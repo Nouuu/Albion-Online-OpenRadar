@@ -1,9 +1,7 @@
-[![Discord](https://img.shields.io/discord/1191823969167352039?style=for-the-badge&logo=discord&label=Discord)](https://discord.gg/XAWjmzeaD3)
+[![Discord](https://img.shields.io/discord/1191823969167352039?style=for-the-badge&logo=discord&label=Discord)](https://discord.gg/xpbgq7E9ya)
 [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Zeldruck/Albion-Online-ZQRadar/main?style=for-the-badge&label=Last%20Commit)]()
 [![GitHub issues](https://img.shields.io/github/issues-raw/Zeldruck/Albion-Online-ZQRadar?style=for-the-badge&label=Issue)](https://github.com/Zeldruck/Albion-Online-ZQRadar/issues)
 [![GitHub Repo stars](https://img.shields.io/github/stars/Zeldruck/Albion-Online-ZQRadar?style=for-the-badge)]()
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/F1F1VMA9G)
 
 ## ❓ What is ZQRadar?
 
@@ -14,7 +12,7 @@ Albion ZQRadar provides a real-time map, helping players detect other players, c
 ## 🎯 Features
 
 - No injections, less risk of banning
-- Display a lot of information about other players (health, items, mounted or not, ...)
+- Display a lot of information about other players (health, items, ...)
 - Display customizable resources (select tiers and enchantments for each)
 - Display customizable living resources (select tiers and enchantments for each)
 - Display customizable enemies
@@ -26,7 +24,7 @@ Albion ZQRadar provides a real-time map, helping players detect other players, c
 
 And much more to come!
 \
-Join the [Discord](https://discord.gg/XAWjmzeaD3) to look at the to-do list and be informed when a new version is released.
+Join the [Discord](https://discord.gg/xpbgq7E9ya) to look at the to-do list and be informed when a new version is released.
 
 ## 🔰 How to run (Windows)
 
@@ -90,8 +88,6 @@ You can download the Image Packs to enhance the radar.
 **Packs:**
 - **Ressource Pack v1.0**: Installed by default
 - **Items Pack v1.2**: [Link](https://github.com/Zeldruck/Albion-Online-ZQRadar/releases/tag/item-pack-v1.1)
-- **~~Animals & Harvestables Pack v0.0~~**: [Link](https://github.com/Zeldruck/Albion-Online-ZQRadar/releases/)
-- **~~Enemies Pack v0.0~~**: [Link](https://github.com/Zeldruck/Albion-Online-ZQRadar/releases/)
 - **Maps Pack v0.1**: [Link](https://github.com/Zeldruck/Albion-Online-ZQRadar/releases/tag/map-pack-v0.1)
 
 \
