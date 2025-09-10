@@ -143,18 +143,6 @@ config/
 .vscode/
 ip.txt
 
-BUILD PACKAGE/
+ZIP PACKAGE/
 
-scripts/Handlers/MobsInfo.js
-
-app.js
-
-auth.auth.auth
-
-nexe.txt
-
-discord-checker/
-
-mob-infos/
-
-mob-info/
+HELPER PACKAGE/

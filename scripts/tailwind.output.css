@@ -1840,6 +1840,10 @@ img, video {
     width: 3rem
 }
 
+.w-15 {
+    width: 3.75rem
+}
+
 .w-56 {
     width: 14rem
 }

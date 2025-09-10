@@ -3,7 +3,7 @@
     <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
         <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="map-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Map
 				</h2>
 			</div>
@@ -13,23 +13,18 @@
             <div>
                 <label class="flex items-center space-x-2">
                     <input type="checkbox" id = "settingShowMap" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-4">Show map background</span>
+                    <span id="map-bg-text" class="dark:text-white ml-4">Show map background</span>
                 </label>
             </div>
         </div>
     </div>
 </div>
 <script>
-     function returnLocalBool(item) {
-        if (localStorage.getItem(item) == "true")
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+    function returnLocalBool(item)
+    {
+        return localStorage.getItem(item) == "true";
     }
+
     let settingShowMap = document.getElementById("settingShowMap");
 
     settingShowMap.checked = returnLocalBool("settingShowMap");
@@ -37,5 +32,12 @@
     settingShowMap.addEventListener("click", () => {
         localStorage.setItem("settingShowMap", settingShowMap.checked);
     });
+
+    function SetLanguage(lang)
+  {
+    document.getElementById("map-text").textContent = lang['map']['map'];
+    document.getElementById("map-bg-text").textContent = lang['map']['map-bg'];
+    
+  }
 
 </script>

@@ -1,5 +1,5 @@
 
-class Settings
+export class Settings
 {
     constructor()
     {
@@ -25,6 +25,11 @@ class Settings
         this.settingGuild = false;
         this.scale = 4.0;
         this.settingSound = false;
+        this.settingFlash = false;
+
+        this.settingPassivePlayers = false;
+        this.settingFactionPlayers = false;
+        this.settingDangerousPlayers = false;
         //#endregion
 
         this.ignoreList = [];
@@ -158,6 +163,9 @@ class Settings
         //#region Enemies
         this.enemyLevels = [false, false, false, false, false];
 
+        this.showMinimumHealthEnemies = false;
+        this.minimumHealthEnemies = 2100;
+
         this.avaloneDrones = false;
         this.showUnmanagedEnemies = false;
         this.showEventEnemies = false;
@@ -179,11 +187,6 @@ class Settings
         this.chestPurple = false;
         this.chestYellow = false;
         //#endregion  
-
-        //#region FootTracks
-        this.settingFootTracksSolo  = false;
-        this.settingFootTracksGroup  = false;
-        //#endregion
 
         this.update();
     }
@@ -349,15 +352,9 @@ class Settings
         }
     }
 
-    returnLocalBool(item) {
-        if (localStorage.getItem(item) == "true") {
-            return true;
-        }
-        else {
-            return false;
-        }
-
-
+    returnLocalBool(item)
+    {
+        return localStorage.getItem(item) == "true";
     }
 
     update()
@@ -374,6 +371,11 @@ class Settings
         this.settingDistance = this.returnLocalBool("settingDistance");
         this.settingGuild = this.returnLocalBool("settingGuild");
         this.settingSound = this.returnLocalBool("settingSound");
+        this.settingFlash = this.returnLocalBool("settingFlash");
+
+        this.settingPassivePlayers = this.returnLocalBool("settingPassivePlayers");
+        this.settingFactionPlayers = this.returnLocalBool("settingFactionPlayers");
+        this.settingDangerousPlayers = this.returnLocalBool("settingDangerousPlayers");
         //#endregion
 
         //#region Resources
@@ -439,6 +441,10 @@ class Settings
         this.enemyLevels[3] = this.returnLocalBool("settingMiniBossEnemy");
         this.enemyLevels[4] = this.returnLocalBool("settingBossEnemy");
 
+
+        this.showMinimumHealthEnemies = this.returnLocalBool("settingShowMinimumHealthEnemies");
+        this.minimumHealthEnemies = parseInt(localStorage.getItem("settingTextMinimumHealthEnemies"));
+
         this.avaloneDrones = this.returnLocalBool("settingAvaloneDrones");
         this.showUnmanagedEnemies = this.returnLocalBool("settingShowUnmanagedEnemies");
         this.showEventEnemies = this.returnLocalBool("settingShowEventEnemies");
@@ -487,11 +493,6 @@ class Settings
         this.dungeonGroup = this.returnLocalBool("settingDungeonDuo");
         this.dungeonCorrupted = this.returnLocalBool("settingDungeonCorrupted");
         this.dungeonHellgate = this.returnLocalBool("settingDungeonHellgate");
-        //#endregion
-
-        //#region FootTracks
-        this.settingFootTracksSolo = this.returnLocalBool("settingFootTracksSolo");
-        this.settingFootTracksGroup = this.returnLocalBool("settingFootTracksGroup");
         //#endregion
 
         this.ignoreList = JSON.parse(localStorage.getItem("ignoreList")) || [];

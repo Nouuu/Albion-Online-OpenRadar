@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Albion Online Radar QRadar</title>
+    <title>ZQRadar</title>
   
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -37,7 +37,7 @@
             class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200"
             href="#"
           >
-            QRadar
+            ZQRadar
           </a>
           <ul class="mt-6">
             <li class="relative px-6 py-3">
@@ -183,7 +183,7 @@
                 <span class="ml-4">Ignore List</span>
               </a>
             </li>
-            <li class="relative px-6 py-3">
+            <!--<li class="relative px-6 py-3">
               <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/settings'" aria-hidden="true"></span>
               <a
                 :class="{'text-white': currentPath === '/settings' && dark, 'text-black': currentPath === '/settings' && !dark, 'hover:text-white dark:hover:text-gray-200': true, 'text-gray-800 dark:text-gray-200': currentPath !== '/settings'}"
@@ -206,7 +206,7 @@
                 </svg>
                 <span class="ml-4">Settings</span>
               </a>
-            </li>
+            </li>-->
 
             <li class="relative px-6 py-3">
               <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/drawing'" aria-hidden="true"></span>
@@ -214,7 +214,43 @@
               class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
               onclick="window.open('/drawing');"
               >
-                <p>Radar Drawing</p>
+                <p>Launch Radar</p>
+              </button>
+            </li>
+
+            <li class="relative px-6 py-3">
+              <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/items'" aria-hidden="true"></span>
+              <button
+              class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
+              onclick="window.open('/items');"
+              >
+                <p>Launch Items</p>
+              </button>
+            </li>
+
+            <li class="relative px-6 py-3">
+              <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/items'" aria-hidden="true"></span>
+              <button
+              class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
+              onclick="ChangeLanguage('EN');"
+              >
+                <p>EN</p>
+              </button>
+
+              <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/items'" aria-hidden="true"></span>
+              <button
+              class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
+              onclick="ChangeLanguage('RU');"
+              >
+                <p>RU</p>
+              </button>
+
+              <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/items'" aria-hidden="true"></span>
+              <button
+              class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
+              onclick="ChangeLanguage('ID');"
+              >
+                <p>ID</p>
               </button>
             </li>
           </ul>
@@ -250,7 +286,7 @@
             class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200"
             href="#"
           >
-            QRadar
+            ZQRadar
           </a>
           <ul class="mt-6">
             <li class="relative px-6 py-3">
@@ -395,7 +431,7 @@
                 <span class="ml-4">Ignore List</span>
               </a>
             </li>
-            <li class="relative px-6 py-3">
+            <!--<li class="relative px-6 py-3">
               <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/settings'" aria-hidden="true"></span>
               <a
               :class="{'text-white': currentPath === '/settings' && dark, 'text-black': currentPath === '/settings' && !dark, 'hover:text-white dark:hover:text-gray-200': true, 'text-gray-800 dark:text-gray-200': currentPath !== '/settings'}"
@@ -418,7 +454,7 @@
               </svg>
               <span class="ml-4">Settings</span>
             </a>
-          </li>
+          </li>-->
 
           <li class="relative px-6 py-3">
             <span class="absolute inset-y-0 left-0 w-1 bg-purple-600 rounded-tr-lg rounded-br-lg" x-show="currentPath === '/drawing'" aria-hidden="true"></span>
@@ -440,7 +476,7 @@
                   d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
                 ></path>
               </svg>
-              <span class="ml-4">Radar Drawing</span>
+              <span class="ml-4">Launch Radar</span>
             </a>
           </li>
 
@@ -450,7 +486,17 @@
             class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
             onclick="window.open('/drawing');"
             >
-              <span >Radar Drawing</span>
+              <span >Launch Radar</span>
+            </button>
+          </li>
+
+          <li class="relative px-6 py-3 ">
+
+            <button
+            class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
+            onclick="window.open('/items');"
+            >
+              <span >Launch Items</span>
             </button>
           </li>
         </ul>
@@ -544,10 +590,44 @@
     </div>
   </div>
 
+  <script>
+    ChangeLanguage(localStorage.getItem('language') || 'EN');
 
+    function ChangeLanguage(lang)
+    {
+      console.log(lang);
+      switch (lang)
+      {
+        case 'RU':
+          fetch('/scripts/Utils/languages/russian.json')
+          .then((response) => response.json())
+          .then((json) => {
+            SetLanguage(json);
+          });
+          localStorage.setItem('language', 'RU');
+          break;
 
-
-
+        case 'ID':
+          fetch('/scripts/Utils/languages/indonesian.json')
+          .then((response) => response.json())
+          .then((json) => {
+            SetLanguage(json);
+          });
+          localStorage.setItem('language', 'ID');
+          break;
+      
+        default:
+        case 'EN':
+          fetch('/scripts/Utils/languages/english.json')
+          .then((response) => response.json())
+          .then((json) => {
+            SetLanguage(json);
+          });
+          localStorage.setItem('language', 'EN');
+          break;
+      }
+    }
+  </script>
 
 </body>
 </html>

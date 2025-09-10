@@ -1,4 +1,4 @@
-export const EventCodes =
+const EventCodes =
 {
     Leave : 1,
 	JoinFinished : 2,
@@ -637,4 +637,8 @@ export const EventCodes =
 	HellDungeonRoomShrineStateUpdate : 635,
 	SimpleBehaviourBuildingStateUpdate : 636,
 	KeyValidation : 637,
+}
+
+module.exports = {
+    EventCodes
 }

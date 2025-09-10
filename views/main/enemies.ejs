@@ -2,46 +2,60 @@
     <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
         <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="enemies-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Enemies
 				</h2>
 			</div>
 		</div>
         <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
 			<div>
-                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+                <h4 id="classic-enemies-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
                     Classic Enemies
                 </h4>
                 <label class="flex items-center">
                     <input disabled type="checkbox" id="settingAllEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">All</span>
+                    <span id="all-text" class="dark:text-white ml-2">All</span>
                 </label>
                 <label class="flex items-center">
                     <input disabled type="checkbox" id="settingNormalEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Normal</span>
+                    <span id="normal-text" class="dark:text-white ml-2">Normal</span>
                 </label>
                 <label class="flex items-center">
                     <input disabled type="checkbox" id="settingMediumEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Medium</span>
+                    <span id="medium-text" class="dark:text-white ml-2">Medium</span>
                 </label>
                 <label class="flex items-center">
                     <input disabled type="checkbox" id="settingEnchantedEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Enchanted</span>
+                    <span id="enchanted-text" class="dark:text-white ml-2">Enchanted</span>
                 </label>
                 <label class="flex items-center">
                     <input disabled type="checkbox" id="settingMiniBossEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Mini-Boss</span>
+                    <span id="mini-boss-text" class="dark:text-white ml-2">Mini-Boss</span>
                 </label>
                 <label class="flex items-center">
                     <input disabled type="checkbox" id="settingBossEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Boss</span>
+                    <span id="boss-text" class="dark:text-white ml-2">Boss</span>
+                </label>
+                <br>
+                <label class="flex items-center">
+                    <input type="checkbox" id="settingShowMinimumHealthEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="show-minimum-text" class="dark:text-white ml-2">Show enemies with minimum hp</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="text" id="settingTextMinimumHealthEnemies" class="h-5 w-15 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="minimum-text" class="dark:text-white ml-2">Minimum hp</span>
+                </label>
+                <br>
+                <label class="flex items-center">
+                    <input type="checkbox" id="settingShowUnmanagedEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="show-unmanaged-text" class="dark:text-white ml-2">Show enemies with unmanaged ids?</span>
                 </label>
 			</div>
 		</div>
 
         <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
 			<div>
-                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+                <h4 id="mists-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
                     Mists
                 </h4>
                 <label class="flex items-center">
@@ -64,37 +78,33 @@
 		</div>
         <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
 			<div>
-                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+                <h4 id="other-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
                     Other
                 </h4>
                 <label class="flex items-center">
                     <input type="checkbox" id="settingAvaloneDrones" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Avalone Drones</span>
-                </label>
-                <label class="flex items-center">
-                    <input type="checkbox" id="settingShowUnmanagedEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Show enemies with unmanaged ids?</span>
+                    <span id="avalone-drones-text" class="dark:text-white ml-2">Avalone Drones</span>
                 </label>
                 <label class="flex items-center">
                     <input type="checkbox" id="settingShowEventEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Event enemies</span>
+                    <span id="event-text" class="dark:text-white ml-2">Event enemies</span>
                 </label>
 			</div>
 		</div>
 
         <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
 			<div>
-                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+                <h4 id="debug-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
                     Debug
                 </h4>
                 <label class="flex items-center">
                     <input type="checkbox" id="settingEnemiesHP" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Show Hp</span>
+                    <span id="health-text" class="dark:text-white ml-2">Show Hp</span>
                 </label>
 
                 <label class="flex items-center">
                     <input type="checkbox" id="settingEnemiesID" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Show Enemies ID</span>
+                    <span id="id-text" class="dark:text-white ml-2">Show ID</span>
                 </label>
 			</div>
 		</div>
@@ -151,6 +161,43 @@
         localStorage.setItem("settingBossEnemy", settingBossEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
+    
+
+    const settingShowUnmanagedEnemies = document.getElementById("settingShowUnmanagedEnemies");
+    settingShowUnmanagedEnemies.checked = returnLocalBool("settingShowUnmanagedEnemies");
+    settingShowUnmanagedEnemies.addEventListener("click", () => {localStorage.setItem("settingShowUnmanagedEnemies", settingShowUnmanagedEnemies.checked);});
+
+    const settingShowMinimumHealthEnemies = document.getElementById("settingShowMinimumHealthEnemies");
+    const settingTextMinimumHealthEnemies = document.getElementById("settingTextMinimumHealthEnemies");
+
+    settingShowMinimumHealthEnemies.checked = returnLocalBool('settingShowMinimumHealthEnemies');
+    settingTextMinimumHealthEnemies.value = localStorage.getItem("settingTextMinimumHealthEnemies") || "2100";
+
+    if (!settingShowMinimumHealthEnemies.checked)
+        settingTextMinimumHealthEnemies.setAttribute("disabled", "");
+
+    settingShowMinimumHealthEnemies.addEventListener("click", () => 
+    {
+        localStorage.setItem("settingShowMinimumHealthEnemies", settingShowMinimumHealthEnemies.checked);
+
+        if (settingShowMinimumHealthEnemies.checked)
+        {
+            settingTextMinimumHealthEnemies.removeAttribute("disabled");
+
+            if (!settingShowUnmanagedEnemies.checked)
+                settingShowUnmanagedEnemies.checked = true;
+        }
+        else
+            settingTextMinimumHealthEnemies.setAttribute("disabled", "");
+    });
+
+    settingTextMinimumHealthEnemies.addEventListener("input", () => 
+    {
+        localStorage.setItem("settingTextMinimumHealthEnemies", settingTextMinimumHealthEnemies.value);
+    });
+
+
+
 
     let updatingAllEnemies = false;
     const settingAllEnemies = document.getElementById("settingAllEnemies");
@@ -197,9 +244,7 @@
     settingAvaloneDrones.checked = returnLocalBool("settingAvaloneDrones");
     settingAvaloneDrones.addEventListener("click", () => {localStorage.setItem("settingAvaloneDrones", settingAvaloneDrones.checked);});
 
-    const settingShowUnmanagedEnemies = document.getElementById("settingShowUnmanagedEnemies");
-    settingShowUnmanagedEnemies.checked = returnLocalBool("settingShowUnmanagedEnemies");
-    settingShowUnmanagedEnemies.addEventListener("click", () => {localStorage.setItem("settingShowUnmanagedEnemies", settingShowUnmanagedEnemies.checked);});
+    
 
     const settingShowEventEnemies = document.getElementById("settingShowEventEnemies");
     settingShowEventEnemies.checked = returnLocalBool("settingShowEventEnemies");
@@ -233,5 +278,28 @@
     settingEnemiesID.checked = returnLocalBool("settingEnemiesID");
     settingEnemiesID.addEventListener("click", () => {localStorage.setItem("settingEnemiesID", settingEnemiesID.checked);});
     //#endregion
+
+    function SetLanguage(lang)
+    {
+        document.getElementById("enemies-text").textContent = lang['enemies']['enemies'];
+        document.getElementById("classic-enemies-text").textContent = lang['enemies']['classic-enemies'];
+        document.getElementById("all-text").textContent = lang['enemies']['all'];
+        document.getElementById("normal-text").textContent = lang['enemies']['normal'];
+        document.getElementById("medium-text").textContent = lang['enemies']['medium'];
+        document.getElementById("enchanted-text").textContent = lang['enemies']['enchanted'];
+        document.getElementById("mini-boss-text").textContent = lang['enemies']['mini-boss'];
+        document.getElementById("boss-text").textContent = lang['enemies']['boss'];
+
+        document.getElementById("show-minimum-text").textContent = lang['enemies']['show-minimum'];
+        document.getElementById("minimum-text").textContent = lang['enemies']['minimum'];
+
+        document.getElementById("other-text").textContent = lang['enemies']['other'];
+        document.getElementById("avalone-drones-text").textContent = lang['enemies']['avalone-drones'];
+        document.getElementById("event-text").textContent = lang['enemies']['event'];
+
+        document.getElementById("debug-text").textContent = lang['enemies']['debug'];
+        document.getElementById("health-text").textContent = lang['enemies']['health'];
+        document.getElementById("id-text").textContent = lang['enemies']['id'];
+    }
 
 </script>

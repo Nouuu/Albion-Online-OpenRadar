@@ -14,6 +14,9 @@ export class PlayersDrawing extends DrawingUtils
 
     drawItems(context, canvas, players, devMode)
     {
+        if (!this.settings.settingDot)
+            return;
+
         let posY = 15;
 
         if (players.length <= 0)
@@ -81,105 +84,103 @@ export class PlayersDrawing extends DrawingUtils
       
             posY += 45;
         }
-
     }
     
-    interpolate(players, lpX, lpY ,t ) {
-
-
-
-        for (const playerOne of players) {
-
-
-
-
-
-
+    interpolate(players, lpX, lpY , t)
+    {
+        /*for (const playerOne of players)
+        {
             const  hX = -1 * playerOne.posX + lpX;
             const  hY = playerOne.posY - lpY;
             let distance = Math.round(Math.sqrt(((playerOne.posX - lpX) * (playerOne.posX - lpX)) + ((playerOne.posY - lpY) * (playerOne.posY - lpY))));
             playerOne.distance = distance;
-            if (playerOne.hY == 0 && playerOne.hX == 0) {
+
+            if (playerOne.hY == 0 && playerOne.hX == 0)
+            {
                 playerOne.hX = hX;
                 playerOne.hY = hY;
 
             }
-            
-
-
 
             playerOne.hX = this.lerp(playerOne.hX, hX, t);
             playerOne.hY = this.lerp(playerOne.hY, hY, t);
-
-
-
-
-
-        }
-
+        }*/
     }
 
     invalidate(context, players)
     {
-        for (const playerOne of players)
+        /*for (const playerOne of players)
         {
             const point = this.transformPoint(playerOne.hX, playerOne.hY);
             let space = 0;
-
-            if (this.settings.settingDot == true)
-            {
-                this.drawFilledCircle(context, point.x, point.y, 10, "red");
-            }
+      
+            const flagId = playerOne.flagId || 0;
+            const flagName = FactionFlagInfo[flagId];
+      
+            // Draw a circle around the status icon if settingMounted is enabled
             if (this.settings.settingMounted)
             {
+                context.beginPath();
+                context.arc(point.x, point.y, 11, 0, 2 * Math.PI, false); // Adjust the circle position and radius as needed
                 if (playerOne.mounted)
                 {
-                    this.drawText(point.x, point.y +3, "M", context);
+                    context.strokeStyle = 'green';
                 }
+                else
+                {
+                    context.strokeStyle = 'red';
+                }
+                
+                context.lineWidth = 3;
+                context.stroke();
             }
+      
+            // Draw the status icon
+            this.DrawCustomImage(context, point.x, point.y, flagName, "Flags", 20);
+      
             if (this.settings.settingNickname == true)
             {
-                space = space + 20;
+                space = space + 23;
                 this.drawText(point.x, point.y + space, playerOne.nickname, context);
             }
+
             if (this.settings.settingDistance)
             {
-                this.drawText(point.x, point.y - 14, playerOne.distance +"m", context);
+                this.drawText(point.x, point.y - 14, playerOne.distance + "m", context);
             }
-
+      
             if (this.settings.settingHealth)
             {
                 space = space + 6;
-
+        
                 const percent = playerOne.currentHealth / playerOne.initialHealth;
                 let width = 60;
                 let height = 7;
-
+        
                 context.fillStyle = "#121317";
-                context.fillRect(point.x - width / 2, point.y - height / 2 + space, width, height);
-
+                context.fillRect(
+                    point.x - width / 2,
+                    point.y - height / 2 + space,
+                    width,
+                    height
+                );
+        
                 context.fillStyle = "red";
-                context.fillRect(point.x - width/2, point.y - height/2 + space, width * percent, height);
-             //   this.drawText(point.x, point.y + space, playerOne.currentHealth, context);
+                context.fillRect(
+                    point.x - width / 2,
+                    point.y - height / 2 + space,
+                    width * percent,
+                    height
+                );
             }
+
             if (this.settings.settingGuild)
             {
                 space = space + 14;
-
+      
                 if (playerOne.guildName != "undefined")
-                {
-                    this.drawText(point.x, point.y + space, playerOne.guildName, context);
-                }
+                this.drawText(point.x, point.y + space, playerOne.guildName, context);
             }
-
-            const flagId = playerOne.flagId || 0
-            const flagName = FactionFlagInfo[flagId]
-            const nicknameWidth = context.measureText(playerOne.nickname).width / 2
-            const healthWidth = 66 / 2
-            const farthest = Math.max(nicknameWidth, healthWidth)
-            const xPos = farthest + 10
-            const yPos = space / 2 + 5
-            this.DrawCustomImage(context, point.x + xPos, point.y + yPos, flagName, 'Flags', 20)
-        }
+        }*/
     }
 }

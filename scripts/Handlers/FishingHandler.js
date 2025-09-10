@@ -83,4 +83,9 @@ export class FishingHandler
     {
         this.fishes = this.fishes.filter(fish => fish.id !== id);
     }
+
+    Clear()
+    {
+        this.fishes = [];
+    }
 }

@@ -8,16 +8,11 @@ import { MapDrawing } from '../Drawings/MapsDrawing.js';
 import { WispCageDrawing } from '../Drawings/WispCageDrawing.js';
 import { FishingDrawing } from '../Drawings/FishingDrawing.js';
 
-import { TrackFootprintsDrawing } from '../Drawings/TrackFootprintsDrawing.js';
 import { EventCodes } from './EventCodes.js';
 
 import { PlayersHandler } from '../Handlers/PlayersHandler.js';
-import { MobsHandler } from '../Handlers/MobsHandler.js';
 import { WispCageHandler } from '../Handlers/WispCageHandler.js';
 import { FishingHandler } from '../Handlers/FishingHandler.js';
-import { TrackFootprintsHandler } from '../Handlers/TrackFootprintsHandler.js';
-
-import { GetMobList } from '../../mob-info/MobsInfo.js';
 
 var canvasMap = document.getElementById("mapCanvas");
 var contextMap = canvasMap.getContext("2d");
@@ -28,6 +23,9 @@ var contextGrid = canvasGrid.getContext("2d");
 var canvas = document.getElementById("drawCanvas");
 var context = canvas.getContext("2d");
 
+var canvasFlash = document.getElementById("flashCanvas");
+var contextFlash = canvas.getContext("2d");
+
 var canvasOurPlayer = document.getElementById("ourPlayerCanvas");
 var contextOurPlayer = canvasOurPlayer .getContext("2d");
 
@@ -35,6 +33,7 @@ var contextOurPlayer = canvasOurPlayer .getContext("2d");
 var canvasItems = document.getElementById("thirdCanvas");
 var contextItems = canvasItems.getContext("2d");
 
+import { Settings } from './Settings.js';
 const settings = new Settings();
 
 
@@ -43,15 +42,17 @@ const harvestablesDrawing = new HarvestablesDrawing(settings);
 const dungeonsHandler = new DungeonsHandler(settings);
 
 var itemsInfo = new ItemsInfo();
+var mobsInfo = new MobsInfo();
 
 itemsInfo.initItems();
+mobsInfo.initMobs();
 
 var map = new MapH(-1);
 const mapsDrawing = new MapDrawing(settings);
 
 const chestsHandler = new ChestsHandler();
 const mobsHandler = new MobsHandler(settings);
-mobsHandler.updateMobInfo(await GetMobList());
+mobsHandler.updateMobInfo(mobsInfo.moblist);
 
 
 const harvestablesHandler = new HarvestablesHandler(settings);
@@ -67,20 +68,18 @@ const chestsDrawing = new ChestsDrawing(settings);
 const mobsDrawing = new MobsDrawing(settings);
 const playersDrawing = new PlayersDrawing(settings);
 const dungeonsDrawing = new DungeonsDrawing(settings);
-const trackFootprintsHandler = new TrackFootprintsHandler(settings);
-const trackFootprintsDrawing = new TrackFootprintsDrawing(settings);
 playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
 
 let lpX = 0.0;
 let lpY = 0.0;
 
+var flashTime = -1;
+
 const drawingUtils = new DrawingUtils();
 drawingUtils.initCanvas(canvas, context);
 drawingUtils.initGridCanvas(canvasGrid, contextGrid);
 drawingUtils.InitOurPlayerCanvas(canvasOurPlayer, contextOurPlayer);
-
-
 
 
 const socket = new WebSocket('ws://localhost:5002');
@@ -120,14 +119,26 @@ function onEvent(Parameters)
     const id = parseInt(Parameters[0]);
     const eventCode = Parameters[252];
 
-    switch (eventCode) {
-        
-        case EventCodes.Track:
-            const trackPosX = Parameters[1][0];
-            const trackPosY = Parameters[1][1];
-            const name = Parameters[3];
-            trackFootprintsHandler.addFootprint(id, trackPosX, trackPosY, name);
+    switch (eventCode)
+    {
+        // DEBUG
+
+        /*case 506:
+            console.log("MistsPlayerJoinedInfo");
+            console.log(Parameters);
             break;
+
+        case 474:
+            console.log("CarriedObjectUpdate");
+            console.log(Parameters);
+            break;
+
+        case 530:
+            console.log("TemporaryFlaggingStatusUpdate ");
+            console.log(Parameters);
+            break;*/
+
+        // END DEBUG
 
         case EventCodes.Leave:
             playersHandler.removePlayer(id);
@@ -136,20 +147,21 @@ function onEvent(Parameters)
             dungeonsHandler.RemoveDungeon(id);
             chestsHandler.removeChest(id);
             fishingHandler.RemoveFish(id);
-            trackFootprintsHandler.removeFootprint(id);
+            wispCageHandler.RemoveCage(id);
             break;
 
         case EventCodes.Move:
             const posX = Parameters[4];
             const posY = Parameters[5];
-            playersHandler.updatePlayerPosition(id, posX, posY);
+
+            //playersHandler.updatePlayerPosition(id, posX, posY, Parameters);
             mobsHandler.updateMistPosition(id, posX, posY);
             mobsHandler.updateMobPosition(id, posX, posY);
-            trackFootprintsHandler.updateFootprintPosition(id, posX, posY);
             break;
 
         case EventCodes.NewCharacter:
-            playersHandler.handleNewPlayerEvent(Parameters);
+            const ttt = playersHandler.handleNewPlayerEvent(Parameters, map.isBZ);
+            flashTime = ttt < 0 ? flashTime : ttt;
             break;
 
         case EventCodes.NewSimpleHarvestableObjectList:
@@ -176,6 +188,32 @@ function onEvent(Parameters)
             playersHandler.UpdatePlayerHealth(Parameters);
             break;
 
+        case EventCodes.HealthUpdate:
+            playersHandler.UpdatePlayerLooseHealth(Parameters);
+            break;
+        
+        // TEST
+        case EventCodes.MountHealthUpdate:
+            console.log();
+            console.log("MountHealthUpdate");
+            console.log(Parameters);
+            break;
+
+        // TEST
+        case EventCodes.CharacterStats:
+            console.log();
+            console.log("CharacterStats");
+            console.log(Parameters);
+            break;
+
+        // TEST
+        case EventCodes.RegenerationHealthEnergyComboChanged:
+            console.log();
+            console.log("RegenerationHealthEnergyComboChanged");
+            console.log(Parameters);
+            break;
+
+
         case EventCodes.CharacterEquipmentChanged:
             playersHandler.updateItems(id, Parameters);
             break;
@@ -188,7 +226,7 @@ function onEvent(Parameters)
             playersHandler.handleMountedPlayerEvent(id, Parameters);
             break;
 
-        case EventCodes.NewRandomDungeon:
+        case EventCodes.NewRandomDungeonExit:
             dungeonsHandler.dungeonEvent(Parameters);
             break;
 
@@ -213,9 +251,16 @@ function onEvent(Parameters)
         case EventCodes.FishingFinished:
             fishingHandler.FishingEnd(Parameters);
             break;
-    
-        default:
+
+        case 590:
+            console.log()
+            console.log("Key sync")
+            console.log(Parameters)
             break;
+
+        /*default:
+            console.log("default");
+            console.log(Parameters);*/
     }
 };
 
@@ -226,32 +271,54 @@ function onRequest(Parameters)
     {
         lpX = Parameters[1][0];
         lpY = Parameters[1][1];
-
-        //console.log("X: " + lpX + ", Y: " + lpY);
-    }    
-};
+        console.log(lpX)
+    }
+}
 
 function onResponse(Parameters)
 {
-    // Player join new map
+    // Player change cluster
     if (Parameters[253] == 35)
     {
         map.id = Parameters[0];
+        
+        /*console.log()
+        console.log("Cluster change")
+        console.log(Parameters)*/
     }
     // All data on the player joining the map (us)
     else if (Parameters[253] == 2)
     {
         lpX = Parameters[9][0];
         lpY = Parameters[9][1];
+
+        // TODO bz portals does not trigger this event, so when change map check if map id is portal in event 35 above ^
+        // And clear everything too 
+        map.isBZ = Parameters[103] == 2;
+
+        /*console.log()
+        console.log("Join")
+        console.log(Parameters)*/
+
+        ClearHandlers();
+    }
+    // GetCharacterStats  
+    else if (Parameters[253] == 137)
+    {
+        console.log()
+        console.log("GetCharacterStats")
+        console.log(Parameters)
     }
 };
 
 requestAnimationFrame(gameLoop);
 
-function render() {
+function render()
+{
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     contextMap.clearRect(0, 0, canvasMap.width, canvasMap.height);
+    contextFlash.clearRect(0, 0, canvasFlash.width, canvasFlash.height);
 
     mapsDrawing.Draw(contextMap, map);
 
@@ -263,8 +330,18 @@ function render() {
     fishingDrawing.Draw(context, fishingHandler.fishes);
     dungeonsDrawing.Draw(context, dungeonsHandler.dungeonList);
     playersDrawing.invalidate(context, playersHandler.playersInRange);
-    trackFootprintsDrawing.invalidate(context, trackFootprintsHandler.getFootprintsList());
+
+    // Flash
+    if (settings.settingFlash && flashTime >= 0)
+    {
+        contextFlash.rect(0, 0, 500, 500);
+        contextFlash.rect(20, 20, 460, 460);
+
+        contextFlash.fillStyle = 'red';
+        contextFlash.fill('evenodd');
+    }
 }
+
 
 var previousTime = performance.now();
 
@@ -283,6 +360,7 @@ function update() {
     const t = Math.min(1, deltaTime / 100);
 
 
+
     if (settings.showMapBackground)
         mapsDrawing.interpolate(map, lpX, lpY, t);
 
@@ -298,7 +376,12 @@ function update() {
     fishingDrawing.Interpolate(fishingHandler.fishes, lpX, lpY, t);
     dungeonsDrawing.interpolate(dungeonsHandler.dungeonList, lpX, lpY, t);
     playersDrawing.interpolate(playersHandler.playersInRange, lpX, lpY, t);
-    trackFootprintsDrawing.interpolate(trackFootprintsHandler.getFootprintsList(), lpX, lpY, t);
+
+    // Flash
+    if (flashTime >= 0)
+    {
+        flashTime -= t;
+    }
 
     previousTime = currentTime;
 }
@@ -328,15 +411,19 @@ setInterval(checkLocalStorage, interval)
 
 
 document.getElementById("button").addEventListener("click", function () {
+    ClearHandlers();
+});
 
+function ClearHandlers()
+{
     chestsHandler.chestsList = [];
     dungeonsHandler.dungeonList = [];
-    harvestablesHandler.harvestableList = [];
-    mobsHandler.mobsList = [];
-    mobsHandler.mistList = [];
-    playersHandler.playersInRange = [];
-    playersDrawing.images = {};
-});
+    fishingHandler.Clear();
+    harvestablesHandler.Clear();
+    mobsHandler.Clear();
+    playersHandler.Clear();
+    wispCageHandler.CLear();
+}
 
 setDrawingViews();
 

@@ -33,27 +33,13 @@ export class HarvestablesDrawing extends DrawingUtils  {
         for (const harvestableOne of harvestables)
         {
             if (harvestableOne.size <= 0) continue;
- 
-            // OLD, to keep if I do an advance settings menu
-            // This will be the beginner friendly
 
-            /*if (!this.settings.harvestingTiers[harvestableOne.tier - 1]) {
-                continue;
-            }
-
-            if (!this.settings.harvestingEnchants[harvestableOne.charges]) {
-                continue;
-            }*/
-            
             const type = harvestableOne.type;
 
             let draw = undefined;
 
-            if (type >= 11 && type <= 14)
-            {
-                draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
-            }
-            else if (type >= 0 && type <= 5)
+            
+            if (type >= 0 && type <= 5)
             {
                 draw = "Logs_" + harvestableOne.tier + "_" + harvestableOne.charges;
             }
@@ -61,7 +47,11 @@ export class HarvestablesDrawing extends DrawingUtils  {
             {
                 draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.charges;
             }
-            else if (type >= 15 && type <= 22)
+            if (type >= 11 && type <= 15)
+            {
+                draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
+            }
+            else if (type >= 16 && type <= 22)
             {
                 draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.charges;
             }
@@ -73,29 +63,6 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (draw === undefined)
                 continue;
 
-            /*if (this.settings.harvestingFiber && (type >= 11 && type <= 14)) {
-
-                draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
-            }
-            else if (this.settings.harvestingWood && (type >= 0 && type <= 5)) {
-
-                draw = "Logs_" + harvestableOne.tier + "_" + harvestableOne.charges;
-            }
-
-            else if (this.settings.harvestingRock && (type >= 6 && type <= 10)) {
-
-                draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.charges;
-            }
-            
-            else if (this.settings.harvestingHide && (type >= 15 && type <= 22))
-            {
-
-                draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.charges;
-            }
-            else if (this.settings.harvestingOre && (type >= 23 && type <= 27)){
-
-                draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
-            }*/
 
             const point = this.transformPoint(harvestableOne.hX, harvestableOne.hY);
 
@@ -106,9 +73,30 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (this.settings.livingResourcesID)
                 this.drawText(point.x, point.y + 20, type.toString(), ctx);
 
-            // TODO
+            let tier = "I";
+            switch (harvestableOne.tier)
+            {
+                case 1: tier = "I"; break;
+                case 2: tier = "II"; break;
+                case 3: tier = "III"; break;
+                case 4: tier = "IV"; break;
+                case 5: tier = "V"; break;
+                case 6: tier = "VI"; break;
+                case 6: tier = "VII"; break;
+                case 6: tier = "VIII"; break;
+
+                default:
+                    tier = "";
+                    break;
+            }
+
+            this.drawText(point.x - 10, point.y - 10, tier.toString(), ctx, 9, "monospace", "#585858", 10);
+
             if (this.settings.resourceSize)
-                this.drawText(point.x, point.y - 20, harvestableOne.size, ctx);
+            {
+                harvestableOne.size = parseInt(harvestableOne.size);
+                this.drawText(point.x + 13, point.y + 15, harvestableOne.size, ctx, 8);
+            }
             
         }
     }  

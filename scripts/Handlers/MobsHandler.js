@@ -1,4 +1,16 @@
-import { EnemyType } from "./EnemyType.js";
+const EnemyType = 
+{
+    LivingHarvestable: 0,
+    LivingSkinnable: 1,
+    Enemy: 2,
+    MediumEnemy: 3,
+    EnchantedEnemy: 4,
+    MiniBoss: 5,
+    Boss: 6,
+    Drone: 7,
+    MistBoss: 8,
+    Events: 9,
+};
 
 class Mob
 {
@@ -44,7 +56,7 @@ class Mist
     }
 }
 
-export class MobsHandler
+class MobsHandler
 {
     constructor(settings)
     {
@@ -66,14 +78,10 @@ export class MobsHandler
         this.mobinfo = newData;
     }
 
-    clear()
-    {
-        this.mobsList = [];
-        this.mistList = [];
-    }
-
     NewMobEvent(parameters)
     {
+        console.log(parameters)
+
         const id = parseInt(parameters[0]); // entity id
         let typeId = parseInt(parameters[1]); // real type id
 
@@ -134,12 +142,12 @@ export class MobsHandler
         }
         else
         {
-            this.AddEnemy(id, typeId, posX, posY, exp, enchant, rarity);
+            this.AddEnemy(id, typeId, posX, posY, exp, enchant, rarity, parameters);
         }
     }
     
 
-    AddEnemy(id, typeId, posX, posY, health, enchant, rarity)
+    AddEnemy(id, typeId, posX, posY, health, enchant, rarity, parameters)
     {
         if (this.mobsList.some(mob => mob.id === id))
             return;
@@ -168,11 +176,15 @@ export class MobsHandler
                    And it's the same with the other living harvestables
                    But keep that in case it changes
                 */
+                   //console.log(parameters);
+                
                 if (!this.settings.harvestingLivingHide[`e${enchant}`][h.tier-1])
                 {
                     this.harvestablesNotGood.push(h);
                     return;
                 }
+
+                
             }
             else if (h.type == EnemyType.LivingHarvestable)
             {
@@ -219,6 +231,9 @@ export class MobsHandler
 
                 if (!this.settings.enemyLevels[h.type - offset])
                     return;
+
+                if (this.settings.showMinimumHealthEnemies && health < this.settings.minimumHealthEnemies)
+                    return;
             }
             else if (h.type == EnemyType.Drone)
             {
@@ -238,10 +253,20 @@ export class MobsHandler
             }
             // Unmanaged type
             else if (!this.settings.showUnmanagedEnemies) return;
+            else
+            {
+                if (this.settings.showMinimumHealthEnemies && health < this.settings.minimumHealthEnemies)
+                    return;
+            }
             
         }
         // Unmanaged id
         else if (!this.settings.showUnmanagedEnemies) return;
+        else
+        {
+            if (this.settings.showMinimumHealthEnemies && health < this.settings.minimumHealthEnemies)
+                return;
+        }
 
         this.mobsList.push(h);
     }
@@ -396,5 +421,12 @@ export class MobsHandler
         if (!mist) return;
 
         mist.enchant = enchantmentLevel;
-    }  
+    }
+
+    Clear()
+    {
+        this.mobsList = [];
+        this.mistList = [];
+        this.harvestablesNotGood = [];
+    }
 }

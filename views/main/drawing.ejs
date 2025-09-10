@@ -1,63 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ZQRadar Drawing</title>
+    <title>ZQRADAR</title>
     <style>
         body{
             background-color: #121317;
         }
         
         /* Position the canvases, with the topCanvas above the gridCanvas */
-        #mapCanvas {
+        .ttcan
+        {
             position: absolute;
             top: 0;
             left: 0;
             margin: 10px;
         }
 
-        #gridCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            margin: 10px;
+        #gridCanvas
+        {
             border: 2px solid grey;
         }
 
-        #drawCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            margin: 10px;
-        }
-
-        #ourPlayerCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            margin: 10px;
-        }
-
-        #button {
-            position: absolute;
-            top: 10px;
+        .button
+        {
             background-color: #1a1c23;
             color:white;
             margin: 10px;
             border: 1px solid gray;
             padding: 8px 18px;
             cursor: pointer;
+        }
+
+        #button {
+            position: absolute;
+            top: 10px;
             left: 520px; /* Adjust the left position to be to the right of the canvases */
         }
 
         #logEnemiesList {
             position: absolute;
             top: 50px;
-            background-color: #1a1c23;
-            color:white;
-            margin: 10px;
-            border: 1px solid gray;
-            padding: 8px 18px;
-            cursor: pointer;
+            left: 520px; /* Adjust the left position to be to the right of the canvases */
+        }
+
+        #launchItems
+        {
+            position: absolute;
+            top: 90px;
             left: 520px; /* Adjust the left position to be to the right of the canvases */
         }
 
@@ -79,25 +68,29 @@
 </head>
 <body>
     <div id="canvasContainer">
-        <canvas id="mapCanvas" width="500" height="500"></canvas>
-        <canvas id="gridCanvas" width="500" height="500"></canvas>
-        <canvas id="drawCanvas" width="500" height="500"></canvas>
-        <canvas id="ourPlayerCanvas" width="500" height="500"></canvas>
+        <canvas class="ttcan" id="mapCanvas" width="500" height="500"></canvas>
+        <canvas class="ttcan" id="gridCanvas" width="500" height="500"></canvas>
+        <canvas class="ttcan" id="drawCanvas" width="500" height="500"></canvas>
+        <canvas class="ttcan" id="flashCanvas" width="500" height="500"></canvas>
+        <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500"></canvas>
         <canvas id="thirdCanvas" width="500" height="500" ></canvas>
-        <button id="button">Clear</button>
-        <button id="logEnemiesList">Log Enemies List</button>
+        <button class="button" id="button">Clear</button>
+        <button class="button" id="logEnemiesList">Log Enemies List</button>
+        <button class="button" id="launchItems" onclick="window.open('/items');" >Open Items Window</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js" ></script>
     <script src="/scripts/Handlers/HarvestablesHandler.js"></script>
+    <script src="/scripts/Handlers/MobsHandler.js"></script>
     <script src="/scripts/Handlers/ChestsHandler.js"></script>
     <script src="/scripts/Handlers/DungeonsHandler.js"></script>  
     <script src="/scripts/Handlers/Map.js"></script>  
+    <script src="/scripts/Handlers/MobsInfo.js"></script>
     <script src="/scripts/Handlers/ItemsInfo.js"></script>
     <script src="/scripts/Handlers/FactionFlagInfo.js"></script>
     <script src="/scripts/Utils/DrawingUtils.js"></script>
-    <script src="/scripts/Utils/Settings.js"></script>
+    <!--<script src="/scripts/Utils/Settings.js"></script>-->
     
     <script type="module" src="/scripts/Utils/Utils.js"></script> 
 </body>

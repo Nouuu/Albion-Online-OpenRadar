@@ -47,4 +47,9 @@ export class WispCageHandler
     {
         this.cages = this.cages.filter(cage => cage.id !== id);
     }
+
+    CLear()
+    {
+        this.cages = [];
+    }
 }

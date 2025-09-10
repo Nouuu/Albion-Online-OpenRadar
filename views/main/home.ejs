@@ -1,158 +1,357 @@
 
-      <div class="container px-6 mx-auto grid">
-        <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
-          <!-- Card -->
+<div class="container px-6 mx-auto grid">
+  <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
+    <!-- Card -->
 
-          <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-            <div>
-              <h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
-                Players
-              </h2>
-            </div>
-          </div>
-
-          <div class="flex items-center p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-            <div>
-              <h4 class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
-                Show
-              </h4>      
-
-              <label class="flex items-center space-x-2">
-                <input type="checkbox" id = "settingDot" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Dot</span>
-              </label>
-
-              <div class = "ml-4">
-
-
-
-              <label class="flex items-center space-x-2 ">
-
-                <input type="checkbox" id="settingNickname" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class=" dark:text-white ml-4">Nickname</span>
-
-              </label>
-
-
-              <label class="flex items-center space-x-2">
-
-                <input type="checkbox" id="settingHealth" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Health</span>
-
-              </label>
-
-
-
-              <label class="flex items-center space-x-2">
-
-                <input type="checkbox" id="settingMounted" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Mounted</span>
-
-              </label>
-
-
-              <label class="flex items-center space-x-2">
-
-                <input type="checkbox" id ="settingItems" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Items</span>
-
-              </label>
-
-              <label class="flex items-center space-x-2">
-
-                <input type="checkbox" id="settingItemsDev"" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Items Dev</span>
-
-              </label>
-
-              <label class="flex items-center space-x-2">
-
-                <input type="checkbox" id="settingDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Distance</span>
-
-              </label>
-
-              <label class="flex items-center space-x-2">
-
-                <input type="checkbox" id="settingGuild" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Guild</span>
-
-              </label>
-
-              <label class="flex items-center space-x-2">
-                <input type="checkbox" id="settingSound" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                <span class="dark:text-white ml-4">Sound</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
+    <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div>
+        <h2 id="players-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+          Players
+        </h2>
       </div>
-      <script>
+    </div>
 
-           function returnLocalBool(item) {
-              if (localStorage.getItem(item) == "true") {
-                  return true;
-              }
-              else {
-                  return false;
-              }
+    <div class="flex items-center p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div>
+        <h4 id="show-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          Show
+        </h4>      
 
+        <!--
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id = "settingDot" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="dot-text" class="dark:text-white ml-4">ON/OFF</span>
+        </label>
+        -->
 
-          }
-          let settingDot = document.getElementById("settingDot");
-          let settingNickname = document.getElementById("settingNickname");
-          let settingHealth = document.getElementById("settingHealth");
-          let settingMounted = document.getElementById("settingMounted");
-          let settingItems = document.getElementById("settingItems");
-          let settingItemsDev = document.getElementById("settingItemsDev");
-          let settingDistance = document.getElementById("settingDistance");
-          let settingGuild = document.getElementById("settingGuild");
-          let settingSound = document.getElementById("settingSound");
-
-          settingDot.checked = returnLocalBool("settingDot");
-          settingNickname.checked = returnLocalBool("settingNickname");
-          settingHealth.checked = returnLocalBool("settingHealth");
-          settingMounted.checked = returnLocalBool("settingMounted");
-          settingItems.checked =returnLocalBool("settingItems");
-          settingItemsDev.checked = returnLocalBool("settingItemsDev");
-          settingDistance.checked = returnLocalBool("settingDistance");
-          settingGuild.checked = returnLocalBool("settingGuild");
-          settingSound.checked = returnLocalBool("settingSound");
-          settingDot.addEventListener("click", () => {
-              localStorage.setItem("settingDot", settingDot.checked);
-          });
-
-          settingNickname.addEventListener("click", () => {
-              localStorage.setItem("settingNickname", settingNickname.checked);
-          });
-
-          settingHealth.addEventListener("click", () => {
-              localStorage.setItem("settingHealth", settingHealth.checked);
-          });
-
-          settingMounted.addEventListener("click", () => {
-              localStorage.setItem("settingMounted", settingMounted.checked);
-          });
-
-          settingItems.addEventListener("click", () => {
-              localStorage.setItem("settingItems", settingItems.checked);
-          });
-
-          settingItemsDev.addEventListener("click", () => {
-              localStorage.setItem("settingItemsDev", settingItemsDev.checked);
-          });
-
-          settingDistance.addEventListener("click", () => {
-              localStorage.setItem("settingDistance", settingDistance.checked);
-          });
-          settingGuild.addEventListener("click", () => {
-              localStorage.setItem("settingGuild", settingGuild.checked);
-          });
-
-                settingSound.addEventListener("click", () => {
-              localStorage.setItem("settingSound", settingSound.checked);
-          });
+        <div class = "ml-4">
 
 
-      </script>
+          <!--
+        <label class="flex items-center space-x-2 ">
+
+          <input type="checkbox" id="settingNickname" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="name-text" class=" dark:text-white ml-4">Nickname</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="name-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows the name of the other player.
+            </span>
+          </span>
+
+        </label>
+
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingHealth" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="health-text" class="dark:text-white ml-4">Health</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="health-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows the health bar of the other player.
+            </span>
+          </span>
+
+        </label>
+
+
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingMounted" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="mounted-text" class="dark:text-white ml-4">Mounted</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="mounted-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows a green circle if the player is mounted and a red circle if the player is unmounted.
+            </span>
+          </span>
+
+        </label>
+      -->
+
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id ="settingItems" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="items-text" class="dark:text-white ml-4">Items</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="items-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows the equipment the other player is carrying.
+            </span>
+          </span>
+
+        </label>
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingItemsDev"" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="items-dev-text" class="dark:text-white ml-4">Items Dev</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="items-dev-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows the IDs of the player's items, mainly for development purposes.
+            </span>
+          </span>
+
+        </label>
+
+        <!--
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="distance-text" class="dark:text-white ml-4">Distance</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="distance-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows the distance between you and the other player.
+            </span>
+          </span>
+
+        </label>
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingGuild" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="guild-text" class="dark:text-white ml-4">Guild</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="guild-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows the guild name of the other player.
+            </span>
+          </span>
+
+        </label>
+      -->
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingFlash" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="flash-text" class="dark:text-white ml-4">Screen Flash</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="flash-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Shows a red flash when a player is detected.
+            </span>
+          </span>
+
+        </label>
+
+        <label class="flex items-center space-x-2">
+
+          <input type="checkbox" id="settingSound" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="sound-text" class="dark:text-white ml-4">Sound</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="sound-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Play a sound when a player is detected.
+            </span>
+          </span>
+
+        </label>
+      </div>
+    </div>
+  </div>
+  <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
+    <div>
+        <h4 id="types-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+            Types
+        </h4>
+        <label class="flex items-center">
+            <input type="checkbox" id="settingPassivePlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+            <span id="passive-text" class="dark:text-white ml-2">Passive Players</span>
+        </label>
+
+        <label class="flex items-center">
+            <input type="checkbox" id="settingFactionPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+            <span id="faction-text" class="dark:text-white ml-2">Faction Players</span>
+        </label>
+
+        <label class="flex items-center">
+          <input type="checkbox" id="settingDangerousPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span id="dangerous-text" class="dark:text-white ml-2">Dangerous Players</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 ml-2 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span id="dangerous-tooltip" class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+              Dangerous players (yellow-red-black).
+            </span>
+          </span>
+      </label>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+  function returnLocalBool(item)
+  {
+    return localStorage.getItem(item) == "true";
+  }
+
+  /*let settingDot = document.getElementById("settingDot");
+  let settingNickname = document.getElementById("settingNickname");
+  let settingHealth = document.getElementById("settingHealth");
+  let settingMounted = document.getElementById("settingMounted");*/
+  let settingItems = document.getElementById("settingItems");
+  let settingItemsDev = document.getElementById("settingItemsDev");
+  /*let settingDistance = document.getElementById("settingDistance");
+  let settingGuild = document.getElementById("settingGuild");*/
+  let settingSound = document.getElementById("settingSound");
+  let settingFlash = document.getElementById("settingFlash");
+
+  let settingPassivePlayers = document.getElementById("settingPassivePlayers");
+  let settingFactionPlayers = document.getElementById("settingFactionPlayers");
+  let settingDangerousPlayers = document.getElementById("settingDangerousPlayers");
+
+  /*settingDot.checked = returnLocalBool("settingDot");
+  settingNickname.checked = returnLocalBool("settingNickname");
+  settingHealth.checked = returnLocalBool("settingHealth");
+  settingMounted.checked = returnLocalBool("settingMounted");*/
+  settingItems.checked = returnLocalBool("settingItems");
+  settingItemsDev.checked = returnLocalBool("settingItemsDev");
+  /*settingDistance.checked = returnLocalBool("settingDistance");
+  settingGuild.checked = returnLocalBool("settingGuild");*/
+  settingSound.checked = returnLocalBool("settingSound");
+  settingFlash.checked = returnLocalBool("settingFlash");
+
+  settingPassivePlayers.checked = returnLocalBool("settingPassivePlayers");
+  settingFactionPlayers.checked = returnLocalBool("settingFactionPlayers");
+  settingDangerousPlayers.checked = returnLocalBool("settingDangerousPlayers");
+
+  /*settingDot.addEventListener("click", () => {
+      localStorage.setItem("settingDot", settingDot.checked);
+  });
+
+  settingNickname.addEventListener("click", () => {
+      localStorage.setItem("settingNickname", settingNickname.checked);
+  });
+
+  settingHealth.addEventListener("click", () => {
+      localStorage.setItem("settingHealth", settingHealth.checked);
+  });
+
+  settingMounted.addEventListener("click", () => {
+      localStorage.setItem("settingMounted", settingMounted.checked);
+  });*/
+
+  settingItems.addEventListener("click", () => {
+      localStorage.setItem("settingItems", settingItems.checked);
+  });
+
+  settingItemsDev.addEventListener("click", () => {
+      localStorage.setItem("settingItemsDev", settingItemsDev.checked);
+  });
+
+  /*settingDistance.addEventListener("click", () => {
+      localStorage.setItem("settingDistance", settingDistance.checked);
+  });
+  settingGuild.addEventListener("click", () => {
+      localStorage.setItem("settingGuild", settingGuild.checked);
+  });*/
+
+  settingSound.addEventListener("click", () => {
+    localStorage.setItem("settingSound", settingSound.checked);
+  });
+
+  settingFlash.addEventListener("click", () => {
+    localStorage.setItem("settingFlash", settingFlash.checked);
+  });
+
+
+  settingPassivePlayers.addEventListener("click", () => {
+    localStorage.setItem("settingPassivePlayers", settingPassivePlayers.checked)
+  });
+  settingFactionPlayers.addEventListener("click", () => {
+    localStorage.setItem("settingFactionPlayers", settingFactionPlayers.checked)
+  });
+  settingDangerousPlayers.addEventListener("click", () => {
+    localStorage.setItem("settingDangerousPlayers", settingDangerousPlayers.checked)
+  });
+
+  function SetLanguage(lang)
+  {
+    document.getElementById("players-text").textContent = lang['pvp']['players'];
+    document.getElementById("show-text").textContent = lang['pvp']['show'];
+    /*document.getElementById("dot-text").textContent = lang['pvp']['on-off'];
+    document.getElementById("name-text").textContent = lang['pvp']['nickname'];
+    document.getElementById("name-tooltip").textContent = lang['pvp']['nickname-tooltip'];
+    document.getElementById("health-text").textContent = lang['pvp']['health'];
+    document.getElementById("health-tooltip").textContent = lang['pvp']['health-tooltip'];
+    document.getElementById("mounted-text").textContent = lang['pvp']['mounted'];
+    document.getElementById("mounted-tooltip").textContent = lang['pvp']['mounted-tooltip'];*/
+    document.getElementById("items-text").textContent = lang['pvp']['items'];
+    document.getElementById("items-tooltip").textContent = lang['pvp']['items-tooltip'];
+    document.getElementById("items-dev-text").textContent = lang['pvp']['items-dev'];
+    document.getElementById("items-dev-tooltip").textContent = lang['pvp']['items-dev-tooltip'];
+    /*document.getElementById("distance-text").textContent = lang['pvp']['distance'];
+    document.getElementById("distance-tooltip").textContent = lang['pvp']['distance-tooltip'];
+    document.getElementById("guild-text").textContent = lang['pvp']['guild'];
+    document.getElementById("guild-tooltip").textContent = lang['pvp']['guild-tooltip'];*/
+    document.getElementById("flash-text").textContent = lang['pvp']['screenflash'];
+    document.getElementById("flash-tooltip").textContent = lang['pvp']['screenflash-tooltip'];
+    document.getElementById("sound-text").textContent = lang['pvp']['sound'];
+    document.getElementById("sound-tooltip").textContent = lang['pvp']['sound-tooltip'];
+    
+    document.getElementById("types-text").textContent = lang['pvp']['types'];
+    document.getElementById("passive-text").textContent = lang['pvp']['passive'];
+    document.getElementById("faction-text").textContent = lang['pvp']['faction'];
+    document.getElementById("dangerous-text").textContent = lang['pvp']['dangerous'];
+    document.getElementById("dangerous-tooltip").textContent = lang['pvp']['dangerous-tooltip'];
+  }
+</script>
+
+<style>
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+  }
+  .whitespace-nowrap {
+    white-space: nowrap;
+  }
+  .group .group-hover\:opacity-100 {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 1;
+  }
+  .relative.group .absolute {
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    transform: translateX(0.5rem) translateY(-50%);
+    pointer-events: none;
+  }
+</style>

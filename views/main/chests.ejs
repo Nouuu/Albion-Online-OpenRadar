@@ -2,7 +2,7 @@
 	<div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
 		<div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="chests-text" class="text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Chests
 				</h2>
 			</div>
@@ -10,32 +10,32 @@
 
 		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
 			<div>
-				<h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="chests-type-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Type
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestGreen" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Green</span>
+					<span id="green-text" class="dark:text-white ml-4">Green</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestBlue" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Blue</span>
+					<span id="blue-text" class="dark:text-white ml-4">Blue</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestPurple" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Purple</span>
+					<span id="purple-text" class="dark:text-white ml-4">Purple</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestYellow" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Yellow</span>
+					<span id="yellow-text" class="dark:text-white ml-4">Yellow</span>
 				</label>
 			</div>
 		</div>
 
 		<div class="mt-8 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="mists-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Mists
 				</h2>
 			</div>
@@ -43,21 +43,21 @@
 
 		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="mists-type-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Type
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistSolo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Solo</span>
+					<span id="mists-solo-text" class="dark:text-white ml-4">Solo</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistDuo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Duo</span>
+					<span id="mists-duo-text" class="dark:text-white ml-4">Duo</span>
 				</label>
 
 
-				<h2 class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="mists-enchant-text" class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Enchant
 				</h2>
 
@@ -88,14 +88,14 @@
 			<div>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingCage" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Show wisp cages</span>
+					<span id="wisp-cages-text" class="dark:text-white ml-4">Show wisp cages</span>
 				</label>
 			</div>
 		</div>
 
 		<div class="mt-8 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="dungeons-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Dungeons
 				</h2>
 			</div>
@@ -103,19 +103,19 @@
 
 		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="dungeons-type-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Type
 				</h2>
-				<label  id="disabled-checkbox" for="disabled-checkbox" class="flex items-center space-x-2">
-					<input  type="checkbox" id="settingDungeonSolo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Solo</span>
+				<label id="disabled-checkbox" for="disabled-checkbox" class="flex items-center space-x-2">
+					<input type="checkbox" id="settingDungeonSolo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span id="dungeons-solo-text" class="dark:text-white ml-4">Solo</span>
 				</label>
 				<label class="flex items-center space-x-2">
-					<input  type="checkbox" id="settingDungeonDuo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Group</span>
+					<input type="checkbox" id="settingDungeonDuo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span id="dungeons-group-text" class="dark:text-white ml-4">Group</span>
 				</label>
 
-				<h2 class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="dungeons-enchant-text" class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Enchant
 				</h2>
 				<div class="flex">
@@ -142,39 +142,17 @@
 					</label>
 				</div>
 
-				<h2 class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="other-text" class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Other
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingDungeonCorrupted" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Corrupted</span>
-				</label>
+					<span id="corrupted-text" class="dark:text-white ml-4">Corrupted</span>
+				</label> 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingDungeonHellgate" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Hellgate</span>
-				</label>
-
-
-			</div>
-		</div>
-		<div class="mt-8 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-			<div>
-				<h2 class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
-					FootTracks
-				</h2>
-			</div>
-		</div>
-		
-		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-			<div>
-				<label class="flex items-center space-x-2">
-					<input type="checkbox" id="settingFootTracksSolo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Show SOLO FootTracks</span>
-				</label>
-				<label class="flex items-center space-x-2">
-					<input type="checkbox" id="settingFootTracksGroup" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">Show GROUP FootTracks</span>
+					<span id="hellgate-text" class="dark:text-white ml-4">Hellgate</span>
 				</label>
 			</div>
 		</div>
@@ -182,190 +160,195 @@
 </div>
 
 <script>
+	function returnLocalBool(item)
+	{
+		return localStorage.getItem(item) == "true";
+	}
 
-				 function returnLocalBool(item) {
-				if (localStorage.getItem(item) == "true") {
-					return true;
-				}
-				else {
-					return false;
-				}
-
-
-			}
-			let settingChestGreen = document.getElementById("settingChestGreen");
-			let settingChestBlue = document.getElementById("settingChestBlue");
-			let settingChestPurple = document.getElementById("settingChestPurple");
-			let settingChestYellow = document.getElementById("settingChestYellow");
+	let settingChestGreen = document.getElementById("settingChestGreen");
+	let settingChestBlue = document.getElementById("settingChestBlue");
+	let settingChestPurple = document.getElementById("settingChestPurple");
+	let settingChestYellow = document.getElementById("settingChestYellow");
 
 
 
-			settingChestGreen.checked = returnLocalBool("settingChestGreen");
-			settingChestBlue.checked = returnLocalBool("settingChestBlue");
-			settingChestPurple.checked = returnLocalBool("settingChestPurple");
-			settingChestYellow.checked = returnLocalBool("settingChestYellow");
-	
+	settingChestGreen.checked = returnLocalBool("settingChestGreen");
+	settingChestBlue.checked = returnLocalBool("settingChestBlue");
+	settingChestPurple.checked = returnLocalBool("settingChestPurple");
+	settingChestYellow.checked = returnLocalBool("settingChestYellow");
 
-			settingChestGreen.addEventListener("click", () => {
-				localStorage.setItem("settingChestGreen", settingChestGreen.checked);
-			});
 
-			settingChestBlue.addEventListener("click", () => {
-				localStorage.setItem("settingChestBlue", settingChestBlue.checked);
-			});
+	settingChestGreen.addEventListener("click", () => {
+		localStorage.setItem("settingChestGreen", settingChestGreen.checked);
+	});
 
-			settingChestPurple.addEventListener("click", () => {
-				localStorage.setItem("settingChestPurple", settingChestPurple.checked);
-			});
+	settingChestBlue.addEventListener("click", () => {
+		localStorage.setItem("settingChestBlue", settingChestBlue.checked);
+	});
 
-			settingChestYellow.addEventListener("click", () => {
-				localStorage.setItem("settingChestYellow", settingChestYellow.checked);
-			});
+	settingChestPurple.addEventListener("click", () => {
+		localStorage.setItem("settingChestPurple", settingChestPurple.checked);
+	});
+
+	settingChestYellow.addEventListener("click", () => {
+		localStorage.setItem("settingChestYellow", settingChestYellow.checked);
+	});
 
 
 
 
-			let settingMistSolo = document.getElementById("settingMistSolo");
-			let settingMistDuo = document.getElementById("settingMistDuo");
+	let settingMistSolo = document.getElementById("settingMistSolo");
+	let settingMistDuo = document.getElementById("settingMistDuo");
 
-			let settingMistE0 = document.getElementById("settingMistE0");
-			let settingMistE1 = document.getElementById("settingMistE1");
-			let settingMistE2 = document.getElementById("settingMistE2");
-			let settingMistE3 = document.getElementById("settingMistE3");
-			let settingMistE4 = document.getElementById("settingMistE4");
+	let settingMistE0 = document.getElementById("settingMistE0");
+	let settingMistE1 = document.getElementById("settingMistE1");
+	let settingMistE2 = document.getElementById("settingMistE2");
+	let settingMistE3 = document.getElementById("settingMistE3");
+	let settingMistE4 = document.getElementById("settingMistE4");
 
-			let settingCage = document.getElementById("settingCage");
-			settingCage.checked = returnLocalBool("settingCage");
-			settingCage.addEventListener("click", () => {
-				localStorage.setItem("settingCage", settingCage.checked);
-			});
-
-
-			settingMistSolo.checked = returnLocalBool("settingMistSolo");
-			settingMistDuo.checked = returnLocalBool("settingMistDuo");
-
-			settingMistE0.checked = returnLocalBool("settingMistE0");
-			settingMistE1.checked = returnLocalBool("settingMistE1");
-			settingMistE2.checked = returnLocalBool("settingMistE2");
-			settingMistE3.checked = returnLocalBool("settingMistE3");
-			settingMistE4.checked = returnLocalBool("settingMistE4");
+	let settingCage = document.getElementById("settingCage");
+	settingCage.checked = returnLocalBool("settingCage");
+	settingCage.addEventListener("click", () => {
+		localStorage.setItem("settingCage", settingCage.checked);
+	});
 
 
+	settingMistSolo.checked = returnLocalBool("settingMistSolo");
+	settingMistDuo.checked = returnLocalBool("settingMistDuo");
 
-			settingMistSolo.addEventListener("click", () => {
-				localStorage.setItem("settingMistSolo", settingMistSolo.checked);
-			});
-
-			settingMistDuo.addEventListener("click", () => {
-				localStorage.setItem("settingMistDuo", settingMistDuo.checked);
-			});
-
-			settingMistE0.addEventListener("click", () => {
-				localStorage.setItem("settingMistE0", settingMistE0.checked);
-			});
-
-			settingMistE1.addEventListener("click", () => {
-				localStorage.setItem("settingMistE1", settingMistE1.checked);
-			});
+	settingMistE0.checked = returnLocalBool("settingMistE0");
+	settingMistE1.checked = returnLocalBool("settingMistE1");
+	settingMistE2.checked = returnLocalBool("settingMistE2");
+	settingMistE3.checked = returnLocalBool("settingMistE3");
+	settingMistE4.checked = returnLocalBool("settingMistE4");
 
 
-			settingMistE2.addEventListener("click", () => {
-				localStorage.setItem("settingMistE2", settingMistE2.checked);
-			});
 
-			settingMistE3.addEventListener("click", () => {
-				localStorage.setItem("settingMistE3", settingMistE3.checked);
-			});
+	settingMistSolo.addEventListener("click", () => {
+		localStorage.setItem("settingMistSolo", settingMistSolo.checked);
+	});
 
-			settingMistE4.addEventListener("click", () => {
-				localStorage.setItem("settingMistE4", settingMistE4.checked);
-			});
+	settingMistDuo.addEventListener("click", () => {
+		localStorage.setItem("settingMistDuo", settingMistDuo.checked);
+	});
+
+	settingMistE0.addEventListener("click", () => {
+		localStorage.setItem("settingMistE0", settingMistE0.checked);
+	});
+
+	settingMistE1.addEventListener("click", () => {
+		localStorage.setItem("settingMistE1", settingMistE1.checked);
+	});
+
+
+	settingMistE2.addEventListener("click", () => {
+		localStorage.setItem("settingMistE2", settingMistE2.checked);
+	});
+
+	settingMistE3.addEventListener("click", () => {
+		localStorage.setItem("settingMistE3", settingMistE3.checked);
+	});
+
+	settingMistE4.addEventListener("click", () => {
+		localStorage.setItem("settingMistE4", settingMistE4.checked);
+	});
 
 
 
 
 
 
-			let settingDungeonSolo = document.getElementById("settingDungeonSolo");
-			let settingDungeonDuo = document.getElementById("settingDungeonDuo");
-					
-			let settingDungeonE0 = document.getElementById("settingDungeonE0");
-			let settingDungeonE1 = document.getElementById("settingDungeonE1");
-			let settingDungeonE2 = document.getElementById("settingDungeonE2");
-			let settingDungeonE3 = document.getElementById("settingDungeonE3");
-			let settingDungeonE4 = document.getElementById("settingDungeonE4");
-
-			let settingDungeonCorrupted = document.getElementById("settingDungeonCorrupted");
-			let settingDungeonHellgate = document.getElementById("settingDungeonHellgate");
-
-
-			settingDungeonSolo.checked = returnLocalBool("settingDungeonSolo");
-			settingDungeonDuo.checked = returnLocalBool("settingDungeonDuo");
-
-			settingDungeonE0.checked = returnLocalBool("settingDungeonE0");
-			settingDungeonE1.checked = returnLocalBool("settingDungeonE1");
-			settingDungeonE2.checked = returnLocalBool("settingDungeonE2");
-			settingDungeonE3.checked = returnLocalBool("settingDungeonE3");
-			settingDungeonE4.checked = returnLocalBool("settingDungeonE4");
-
-			settingDungeonCorrupted.checked = returnLocalBool("settingDungeonCorrupted");
-			settingDungeonHellgate.checked = returnLocalBool("settingDungeonHellgate");
-
-
-
-
-			settingDungeonSolo.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonSolo", settingDungeonSolo.checked);
-			});
-
-			settingDungeonDuo.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonDuo", settingDungeonDuo.checked);
-			});
-
-
-			settingDungeonE0.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonE0", settingDungeonE0.checked);
-			});
-
-			settingDungeonE1.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonE1", settingDungeonE1.checked);
-			});
-
-			settingDungeonE2.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonE2", settingDungeonE2.checked);
-			});
-
-			settingDungeonE3.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonE3", settingDungeonE3.checked);
-			});
-
-			settingDungeonE4.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonE4", settingDungeonE4.checked);
-			});
-
-
-			settingDungeonCorrupted.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonCorrupted", settingDungeonCorrupted.checked);
-			});
-
-			settingDungeonHellgate.addEventListener("click", () => {
-				localStorage.setItem("settingDungeonHellgate", settingDungeonHellgate.checked);
-			});
-
+	let settingDungeonSolo = document.getElementById("settingDungeonSolo");
+	let settingDungeonDuo = document.getElementById("settingDungeonDuo");
 			
-			let settingFootTracksSolo = document.getElementById("settingFootTracksSolo");
-			let settingFootTracksGroup = document.getElementById("settingFootTracksGroup");
+	let settingDungeonE0 = document.getElementById("settingDungeonE0");
+	let settingDungeonE1 = document.getElementById("settingDungeonE1");
+	let settingDungeonE2 = document.getElementById("settingDungeonE2");
+	let settingDungeonE3 = document.getElementById("settingDungeonE3");
+	let settingDungeonE4 = document.getElementById("settingDungeonE4");
 
-			settingFootTracksSolo.checked = returnLocalBool("settingFootTracksSolo");
-			settingFootTracksGroup.checked = returnLocalBool("settingFootTracksGroup");
+	let settingDungeonCorrupted = document.getElementById("settingDungeonCorrupted");
+	let settingDungeonHellgate = document.getElementById("settingDungeonHellgate");
 
-			settingFootTracksSolo.addEventListener("click", () => {
-				localStorage.setItem("settingFootTracksSolo", settingFootTracksSolo.checked);
-			});
 
-			settingFootTracksGroup.addEventListener("click", () => {
-				localStorage.setItem("settingFootTracksGroup", settingFootTracksGroup.checked);
-			});
+	settingDungeonSolo.checked = returnLocalBool("settingDungeonSolo");
+	settingDungeonDuo.checked = returnLocalBool("settingDungeonDuo");
 
+	settingDungeonE0.checked = returnLocalBool("settingDungeonE0");
+	settingDungeonE1.checked = returnLocalBool("settingDungeonE1");
+	settingDungeonE2.checked = returnLocalBool("settingDungeonE2");
+	settingDungeonE3.checked = returnLocalBool("settingDungeonE3");
+	settingDungeonE4.checked = returnLocalBool("settingDungeonE4");
+
+	settingDungeonCorrupted.checked = returnLocalBool("settingDungeonCorrupted");
+	settingDungeonHellgate.checked = returnLocalBool("settingDungeonHellgate");
+
+
+
+
+	settingDungeonSolo.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonSolo", settingDungeonSolo.checked);
+	});
+
+	settingDungeonDuo.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonDuo", settingDungeonDuo.checked);
+	});
+
+
+	settingDungeonE0.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonE0", settingDungeonE0.checked);
+	});
+
+	settingDungeonE1.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonE1", settingDungeonE1.checked);
+	});
+
+	settingDungeonE2.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonE2", settingDungeonE2.checked);
+	});
+
+	settingDungeonE3.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonE3", settingDungeonE3.checked);
+	});
+
+	settingDungeonE4.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonE4", settingDungeonE4.checked);
+	});
+
+
+	settingDungeonCorrupted.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonCorrupted", settingDungeonCorrupted.checked);
+	});
+
+	settingDungeonHellgate.addEventListener("click", () => {
+		localStorage.setItem("settingDungeonHellgate", settingDungeonHellgate.checked);
+	});
+
+	function SetLanguage(lang)
+	{
+		document.getElementById("chests-text").textContent = lang['other']['chests'];
+		document.getElementById("chests-type-text").textContent = lang['other']['type'];
+		document.getElementById("green-text").textContent = lang['other']['green'];
+		document.getElementById("blue-text").textContent = lang['other']['blue'];
+		document.getElementById("purple-text").textContent = lang['other']['purple'];
+		document.getElementById("yellow-text").textContent = lang['other']['yellow'];
+
+		document.getElementById("mists-text").textContent = lang['other']['mists'];
+		document.getElementById("mists-type-text").textContent = lang['other']['type'];
+		document.getElementById("mists-solo-text").textContent = lang['other']['solo'];
+		document.getElementById("mists-duo-text").textContent = lang['other']['duo'];
+		document.getElementById("mists-enchant-text").textContent = lang['other']['enchant'];
+		document.getElementById("wisp-cages-text").textContent = lang['other']['wisp-cages'];
+
+		document.getElementById("dungeons-text").textContent = lang['other']['dungeons'];
+		document.getElementById("dungeons-type-text").textContent = lang['other']['type'];
+		document.getElementById("dungeons-solo-text").textContent = lang['other']['solo'];
+		document.getElementById("dungeons-group-text").textContent = lang['other']['group'];
+		document.getElementById("dungeons-enchant-text").textContent = lang['other']['enchant'];
+
+		document.getElementById("other-text").textContent = lang['other']['other'];
+		document.getElementById("corrupted-text").textContent = lang['other']['corrupted'];
+		document.getElementById("hellgate-text").textContent = lang['other']['hellgate'];
+	}
 
 </script>

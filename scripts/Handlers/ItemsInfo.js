@@ -56,4 +56,9 @@ class ItemsInfo{
             }
         }
     }
+
+    get(id)
+    {
+        return this.iteminfo[id];
+    }
 }

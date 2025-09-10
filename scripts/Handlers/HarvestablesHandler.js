@@ -150,6 +150,8 @@ class HarvestablesHandler
     // Good
     newHarvestableObject(id, Parameters) // Update
     {
+        console.log(Parameters);
+
         const type = Parameters[5];
         const tier = Parameters[7];
         const location = Parameters[8];
@@ -177,7 +179,11 @@ class HarvestablesHandler
     // Good
     newSimpleHarvestableObject(Parameters) // New
     {
-        const a0 = Parameters[0];
+        let a0 = Parameters[0]["data"];
+        if  (a0 == undefined)
+        {
+            a0 = Parameters[0];
+        }
 
         if (a0.length === 0) return;
 
@@ -236,11 +242,6 @@ class HarvestablesHandler
         }
     }
 
-    clear()
-    {
-        this.harvestableList = [];
-    }
-
     GetStringType(typeNumber)
     {
         if (typeNumber >= 0 && typeNumber <= 5)
@@ -251,11 +252,11 @@ class HarvestablesHandler
         {
             return HarvestableType.Rock;
         }
-        else if (typeNumber >= 11 && typeNumber <= 14)
+        else if (typeNumber >= 11 && typeNumber <= 15)
         {
             return HarvestableType.Fiber;
         }
-        else if (typeNumber >= 15 && typeNumber <= 22)
+        else if (typeNumber >= 16 && typeNumber <= 22)
         {
             return HarvestableType.Hide;
         }
@@ -264,5 +265,10 @@ class HarvestablesHandler
             return HarvestableType.Ore;
         }
         else return '';
+    }
+
+    Clear()
+    {
+        this.harvestableList = [];
     }
 }

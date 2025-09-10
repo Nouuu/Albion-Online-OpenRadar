@@ -1,0 +1,115 @@
+{
+    "pvp": {
+        "players": "Pemain",
+        "Show": "Tampilkan",
+        "on-off": "HIDUP/MATI",
+        "nickname": "Nama Panggilan",
+        "nickname-tooltip": "Menampilkan nama pemain lain.",
+        "health": "Kesehatan",
+        "health-tooltip": "Menampilkan bilah kesehatan pemain lain.",
+        "mounted": "Naik",
+        "mounted-tooltip": "Menampilkan lingkaran hijau jika pemain sedang naik dan lingkaran merah jika pemain tidak naik.",
+        "items": "Barang",
+        "items-tooltip": "Menampilkan perlengkapan yang dibawa pemain lain.",
+        "items-dev": "Pengembangan Barang",
+        "items-dev-tooltip": "Menampilkan ID barang pemain, terutama untuk tujuan pengembangan.",
+        "distance": "Jarak",
+        "distance-tooltip": "Menampilkan jarak antara Anda dan pemain lain.",
+        "guild": "Guild",
+        "guild-tooltip": "Menampilkan nama guild pemain lain.",
+        "screenflash": "Kilat Layar",
+        "screenflash-tooltip": "Menampilkan kilatan merah ketika pemain terdeteksi.",
+        "sound": "Suara",
+        "sound-tooltip": "Memainkan suara saat pemain terdeteksi.",
+
+        "types": "Jenis",
+        "passive": "Tampilkan Pemain Pasif",
+        "faction": "Tampilkan Pemain Faksi",
+        "dangerous": "Tampilkan Pemain Berbahaya",
+        "dangerous-tooltip": "Tampilkan pemain berbahaya (kuning, merah, hitam)."
+    },
+
+    "resources": {
+        "static": "Sumber Daya Statis",
+        "s-fiber": "Serat Statis",
+        "s-hide": "Kulit Statis",
+        "s-wood": "Kayu Statis",
+        "s-ore": "Bijih Statis",
+        "s-rock": "Batu Statis",
+
+        "living": "Sumber Daya Hidup",
+        "l-fiber": "Serat Hidup",
+        "l-hide": "Kulit Hidup",
+        "l-wood": "Kayu Hidup",
+        "l-ore": "Bijih Hidup",
+        "l-rock": "Batu Hidup",
+
+        "other": "Lainnya",
+        "fishing": "Tampilkan Kolam Memancing",
+
+        "debug": "Debug",
+        "size": "Tampilkan Ukuran",
+        "health": "Tampilkan Kesehatan",
+        "id": "Tampilkan ID"
+    },
+
+    "enemies": {
+        "enemies": "Musuh",
+        "classic-enemies": "Musuh Klasik",
+        "all": "Semua",
+        "normal": "Normal",
+        "medium": "Sedang",
+        "enchanted": "Terpesona",
+        "mini-boss": "Mini Boss",
+        "boss": "Boss",
+        "show-minimum": "Tampilkan musuh dengan hp minimum",
+        "minimum": "Hp minimum",
+        "unmanaged": "Tampilkan musuh dengan ID tidak terkelola?",
+
+        "mists": "Kabut",
+
+        "other": "Lainnya",
+        "avalone-drones": "Drone Avalone",
+        "event": "Musuh Acara",
+
+        "debug": "Debug",
+        "health": "Tampilkan HP",
+        "id": "Tampilkan ID"
+    },
+
+    "other": {
+        "chests": "Peti",
+        "type": "Jenis",
+        "green": "Hijau",
+        "blue": "Biru",
+        "purple": "Ungu",
+        "yellow": "Kuning",
+
+        "mists": "Kabut",
+        "solo": "Solo",
+        "duo": "Duo",
+        "enchant": "Memikat",
+        "wisp-cages": "Tampilkan Kandang Wisp",
+
+        "dungeons": "Ruang Bawah Tanah",
+        "group": "Grup",
+
+        "other": "Lainnya",
+        "corrupted": "Rusak",
+        "hellgate": "Gerbang Neraka"
+    },
+
+    "map": {
+        "map": "Peta",
+        "map-bg": "Tampilkan latar belakang peta"
+    },
+    "require-map": {
+        "require": "Memerlukan Paket Peta Sumber Daya",
+        "download": "- Unduh ",
+        "map-pack": "paket peta",
+        "extract": "- Ekstrak folder <span class=\"text-white\">Peta</span> ke > <span class=\"text-gray-200\"><i>./ZQRADAR/images/</i></span>",
+        "path": "- Anda harus memiliki jalur saat ini > <span class=\"text-gray-200\"><i>./ZQRADAR/images/Maps/**.png</i></span>",
+        "refresh": "- <span class=\"text-white font-semibold\">Segarkan </span>halaman ini",
+        "download2": "Unduh"
+    }
+}

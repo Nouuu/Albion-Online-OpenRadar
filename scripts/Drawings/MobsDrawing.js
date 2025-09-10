@@ -1,5 +1,3 @@
-import { EnemyType } from "../Handlers/EnemyType.js";
-
 export class MobsDrawing extends DrawingUtils
 {
     constructor(Settings)
@@ -120,7 +118,7 @@ export class MobsDrawing extends DrawingUtils
                 continue;
             }
 
-            if ((this.settings.mistSolo && mistsOne.type == 0) || (this.settings.mistDuo == true && mistsOne.type == 1))
+            if ((this.settings.mistSolo && mistsOne.type == 0) || (this.settings.mistDuo && mistsOne.type == 1))
             {
                 // Change image folder
                 const point = this.transformPoint(mistsOne.hX, mistsOne.hY);

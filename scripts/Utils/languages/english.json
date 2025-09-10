@@ -1,0 +1,115 @@
+{
+    "pvp": {
+        "players": "Players",
+        "Show": "Show",
+        "on-off": "ON/OFF",
+        "nickname": "Nickname",
+        "nickname-tooltip": "Shows the name of other players.",
+        "health": "Health",
+        "health-tooltip": "Shows the health bar of other players.",
+        "mounted": "Mounted",
+        "mounted-tooltip": "Shows a green circle if the player is mounted and a red circle if the player is unmonted.",
+        "items": "Items",
+        "items-tooltip": "Shows the equipment other players are carrying.",
+        "items-dev": "Items Dev",
+        "items-dev-tooltip": "Shows the IDs of the player's items, mainly for development purpose.",
+        "distance": "Distance",
+        "distance-tooltip": "Shows the distance between you and the other player.",
+        "guild": "Guild",
+        "guild-tooltip": "Shows the guild name of other players.",
+        "screenflash": "Screen Flash",
+        "screenflash-tooltip": "Shows a red flash when a player is detected.",
+        "sound": "Sound",
+        "sound-tooltip": "Play a sound when a player is detected.",
+
+        "types": "Types",
+        "passive": "Show Passive Players",
+        "faction": "Show Faction Players",
+        "dangerous": "Show Dangerous Players",
+        "dangerous-tooltip": "Show dangerous players (yellow, red, black)."
+    },
+
+    "resources": {
+        "static": "Static Resources",
+        "s-fiber": "Static Fiber",
+        "s-hide": "Static Hide",
+        "s-wood": "Static Wood",
+        "s-ore": "Static Ore",
+        "s-rock": "Static Rock",
+
+        "living": "Living Resources",
+        "l-fiber": "Living Fiber",
+        "l-hide": "Living Hide",
+        "l-wood": "Living Wood",
+        "l-ore": "Living Ore",
+        "l-rock": "Living Rock",
+
+        "other": "Other",
+        "fishing": "Show Fishing Pool",
+
+        "debug": "Debug",
+        "size": "Show Size",
+        "health": "Show Health",
+        "id": "Show ID"
+    },
+
+    "enemies": {
+        "enemies": "Enemies",
+        "classic-enemies": "Classic Enemies",
+        "all": "All",
+        "normal": "Normal",
+        "medium": "Medium",
+        "enchanted": "Enchanted",
+        "mini-boss": "Mini Boss",
+        "boss": "Boss",
+        "show-minimum": "Show enemies with minimum hp",
+        "minimum": "Minimum hp",
+        "unmanaged": "Show enemies with unmanaged ids?",
+        
+        "mists": "Mists",
+
+        "other": "Other",
+        "avalone-drones": "Avalone Drones",
+        "event": "Event Enemies",
+
+        "debug": "Debug",
+        "health": "Show HP",
+        "id": "Show ID"
+    },
+
+    "other": {
+        "chests": "Chests",
+        "type": "Type",
+        "green": "Green",
+        "blue": "Blue",
+        "purple": "Purple",
+        "yellow": "Yellow",
+
+        "mists": "Mists",
+        "solo": "Solo",
+        "duo": "Duo",
+        "enchant": "Enchant",
+        "wisp-cages": "Show Wisp Cages",
+
+        "dungeons": "Dungeons",
+        "group": "Group",
+
+        "other": "Other",
+        "corrupted": "Corrupted",
+        "hellgate": "Hellgate"
+    },
+
+    "map": {
+        "map": "Map",
+        "map-bg": "Show map background"
+    },
+    "require-map": {
+        "require": "Require Ressource Map Pack",
+        "download": "- Download the ",
+        "map-pack": "map pack",
+        "extract": "- Extract the <span class=\"text-white\">Maps</span> folder into > <span class=\"text-gray-200\"><i>./ZQRADAR/images/</i></span>",
+        "path": "- You should now have the current path > <span class=\"text-gray-200\"><i>./ZQRADAR/images/Maps/**.png</i></span>",
+        "refresh": "- <span class=\"text-white font-semibold\">Refresh </span>this page",
+        "download2": "Download"
+    }
+}
