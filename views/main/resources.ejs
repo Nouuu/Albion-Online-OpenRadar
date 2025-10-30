@@ -863,6 +863,11 @@
                     <input type="checkbox" id="settingLogLivingResources" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span class="dark:text-white ml-2">🔍 Log Living Resources to Console</span>
                 </label>
+                <!-- Checkbox pour basculer le format d'affichage (JSON vs Human) -->
+                <label class="flex items-center" style="margin-top:6px;">
+                    <input type="checkbox" id="settingLogLivingHuman" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span class="dark:text-white ml-2">Afficher en lecture humaine (pas de JSON)</span>
+                </label>
 			</div>
 		</div>
 
@@ -1864,6 +1869,16 @@
         } else {
             console.log("🔍 Living Resources Logging DISABLED");
         }
+    });
+
+    // Toggle human-readable mode for living logs (exclusive: human OR json)
+    let settingLogLivingHuman = document.getElementById("settingLogLivingHuman");
+    // Default to false if not set
+    settingLogLivingHuman.checked = returnLocalBool("settingLogLivingHuman");
+    settingLogLivingHuman.addEventListener("click", () => {
+        localStorage.setItem("settingLogLivingHuman", settingLogLivingHuman.checked);
+        if (settingLogLivingHuman.checked) console.log("Logs living: HUMAN (NDJSON désactivé pour ces events)");
+        else console.log("Logs living: JSON (NDJSON activé)");
     });
 	//#endregion
 

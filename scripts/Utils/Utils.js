@@ -1,4 +1,3 @@
-
 import { PlayersDrawing } from '../Drawings/PlayersDrawing.js';
 import { HarvestablesDrawing } from '../Drawings/HarvestablesDrawing.js';
 import { MobsDrawing } from '../Drawings/MobsDrawing.js';
@@ -53,6 +52,12 @@ const mapsDrawing = new MapDrawing(settings);
 const chestsHandler = new ChestsHandler();
 const mobsHandler = new MobsHandler(settings);
 mobsHandler.updateMobInfo(mobsInfo.moblist);
+
+// existing logEnemiesList button stays the same
+window.addEventListener('load', () => {
+    const logEnemiesList = document.getElementById('logEnemiesList');
+    if (logEnemiesList) logEnemiesList.addEventListener('click', () => console.log(mobsHandler.getMobList()));
+});
 
 
 const harvestablesHandler = new HarvestablesHandler(settings, mobsHandler); // 🔗 Pass MobsHandler reference

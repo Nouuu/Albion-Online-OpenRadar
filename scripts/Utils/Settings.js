@@ -1,4 +1,3 @@
-
 export class Settings
 {
     constructor()
@@ -141,6 +140,9 @@ export class Settings
         this.livingResourcesHP = false;
         this.livingResourcesID = false;
         this.logLivingResources = false;
+        this.logLivingHuman = false; // when true, pretty human logs only (no NDJSON for living resources)
+        // logFormat: 'json' | 'human' — controls how logs are pretty-printed in console
+        this.logFormat = localStorage.getItem('logFormat') || 'human';
         //#endregion
         this.resourceSize = false;
 
@@ -432,6 +434,7 @@ export class Settings
         this.livingResourcesHP = this.returnLocalBool("settingLivingResourcesHP");
         this.livingResourcesID = this.returnLocalBool("settingLivingResourcesID");
         this.logLivingResources = this.returnLocalBool("settingLogLivingResources");
+        this.logLivingHuman = this.returnLocalBool("settingLogLivingHuman");
         this.resourceSize = this.returnLocalBool("settingRawSize");
         this.showFish = this.returnLocalBool("settingFishing");
         //#endregion
@@ -498,5 +501,9 @@ export class Settings
         //#endregion
 
         this.ignoreList = JSON.parse(localStorage.getItem("ignoreList")) || [];
+    }
+
+    isHumanLogFormat() {
+        return this.logFormat === 'human';
     }
 }
