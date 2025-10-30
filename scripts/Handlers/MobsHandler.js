@@ -68,9 +68,95 @@ class MobsHandler
 
         this.harvestablesNotGood = [];
 
-        const logEnemiesList = document.getElementById("logEnemiesList");
-        if (logEnemiesList)
-            logEnemiesList.addEventListener("click", () => console.log(this.mobsList));
+        // 🔍 Enhanced logging tracking
+        this.detectedTypeIDs = new Set(); // Track unique TypeIDs
+        this.loggingStartTime = null;
+
+        // 🔗 Cross-reference with HarvestablesHandler
+        this.staticResourceTypeIDs = new Map(); // TypeID → {type: 'Fiber'|'Hide'|'Wood'|'Ore'|'Rock', tier: number}
+
+        // Only attempt DOM wiring if running in a browser environment
+        if (typeof document !== 'undefined') {
+            const logEnemiesList = document.getElementById("logEnemiesList");
+            if (logEnemiesList)
+                logEnemiesList.addEventListener("click", () => console.log(this.mobsList));
+        }
+    }
+
+    // New helper: normalize numeric values coming from parameters
+    normalizeNumber(value, defaultValue = null) {
+        if (value === undefined || value === null) return defaultValue;
+        const n = Number(value);
+        if (Number.isFinite(n)) return n;
+        return defaultValue;
+    }
+
+    // New helper: structured NDJSON logger for machine parsing
+    structuredLog(event, payload) {
+        const record = Object.assign({
+            timestamp: new Date().toISOString(),
+            module: 'MobsHandler',
+            event: event
+        }, payload);
+
+        try {
+            console.log(JSON.stringify(record)); // NDJSON line
+        }
+        catch (err) {
+            // Fallback readable log if stringify fails
+            console.log(record);
+        }
+
+        // Optionally emit human readable short lines for known living resources
+        if (this.settings && this.settings.humanReadableLivingResources && payload && payload.classification && payload.classification.startsWith('LIVING')) {
+            console.log(`${payload.emoji || '🌿'} ${payload.classification} ${payload.knownName ? `(${payload.knownName} T${payload.knownTier})` : ''} @ (${payload.posX?.toFixed(2)}, ${payload.posY?.toFixed(2)})`);
+        }
+    }
+
+    // New helper: decide if we should emit a log line (filter enemy spam)
+    shouldLogCreature(classification, staticInfo, isLikelyLivingResource, settings) {
+        // Always log living resources or cross-referenced types
+        if (classification && classification.startsWith('LIVING')) return true;
+        if (staticInfo) return true;
+
+        // If user asked to see unmanaged enemies explicitly, allow it
+        if (settings && settings.showUnmanagedEnemies) return true;
+
+        // Otherwise, skip logging plain ENEMY to reduce spam
+        if (classification === 'ENEMY') return false;
+
+        // Default: log (unknowns) only if verbose/DEBUG mode
+        return (settings && settings.logVerbose);
+    }
+
+    // 🔗 Called by HarvestablesHandler to register static resource TypeIDs
+    registerStaticResourceTypeID(typeId, typeNumber, tier)
+    {
+        const resourceType = this.getResourceTypeFromNumber(typeNumber);
+
+        if (resourceType && !this.staticResourceTypeIDs.has(typeId)) {
+            this.staticResourceTypeIDs.set(typeId, { type: resourceType, tier: tier });
+
+            if (this.settings.logLivingResources) {
+                // keep a structured registration log
+                this.structuredLog('CROSS_REFERENCE_REGISTERED', {
+                    typeId: typeId,
+                    staticType: resourceType,
+                    staticTier: tier
+                });
+            }
+        }
+    }
+
+    // Convert HarvestablesHandler type number to resource type
+    getResourceTypeFromNumber(typeNumber)
+    {
+        if (typeNumber >= 0 && typeNumber <= 5) return 'Wood';
+        else if (typeNumber >= 6 && typeNumber <= 10) return 'Rock';
+        else if (typeNumber >= 11 && typeNumber <= 15) return 'Fiber';
+        else if (typeNumber >= 16 && typeNumber <= 22) return 'Hide';
+        else if (typeNumber >= 23 && typeNumber <= 27) return 'Ore';
+        else return null;
     }
 
     updateMobInfo(newData)
@@ -80,19 +166,19 @@ class MobsHandler
 
     NewMobEvent(parameters)
     {
-        console.log(parameters)
+        // Removed raw parameters dump to avoid noisy truncated objects
 
-        const id = parseInt(parameters[0]); // entity id
-        let typeId = parseInt(parameters[1]); // real type id
+        const id = this.normalizeNumber(parameters[0], 0); // entity id
+        let typeId = this.normalizeNumber(parameters[1], 0); // real type id
 
-        const loc = parameters[7];
-        let posX = loc[0];
-        let posY = loc[1];
+        const loc = parameters[7] || [0,0];
+        let posX = this.normalizeNumber(loc[0], 0);
+        let posY = this.normalizeNumber(loc[1], 0);
 
         let exp = 0
         try
         {
-            exp = parseFloat(parameters[13]);
+            exp = this.normalizeNumber(parameters[13], 0);
         }
         catch (error)
         {
@@ -102,39 +188,16 @@ class MobsHandler
         let name = null;
         try
         {
-            name = parameters[32];
+            name = parameters[32] || parameters[31] || null;
         }
         catch (error)
         {
-            try
-            {
-                name = parameters[31];
-            }
-            catch (error2)
-            {
-                name = null;
-            }
+            name = null;
         }
 
-        let enchant = 0;
-        try
-        {
-            enchant = parameters[33];
-        }
-        catch (error)
-        {
-            enchant = 0;
-        }
+        let enchant = this.normalizeNumber(parameters[33], 0);
 
-        let rarity = 1;
-        try
-        {
-            rarity = parseInt(parameters[19]);
-        }
-        catch (error)
-        {
-            rarity = 1;
-        }
+        let rarity = this.normalizeNumber(parameters[19], null);
 
         if (name != null)
         {
@@ -157,61 +220,202 @@ class MobsHandler
 
         const h = new Mob(id, typeId, posX, posY, health, enchant, rarity);
 
-        // TODO
-        // List of enemies
-        if (this.mobinfo[typeId] != null) 
+        // Prepare normalized values
+        const normHealth = this.normalizeNumber(health, 0);
+        const normEnchant = this.normalizeNumber(enchant, 0);
+        const normRarity = this.normalizeNumber(rarity, null);
+
+        // Initialize logging session if needed
+        if (!this.loggingStartTime) {
+            this.loggingStartTime = new Date();
+        }
+
+        // Track unique TypeIDs
+        if (!this.detectedTypeIDs.has(typeId)) {
+            this.detectedTypeIDs.add(typeId);
+        }
+
+        // Collect candidate TypeIDs from other parameter positions to help detect mis-indexed events
+        const candidateIndices = [1,6,9,13,17,22,30,252];
+        const candidateTypeIds = [];
+        try {
+            if (parameters) {
+                candidateIndices.forEach(idx => {
+                    const v = parameters[idx];
+                    const n = this.normalizeNumber(v, null);
+                    if (n !== null && n !== typeId) candidateTypeIds.push({ idx, value: n });
+                });
+            }
+        } catch (e) {
+            // ignore
+        }
+
+        // Try to resolve a better TypeID: prefer candidates that map to static resources or known living mobinfo
+        let resolvedTypeId = typeId;
+        let resolvedBy = 'reported';
+
+        const isLivingMobInfo = (info) => {
+            if (!info) return false;
+            try { return info[1] === EnemyType.LivingHarvestable || info[1] === EnemyType.LivingSkinnable; } catch (e) { return false; }
+        };
+
+        // If reported typeId has no static or known info, search candidates
+        const reportedStatic = this.staticResourceTypeIDs.get(typeId);
+        const reportedKnown = this.mobinfo[typeId];
+
+        if (!reportedStatic && !isLivingMobInfo(reportedKnown) && candidateTypeIds.length > 0) {
+            for (const c of candidateTypeIds) {
+                const cand = c.value;
+                if (this.staticResourceTypeIDs.has(cand)) {
+                    resolvedTypeId = cand; resolvedBy = `candidate_idx_${c.idx}`; break;
+                }
+                const k = this.mobinfo[cand];
+                if (isLivingMobInfo(k)) { resolvedTypeId = cand; resolvedBy = `candidate_idx_${c.idx}`; break; }
+            }
+
+            // Informative SUSPECT_TYPEID log when we replaced the id
+            if (resolvedTypeId !== typeId && this.settings && this.settings.debugTypeIdMapping) {
+                this.structuredLog('SUSPECT_TYPEID_RESOLVED', {
+                    entityId: id,
+                    reportedTypeId: typeId,
+                    resolvedTypeId: resolvedTypeId,
+                    resolvedBy: resolvedBy,
+                    candidates: candidateTypeIds
+                });
+            }
+            else if (this.settings && this.settings.debugTypeIdMapping) {
+                // If not resolved, still emit SUSPECT_TYPEID for inspection
+                this.structuredLog('SUSPECT_TYPEID', {
+                    entityId: id,
+                    reportedTypeId: typeId,
+                    classificationGuessed: null,
+                    candidates: candidateTypeIds,
+                    paramCount: parameters ? Object.keys(parameters).length : 0
+                });
+            }
+        }
+
+        // After resolution, fetch staticInfo/knownInfo for resolvedTypeId
+        const staticInfoResolved = this.staticResourceTypeIDs.get(resolvedTypeId);
+        const knownInfoResolved = this.mobinfo[resolvedTypeId];
+
+        // 🔍 Improved classification using resolved info + heuristics
+        const resolvedKnownInfo = knownInfoResolved || reportedKnown;
+        const resolvedStaticInfo = staticInfoResolved || reportedStatic;
+
+        let creatureType = 'UNKNOWN';
+        let emoji = '❓';
+
+        // If we have a registered static resource for this typeId -> trust it
+        if (resolvedStaticInfo) {
+            creatureType = `LIVING_${resolvedStaticInfo.type.toUpperCase()}`;
+            switch(resolvedStaticInfo.type) {
+                case 'Fiber': emoji = '🌿'; break;
+                case 'Wood': emoji = '🪵'; break;
+                case 'Hide': emoji = '🐾'; break;
+                case 'Ore': emoji = '⛏️'; break;
+                case 'Rock': emoji = '🪨'; break;
+            }
+        }
+        // Else if we know the mob in mobinfo, use that
+        else if (resolvedKnownInfo) {
+            const kt = resolvedKnownInfo[1];
+            if (kt === EnemyType.LivingHarvestable) { creatureType = 'LIVING_RESOURCE'; emoji = '🌿'; }
+            else if (kt === EnemyType.LivingSkinnable) { creatureType = 'LIVING_HIDE'; emoji = '🐾'; }
+            else if (kt >= EnemyType.Enemy && kt <= EnemyType.Boss) { creatureType = 'ENEMY'; emoji = '⚔️'; }
+            else creatureType = 'UNKNOWN';
+        }
+        else {
+            // Heuristics fallback using resolvedTypeId
+            const isLikelyLivingResource = (resolvedTypeId < 600 && normHealth >= 20 && normHealth <= 2000 && (normRarity === null || (normRarity >= 70 && normRarity <= 150)));
+            const isLikelyEnemy = (resolvedTypeId >= 1500 || (normRarity !== null && normRarity > 150));
+
+            if (isLikelyLivingResource) { creatureType = 'LIVING_RESOURCE'; emoji = '🌿'; }
+            else if (isLikelyEnemy) { creatureType = 'ENEMY'; emoji = '⚔️'; }
+            else { creatureType = 'UNKNOWN'; }
+        }
+
+        // Decide whether to log this event (reduce enemy spam)
+        const shouldLog = this.shouldLogCreature(creatureType, resolvedStaticInfo, (creatureType.startsWith('LIVING') || creatureType === 'LIVING_RESOURCE'), this.settings);
+
+        if (shouldLog && this.settings && this.settings.logLivingResources) {
+            // Build structured payload
+            const payload = {
+                entityId: id,
+                reportedTypeId: typeId,
+                resolvedTypeId: resolvedTypeId,
+                resolvedBy: resolvedBy,
+                classification: creatureType,
+                knownInfo: resolvedKnownInfo || null,
+                staticInfo: resolvedStaticInfo || null,
+                health: normHealth,
+                enchant: normEnchant,
+                rarity: normRarity,
+                posX: Number(posX),
+                posY: Number(posY),
+                emoji: emoji
+            };
+
+            // Optionally include raw parameters only in debug
+            if (this.settings.logRawParams) payload.rawParameters = parameters;
+
+            this.structuredLog('SPAWN', payload);
+        }
+
+        // Process known mobinfo to decide if we keep or reject the mob for harvesting
+        if (this.mobinfo[resolvedTypeId] != null)
         {
-            const mobsInfo = this.mobinfo[typeId];
+            const mobsInfo = this.mobinfo[resolvedTypeId];
 
             h.tier = mobsInfo[0];
             h.type = mobsInfo[1];
             h.name = mobsInfo[2];
 
+            // Keep previous human-readable detail only for known living resources if requested
+            if (this.settings.logLivingResources && this.settings.humanReadableLivingResources) {
+                if (h.type == EnemyType.LivingSkinnable || h.type == EnemyType.LivingHarvestable) {
+                    const typeLabel = h.type == EnemyType.LivingSkinnable ? "LivingSkinnable" : "LivingHarvestable";
+                    console.log(`🔍 LIVING RESOURCE FOUND (KNOWN): ${typeLabel} ${h.name} T${h.tier} - Health:${normHealth} Enchant:${normEnchant}`);
+                }
+            }
+
+            if (this.settings.logLivingResources) {
+                // minimal separator only when human readable is enabled
+                if (this.settings.humanReadableLivingResources) console.log("============================");
+            }
+
             if (h.type == EnemyType.LivingSkinnable)
             {
-                /* 
-                   If animal is enchanted, it'll probably never work and jump into this return
-                   Because it's sending an event with normal animal with tier, ect
-                   And after send another event to say, this animal is enchant Y
-                   And it's the same with the other living harvestables
-                   But keep that in case it changes
-                */
-                   //console.log(parameters);
-                
-                if (!this.settings.harvestingLivingHide[`e${enchant}`][h.tier-1])
+                if (!this.settings.harvestingLivingHide[`e${normEnchant}`][h.tier-1])
                 {
                     this.harvestablesNotGood.push(h);
                     return;
                 }
 
-                
             }
             else if (h.type == EnemyType.LivingHarvestable)
             {
-                /* 
-                   Same as animals comment before
-                */
                 let iG = true;
 
                 switch (h.name) {
                     case "fiber":
-                        if (!this.settings.harvestingLivingFiber[`e${enchant}`][h.tier-1]) iG = false;
+                        if (!this.settings.harvestingLivingFiber[`e${normEnchant}`][h.tier-1]) iG = false;
                         break;
 
                     case "hide":
-                        if (!this.settings.harvestingLivingHide[`e${enchant}`][h.tier-1]) iG = false;
+                        if (!this.settings.harvestingLivingHide[`e${normEnchant}`][h.tier-1]) iG = false;
                         break;
 
                     case "Logs":
-                        if (!this.settings.harvestingLivingWood[`e${enchant}`][h.tier-1]) iG = false;
+                        if (!this.settings.harvestingLivingWood[`e${normEnchant}`][h.tier-1]) iG = false;
                         break;
 
                     case "ore":
-                        if (!this.settings.harvestingLivingOre[`e${enchant}`][h.tier-1]) iG = false;
+                        if (!this.settings.harvestingLivingOre[`e${normEnchant}`][h.tier-1]) iG = false;
                         break;
                     
                     case "rock":
-                        if (!this.settings.harvestingLivingRock[`e${enchant}`][h.tier-1]) iG = false;
+                        if (!this.settings.harvestingLivingRock[`e${normEnchant}`][h.tier-1]) iG = false;
                         break;
                 
                     default:
@@ -429,4 +633,9 @@ class MobsHandler
         this.mistList = [];
         this.harvestablesNotGood = [];
     }
+}
+
+// Exports for Node.js testing (safe for browser when module is undefined)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MobsHandler;
 }

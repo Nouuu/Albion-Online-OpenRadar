@@ -55,7 +55,7 @@ const mobsHandler = new MobsHandler(settings);
 mobsHandler.updateMobInfo(mobsInfo.moblist);
 
 
-const harvestablesHandler = new HarvestablesHandler(settings);
+const harvestablesHandler = new HarvestablesHandler(settings, mobsHandler); // 🔗 Pass MobsHandler reference
 const playersHandler = new PlayersHandler(settings);
 
 const wispCageHandler = new WispCageHandler(settings);
@@ -271,7 +271,7 @@ function onRequest(Parameters)
     {
         lpX = Parameters[1][0];
         lpY = Parameters[1][1];
-        console.log(lpX)
+        // console.log(lpX)
     }
 }
 

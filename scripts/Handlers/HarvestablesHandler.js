@@ -1,4 +1,4 @@
-﻿const HarvestableType = 
+const HarvestableType = 
 {
     Fiber: 'Fiber',
     Hide: 'Hide',
@@ -31,14 +31,20 @@ class Harvestable
 
 class HarvestablesHandler
 {
-    constructor(settings)
+    constructor(settings, mobsHandler = null)
     {
         this.harvestableList = [];
         this.settings = settings;
+        this.mobsHandler = mobsHandler; // 🔗 Reference to MobsHandler for cross-referencing
     }
 
-    addHarvestable(id, type, tier, posX, posY, charges, size)
+    addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
+        // 🔗 Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
+        if (this.mobsHandler && mobileTypeId !== null) {
+            this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
+        }
+
         switch (this.GetStringType(type))
         {
             case HarvestableType.Fiber:
@@ -65,7 +71,6 @@ class HarvestablesHandler
                 return;
         }
 
-        
         var harvestable = this.harvestableList.find((item) => item.id === id);
 
         if (!harvestable)
@@ -73,15 +78,20 @@ class HarvestablesHandler
             const h = new Harvestable(id, type, tier, posX, posY, charges, size);
             this.harvestableList.push(h);
             //console.log("New Harvestable: " + h.toString());
-        } 
+        }
         else // update
         {
             harvestable.setCharges(charges);
         }
     }
 
-    UpdateHarvestable(id, type, tier, posX, posY, charges, size)
+    UpdateHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
+        // 🔗 Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
+        if (this.mobsHandler && mobileTypeId !== null) {
+            this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
+        }
+
         switch (this.GetStringType(type))
         {
             case HarvestableType.Fiber:
@@ -112,7 +122,7 @@ class HarvestablesHandler
 
         if (!harvestable)
         {
-            this.addHarvestable(id, type, tier, posX, posY, charges, size);
+            this.addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId);
             return;
         }
 
@@ -152,14 +162,15 @@ class HarvestablesHandler
     {
         console.log(Parameters);
 
-        const type = Parameters[5];
+        const type = Parameters[5];  // typeNumber (0-27)
+        const mobileTypeId = Parameters[6];  // 🔗 Mobile TypeID (421, 422, 527, etc.)
         const tier = Parameters[7];
         const location = Parameters[8];
 
         let enchant = Parameters[11] === undefined ? 0 : Parameters[11];
         let size = Parameters[10] === undefined ? 0 : Parameters[10];
 
-        this.UpdateHarvestable(id, type, tier, location[0], location[1], enchant, size);
+        this.UpdateHarvestable(id, type, tier, location[0], location[1], enchant, size, mobileTypeId);
     }
 
     base64ToArrayBuffer(base64)

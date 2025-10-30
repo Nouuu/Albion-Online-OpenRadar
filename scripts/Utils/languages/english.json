@@ -50,7 +50,8 @@
         "debug": "Debug",
         "size": "Show Size",
         "health": "Show Health",
-        "id": "Show ID"
+        "id": "Show ID",
+        "log-living-resources": "Log Living Resources Creatures"
     },
 
     "enemies": {
@@ -65,7 +66,7 @@
         "show-minimum": "Show enemies with minimum hp",
         "minimum": "Minimum hp",
         "unmanaged": "Show enemies with unmanaged ids?",
-        
+
         "mists": "Mists",
 
         "other": "Other",

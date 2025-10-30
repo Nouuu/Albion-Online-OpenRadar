@@ -140,6 +140,7 @@ export class Settings
 
         this.livingResourcesHP = false;
         this.livingResourcesID = false;
+        this.logLivingResources = false;
         //#endregion
         this.resourceSize = false;
 
@@ -430,6 +431,7 @@ export class Settings
 
         this.livingResourcesHP = this.returnLocalBool("settingLivingResourcesHP");
         this.livingResourcesID = this.returnLocalBool("settingLivingResourcesID");
+        this.logLivingResources = this.returnLocalBool("settingLogLivingResources");
         this.resourceSize = this.returnLocalBool("settingRawSize");
         this.showFish = this.returnLocalBool("settingFishing");
         //#endregion

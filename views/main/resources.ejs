@@ -858,6 +858,11 @@
                     <input type="checkbox" id="settingLivingResourcesID" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span id="id-text" class="dark:text-white ml-2">Show ID</span>
                 </label>
+
+                <label class="flex items-center">
+                    <input type="checkbox" id="settingLogLivingResources" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span class="dark:text-white ml-2">🔍 Log Living Resources to Console</span>
+                </label>
 			</div>
 		</div>
 
@@ -1848,6 +1853,18 @@
 	let settingLivingResourcesID = document.getElementById("settingLivingResourcesID");
 	settingLivingResourcesID.checked = returnLocalBool("settingLivingResourcesID");
 	settingLivingResourcesID.addEventListener("click", () => {localStorage.setItem("settingLivingResourcesID", settingLivingResourcesID.checked);});
+
+    let settingLogLivingResources = document.getElementById("settingLogLivingResources");
+    settingLogLivingResources.checked = returnLocalBool("settingLogLivingResources");
+    settingLogLivingResources.addEventListener("click", () => {
+        localStorage.setItem("settingLogLivingResources", settingLogLivingResources.checked);
+        if (settingLogLivingResources.checked) {
+            console.log("🔍 Living Resources Logging ENABLED");
+            console.log("📋 CSV Header: Timestamp,TypeID,Tier,Name,Type,Enchant,Health,State");
+        } else {
+            console.log("🔍 Living Resources Logging DISABLED");
+        }
+    });
 	//#endregion
 
 	function SetLanguage(lang)
