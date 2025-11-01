@@ -1,0 +1,18 @@
+[
+  {
+    "typeId": 530,
+    "tier": 4,
+    "ours": "Fiber",
+    "game": "Hide",
+    "typeNumber": 16,
+    "reason": "Override intentionnel (bug serveur Albion)"
+  },
+  {
+    "typeId": 528,
+    "tier": 3,
+    "ours": "Fiber",
+    "game": "Hide",
+    "typeNumber": 16,
+    "reason": "Override intentionnel (bug serveur Albion)"
+  }
+]

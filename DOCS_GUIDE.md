@@ -22,7 +22,9 @@ Ce projet contient 4 fichiers de documentation :
 **Pour**: Contexte IA  
 **Contenu**: Notes de développement avec Claude AI (historique)
 
-
+### 🛠️ [tools/](tools/)
+**Pour**: Développeurs  
+**Contenu**: Scripts d'analyse TypeID, vérification logs, outils de diagnostic
 
 ---
 
@@ -37,6 +39,8 @@ Ce projet contient 4 fichiers de documentation :
 | Architecture du code             | DEV_NOTES.md        |
 | Bugs connus                      | DEV_NOTES.md        |
 | TypeID mappings                  | DEV_NOTES.md        |
+| **Analyse TypeID / Logs**        | **tools/**          |
+| Scripts de vérification          | tools/              |
 | Changelog                        | DEV_NOTES.md        |
 | Historique développement IA      | CLAUDE.md           |
 
