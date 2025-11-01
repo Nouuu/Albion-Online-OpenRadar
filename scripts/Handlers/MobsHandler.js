@@ -68,9 +68,6 @@ class MobsHandler {
         this._registrationLogState = new Map();
         this._lastHumanLog = new Map();
 
-        // 🎓 Auto-learning: Track recent kills for correlation with harvestables
-        this._recentKills = new Map(); // entityId → { typeId, timestamp, posX, posY }
-        this._killTimeout = 10000; // 10 seconds to correlate
 
         this.loadCachedTypeIDs();
     }
@@ -107,68 +104,11 @@ class MobsHandler {
         console.log(`[LIVING_CSV] ${timestamp},${typeId},${tier || 0},${name || 'unknown'},${typeLabel},${enchant},${health},${isAlive},${id}`);
     }
 
-    // 🎓 Track killed living resource for auto-learning
-    trackKilledLivingResource(entityId, typeId, posX, posY) {
-        this._recentKills.set(entityId, {
-            typeId: typeId,
-            timestamp: Date.now(),
-            posX: posX,
-            posY: posY
-        });
-
-        // Cleanup old kills (> 10 seconds)
-        const now = Date.now();
-        for (const [id, data] of this._recentKills.entries()) {
-            if (now - data.timestamp > this._killTimeout) {
-                this._recentKills.delete(id);
-            }
-        }
-    }
-
-    // 🎓 Try to learn TypeID from harvestable correlation
-    tryLearnFromHarvestable(harvestableId, harvestableTypeId, harvestableType, harvestableTier, harvestablePos) {
-        // Find recent kill near this harvestable
-        const searchRadius = 5; // 5 units radius
-
-        for (const [killId, killData] of this._recentKills.entries()) {
-            const deltaX = killData.posX - harvestablePos.x;
-            const deltaY = killData.posY - harvestablePos.y;
-            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-            if (distance <= searchRadius) {
-                // Found correlation!
-                const livingTypeId = killData.typeId;
-
-                // Check if we already know this TypeID
-                const knownInfo = this.mobinfo[livingTypeId];
-                const staticInfo = this.staticResourceTypeIDs.get(livingTypeId);
-
-                if (!knownInfo && !staticInfo) {
-                    // New TypeID discovered! Learn it
-                    this.staticResourceTypeIDs.set(livingTypeId, {
-                        type: harvestableType,
-                        tier: harvestableTier
-                    });
-
-                    this.saveCachedTypeIDs();
-
-                    if (this.settings && this.settings.logLivingResources) {
-                        console.log(`[AUTO-LEARN] 🎓 Learned TypeID ${livingTypeId} = ${harvestableType} T${harvestableTier} (from harvestable correlation)`);
-                    }
-                }
-
-                // Remove from tracking
-                this._recentKills.delete(killId);
-                break;
-            }
-        }
-    }
-
     // 💾 Save cached TypeID mappings to localStorage
     saveCachedTypeIDs() {
         try {
             const entries = Array.from(this.staticResourceTypeIDs.entries())
-                .filter(([typeId]) => typeId !== 65535);
+                .filter(([typeId]) => typeId !== 65535); // Skip unstable TypeID only
             localStorage.setItem('cachedStaticResourceTypeIDs', JSON.stringify(entries));
         } catch (e) {
             console.error('[MobsHandler] Failed to save cache:', e);
@@ -190,17 +130,18 @@ class MobsHandler {
 
     showCachedTypeIDs() {
         console.log('═════════════════════════════════════════');
-        console.log('🔍 TypeID Cache Status');
+        console.log('📦 CACHED TYPEIDS');
         console.log('═════════════════════════════════════════');
-        console.log(`\n📦 In-Memory (${this.staticResourceTypeIDs.size} entries):`);
-        if (this.staticResourceTypeIDs.size > 0) {
-            this.staticResourceTypeIDs.forEach((info, typeId) => {
-                console.log(`  TypeID ${typeId}: ${info.type} T${info.tier}`);
-            });
-        } else {
-            console.log('  (empty)');
-        }
-        console.log('═════════════════════════════════════════\n');
+
+        const sorted = Array.from(this.staticResourceTypeIDs.entries())
+            .sort((a, b) => a[0] - b[0]);
+
+        sorted.forEach(([typeId, info]) => {
+            console.log(`TypeID ${typeId} → ${info.type} T${info.tier}`);
+        });
+
+        console.log(`\n📊 Total: ${this.staticResourceTypeIDs.size} TypeIDs`);
+        console.log('═════════════════════════════════════════');
     }
 
     normalizeNumber(value, defaultValue = null) {
@@ -364,11 +305,6 @@ class MobsHandler {
         if (this.settings && this.settings.logLivingCreatures) {
             if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
                 this.logLivingCreatureCSV(id, typeId, health, enchant, rarity, mob.tier, mob.type, mob.name);
-            }
-
-            // 🔍 Log UNKNOWN spawns with full health (potential enchanted living resources)
-            if (!hasKnownInfo && !staticInfo && normHealth === 255) {
-                console.log(`[UNKNOWN_LIVING?] typeId=${typeId}, enchant=${enchant}, rarity=${rarity}, health=${health}, entityId=${id}`);
             }
         }
 

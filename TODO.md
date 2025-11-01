@@ -1,63 +1,173 @@
-# 📋 TODO - Living Resources Detection
+# 📋 TODO
 
-**Dernière mise à jour**: 2025-11-01  
-**État**: Phase 1 & 2 TERMINÉES ✅
+**Dernière mise à jour**: 2025-11-02  
+**État**: Production-ready ✅ | Code nettoyé ✅
 
-> 📖 **Pour les détails techniques complets, voir [DEV_NOTES.md](DEV_NOTES.md)**
+> 📖 **Détails techniques**: [DEV_NOTES.md](DEV_NOTES.md) | **Outils**: [tools/](tools/)
+
+---
+
+## 📊 ÉTAT ACTUEL
+
+### ✅ Ce qui fonctionne
+- **Hide/Fiber .0 (non enchantés)** : 100% détection
+  - Hide T1/T3/T4/T5 (TypeID 421/423/425/427) ✅
+  - Fiber T3/T4/T5 (TypeID 528/530/531) ✅
+- **Cache localStorage** : Fonctionnel (cross-référence HarvestablesHandler)
+- **Filtrage settings** : Par Tier + Enchant opérationnel
+
+### ❌ Ce qui ne fonctionne pas
+- **Hide/Fiber ENCHANTÉS (.1, .2, .3)** : 0% détection
+  - Cause : Chaque enchantement = TypeID unique (inconnus)
+  - Solution : Collecte manuelle nécessaire (session terrain)
+
+### 🔄 Derniers changements
+- ❌ Apprentissage automatique retiré (approche non viable)
+- ✅ Code retour état propre et simple
+- ✅ Documentation nettoyée et consolidée
 
 ---
 
 ## ✅ TERMINÉ
 
-- ✅ Phase 1: Infrastructure & Cross-référence
-- ✅ Phase 2: UI & Filtrage utilisateur
-- ✅ Cache localStorage avec Clear/Show buttons
-- ✅ Hide Detection (100%)
-- ✅ Logs JSON/NDJSON structurés
-- ✅ Code propre sans workarounds
+- ✅ Base de données TypeIDs complète (235 TypeIDs)
+- ✅ Fiber/Hide detection fonctionnelle
+- ✅ Override bugs serveur Albion (TypeID 528/530/531)
+- ✅ Cache localStorage + Clear button
+- ✅ Outils d'analyse (tools/)
+- ✅ Documentation organisée
 
 ---
 
-## 🔄 EN COURS / À FAIRE
+## 🔄 PROCHAINES ÉTAPES
 
-### Court terme
-- [x] **Scraper living resources TypeIDs** → 235 TypeIDs extraits ✅
-- [x] **Fusionner dans MobsInfo.js unique** → Plus de doublons ✅
-- [x] **Corriger affichage Fiber cadavres** → mobinfo priority ✅
-- [x] **Corriger TypeID 528** → Fiber T3 (était Rock T4) ✅
-- [x] **"Superposition"** → Analysé, comportement normal (objets différents) ✅
-- [x] **Créer outils d'analyse logs** → tools/ folder ✅
-- [x] **Nettoyage & organisation** → Documentation claire ✅
-- [ ] **Tests terrain complets** - Valider tous types (Fiber/Hide/Wood/Ore/Rock)
-- [ ] **Vérifier 12 TypeID suspects** (range 523-537) - Optionnel/Progressif
-- [ ] Session longue stabilité (2h+)
-
-### Moyen terme (Phase 3)
-- [ ] **EventNormalizer** (refactoring architectural majeur)
-  - Buffer temporel 300ms
-  - Centralisation des décisions
-  - Résolution race conditions
-  - Correction détection Fiber
-
-### Long terme
-- [ ] Métriques de qualité de détection
-- [ ] Feature flag pour rollout progressif
-- [ ] Tuning heuristics automatique
+### Court terme (immédiat)
+- [ ] **Session terrain longue** pour valider stabilité
+  - Fiber/Hide detection
+  - Analyse logs
+  - Performance
+  
+- [ ] **Collecte TypeID enchantés** (1-2h ciblée)
+  - Guide de collecte ci-dessous 👇
+  - Focus Hide T4/T5 et Fiber T4/T5 enchantés
+  - Noter TypeID dans logs JSON
 
 ---
 
-## ⚠️ LIMITATIONS CONNUES
+## 📋 GUIDE DE COLLECTE TypeID ENCHANTÉS
 
-- **Fiber detection**: Partielle (~60%) - Bug serveur Albion
-- **TypeID 65535**: Blacklisté (instable)
-- **Race conditions**: Attente EventNormalizer (Phase 3)
+### Préparation
+```
+✅ Settings → Debug → Cocher "🔍 Log Living Resources (JSON)"
+✅ Console (F12) ouverte
+✅ Aller en zone T4/T5 Hide ou Fiber
+```
+
+### Pendant la session
+```
+1. Tuer des ressources ENCHANTÉES (.1, .2, .3)
+2. Repérer dans les logs JSON:
+   "reportedTypeId": XXX  ← Noter ce TypeID
+   "name": "Hide" ou "Fiber"
+   "tier": 4 ou 5
+3. Corréler: TypeID → Type/Tier que vous venez de tuer
+```
+
+### Format à collecter
+```
+TypeID 426 → Hide T4.1
+TypeID 432 → Hide T4.2  
+TypeID 428 → Hide T5.1
+TypeID 535 → Fiber T5.1
+... etc
+```
+
+### Après collecte
+- Donner la liste des TypeID collectés
+- Mise à jour MobsInfo.js (30 min)
+- Test validation (1h)
+
+---
+  - Logs `[UNKNOWN_LIVING?]` activés pour identifier TypeID
+  - Environ 30+ TypeID à collecter (T4-T5 .1/.2/.3 pour Hide/Fiber)
+  
+- [ ] **Session longue terrain (2h+)** avec logging CSV activé
+  - Collecter données complètes Fiber/Hide/Wood/Ore/Rock
+  - Analyser stabilité et performance
+  - Vérifier charges restantes vs bonus récolte
+  
+- [ ] **Analyser nécessité EventNormalizer**
+  - Évaluer si les corrections actuelles suffisent
+  - Décision basée sur résultats session longue
+
+### Moyen/Long terme
+- [ ] Décision EventNormalizer (après analyse session longue)
+- [ ] Métriques de qualité
+- [ ] Feature flags
 
 ---
 
-## 📚 DOCUMENTS DE RÉFÉRENCE
+## 📊 ÉVALUATION EventNormalizer
 
+**Objectif**: Déterminer si EventNormalizer est encore nécessaire avec les changements récents
+
+### ✅ Corrections déjà appliquées
+1. **Override TypeID bugs serveur** (528/530/531) via mobinfo priority
+2. **Cache localStorage** des TypeID mappings
+3. **Logging structuré** (JSON + CSV) pour analyse
+4. **Base de données complète** (235 TypeIDs)
+
+### ❓ Questions à résoudre via session longue
+1. **Faux positifs**: Combien de TypeID encore mal classés ?
+2. **Performance**: Ralentissements avec cache activé ?
+3. **Stabilité**: Race conditions dans quels % de cas ?
+4. **"Superposition"**: Gênant ou acceptable (objets différents) ?
+
+### 🎯 Critères de décision
+
+**EventNormalizer NÉCESSAIRE si** :
+- [ ] > 10% de TypeID encore mal classés après session
+- [ ] Race conditions fréquentes (> 5% des spawns)
+- [ ] Superposition gênante gameplay
+- [ ] Instabilité cache localStorage
+
+**EventNormalizer PAS NÉCESSAIRE si** :
+- [ ] < 5% de TypeID problématiques
+- [ ] Rare conditions rares (< 2%)
+- [ ] Superposition acceptable
+- [ ] Système actuel stable
+
+> **Décision après session 2h+ avec logging CSV complet**
+
+---
+
+## ⚠️ LIMITATIONS (Serveur Albion)
+
+1. **Charges restantes**: Affichage incorrect (serveur compte bonus récolte)
+   - Fix: Impossible (données manquantes côté serveur)
+   
+2. **"Superposition"**: Ressources en groupe ont des entityId différents
+   - Comportement normal du jeu (pas un bug)
+
+3. **TypeID Fiber**: Serveur envoie typeNumber incorrect (16 au lieu de 14)
+   - Fix: Override mobinfo ✅
+
+4. **Hide/Fiber ENCHANTÉS (.1+)**
+   - Cause: TypeID uniques par enchantement (inconnus)
+   - Exemple: Hide T4.0 (TypeID 425) ✅, T4.1/T4.2 (TypeID ???) ❌
+   - Impact: Filtres T4.2+ et T5.1+ non fonctionnels
+   - Solution: Collecte manuelle nécessaire (session terrain avec logs)
+
+> Détails: [DEV_NOTES.md](DEV_NOTES.md) section "Comportement attendu"
+
+---
+
+## 📚 DOCUMENTATION
+
+- **README.md** - Guide utilisateur
 - **DEV_NOTES.md** - Documentation technique complète
-- **CLAUDE.md** - Notes de développement avec Claude
+- **DOCS_GUIDE.md** - Navigation
+- **tools/** - Scripts d'analyse et vérification
 - **README.md** - Documentation utilisateur
 
 ---

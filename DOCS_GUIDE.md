@@ -35,10 +35,14 @@ Ce projet contient 4 fichiers de documentation :
 | Comment utiliser le radar        | README.md           |
 | État d'avancement du projet      | TODO.md             |
 | **Priorités actuelles**          | **TODO.md**         |
+| **Guide collecte TypeID**        | **TODO.md**         |
+| **État actuel du projet**        | **TODO.md**         |
 | Détails techniques               | DEV_NOTES.md        |
 | Architecture du code             | DEV_NOTES.md        |
 | Bugs connus                      | DEV_NOTES.md        |
 | TypeID mappings                  | DEV_NOTES.md        |
+| Réflexions & Solutions           | DEV_NOTES.md        |
+| Pourquoi auto-learning a échoué  | DEV_NOTES.md        |
 | **Analyse TypeID / Logs**        | **tools/**          |
 | Scripts de vérification          | tools/              |
 | Changelog                        | DEV_NOTES.md        |
@@ -54,12 +58,13 @@ Ce projet contient 4 fichiers de documentation :
 - ✅ Aucun doublon, code propre
 
 ### 🔴 Court terme (P1)
-1. **TESTER en jeu** (Fiber/Hide detection)
-2. Valider 100% détection
-3. Session longue stabilité
+1. **Session terrain longue** pour validation
+2. Analyser stabilité Fiber/Hide detection
+3. Collecter TypeID enchantés manquants
 
 ### 🟠 Moyen terme (P2)
-- Analyser si EventNormalizer nécessaire
+- Décider si EventNormalizer nécessaire
+- Améliorer détection ressources enchantées
 
 ### 🟡 Long terme (P3)
 - Métriques & monitoring

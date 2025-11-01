@@ -109,6 +109,7 @@ class HarvestablesHandler
         if (this.mobsHandler && mobileTypeId !== null) {
             this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
 
+
             // 🔧 OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
             const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
             if (staticInfo && staticInfo.type) {

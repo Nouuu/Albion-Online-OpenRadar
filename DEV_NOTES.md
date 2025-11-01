@@ -26,6 +26,13 @@
   - Utilisé pour cadavres transitoires uniquement
   - Ne déclanche pas NewMobEvent pour spawns vivants
 
+- **Hide/Fiber ENCHANTÉS (.1+)**
+  - **Symptôme**: Seuls les .0 (non enchantés) s'affichent
+  - **Cause**: Chaque niveau d'enchantement a un TypeID unique
+  - **Exemple**: Hide T4.0=425 ✅, T4.1=??? ❌, T4.2=??? ❌
+  - **Impact**: Filtres T4.2+ et T5.1+ non fonctionnels
+  - **Solution**: Collecte manuelle TypeID nécessaire (session terrain)
+
 ### ❌ Nécessite Phase 3 (EventNormalizer)
 - Race conditions SPAWN vs STATIC
 - Données incorrectes du jeu
@@ -155,7 +162,59 @@ node test_mobshandler.js             # Test général
 
 ---
 
+## 💡 RÉFLEXIONS & SOLUTIONS
+
+### Pourquoi l'apprentissage automatique a échoué
+
+**Tentative** : Corrélation automatique kill → harvestable pour apprendre les TypeID enchantés
+
+**Échec** pour 3 raisons :
+1. **Harvestables non détectés** : Événements réseau manquants ou filtrés
+2. **Timing imprévisible** : Délai variable, race conditions impossibles à résoudre
+3. **Complexité excessive** : Code complexe, risque corruption cache, debugging difficile
+
+**Conclusion** : Approche retirée le 2025-11-02, code nettoyé ✅
+
+### Solutions pour les TypeID enchantés
+
+#### ⭐ Solution recommandée : Collecte manuelle ciblée
+```
+Avantages:
+✅ Propre et fiable
+✅ Contrôle total
+✅ Pas de risque corruption
+
+Process:
+1. Session terrain 1-2h avec logs JSON activés
+2. Tuer Hide/Fiber enchantés (.1, .2, .3) 
+3. Noter TypeID dans logs (reportedTypeId)
+4. Ajouter manuellement dans MobsInfo.js
+
+Estimation: 20-30 TypeID principaux en 1-2h
+```
+
+#### Alternative : Scraping bases externes
+```
+✅ Déjà fait: albiononline2d.com (235 TypeIDs)
+❌ Problème: Incomplet pour enchantés, peut être obsolète
+```
+
+#### Dernier recours : EventNormalizer
+```
+❌ Trop complexe pour ce problème
+❌ Refactoring architectural massif
+✅ Nécessaire UNIQUEMENT si race conditions Fiber persistent
+```
+
+---
+
+
 ## 📝 CHANGELOG
+
+### 2025-11-02
+- ❌ **Revert apprentissage automatique**: Approche non viable (harvestables non détectés)
+- ✅ **Code nettoyé**: Retour état simple et propre
+- ✅ **Documentation consolidée**: Fusion fichiers, organisation claire
 
 ### 2025-11-01
 - ✅ **Nettoyage complet**: Retiré tous overrides manuels et heuristiques complexes
@@ -322,6 +381,30 @@ Valider que les 230 TypeIDs détectent correctement les living resources (Fiber 
 - Ou tuer TOUS les Fiber du groupe
 
 **Fix nécessaire** : Aucun, comportement correct.
+
+---
+
+### Charges restantes affichées incorrectement
+**Symptôme**: La quantité affichée sur les ressources diminue trop vite et disparaît avant la fin de la récolte
+
+**Cause**: Le serveur Albion envoie une valeur `size` qui compte les **objets récupérés** (avec bonus premium/récolte) au lieu des **charges réellement consommées**.
+
+**Exemple** :
+- Ressource a 10 charges
+- Vous récoltez 1 fois → Récupérez 3 objets (avec bonus +200%)
+- Le serveur dit : `size = 10 - 3 = 7` (au lieu de 9)
+- Après 4 récoltes : `size = 0` mais il reste encore des charges !
+
+**Impact** : L'affichage radar montre "0" ou disparaît avant que la ressource soit épuisée.
+
+**Ce n'est PAS un bug du radar** : C'est la valeur envoyée par le serveur.
+
+**Fix impossible** : On ne connaît pas :
+- Le nombre de charges initiales
+- Le bonus de récolte actif du joueur
+- Le multiplicateur premium
+
+**Workaround** : Ignorer l'affichage du nombre et récolter jusqu'à disparition effective.
 
 ---
 
