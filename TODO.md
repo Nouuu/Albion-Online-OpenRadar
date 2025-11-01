@@ -21,9 +21,14 @@
 ## 🔄 EN COURS / À FAIRE
 
 ### Court terme
-- [ ] Tester en production avec sessions longues
-- [ ] Documenter autres TypeID (Wood, Ore, Rock)
-- [ ] Enrichir MobsInfo.js avec TypeID confirmés
+- [x] **Scraper living resources TypeIDs** → 235 TypeIDs extraits ✅
+- [x] **Fusionner dans MobsInfo.js unique** → Plus de doublons ✅
+- [x] **Corriger affichage Fiber cadavres** → mobinfo priority ✅
+- [x] **Corriger double affichage vivant+cadavre** → removeMob ajouté ✅
+- [x] **Vérifier TypeID manquants** → Aucun manquant ✅
+- [ ] **Tests terrain complets** (Fiber/Hide/Wood/Ore/Rock)
+- [ ] Valider 100% détection
+- [ ] Session longue stabilité
 
 ### Moyen terme (Phase 3)
 - [ ] **EventNormalizer** (refactoring architectural majeur)

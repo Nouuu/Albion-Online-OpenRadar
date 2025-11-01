@@ -188,6 +188,122 @@ node test_mobshandler.js             # Test général
 
 ---
 
+## 🧪 PROTOCOLE DE TEST FIBER/HIDE
+
+### Préparation
+1. Radar ouvert → **🗑️ Clear TypeID Cache**
+2. Recharger page (F5)
+3. Settings > Resources → ✅ **"🔍 Log Living Resources to Console"**
+
+### Test
+1. Zone Fiber/Hide T3-T5
+2. Tuer 5+ Fiber et 5+ Hide
+3. Observer comportement
+
+### Récupération logs
+1. Console (F12) → Ctrl+A → Ctrl+C
+2. Console → `localStorage.getItem('cachedStaticResourceTypeIDs')`
+3. Copier résultat
+4. M'envoyer tout
+
+---
+
+## 🧪 PROTOCOLE DE TEST - MobsInfo_Enriched
+
+### Objectif
+Valider que les 230 TypeIDs détectent correctement les living resources (Fiber surtout)
+
+### Préparation
+1. Radar ouvert → **🗑️ Clear TypeID Cache**
+2. Recharger page (F5)
+3. Settings > Resources → ✅ **"🔍 Log Living Resources to Console"**
+4. Console (F12) → vérifier log: `[Utils] 📊 Merged moblist: ... TypeIDs`
+
+### Test rapide (5-10 min)
+1. **Zone T3-T5 Fiber/Hide** (Steppes, Forest)
+2. **Tuer 3+ Fiber vivants** → Observer radar
+3. **Tuer 3+ Hide vivants** → Observer radar
+4. **Vérifier logs JSON**:
+   ```json
+   {"event":"SPAWN","name":"Fiber","tier":4,...}  ← Doit afficher "Fiber" !
+   ```
+
+### Résultat attendu
+- ✅ **Fiber affichés AVANT kill** (spawn vivant visible)
+- ✅ **Fiber nommés "Fiber"** dans logs (pas null, pas "Hide")
+- ✅ **Hide affichés normalement** (pas de régression)
+- ✅ **Tier correct** (T3/T4/T5 selon zone)
+
+### Si ça fonctionne
+🎉 **EventNormalizer peut-être PAS nécessaire !**
+- Le problème était juste la base de données incomplète
+- 230 TypeIDs résolvent les race conditions côté priorité mobinfo
+
+### Si ça ne fonctionne toujours pas
+- Copier les logs complets
+- M'envoyer cache localStorage
+- On passera à EventNormalizer (Phase 3)
+
+**C'est tout !** Les logs sont automatiques, rien à modifier.
+
+---
+
+## 🌐 SOURCES DE DONNÉES EXTERNES
+
+### Base de données TypeID disponibles
+
+#### 1. **AlbionOnline2D.com** ⭐ RECOMMANDÉ
+- URL: https://albiononline2d.com/
+- **Avantages**:
+  - Base de données complète et à jour
+  - API accessible
+  - Icons haute qualité
+  - Tous les items/mobs/ressources
+- **Utilisation potentielle**:
+  - Scraper les TypeID living resources
+  - Télécharger icons manquants
+  - Valider nos mappings
+
+#### 2. **Albion Online Data Project**
+- URL: https://www.albion-online-data.com/
+- Focus: Prix marché, pas TypeID mobs
+
+#### 3. **GitHub: ao-data**
+- URL: https://github.com/broderickhyman/ao-bin-dumps
+- Dumps binaires du client Albion
+- Nécessite parsing
+
+### 📋 TypeID Living Resources - Base de données complète
+
+**✅ Fusion FINALE dans MobsInfo.js unique** :
+
+**📊 Total: 235 TypeIDs** répartis comme suit:
+- **Fiber**: 38 TypeIDs (T3-T8 complet)
+- **Hide**: 85 TypeIDs (T1-T8 complet + variantes)
+- **Wood**: 38 TypeIDs (T3-T8 complet)
+- **Ore**: 38 TypeIDs (T3-T8 complet)
+- **Rock**: 36 TypeIDs (T3-T8 complet)
+
+**🔧 Corrections appliquées** (confirmées logs terrain 2025-11-01):
+- TypeID 421, 423, 425, 427: AJOUTÉS (absents original)
+- TypeID 528: **Rock T4 → Fiber T3** (CORRIGÉ terrain)
+- TypeID 530: **Rock T6 → Fiber T4** (CORRIGÉ terrain)
+- TypeID 531: **Rock T7 → Fiber T5** (CORRIGÉ terrain)
+- **Noms corrigés**: "fiber"→"Fiber", "hide"→"Hide", "Wood"→"Log" (majuscules + compatibilité HarvestableType)
+
+**🚨 BUG SERVEUR ALBION CONFIRMÉ**:
+- TypeID 528, 530, 531 = **Fiber** mais le jeu envoie `typeNumber=16` (Hide) au lieu de 14
+- Notre système override correctement via mobinfo priority
+- 12 autres TypeID suspects dans range 523-537 à vérifier en jeu (voir `find_suspect_typeids.js`)
+
+**⚠️ Vérification interne** : Aucun TypeID manquant dans les ranges connus (330-639)
+
+**⚠️ Vérification externe** : À faire manuellement via ao-bin-dumps (voir `VERIFICATION_TYPEID_MANUELLE.md`)
+
+**Fichier unique**: `scripts/Handlers/MobsInfo.js` (tout fusionné)
+
+---
+
 ## 💡 NOTES TECHNIQUES
 
 ### Pourquoi TypeID 65535 est blacklisté
