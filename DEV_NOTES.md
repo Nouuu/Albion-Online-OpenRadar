@@ -292,9 +292,40 @@ Valider que les 230 TypeIDs détectent correctement les living resources (Fiber 
 - **Noms corrigés**: "fiber"→"Fiber", "hide"→"Hide", "Wood"→"Log" (majuscules + compatibilité HarvestableType)
 - **HarvestablesHandler**: Utilise mobinfo pour override typeNumber du jeu (cadavres Fiber correctement affichés)
 
-**🚨 BUG SERVEUR ALBION CONFIRMÉ**:
-- TypeID 528, 530, 531 = **Fiber** mais le jeu envoie `typeNumber=16` (Hide) au lieu de 14
-- **MobsHandler** override via mobinfo priority (spawns vivants) ✅
+## ⚠️ COMPORTEMENT ATTENDU
+
+### "Superposition" living resource + cadavre
+**Symptôme**: Fiber/Hide vivant + cadavre affichés ensemble
+
+**Analyse logs** : Ce sont des **entités DIFFÉRENTES** !
+- Fiber vivant (entityId=253682) reste affiché
+- Cadavre d'un AUTRE Fiber (entityId=266729) créé à proximité
+- Les deux sont **corrects**, ce sont des objets distincts
+
+**Ce n'est PAS un bug** : C'est le comportement normal du jeu.
+- Plusieurs ressources vivantes peuvent être proches
+- Quand vous en tuez une, le cadavre apparaît
+- Les autres vivants restent affichés (correct)
+
+**Pourquoi ça "semble" superposé** :
+- Les ressources spawnt souvent par groupes
+- Position GPS proche (~1-2 mètres)
+- Visuellement, ça semble être le même objet
+
+**Vérification** : Comparer les entityId dans les logs
+- SPAWN entityId=X → Mob vivant
+- 💀 Entity killed entityId=Y → Cadavre
+- Si X ≠ Y → **Objets différents** ✅
+
+**Workaround si gênant** :
+- S'éloigner pour déclencher `Leave` (retire vivants hors range)
+- Ou tuer TOUS les Fiber du groupe
+
+**Fix nécessaire** : Aucun, comportement correct.
+
+---
+
+## 🚨 BUG SERVEUR ALBION CONFIRMÉ
 - **HarvestablesHandler** override via mobinfo priority (cadavres) ✅
 - 12 autres TypeID suspects dans range 523-537 à vérifier en jeu (voir `tools/find_suspect_typeids.js`)
 

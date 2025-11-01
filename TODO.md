@@ -24,13 +24,13 @@
 - [x] **Scraper living resources TypeIDs** → 235 TypeIDs extraits ✅
 - [x] **Fusionner dans MobsInfo.js unique** → Plus de doublons ✅
 - [x] **Corriger affichage Fiber cadavres** → mobinfo priority ✅
-- [x] **Corriger double affichage vivant+cadavre** → removeMob ajouté ✅
 - [x] **Corriger TypeID 528** → Fiber T3 (était Rock T4) ✅
+- [x] **"Superposition"** → Analysé, comportement normal (objets différents) ✅
 - [x] **Créer outils d'analyse logs** → tools/ folder ✅
 - [x] **Nettoyage & organisation** → Documentation claire ✅
-- [ ] **Tests terrain complets** (Fiber T3/T4/T5 confirmés)
-- [ ] **Vérifier 12 TypeID suspects** (range 523-537) - Progressif
-- [ ] Session longue stabilité
+- [ ] **Tests terrain complets** - Valider tous types (Fiber/Hide/Wood/Ore/Rock)
+- [ ] **Vérifier 12 TypeID suspects** (range 523-537) - Optionnel/Progressif
+- [ ] Session longue stabilité (2h+)
 
 ### Moyen terme (Phase 3)
 - [ ] **EventNormalizer** (refactoring architectural majeur)

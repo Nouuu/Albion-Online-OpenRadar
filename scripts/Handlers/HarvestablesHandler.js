@@ -189,6 +189,7 @@ class HarvestablesHandler
 
         if (!harvestable) return;
 
+
         harvestable.size = Parameters[1];
     }
 
@@ -204,14 +205,6 @@ class HarvestablesHandler
         let enchant = Parameters[11] === undefined ? 0 : Parameters[11];
         let size = Parameters[10] === undefined ? 0 : Parameters[10];
 
-        // 🔧 FIX: Remove living mob when it becomes harvestable (killed)
-        // This prevents showing both living resource AND harvestable cadaver
-        if (this.mobsHandler && id) {
-            if (this.settings && this.settings.logLivingResources) {
-                console.log(`[HarvestablesHandler] 💀 Entity ${id} killed → removing from living resources`);
-            }
-            this.mobsHandler.removeMob(id);
-        }
 
         this.UpdateHarvestable(id, type, tier, location[0], location[1], enchant, size, mobileTypeId);
     }
