@@ -42,16 +42,21 @@ const dungeonsHandler = new DungeonsHandler(settings);
 
 var itemsInfo = new ItemsInfo();
 var mobsInfo = new MobsInfo();
+var mobsInfo_Enriched = new MobsInfo_Enriched(); // 230 Living Resources TypeIDs
 
 itemsInfo.initItems();
 mobsInfo.initMobs();
+
+// Merge: Enriched data takes priority for living resources
+const mergedMoblist = { ...mobsInfo.moblist, ...mobsInfo_Enriched.moblist };
+console.log(`[Utils] 📊 Merged moblist: ${Object.keys(mobsInfo.moblist).length} (original) + ${Object.keys(mobsInfo_Enriched.moblist).length} (enriched) = ${Object.keys(mergedMoblist).length} total TypeIDs`);
 
 var map = new MapH(-1);
 const mapsDrawing = new MapDrawing(settings);
 
 const chestsHandler = new ChestsHandler();
 const mobsHandler = new MobsHandler(settings);
-mobsHandler.updateMobInfo(mobsInfo.moblist);
+mobsHandler.updateMobInfo(mergedMoblist); // Use merged data
 
 // existing logEnemiesList button stays the same
 window.addEventListener('load', () => {

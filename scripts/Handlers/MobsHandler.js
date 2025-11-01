@@ -154,10 +154,42 @@ class MobsHandler {
     registerStaticResourceTypeID(typeId, typeNumber, tier) {
         if (typeId === 65535) return;
 
-        const resourceType = this.getResourceTypeFromNumber(typeNumber);
+        // 🔧 PRIORITY 1: Check mobinfo first (overrides game bugs)
+        const knownInfo = this.mobinfo && this.mobinfo[typeId];
+        let resourceType;
+
+        if (knownInfo && knownInfo[2]) {
+            // Use mobinfo name (Fiber, Hide, Wood, Ore, Rock)
+            resourceType = knownInfo[2];
+            console.log(`[registerStaticResourceTypeID] ✅ Using mobinfo: TypeID ${typeId} = ${resourceType} T${tier} (overriding game typeNumber=${typeNumber})`);
+        } else {
+            // Fallback: use game's typeNumber
+            resourceType = this.getResourceTypeFromNumber(typeNumber);
+        }
+
         if (!resourceType) return;
 
         const existing = this.staticResourceTypeIDs.get(typeId);
+
+        // 📊 Log EVERY registration for analysis (capture typeNumber from game)
+        if (this.settings && this.settings.logLivingResources) {
+            const isUpdate = !!existing;
+            const changed = existing && (existing.type !== resourceType || existing.tier !== tier);
+
+            console.log(JSON.stringify({
+                timestamp: new Date().toISOString(),
+                module: 'MobsHandler',
+                event: isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER',
+                typeId: typeId,
+                typeNumber: typeNumber,
+                resourceType: resourceType,
+                tier: tier,
+                existing: existing || null,
+                changed: changed,
+                source: knownInfo ? 'mobinfo' : 'game-typeNumber'
+            }));
+        }
+
         if (existing && existing.type === resourceType && existing.tier === tier) {
             return;
         }
