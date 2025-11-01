@@ -200,7 +200,7 @@ class MobsHandler {
 
     getResourceTypeFromNumber(typeNumber) {
         if (typeof typeNumber !== 'number') return null;
-        if (typeNumber >= 0 && typeNumber <= 5) return 'Wood';
+        if (typeNumber >= 0 && typeNumber <= 5) return 'Log';
         else if (typeNumber >= 6 && typeNumber <= 10) return 'Rock';
         else if (typeNumber >= 11 && typeNumber <= 15) return 'Fiber';
         else if (typeNumber >= 16 && typeNumber <= 22) return 'Hide';
