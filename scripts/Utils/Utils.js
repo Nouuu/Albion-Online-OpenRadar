@@ -57,6 +57,42 @@ mobsHandler.updateMobInfo(mobsInfo.moblist);
 window.addEventListener('load', () => {
     const logEnemiesList = document.getElementById('logEnemiesList');
     if (logEnemiesList) logEnemiesList.addEventListener('click', () => console.log(mobsHandler.getMobList()));
+
+    // Clear TypeID Cache button
+    const clearTypeIDCache = document.getElementById('clearTypeIDCache');
+    if (clearTypeIDCache) clearTypeIDCache.addEventListener('click', () => {
+        try {
+            // Show what's in cache BEFORE clearing
+            const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
+            if (cached) {
+                const entries = JSON.parse(cached);
+                console.log(`[clearTypeIDCache] 🗑️ Clearing ${entries.length} cached entries:`);
+                entries.forEach(([typeId, info]) => {
+                    console.log(`  - TypeID ${typeId}: ${info.type} T${info.tier}`);
+                });
+            } else {
+                console.log('[clearTypeIDCache] ℹ️ Cache is already empty');
+            }
+
+            // Clear in-memory cache in MobsHandler
+            mobsHandler.clearCachedTypeIDs();
+
+            // Confirm
+            const shouldReload = confirm('✅ TypeID Cache cleared (in-memory + localStorage)!\n\n🔄 Reload the page to start fresh?\n\n(Recommended: Yes)');
+            if (shouldReload) {
+                window.location.reload();
+            }
+        } catch (e) {
+            console.error('❌ Failed to clear TypeID cache:', e);
+            alert('❌ Failed to clear cache: ' + e.message);
+        }
+    });
+
+    // Show TypeID Cache button (debug)
+    const showTypeIDCache = document.getElementById('showTypeIDCache');
+    if (showTypeIDCache) showTypeIDCache.addEventListener('click', () => {
+        mobsHandler.showCachedTypeIDs();
+    });
 });
 
 

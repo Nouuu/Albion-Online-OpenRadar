@@ -54,8 +54,12 @@ export class MobsDrawing extends DrawingUtils
 
             if (mobOne.type == EnemyType.LivingSkinnable || mobOne.type == EnemyType.LivingHarvestable)
             {
-                imageName = mobOne.name + "_" + mobOne.tier + "_" + mobOne.enchantmentLevel;
-                imageFolder = "Resources"; // Change folder to living harvestables
+                // Only set imageName if mob has been identified (has name from mobinfo or cross-ref)
+                // Otherwise leave undefined and fallback circle will be drawn
+                if (mobOne.name && mobOne.tier > 0) {
+                    imageName = mobOne.name + "_" + mobOne.tier + "_" + mobOne.enchantmentLevel;
+                    imageFolder = "Resources"; // Change folder to living harvestables
+                }
 
                 drawHp = this.settings.livingResourcesHp;
                 drawId = this.settings.livingResourcesID;

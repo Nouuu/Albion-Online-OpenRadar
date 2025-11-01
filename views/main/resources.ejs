@@ -863,11 +863,16 @@
                     <input type="checkbox" id="settingLogLivingResources" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span class="dark:text-white ml-2">🔍 Log Living Resources to Console</span>
                 </label>
-                <!-- Checkbox pour basculer le format d'affichage (JSON vs Human) -->
-                <label class="flex items-center" style="margin-top:6px;">
-                    <input type="checkbox" id="settingLogLivingHuman" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white ml-2">Afficher en lecture humaine (pas de JSON)</span>
-                </label>
+                <!-- Bouton pour vider le cache TypeID -->
+                <div style="margin-top:10px;">
+                    <button
+                        id="clearTypeIDCacheBtn"
+                        class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-red-600 border border-transparent rounded-lg active:bg-red-600 hover:bg-red-700 focus:outline-none focus:shadow-outline-red"
+                        onclick="clearTypeIDCache();"
+                    >
+                        🗑️ Clear TypeID Cache
+                    </button>
+                </div>
 			</div>
 		</div>
 
@@ -1871,15 +1876,45 @@
         }
     });
 
-    // Toggle human-readable mode for living logs (exclusive: human OR json)
-    let settingLogLivingHuman = document.getElementById("settingLogLivingHuman");
-    // Default to false if not set
-    settingLogLivingHuman.checked = returnLocalBool("settingLogLivingHuman");
-    settingLogLivingHuman.addEventListener("click", () => {
-        localStorage.setItem("settingLogLivingHuman", settingLogLivingHuman.checked);
-        if (settingLogLivingHuman.checked) console.log("Logs living: HUMAN (NDJSON désactivé pour ces events)");
-        else console.log("Logs living: JSON (NDJSON activé)");
-    });
+
+    // Function to clear TypeID cache
+    function clearTypeIDCache() {
+        try {
+            // 🔍 Debug: Show what's in cache BEFORE clearing
+            const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
+            if (cached) {
+                const entries = JSON.parse(cached);
+                console.log(`[clearTypeIDCache] 🗑️ Clearing ${entries.length} cached entries:`);
+                entries.forEach(([typeId, info]) => {
+                    console.log(`  - TypeID ${typeId}: ${info.type} T${info.tier}`);
+                });
+            } else {
+                console.log('[clearTypeIDCache] ℹ️ Cache is already empty');
+            }
+
+            // Clear localStorage
+            localStorage.removeItem('cachedStaticResourceTypeIDs');
+            console.log('✅ TypeID Cache cleared from localStorage');
+
+            // Confirm and reload to clear in-memory cache too
+            const shouldReload = confirm('✅ TypeID Cache cleared!\n\n⚠️ The radar page needs to reload to clear the in-memory cache.\n\nReload now?');
+            if (shouldReload) {
+                // Find and reload the radar window if open
+                if (window.opener && !window.opener.closed) {
+                    console.log('🔄 Reloading opener window (radar)...');
+                    window.opener.location.reload();
+                }
+                // Also reload this settings page
+                console.log('🔄 Reloading settings page...');
+                window.location.reload();
+            } else {
+                alert('⚠️ Cache cleared from localStorage, but you need to reload the radar page manually for full effect.');
+            }
+        } catch (e) {
+            console.error('❌ Failed to clear TypeID cache:', e);
+            alert('❌ Failed to clear cache: ' + e.message);
+        }
+    }
 	//#endregion
 
 	function SetLanguage(lang)

@@ -31,11 +31,6 @@
             cursor: pointer;
         }
 
-        #button {
-            position: absolute;
-            top: 10px;
-            left: 520px; /* Adjust the left position to be to the right of the canvases */
-        }
 
         #logEnemiesList {
             position: absolute;
@@ -48,6 +43,32 @@
             position: absolute;
             top: 90px;
             left: 520px; /* Adjust the left position to be to the right of the canvases */
+        }
+
+        #clearTypeIDCache
+        {
+            position: absolute;
+            top: 130px;
+            left: 520px; /* Adjust the left position to be to the right of the canvases */
+            background-color: #dc2626; /* Red background */
+        }
+
+        #clearTypeIDCache:hover
+        {
+            background-color: #b91c1c; /* Darker red on hover */
+        }
+
+        #showTypeIDCache
+        {
+            position: absolute;
+            top: 170px;
+            left: 520px; /* Adjust the left position to be to the right of the canvases */
+            background-color: #2563eb; /* Blue background */
+        }
+
+        #showTypeIDCache:hover
+        {
+            background-color: #1d4ed8; /* Darker blue on hover */
         }
 
         #canvasContainer {
@@ -77,6 +98,8 @@
         <button class="button" id="button">Clear</button>
         <button class="button" id="logEnemiesList">Log Enemies List</button>
         <button class="button" id="launchItems" onclick="window.open('/items');" >Open Items Window</button>
+        <button class="button" id="clearTypeIDCache">🗑️ Clear TypeID Cache</button>
+        <button class="button" id="showTypeIDCache">🔍 Show TypeID Cache</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
