@@ -38,6 +38,7 @@
 - ✅ Cadavres Fiber affichés comme **Fiber** (pas Hide)
 - ✅ Plus de superposition vivant + cadavre
 - ✅ Transition propre: vivant disparaît → cadavre apparaît
+- ✅ **Logs de debug** pour tracer les kills (💀 Entity killed, 🗑️ Removed)
 
 ### 4. Outils d'analyse
 - ✅ **tools/analyze_logs_typeids.js** - Analyse auto des logs
