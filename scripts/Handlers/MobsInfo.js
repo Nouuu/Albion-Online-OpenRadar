@@ -6,7 +6,7 @@ class MobsInfo{
         this.moblist = {};
     }
 
-    addItem(id, tier, type, loc)
+    addItem(id, tier, type, loc, enchant = 0)
     {
         if (!this.moblist[id])
         {
@@ -16,6 +16,7 @@ class MobsInfo{
         this.moblist[id][0] = tier;
         this.moblist[id][1] = type;
         this.moblist[id][2] = loc;
+        this.moblist[id][3] = enchant;  // Enchantment level (0-4)
     }
 
     initMobs()
@@ -83,33 +84,33 @@ class MobsInfo{
         this.addItem(393, 7, 1, "Hide");
         this.addItem(394, 8, 1, "Hide");
         this.addItem(395, 8, 1, "Hide");
-        this.addItem(396, 4, 1, "Hide");
-        this.addItem(397, 5, 1, "Hide");
-        this.addItem(398, 6, 1, "Hide");
-        this.addItem(399, 7, 1, "Hide");
-        this.addItem(400, 8, 1, "Hide");
-        this.addItem(421, 1, 1, "Hide");
-        this.addItem(423, 3, 1, "Hide");
-        this.addItem(425, 4, 1, "Hide");
-        this.addItem(427, 5, 1, "Hide");
-        this.addItem(475, 3, 1, "Hide");
-        this.addItem(476, 5, 1, "Hide");
-        this.addItem(477, 7, 1, "Hide");
-        this.addItem(493, 4, 1, "Hide");
-        this.addItem(494, 5, 1, "Hide");
-        this.addItem(495, 6, 1, "Hide");
-        this.addItem(496, 7, 1, "Hide");
-        this.addItem(497, 8, 1, "Hide");
-        this.addItem(498, 4, 1, "Hide");
-        this.addItem(499, 5, 1, "Hide");
-        this.addItem(500, 6, 1, "Hide");
-        this.addItem(501, 7, 1, "Hide");
-        this.addItem(502, 8, 1, "Hide");
-        this.addItem(503, 4, 1, "Hide");
-        this.addItem(504, 5, 1, "Hide");
-        this.addItem(505, 6, 1, "Hide");
-        this.addItem(506, 7, 1, "Hide");
-        this.addItem(507, 8, 1, "Hide");
+        this.addItem(396, 4, 1, "Hide");  // Skinnable (animal)
+        this.addItem(397, 5, 1, "Hide");  // Skinnable (animal)
+        this.addItem(398, 6, 1, "Hide");  // Skinnable (animal)
+        this.addItem(399, 7, 1, "Hide");  // Skinnable (animal)
+        this.addItem(400, 8, 1, "Hide");  // Skinnable (animal)
+        this.addItem(421, 1, 1, "Hide");  // Skinnable T1 e0
+        this.addItem(423, 3, 1, "Hide");  // Skinnable T3 e0
+        this.addItem(425, 4, 1, "Hide");  // Skinnable T4 e0 ‚ö†Ô∏è Le jeu envoie rarity=137 (e1 calcul√©), mais c'est e0 !
+        this.addItem(427, 5, 1, "Hide");  // Skinnable T5 e0 ‚ö†Ô∏è Le jeu envoie rarity=257 (e3 calcul√©), mais c'est e0 !
+        this.addItem(475, 3, 1, "Hide");  // Skinnable (animal)
+        this.addItem(476, 5, 1, "Hide");  // Skinnable (animal)
+        this.addItem(477, 7, 1, "Hide");  // Skinnable (animal)
+        this.addItem(493, 4, 1, "Hide");  // Skinnable (animal)
+        this.addItem(494, 5, 1, "Hide");  // Skinnable (animal)
+        this.addItem(495, 6, 1, "Hide");  // Skinnable (animal)
+        this.addItem(496, 7, 1, "Hide");  // Skinnable (animal)
+        this.addItem(497, 8, 1, "Hide");  // Skinnable (animal)
+        this.addItem(498, 4, 1, "Hide");  // Skinnable (animal)
+        this.addItem(499, 5, 1, "Hide");  // Skinnable (animal)
+        this.addItem(500, 6, 1, "Hide");  // Skinnable (animal)
+        this.addItem(501, 7, 1, "Hide");  // Skinnable (animal)
+        this.addItem(502, 8, 1, "Hide");  // Skinnable (animal)
+        this.addItem(503, 4, 1, "Hide");  // Skinnable (animal)
+        this.addItem(504, 5, 1, "Hide");  // Skinnable (animal)
+        this.addItem(505, 6, 1, "Hide");  // Skinnable (animal)
+        this.addItem(506, 7, 1, "Hide");  // Skinnable (animal)
+        this.addItem(507, 8, 1, "Hide");  // Skinnable (animal)
         //#endregion
 
         //#region Fiber (LivingHarvestable)
@@ -205,7 +206,7 @@ class MobsInfo{
         this.addItem(525, 6, 0, "Rock");
         this.addItem(526, 7, 0, "Rock");
         this.addItem(527, 8, 0, "Rock");
-        this.addItem(528, 3, 0, "Fiber"); // ?? CORRIG…: Ètait Rock T4, en rÈalitÈ Fiber T3
+        this.addItem(528, 3, 0, "Fiber"); // ?? CORRIGÔøΩ: ÔøΩtait Rock T4, en rÔøΩalitÔøΩ Fiber T3
         this.addItem(529, 5, 0, "Rock");
         this.addItem(532, 8, 0, "Rock");
         this.addItem(533, 4, 0, "Rock");
