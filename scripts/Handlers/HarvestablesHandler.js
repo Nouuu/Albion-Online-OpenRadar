@@ -171,9 +171,11 @@ class HarvestablesHandler
     {
 
         const id = Parameters[3];
-        const count = Parameters[5];
+        // Parameters[5] contient le nombre de ressources récoltées (incluant les bonus)
+        // Mais on doit soustraire 1 stack au lieu du total récolté
+        const stackCount = 1; // Un seul coup de récolte = 1 stack, peu importe les bonus
 
-        this.updateHarvestable(id, count);
+        this.updateHarvestable(id, stackCount);
     }
 
     HarvestUpdateEvent(Parameters)
@@ -190,8 +192,13 @@ class HarvestablesHandler
 
         if (!harvestable) return;
 
-
-        harvestable.size = Parameters[1];
+        // ⚠️ Ne pas mettre à jour si la valeur a diminué (harvestFinished s'en charge)
+        // On met à jour uniquement si la valeur a augmenté (régénération) ou si c'est une nouvelle valeur
+        const newSize = Parameters[1];
+        if (newSize > harvestable.size) {
+            harvestable.size = newSize;
+        }
+        // Si newSize < harvestable.size, on ignore car harvestFinished va décrémenter correctement
     }
 
     // Normally work with everything
