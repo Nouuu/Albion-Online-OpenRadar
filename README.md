@@ -25,6 +25,8 @@ Albion ZQRadar provides a real-time map, helping players detect other players, c
 - Display background map on radar
 - **🆕 Overlay mode**: Open radar in a separate popup window with opacity control and keyboard shortcuts
 
+> 💡 **Want a PERFECT overlay?** Check out [ELECTRON_EXECUTIVE_SUMMARY.md](ELECTRON_EXECUTIVE_SUMMARY.md) for analysis on migrating to Electron (frameless window, true always-on-top, native app)
+
 And much more to come!
 \
 Join the [Discord](https://discord.gg/XAWjmzeaD3) to look at the to-do list and be informed when a new version is released.
