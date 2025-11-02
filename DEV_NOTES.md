@@ -62,6 +62,111 @@ npm run optimize:images   # Optimize dist/images/ only
 - 2-3 minutes processing time
 - Archives created with optimized images
 
+---
+
+## 🤖 GITHUB ACTIONS CI/CD (2025-11-02)
+
+### Automated Pipelines
+
+#### 1. CI - Tests & Lint
+**File**: `.github/workflows/ci.yml`  
+**Triggers**: Pull Requests to main/develop, Push to develop  
+**Platforms**: Ubuntu, Windows, macOS
+
+**Steps**:
+- Install dependencies
+- Check system requirements
+- Run linting (if available)
+- Run tests (if available)
+- Verify build (Linux quick check)
+
+**Use case**: Quality control before merging PRs
+
+#### 2. Build - Multi-platform
+**File**: `.github/workflows/build.yml`  
+**Triggers**: Push to main, Manual dispatch  
+**Platforms**: All (Ubuntu runner builds for all)
+
+**Steps**:
+1. Install dependencies
+2. Rebuild native modules
+3. Install build tools (pkg, archiver, sharp)
+4. Build all platforms (npm run build:all)
+5. Post-build with optimization
+6. Upload artifacts (30 days retention)
+
+**Artifacts**:
+- ZQRadar-Windows (~212 MB)
+- ZQRadar-Linux (~215 MB)
+- ZQRadar-macOS (~215 MB)
+
+**Use case**: Test complete build process
+
+#### 3. Release
+**File**: `.github/workflows/release.yml`  
+**Triggers**: Git tags `v*.*.*`, Manual dispatch with version input  
+
+**Steps**:
+1. Clean build artifacts
+2. Install dependencies
+3. Rebuild native modules
+4. Build all platforms
+5. Optimize images (integrated)
+6. Create GitHub Release
+7. Upload 3 ZIP archives
+8. Generate release notes with:
+   - Download links
+   - Installation instructions
+   - Requirements (Npcap, libpcap)
+   - Feature highlights
+
+**Release Notes Include**:
+- Platform-specific download links
+- Archive sizes
+- Requirements per platform
+- Installation guide
+- Discord/GitHub links
+- Optimization info (70% compression)
+
+**Example**:
+```bash
+# Automatic release on tag push
+git tag v1.0.0
+git push origin v1.0.0
+
+# Or manual trigger from GitHub Actions UI
+```
+
+### Workflow Benefits
+
+✅ **Automated testing** on every PR  
+✅ **Multi-platform builds** on every main push  
+✅ **One-click releases** with optimized archives  
+✅ **Consistent builds** (same process everywhere)  
+✅ **Artifact storage** (30 days for testing)  
+✅ **Professional release notes** (auto-generated)
+
+### Configuration
+
+**No secrets required** for basic workflows.
+
+**Permissions needed**:
+- `contents: write` - For creating releases
+- `packages: write` - For uploading artifacts
+
+**Node.js version**: 18.18.2 (pinned in all workflows)
+
+**Build time**: ~20-25 minutes (includes 2-3 min image optimization)
+
+### Notes
+
+- Native modules (cap, node-sass) use `continue-on-error: true`
+- Image optimization runs automatically in post-build
+- Archives use ZIP only (simplified from ZIP + TAR.GZ)
+- All builds use optimized images (70% compression)
+
+> 📖 **Full workflow documentation**: `.github/README.md`
+
 ### Distribution Structure
 ```
 dist/

@@ -80,6 +80,7 @@ This project contains 4 documentation files:
 - ✅ Lossless image optimization (dist/ only, preserves sources)
 - ✅ All-in-one build command (automated workflow)
 - ✅ Complete build scripts (Makefile, build.bat)
+- ✅ GitHub Actions CI/CD pipelines (tests, build, release)
 
 ### 🚀 BUILD SYSTEM COMMANDS
 
@@ -109,6 +110,42 @@ make clean               # Clean build artifacts
   - Linux/macOS: ~215 MB (vs ~635 MB before)
 - **ZIP only**: Simplified to one format per platform
 - Manual optimization available: `npm run optimize:images` (for standalone use)
+
+---
+
+## 🤖 GITHUB ACTIONS CI/CD
+
+### Automated Workflows
+
+**CI - Tests & Lint** (`ci.yml`)
+- Triggers: Pull Requests, Push to develop
+- Platforms: Ubuntu, Windows, macOS
+- Actions: Lint, Tests, Build check
+
+**Build - Multi-platform** (`build.yml`)
+- Triggers: Push to main, Manual
+- Platforms: All (Windows, Linux, macOS)
+- Actions: Full build with optimization, Upload artifacts
+
+**Release** (`release.yml`)
+- Triggers: Git tags `v*.*.*`, Manual
+- Actions: Build, Optimize, Create GitHub Release
+- Uploads: 3 ZIP archives (~212-215 MB each)
+
+### Quick Start
+
+**Create a release:**
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+**Manual trigger:**
+1. Go to Actions tab
+2. Select workflow
+3. Click "Run workflow"
+
+> 📖 **Full details in [.github/README.md](.github/README.md)**
 
 ### 🔴 Short term (P1)
 1. **Long field session** for validation

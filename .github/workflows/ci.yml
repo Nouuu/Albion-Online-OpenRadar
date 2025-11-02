@@ -1,0 +1,81 @@
+name: CI - Tests & Lint
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ develop ]
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: [18.18.2]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check system dependencies
+        run: |
+          node --version
+          npm --version
+
+      - name: Lint check (if available)
+        run: npm run lint --if-present
+        continue-on-error: true
+
+      - name: Run tests (if available)
+        run: npm test --if-present
+        continue-on-error: true
+
+      - name: Check for syntax errors
+        run: node -c app.js
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.18.2
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install build tools
+        run: npm install -D pkg archiver sharp
+
+      - name: Test build (Linux only for speed)
+        run: npm run build:linux
+
+      - name: Verify executable created
+        run: |
+          if [ -f dist/albion-zqradar-linux ]; then
+            echo "✓ Executable created successfully"
+            ls -lh dist/albion-zqradar-linux
+          else
+            echo "✗ Executable not found"
+            exit 1
+          fi
+

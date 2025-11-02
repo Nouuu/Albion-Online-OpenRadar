@@ -1,0 +1,161 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.18.2
+          cache: 'npm'
+
+      - name: Get version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Clean build artifacts
+        run: |
+          rm -rf dist
+          rm -rf build/temp
+          rm -f *.log
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm rebuild cap node-sass
+        continue-on-error: true
+
+      - name: Install build tools
+        run: npm install -D pkg archiver sharp
+
+      - name: Build all platforms
+        run: npm run build:all
+
+      - name: Post-build with optimization
+        run: node build/post-build.js
+
+      - name: Verify archives created
+        run: |
+          echo "📦 Archives created:"
+          ls -lh dist/*.zip
+          echo ""
+          echo "Total size:"
+          du -ch dist/*.zip | tail -1
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: ZQRadar ${{ steps.version.outputs.version }}
+          body: |
+            ## 🎉 ZQRadar Release ${{ steps.version.outputs.version }}
+            
+            ### 📦 Downloads
+            
+            **Windows:**
+            - Download `ZQRadar-*-win64.zip` (~212 MB)
+            - Requires: [Npcap 1.79 or newer](https://npcap.com/)
+            
+            **Linux:**
+            - Download `ZQRadar-*-linux-x64.zip` (~215 MB)
+            - Requires: libpcap
+            
+            **macOS:**
+            - Download `ZQRadar-*-macos-x64.zip` (~215 MB)
+            - Requires: libpcap (usually pre-installed)
+            
+            ### ✨ Features
+            
+            - **Optimized images**: 70% compression (602 MB → 180 MB)
+            - **Multi-platform**: Windows, Linux, macOS
+            - **Standalone executables**: No Node.js required
+            
+            ### 📝 Installation
+            
+            1. Download the ZIP for your platform
+            2. Extract the archive
+            3. Follow the README.txt instructions
+            4. Launch the executable
+            
+            ### 🔗 Links
+            
+            - [Discord](https://discord.gg/XAWjmzeaD3)
+            - [GitHub](https://github.com/Zeldruck/Albion-Online-ZQRadar)
+            
+            ---
+            
+            **Built with GitHub Actions** | **Images optimized with Sharp (95% quality)**
+          draft: false
+          prerelease: false
+
+      - name: Upload Windows Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ZQRadar-${{ steps.version.outputs.version }}-win64.zip
+          asset_name: ZQRadar-${{ steps.version.outputs.version }}-win64.zip
+          asset_content_type: application/zip
+
+      - name: Upload Linux Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ZQRadar-${{ steps.version.outputs.version }}-linux-x64.zip
+          asset_name: ZQRadar-${{ steps.version.outputs.version }}-linux-x64.zip
+          asset_content_type: application/zip
+
+      - name: Upload macOS Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist/ZQRadar-${{ steps.version.outputs.version }}-macos-x64.zip
+          asset_name: ZQRadar-${{ steps.version.outputs.version }}-macos-x64.zip
+          asset_content_type: application/zip
+
+      - name: Release Summary
+        run: |
+          echo "### 🚀 Release Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Archives:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Windows: $(ls dist/*-win64.zip | xargs du -h | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "- Linux: $(ls dist/*-linux-x64.zip | xargs du -h | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "- macOS: $(ls dist/*-macos-x64.zip | xargs du -h | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Optimization:** Images optimized 70% (602 MB → 180 MB)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "[View Release](${{ steps.create_release.outputs.html_url }})" >> $GITHUB_STEP_SUMMARY
+
