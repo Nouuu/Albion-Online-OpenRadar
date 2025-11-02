@@ -48,27 +48,46 @@ input the number here:
 6. Click on the "Launch radar" button.
 7. You can now access the radar features by going to `http://localhost:5001` in your browser.
 
-## 👨‍💻 For the devs (Windows)
+## 👨‍💻 For Developers
 
-1. Download Node.js v18.18.2:
-- [Node.js v18.18.2 (64-bit)](https://nodejs.org/dist/v18.18.2/node-v18.18.2-x64.msi)
-2. Download Npcap:
-- [Npcap 1.79](https://npcap.com/dist/npcap-1.79.exe)
-3. Download Python 3.10.2:
-- [Python 3.10.2 (64-bit)](https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe)
-4. Download Windows Build Tools:
-- [Windows Build Tools](https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools)
-- And select `Desktop development with C++` (the first one normally), and install
-5. Download the source code of the latest dev branch
-- [Branch](https://github.com/Zeldruck/Albion-Online-ZQRadar/tree/old-radar-dev)
-6. Run the following line:
-```
+### Prerequisites
+1. **Node.js v18.18.2**: [Download](https://nodejs.org/dist/v18.18.2/node-v18.18.2-x64.msi)
+2. **Npcap 1.79+**: [Download](https://npcap.com/dist/npcap-1.79.exe)
+3. **Python 3.10.2**: [Download](https://www.python.org/ftp/python/3.10.2/python-3.10.2-amd64.exe)
+4. **Windows Build Tools**: [Download](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) - Select "Desktop development with C++"
+
+### Quick Start
+```bash
+# Clone the repository
+git clone https://github.com/Zeldruck/Albion-Online-ZQRadar.git
+cd Albion-Online-ZQRadar
+
+# Install dependencies
 npm install
+
+# Run in development mode
+npm start
+# or with auto-reload
+npm run dev
 ```
-7. Run the following line:
+
+### Building Windows Executable
+
+```bash
+# With Makefile (WSL/Git Bash)
+make build          # Build ZQRadar.exe
+make release        # Build + create release ZIP
+
+# Without Make (Windows CMD)
+build.bat build
+build.bat release
+
+# With npm
+npm run build:win
+npm run release
 ```
-node app.js
-```
+
+See [BUILD.md](BUILD.md) for detailed build instructions and all available commands
 8. You should see this:
 ```
 Please select one of the adapter that you use to connect to the internet:

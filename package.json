@@ -1,15 +1,50 @@
 {
   "name": "albion-zqradar",
   "version": "1.0.0",
-  "description": "",
+  "description": "ZQRadar - Real-time radar for Albion Online",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "check": "node build/check-system.js",
+    "prebuild": "npm run check",
+    "build": "pkg . --compress GZip",
+    "build:win": "pkg . --targets node18-win-x64 --compress GZip --output dist/ZQRadar.exe",
+    "build:all": "pkg . --targets node18-win-x64,node18-linux-x64 --compress GZip",
+    "postbuild": "node build/post-build.js",
+    "clean": "if exist dist rmdir /s /q dist && if exist build\\temp rmdir /s /q build\\temp && del /q *.log 2>nul",
+    "clean:all": "npm run clean && if exist node_modules rmdir /s /q node_modules && del /q package-lock.json",
+    "rebuild:native": "npm rebuild cap node-sass",
+    "package": "node build/create-release.js",
+    "release": "npm run build:win && npm run package",
+    "install:deps": "npm install && npm run rebuild:native"
+  },
+  "bin": "app.js",
+  "pkg": {
+    "assets": [
+      "views/**/*",
+      "scripts/**/*",
+      "images/**/*",
+      "sounds/**/*",
+      "node_modules/cap/build/**/*",
+      "node_modules/node-sass/vendor/**/*"
+    ],
+    "targets": [
+      "node18-win-x64"
+    ],
+    "outputPath": "dist",
+    "scripts": [
+      "scripts/**/*.js",
+      "server-scripts/**/*.js"
+    ]
   },
   "author": "Zeldruck",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18.18.2",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "axios": "^1.13.1",
     "buffercursor": "^0.0.12",
@@ -25,5 +60,10 @@
     "readline-sync": "^1.4.10",
     "winreg": "^1.2.5",
     "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "nodemon": "^3.1.7",
+    "pkg": "^5.8.1"
   }
 }

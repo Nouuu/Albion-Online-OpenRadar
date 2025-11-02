@@ -5,6 +5,7 @@ var decoders = require('cap').decoders;
 const WebSocket = require('ws');
 
 const fs = require("fs");
+const path = require("path");
 
 const { getAdapterIp } = require('./server-scripts/adapter-selector');
 
@@ -18,8 +19,10 @@ function StartRadar()
 
   BigInt.prototype.toJSON = function() { return this.toString() }
 
-  app.use(express.static(__dirname + '/views'));
+  // Configure views directory for pkg compatibility
+  app.set('views', path.join(__dirname, 'views'));
   app.set('view engine', 'ejs');
+  app.use(express.static(path.join(__dirname, 'views')));
 
 
   app.get('/', (req, res) => {
@@ -93,17 +96,17 @@ function StartRadar()
 
 
 
-  app.use('/scripts', express.static(__dirname + '/scripts'));
-  app.use('/scripts/Handlers', express.static(__dirname + '/scripts/Handlers'));
-  app.use('/scripts/Drawings', express.static(__dirname + '/scripts/Drawings'));
-  app.use('/scripts/Utils', express.static(__dirname + '/scripts/Utils'));
-  app.use('/scripts/Utils/languages', express.static(__dirname + '/scripts/Utils/languages'));
-  app.use('/images/Resources', express.static(__dirname + '/images/Resources'));
-  app.use('/images/Maps', express.static(__dirname + '/images/Maps'));
-  app.use('/images/Items', express.static(__dirname + '/images/Items'));
-  app.use('/images/Flags', express.static(__dirname + '/images/Flags'));
-  app.use('/sounds', express.static(__dirname + '/sounds'));
-  app.use('/config', express.static(__dirname + '/config'));
+  app.use('/scripts', express.static(path.join(__dirname, 'scripts')));
+  app.use('/scripts/Handlers', express.static(path.join(__dirname, 'scripts', 'Handlers')));
+  app.use('/scripts/Drawings', express.static(path.join(__dirname, 'scripts', 'Drawings')));
+  app.use('/scripts/Utils', express.static(path.join(__dirname, 'scripts', 'Utils')));
+  app.use('/scripts/Utils/languages', express.static(path.join(__dirname, 'scripts', 'Utils', 'languages')));
+  app.use('/images/Resources', express.static(path.join(__dirname, 'images', 'Resources')));
+  app.use('/images/Maps', express.static(path.join(__dirname, 'images', 'Maps')));
+  app.use('/images/Items', express.static(path.join(__dirname, 'images', 'Items')));
+  app.use('/images/Flags', express.static(path.join(__dirname, 'images', 'Flags')));
+  app.use('/sounds', express.static(path.join(__dirname, 'sounds')));
+  app.use('/config', express.static(path.join(__dirname, 'config')));
 
 
 
