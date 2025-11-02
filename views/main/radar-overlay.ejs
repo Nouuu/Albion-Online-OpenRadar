@@ -1,74 +1,179 @@
 <!DOCTYPE html>
-<html lang=" fr\>
+<html lang="fr">
 <head>
- <title>ZQRADAR - Overlay</title>
- <style>
- * { margin: 0; padding: 0; box-sizing: border-box; }
- body { background-color: #000000; overflow: hidden; cursor: default; user-select: none; margin: 0; padding: 0; }
- #overlayContainer { position: relative; width: 500px; height: 500px; background-color: rgba(0, 0, 0, 0.3); }
- .overlay-canvas { position: absolute; top: 0; left: 0; }
- #gridCanvas { border: 2px solid rgba(100, 100, 255, 0.6); }
- #dragHandle { position: absolute; top: 0; left: 0; right: 0; background-color: rgba(30, 30, 40, 0.85); color: white; padding: 6px 12px; border-bottom: 1px solid rgba(100, 100, 255, 0.6); font-size: 11px; z-index: 1000; cursor: move; transition: opacity 0.3s; display: flex; justify-content: space-between; align-items: center; }
- #dragHandle:hover { background-color: rgba(50, 50, 100, 0.95); }
- #dragHandle .title { font-weight: bold; font-size: 12px; }
- #dragHandle .hint { font-size: 10px; opacity: 0.7; }
- #controls { position: absolute; top: 30px; right: 5px; z-index: 1000; display: flex; gap: 5px; transition: opacity 0.3s; }
- .control-btn { background-color: rgba(30, 30, 40, 0.9); color: white; border: 1px solid rgba(100, 100, 255, 0.6); padding: 8px 12px; cursor: pointer; font-size: 14px; border-radius: 4px; transition: all 0.2s; font-weight: bold; }
- .control-btn:hover { background-color: rgba(50, 50, 100, 0.95); border-color: rgba(150, 150, 255, 0.8); transform: scale(1.05); }
- .control-btn:active { transform: scale(0.95); }
- </style>
+    <title>ZQRADAR - Overlay</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            overflow: hidden;
+            cursor: default;
+            user-select: none;
+        }
+
+        #overlayContainer {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        .overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #gridCanvas {
+            border: 2px solid rgba(100, 100, 255, 0.6);
+        }
+
+        #dragHandle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(30, 30, 40, 0.85);
+            color: white;
+            padding: 6px 12px;
+            border-bottom: 1px solid rgba(100, 100, 255, 0.6);
+            font-size: 11px;
+            z-index: 1000;
+            cursor: move;
+            transition: opacity 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #dragHandle:hover {
+            background-color: rgba(50, 50, 100, 0.95);
+        }
+
+        #dragHandle .title {
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        #dragHandle .hint {
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        #controls {
+            position: absolute;
+            top: 30px;
+            right: 5px;
+            z-index: 1000;
+            display: flex;
+            gap: 5px;
+            transition: opacity 0.3s;
+        }
+
+        .control-btn {
+            background-color: rgba(30, 30, 40, 0.9);
+            color: white;
+            border: 1px solid rgba(100, 100, 255, 0.6);
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .control-btn:hover {
+            background-color: rgba(50, 50, 100, 0.95);
+            border-color: rgba(150, 150, 255, 0.8);
+            transform: scale(1.05);
+        }
+
+        .control-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
 </head>
 <body>
- <div id=\overlayContainer\>
- <div id=\dragHandle\ title=\Drag to move window\><span class=\title\>? ZQRADAR Overlay</span><span class=\hint\>Drag to move</span></div>
- <div id=\controls\><button class=\control-btn\ id=\closeBtn\ title=\Close\>??</button></div>
- <canvas class=\overlay-canvas\ id=\mapCanvas\ width=\500\ height=\500\></canvas>
- <canvas class=\overlay-canvas\ id=\gridCanvas\ width=\500\ height=\500\></canvas>
- <canvas class=\overlay-canvas\ id=\drawCanvas\ width=\500\ height=\500\></canvas>
- <canvas class=\overlay-canvas\ id=\flashCanvas\ width=\500\ height=\500\></canvas>
- <canvas class=\overlay-canvas\ id=\ourPlayerCanvas\ width=\500\ height=\500\></canvas>
- <canvas class=\overlay-canvas\ id=\thirdCanvas\ width=\500\ height=\500\></canvas>
- </div>
- <script src=\https://code.jquery.com/jquery-3.6.0.min.js\></script>
- <script src=\https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js\></script>
- <script src=\/scripts/Handlers/HarvestablesHandler.js\></script>
- <script src=\/scripts/Handlers/MobsHandler.js\></script>
- <script src=\/scripts/Handlers/ChestsHandler.js\></script>
- <script src=\/scripts/Handlers/DungeonsHandler.js\></script> 
- <script src=\/scripts/Handlers/Map.js\></script> 
- <script src=\/scripts/Handlers/MobsInfo.js\></script>
- <script src=\/scripts/Handlers/ItemsInfo.js\></script>
- <script src=\/scripts/Handlers/FactionFlagInfo.js\></script>
- <script src=\/scripts/Utils/DrawingUtils.js\></script>
- <script type=\module\ src=\/scripts/Utils/Utils.js\></script> 
- <script>
-document.getElementById('closeBtn').addEventListener('click', function() {
- if (confirm('Fermer le mode overlay ?')) { window.close(); }
-});
-let hideControlsTimeout;
-const controls = document.getElementById('controls');
-const dragHandle = document.getElementById('dragHandle');
-function showControls() {
- controls.style.opacity = '1';
- dragHandle.style.opacity = '1';
- clearTimeout(hideControlsTimeout);
- hideControlsTimeout = setTimeout(() => {
- controls.style.opacity = '0.2';
- dragHandle.style.opacity = '0.2';
- }, 2000);
-}
-document.addEventListener('mousemove', showControls);
-[controls, dragHandle].forEach(el => {
- el.addEventListener('mouseenter', () => {
- el.style.opacity = '1';
- clearTimeout(hideControlsTimeout);
- });
-});
-showControls();
-document.addEventListener('keydown', function(e) {
- if (e.key === 'Escape') { window.close(); }
-});
-document.title = 'ZQRADAR Overlay - ESC:Close';
- </script>
+    <div id="overlayContainer">
+        <div id="dragHandle" title="Drag to move window">
+            <span class="title">⚫ ZQRADAR Overlay</span>
+            <span class="hint">Drag to move</span>
+        </div>
+
+        <div id="controls">
+            <button class="control-btn" id="closeBtn" title="Close">✖️</button>
+        </div>
+
+        <canvas class="overlay-canvas" id="mapCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="gridCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="drawCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="flashCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="ourPlayerCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="thirdCanvas" width="500" height="500"></canvas>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
+    <script src="/scripts/Handlers/HarvestablesHandler.js"></script>
+    <script src="/scripts/Handlers/MobsHandler.js"></script>
+    <script src="/scripts/Handlers/ChestsHandler.js"></script>
+    <script src="/scripts/Handlers/DungeonsHandler.js"></script>
+    <script src="/scripts/Handlers/Map.js"></script>
+    <script src="/scripts/Handlers/MobsInfo.js"></script>
+    <script src="/scripts/Handlers/ItemsInfo.js"></script>
+    <script src="/scripts/Handlers/FactionFlagInfo.js"></script>
+    <script src="/scripts/Utils/DrawingUtils.js"></script>
+
+    <script type="module" src="/scripts/Utils/Utils.js"></script>
+
+    <script>
+        // Close button
+        document.getElementById('closeBtn').addEventListener('click', function() {
+            if (confirm('Fermer le mode overlay ?')) {
+                window.close();
+            }
+        });
+
+        // Auto-hide controls
+        let hideControlsTimeout;
+        const controls = document.getElementById('controls');
+        const dragHandle = document.getElementById('dragHandle');
+
+        function showControls() {
+            controls.style.opacity = '1';
+            dragHandle.style.opacity = '1';
+            clearTimeout(hideControlsTimeout);
+            hideControlsTimeout = setTimeout(() => {
+                controls.style.opacity = '0.2';
+                dragHandle.style.opacity = '0.2';
+            }, 2000);
+        }
+
+        document.addEventListener('mousemove', showControls);
+        [controls, dragHandle].forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                el.style.opacity = '1';
+                clearTimeout(hideControlsTimeout);
+            });
+        });
+
+        // Initialize
+        showControls();
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.close();
+            }
+        });
+
+        document.title = 'ZQRADAR Overlay - ESC:Close';
+    </script>
 </body>
 </html>
+

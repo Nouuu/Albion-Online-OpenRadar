@@ -5,6 +5,94 @@ men**Last update**: 2025-11-02
 
 ---
 
+## 🎯 OVERLAY MODE - Solutions (2025-11-02)
+
+### ❌ Electron : Test effectué, migration IMPOSSIBLE
+**Raison** : Module `cap` ne compile pas (distutils manquant, node-gyp incompatible)  
+**Décision** : Garder architecture actuelle (pkg + navigateur)
+
+### ✅ Solutions Frontend pour Overlay
+
+#### 1. **Solution actuelle** : window.open() avec DeskPins ⭐ **RECOMMANDÉ**
+- ✅ Fonctionne aujourd'hui
+- ✅ Pas de dépendance externe
+- 💡 **DeskPins** pour always-on-top : https://efotinis.neocities.org/deskpins/
+- ⚠️ Barre URL visible (limitation sécurité navigateurs)
+- 📊 Effort : 0 jour (déjà implémenté)
+
+#### 2. **Bibliothèques Frontend JavaScript** (Overlay dans navigateur)
+
+**a) Winbox.js** - Fenêtres modales draggables
+- URL : https://github.com/nextapps-de/winbox
+- ✅ Léger (10 KB), sans dépendance
+- ✅ Fenêtres draggables/redimensionnables
+- ✅ Peut minimiser/maximiser
+- ❌ **Reste dans la page** (pas de vraie fenêtre séparée)
+- 📊 Effort : 0.5 jour
+
+**b) Draggabilly** - Drag & drop
+- URL : https://draggabilly.desandro.com/
+- ✅ Très léger
+- ✅ Drag & drop simple
+- ❌ **Pas de fenêtre séparée**
+- 📊 Effort : 0.25 jour
+
+**c) Custom CSS + Fullscreen API**
+- Utiliser `requestFullscreen()` sur l'overlay
+- ✅ Pas de dépendance
+- ✅ Plein écran possible
+- ❌ **Pas de vraie fenêtre séparée**
+- ❌ Barre URL toujours visible en mode normal
+- 📊 Effort : 0.5 jour
+
+**Conclusion** : Aucune bibliothèque frontend pure ne peut créer une **vraie fenêtre système séparée** sans framework (Electron/Tauri/etc.)
+
+#### 3. **Alternative : Tauri** (Recommandé si refactor nécessaire)
+- URL : https://tauri.app/
+- ✅ Plus léger qu'Electron (Rust + WebView natif)
+- ✅ Pas de Chromium embarqué (~5-10 MB)
+- ✅ Fenêtre frameless, always-on-top natif
+- ⚠️ **Problème potentiel** : Module `cap` (même risque qu'Electron)
+- 📊 Effort : 2-3 jours migration
+
+#### 3. **Alternative : NW.js** (Chromium + Node.js)
+- URL : https://nwjs.io/
+- ✅ Similaire Electron mais plus vieux/stable
+- ✅ Fenêtre frameless possible
+- ⚠️ **Problème potentiel** : Module `cap` (même risque)
+- 📊 Effort : 2-3 jours migration
+
+#### 4. **Alternative : Neutralinojs** (Ultra léger)
+- URL : https://neutralino.js.org/
+- ✅ Très léger (~3 MB)
+- ✅ Pas de Node.js embarqué (WebSockets)
+- ❌ **Bloquant** : Pas de modules natifs (cap impossible)
+- ❌ Non compatible avec le projet
+
+#### 5. **Alternative : WebView2 (Windows uniquement)**
+- URL : https://developer.microsoft.com/en-us/microsoft-edge/webview2/
+- ✅ Natif Windows, léger
+- ✅ Fenêtre frameless possible
+- ❌ **Windows only** (pas cross-platform)
+- ⚠️ **Problème** : Intégration `cap` complexe
+- 📊 Effort : 3-4 jours
+
+### 🎯 Recommandation FINALE
+
+**Garder solution actuelle** : pkg + navigateur + window.open()
+
+**Pourquoi** :
+1. ✅ Fonctionne parfaitement
+2. ✅ Module `cap` stable
+3. ✅ Multi-plateforme
+4. 💡 DeskPins résout le always-on-top
+5. ⚠️ Toutes les alternatives ont le même problème `cap`
+
+**Si vraiment besoin overlay parfait** :
+→ Tester **Tauri** (plus léger qu'Electron, peut-être compatible `cap`)
+
+---
+
 ## 🏗️ BUILD SYSTEM (2025-11-02)
 
 ### Architecture
