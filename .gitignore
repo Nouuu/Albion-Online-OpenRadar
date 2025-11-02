@@ -7,6 +7,35 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+# Logs de session
+LOGS.json
+
+# Fichiers temporaires de diagnostic
+diff_*.txt
+TYPEIDS_SUSPECTS.json
+
+# Fichiers de documentation temporaires (utiliser DEV_NOTES.md et TODO.md uniquement)
+WORKING_*.md
+*_FIX.md
+*_ANALYSIS.md
+*_CLEANUP.md
+*_SESSION.md
+*_FINAL.md
+*_TYPEIDS.md
+
+# Scripts Python temporaires (tools/)
+tools/*.py
+tools/extract_*.py
+tools/scrape_*.py
+tools/fetch_*.py
+tools/analyze_*.py
+tools/debug_*.py
+tools/generate_*.py
+
+# Gros fichiers JSON téléchargés (tools/)
+tools/*.json
+!tools/TYPEIDS_STATUS.json
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
