@@ -63,13 +63,26 @@ class HarvestablesHandler
             }
         }
 
-        switch (this.GetStringType(type))
+        // 🐛 DEBUG: Log Hide T4+ enchanted resources
+        const stringType = this.GetStringType(type);
+        if (stringType === HarvestableType.Hide && tier >= 4 && charges > 0) {
+            console.log(`[DEBUG Hide T4+] ID=${id}, TypeID=${mobileTypeId}, type=${type}, tier=${tier}, enchant=${charges}, size=${size}, stringType=${stringType}`);
+        }
+
+        switch (stringType)
         {
             case HarvestableType.Fiber:
                 if (!this.settings.harvestingStaticFiber[`e${charges}`][tier-1]) return;
                 break;
 
             case HarvestableType.Hide:
+                // 🐛 DEBUG: Log settings check for Hide T4+
+                if (tier >= 4 && charges > 0) {
+                    const settingKey = `e${charges}`;
+                    const settingIndex = tier - 1;
+                    const settingValue = this.settings.harvestingStaticHide[settingKey] ? this.settings.harvestingStaticHide[settingKey][settingIndex] : undefined;
+                    console.log(`[DEBUG Hide T4+ Settings] tier=${tier}, charges=${charges}, key=${settingKey}, index=${settingIndex}, value=${settingValue}, passed=${!!settingValue}`);
+                }
                 if (!this.settings.harvestingStaticHide[`e${charges}`][tier-1]) return;
                 break;
 
@@ -129,13 +142,26 @@ class HarvestablesHandler
             }
         }
 
-        switch (this.GetStringType(type))
+        // 🐛 DEBUG: Log Hide T4+ enchanted resources
+        const stringType = this.GetStringType(type);
+        if (stringType === HarvestableType.Hide && tier >= 4 && charges > 0) {
+            console.log(`[DEBUG Hide T4+ UPDATE] ID=${id}, TypeID=${mobileTypeId}, type=${type}, tier=${tier}, enchant=${charges}, size=${size}, stringType=${stringType}`);
+        }
+
+        switch (stringType)
         {
             case HarvestableType.Fiber:
                 if (!this.settings.harvestingStaticFiber[`e${charges}`][tier-1]) return;
                 break;
 
             case HarvestableType.Hide:
+                // 🐛 DEBUG: Log settings check for Hide T4+
+                if (tier >= 4 && charges > 0) {
+                    const settingKey = `e${charges}`;
+                    const settingIndex = tier - 1;
+                    const settingValue = this.settings.harvestingStaticHide[settingKey] ? this.settings.harvestingStaticHide[settingKey][settingIndex] : undefined;
+                    console.log(`[DEBUG Hide T4+ UPDATE Settings] tier=${tier}, charges=${charges}, key=${settingKey}, index=${settingIndex}, value=${settingValue}, passed=${!!settingValue}`);
+                }
                 if (!this.settings.harvestingStaticHide[`e${charges}`][tier-1]) return;
                 break;
 
@@ -319,7 +345,10 @@ class HarvestablesHandler
         {
             return HarvestableType.Ore;
         }
-        else return '';
+        else {
+            console.warn(`[GetStringType] Unknown typeNumber: ${typeNumber}`);
+            return '';
+        }
     }
 
     Clear()
