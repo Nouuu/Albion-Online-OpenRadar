@@ -11,7 +11,7 @@ const { getAdapterIp } = require('./server-scripts/adapter-selector');
 
 const EventCodes = require('./scripts/Utils/EventCodesApp.js')
 
-// Détection si l'application est packagée avec pkg
+// Detect if application is packaged with pkg
 const isPkg = typeof process.pkg !== 'undefined';
 const appDir = isPkg ? path.dirname(process.execPath) : __dirname;
 
@@ -24,7 +24,7 @@ function StartRadar()
   BigInt.prototype.toJSON = function() { return this.toString() }
 
   // Configure views directory for pkg compatibility
-  // Quand packagé avec pkg, EJS a besoin d'accéder aux fichiers réels
+  // When packaged with pkg, EJS needs access to real files
   const viewsPath = isPkg ? path.join(appDir, 'views') : path.join(__dirname, 'views');
   app.set('views', viewsPath);
   app.set('view engine', 'ejs');

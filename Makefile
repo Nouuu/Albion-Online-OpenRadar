@@ -14,93 +14,93 @@ DIST_DIR = dist
 BUILD_DIR = build
 RELEASE_NAME = ZQRadar-$(shell date +%Y%m%d)
 
-# Couleurs pour l'affichage
+# Colors for display
 GREEN = \033[0;32m
 YELLOW = \033[1;33m
 RED = \033[0;31m
 NC = \033[0m # No Color
 
-help: ## Afficher l'aide
+help: ## Display help
 	@echo ""
-	@echo "$(GREEN)ZQRadar - Commandes disponibles$(NC)"
+	@echo "$(GREEN)ZQRadar - Available Commands$(NC)"
 	@echo "=================================="
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 
-install: ## Installer toutes les dépendances
-	@echo "$(GREEN)[1/2] Installation des dépendances npm...$(NC)"
+install: ## Install all dependencies
+	@echo "$(GREEN)[1/2] Installing npm dependencies...$(NC)"
 	npm install
 	@echo ""
-	@echo "$(GREEN)[2/2] Rebuild des modules natifs (cap, node-sass)...$(NC)"
+	@echo "$(GREEN)[2/2] Rebuilding native modules (cap, node-sass)...$(NC)"
 	npm rebuild cap node-sass
 	@echo ""
-	@echo "$(GREEN)✓ Installation terminée !$(NC)"
+	@echo "$(GREEN)✓ Installation completed!$(NC)"
 
-start: ## Lancer le radar
-	@echo "$(GREEN)Démarrage de ZQRadar...$(NC)"
+start: ## Launch the radar
+	@echo "$(GREEN)Starting ZQRadar...$(NC)"
 	@echo ""
 	npm start
 
-dev: ## Lancer en mode développement (auto-reload)
-	@echo "$(GREEN)Mode développement avec auto-reload...$(NC)"
+dev: ## Launch in development mode (auto-reload)
+	@echo "$(GREEN)Development mode with auto-reload...$(NC)"
 	@command -v nodemon >/dev/null 2>&1 || npm install -D nodemon
 	npm run dev
 
-check: ## Vérifier les dépendances système
-	@echo "$(GREEN)Vérification des dépendances système...$(NC)"
+check: ## Check system dependencies
+	@echo "$(GREEN)Checking system dependencies...$(NC)"
 	@echo ""
 	@echo -n "Node.js version: "
-	@node --version || (echo "$(RED)✗ Node.js non trouvé !$(NC)" && exit 1)
+	@node --version || (echo "$(RED)✗ Node.js not found!$(NC)" && exit 1)
 	@echo "$(GREEN)✓ Node.js OK$(NC)"
 	@echo ""
 	@echo -n "npm version: "
-	@npm --version || (echo "$(RED)✗ npm non trouvé !$(NC)" && exit 1)
+	@npm --version || (echo "$(RED)✗ npm not found!$(NC)" && exit 1)
 	@echo "$(GREEN)✓ npm OK$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Note: Npcap $(NPCAP_VERSION) doit être installé sur Windows$(NC)"
-	@echo "      Télécharger: https://npcap.com/dist/npcap-$(NPCAP_VERSION).exe"
+	@echo "$(YELLOW)Note: Npcap $(NPCAP_VERSION) must be installed on Windows$(NC)"
+	@echo "      Download: https://npcap.com/dist/npcap-$(NPCAP_VERSION).exe"
 	@echo ""
-	@echo "$(GREEN)✓ Vérification terminée !$(NC)"
+	@echo "$(GREEN)✓ Check completed!$(NC)"
 
-install-pkg: ## Installer pkg pour le build
-	@echo "$(GREEN)Installation de pkg...$(NC)"
-	npm install -D pkg
+install-pkg: ## Install pkg and archiver for build
+	@echo "$(GREEN)Installing pkg and archiver...$(NC)"
+	npm install -D pkg archiver
 
-build: install-pkg ## Builder l'exécutable Windows (.exe)
-	@echo "$(GREEN)[1/2] Vérification des dépendances...$(NC)"
+build: install-pkg ## Build Windows executable (.exe)
+	@echo "$(GREEN)[1/2] Checking dependencies...$(NC)"
 	@make check
 	@echo ""
-	@echo "$(GREEN)[2/2] Build de l'exécutable Windows...$(NC)"
+	@echo "$(GREEN)[2/2] Building Windows executable...$(NC)"
 	npm run build:win
 	@echo ""
-	@echo "$(GREEN)✓ Build terminé !$(NC)"
-	@echo "$(YELLOW)Exécutable créé: $(DIST_DIR)/ZQRadar.exe$(NC)"
+	@echo "$(GREEN)✓ Build completed!$(NC)"
+	@echo "$(YELLOW)Executable created: $(DIST_DIR)/ZQRadar.exe$(NC)"
 
-build-all: install-pkg ## Builder pour Windows et Linux
-	@echo "$(GREEN)Build multi-plateforme...$(NC)"
+build-all: install-pkg ## Build for Windows and Linux
+	@echo "$(GREEN)Multi-platform build...$(NC)"
 	npm run build:all
 	@echo ""
-	@echo "$(GREEN)✓ Build terminé pour toutes les plateformes !$(NC)"
+	@echo "$(GREEN)✓ Build completed for all platforms!$(NC)"
 
-clean: ## Nettoyer les fichiers temporaires et builds
-	@echo "$(GREEN)Nettoyage des fichiers temporaires...$(NC)"
+clean: ## Clean temporary files and builds
+	@echo "$(GREEN)Cleaning temporary files...$(NC)"
 	rm -rf $(DIST_DIR)
 	rm -rf $(BUILD_DIR)/temp
 	rm -f *.log
-	@echo "$(GREEN)✓ Nettoyage terminé !$(NC)"
+	@echo "$(GREEN)✓ Cleaning completed!$(NC)"
 
-clean-all: clean ## Nettoyage complet (+ node_modules)
-	@echo "$(YELLOW)Suppression de node_modules...$(NC)"
+clean-all: clean ## Complete cleanup (+ node_modules)
+	@echo "$(YELLOW)Removing node_modules...$(NC)"
 	rm -rf node_modules package-lock.json
-	@echo "$(GREEN)✓ Nettoyage complet terminé !$(NC)"
+	@echo "$(GREEN)✓ Complete cleanup finished!$(NC)"
 
-rebuild: clean install build ## Rebuild complet (clean + install + build)
+rebuild: clean install build ## Complete rebuild (clean + install + build)
 	@echo ""
-	@echo "$(GREEN)✓ Rebuild complet terminé !$(NC)"
+	@echo "$(GREEN)✓ Complete rebuild finished!$(NC)"
 
-package: build ## Créer un package de release (ZIP)
-	@echo "$(GREEN)Création du package de release...$(NC)"
+package: build ## Create release package (ZIP)
+	@echo "$(GREEN)Creating release package...$(NC)"
 	@mkdir -p $(DIST_DIR)/$(RELEASE_NAME)
 	@cp $(DIST_DIR)/ZQRadar.exe $(DIST_DIR)/$(RELEASE_NAME)/
 	@cp -r views $(DIST_DIR)/$(RELEASE_NAME)/
@@ -109,42 +109,42 @@ package: build ## Créer un package de release (ZIP)
 	@cp -r sounds $(DIST_DIR)/$(RELEASE_NAME)/
 	@cp README.md $(DIST_DIR)/$(RELEASE_NAME)/
 	@cp zqradar.ico $(DIST_DIR)/$(RELEASE_NAME)/ 2>/dev/null || true
-	@echo "$(YELLOW)Création de l'archive...$(NC)"
+	@echo "$(YELLOW)Creating archive...$(NC)"
 	@cd $(DIST_DIR) && zip -r $(RELEASE_NAME).zip $(RELEASE_NAME)
 	@rm -rf $(DIST_DIR)/$(RELEASE_NAME)
 	@echo ""
-	@echo "$(GREEN)✓ Package créé: $(DIST_DIR)/$(RELEASE_NAME).zip$(NC)"
+	@echo "$(GREEN)✓ Package created: $(DIST_DIR)/$(RELEASE_NAME).zip$(NC)"
 
-release: rebuild package ## Créer une release complète
+release: rebuild package ## Create complete release
 	@echo ""
-	@echo "$(GREEN)✓ Release complète terminée !$(NC)"
-	@echo "$(YELLOW)Fichiers créés dans $(DIST_DIR)/$(NC)"
+	@echo "$(GREEN)✓ Complete release finished!$(NC)"
+	@echo "$(YELLOW)Files created in $(DIST_DIR)/$(NC)"
 
-test-build: ## Tester si l'exécutable fonctionne
-	@echo "$(GREEN)Test de l'exécutable...$(NC)"
+test-build: ## Test if executable works
+	@echo "$(GREEN)Testing executable...$(NC)"
 	@if [ -f $(DIST_DIR)/ZQRadar.exe ]; then \
-		echo "$(GREEN)✓ ZQRadar.exe trouvé$(NC)"; \
-		echo "$(YELLOW)Note: Le test complet nécessite Windows pour exécuter le .exe$(NC)"; \
+		echo "$(GREEN)✓ ZQRadar.exe found$(NC)"; \
+		echo "$(YELLOW)Note: Full test requires Windows to execute .exe$(NC)"; \
 	else \
-		echo "$(RED)✗ ZQRadar.exe non trouvé. Lancez 'make build' d'abord.$(NC)"; \
+		echo "$(RED)✗ ZQRadar.exe not found. Run 'make build' first.$(NC)"; \
 		exit 1; \
 	fi
 
-info: ## Afficher les informations du projet
+info: ## Display project information
 	@echo ""
-	@echo "$(GREEN)ZQRadar - Informations du projet$(NC)"
+	@echo "$(GREEN)ZQRadar - Project Information$(NC)"
 	@echo "=================================="
-	@echo "Version Node requise: $(NODE_VERSION)"
-	@echo "Version Npcap requise: $(NPCAP_VERSION)"
-	@echo "Dossier de build: $(DIST_DIR)/"
+	@echo "Required Node version: $(NODE_VERSION)"
+	@echo "Required Npcap version: $(NPCAP_VERSION)"
+	@echo "Build folder: $(DIST_DIR)/"
 	@echo ""
-	@echo "Dépendances principales:"
-	@echo "  - express: Serveur web"
+	@echo "Main dependencies:"
+	@echo "  - express: Web server"
 	@echo "  - ws: WebSocket"
-	@echo "  - cap: Capture de paquets (module natif)"
+	@echo "  - cap: Packet capture (native module)"
 	@echo "  - ejs: Templates"
 	@echo ""
-	@echo "Modules natifs (nécessitent rebuild):"
-	@echo "  - cap.node (capture réseau)"
-	@echo "  - node-sass (compilation SASS)"
+	@echo "Native modules (require rebuild):"
+	@echo "  - cap.node (network capture)"
+	@echo "  - node-sass (SASS compilation)"
 	@echo ""

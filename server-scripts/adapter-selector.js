@@ -3,7 +3,7 @@ const readlineSync = require('readline-sync');
 const fs = require('node:fs');
 const path = require('path');
 
-// Détection si l'application est packagée avec pkg
+// Detect if application is packaged with pkg
 const isPkg = typeof process.pkg !== 'undefined';
 const appDir = isPkg ? path.dirname(process.execPath) : __dirname;
 

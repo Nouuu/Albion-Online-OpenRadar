@@ -1,9 +1,9 @@
 @echo off
 REM ============================================
-REM ZQRadar - Build Helper pour Windows
+REM ZQRadar - Build Helper for Windows
 REM ============================================
-REM Alternative au Makefile pour ceux qui n'ont pas GNU Make
-REM Usage: build.bat [commande]
+REM Alternative to Makefile for those who don't have GNU Make
+REM Usage: build.bat [command]
 REM ============================================
 
 setlocal
@@ -22,55 +22,55 @@ goto error
 :help
 echo.
 echo ╔════════════════════════════════════════════════════════════╗
-echo ║          ZQRadar - Build Helper pour Windows               ║
+echo ║          ZQRadar - Build Helper for Windows                ║
 echo ╚════════════════════════════════════════════════════════════╝
 echo.
-echo Usage: build.bat [commande]
+echo Usage: build.bat [command]
 echo.
-echo Commandes disponibles:
+echo Available commands:
 echo.
-echo   check       Vérifier les dépendances système
-echo   install     Installer toutes les dépendances
-echo   build       Builder l'exécutable Windows
-echo   rebuild     Rebuild complet (clean + install + build)
-echo   release     Créer un package de release complet
-echo   clean       Nettoyer les fichiers temporaires
-echo   start       Lancer ZQRadar en mode dev
-echo   help        Afficher cette aide
+echo   check       Check system dependencies
+echo   install     Install all dependencies
+echo   build       Build Windows executable
+echo   rebuild     Complete rebuild (clean + install + build)
+echo   release     Create complete release package
+echo   clean       Clean temporary files
+echo   start       Launch ZQRadar in dev mode
+echo   help        Display this help
 echo.
 echo ────────────────────────────────────────────────────────────
 echo.
-echo 💡 Conseil: Si vous avez WSL ou Git Bash, utilisez le Makefile:
+echo 💡 Tip: If you have WSL or Git Bash, use the Makefile:
 echo    make help
 echo.
 goto end
 
 :check
 echo.
-echo 🔍 Vérification des dépendances système...
+echo 🔍 Checking system dependencies...
 echo.
 call npm run check
 goto end
 
 :install
 echo.
-echo 📦 Installation des dépendances...
+echo 📦 Installing dependencies...
 echo.
 call npm install
 if errorlevel 1 goto installerror
 echo.
-echo 🔧 Rebuild des modules natifs...
+echo 🔧 Rebuilding native modules...
 call npm rebuild cap node-sass
 if errorlevel 1 goto installerror
 echo.
-echo ✅ Installation terminée !
+echo ✅ Installation completed!
 goto end
 
 :installerror
 echo.
-echo ❌ ERREUR lors de l'installation !
+echo ❌ ERROR during installation!
 echo.
-echo Vérifiez que vous avez:
+echo Make sure you have:
 echo   • Node.js v18.18.2
 echo   • Python 3.10.2
 echo   • Visual Studio Build Tools
@@ -80,139 +80,139 @@ goto end
 
 :build
 echo.
-echo 🏗️  Build de ZQRadar pour Windows...
+echo 🏗️  Building ZQRadar for Windows...
 echo.
-echo [1/3] Vérification...
+echo [1/3] Checking...
 call npm run check
 if errorlevel 1 (
     echo.
-    echo ❌ Vérification échouée !
+    echo ❌ Check failed!
     pause
     goto end
 )
 echo.
-echo [2/3] Installation de pkg...
-call npm install -D pkg
+echo [2/3] Installing pkg...
+call npm install -D pkg archiver
 echo.
-echo [3/3] Compilation...
+echo [3/3] Compiling...
 call npm run build:win
 if errorlevel 1 (
     echo.
-    echo ❌ Build échoué !
+    echo ❌ Build failed!
     pause
     goto end
 )
 echo.
-echo ✅ Build terminé !
+echo ✅ Build completed!
 echo.
-echo 📍 Exécutable créé: dist\ZQRadar.exe
+echo 📍 Executable created: dist\ZQRadar.exe
 echo.
 goto end
 
 :rebuild
 echo.
-echo 🔄 Rebuild complet de ZQRadar...
+echo 🔄 Complete rebuild of ZQRadar...
 echo.
-echo [1/4] Nettoyage...
+echo [1/4] Cleaning...
 if exist dist (
     rmdir /s /q dist
-    echo ✓ dist\ supprimé
+    echo ✓ dist\ deleted
 )
 if exist ip.txt (
     del /q ip.txt
-    echo ✓ ip.txt supprimé
+    echo ✓ ip.txt deleted
 )
 echo.
-echo [2/4] Installation des dépendances...
+echo [2/4] Installing dependencies...
 call npm install
 if errorlevel 1 (
     echo.
-    echo ❌ Installation échouée !
+    echo ❌ Installation failed!
     pause
     goto end
 )
 echo.
-echo [3/4] Rebuild des modules natifs...
+echo [3/4] Rebuilding native modules...
 call npm rebuild cap node-sass
 if errorlevel 1 (
     echo.
-    echo ❌ Rebuild des modules natifs échoué !
+    echo ❌ Native modules rebuild failed!
     pause
     goto end
 )
 echo.
-echo [4/4] Build de l'exécutable...
+echo [4/4] Building executable...
 call npm run build:win
 if errorlevel 1 (
     echo.
-    echo ❌ Build échoué !
+    echo ❌ Build failed!
     pause
     goto end
 )
 echo.
-echo [Post-build] Copie des assets...
+echo [Post-build] Copying assets and creating archive...
 call node build\post-build.js
 if errorlevel 1 (
     echo.
-    echo ❌ Post-build échoué !
+    echo ❌ Post-build failed!
     pause
     goto end
 )
 echo.
-echo ✅ Rebuild complet terminé !
+echo ✅ Complete rebuild finished!
 echo.
-echo 📍 Exécutable créé: dist\ZQRadar.exe
+echo 📍 Executable created: dist\ZQRadar.exe
 echo.
 goto end
 
 :release
 echo.
-echo 📦 Création d'une release complète...
+echo 📦 Creating complete release...
 echo.
 call npm run release
 if errorlevel 1 (
     echo.
-    echo ❌ Release échouée !
+    echo ❌ Release failed!
     pause
     goto end
 )
 echo.
-echo ✅ Release créée avec succès !
+echo ✅ Release created successfully!
 echo.
-echo Fichiers dans dist\:
+echo Files in dist\:
 dir /b dist\*.zip 2>nul
 echo.
 goto end
 
 :clean
 echo.
-echo 🧹 Nettoyage...
+echo 🧹 Cleaning...
 echo.
 if exist dist (
     rmdir /s /q dist
-    echo ✓ dist\ supprimé
+    echo ✓ dist\ deleted
 )
 if exist build\temp (
     rmdir /s /q build\temp
-    echo ✓ build\temp\ supprimé
+    echo ✓ build\temp\ deleted
 )
 del /q *.log 2>nul
 echo.
-echo ✅ Nettoyage terminé !
+echo ✅ Cleaning completed!
 goto end
 
 :start
 echo.
-echo 🚀 Démarrage de ZQRadar...
+echo 🚀 Starting ZQRadar...
 echo.
 call npm start
 goto end
 
 :error
 echo.
-echo ❌ Commande inconnue: %1
+echo ❌ Unknown command: %1
 echo.
-echo Tapez "build.bat help" pour voir les commandes disponibles
+echo Type "build.bat help" to see available commands
 echo.
 goto end
 
