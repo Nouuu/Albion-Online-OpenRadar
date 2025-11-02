@@ -67,8 +67,55 @@ Les modules natifs (cap.node) sont intégrés dans l'exécutable.
 fs.writeFileSync(path.join(DIST_DIR, 'README.txt'), readmeContent, 'utf8');
 console.log('✓ README.txt créé dans dist/');
 
+// Copier tous les assets à côté de l'exe
+// Cette approche allège l'exécutable et facilite les mises à jour
+const assetsToCopy = ['views', 'scripts', 'images', 'sounds', 'config'];
+
+function copyRecursiveSync(src, dest) {
+    if (!fs.existsSync(src)) {
+        console.warn(`⚠ Dossier source non trouvé: ${src}`);
+        return;
+    }
+
+    if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+    }
+
+    const entries = fs.readdirSync(src, { withFileTypes: true });
+
+    for (let entry of entries) {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+
+        if (entry.isDirectory()) {
+            copyRecursiveSync(srcPath, destPath);
+        } else {
+            fs.copyFileSync(srcPath, destPath);
+        }
+    }
+}
+
+console.log('\n📁 Copie des assets à côté de l\'exécutable...\n');
+
+for (const asset of assetsToCopy) {
+    const srcPath = path.join(__dirname, '..', asset);
+    const destPath = path.join(DIST_DIR, asset);
+
+    try {
+        copyRecursiveSync(srcPath, destPath);
+        console.log(`✓ ${asset}/ copié`);
+    } catch (err) {
+        console.error(`✗ Erreur lors de la copie de ${asset}/:`, err.message);
+    }
+}
+
 console.log('\n✓ Post-build terminé !\n');
 console.log('Fichiers dans dist/:');
-console.log('  - ZQRadar.exe');
+console.log('  - ZQRadar.exe (allégé - modules natifs seulement)');
 console.log('  - README.txt');
-console.log('\nNote: Les assets (views, scripts, images) sont intégrés dans le .exe\n');
+console.log('  - views/');
+console.log('  - scripts/');
+console.log('  - images/');
+console.log('  - sounds/');
+console.log('  - config/');
+console.log('\nNote: Cette approche allège l\'exe et facilite les mises à jour\n');

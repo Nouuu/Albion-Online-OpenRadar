@@ -22,10 +22,6 @@
   "bin": "app.js",
   "pkg": {
     "assets": [
-      "views/**/*",
-      "scripts/**/*",
-      "images/**/*",
-      "sounds/**/*",
       "node_modules/cap/build/**/*",
       "node_modules/node-sass/vendor/**/*"
     ],

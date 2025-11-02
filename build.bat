@@ -13,6 +13,7 @@ if /i "%1"=="help" goto help
 if /i "%1"=="check" goto check
 if /i "%1"=="install" goto install
 if /i "%1"=="build" goto build
+if /i "%1"=="rebuild" goto rebuild
 if /i "%1"=="release" goto release
 if /i "%1"=="clean" goto clean
 if /i "%1"=="start" goto start
@@ -31,6 +32,7 @@ echo.
 echo   check       Vérifier les dépendances système
 echo   install     Installer toutes les dépendances
 echo   build       Builder l'exécutable Windows
+echo   rebuild     Rebuild complet (clean + install + build)
 echo   release     Créer un package de release complet
 echo   clean       Nettoyer les fichiers temporaires
 echo   start       Lancer ZQRadar en mode dev
@@ -102,6 +104,62 @@ if errorlevel 1 (
 )
 echo.
 echo ✅ Build terminé !
+echo.
+echo 📍 Exécutable créé: dist\ZQRadar.exe
+echo.
+goto end
+
+:rebuild
+echo.
+echo 🔄 Rebuild complet de ZQRadar...
+echo.
+echo [1/4] Nettoyage...
+if exist dist (
+    rmdir /s /q dist
+    echo ✓ dist\ supprimé
+)
+if exist ip.txt (
+    del /q ip.txt
+    echo ✓ ip.txt supprimé
+)
+echo.
+echo [2/4] Installation des dépendances...
+call npm install
+if errorlevel 1 (
+    echo.
+    echo ❌ Installation échouée !
+    pause
+    goto end
+)
+echo.
+echo [3/4] Rebuild des modules natifs...
+call npm rebuild cap node-sass
+if errorlevel 1 (
+    echo.
+    echo ❌ Rebuild des modules natifs échoué !
+    pause
+    goto end
+)
+echo.
+echo [4/4] Build de l'exécutable...
+call npm run build:win
+if errorlevel 1 (
+    echo.
+    echo ❌ Build échoué !
+    pause
+    goto end
+)
+echo.
+echo [Post-build] Copie des assets...
+call node build\post-build.js
+if errorlevel 1 (
+    echo.
+    echo ❌ Post-build échoué !
+    pause
+    goto end
+)
+echo.
+echo ✅ Rebuild complet terminé !
 echo.
 echo 📍 Exécutable créé: dist\ZQRadar.exe
 echo.

@@ -1,6 +1,11 @@
 const { networkInterfaces } = require('os')
 const readlineSync = require('readline-sync');
 const fs = require('node:fs');
+const path = require('path');
+
+// Détection si l'application est packagée avec pkg
+const isPkg = typeof process.pkg !== 'undefined';
+const appDir = isPkg ? path.dirname(process.execPath) : __dirname;
 
 const getAdapterIp = () => {
     const interfaces = networkInterfaces();
@@ -50,7 +55,8 @@ const getAdapterIp = () => {
     console.log(`You have selected "${selectedName} - ${selectedIp}"`);
     console.log();
 
-    fs.writeFile('ip.txt', selectedIp, (err) => {
+    const ipFilePath = path.join(appDir, 'ip.txt');
+    fs.writeFile(ipFilePath, selectedIp, (err) => {
         if (err)
             console.log("Error when saving ip.")
     });

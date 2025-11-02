@@ -11,6 +11,10 @@ const { getAdapterIp } = require('./server-scripts/adapter-selector');
 
 const EventCodes = require('./scripts/Utils/EventCodesApp.js')
 
+// Détection si l'application est packagée avec pkg
+const isPkg = typeof process.pkg !== 'undefined';
+const appDir = isPkg ? path.dirname(process.execPath) : __dirname;
+
 StartRadar();
 
 function StartRadar()
@@ -20,9 +24,11 @@ function StartRadar()
   BigInt.prototype.toJSON = function() { return this.toString() }
 
   // Configure views directory for pkg compatibility
-  app.set('views', path.join(__dirname, 'views'));
+  // Quand packagé avec pkg, EJS a besoin d'accéder aux fichiers réels
+  const viewsPath = isPkg ? path.join(appDir, 'views') : path.join(__dirname, 'views');
+  app.set('views', viewsPath);
   app.set('view engine', 'ejs');
-  app.use(express.static(path.join(__dirname, 'views')));
+  app.use(express.static(viewsPath));
 
 
   app.get('/', (req, res) => {
@@ -54,7 +60,7 @@ function StartRadar()
     const viewName = 'main/map';
     const viewRequireName = 'main/require-map'
 
-    fs.access("./images/Maps", function(error) {
+    fs.access(path.join(appDir, 'images', 'Maps'), function(error) {
       if (error)
       {
         res.render('layout', { mainContent: viewRequireName });
@@ -96,17 +102,17 @@ function StartRadar()
 
 
 
-  app.use('/scripts', express.static(path.join(__dirname, 'scripts')));
-  app.use('/scripts/Handlers', express.static(path.join(__dirname, 'scripts', 'Handlers')));
-  app.use('/scripts/Drawings', express.static(path.join(__dirname, 'scripts', 'Drawings')));
-  app.use('/scripts/Utils', express.static(path.join(__dirname, 'scripts', 'Utils')));
-  app.use('/scripts/Utils/languages', express.static(path.join(__dirname, 'scripts', 'Utils', 'languages')));
-  app.use('/images/Resources', express.static(path.join(__dirname, 'images', 'Resources')));
-  app.use('/images/Maps', express.static(path.join(__dirname, 'images', 'Maps')));
-  app.use('/images/Items', express.static(path.join(__dirname, 'images', 'Items')));
-  app.use('/images/Flags', express.static(path.join(__dirname, 'images', 'Flags')));
-  app.use('/sounds', express.static(path.join(__dirname, 'sounds')));
-  app.use('/config', express.static(path.join(__dirname, 'config')));
+  app.use('/scripts', express.static(path.join(appDir, 'scripts')));
+  app.use('/scripts/Handlers', express.static(path.join(appDir, 'scripts', 'Handlers')));
+  app.use('/scripts/Drawings', express.static(path.join(appDir, 'scripts', 'Drawings')));
+  app.use('/scripts/Utils', express.static(path.join(appDir, 'scripts', 'Utils')));
+  app.use('/scripts/Utils/languages', express.static(path.join(appDir, 'scripts', 'Utils', 'languages')));
+  app.use('/images/Resources', express.static(path.join(appDir, 'images', 'Resources')));
+  app.use('/images/Maps', express.static(path.join(appDir, 'images', 'Maps')));
+  app.use('/images/Items', express.static(path.join(appDir, 'images', 'Items')));
+  app.use('/images/Flags', express.static(path.join(appDir, 'images', 'Flags')));
+  app.use('/sounds', express.static(path.join(appDir, 'sounds')));
+  app.use('/config', express.static(path.join(appDir, 'config')));
 
 
 
@@ -123,10 +129,11 @@ function StartRadar()
   var c = new Cap();
 
   let adapterIp;
+  const ipFilePath = path.join(appDir, 'ip.txt');
 
-  if (fs.existsSync('ip.txt'))
-    adapterIp = fs.readFileSync('ip.txt', { encoding: 'utf-8', flag: 'r' })
-    
+  if (fs.existsSync(ipFilePath))
+    adapterIp = fs.readFileSync(ipFilePath, { encoding: 'utf-8', flag: 'r' })
+
 
   if (!adapterIp)
   {
