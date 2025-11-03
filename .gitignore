@@ -22,6 +22,8 @@ WORKING_*.md
 *_SESSION.md
 *_FINAL.md
 *_TYPEIDS.md
+tools/
+.claude
 
 # Temporary Python scripts (tools/)
 tools/*.py
