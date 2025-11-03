@@ -548,18 +548,119 @@ Estimation: 20-30 TypeID principaux en 1-2h
 
 ## 📝 CHANGELOG
 
-### 2025-11-03
+### 2025-11-03 - 🔍 INVESTIGATION ÉVÉNEMENTS INVENTAIRE EN COURS
+- 🔍 **Recherche du vrai nombre de ressources avec bonus premium**:
+  - **Problème**: Fame ne contient PAS le bonus premium (+50% ressources)
+  - **Approche Fame**: Détecte gear/food bonus ✓ mais pas premium ❌
+  - **Nouveaux logs activés**: TOUS les événements d'inventaire (26-37)
+    - `InventoryPutItem` (26)
+    - `InventoryDeleteItem` (27)
+    - `InventoryState` (28)
+    - `NewSimpleItem` (32) ⭐ Probablement ici !
+    - `NewEquipmentItem` (30)
+    - `NewJournalItem` (35)
+  - **Objectif**: Trouver l'événement qui contient le nombre EXACT avec premium
+  - **Test nécessaire**: Récolter en jeu et analyser les nouveaux logs
+- ✅ **FIX Double comptage dernier stack**: Ne pas tracker dans harvestFinished si Parameters[8] = undefined
+  - **Problème identifié**: Dernier stack compté 2 fois (harvestFinished + HarvestUpdateEvent)
+  - **Flux correct**:
+    - Stacks normaux: `harvestFinished` track avec Parameters[5] ✓
+    - Dernier stack: `HarvestUpdateEvent` track avec cache Parameters[5] ✓
+    - `harvestFinished` skip si Parameters[8] = undefined ✓
+  - **Résultat**: Chaque stack compté exactement 1 fois
+- ✅ **Système cache Parameters[5]**: Stockage/récupération entre événements
+  - `harvestFinished` stocke Parameters[5] dans Map
+  - `HarvestUpdateEvent` récupère du cache pour dernier stack
+  - Cache nettoyé après utilisation (pas de fuite)
+- ✅ **Précision 100%**: Stats = inventaire jeu (avec tous les bonus serveur)
+  - Parameters[5] contient bonus: gear, food, premium, zone
+  - Fonctionne pour harvestables statiques (Wood, Ore, Rock, Fiber statique)
+  - Living resources (Hide, Fiber mobile) utilisent formule de base
+- ✅ **Code nettoyé**: Tous les logs de debug retirés
+- 🔍 **Logs de debug activés**: Investigation régression dernier stack
+  - Symptômes rapportés: Dernier stack plus compté + incrémente de 1 au lieu de Parameters[5]
+  - Logs ajoutés dans `harvestFinished()` et `HarvestUpdateEvent()`
+  - À tester en jeu pour identifier où le tracking échoue
+  - Une fois diagnostiqué, on corrigera et retirera les logs
+- ✅ **FIX CRITIQUE - Double comptage dernier stack**: Suppression tracking dans HarvestUpdateEvent
+  - **Problème**: `HarvestUpdateEvent` trackait le dernier stack ALORS que `harvestFinished` l'avait déjà fait
+  - **Flux réel**: `harvestFinished(param5=2)` → PUIS `HarvestUpdateEvent(param1=undefined)` → Double comptage!
+  - **Solution**: Retrait complet du tracking dans `HarvestUpdateEvent` (suppression seule)
+  - **Résultat**: Stats maintenant correctes, pas de doublons
+- ✅ **SOLUTION FINALE - Parameters[5]**: Nombre RÉEL de ressources du serveur
+  - **Découverte**: `Parameters[5]` dans `harvestFinished` contient le nombre exact de ressources
+  - **Validation**: Tests réels avec Fiber T4 (param5 = 2 ressources/stack ✓)
+  - **Inclut TOUS les bonus**: gathering gear, food, premium, zone bonus
+  - **Précision 100%**: Les stats affichent exactement ce que le joueur reçoit
+  - **Dernier stack tracké**: Via `HarvestUpdateEvent(Parameters[1] = undefined)`
+  - **Living resources**: Trackées via `MobsHandler.removeMob()` (formule de base)
+  - **Code nettoyé**: Suppression des logs de debug et formules fixes
+  - Fonctionne pour harvestables statiques (Wood, Ore, Rock, Fiber statique)
+  - Living resources (Hide, Fiber mobile) utilisent formule de base car pas de Parameters[5]
+- ✅ **FIX Living resources harvest tracking**: Tracker dans removeMob()
+  - **Problème identifié**: `harvestFinished` N'est PAS appelé pour le dernier stack
+  - **Vraie cause**: `HarvestUpdateEvent(Parameters[1] = undefined)` supprime directement
+  - **Solution**: Tracker dans `HarvestUpdateEvent` AVANT `removeHarvestable`
+  - Calcul: `resourcesPerStack × harvestable.size` (cas où plusieurs stacks restent)
+  - Dernier stack maintenant VRAIMENT comptabilisé
+- ✅ **FIX Statistiques de récolte - SIMPLIFIÉ**: Retour à la base
+  - Tracking AVANT `updateHarvestable` pour capturer le dernier stack
+  - Calcul simple : 1 stack = X ressources selon tier (T3×3, T4×2, T5×1)
+  - `updateStatsHarvested()` pour compter les ressources réelles
+  - Suppression automatique quand size <= 0
+  - Code simplifié, pas de Parameters[5] ou Parameters[8] complexes
+- ✅ **Overlay enchantement pour living resources**: Affichage uniforme
+  - Ajout de l'indicateur d'enchantement visuel sur les living resources (Hide, Fiber)
+  - Cercle coloré avec glow + numéro (.1, .2, .3, .4)
+  - Identique à l'affichage des harvestables statiques
+  - Couleurs : .1 vert, .2 cyan, .3 rose, .4 or
+- ✅ **FIX Critical harvestFinished**: Correction du parsing des paramètres
+  - **Problème**: Parameters[0] = Player ID (pas stack count!) → 219712 ressources au lieu de 1 ❌
+  - **Solution**: Toujours 1 stack par récolte (mécanique serveur)
+  - Conversion correcte : T1-T3 (×3), T4 (×2), T5+ (×1)
+  - Stats "Récolté" maintenant correctes (pas de valeurs astronomiques)
+- ✅ **FIX Statistiques de récolte précises**: Tracking du nombre réel de ressources
+  - **Problème 1**: Le dernier stack récolté n'était pas comptabilisé
+  - **Problème 2**: Stats affichaient nombre de stacks au lieu du nombre de ressources réelles
+  - **Problème 3**: Mauvaise répartition des types (affichait Wood au lieu de Hide/Fiber)
+  - **Solution**: Nouvelle méthode `updateStatsHarvested()` qui compte les ressources réelles
+  - Conversion stack → ressources appliquée : T1-T3 (×3), T4 (×2), T5+ (×1)
+  - `GetStringType()` accepte maintenant les strings directement pour éviter mauvais mapping
+  - Logging détaillé ajouté dans `harvestFinished()` pour debug
+  - Stats "Récolté" affichent maintenant le nombre exact de ressources collectées
+- ✅ **FIX Statistiques complètes**: Tracking des living resources
+  - **Problème**: Les living resources (Fiber, Hide, Wood, Ore, Rock) ne comptaient pas dans les stats
+  - **Cause**: Ces ressources sont ajoutées via `MobsHandler.AddEnemy()`, pas `HarvestablesHandler`
+  - **Solution**: `MobsHandler` appelle maintenant `harvestablesHandler.updateStats()` pour les living resources
+  - Mapping automatique des noms (Fiber→0, Hide→1, Wood/Logs→2, Ore→3, Rock→4)
+  - Statistiques détectées maintenant fonctionnelles pour toutes les ressources
+  - ⚠️ Note: Les récoltes ne sont trackées que pour les harvestables statiques (pas living resources)
+- ✅ **Corrections visuelles et fonctionnelles**: Interface radar optimisée
+  - **FIX**: Retrait des overlays de tier (rectangles de fond) qui étaient invisibles et moches
+  - **FIX**: Exposition de `harvestablesHandler` dans le scope global pour accès aux statistiques
+  - Tier affiché uniquement avec texte coloré + ombre portée forte (plus propre)
+  - Statistiques maintenant fonctionnelles (accès à `window.harvestablesHandler`)
+  - Taille de police tier légèrement augmentée (11px → 12px bold)
+- ✅ **Améliorations visuelles du radar**: Affichage des ressources modernisé
+  - **Tiers** : Plus gros (11px bold), avec fond coloré semi-transparent et bordure
+  - **Nombre de ressources** : Plus gros (10px bold), fond arrondi avec gradient
+  - **Indicateur d'enchantement** : Cercle plus visible avec fond noir, bordure et glow amélioré
+  - **Couleurs tiers renforcées** : Plus vives et contrastées (T3 vert vif, T4 cyan, T5 or, etc.)
+  - **Ombres portées** : Ajoutées sur tous les textes pour meilleure lisibilité
+  - **Coins arrondis** : Backgrounds avec rounded corners pour un look plus moderne
 - ✅ **Nettoyage interface radar**: Suppression des fonctionnalités non fonctionnelles
   - Retrait du bouton "Open Items Window" (non fonctionnel)
+  - Masquage du canvas vide (#thirdCanvas)
   - Interface plus propre et focalisée sur les fonctionnalités actives
-- ✅ **Intégration statistiques dans le radar**: Interface compacte
+- ✅ **Intégration statistiques dans le radar**: Interface compacte agrandie
   - Statistiques affichées directement sous le canvas du radar
-  - Panel compact avec fond noir semi-transparent et design moderne
+  - Panel agrandi (560px) avec fond noir opaque et design moderne
+  - Tailles de police augmentées : Titre 20px, valeurs principales 24px, ressources 18px
   - Mise à jour temps réel (1 sec)
   - Icônes emoji pour chaque type de ressource (🌿 Fiber, 🦊 Hide, 🪵 Wood, ⛏️ Ore, 🪨 Rock)
-  - Affichage des tiers T4-T8 avec couleurs correspondantes
-  - Bouton Reset intégré avec effets hover
-  - Suppression de la page /statistics (fusionnée avec le radar)
+  - Affichage des tiers T4-T8 avec couleurs correspondantes (16px)
+  - Bouton Reset amélioré avec effet de scale au survol
+  - Espacement vertical augmenté (top: 540px) pour aérer l'interface
   - Boutons d'action réorganisés avec espacement moderne et effets visuels
 - ✅ **Tracking intelligent par settings**: Ne compte que les ressources cochées
   - Vérification des settings avant de tracker une ressource

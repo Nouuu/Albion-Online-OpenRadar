@@ -495,6 +495,16 @@ class MobsHandler {
 
         this.mobsList.push(mob);
 
+        // 📊 Track statistics for living resources (Fiber, Hide, Wood, Ore, Rock)
+        if ((mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) &&
+            mob.tier > 0 && mob.name) {
+            // Call harvestablesHandler to update stats if available
+            if (typeof window !== 'undefined' && window.harvestablesHandler) {
+                // Send resource name directly (GetStringType will normalize it)
+                window.harvestablesHandler.updateStats(mob.name, mob.tier, mob.enchantmentLevel, false);
+            }
+        }
+
         // 📊 Enhanced logging for living creatures
         if (this.settings && this.settings.logLivingCreatures) {
             if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {

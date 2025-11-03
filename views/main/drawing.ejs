@@ -144,6 +144,14 @@
                 <span style="color: #D060D0;">T7: <span id="statT7" style="font-weight: 800; font-size: 16px;">0</span></span>
                 <span style="color: #FF6060;">T8: <span id="statT8" style="font-weight: 800; font-size: 16px;">0</span></span>
             </div>
+            <!-- 🌟 Enchantements Récoltés -->
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; padding-top: 14px; border-top: 2px solid rgba(255,255,255,0.25); opacity: 0.95;">
+                <span style="color: #FFFFFF;">⚪ .0: <span id="statEnchant0" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #1eff00;">🟢 .1: <span id="statEnchant1" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #0070ff;">🔵 .2: <span id="statEnchant2" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #a335ee;">🟣 .3: <span id="statEnchant3" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #ff8000;">🟠 .4: <span id="statEnchant4" style="font-weight: 800; font-size: 16px;">0</span></span>
+            </div>
         </div>
     </div>
 
@@ -158,6 +166,7 @@
     <script src="/scripts/Handlers/ItemsInfo.js"></script>
     <script src="/scripts/Handlers/FactionFlagInfo.js"></script>
     <script src="/scripts/Utils/DrawingUtils.js"></script>
+    <script src="/scripts/Utils/DebugConfig.js"></script>
     <!--<script src="/scripts/Utils/Settings.js"></script>-->
     
     <script type="module" src="/scripts/Utils/Utils.js"></script> 
@@ -191,6 +200,13 @@
                 document.getElementById('statT6').textContent = stats.byTier[6].detected;
                 document.getElementById('statT7').textContent = stats.byTier[7].detected;
                 document.getElementById('statT8').textContent = stats.byTier[8].detected;
+
+                // 🌟 Enchantments (harvested resources)
+                document.getElementById('statEnchant0').textContent = stats.byEnchantment.harvested[0] || 0;
+                document.getElementById('statEnchant1').textContent = stats.byEnchantment.harvested[1] || 0;
+                document.getElementById('statEnchant2').textContent = stats.byEnchantment.harvested[2] || 0;
+                document.getElementById('statEnchant3').textContent = stats.byEnchantment.harvested[3] || 0;
+                document.getElementById('statEnchant4').textContent = stats.byEnchantment.harvested[4] || 0;
             }
         }, 1000);
 

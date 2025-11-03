@@ -101,6 +101,10 @@ window.addEventListener('load', () => {
 const harvestablesHandler = new HarvestablesHandler(settings, mobsHandler); // 🔗 Pass MobsHandler reference
 const playersHandler = new PlayersHandler(settings);
 
+
+// 📊 Expose harvestablesHandler globally for statistics access
+window.harvestablesHandler = harvestablesHandler;
+
 const wispCageHandler = new WispCageHandler(settings);
 const wispCageDrawing = new WispCageDrawing(settings);
 
@@ -219,8 +223,54 @@ function onEvent(Parameters)
             harvestablesHandler.HarvestUpdateEvent(Parameters);
             break;
 
+        case EventCodes.HarvestStart:
+            if (Parameters[3]) {
+                harvestablesHandler.onHarvestStart(Parameters[3]);
+            }
+            break;
+
+        case EventCodes.HarvestCancel:
+            harvestablesHandler.onHarvestCancel();
+            break;
+
         case EventCodes.HarvestFinished:
             harvestablesHandler.harvestFinished(Parameters);
+            break;
+
+        // Inventory events
+        case EventCodes.InventoryPutItem:
+            // 📦 Inventory updates
+            break;
+
+        case EventCodes.InventoryDeleteItem:
+            // 🗑️ Item removed from inventory
+            break;
+
+        case EventCodes.InventoryState:
+            // 📋 Full inventory state
+            break;
+
+        case EventCodes.NewSimpleItem:
+            if (Parameters[1] && Parameters[2]) {
+                harvestablesHandler.onNewSimpleItem(Parameters[1], Parameters[2]);
+            }
+            break;
+
+        case EventCodes.NewEquipmentItem:
+            // ⚔️ Equipment updates
+            break;
+
+        case EventCodes.NewJournalItem:
+            // 📖 Journal updates
+            break;
+
+        case EventCodes.UpdateFame:
+            // 📊 Fame tracking (not used for resource counting - see NewSimpleItem instead)
+            // Parameters[2] = fame gained (varies with gear/food bonuses, but NOT premium)
+            break;
+
+        case EventCodes.UpdateMoney:
+            // 💰 Money updates
             break;
 
         case EventCodes.MobChangeState:
@@ -233,27 +283,6 @@ function onEvent(Parameters)
 
         case EventCodes.HealthUpdate:
             playersHandler.UpdatePlayerLooseHealth(Parameters);
-            break;
-        
-        // TEST
-        case EventCodes.MountHealthUpdate:
-            console.log();
-            console.log("MountHealthUpdate");
-            console.log(Parameters);
-            break;
-
-        // TEST
-        case EventCodes.CharacterStats:
-            console.log();
-            console.log("CharacterStats");
-            console.log(Parameters);
-            break;
-
-        // TEST
-        case EventCodes.RegenerationHealthEnergyComboChanged:
-            console.log();
-            console.log("RegenerationHealthEnergyComboChanged");
-            console.log(Parameters);
             break;
 
 
