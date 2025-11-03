@@ -146,6 +146,16 @@ export class Settings
         //#endregion
         this.resourceSize = false;
 
+        // 📊 Resource Overlay Settings (loaded in update() from localStorage)
+        this.overlayEnchantment = true; // Default: show enchantment for static resources
+        this.overlayEnchantmentLiving = true; // Default: show enchantment for living resources
+        this.overlayResourceCount = true; // Default: show resource count
+        this.overlayDistance = false; // Default: distance indicator off
+        this.overlayDistanceLivingOnly = true; // Default: only show distance for living resources
+        this.overlayCluster = false; // Default: cluster indicator off
+        this.overlayClusterRadius = 30; // Default cluster radius in meters
+        this.overlayClusterMinSize = 2; // Default minimum resources to form a cluster
+
         this.showFish = false;
 
 
@@ -436,6 +446,27 @@ export class Settings
         this.logLivingResources = this.returnLocalBool("settingLogLivingResources");
         this.logLivingCreatures = this.returnLocalBool("settingLogLivingCreatures");
         this.resourceSize = this.returnLocalBool("settingRawSize");
+
+        // 📊 Load overlay settings from localStorage (matching UI setting names)
+        const enchantOverlaySetting = localStorage.getItem("settingResourceEnchantOverlay");
+        this.overlayEnchantment = enchantOverlaySetting !== null ? enchantOverlaySetting === 'true' : true;
+
+        const livingEnchantOverlaySetting = localStorage.getItem("settingLivingResourceEnchantOverlay");
+        this.overlayEnchantmentLiving = livingEnchantOverlaySetting !== null ? livingEnchantOverlaySetting === 'true' : true;
+
+        const resourceCountSetting = localStorage.getItem("settingResourceCount");
+        this.overlayResourceCount = resourceCountSetting !== null ? resourceCountSetting === 'true' : true;
+
+        this.overlayDistance = this.returnLocalBool("settingResourceDistance");
+        this.overlayDistanceLivingOnly = this.returnLocalBool("settingResourceDistanceLivingOnly");
+        this.overlayCluster = this.returnLocalBool("settingResourceClusters");
+
+        const clusterRadiusSetting = localStorage.getItem("settingClusterRadius");
+        this.overlayClusterRadius = clusterRadiusSetting ? parseInt(clusterRadiusSetting) : 30;
+
+        const clusterMinSizeSetting = localStorage.getItem("settingClusterMinSize");
+        this.overlayClusterMinSize = clusterMinSizeSetting ? parseInt(clusterMinSizeSetting) : 2;
+
         this.showFish = this.returnLocalBool("settingFishing");
         //#endregion
 

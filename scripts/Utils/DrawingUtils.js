@@ -1,4 +1,4 @@
-﻿class DrawingUtils
+class DrawingUtils
 {
     constructor(settings)
     {
@@ -188,5 +188,345 @@
         ctx.fillStyle = enchantColor;
         ctx.fillText(`.${enchantmentLevel}`, x + 14, y - 20);
         ctx.restore();
+    }
+
+    /**
+     * 📊 Draw resource count badge (common function)
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - X position (resource center)
+     * @param {number} y - Y position (resource center)
+     * @param {number} count - Resource count to display
+     * @param {string} position - Badge position: 'bottom-right' (default), 'top-right', etc.
+     */
+    drawResourceCountBadge(ctx, x, y, count, position = 'bottom-right')
+    {
+        const text = count.toString();
+        ctx.save();
+
+        // Configuration
+        ctx.font = "bold 10px monospace";
+        const textWidth = ctx.measureText(text).width;
+        const padding = 4;
+        const rectWidth = textWidth + (padding * 2);
+        const rectHeight = 14;
+        const radius = 4;
+
+        // Position calculation
+        const positions = {
+            'bottom-right': { x: x + 8, y: y + 6 },
+            'top-right': { x: x + 8, y: y - 20 },
+            'bottom-left': { x: x - rectWidth - 8, y: y + 6 }
+        };
+        const pos = positions[position] || positions['bottom-right'];
+        const rectX = pos.x;
+        const rectY = pos.y;
+
+        // Gradient background
+        const gradient = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectHeight);
+        gradient.addColorStop(0, "rgba(0, 0, 0, 0.85)");
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0.75)");
+        ctx.fillStyle = gradient;
+
+        // Rounded rectangle path
+        ctx.beginPath();
+        ctx.moveTo(rectX + radius, rectY);
+        ctx.lineTo(rectX + rectWidth - radius, rectY);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radius);
+        ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radius);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radius, rectY + rectHeight);
+        ctx.lineTo(rectX + radius, rectY + rectHeight);
+        ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radius);
+        ctx.lineTo(rectX, rectY + radius);
+        ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Text with shadow
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+        ctx.shadowBlur = 2;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(text, rectX + padding, rectY + 10);
+        ctx.restore();
+    }
+
+    /**
+     * 📊 Convert harvestable size to real resource count
+     * @param {number} size - Stack size
+     * @param {number} tier - Resource tier (1-8)
+     * @returns {number} - Real resource count
+     */
+    calculateRealResources(size, tier)
+    {
+        // Conversion rates based on tier
+        if (tier <= 3) {
+            return size * 3;  // T1-T3: 3 resources per stack
+        } else if (tier === 4) {
+            return size * 2;  // T4: 2 resources per stack
+        }
+        // T5+: 1:1 ratio
+        return size;
+    }
+
+    /**
+     * 📍 Draw distance indicator (for tracked resources)
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {number} distance - Distance value
+     */
+    drawDistanceIndicator(ctx, x, y, distance)
+    {
+        if (distance <= 0) return;
+
+        ctx.save();
+
+        // Divide distance by 3 for correct scale (game units to meters)
+        const realDistance = distance / 3;
+
+        // Format distance (meters)
+        const text = realDistance < 1000 ? `${Math.round(realDistance)}m` : `${(realDistance/1000).toFixed(1)}km`;
+
+        ctx.font = "bold 9px monospace";
+        const textWidth = ctx.measureText(text).width;
+        const padding = 3;
+        const rectWidth = textWidth + (padding * 2);
+        const rectHeight = 12;
+        const radius = 3;
+
+        // Position: top-left
+        const rectX = x - rectWidth - 8;
+        const rectY = y - 20;
+
+        // Color gradient based on distance (green = close, yellow = medium, red = far)
+        let color;
+        if (realDistance < 30) {
+            color = "rgba(0, 200, 0, 0.85)";  // Green
+        } else if (realDistance < 60) {
+            color = "rgba(255, 200, 0, 0.85)";  // Yellow
+        } else {
+            color = "rgba(255, 100, 0, 0.85)";  // Orange
+        }
+
+        // Background
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(rectX + radius, rectY);
+        ctx.lineTo(rectX + rectWidth - radius, rectY);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radius);
+        ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radius);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radius, rectY + rectHeight);
+        ctx.lineTo(rectX + radius, rectY + rectHeight);
+        ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radius);
+        ctx.lineTo(rectX, rectY + radius);
+        ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Text
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+        ctx.shadowBlur = 2;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(text, rectX + padding, rectY + 9);
+        ctx.restore();
+    }
+
+    /**
+     * 📍 Calculate distance between two points
+     * @param {number} x1 - X position 1
+     * @param {number} y1 - Y position 1
+     * @param {number} x2 - X position 2
+     * @param {number} y2 - Y position 2
+     * @returns {number} - Distance
+     */
+    calculateDistance(x1, y1, x2, y2)
+    {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    /**
+     * 🗂️ Draw cluster indicator (for groups of nearby resources)
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - X position (cluster center)
+     * @param {number} y - Y position (cluster center)
+     * @param {number} count - Number of resources in cluster
+     * @param {string} clusterType - Resource type (e.g., "Fiber", "Hide", "Ore")
+     */
+    drawClusterIndicator(ctx, x, y, count, clusterType = null)
+    {
+        if (count <= 1) return; // No need for indicator if only 1 resource
+
+        ctx.save();
+
+        // Pulsing ring effect
+        const time = Date.now() / 1000;
+        const pulse = Math.sin(time * 2) * 0.15 + 0.85; // Pulse between 0.7 and 1.0
+
+        // Outer ring
+        ctx.strokeStyle = `rgba(100, 200, 255, ${0.4 * pulse})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 35 * pulse, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Inner ring
+        ctx.strokeStyle = `rgba(100, 200, 255, ${0.6 * pulse})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 30 * pulse, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Cluster count badge (top)
+        const text = `×${count}`;
+        ctx.font = "bold 11px monospace";
+        const textWidth = ctx.measureText(text).width;
+        const padding = 4;
+        const rectWidth = textWidth + (padding * 2);
+        const rectHeight = 14;
+        const radius = 4;
+        const rectX = x - (rectWidth / 2);
+        const rectY = y - 35;
+
+        // Background gradient
+        const gradient = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectHeight);
+        gradient.addColorStop(0, "rgba(100, 200, 255, 0.9)");
+        gradient.addColorStop(1, "rgba(50, 150, 255, 0.8)");
+        ctx.fillStyle = gradient;
+
+        // Rounded rectangle
+        ctx.beginPath();
+        ctx.moveTo(rectX + radius, rectY);
+        ctx.lineTo(rectX + rectWidth - radius, rectY);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radius);
+        ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radius);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radius, rectY + rectHeight);
+        ctx.lineTo(rectX + radius, rectY + rectHeight);
+        ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radius);
+        ctx.lineTo(rectX, rectY + radius);
+        ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Text
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(text, rectX + padding, rectY + 11);
+
+        // Optional: Type label (bottom)
+        if (clusterType) {
+            ctx.font = "bold 8px monospace";
+            const typeWidth = ctx.measureText(clusterType).width;
+            const typeX = x - (typeWidth / 2);
+            const typeY = y + 42;
+
+            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+            ctx.shadowBlur = 2;
+            ctx.fillStyle = "rgba(100, 200, 255, 0.9)";
+            ctx.fillText(clusterType, typeX, typeY);
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * 🗂️ Detect clusters of nearby resources
+     * @param {Array} resources - Array of resource objects with {hX, hY, type/name, tier}
+     * @param {number} clusterRadius - Max distance in meters to consider resources as clustered (default: 30m)
+     * @param {number} minClusterSize - Minimum number of resources to form a cluster (default: 2)
+     * @returns {Array} - Array of clusters [{x, y, count, type, resources: []}]
+     */
+    detectClusters(resources, clusterRadius = 30, minClusterSize = 2)
+    {
+        if (!resources || resources.length === 0) return [];
+
+        // Convert radius from meters to game units (multiply by 3)
+        const gameUnitsRadius = clusterRadius * 3;
+        const clusters = [];
+        const processed = new Set();
+
+        for (let i = 0; i < resources.length; i++) {
+            if (processed.has(i)) continue;
+
+            // Skip invalid resources
+            if (resources[i].size !== undefined && resources[i].size <= 0) continue;
+
+            const resource = resources[i];
+
+            // Get type name (works for both harvestables and living resources)
+            const typeName = resource.name || this.getResourceTypeName(resource.type);
+
+            const cluster = {
+                x: resource.hX,
+                y: resource.hY,
+                count: 1,
+                type: typeName,
+                tier: resource.tier,
+                resources: [resource]
+            };
+
+            // Find nearby resources of same type and tier
+            for (let j = i + 1; j < resources.length; j++) {
+                if (processed.has(j)) continue;
+
+                // Skip invalid resources
+                if (resources[j].size !== undefined && resources[j].size <= 0) continue;
+
+                const other = resources[j];
+                const otherType = other.name || this.getResourceTypeName(other.type);
+
+                // Must be same type and tier
+                if (otherType !== typeName || other.tier !== resource.tier) continue;
+
+                const dist = this.calculateDistance(resource.hX, resource.hY, other.hX, other.hY);
+
+                if (dist <= gameUnitsRadius) {
+                    cluster.count++;
+                    cluster.resources.push(other);
+                    // Update cluster center (average position)
+                    cluster.x = (cluster.x * (cluster.count - 1) + other.hX) / cluster.count;
+                    cluster.y = (cluster.y * (cluster.count - 1) + other.hY) / cluster.count;
+                    processed.add(j);
+                }
+            }
+
+            processed.add(i);
+            if (cluster.count >= minClusterSize) { // Only add if it's actually a cluster (2+)
+                clusters.push(cluster);
+            }
+        }
+
+        return clusters;
+    }
+
+    /**
+     * Get resource type name from type ID (for harvestables)
+     * @param {number} type - Resource type ID
+     * @returns {string} - Resource type name
+     */
+    getResourceTypeName(type)
+    {
+        if (type >= 0 && type <= 5) return "Wood";
+        if (type >= 6 && type <= 10) return "Stone";
+        if (type >= 11 && type <= 15) return "Fiber";
+        if (type >= 16 && type <= 22) return "Hide";
+        if (type >= 23 && type <= 27) return "Ore";
+        return "Resource";
     }
 }

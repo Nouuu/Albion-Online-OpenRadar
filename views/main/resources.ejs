@@ -848,6 +848,55 @@
 					<span id="size-text" class="dark:text-white ml-4">Show Size</span>
 				</label>
 
+				<!-- 📍 P0: New overlay features -->
+				<label class="flex items-center space-x-2">
+					<input type="checkbox" id="settingResourceDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span id="distance-text" class="dark:text-white ml-4">📍 Show Distance</span>
+				</label>
+
+				<label class="flex items-center space-x-2">
+					<input type="checkbox" id="settingResourceClusters" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span id="cluster-text" class="dark:text-white ml-4">🗂️ Show Clusters</span>
+				</label>
+
+				<div class="ml-11 space-y-2 mt-2">
+					<label class="block text-sm">
+						<span class="text-gray-700 dark:text-gray-400 text-xs">Cluster radius (meters)</span>
+						<input
+							id="settingClusterRadius"
+							type="number"
+							min="10"
+							max="100"
+							step="5"
+							class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none dark:text-gray-300 form-input"
+							placeholder="30"
+						/>
+					</label>
+					<label class="block text-sm">
+						<span class="text-gray-700 dark:text-gray-400 text-xs">Min resources per cluster</span>
+						<input
+							id="settingClusterMinSize"
+							type="number"
+							min="2"
+							max="10"
+							step="1"
+							class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none dark:text-gray-300 form-input"
+							placeholder="2"
+						/>
+					</label>
+				</div>
+
+				<!-- ✨ P1: Enchantment overlays -->
+				<label class="flex items-center space-x-2">
+					<input type="checkbox" id="settingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span id="enchant-static-text" class="dark:text-white ml-4">✨ Enchant Overlay (Static)</span>
+				</label>
+
+				<label class="flex items-center space-x-2">
+					<input type="checkbox" id="settingLivingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span id="enchant-living-text" class="dark:text-white ml-4">✨ Enchant Overlay (Living)</span>
+				</label>
+
 				<!-- TODO -->
 				<label class="flex items-center">
                     <input disabled type="checkbox" id="settingLivingResourcesHP" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
@@ -1865,6 +1914,44 @@
 	let settingRawSize = document.getElementById("settingRawSize");
 	settingRawSize.checked = returnLocalBool("settingRawSize");
 	settingRawSize.addEventListener("click", () => {localStorage.setItem("settingRawSize", settingRawSize.checked);});
+
+	// 📍 P0: New overlay features
+	let settingResourceDistance = document.getElementById("settingResourceDistance");
+	settingResourceDistance.checked = returnLocalBool("settingResourceDistance");
+	settingResourceDistance.addEventListener("click", () => {
+		localStorage.setItem("settingResourceDistance", settingResourceDistance.checked);
+	});
+
+	let settingResourceClusters = document.getElementById("settingResourceClusters");
+	settingResourceClusters.checked = returnLocalBool("settingResourceClusters");
+	settingResourceClusters.addEventListener("click", () => {
+		localStorage.setItem("settingResourceClusters", settingResourceClusters.checked);
+	});
+
+	let settingClusterRadius = document.getElementById("settingClusterRadius");
+	settingClusterRadius.value = localStorage.getItem("settingClusterRadius") || "30";
+	settingClusterRadius.addEventListener("input", () => {
+		localStorage.setItem("settingClusterRadius", settingClusterRadius.value);
+	});
+
+	let settingClusterMinSize = document.getElementById("settingClusterMinSize");
+	settingClusterMinSize.value = localStorage.getItem("settingClusterMinSize") || "2";
+	settingClusterMinSize.addEventListener("input", () => {
+		localStorage.setItem("settingClusterMinSize", settingClusterMinSize.value);
+	});
+
+	// ✨ P1: Enchantment overlays
+	let settingResourceEnchantOverlay = document.getElementById("settingResourceEnchantOverlay");
+	settingResourceEnchantOverlay.checked = returnLocalBool("settingResourceEnchantOverlay");
+	settingResourceEnchantOverlay.addEventListener("click", () => {
+		localStorage.setItem("settingResourceEnchantOverlay", settingResourceEnchantOverlay.checked);
+	});
+
+	let settingLivingResourceEnchantOverlay = document.getElementById("settingLivingResourceEnchantOverlay");
+	settingLivingResourceEnchantOverlay.checked = returnLocalBool("settingLivingResourceEnchantOverlay");
+	settingLivingResourceEnchantOverlay.addEventListener("click", () => {
+		localStorage.setItem("settingLivingResourceEnchantOverlay", settingLivingResourceEnchantOverlay.checked);
+	});
 
 	let settingLivingResourcesID = document.getElementById("settingLivingResourcesID");
 	settingLivingResourcesID.checked = returnLocalBool("settingLivingResourcesID");

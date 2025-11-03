@@ -41,6 +41,19 @@ export class MobsDrawing extends DrawingUtils
 
     invalidate(ctx, mobs, mists)
     {
+        // 🗂️ Detect living resource clusters if enabled
+        const livingResources = mobs.filter(mob =>
+            mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable
+        );
+        const clusters = this.settings.overlayCluster ?
+            this.detectClusters(livingResources, this.settings.overlayClusterRadius, this.settings.overlayClusterMinSize) : [];
+
+        // Draw cluster indicators first (behind resources)
+        for (const cluster of clusters) {
+            const point = this.transformPoint(cluster.x, cluster.y);
+            this.drawClusterIndicator(ctx, point.x, point.y, cluster.count, cluster.type);
+        }
+
         for (const mobOne of mobs)
         {
             const point = this.transformPoint(mobOne.hX, mobOne.hY);
@@ -51,9 +64,11 @@ export class MobsDrawing extends DrawingUtils
             /* Set by default to enemy, since there are more, so we don't add at each case */
             let drawHp = this.settings.enemiesHP;
             let drawId = this.settings.enemiesID;
+            let isLivingResource = false;
 
             if (mobOne.type == EnemyType.LivingSkinnable || mobOne.type == EnemyType.LivingHarvestable)
             {
+                isLivingResource = true;
                 // Only set imageName if mob has been identified (has name from mobinfo or cross-ref)
                 // Otherwise leave undefined and fallback circle will be drawn
                 if (mobOne.name && mobOne.tier > 0) {
@@ -102,10 +117,18 @@ export class MobsDrawing extends DrawingUtils
             else
                 this.drawFilledCircle(ctx, point.x, point.y, 10, "#4169E1"); // Unmanaged ids
 
-            // 📊 Enchantment indicator for living resources (using common function)
-            if ((mobOne.type === EnemyType.LivingHarvestable || mobOne.type === EnemyType.LivingSkinnable) &&
-                mobOne.enchantmentLevel > 0) {
+            // 📊 Enchantment indicator for living resources (if enabled)
+            if (isLivingResource && this.settings.overlayEnchantment && mobOne.enchantmentLevel > 0) {
                 this.drawEnchantmentIndicator(ctx, point.x, point.y, mobOne.enchantmentLevel);
+            }
+
+            // 📍 Distance indicator for living resources (if enabled)
+            if (isLivingResource && this.settings.overlayDistance) {
+                // Player is at canvas center (250, 250)
+                const playerX = 250;
+                const playerY = 250;
+                const distance = this.calculateDistance(point.x, point.y, playerX, playerY);
+                this.drawDistanceIndicator(ctx, point.x, point.y, distance);
             }
 
             if (drawHp)

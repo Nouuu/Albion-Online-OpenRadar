@@ -99,6 +99,109 @@
             />
           </label>
         </div>
+
+        <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
+          📊 Resource Overlay Settings
+        </h2>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Enchantment Indicator -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+              ✨ Enchantment Indicator
+            </h3>
+            <label class="flex items-center space-x-2 mb-2">
+              <input type="checkbox" id="settingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="dark:text-white">Static resources (.1, .2, .3, .4)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingLivingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="dark:text-white">Living resources (.1, .2, .3, .4)</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Displays colored dots for enchanted resources
+            </p>
+          </div>
+
+          <!-- Resource Count Badge -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+              📦 Resource Count Badge
+            </h3>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingResourceCount" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="dark:text-white">Show resource quantity</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Shows total resources considering bonuses
+            </p>
+          </div>
+
+          <!-- Distance Indicator -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+              📍 Distance Indicator
+            </h3>
+            <label class="flex items-center space-x-2 mb-2">
+              <input type="checkbox" id="settingResourceDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="dark:text-white">Show distance from player</span>
+            </label>
+            <label class="flex items-center space-x-2 ml-7">
+              <input type="checkbox" id="settingResourceDistanceLivingOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded-md">
+              <span class="text-sm dark:text-white">Living resources only</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Distance in meters (color-coded by proximity)
+            </p>
+          </div>
+
+          <!-- Cluster Indicator -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+              🗂️ Cluster Indicator
+            </h3>
+            <label class="flex items-center space-x-2 mb-3">
+              <input type="checkbox" id="settingResourceClusters" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="dark:text-white">Show resource clusters</span>
+            </label>
+            <div class="ml-7 space-y-3">
+              <label class="block text-sm">
+                <span class="text-gray-700 dark:text-gray-400 text-xs">Cluster radius (meters)</span>
+                <input
+                  id="settingClusterRadius"
+                  type="number"
+                  min="10"
+                  max="100"
+                  step="5"
+                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
+                  placeholder="30"
+                />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-700 dark:text-gray-400 text-xs">Min resources per cluster</span>
+                <input
+                  id="settingClusterMinSize"
+                  type="number"
+                  min="2"
+                  max="10"
+                  step="1"
+                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
+                  placeholder="2"
+                />
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Groups nearby resources of same type/tier
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+          <p class="text-sm text-blue-800 dark:text-blue-200">
+            💡 <strong>Tip:</strong> Distance and cluster indicators work best for tracking valuable resources.
+            Disable them for better performance when not needed.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -154,6 +257,17 @@
 
     const itemsWidthInput = document.getElementById("itemsWidth");
     const itemsHeightInput = document.getElementById("itemsHeight");
+
+    // Overlay settings (using setting* prefix for consistency)
+
+    const settingResourceEnchantOverlayCheckbox = document.getElementById("settingResourceEnchantOverlay");
+    const settingLivingResourceEnchantOverlayCheckbox = document.getElementById("settingLivingResourceEnchantOverlay");
+    const settingResourceCountCheckbox = document.getElementById("settingResourceCount");
+    const settingResourceDistanceCheckbox = document.getElementById("settingResourceDistance");
+    const settingResourceDistanceLivingOnlyCheckbox = document.getElementById("settingResourceDistanceLivingOnly");
+    const settingResourceClustersCheckbox = document.getElementById("settingResourceClusters");
+    const settingClusterRadiusInput = document.getElementById("settingClusterRadius");
+    const settingClusterMinSizeInput = document.getElementById("settingClusterMinSize");
 
     // Function to save a value to local storage
     function saveToLocalStorage(key, value) {
@@ -217,6 +331,39 @@
       saveToLocalStorage("settingItemsBorder", isChecked);
     });
 
+    // Overlay event listeners (using setting* prefix)
+    settingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingResourceEnchantOverlay", event.target.checked);
+    });
+
+    settingLivingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingLivingResourceEnchantOverlay", event.target.checked);
+    });
+
+    settingResourceCountCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingResourceCount", event.target.checked);
+    });
+
+    settingResourceDistanceCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingResourceDistance", event.target.checked);
+    });
+
+    settingResourceDistanceLivingOnlyCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingResourceDistanceLivingOnly", event.target.checked);
+    });
+
+    settingResourceClustersCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingResourceClusters", event.target.checked);
+    });
+
+    settingClusterRadiusInput.addEventListener("input", function (event) {
+      saveToLocalStorage("settingClusterRadius", event.target.value);
+    });
+
+    settingClusterMinSizeInput.addEventListener("input", function (event) {
+      saveToLocalStorage("settingClusterMinSize", event.target.value);
+    });
+
     // Initialize the input fields and checkboxes with values from local storage (if available)
     mainWindowMarginXInput.value = getFromLocalStorage("mainWindowMarginX") || "";
     mainWindowMarginYInput.value = getFromLocalStorage("mainWindowMarginY") || "";
@@ -229,4 +376,14 @@
     buttonMarginXInput.value = getFromLocalStorage("buttonMarginX") || "";
     buttonMarginYInput.value = getFromLocalStorage("buttonMarginY") || "";
     settingItemsBorderCheckbox.checked = getFromLocalStorage("settingItemsBorder") === "true";
+
+    // Initialize overlay settings (defaults to enabled for better UX)
+    settingResourceEnchantOverlayCheckbox.checked = getFromLocalStorage("settingResourceEnchantOverlay") === null ? true : getFromLocalStorage("settingResourceEnchantOverlay") === "true";
+    settingLivingResourceEnchantOverlayCheckbox.checked = getFromLocalStorage("settingLivingResourceEnchantOverlay") === null ? true : getFromLocalStorage("settingLivingResourceEnchantOverlay") === "true";
+    settingResourceCountCheckbox.checked = getFromLocalStorage("settingResourceCount") === null ? true : getFromLocalStorage("settingResourceCount") === "true";
+    settingResourceDistanceCheckbox.checked = getFromLocalStorage("settingResourceDistance") === null ? false : getFromLocalStorage("settingResourceDistance") === "true";
+    settingResourceDistanceLivingOnlyCheckbox.checked = getFromLocalStorage("settingResourceDistanceLivingOnly") === null ? true : getFromLocalStorage("settingResourceDistanceLivingOnly") === "true";
+    settingResourceClustersCheckbox.checked = getFromLocalStorage("settingResourceClusters") === null ? false : getFromLocalStorage("settingResourceClusters") === "true";
+    settingClusterRadiusInput.value = getFromLocalStorage("settingClusterRadius") || "30";
+    settingClusterMinSizeInput.value = getFromLocalStorage("settingClusterMinSize") || "2";
   </script>
