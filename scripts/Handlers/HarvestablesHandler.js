@@ -36,6 +36,122 @@ class HarvestablesHandler
         this.harvestableList = [];
         this.settings = settings;
         this.mobsHandler = mobsHandler; // 🔗 Reference to MobsHandler for cross-referencing
+
+        // 📊 Statistics tracking
+        this.stats = {
+            totalDetected: 0,
+            totalHarvested: 0,
+            byType: {
+                Fiber: { detected: 0, harvested: 0 },
+                Hide: { detected: 0, harvested: 0 },
+                Log: { detected: 0, harvested: 0 },
+                Ore: { detected: 0, harvested: 0 },
+                Rock: { detected: 0, harvested: 0 }
+            },
+            byTier: {},
+            byEnchantment: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
+            sessionStart: new Date()
+        };
+
+        // Initialize tier stats
+        for (let i = 1; i <= 8; i++) {
+            this.stats.byTier[i] = { detected: 0, harvested: 0 };
+        }
+    }
+
+    // 📊 Update statistics when new harvestable is added (only if enabled in settings)
+    updateStats(type, tier, charges, isHarvested = false) {
+        const stringType = this.GetStringType(type);
+
+        // Check if this resource is enabled in settings
+        if (!this.isResourceEnabled(stringType, tier, charges)) {
+            return; // Don't track disabled resources
+        }
+
+        if (!isHarvested) {
+            this.stats.totalDetected++;
+
+            if (this.stats.byType[stringType]) {
+                this.stats.byType[stringType].detected++;
+            }
+
+            if (this.stats.byTier[tier]) {
+                this.stats.byTier[tier].detected++;
+            }
+
+            if (charges >= 0 && charges <= 4) {
+                this.stats.byEnchantment[charges]++;
+            }
+        } else {
+            this.stats.totalHarvested++;
+
+            if (this.stats.byType[stringType]) {
+                this.stats.byType[stringType].harvested++;
+            }
+
+            if (this.stats.byTier[tier]) {
+                this.stats.byTier[tier].harvested++;
+            }
+        }
+    }
+
+    // Check if a resource is enabled in settings
+    isResourceEnabled(type, tier, enchant) {
+        if (!this.settings) return true; // Default: track all if no settings
+
+        // Map resource type to settings property
+        const settingsMap = {
+            'Fiber': 'harvestingLivingFiber',
+            'Hide': 'harvestingLivingHide',
+            'Log': 'harvestingLivingWood',
+            'Ore': 'harvestingLivingOre',
+            'Rock': 'harvestingLivingRock'
+        };
+
+        const settingsProp = settingsMap[type];
+        if (!settingsProp || !this.settings[settingsProp]) {
+            return true; // Default: enabled if setting not found
+        }
+
+        const enchantKey = `e${enchant}`;
+        const tierIndex = tier - 1; // tier 1-8 maps to index 0-7
+
+        // Check if this tier/enchant combo is enabled
+        if (this.settings[settingsProp][enchantKey] &&
+            this.settings[settingsProp][enchantKey][tierIndex] !== undefined) {
+            return this.settings[settingsProp][enchantKey][tierIndex];
+        }
+
+        return true; // Default: enabled
+    }
+
+    // 📊 Get current statistics
+    getStats() {
+        const sessionDuration = Math.floor((new Date() - this.stats.sessionStart) / 1000);
+        return {
+            ...this.stats,
+            sessionDuration,
+            currentlyVisible: this.harvestableList.length
+        };
+    }
+
+    // 📊 Reset statistics
+    resetStats() {
+        this.stats.totalDetected = 0;
+        this.stats.totalHarvested = 0;
+        this.stats.sessionStart = new Date();
+
+        Object.keys(this.stats.byType).forEach(type => {
+            this.stats.byType[type] = { detected: 0, harvested: 0 };
+        });
+
+        Object.keys(this.stats.byTier).forEach(tier => {
+            this.stats.byTier[tier] = { detected: 0, harvested: 0 };
+        });
+
+        Object.keys(this.stats.byEnchantment).forEach(enchant => {
+            this.stats.byEnchantment[enchant] = 0;
+        });
     }
 
     addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
@@ -108,6 +224,9 @@ class HarvestablesHandler
         {
             const h = new Harvestable(id, type, tier, posX, posY, charges, size);
             this.harvestableList.push(h);
+
+            // 📊 Update statistics
+            this.updateStats(type, tier, charges, false);
             //console.log("New Harvestable: " + h.toString());
         }
         else // update
@@ -200,6 +319,12 @@ class HarvestablesHandler
         // Un coup de récolte = 1 stack retiré (peu importe le tier ou les bonus)
         // La conversion stack → ressources se fait uniquement à l'affichage
         const stackCount = 1;
+
+        // 📊 Track harvest in statistics
+        const harvestable = this.harvestableList.find((h) => h.id === id);
+        if (harvestable) {
+            this.updateStats(harvestable.type, harvestable.tier, harvestable.charges, true);
+        }
 
         this.updateHarvestable(id, stackCount);
     }

@@ -23,65 +23,48 @@
 
         .button
         {
-            background-color: #1a1c23;
-            color:white;
-            margin: 10px;
-            border: 1px solid gray;
-            padding: 8px 18px;
+            background: linear-gradient(135deg, #2d3748, #1a202c);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 16px;
             cursor: pointer;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
-
-        #logEnemiesList {
-            position: absolute;
-            top: 50px;
-            left: 520px; /* Adjust the left position to be to the right of the canvases */
-        }
-
-        #launchItems
+        .button:hover
         {
-            position: absolute;
-            top: 90px;
-            left: 520px; /* Adjust the left position to be to the right of the canvases */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.3);
         }
 
-        #clearTypeIDCache
+        .button:active
         {
-            position: absolute;
-            top: 130px;
-            left: 520px; /* Adjust the left position to be to the right of the canvases */
-            background-color: #dc2626; /* Red background */
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
         }
 
         #clearTypeIDCache:hover
         {
-            background-color: #b91c1c; /* Darker red on hover */
-        }
-
-        #showTypeIDCache
-        {
-            position: absolute;
-            top: 170px;
-            left: 520px; /* Adjust the left position to be to the right of the canvases */
-            background-color: #2563eb; /* Blue background */
+            background: linear-gradient(135deg, #b91c1c, #7f1d1d);
         }
 
         #showTypeIDCache:hover
         {
-            background-color: #1d4ed8; /* Darker blue on hover */
-        }
-
-        #openOverlay
-        {
-            position: absolute;
-            top: 210px;
-            left: 520px;
-            background-color: #059669; /* Green background */
+            background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
         }
 
         #openOverlay:hover
         {
-            background-color: #047857; /* Darker green on hover */
+            background: linear-gradient(135deg, #047857, #065f46);
         }
 
         #canvasContainer {
@@ -89,14 +72,13 @@
         }
 
         #thirdCanvas {
-   
             position: absolute;
             top: 520px;
-     
             margin: 10px;
             bottom: 0;
             left: 0;
             border: 2px solid grey;
+            display: none; /* Masquer le canvas vide */
         }
     </style>
 </head>
@@ -108,12 +90,61 @@
         <canvas class="ttcan" id="flashCanvas" width="500" height="500"></canvas>
         <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500"></canvas>
         <canvas id="thirdCanvas" width="500" height="500" ></canvas>
-        <button class="button" id="button">Clear</button>
-        <button class="button" id="logEnemiesList">Log Enemies List</button>
-        <button class="button" id="launchItems" onclick="window.open('/items');" >Open Items Window</button>
-        <button class="button" id="clearTypeIDCache">🗑️ Clear TypeID Cache</button>
-        <button class="button" id="showTypeIDCache">🔍 Show TypeID Cache</button>
-        <button class="button" id="openOverlay">🎯 Open Overlay Mode</button>
+
+        <!-- Boutons d'action avec meilleur espacement -->
+        <div style="position: absolute; top: 20px; left: 530px; display: flex; flex-direction: column; gap: 12px;">
+            <button class="button" id="button" style="width: 180px;">🧹 Clear</button>
+            <button class="button" id="logEnemiesList" style="width: 180px;">📋 Log Enemies List</button>
+            <button class="button" id="clearTypeIDCache" style="width: 180px; background-color: #dc2626;">🗑️ Clear TypeID Cache</button>
+            <button class="button" id="showTypeIDCache" style="width: 180px; background-color: #2563eb;">🔍 Show TypeID Cache</button>
+            <button class="button" id="openOverlay" style="width: 180px; background-color: #059669;">🎯 Open Overlay Mode</button>
+        </div>
+
+        <!-- 📊 Statistiques Compactes -->
+        <div style="position: absolute; top: 540px; left: 10px; background: rgba(0,0,0,0.92); padding: 20px; border-radius: 12px; color: white; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 560px; box-shadow: 0 6px 16px rgba(0,0,0,0.6);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                <strong style="font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">📊 Statistiques Session</strong>
+                <button onclick="if(typeof harvestablesHandler!=='undefined')harvestablesHandler.resetStats();" style="background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 700; transition: all 0.2s; box-shadow: 0 3px 6px rgba(0,0,0,0.3);" onmouseover="this.style.background='#dc2626';this.style.transform='scale(1.05)'" onmouseout="this.style.background='#ef4444';this.style.transform='scale(1)'">🔄 Reset</button>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px;">
+                <div style="background: linear-gradient(135deg, rgba(59,130,246,0.5), rgba(37,99,235,0.4)); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid rgba(59,130,246,0.5); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);">
+                    <div style="font-size: 13px; opacity: 0.95; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">⏱️ Durée</div>
+                    <div id="statDuration" style="font-size: 24px; font-weight: 800; color: #60a5fa; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">0:00:00</div>
+                </div>
+                <div style="background: linear-gradient(135deg, rgba(34,197,94,0.5), rgba(22,163,74,0.4)); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid rgba(34,197,94,0.5); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);">
+                    <div style="font-size: 13px; opacity: 0.95; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">✅ Détecté</div>
+                    <div id="statDetected" style="font-size: 24px; font-weight: 800; color: #4ade80; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">0</div>
+                </div>
+                <div style="background: linear-gradient(135deg, rgba(168,85,247,0.5), rgba(147,51,234,0.4)); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid rgba(168,85,247,0.5); box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);">
+                    <div style="font-size: 13px; opacity: 0.95; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">⛏️ Récolté</div>
+                    <div id="statHarvested" style="font-size: 24px; font-weight: 800; color: #c084fc; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">0</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <span style="font-size: 20px;">🌿</span><span id="statFiber" style="font-weight: 700; font-size: 18px;">0</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <span style="font-size: 20px;">🦊</span><span id="statHide" style="font-weight: 700; font-size: 18px;">0</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <span style="font-size: 20px;">🪵</span><span id="statWood" style="font-weight: 700; font-size: 18px;">0</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <span style="font-size: 20px;">⛏️</span><span id="statOre" style="font-weight: 700; font-size: 18px;">0</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.18); padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                    <span style="font-size: 20px;">🪨</span><span id="statRock" style="font-weight: 700; font-size: 18px;">0</span>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; padding-top: 14px; border-top: 2px solid rgba(255,255,255,0.25);">
+                <span style="color: #90C090;">T4: <span id="statT4" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #70B0E0;">T5: <span id="statT5" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #E08050;">T6: <span id="statT6" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #D060D0;">T7: <span id="statT7" style="font-weight: 800; font-size: 16px;">0</span></span>
+                <span style="color: #FF6060;">T8: <span id="statT8" style="font-weight: 800; font-size: 16px;">0</span></span>
+            </div>
+        </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -132,6 +163,37 @@
     <script type="module" src="/scripts/Utils/Utils.js"></script> 
 
     <script>
+        // 📊 Update statistics every second
+        setInterval(function() {
+            if (typeof harvestablesHandler !== 'undefined') {
+                const stats = harvestablesHandler.getStats();
+
+                // Format duration
+                const h = Math.floor(stats.sessionDuration / 3600);
+                const m = Math.floor((stats.sessionDuration % 3600) / 60);
+                const s = stats.sessionDuration % 60;
+                document.getElementById('statDuration').textContent = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+                // Main counters
+                document.getElementById('statDetected').textContent = stats.totalDetected;
+                document.getElementById('statHarvested').textContent = stats.totalHarvested;
+
+                // By type (detected only for compact view)
+                document.getElementById('statFiber').textContent = stats.byType.Fiber.detected;
+                document.getElementById('statHide').textContent = stats.byType.Hide.detected;
+                document.getElementById('statWood').textContent = stats.byType.Log.detected;
+                document.getElementById('statOre').textContent = stats.byType.Ore.detected;
+                document.getElementById('statRock').textContent = stats.byType.Rock.detected;
+
+                // By tier (T4-T8 only for compact view)
+                document.getElementById('statT4').textContent = stats.byTier[4].detected;
+                document.getElementById('statT5').textContent = stats.byTier[5].detected;
+                document.getElementById('statT6').textContent = stats.byTier[6].detected;
+                document.getElementById('statT7').textContent = stats.byTier[7].detected;
+                document.getElementById('statT8').textContent = stats.byTier[8].detected;
+            }
+        }, 1000);
+
         // Open overlay mode
         document.getElementById('openOverlay').addEventListener('click', function() {
             // Paramètres pour fenêtre sans bordures - TAILLE FIXE pour préserver les coordonnées

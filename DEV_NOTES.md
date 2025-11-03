@@ -549,6 +549,42 @@ Estimation: 20-30 TypeID principaux en 1-2h
 ## 📝 CHANGELOG
 
 ### 2025-11-03
+- ✅ **Nettoyage interface radar**: Suppression des fonctionnalités non fonctionnelles
+  - Retrait du bouton "Open Items Window" (non fonctionnel)
+  - Interface plus propre et focalisée sur les fonctionnalités actives
+- ✅ **Intégration statistiques dans le radar**: Interface compacte
+  - Statistiques affichées directement sous le canvas du radar
+  - Panel compact avec fond noir semi-transparent et design moderne
+  - Mise à jour temps réel (1 sec)
+  - Icônes emoji pour chaque type de ressource (🌿 Fiber, 🦊 Hide, 🪵 Wood, ⛏️ Ore, 🪨 Rock)
+  - Affichage des tiers T4-T8 avec couleurs correspondantes
+  - Bouton Reset intégré avec effets hover
+  - Suppression de la page /statistics (fusionnée avec le radar)
+  - Boutons d'action réorganisés avec espacement moderne et effets visuels
+- ✅ **Tracking intelligent par settings**: Ne compte que les ressources cochées
+  - Vérification des settings avant de tracker une ressource
+  - Méthode `isResourceEnabled()` pour vérifier tier/enchant
+  - Respect des filtres harvestingLivingFiber, Hide, Wood, Ore, Rock
+  - Stats précises basées uniquement sur ce qui est activé
+- ✅ **Système de statistiques**: Tracking en temps réel des ressources
+  - Compteurs par type (Fiber, Hide, Wood, Ore, Rock)
+  - Compteurs par tier (T1-T8)
+  - Compteurs par enchantement (.0 à .4)
+  - Total détecté vs récolté
+  - Durée de session
+  - Page dédiée `/statistics` avec interface graphique
+- ✅ **Améliorations interface radar**:
+  - Couleurs des tiers améliorées (gradient par tier)
+  - Indicateur d'enchantement avec effet de glow
+  - Couleurs spécifiques par enchantement (.1 vert, .2 cyan, .3 rose, .4 or)
+  - Fond noir semi-transparent pour meilleure lisibilité du nombre de ressources
+  - Texte blanc pour le nombre de ressources (meilleur contraste)
+- ✅ **Code quality improvements**: Bug fixes et polish
+  - Fix case labels dupliqués (6, 6, 6 → 6, 7, 8) dans HarvestablesDrawing.js
+  - Fix comparaisons type coercion (== → ===) dans 5 fichiers
+  - Fix variable redondante dans calculateDistance
+  - Fix variable initializer redondant (let name = null → let name)
+  - Réduction de 56% des warnings (25+ → 11)
 - ✅ **Build system amélioré**: Cache intelligent pour les images optimisées
   - Système de marqueur (`.optimized`) pour détecter images déjà optimisées
   - `clean` préserve les images optimisées (⚡ 50% plus rapides)
