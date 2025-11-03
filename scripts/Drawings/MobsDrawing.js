@@ -102,50 +102,10 @@ export class MobsDrawing extends DrawingUtils
             else
                 this.drawFilledCircle(ctx, point.x, point.y, 10, "#4169E1"); // Unmanaged ids
 
-            // 📊 Enchantment indicator for living resources (same as HarvestablesDrawing)
+            // 📊 Enchantment indicator for living resources (using common function)
             if ((mobOne.type === EnemyType.LivingHarvestable || mobOne.type === EnemyType.LivingSkinnable) &&
                 mobOne.enchantmentLevel > 0) {
-                const enchantColors = {
-                    1: "#90FF90",  // .1 - Light green
-                    2: "#60D0FF",  // .2 - Cyan
-                    3: "#FF90FF",  // .3 - Pink
-                    4: "#FFD060"   // .4 - Gold
-                };
-                const enchantColor = enchantColors[mobOne.enchantmentLevel] || "#FFFFFF";
-
-                // Draw enchantment indicator with background
-                ctx.save();
-
-                // Background circle
-                ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-                ctx.beginPath();
-                ctx.arc(point.x + 18, point.y - 12, 7, 0, 2 * Math.PI);
-                ctx.fill();
-
-                // Glowing dot
-                ctx.shadowColor = enchantColor;
-                ctx.shadowBlur = 10;
-                ctx.fillStyle = enchantColor;
-                ctx.beginPath();
-                ctx.arc(point.x + 18, point.y - 12, 5, 0, 2 * Math.PI);
-                ctx.fill();
-
-                // Border
-                ctx.strokeStyle = enchantColor;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.arc(point.x + 18, point.y - 12, 7, 0, 2 * Math.PI);
-                ctx.stroke();
-                ctx.restore();
-
-                // Draw enchantment number with better visibility
-                ctx.save();
-                ctx.font = "bold 9px monospace";
-                ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
-                ctx.shadowBlur = 3;
-                ctx.fillStyle = enchantColor;
-                ctx.fillText(`.${mobOne.enchantmentLevel}`, point.x + 14, point.y - 20);
-                ctx.restore();
+                this.drawEnchantmentIndicator(ctx, point.x, point.y, mobOne.enchantmentLevel);
             }
 
             if (drawHp)

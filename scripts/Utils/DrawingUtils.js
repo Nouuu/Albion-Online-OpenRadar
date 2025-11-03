@@ -135,4 +135,58 @@
 
         ctx.fillText(text, x , y);
     }
+
+    /**
+     * 📊 Draw enchantment indicator (common function for all resource types)
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - X position (resource center)
+     * @param {number} y - Y position (resource center)
+     * @param {number} enchantmentLevel - Enchantment level (1-4)
+     */
+    drawEnchantmentIndicator(ctx, x, y, enchantmentLevel)
+    {
+        if (enchantmentLevel <= 0 || enchantmentLevel > 4) return;
+
+        const enchantColors = {
+            1: "#90FF90",  // .1 - Light green
+            2: "#60D0FF",  // .2 - Cyan
+            3: "#FF90FF",  // .3 - Pink
+            4: "#FFD060"   // .4 - Gold
+        };
+        const enchantColor = enchantColors[enchantmentLevel] || "#FFFFFF";
+
+        // Draw enchantment indicator with background
+        ctx.save();
+
+        // Background circle
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.beginPath();
+        ctx.arc(x + 18, y - 12, 7, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Glowing dot
+        ctx.shadowColor = enchantColor;
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = enchantColor;
+        ctx.beginPath();
+        ctx.arc(x + 18, y - 12, 5, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = enchantColor;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x + 18, y - 12, 7, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw enchantment number with better visibility
+        ctx.save();
+        ctx.font = "bold 9px monospace";
+        ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = enchantColor;
+        ctx.fillText(`.${enchantmentLevel}`, x + 14, y - 20);
+        ctx.restore();
+    }
 }
