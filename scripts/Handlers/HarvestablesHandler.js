@@ -261,7 +261,7 @@ class HarvestablesHandler
     newSimpleHarvestableObject(Parameters) // New
     {
         let a0 = Parameters[0]["data"];
-        if  (a0 == undefined)
+        if  (a0 === undefined)
         {
             a0 = Parameters[0];
         }
@@ -299,9 +299,8 @@ class HarvestablesHandler
     {
         const deltaX = lpX - posX;
         const deltaY = lpY - posY;
-        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-        return distance;
+        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 
     removeHarvestable(id)
@@ -315,7 +314,7 @@ class HarvestablesHandler
 
     updateHarvestable(harvestableId, count)
     {   
-        const harvestable = this.harvestableList.find((h) => h.id == harvestableId);
+        const harvestable = this.harvestableList.find((h) => h.id === harvestableId);
 
         if (harvestable)
         {

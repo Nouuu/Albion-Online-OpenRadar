@@ -242,7 +242,7 @@ class MobsHandler {
     logLivingCreatureEnhanced(id, typeId, health, enchant, rarity, tier, type, name) {
         if (!this.settings.logLivingCreatures) return;
 
-        const typeLabel = type == EnemyType.LivingSkinnable ? "Skinnable" : "Harvestable";
+        const typeLabel = type === EnemyType.LivingSkinnable ? "Skinnable" : "Harvestable";
         const isAlive = health > 0;
         const timestamp = new Date().toISOString();
 
@@ -417,7 +417,7 @@ class MobsHandler {
         const enchant = this.normalizeNumber(parameters[33], 0) || 0;
         const rarity = this.normalizeNumber(parameters[19], null);
 
-        let name = null;
+        let name;
         try { name = parameters[32] || parameters[31] || null; } catch (e) { name = null; }
 
         // 🔍 DEBUG: Log ALL parameters for living resources to find enchantment
@@ -522,7 +522,7 @@ class MobsHandler {
     updateEnchantEvent(parameters) {
         const mobId = parameters[0];
         const enchantmentLevel = parameters[1];
-        const found = this.mobsList.find(m => m.id == mobId) || this.harvestablesNotGood.find(m => m.id == mobId);
+        const found = this.mobsList.find(m => m.id === mobId) || this.harvestablesNotGood.find(m => m.id === mobId);
         if (found) { found.enchantmentLevel = enchantmentLevel; }
     }
 
