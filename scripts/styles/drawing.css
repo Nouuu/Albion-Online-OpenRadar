@@ -60,14 +60,6 @@ body {
     z-index: 10;
 }
 
-.stats-section {
-    position: absolute;
-    top: 540px;
-    left: 10px;
-    width: 760px;
-    z-index: 10;
-}
-
 /* ========== Canvas Styles ========== */
 #canvasContainer {
     position: relative;
@@ -415,13 +407,6 @@ body {
         width: 100%;
         max-width: 500px;
         margin: 0 auto var(--spacing-lg);
-    }
-
-    .stats-section {
-        position: static;
-        width: 100%;
-        max-width: 760px;
-        margin: 0 auto;
     }
 }
 

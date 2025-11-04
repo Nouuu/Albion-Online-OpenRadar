@@ -1,152 +1,89 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>ZQRADAR</title>
-    <link rel="stylesheet" href="/scripts/styles/drawing.css">
-</head>
-<body>
-    <div class="main-container">
-        <!-- Canvas Section -->
-        <div class="canvas-section">
-            <div id="canvasContainer">
-                <canvas class="ttcan" id="mapCanvas" width="500" height="500"></canvas>
-                <canvas class="ttcan" id="gridCanvas" width="500" height="500"></canvas>
-                <canvas class="ttcan" id="drawCanvas" width="500" height="500"></canvas>
-                <canvas class="ttcan" id="flashCanvas" width="500" height="500"></canvas>
-                <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500"></canvas>
-                <canvas id="thirdCanvas" width="500" height="500"></canvas>
-            </div>
-        </div>
+<link rel="stylesheet" href="/scripts/styles/drawing.css">
 
-        <!-- Controls Section -->
-        <div class="controls-section">
-            <!-- Action Buttons -->
-            <div class="buttons-container">
-                <button class="button" id="button">🧹 Clear</button>
-                <button class="button" id="logEnemiesList">📋 Log Enemies List</button>
-                <button class="button button-danger" id="clearTypeIDCache">🗑️ Clear TypeID Cache</button>
-                <button class="button button-primary" id="showTypeIDCache">🔍 Show TypeID Cache</button>
-                <button class="button button-success" id="openOverlay">🎯 Open Overlay Mode</button>
-            </div>
-
-            <!-- Display Overlays Control Panel -->
-            <div class="panel">
-                <div class="panel-title">📊 Display Overlays</div>
-
-                <!-- Enchantment -->
-                <label class="checkbox-label">
-                    <input type="checkbox" id="overlayEnchantment">
-                    <span>✨ Enchantments</span>
-                </label>
-
-                <!-- Resource Count -->
-                <label class="checkbox-label">
-                    <input type="checkbox" id="overlayResourceCount">
-                    <span>📦 Resource Count</span>
-                </label>
-
-                <!-- Distance -->
-                <label class="checkbox-label">
-                    <input type="checkbox" id="overlayDistance">
-                    <span>📍 Distance</span>
-                </label>
-
-                <!-- Clusters -->
-                <label class="checkbox-label">
-                    <input type="checkbox" id="overlayCluster">
-                    <span>🗂️ Clusters</span>
-                </label>
-                <div class="input-group">
-                    <label class="input-label">Radius:</label>
-                    <input type="number" class="input-number" id="overlayClusterRadius" min="10" max="100" step="5" value="30">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Min size:</label>
-                    <input type="number" class="input-number" id="overlayClusterMinSize" min="1" max="20" step="1" value="2">
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Section -->
-        <div class="stats-section">
-            <div class="stats-panel">
-                <div class="stats-header">
-                    <strong class="stats-title">📊 Statistiques Session</strong>
-                    <button class="reset-button" onclick="if(typeof harvestablesHandler!=='undefined')harvestablesHandler.resetStats();">🔄 Reset</button>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card stat-card-blue">
-                        <div class="stat-label">⏱️ Durée</div>
-                        <div id="statDuration" class="stat-value stat-value-blue">0:00:00</div>
-                    </div>
-                    <div class="stat-card stat-card-green">
-                        <div class="stat-label">✅ Détecté</div>
-                        <div id="statDetected" class="stat-value stat-value-green">0</div>
-                    </div>
-                    <div class="stat-card stat-card-purple">
-                        <div class="stat-label">⛏️ Récolté</div>
-                        <div id="statHarvested" class="stat-value stat-value-purple">0</div>
-                    </div>
-                </div>
-
-                <div class="resource-badges">
-                    <div class="resource-badge">
-                        <span class="resource-icon">🌿</span>
-                        <span id="statFiber" class="resource-count">0</span>
-                    </div>
-                    <div class="resource-badge">
-                        <span class="resource-icon">🦊</span>
-                        <span id="statHide" class="resource-count">0</span>
-                    </div>
-                    <div class="resource-badge">
-                        <span class="resource-icon">🪵</span>
-                        <span id="statWood" class="resource-count">0</span>
-                    </div>
-                    <div class="resource-badge">
-                        <span class="resource-icon">⛏️</span>
-                        <span id="statOre" class="resource-count">0</span>
-                    </div>
-                    <div class="resource-badge">
-                        <span class="resource-icon">🪨</span>
-                        <span id="statRock" class="resource-count">0</span>
-                    </div>
-                </div>
-
-                <div class="tier-row">
-                    <span class="tier-item tier-t4">T4: <span id="statT4" class="tier-value">0</span></span>
-                    <span class="tier-item tier-t5">T5: <span id="statT5" class="tier-value">0</span></span>
-                    <span class="tier-item tier-t6">T6: <span id="statT6" class="tier-value">0</span></span>
-                    <span class="tier-item tier-t7">T7: <span id="statT7" class="tier-value">0</span></span>
-                    <span class="tier-item tier-t8">T8: <span id="statT8" class="tier-value">0</span></span>
-                </div>
-
-                <div class="enchant-row">
-                    <span class="enchant-item enchant-0">⚪ .0: <span id="statEnchant0" class="enchant-value">0</span></span>
-                    <span class="enchant-item enchant-1">🟢 .1: <span id="statEnchant1" class="enchant-value">0</span></span>
-                    <span class="enchant-item enchant-2">🔵 .2: <span id="statEnchant2" class="enchant-value">0</span></span>
-                    <span class="enchant-item enchant-3">🟣 .3: <span id="statEnchant3" class="enchant-value">0</span></span>
-                    <span class="enchant-item enchant-4">🟠 .4: <span id="statEnchant4" class="enchant-value">0</span></span>
-                </div>
-            </div>
+<div class="main-container">
+    <!-- Canvas Section -->
+    <div class="canvas-section">
+        <div id="canvasContainer">
+            <canvas class="ttcan" id="mapCanvas" width="500" height="500"></canvas>
+            <canvas class="ttcan" id="gridCanvas" width="500" height="500"></canvas>
+            <canvas class="ttcan" id="drawCanvas" width="500" height="500"></canvas>
+            <canvas class="ttcan" id="flashCanvas" width="500" height="500"></canvas>
+            <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500"></canvas>
+            <canvas id="thirdCanvas" width="500" height="500"></canvas>
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js" ></script>
-    <script src="/scripts/Handlers/HarvestablesHandler.js"></script>
-    <script src="/scripts/Handlers/MobsHandler.js"></script>
-    <script src="/scripts/Handlers/ChestsHandler.js"></script>
-    <script src="/scripts/Handlers/DungeonsHandler.js"></script>  
-    <script src="/scripts/Handlers/Map.js"></script>  
-    <script src="/scripts/Handlers/MobsInfo.js"></script>
-    <script src="/scripts/Handlers/ItemsInfo.js"></script>
-    <script src="/scripts/Handlers/FactionFlagInfo.js"></script>
-    <script src="/scripts/Utils/DrawingUtils.js"></script>
-    <script src="/scripts/Utils/DebugConfig.js"></script>
-    <!--<script src="/scripts/Utils/Settings.js"></script>-->
+    <!-- Controls Section -->
+    <div class="controls-section">
+        <!-- Action Buttons -->
+        <div class="buttons-container">
+            <button class="button" id="button">🧹 Clear</button>
+            <button class="button" id="logEnemiesList">📋 Log Enemies List</button>
+            <button class="button button-danger" id="clearTypeIDCache">🗑️ Clear TypeID Cache</button>
+            <button class="button button-primary" id="showTypeIDCache">🔍 Show TypeID Cache</button>
+            <button class="button button-success" id="openOverlay">🎯 Open Overlay Mode</button>
+        </div>
 
-    <script type="module" src="/scripts/Utils/Utils.js"></script>
-    <script src="/scripts/drawing-ui.js"></script>
-</body>
-</html>
+        <!-- Display Overlays Control Panel -->
+        <div class="panel">
+            <div class="panel-title">📊 Display Overlays</div>
+
+            <!-- Enchantment -->
+            <label class="checkbox-label">
+                <input type="checkbox" id="overlayEnchantment">
+                <span>✨ Enchantments</span>
+            </label>
+
+            <!-- Resource Count -->
+            <label class="checkbox-label">
+                <input type="checkbox" id="overlayResourceCount">
+                <span>📦 Resource Count</span>
+            </label>
+
+            <!-- Distance -->
+            <label class="checkbox-label">
+                <input type="checkbox" id="overlayDistance">
+                <span>📍 Distance</span>
+            </label>
+
+            <!-- Clusters -->
+            <label class="checkbox-label">
+                <input type="checkbox" id="overlayCluster">
+                <span>🗂️ Clusters</span>
+            </label>
+            <div class="input-group">
+                <label class="input-label">Radius:</label>
+                <input type="number" class="input-number" id="overlayClusterRadius" min="10" max="100" step="5" value="30">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Min size:</label>
+                <input type="number" class="input-number" id="overlayClusterMinSize" min="1" max="20" step="1" value="2">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js" ></script>
+<script src="/scripts/Handlers/HarvestablesHandler.js"></script>
+<script src="/scripts/Handlers/MobsHandler.js"></script>
+<script src="/scripts/Handlers/ChestsHandler.js"></script>
+<script src="/scripts/Handlers/DungeonsHandler.js"></script>
+<script src="/scripts/Handlers/Map.js"></script>
+<script src="/scripts/Handlers/MobsInfo.js"></script>
+<script src="/scripts/Handlers/ItemsInfo.js"></script>
+<script src="/scripts/Handlers/FactionFlagInfo.js"></script>
+<script src="/scripts/Utils/DrawingUtils.js"></script>
+<script src="/scripts/Utils/DebugConfig.js"></script>
+<!--<script src="/scripts/Utils/Settings.js"></script>-->
+
+<script type="module" src="/scripts/Utils/Utils.js"></script>
+<script src="/scripts/drawing-ui.js"></script>
+
+<script>
+    // Empty SetLanguage function for compatibility with layout.ejs ChangeLanguage
+    function SetLanguage(lang) {
+        // Drawing page doesn't have translatable UI elements
+        console.log('[Drawing] Language changed to:', lang);
+    }
+</script>

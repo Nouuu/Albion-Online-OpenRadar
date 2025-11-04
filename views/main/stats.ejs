@@ -1,0 +1,143 @@
+<div class="container px-6 mx-auto grid">
+    <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
+        <!-- Header Card -->
+        <div class="mt-4 flex items-center justify-between p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+            <h2 class="text-4xl font-semibold text-gray-600 dark:text-gray-300">
+                📊 Statistiques Session
+            </h2>
+            <button
+                class="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple transition-colors duration-150"
+                onclick="if(typeof harvestablesHandler!=='undefined')harvestablesHandler.resetStats();"
+            >
+                🔄 Reset
+            </button>
+        </div>
+
+        <!-- Main Stats Grid -->
+        <div class="grid gap-4 md:grid-cols-3">
+            <!-- Duration Card -->
+            <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+                <div class="w-full">
+                    <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">⏱️ Durée</p>
+                    <p id="statDuration" class="text-3xl font-semibold text-blue-600 dark:text-blue-400">0:00:00</p>
+                </div>
+            </div>
+
+            <!-- Detected Card -->
+            <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+                <div class="w-full">
+                    <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">✅ Détecté</p>
+                    <p id="statDetected" class="text-3xl font-semibold text-green-600 dark:text-green-400">0</p>
+                </div>
+            </div>
+
+            <!-- Harvested Card -->
+            <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+                <div class="w-full">
+                    <p class="mb-2 text-sm font-medium text-gray-600 dark:text-gray-400">⛏️ Récolté</p>
+                    <p id="statHarvested" class="text-3xl font-semibold text-purple-600 dark:text-purple-400">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resource Types Card -->
+        <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+            <div class="w-full">
+                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">Resources</h4>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-2xl">🌿</span>
+                        <span id="statFiber" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-2xl">🦊</span>
+                        <span id="statHide" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-2xl">🪵</span>
+                        <span id="statWood" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-2xl">⛏️</span>
+                        <span id="statOre" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-2xl">🪨</span>
+                        <span id="statRock" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tiers Card -->
+        <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+            <div class="w-full">
+                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">Tiers</h4>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-green-600 dark:text-green-400 font-semibold">T4: </span>
+                        <span id="statT4" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-blue-600 dark:text-blue-400 font-semibold">T5: </span>
+                        <span id="statT5" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-purple-600 dark:text-purple-400 font-semibold">T6: </span>
+                        <span id="statT6" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-red-600 dark:text-red-400 font-semibold">T7: </span>
+                        <span id="statT7" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-yellow-600 dark:text-yellow-400 font-semibold">T8: </span>
+                        <span id="statT8" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enchantments Card -->
+        <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+            <div class="w-full">
+                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">Enchantments</h4>
+                <div class="flex flex-wrap gap-4 justify-center">
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-gray-500 dark:text-gray-400 font-semibold">⚪ .0: </span>
+                        <span id="statEnchant0" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-green-600 dark:text-green-400 font-semibold">🟢 .1: </span>
+                        <span id="statEnchant1" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-blue-600 dark:text-blue-400 font-semibold">🔵 .2: </span>
+                        <span id="statEnchant2" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-purple-600 dark:text-purple-400 font-semibold">🟣 .3: </span>
+                        <span id="statEnchant3" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                    <div class="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <span class="text-orange-600 dark:text-orange-400 font-semibold">🟠 .4: </span>
+                        <span id="statEnchant4" class="text-xl font-bold text-gray-700 dark:text-gray-200">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
+<script src="/scripts/Handlers/HarvestablesHandler.js"></script>
+<script src="/scripts/drawing-ui.js"></script>
+
+<script>
+    // Empty SetLanguage function for compatibility with layout.ejs ChangeLanguage
+    function SetLanguage(lang) {
+        // Stats page doesn't have translatable UI elements
+        console.log('[Stats] Language changed to:', lang);
+    }
+</script>

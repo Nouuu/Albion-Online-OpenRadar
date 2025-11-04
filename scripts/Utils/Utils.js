@@ -13,24 +13,24 @@ import { PlayersHandler } from '../Handlers/PlayersHandler.js';
 import { WispCageHandler } from '../Handlers/WispCageHandler.js';
 import { FishingHandler } from '../Handlers/FishingHandler.js';
 
+// Check if canvas elements exist (only on drawing page)
 var canvasMap = document.getElementById("mapCanvas");
-var contextMap = canvasMap.getContext("2d");
+var contextMap = canvasMap ? canvasMap.getContext("2d") : null;
 
 var canvasGrid = document.getElementById("gridCanvas");
-var contextGrid = canvasGrid.getContext("2d");
+var contextGrid = canvasGrid ? canvasGrid.getContext("2d") : null;
 
 var canvas = document.getElementById("drawCanvas");
-var context = canvas.getContext("2d");
+var context = canvas ? canvas.getContext("2d") : null;
 
 var canvasFlash = document.getElementById("flashCanvas");
-var contextFlash = canvas.getContext("2d");
+var contextFlash = canvasFlash ? canvasFlash.getContext("2d") : null;
 
 var canvasOurPlayer = document.getElementById("ourPlayerCanvas");
-var contextOurPlayer = canvasOurPlayer .getContext("2d");
-
+var contextOurPlayer = canvasOurPlayer ? canvasOurPlayer.getContext("2d") : null;
 
 var canvasItems = document.getElementById("thirdCanvas");
-var contextItems = canvasItems.getContext("2d");
+var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
 
 import { Settings } from './Settings.js';
 const settings = new Settings();

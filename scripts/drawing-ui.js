@@ -1,5 +1,9 @@
 // ========== Statistics Update ==========
 function initStats() {
+    // Check if stats elements exist before trying to update them
+    const statDuration = document.getElementById('statDuration');
+    if (!statDuration) return; // Stats elements don't exist on this page
+
     setInterval(function () {
         if (typeof harvestablesHandler !== 'undefined') {
             const stats = harvestablesHandler.getStats();
@@ -8,32 +12,50 @@ function initStats() {
             const h = Math.floor(stats.sessionDuration / 3600);
             const m = Math.floor((stats.sessionDuration % 3600) / 60);
             const s = stats.sessionDuration % 60;
-            document.getElementById('statDuration').textContent = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            const statDurationEl = document.getElementById('statDuration');
+            if (statDurationEl) statDurationEl.textContent = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
             // Main counters
-            document.getElementById('statDetected').textContent = stats.totalDetected;
-            document.getElementById('statHarvested').textContent = stats.totalHarvested;
+            const statDetectedEl = document.getElementById('statDetected');
+            const statHarvestedEl = document.getElementById('statHarvested');
+            if (statDetectedEl) statDetectedEl.textContent = stats.totalDetected;
+            if (statHarvestedEl) statHarvestedEl.textContent = stats.totalHarvested;
 
             // By type (detected only for compact view)
-            document.getElementById('statFiber').textContent = stats.byType.Fiber.detected;
-            document.getElementById('statHide').textContent = stats.byType.Hide.detected;
-            document.getElementById('statWood').textContent = stats.byType.Log.detected;
-            document.getElementById('statOre').textContent = stats.byType.Ore.detected;
-            document.getElementById('statRock').textContent = stats.byType.Rock.detected;
+            const statFiberEl = document.getElementById('statFiber');
+            const statHideEl = document.getElementById('statHide');
+            const statWoodEl = document.getElementById('statWood');
+            const statOreEl = document.getElementById('statOre');
+            const statRockEl = document.getElementById('statRock');
+            if (statFiberEl) statFiberEl.textContent = stats.byType.Fiber.detected;
+            if (statHideEl) statHideEl.textContent = stats.byType.Hide.detected;
+            if (statWoodEl) statWoodEl.textContent = stats.byType.Log.detected;
+            if (statOreEl) statOreEl.textContent = stats.byType.Ore.detected;
+            if (statRockEl) statRockEl.textContent = stats.byType.Rock.detected;
 
             // By tier (T4-T8 only for compact view)
-            document.getElementById('statT4').textContent = stats.byTier[4].detected;
-            document.getElementById('statT5').textContent = stats.byTier[5].detected;
-            document.getElementById('statT6').textContent = stats.byTier[6].detected;
-            document.getElementById('statT7').textContent = stats.byTier[7].detected;
-            document.getElementById('statT8').textContent = stats.byTier[8].detected;
+            const statT4El = document.getElementById('statT4');
+            const statT5El = document.getElementById('statT5');
+            const statT6El = document.getElementById('statT6');
+            const statT7El = document.getElementById('statT7');
+            const statT8El = document.getElementById('statT8');
+            if (statT4El) statT4El.textContent = stats.byTier[4].detected;
+            if (statT5El) statT5El.textContent = stats.byTier[5].detected;
+            if (statT6El) statT6El.textContent = stats.byTier[6].detected;
+            if (statT7El) statT7El.textContent = stats.byTier[7].detected;
+            if (statT8El) statT8El.textContent = stats.byTier[8].detected;
 
             // Enchantments (harvested resources)
-            document.getElementById('statEnchant0').textContent = stats.byEnchantment.harvested[0] || 0;
-            document.getElementById('statEnchant1').textContent = stats.byEnchantment.harvested[1] || 0;
-            document.getElementById('statEnchant2').textContent = stats.byEnchantment.harvested[2] || 0;
-            document.getElementById('statEnchant3').textContent = stats.byEnchantment.harvested[3] || 0;
-            document.getElementById('statEnchant4').textContent = stats.byEnchantment.harvested[4] || 0;
+            const statEnchant0El = document.getElementById('statEnchant0');
+            const statEnchant1El = document.getElementById('statEnchant1');
+            const statEnchant2El = document.getElementById('statEnchant2');
+            const statEnchant3El = document.getElementById('statEnchant3');
+            const statEnchant4El = document.getElementById('statEnchant4');
+            if (statEnchant0El) statEnchant0El.textContent = stats.byEnchantment.harvested[0] || 0;
+            if (statEnchant1El) statEnchant1El.textContent = stats.byEnchantment.harvested[1] || 0;
+            if (statEnchant2El) statEnchant2El.textContent = stats.byEnchantment.harvested[2] || 0;
+            if (statEnchant3El) statEnchant3El.textContent = stats.byEnchantment.harvested[3] || 0;
+            if (statEnchant4El) statEnchant4El.textContent = stats.byEnchantment.harvested[4] || 0;
         }
     }, 1000);
 }
@@ -75,6 +97,9 @@ function initOverlayControls() {
     const clusterCheckbox = document.getElementById('overlayCluster');
     const clusterRadiusInput = document.getElementById('overlayClusterRadius');
     const clusterMinSizeInput = document.getElementById('overlayClusterMinSize');
+
+    // Check if overlay elements exist (only on drawing page)
+    if (!enchantmentCheckbox) return;
 
     // Load initial values (defaults: enchantment=true, count=true, distance=false, cluster=false)
     enchantmentCheckbox.checked = getBool('settingResourceEnchantOverlay', true);

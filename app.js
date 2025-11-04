@@ -100,8 +100,8 @@ function StartRadar()
 
 
   app.get('/drawing', (req, res) => {
-
-    res.render('main/drawing');
+    const viewName = 'main/drawing';
+    res.render('layout', { mainContent: viewName });
   });
 
   app.get('/items', (req, res) => {
@@ -112,6 +112,11 @@ function StartRadar()
   app.get('/radar-overlay', (req, res) => {
 
     res.render('main/radar-overlay');
+  });
+
+  app.get('/stats', (req, res) => {
+    const viewName = 'main/stats';
+    res.render('layout', { mainContent: viewName });
   });
 
   /*app.get('/logout', (req, res) => {
