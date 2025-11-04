@@ -7,6 +7,21 @@ const WebSocket = require('ws');
 const fs = require("fs");
 const path = require("path");
 
+// Runtime checks: use lightweight module included in the packaged executable
+try {
+  const { runRuntimeChecks } = require('./scripts/Utils/runtime-check');
+  const ok = runRuntimeChecks();
+  const isPkg = typeof process.pkg !== 'undefined';
+  if (!ok && isPkg) {
+    console.error('Startup runtime check failed: Npcap >= 1.84 required. Aborting.');
+    process.exit(1);
+  } else if (!ok) {
+    console.warn('Runtime check reported issues; continuing in development mode.');
+  }
+} catch (e) {
+    console.warn('Runtime check module not available:', e?.message ?? e);
+}
+
 const { getAdapterIp } = require('./server-scripts/adapter-selector');
 
 const EventCodes = require('./scripts/Utils/EventCodesApp.js')

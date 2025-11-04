@@ -55,11 +55,12 @@ const installInstructions = `╔════════════════
 
 📋 ÉTAPES D'INSTALLATION :
 
-1. Installer Npcap 1.79 (OBLIGATOIRE)
+1. Installer Npcap 1.84 (OBLIGATOIRE)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Téléchargez depuis : https://npcap.com/dist/npcap-1.79.exe
+   Téléchargez depuis : https://npcap.com/
+   Lien direct (optionnel) : https://npcap.com/dist/npcap-1.84.exe
 
-   ⚠️  IMPORTANT : Sans Npcap, ZQRadar ne pourra pas capturer
+   ⚠️  IMPORTANT : Sans Npcap (version 1.84+), ZQRadar ne pourra pas capturer
        les paquets réseau et ne fonctionnera pas !
 
 2. Lancer ZQRadar
@@ -84,7 +85,7 @@ const installInstructions = `╔════════════════
 📌 PRÉREQUIS :
 
    • Windows 10 ou 11
-   • Npcap 1.79 installé
+   • Npcap 1.84 ou plus récent installé
    • Albion Online en cours d'exécution
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

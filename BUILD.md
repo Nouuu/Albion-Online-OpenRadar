@@ -6,7 +6,7 @@ Guide pour builder ZQRadar en exécutable Windows (.exe).
 
 - Node.js v18.18.2
 - Python 3.10.2 + Visual Studio Build Tools (pour modules natifs cap.node et node-sass)
-- Npcap 1.79
+- Npcap 1.84 or newer
 - GNU Make (optionnel : WSL, Git Bash, ou `choco install make`)
 
 ## Quick Start
@@ -116,6 +116,6 @@ npm config set msvs_version 2022
 
 **Le .exe ne démarre pas**
 
-- Installer Npcap 1.79 (OBLIGATOIRE)
+- Installer Npcap 1.84 ou plus récent (OBLIGATOIRE)
 - Lancer en tant qu'administrateur (requis pour capture réseau)
 - Vérifier l'antivirus (peut bloquer)

@@ -231,7 +231,7 @@ dist/
 
 ### System Requirements
 **Windows:**
-- Npcap 1.79 or newer (download: https://npcap.com/)
+- Npcap 1.84 or newer (download: https://npcap.com/)
 - Node.js v18.18.2 (for development)
 
 **Linux:**
@@ -614,7 +614,7 @@ Estimation: 20-30 TypeID principaux en 1-2h
   - Cercle coloré avec glow + numéro (.1, .2, .3, .4)
   - Identique à l'affichage des harvestables statiques
   - Couleurs : .1 vert, .2 cyan, .3 rose, .4 or
-- ✅ **FIX Critical harvestFinished**: Correction du parsing des paramètres
+- ✅ **FIX CRITIQUE - Double comptage dernier stack**: Correction du parsing des paramètres
   - **Problème**: Parameters[0] = Player ID (pas stack count!) → 219712 ressources au lieu de 1 ❌
   - **Solution**: Toujours 1 stack par récolte (mécanique serveur)
   - Conversion correcte : T1-T3 (×3), T4 (×2), T5+ (×1)
@@ -1143,7 +1143,7 @@ detectEnchantmentLevel(hp, baseTier) {
 - T5: Bear (8 variants), Direwolf, Terrorbird
 - T6: Direbear, Terrorbird
 - T7: Moabird, Swamp Dragon
-- T8: Mammoth, Rhinoceros
+- T8: Mammoth, Rhinocéros
 
 #### 5. Logging Amélioré
 
@@ -1229,4 +1229,3 @@ Validation: ✓ CONFIRMED
 ---
 
 Fin du document.
-

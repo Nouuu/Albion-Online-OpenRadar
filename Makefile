@@ -2,14 +2,14 @@
 # ZQRadar - Makefile
 # ============================================
 # Usage: make [target]
-# Requires: Node.js v18.18.2, npm, Npcap 1.79
+# Requires: Node.js v18.18.2, npm, Npcap 1.84
 # ============================================
 
 .PHONY: help install start dev check build build-linux build-macos build-all release clean rebuild package optimize-images all-in-one
 
 # Variables
 NODE_VERSION = v18.18.2
-NPCAP_VERSION = 1.79
+NPCAP_VERSION = 1.84
 DIST_DIR = dist
 BUILD_DIR = build
 RELEASE_NAME = ZQRadar-$(shell date +%Y%m%d)
