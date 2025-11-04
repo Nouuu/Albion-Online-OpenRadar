@@ -32,7 +32,7 @@
       <!-- Desktop sidebar -->
       <aside
         :class="{'w-64': !sidebarCollapsed || sidebarHoverExpanded, 'w-20': sidebarCollapsed && !sidebarHoverExpanded}"
-        class="z-20 hidden overflow-y-auto bg-white dark:bg-gray-800 md:block flex-shrink-0 transition-all duration-300"
+        class="z-20 hidden overflow-y-auto bg-white dark:bg-gray-800 md:block flex-shrink-0 transition-all duration-500"
         @mouseenter="onSidebarMouseEnter"
         @mouseleave="onSidebarMouseLeave"
       >
@@ -329,6 +329,7 @@
         class="fixed inset-0 z-10 flex items-end bg-black bg-opacity-50 sm:items-center sm:justify-center"
       ></div>
       <aside
+        x-show="isSideMenuOpen"
         :class="{'w-64': !sidebarCollapsed, 'w-20': sidebarCollapsed}"
         class="fixed inset-y-0 z-20 flex-shrink-0 w-64 mt-16 overflow-y-auto bg-white dark:bg-gray-800 md:hidden"
         x-transition:enter="transition ease-in-out duration-150"

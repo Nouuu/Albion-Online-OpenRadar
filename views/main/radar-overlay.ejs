@@ -1,7 +1,13 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <title>ZQRADAR - Overlay</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/scripts/classes/Settings.js"></script>
+    <link rel="icon" type="image/x-icon" href="/zqradar.ico">
+    <link rel="stylesheet" href="/scripts/styles/overlay.css">
+
     <style>
         * {
             margin: 0;
@@ -20,7 +26,9 @@
             position: relative;
             width: 500px;
             height: 500px;
-            background-color: rgba(0, 0, 0, 0.3);
+            background-color: rgba(17, 24, 39, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
         .overlay-canvas {
@@ -30,83 +38,52 @@
         }
 
         #gridCanvas {
-            border: 2px solid rgba(100, 100, 255, 0.6);
-        }
-
-        #dragHandle {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(30, 30, 40, 0.85);
-            color: white;
-            padding: 6px 12px;
-            border-bottom: 1px solid rgba(100, 100, 255, 0.6);
-            font-size: 11px;
-            z-index: 1000;
-            cursor: move;
-            transition: opacity 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #dragHandle:hover {
-            background-color: rgba(50, 50, 100, 0.95);
-        }
-
-        #dragHandle .title {
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        #dragHandle .hint {
-            font-size: 10px;
-            opacity: 0.7;
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            border-radius: 12px;
         }
 
         #controls {
             position: absolute;
-            top: 30px;
-            right: 5px;
+            top: 8px;
+            right: 8px;
             z-index: 1000;
             display: flex;
-            gap: 5px;
-            transition: opacity 0.3s;
+            gap: 8px;
+            transition: opacity 0.5s ease;
         }
 
         .control-btn {
-            background-color: rgba(30, 30, 40, 0.9);
+            background-color: rgba(124, 58, 237, 0.85);
             color: white;
-            border: 1px solid rgba(100, 100, 255, 0.6);
-            padding: 8px 12px;
+            border: 1px solid rgba(167, 139, 250, 0.4);
+            padding: 8px 14px;
             cursor: pointer;
-            font-size: 14px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            font-weight: bold;
+            font-size: 13px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .control-btn:hover {
-            background-color: rgba(50, 50, 100, 0.95);
-            border-color: rgba(150, 150, 255, 0.8);
-            transform: scale(1.05);
+            background-color: rgba(139, 92, 246, 0.95);
+            border-color: rgba(167, 139, 250, 0.6);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
         }
 
         .control-btn:active {
-            transform: scale(0.95);
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
         }
     </style>
 </head>
 <body>
     <div id="overlayContainer">
-        <div id="dragHandle" title="Drag to move window">
-            <span class="title">⚫ ZQRADAR Overlay</span>
-            <span class="hint">Drag to move</span>
-        </div>
 
         <div id="controls">
-            <button class="control-btn" id="closeBtn" title="Close">✖️</button>
+            <button class="control-btn" id="closeBtn" title="Close">✖</button>
         </div>
 
         <canvas class="overlay-canvas" id="mapCanvas" width="500" height="500"></canvas>
@@ -133,47 +110,55 @@
     <script type="module" src="/scripts/Utils/Utils.js"></script>
 
     <script>
-        // Close button
-        document.getElementById('closeBtn').addEventListener('click', function() {
-            if (confirm('Fermer le mode overlay ?')) {
-                window.close();
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close button
+            const closeBtn = document.getElementById('closeBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    if (confirm('Close overlay mode?')) {
+                        window.close();
+                    }
+                });
             }
-        });
 
-        // Auto-hide controls
-        let hideControlsTimeout;
-        const controls = document.getElementById('controls');
-        const dragHandle = document.getElementById('dragHandle');
+            // Auto-hide controls
+            let hideControlsTimeout;
+            const controls = document.getElementById('controls');
+            const dragHandle = document.getElementById('dragHandle');
 
-        function showControls() {
-            controls.style.opacity = '1';
-            dragHandle.style.opacity = '1';
-            clearTimeout(hideControlsTimeout);
-            hideControlsTimeout = setTimeout(() => {
-                controls.style.opacity = '0.2';
-                dragHandle.style.opacity = '0.2';
-            }, 2000);
-        }
-
-        document.addEventListener('mousemove', showControls);
-        [controls, dragHandle].forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                el.style.opacity = '1';
+            function showControls() {
+                if (controls) controls.style.opacity = '1';
+                if (dragHandle) dragHandle.style.opacity = '1';
                 clearTimeout(hideControlsTimeout);
-            });
-        });
-
-        // Initialize
-        showControls();
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                window.close();
+                hideControlsTimeout = setTimeout(() => {
+                    if (controls) controls.style.opacity = '0.2';
+                    if (dragHandle) dragHandle.style.opacity = '0.2';
+                }, 2000);
             }
-        });
 
-        document.title = 'ZQRADAR Overlay - ESC:Close';
+            document.addEventListener('mousemove', showControls);
+
+            if (controls && dragHandle) {
+                [controls, dragHandle].forEach(el => {
+                    el.addEventListener('mouseenter', () => {
+                        el.style.opacity = '1';
+                        clearTimeout(hideControlsTimeout);
+                    });
+                });
+            }
+
+            // Initialize
+            showControls();
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    window.close();
+                }
+            });
+
+            document.title = 'ZQRADAR Overlay - ESC:Close';
+        });
     </script>
 </body>
 </html>

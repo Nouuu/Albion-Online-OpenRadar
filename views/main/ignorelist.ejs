@@ -1,217 +1,115 @@
-<div class="h-full pb-16 overflow-y-auto">
-  <div class="container grid px-6 mx-auto">
-    <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
-        Ignore list
-    </h2>
-    <div class="flex justify-center">
-      <label class="block text-sm mr-6">
+<div class="container px-6 mx-auto grid">
+  <div class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">
+  </div>
+  <div class="grid gap-6 mb-8 md:grid-cols-1">
+    <!-- Ignore List Card -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          🚫 Ignore List
+        </h2>
 
-        <input 
-          id="nameInput"
-          class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-          placeholder="Name"
-        />
-      </label>
-      <div class="relative mr-6">
-        <button id="dropdownDefaultButton" data-dropdown-toggle="dropdown" class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input" type="button">
-          <div class="flex items-center">
-              <div id="dropdownDefaultText">Player</div>
-              <div>
-                  <svg
-                      class="w-4 h-4"
-                      aria-hidden="true"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                  >
-                      <path
-                          fill-rule="evenodd"
-                          d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                          clip-rule="evenodd"
-                      ></path>
-                  </svg>
-              </div>
-          </div>
-        </button>
-        <button id="drpMenu" class="hidden absolute mt-2 dark:bg-gray-700 dark::text-white border border-gray-300 rounded shadow-lg" style="width: max-content;">
-          <p class="block c-pointer px-4 py-2 dark:text-gray-300 hover:bg-blue-100" style="width: 100%;">Player</p>
-          <p class="block c-pointer px-4 py-2 dark:text-gray-300 hover:bg-blue-100" style="width: 100%;">Guild</p>
-          <p class="block c-pointer px-4 py-2 dark:text-gray-300 hover:bg-blue-100" style="width: 100%;">Alliance</p>
-        </button>
-      </div>
-      <button
-        id="addItem"
-        class="block mb-8 w-56 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-      >
-        Add +
-      </button>
-      <button
-        id="resetButton"
-        class="block ml-6 mb-8 w-28 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-      >
-        Reset All
-      </button>
-    </div>
-    <div class="w-full overflow-hidden rounded-lg shadow-xs">
-      <div class="w-full overflow-x-auto">
-        <table class="w-full whitespace-no-wrap">
-          <thead>
-            <tr
-              class="text-xs font-semibold text-left tracking-wide text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800"
+        <!-- Add Player Section -->
+        <div class="mb-6">
+          <label class="block text-sm mb-2">
+            <span class="text-gray-600 dark:text-gray-300">Add Player to Ignore List</span>
+          </label>
+          <div class="flex gap-2">
+            <input
+              id="ignorePlayerInput"
+              type="text"
+              class="flex-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+              placeholder="Enter player name..."
+            />
+            <button
+              id="addIgnoreBtn"
+              class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-md active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
             >
-              <th class="px-4 py-3 w-full">Name</th>
-              <th class="px-4 py-3">Type</th>
-              <th class="px-4 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tableBody"
-            class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800"
-          >
-          </tbody>
-        </table>
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- Ignored Players List -->
+        <div>
+          <h3 class="mb-3 text-lg font-semibold text-gray-600 dark:text-gray-300">
+            Ignored Players (<span id="ignoreCount">0</span>)
+          </h3>
+          <div id="ignoreListContainer" class="space-y-2">
+            <!-- List will be populated by JavaScript -->
+          </div>
+          <div id="emptyMessage" class="text-sm text-gray-500 dark:text-gray-400 italic">
+            No players ignored yet.
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-
 <script>
-  var isOpen = false;
+  // Load and display ignore list
+  function loadIgnoreList() {
+    const ignoreList = JSON.parse(localStorage.getItem('ignoreList')) || [];
+    const container = document.getElementById('ignoreListContainer');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const countSpan = document.getElementById('ignoreCount');
 
-  let selectedType = "Player";
+    countSpan.textContent = ignoreList.length;
 
-  let drpMenu = document.getElementById("drpMenu");
-  let dropdownDefaultButton = document.getElementById("dropdownDefaultButton");
-  let dropdownDefaultText = document.getElementById("dropdownDefaultText");
-
-  dropdownDefaultButton.addEventListener("blur", () => {
-    if (isOpen)
-    {
-      setTimeout(() => {
-        drpMenu.classList.toggle("hidden");
-        isOpen = !isOpen;
-      }, 100);
+    if (ignoreList.length === 0) {
+      container.innerHTML = '';
+      emptyMessage.style.display = 'block';
+      return;
     }
-  }, true);
 
-  dropdownDefaultButton.addEventListener("click", () =>
-  {
-    isOpen = !isOpen;
-
-    drpMenu.classList.toggle("hidden");
-  });
-
-  Array.from(drpMenu.children).forEach(element => {
-    element.addEventListener("click", () => {
-      dropdownDefaultText.textContent = element.textContent;
-      selectedType = element.textContent;
-    }, false);
-  });
-
-  let resetButton = document.getElementById("resetButton");
-  resetButton.addEventListener("click", () => {
-    removeAll();
-  });
-
-
-  let storedData = JSON.parse(localStorage.getItem("ignoreList")) || [];
-
-  storedData.forEach(element => {
-    addItem(element);
-  });
-
-  function addItem(value)
-  {
-    const name = value['Name'];
-    let type = value['Type'];
-    if (!type)
-      type = 'Player';
-
-    let tableBody = document.getElementById("tableBody");
-
-    // Create a new table row element.
-    let newRow = document.createElement("tr");
-    newRow.className = "text-gray-700 dark:text-gray-400";
-
-    // Set the HTML content of the new row with the desired structure.
-    newRow.innerHTML = `
-      <td class="px-4 py-3 text-sm">
-        ${name}
-      </td>
-      <td class="px-4 py-3 text-sm">
-        ${type}
-      </td>
-      <td class="px-4 py-3">
-        <div class="flex items-center space-x-4 text-sm">
-          <button class="flex items-center justify-between px-2 py-2 text-sm font-medium leading-5 text-purple-600 rounded-lg dark:text-gray-400 focus:outline-none focus:shadow-outline-gray" aria-label="Delete">
-            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-            </svg>
-          </button>
-        </div>
-      </td>
-    `;
-
-    // Append the new row to the table body.
-    tableBody.appendChild(newRow);
-
-    const button = newRow.children[2].children[0].children[0];
-    button.addEventListener("click", function(event)
-    {
-      let idx = 0;
-
-      for (let i = 0; i < tableBody.rows.length; i++)
-      {
-        if (tableBody.rows[i] == newRow)
-        {
-          idx = i;
-          break;
-        }
-      }
-
-      storedData.forEach(element => {
-        const paragraphContext = document.getElementById(element.id + "counterCell");
-        
-        if (paragraphContext != null)
-        {
-          if (parseInt(paragraphContext.textContent) > idx+1)
-          {
-            element.id = element.id -1;
-            paragraphContext.textContent  = '' + element.id;
-            paragraphContext.id = element.id + "counterCell";
-          }
-        }
-      });
-
-      storedData.splice(idx, 1);
-      tableBody.removeChild(newRow);
-
-      const updatedData = JSON.stringify(storedData);
-      localStorage.setItem("ignoreList", updatedData);
-    });
+    emptyMessage.style.display = 'none';
+    container.innerHTML = ignoreList.map(player => `
+      <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+        <span class="text-gray-700 dark:text-gray-300">${player}</span>
+        <button
+          onclick="removePlayer('${player}')"
+          class="px-3 py-1 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none"
+        >
+          Remove
+        </button>
+      </div>
+    `).join('');
   }
 
-  function removeAll()
-  {
-    localStorage.setItem("ignoreList", "[]");
-    let tableBody = document.getElementById("tableBody");
+  // Add player to ignore list
+  document.getElementById('addIgnoreBtn').addEventListener('click', () => {
+    const input = document.getElementById('ignorePlayerInput');
+    const playerName = input.value.trim();
 
-    Array.from(tableBody.children).forEach((element) => {
-      element.remove();
-    });
+    if (!playerName) return;
+
+    const ignoreList = JSON.parse(localStorage.getItem('ignoreList')) || [];
+
+    if (!ignoreList.includes(playerName)) {
+      ignoreList.push(playerName);
+      localStorage.setItem('ignoreList', JSON.stringify(ignoreList));
+      input.value = '';
+      loadIgnoreList();
+    }
+  });
+
+  // Remove player from ignore list
+  function removePlayer(playerName) {
+    const ignoreList = JSON.parse(localStorage.getItem('ignoreList')) || [];
+    const filtered = ignoreList.filter(p => p !== playerName);
+    localStorage.setItem('ignoreList', JSON.stringify(filtered));
+    loadIgnoreList();
   }
 
-  const nameInput = document.getElementById("nameInput");
-  const button = document.getElementById("addItem");
-
-  button.addEventListener("click", function(event) {
-    const nValue = {"Name": nameInput.value.toUpperCase(), "Type": selectedType};
-    storedData.push(nValue); 
-
-    addItem(nValue);
-
-    nameInput.value = "";
-
-    const updatedData = JSON.stringify(storedData);
-    localStorage.setItem("ignoreList", updatedData);
+  // Allow adding with Enter key
+  document.getElementById('ignorePlayerInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('addIgnoreBtn').click();
+    }
   });
+
+  // Initial load
+  loadIgnoreList();
 </script>
+
