@@ -41,18 +41,7 @@ export class MobsDrawing extends DrawingUtils
 
     invalidate(ctx, mobs, mists)
     {
-        // 🗂️ Detect living resource clusters if enabled
-        const livingResources = mobs.filter(mob =>
-            mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable
-        );
-        const clusters = this.settings.overlayCluster ?
-            this.detectClusters(livingResources, this.settings.overlayClusterRadius, this.settings.overlayClusterMinSize) : [];
-
-        // Draw cluster indicators first (behind resources)
-        for (const cluster of clusters) {
-            const point = this.transformPoint(cluster.x, cluster.y);
-            this.drawClusterIndicator(ctx, point.x, point.y, cluster.count, cluster.type);
-        }
+        // Note: cluster detection & drawing is handled centrally in Utils.render (merged static + living resources)
 
         for (const mobOne of mobs)
         {

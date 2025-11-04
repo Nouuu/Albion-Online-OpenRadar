@@ -30,15 +30,8 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
     invalidate(ctx, harvestables)
     {
-        // 🗂️ Detect resource clusters if enabled
-        const clusters = this.settings.overlayCluster ?
-            this.detectClusters(harvestables, this.settings.overlayClusterRadius, this.settings.overlayClusterMinSize) : [];
-
-        // Draw cluster indicators first (behind resources)
-        for (const cluster of clusters) {
-            const point = this.transformPoint(cluster.x, cluster.y);
-            this.drawClusterIndicator(ctx, point.x, point.y, cluster.count, cluster.type);
-        }
+        // Clusters are detected and drawn centrally in Utils.render when overlayCluster is enabled
+        // (to merge static harvestables and living resources into the same clustering pass)
 
         for (const harvestableOne of harvestables)
         {

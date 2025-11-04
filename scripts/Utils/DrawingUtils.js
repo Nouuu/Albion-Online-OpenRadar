@@ -357,6 +357,7 @@ class DrawingUtils
 
     /**
      * 🗂️ Draw cluster indicator (for groups of nearby resources)
+     * Backward-compatible drawing method kept for simple uses (x,y,count)
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {number} x - X position (cluster center)
      * @param {number} y - Y position (cluster center)
@@ -446,12 +447,191 @@ class DrawingUtils
     }
 
     /**
-     * 🗂️ Detect clusters of nearby resources
-     * @param {Array} resources - Array of resource objects with {hX, hY, type/name, tier}
-     * @param {number} clusterRadius - Max distance in meters to consider resources as clustered (default: 30m)
-     * @param {number} minClusterSize - Minimum number of resources to form a cluster (default: 2)
-     * @returns {Array} - Array of clusters [{x, y, count, type, resources: []}]
+     * 🗂️ Draw cluster indicator using cluster object (better centering and size based on resource spread)
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} cluster - Cluster object {x, y, count, type, resources: []}
+     * This method computes pixel-centroid & pixel-radius from actual resource points to avoid centering/size issues.
      */
+    drawClusterIndicatorFromCluster(ctx, cluster)
+    {
+        if (!cluster || !cluster.resources || cluster.count <= 1) return;
+
+        // Map resource points to pixel coordinates
+        const pts = cluster.resources
+            .filter(r => r.hX !== undefined && r.hY !== undefined)
+            .map(r => this.transformPoint(r.hX, r.hY));
+
+        if (pts.length === 0) return;
+
+        // Compute centroid in pixel space
+        let sumX = 0, sumY = 0;
+        for (const p of pts) { sumX += p.x; sumY += p.y; }
+        const cx = sumX / pts.length;
+        const cy = sumY / pts.length;
+
+        // Compute max distance from centroid (in pixels)
+        let maxDist = 0;
+        for (const p of pts) {
+            const dx = p.x - cx;
+            const dy = p.y - cy;
+            const d = Math.sqrt(dx*dx + dy*dy);
+            if (d > maxDist) maxDist = d;
+        }
+
+        // Determine visual radius: ensure a sensible minimum and padding
+        const minRadius = 24; // px
+        const padding = 18 + Math.log(Math.max(1, cluster.count)) * 6; // more items -> larger padding
+        const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + padding);
+
+        // Compute total collectible stacks (if available) to influence color
+        let totalStacks = 0;
+        for (const r of cluster.resources) {
+            const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1;
+            const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4;
+            totalStacks += this.calculateRealResources(size, tier);
+        }
+
+        // Choose color based on cluster size or stacks
+        // small: teal, medium: yellow/orange, large: red
+        let color;
+        if (cluster.count <= 3 && totalStacks <= 6) {
+            color = { outer: `rgba(100,200,255,0.45)`, inner: `rgba(100,200,255,0.65)`, badgeFrom: "rgba(100,200,255,0.9)" };
+        } else if (cluster.count <= 6 || totalStacks <= 18) {
+            color = { outer: `rgba(255,210,100,0.45)`, inner: `rgba(255,180,60,0.65)`, badgeFrom: "rgba(255,210,100,0.95)" };
+        } else {
+            color = { outer: `rgba(255,100,100,0.45)`, inner: `rgba(220,80,80,0.65)`, badgeFrom: "rgba(255,100,100,0.95)" };
+        }
+
+        // Pulsing effect
+        const time = Date.now() / 1000;
+        const pulse = Math.sin(time * 2) * 0.12 + 0.92; // gentler pulse
+
+        ctx.save();
+
+        // Outer ring
+        ctx.strokeStyle = color.outer.replace(/,\s*0.45\)/, `, ${0.4 * pulse})`);
+        ctx.lineWidth = Math.max(2, Math.min(6, Math.log(cluster.count + 1) * 1.6));
+        ctx.beginPath();
+        ctx.arc(cx, cy, visualRadius * pulse, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Inner ring
+        ctx.strokeStyle = color.inner.replace(/,\s*0.65\)/, `, ${0.6 * pulse})`);
+        ctx.lineWidth = Math.max(1, Math.min(4, Math.log(cluster.count + 1) * 1.2));
+        ctx.beginPath();
+        ctx.arc(cx, cy, (visualRadius - 6) * pulse, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Cluster count badge (top)
+        const text = `×${cluster.count}`;
+        ctx.font = "bold 11px monospace";
+        const textWidth = ctx.measureText(text).width;
+        const paddingText = 6;
+        const rectWidth = textWidth + (paddingText * 2);
+        const rectHeight = 16;
+        const radiusRect = 6;
+        const rectX = cx - (rectWidth / 2);
+        const rectY = cy - visualRadius - rectHeight - 6;
+
+        // Badge gradient
+        const gradient = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectHeight);
+        gradient.addColorStop(0, color.badgeFrom);
+        gradient.addColorStop(1, "rgba(160,120,40,0.9)");
+        ctx.fillStyle = gradient;
+
+        // Rounded rectangle for badge
+        ctx.beginPath();
+        ctx.moveTo(rectX + radiusRect, rectY);
+        ctx.lineTo(rectX + rectWidth - radiusRect, rectY);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radiusRect);
+        ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radiusRect);
+        ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radiusRect, rectY + rectHeight);
+        ctx.lineTo(rectX + radiusRect, rectY + rectHeight);
+        ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radiusRect);
+        ctx.lineTo(rectX, rectY + radiusRect);
+        ctx.quadraticCurveTo(rectX, rectY, rectX + radiusRect, rectY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Badge border
+        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Badge text
+        ctx.shadowColor = "rgba(0,0,0,0.9)";
+        ctx.shadowBlur = 3;
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillText(text, rectX + paddingText, rectY + 12);
+
+        // Optional: Type label (bottom)
+        if (cluster.type) {
+            ctx.font = "bold 9px monospace";
+            const typeWidth = ctx.measureText(cluster.type).width;
+            const typeX = cx - (typeWidth / 2);
+            const typeY = cy + visualRadius + 18;
+
+            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+            ctx.shadowBlur = 2;
+            ctx.fillStyle = color.inner;
+            ctx.fillText(cluster.type, typeX, typeY);
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * Get resource type name from type ID (for harvestables)
+     * @param {number} type - Resource type ID
+     * @returns {string} - Resource type name
+     */
+    getResourceTypeName(type)
+    {
+        if (type >= 0 && type <= 5) return "Wood";
+        if (type >= 6 && type <= 10) return "Stone";
+        if (type >= 11 && type <= 15) return "Fiber";
+        if (type >= 16 && type <= 22) return "Hide";
+        if (type >= 23 && type <= 27) return "Ore";
+        return "Resource";
+    }
+
+    /**
+     * Get canonical category for clustering from a resource or mob object
+     * Returns one of: "Wood", "Rock", "Fiber", "Hide", "Ore", or "Resource"
+     * Accepts harvestable objects (with numeric .type) and living mobs (with .name)
+     */
+    getClusterCategory(resource)
+    {
+        if (!resource) return "Resource";
+
+        // If resource has a normalized string name, try to detect the category
+        if (resource.name && typeof resource.name === 'string') {
+            const n = resource.name.toLowerCase();
+            if (n.includes('fiber')) return 'Fiber';
+            if (n.includes('hide')) return 'Hide';
+            if (n.includes('wood') || n.includes('log') || n.includes('logs')) return 'Wood';
+            if (n.includes('ore')) return 'Ore';
+            if (n.includes('rock')) return 'Rock';
+        }
+
+        // If resource.type is numeric (harvestables), reuse getResourceTypeName
+        if (typeof resource.type === 'number') {
+            return this.getResourceTypeName(resource.type);
+        }
+
+        // Fallback: if the object carries a string-type property (type string)
+        if (typeof resource.type === 'string') {
+            const t = resource.type.toLowerCase();
+            if (t.includes('fiber')) return 'Fiber';
+            if (t.includes('hide')) return 'Hide';
+            if (t.includes('wood') || t.includes('log')) return 'Wood';
+            if (t.includes('ore')) return 'Ore';
+            if (t.includes('rock')) return 'Rock';
+        }
+
+        return 'Resource';
+    }
+
     detectClusters(resources, clusterRadius = 30, minClusterSize = 2)
     {
         if (!resources || resources.length === 0) return [];
@@ -469,8 +649,8 @@ class DrawingUtils
 
             const resource = resources[i];
 
-            // Get type name (works for both harvestables and living resources)
-            const typeName = resource.name || this.getResourceTypeName(resource.type);
+            // Determine canonical category (works for both harvestables and living resources)
+            const typeName = this.getClusterCategory(resource);
 
             const cluster = {
                 x: resource.hX,
@@ -489,10 +669,11 @@ class DrawingUtils
                 if (resources[j].size !== undefined && resources[j].size <= 0) continue;
 
                 const other = resources[j];
-                const otherType = other.name || this.getResourceTypeName(other.type);
+                const otherType = this.getClusterCategory(other);
 
-                // Must be same type and tier
-                if (otherType !== typeName || other.tier !== resource.tier) continue;
+                // Must be same category and same tier (if tier info present)
+                if (otherType !== typeName) continue;
+                if ((other.tier !== undefined && resource.tier !== undefined) && other.tier !== resource.tier) continue;
 
                 const dist = this.calculateDistance(resource.hX, resource.hY, other.hX, other.hY);
 
@@ -513,20 +694,5 @@ class DrawingUtils
         }
 
         return clusters;
-    }
-
-    /**
-     * Get resource type name from type ID (for harvestables)
-     * @param {number} type - Resource type ID
-     * @returns {string} - Resource type name
-     */
-    getResourceTypeName(type)
-    {
-        if (type >= 0 && type <= 5) return "Wood";
-        if (type >= 6 && type <= 10) return "Stone";
-        if (type >= 11 && type <= 15) return "Fiber";
-        if (type >= 16 && type <= 22) return "Hide";
-        if (type >= 23 && type <= 27) return "Ore";
-        return "Resource";
     }
 }

@@ -394,6 +394,29 @@ function render()
 
     mapsDrawing.Draw(contextMap, map);
 
+    // Unified cluster detection + drawing (merge static harvestables + living resources)
+    if (settings.overlayCluster) {
+        try {
+            // Prepare merged list: static harvestables + living resources from mobs
+            const staticList = harvestablesHandler.harvestableList || [];
+            const livingList = (mobsHandler && mobsHandler.mobsList) ?
+                mobsHandler.mobsList.filter(mob => mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable)
+                : [];
+
+            // Merge arrays (no deep copy needed) - detectClusters expects objects with hX/hY/tier/name/type/size
+            const merged = staticList.concat(livingList);
+
+            const clusters = drawingUtils.detectClusters(merged, settings.overlayClusterRadius, settings.overlayClusterMinSize);
+
+            // Draw cluster indicators behind resources
+            for (const cluster of clusters) {
+                drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
+            }
+        } catch (e) {
+            console.error('[Cluster] Failed to compute/draw clusters:', e);
+        }
+    }
+
     harvestablesDrawing.invalidate(context, harvestablesHandler.harvestableList);
 
     mobsDrawing.invalidate(context, mobsHandler.mobsList, mobsHandler.mistList);
