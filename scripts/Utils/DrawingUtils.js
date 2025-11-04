@@ -1,7 +1,5 @@
-class DrawingUtils
-{
-    constructor(settings)
-    {
+class DrawingUtils {
+    constructor(settings) {
         this.settings = settings;
         this.fontSize = "12px";
         this.fontFamily = "Arial";
@@ -9,50 +7,44 @@ class DrawingUtils
         this.images = [];
     }
 
-    InitOurPlayerCanvas(ourPlayerCanvas, context)
-    {
-        this.drawFilledCircle(context, ourPlayerCanvas.width/2, ourPlayerCanvas.height/2, 10, "blue");
+    InitOurPlayerCanvas(ourPlayerCanvas, context) {
+        this.drawFilledCircle(context, ourPlayerCanvas.width / 2, ourPlayerCanvas.height / 2, 10, "blue");
     }
-        
-    initGridCanvas(canvasBottom, contextBottom)
-    {    
+
+    initGridCanvas(canvasBottom, contextBottom) {
         //this.fillCtx(canvasBottom, contextBottom);
         this.drawBoard(canvasBottom, contextBottom);
     }
 
-    drawFilledCircle(context, x, y, radius, color)
-    {
+    drawFilledCircle(context, x, y, radius, color) {
         context.beginPath();
-        context.arc(x , y , radius, 0, 2 * Math.PI);
+        context.arc(x, y, radius, 0, 2 * Math.PI);
         context.fillStyle = color;
         context.fill();
     }
-    
-    initCanvas(canvas, context) {}
 
-    fillCtx(canvasBottom, contextBottom)
-    {
+    initCanvas(canvas, context) {
+    }
+
+    fillCtx(canvasBottom, contextBottom) {
         contextBottom.fillStyle = '#1a1c23';
         contextBottom.fillRect(0, 0, canvasBottom.width, canvasBottom.height);
         //this.drawFilledCircle(contextBottom, canvasBottom.width / 2, canvasBottom.height / 2, 10, "blue"); 
     }
 
-    drawBoard(canvasBottom, contextBottom)
-    {
+    drawBoard(canvasBottom, contextBottom) {
         var bw = canvasBottom.width;
         var bh = canvasBottom.height;
 
         var p = 0;
         let totalSpace = canvasBottom.height / 10;
 
-        for (var x = 0; x <= bw; x += totalSpace)
-        {
+        for (var x = 0; x <= bw; x += totalSpace) {
             contextBottom.moveTo(0.5 + x + p, p);
             contextBottom.lineTo(0.5 + x + p, bh + p);
         }
 
-        for (var x = 0; x <= bh; x += 50)
-        {
+        for (var x = 0; x <= bh; x += 50) {
             contextBottom.moveTo(p, 0.5 + x + p);
             contextBottom.lineTo(bw + p, 0.5 + x + p);
         }
@@ -61,43 +53,39 @@ class DrawingUtils
         contextBottom.stroke();
     }
 
-    lerp(a, b, t) { return a + (b - a) * t; }
+    lerp(a, b, t) {
+        return a + (b - a) * t;
+    }
 
 
-    DrawCustomImage(ctx, x, y, imageName, folder, size)
-    {
+    DrawCustomImage(ctx, x, y, imageName, folder, size) {
         if (imageName == "" || imageName === undefined)
             return;
-        
+
         const folderR = folder == "" || folder === undefined ? "" : folder + "/";
 
-        const src = "/images/" + folderR + imageName + ".png"; 
+        const src = "/images/" + folderR + imageName + ".png";
 
         const preloadedImage = this.settings.GetPreloadedImage(src, folder);
 
-        if (preloadedImage === null) 
-        {
+        if (preloadedImage === null) {
             this.drawFilledCircle(ctx, x, y, 10, "#4169E1");
             return;
         }
 
-        if (preloadedImage)
-        {
+        if (preloadedImage) {
             ctx.drawImage(preloadedImage, x - size / 2, y - size / 2, size, size);
-        }
-        else
-        {
+        } else {
             this.settings.preloadImageAndAddToList(src, folder)
-            .then(() => console.log('Item loaded'))
-            .catch(() => console.log('Item not loaded'));
+                .then(() => console.log('Item loaded'))
+                .catch(() => console.log('Item not loaded'));
         }
     }
 
-    transformPoint(x, y)
-    {
+    transformPoint(x, y) {
         //const angle = -0.7071;
         const angle = -0.785398;
-        
+
 
         let newX = x * angle - y * angle;
         let newY = x * angle + y * angle;
@@ -107,12 +95,11 @@ class DrawingUtils
         newX += 250;
         newY += 250;
 
-        return { x: newX, y: newY };
+        return {x: newX, y: newY};
     }
 
 
-    drawText(xTemp, yTemp, text, ctx )
-    {
+    drawText(xTemp, yTemp, text, ctx) {
         ctx.font = this.fontSize + " " + this.fontFamily;
         ctx.fillStyle = this.textColor;
 
@@ -125,15 +112,14 @@ class DrawingUtils
     }
 
 
-    drawTextItems(xTemp, yTemp, text, ctx , size , color)
-    {
+    drawTextItems(xTemp, yTemp, text, ctx, size, color) {
         ctx.font = size + " " + this.fontFamily;
         ctx.fillStyle = color;
 
         let x = xTemp;
         let y = yTemp;
 
-        ctx.fillText(text, x , y);
+        ctx.fillText(text, x, y);
     }
 
     /**
@@ -143,8 +129,7 @@ class DrawingUtils
      * @param {number} y - Y position (resource center)
      * @param {number} enchantmentLevel - Enchantment level (1-4)
      */
-    drawEnchantmentIndicator(ctx, x, y, enchantmentLevel)
-    {
+    drawEnchantmentIndicator(ctx, x, y, enchantmentLevel) {
         if (enchantmentLevel <= 0 || enchantmentLevel > 4) return;
 
         const enchantColors = {
@@ -198,8 +183,7 @@ class DrawingUtils
      * @param {number} count - Resource count to display
      * @param {string} position - Badge position: 'bottom-right' (default), 'top-right', etc.
      */
-    drawResourceCountBadge(ctx, x, y, count, position = 'bottom-right')
-    {
+    drawResourceCountBadge(ctx, x, y, count, position = 'bottom-right') {
         const text = count.toString();
         ctx.save();
 
@@ -213,9 +197,9 @@ class DrawingUtils
 
         // Position calculation
         const positions = {
-            'bottom-right': { x: x + 8, y: y + 6 },
-            'top-right': { x: x + 8, y: y - 20 },
-            'bottom-left': { x: x - rectWidth - 8, y: y + 6 }
+            'bottom-right': {x: x + 8, y: y + 6},
+            'top-right': {x: x + 8, y: y - 20},
+            'bottom-left': {x: x - rectWidth - 8, y: y + 6}
         };
         const pos = positions[position] || positions['bottom-right'];
         const rectX = pos.x;
@@ -260,8 +244,7 @@ class DrawingUtils
      * @param {number} tier - Resource tier (1-8)
      * @returns {number} - Real resource count
      */
-    calculateRealResources(size, tier)
-    {
+    calculateRealResources(size, tier) {
         // Conversion rates based on tier
         if (tier <= 3) {
             return size * 3;  // T1-T3: 3 resources per stack
@@ -279,8 +262,7 @@ class DrawingUtils
      * @param {number} y - Y position
      * @param {number} distance - Distance value
      */
-    drawDistanceIndicator(ctx, x, y, distance)
-    {
+    drawDistanceIndicator(ctx, x, y, distance) {
         if (distance <= 0) return;
 
         ctx.save();
@@ -289,7 +271,7 @@ class DrawingUtils
         const realDistance = distance / 3;
 
         // Format distance (meters)
-        const text = realDistance < 1000 ? `${Math.round(realDistance)}m` : `${(realDistance/1000).toFixed(1)}km`;
+        const text = realDistance < 1000 ? `${Math.round(realDistance)}m` : `${(realDistance / 1000).toFixed(1)}km`;
 
         ctx.font = "bold 9px monospace";
         const textWidth = ctx.measureText(text).width;
@@ -348,8 +330,7 @@ class DrawingUtils
      * @param {number} y2 - Y position 2
      * @returns {number} - Distance
      */
-    calculateDistance(x1, y1, x2, y2)
-    {
+    calculateDistance(x1, y1, x2, y2) {
         const dx = x2 - x1;
         const dy = y2 - y1;
         return Math.sqrt(dx * dx + dy * dy);
@@ -364,8 +345,7 @@ class DrawingUtils
      * @param {number} count - Number of resources in cluster
      * @param {string} clusterType - Resource type (e.g., "Fiber", "Hide", "Ore")
      */
-    drawClusterIndicator(ctx, x, y, count, clusterType = null)
-    {
+    drawClusterIndicator(ctx, x, y, count, clusterType = null) {
         if (count <= 1) return; // No need for indicator if only 1 resource
 
         ctx.save();
@@ -452,8 +432,7 @@ class DrawingUtils
      * @param {Object} cluster - Cluster object {x, y, count, type, resources: []}
      * This method computes pixel-centroid & pixel-radius from actual resource points to avoid centering/size issues.
      */
-    drawClusterIndicatorFromCluster(ctx, cluster)
-    {
+    drawClusterIndicatorFromCluster(ctx, cluster) {
         if (!cluster || !cluster.resources || cluster.count <= 1) return;
 
         // Map resource points to pixel coordinates
@@ -465,7 +444,10 @@ class DrawingUtils
 
         // Compute centroid in pixel space
         let sumX = 0, sumY = 0;
-        for (const p of pts) { sumX += p.x; sumY += p.y; }
+        for (const p of pts) {
+            sumX += p.x;
+            sumY += p.y;
+        }
         const cx = sumX / pts.length;
         const cy = sumY / pts.length;
 
@@ -474,7 +456,7 @@ class DrawingUtils
         for (const p of pts) {
             const dx = p.x - cx;
             const dy = p.y - cy;
-            const d = Math.sqrt(dx*dx + dy*dy);
+            const d = Math.sqrt(dx * dx + dy * dy);
             if (d > maxDist) maxDist = d;
         }
 
@@ -495,11 +477,23 @@ class DrawingUtils
         // small: teal, medium: yellow/orange, large: red
         let color;
         if (cluster.count <= 3 && totalStacks <= 6) {
-            color = { outer: `rgba(100,200,255,0.45)`, inner: `rgba(100,200,255,0.65)`, badgeFrom: "rgba(100,200,255,0.9)" };
+            color = {
+                outer: `rgba(100, 200, 255, 0.45)`,
+                inner: `rgba(100, 200, 255, 0.65)`,
+                badgeFrom: "rgba(100,200,255,0.9)"
+            };
         } else if (cluster.count <= 6 || totalStacks <= 18) {
-            color = { outer: `rgba(255,210,100,0.45)`, inner: `rgba(255,180,60,0.65)`, badgeFrom: "rgba(255,210,100,0.95)" };
+            color = {
+                outer: `rgba(255, 210, 100, 0.45)`,
+                inner: `rgba(255, 180, 60, 0.65)`,
+                badgeFrom: "rgba(255,210,100,0.95)"
+            };
         } else {
-            color = { outer: `rgba(255,100,100,0.45)`, inner: `rgba(220,80,80,0.65)`, badgeFrom: "rgba(255,100,100,0.95)" };
+            color = {
+                outer: `rgba(255, 100, 100, 0.45)`,
+                inner: `rgba(220, 80, 80, 0.65)`,
+                badgeFrom: "rgba(255,100,100,0.95)"
+            };
         }
 
         // Pulsing effect
@@ -522,60 +516,72 @@ class DrawingUtils
         ctx.arc(cx, cy, (visualRadius - 6) * pulse, 0, 2 * Math.PI);
         ctx.stroke();
 
-        // Cluster count badge (top)
-        const text = `×${cluster.count}`;
-        ctx.font = "bold 11px monospace";
-        const textWidth = ctx.measureText(text).width;
-        const paddingText = 6;
-        const rectWidth = textWidth + (paddingText * 2);
-        const rectHeight = 16;
-        const radiusRect = 6;
-        const rectX = cx - (rectWidth / 2);
-        const rectY = cy - visualRadius - rectHeight - 6;
+        // Unified info box above the cluster: count, type, tier, totalStacks, distance
+        const countText = `×${cluster.count}`;
+        const typeText = cluster.type || '';
+        const tierText = (cluster.tier !== undefined && cluster.tier !== null) ? `T${cluster.tier}` : '';
 
-        // Badge gradient
-        const gradient = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectHeight);
-        gradient.addColorStop(0, color.badgeFrom);
-        gradient.addColorStop(1, "rgba(160,120,40,0.9)");
-        ctx.fillStyle = gradient;
+        const distanceGameUnits = Math.round(Math.sqrt((cluster.x || 0) * (cluster.x || 0) + (cluster.y || 0) * (cluster.y || 0)));
+        const distanceMeters = Math.round(distanceGameUnits / 3);
+        const distText = distanceMeters < 1000 ? `${distanceMeters}m` : `${(distanceMeters / 1000).toFixed(1)}km`;
 
-        // Rounded rectangle for badge
+        const stacksText = `${totalStacks}`;
+
+        const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
+        const line2 = `${stacksText} stakck(s) · ${distText}`;
+
+        ctx.font = 'bold 12px monospace';
+        const w1 = ctx.measureText(line1).width;
+        ctx.font = '11px monospace';
+        const w2 = ctx.measureText(line2).width;
+        const infoW = Math.ceil(Math.max(w1, w2)) + 16;
+        const infoH = 8 + 14 + 6 + 12; // padding + line1 + gap + line2
+
+        const infoX = cx - infoW / 2;
+        const infoY = cy - visualRadius - infoH - 8;
+
+        // If the box would be off-screen top, place below cluster
+        let boxY = infoY;
+        if (infoY < 8) boxY = cy + visualRadius + 8;
+
+        // Gradient background matching color badgeFrom
+        const grad = ctx.createLinearGradient(infoX, boxY, infoX, boxY + infoH);
+        grad.addColorStop(0, color.badgeFrom);
+        grad.addColorStop(1, 'rgba(0,0,0,0.6)');
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = grad;
+        const rbox = 8;
         ctx.beginPath();
-        ctx.moveTo(rectX + radiusRect, rectY);
-        ctx.lineTo(rectX + rectWidth - radiusRect, rectY);
-        ctx.quadraticCurveTo(rectX + rectWidth, rectY, rectX + rectWidth, rectY + radiusRect);
-        ctx.lineTo(rectX + rectWidth, rectY + rectHeight - radiusRect);
-        ctx.quadraticCurveTo(rectX + rectWidth, rectY + rectHeight, rectX + rectWidth - radiusRect, rectY + rectHeight);
-        ctx.lineTo(rectX + radiusRect, rectY + rectHeight);
-        ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radiusRect);
-        ctx.lineTo(rectX, rectY + radiusRect);
-        ctx.quadraticCurveTo(rectX, rectY, rectX + radiusRect, rectY);
+        ctx.moveTo(infoX + rbox, boxY);
+        ctx.lineTo(infoX + infoW - rbox, boxY);
+        ctx.quadraticCurveTo(infoX + infoW, boxY, infoX + infoW, boxY + rbox);
+        ctx.lineTo(infoX + infoW, boxY + infoH - rbox);
+        ctx.quadraticCurveTo(infoX + infoW, boxY + infoH, infoX + infoW - rbox, boxY + infoH);
+        ctx.lineTo(infoX + rbox, boxY + infoH);
+        ctx.quadraticCurveTo(infoX, boxY + infoH, infoX, boxY + infoH - rbox);
+        ctx.lineTo(infoX, boxY + rbox);
+        ctx.quadraticCurveTo(infoX, boxY, infoX + rbox, boxY);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
 
-        // Badge border
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
+        // Thin border
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 1;
-        ctx.stroke();
+        ctx.strokeRect(infoX + 0.5, boxY + 0.5, infoW - 1, infoH - 1);
 
-        // Badge text
-        ctx.shadowColor = "rgba(0,0,0,0.9)";
-        ctx.shadowBlur = 3;
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(text, rectX + paddingText, rectY + 12);
-
-        // Optional: Type label (bottom)
-        if (cluster.type) {
-            ctx.font = "bold 9px monospace";
-            const typeWidth = ctx.measureText(cluster.type).width;
-            const typeX = cx - (typeWidth / 2);
-            const typeY = cy + visualRadius + 18;
-
-            ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
-            ctx.shadowBlur = 2;
-            ctx.fillStyle = color.inner;
-            ctx.fillText(cluster.type, typeX, typeY);
-        }
+        // Text centered
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText(line1, infoX + infoW / 2, boxY + 14);
+        ctx.font = '11px monospace';
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.fillText(line2, infoX + infoW / 2, boxY + 14 + 16);
+        ctx.textAlign = 'start';
 
         ctx.restore();
     }
@@ -585,8 +591,7 @@ class DrawingUtils
      * @param {number} type - Resource type ID
      * @returns {string} - Resource type name
      */
-    getResourceTypeName(type)
-    {
+    getResourceTypeName(type) {
         if (type >= 0 && type <= 5) return "Wood";
         if (type >= 6 && type <= 10) return "Stone";
         if (type >= 11 && type <= 15) return "Fiber";
@@ -600,8 +605,7 @@ class DrawingUtils
      * Returns one of: "Wood", "Rock", "Fiber", "Hide", "Ore", or "Resource"
      * Accepts harvestable objects (with numeric .type) and living mobs (with .name)
      */
-    getClusterCategory(resource)
-    {
+    getClusterCategory(resource) {
         if (!resource) return "Resource";
 
         // If resource has a normalized string name, try to detect the category
@@ -632,8 +636,7 @@ class DrawingUtils
         return 'Resource';
     }
 
-    detectClusters(resources, clusterRadius = 30, minClusterSize = 2)
-    {
+    detectClusters(resources, clusterRadius = 30, minClusterSize = 2) {
         if (!resources || resources.length === 0) return [];
 
         // Convert radius from meters to game units (multiply by 3)
