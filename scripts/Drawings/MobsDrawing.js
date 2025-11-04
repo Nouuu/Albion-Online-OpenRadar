@@ -70,32 +70,48 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
-                imageName = mobOne.name;
-                imageFolder = "Resources"; // Change folder to enemies
+                // Only set imageName if mob has been identified (has name from mobinfo)
+                // Otherwise leave undefined and fallback blue circle will be drawn
+                if (mobOne.name) {
+                    imageName = mobOne.name;
+                    imageFolder = "Resources"; // Change folder to enemies
+                }
 
                 drawHp = this.settings.enemiesHP;
                 drawId = this.settings.enemiesID;
             }
             else if (mobOne.type == EnemyType.Drone)
             {
-                imageName = mobOne.name;
-                imageFolder = "Resources"; // Change folder to enemies
+                // Only set imageName if mob has been identified (has name from mobinfo)
+                // Otherwise leave undefined and fallback blue circle will be drawn
+                if (mobOne.name) {
+                    imageName = mobOne.name;
+                    imageFolder = "Resources"; // Change folder to enemies
+                }
 
                 drawHp = this.settings.enemiesHP;
                 drawId = this.settings.enemiesID;
             }
             else if (mobOne.type == EnemyType.MistBoss)
             {
-                imageName = mobOne.name;
-                imageFolder = "Resources"; // Change folder to enemies
+                // Only set imageName if mob has been identified (has name from mobinfo)
+                // Otherwise leave undefined and fallback blue circle will be drawn
+                if (mobOne.name) {
+                    imageName = mobOne.name;
+                    imageFolder = "Resources"; // Change folder to enemies
+                }
 
                 drawHp = this.settings.enemiesHP;
                 drawId = this.settings.enemiesID;
             }
             else if (mobOne.type == EnemyType.Events)
             {
-                imageName = mobOne.name;
-                imageFolder = "Resources";
+                // Only set imageName if mob has been identified (has name from mobinfo)
+                // Otherwise leave undefined and fallback blue circle will be drawn
+                if (mobOne.name) {
+                    imageName = mobOne.name;
+                    imageFolder = "Resources";
+                }
 
                 drawHp = this.settings.enemiesHP;
                 drawId = this.settings.enemiesID;

@@ -493,6 +493,44 @@ class MobsHandler {
             }
         }
 
+        // Filter enemies based on user settings
+        if (mob.type >= EnemyType.Enemy && mob.type <= EnemyType.Boss) {
+            // If enemy is not identified (no name from mobinfo), check "Show Unmanaged Enemies" setting
+            if (!mob.name || !hasKnownInfo) {
+                if (!this.settings.showUnmanagedEnemies) {
+                    return; // Skip unidentified enemies if setting is disabled
+                }
+            } else {
+                // For identified enemies, filter by their specific level (Normal, Medium, Enchanted, MiniBoss, Boss)
+                const enemyLevelIndex = mob.type - EnemyType.Enemy; // 0-4 for Enemy through Boss
+                if (enemyLevelIndex >= 0 && enemyLevelIndex < this.settings.enemyLevels.length) {
+                    if (!this.settings.enemyLevels[enemyLevelIndex]) {
+                        return; // Skip if this enemy level is disabled
+                    }
+                }
+            }
+        }
+
+        // Filter drones based on user settings
+        if (mob.type === EnemyType.Drone) {
+            if (!this.settings.avaloneDrones) {
+                return;
+            }
+        }
+
+        // Filter mist bosses based on user settings
+        if (mob.type === EnemyType.MistBoss) {
+            // Mist bosses have individual toggles, but if we don't know which one it is, show it
+            // The specific filtering is done in MobsDrawing based on mob name
+        }
+
+        // Filter event enemies based on user settings
+        if (mob.type === EnemyType.Events) {
+            if (!this.settings.showEventEnemies) {
+                return;
+            }
+        }
+
         this.mobsList.push(mob);
 
         // 📊 Track statistics for living resources (Fiber, Hide, Wood, Ore, Rock)
