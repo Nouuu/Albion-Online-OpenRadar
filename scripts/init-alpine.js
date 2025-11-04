@@ -16,11 +16,43 @@ function data() {
     window.localStorage.setItem('dark', value)
   }
 
+  function getSidebarCollapsedFromLocalStorage() {
+    if (window.localStorage.getItem('sidebarCollapsed')) {
+      return JSON.parse(window.localStorage.getItem('sidebarCollapsed'))
+    }
+    return false
+  }
+
+  function setSidebarCollapsedToLocalStorage(value) {
+    window.localStorage.setItem('sidebarCollapsed', value)
+  }
+
   return {
     dark: getThemeFromLocalStorage(),
     toggleTheme() {
       this.dark = !this.dark
       setThemeToLocalStorage(this.dark)
+    },
+    sidebarCollapsed: getSidebarCollapsedFromLocalStorage(),
+    sidebarHoverExpanded: false,
+    sidebarHoverTimeout: null,
+    toggleSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed
+      setSidebarCollapsedToLocalStorage(this.sidebarCollapsed)
+    },
+    onSidebarMouseEnter() {
+      if (this.sidebarCollapsed) {
+        this.sidebarHoverTimeout = setTimeout(() => {
+          this.sidebarHoverExpanded = true
+        }, 500) // 500ms delay
+      }
+    },
+    onSidebarMouseLeave() {
+      if (this.sidebarHoverTimeout) {
+        clearTimeout(this.sidebarHoverTimeout)
+        this.sidebarHoverTimeout = null
+      }
+      this.sidebarHoverExpanded = false
     },
     isSideMenuOpen: false,
     toggleSideMenu() {
@@ -29,6 +61,7 @@ function data() {
     closeSideMenu() {
       this.isSideMenuOpen = false
     },
+    // ...existing code...
     isNotificationsMenuOpen: false,
     toggleNotificationsMenu() {
       this.isNotificationsMenuOpen = !this.isNotificationsMenuOpen

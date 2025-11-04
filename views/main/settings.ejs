@@ -1,203 +1,363 @@
-
 <div class="container px-6 mx-auto grid">
   <div class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">
   </div>
   <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
-    <div class="flex items-center p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-      <div>
-        <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200"  >
-          Main settings
+    <!-- Main Settings Card -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <!-- Main Window Settings -->
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          🖥️ Main Window Settings
         </h2>
-        <div class ="flex justify-start space-x-6">
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Main window Margin X </span>
-            <input
-              id = "mainWindowMarginX"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="X"
-            />
-          </label>
+        <div class="flex flex-wrap -m-2 mb-8">
+          <div class="p-2 w-full md:w-1/2">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Margin X (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Horizontal offset of the main radar window
+                  </span>
+                </span>
+              </span>
+              <input
+                id="mainWindowMarginX"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="0"
+              />
+            </label>
+          </div>
 
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Main window Margin Y </span>
-            <input
-              id = "mainWindowMarginY"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="Y"
-            />
-          </label>
-
+          <div class="p-2 w-full md:w-1/2">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Margin Y (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Vertical offset of the main radar window
+                  </span>
+                </span>
+              </span>
+              <input
+                id="mainWindowMarginY"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="0"
+              />
+            </label>
+          </div>
         </div>
 
-        <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
-        Items window settings
+        <!-- Items Window Settings -->
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          📦 Items Window Settings
         </h2>
+        <div class="flex flex-wrap -m-2 mb-4">
+          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Margin X (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Horizontal position of the items overlay
+                  </span>
+                </span>
+              </span>
+              <input
+                id="itemsWindowMarginX"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="0"
+              />
+            </label>
+          </div>
 
-        <div class ="flex justify-start space-x-6">
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Items window Margin X</span>
-            <input
-              id = "itemsWindowMarginX"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="X"
-            />
-          </label>
+          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Margin Y (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Vertical position of the items overlay
+                  </span>
+                </span>
+              </span>
+              <input
+                id="itemsWindowMarginY"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="0"
+              />
+            </label>
+          </div>
 
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Items window margin  Y</span>
-            <input
-              id = "itemsWindowMarginY"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="Y"
-            />
-          </label>
+          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Width (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Width of the items overlay window
+                  </span>
+                </span>
+              </span>
+              <input
+                id="itemsWidth"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="200"
+              />
+            </label>
+          </div>
 
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Items width</span>
-            <input
-              id = "itemsWidth"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="W"
-            />
-          </label>
+          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Height (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Height of the items overlay window
+                  </span>
+                </span>
+              </span>
+              <input
+                id="itemsHeight"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="300"
+              />
+            </label>
+          </div>
+        </div>
 
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Items height</span>
-            <input
-              id = "itemsHeight"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="H"
-            />
-          </label>
-
+        <div class="mb-8">
           <label class="flex items-center space-x-2">
             <input type="checkbox" id="settingItemsBorder" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-            <span class="dark:text-white ml-4">Items window border</span>
+            <span class="text-gray-600 dark:text-gray-300">Show window border</span>
+            <span class="relative group ml-2">
+              <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                <circle cx="12" cy="12" r="10"></circle>
+              </svg>
+              <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                Display a border around the items overlay window
+              </span>
+            </span>
           </label>
         </div>
 
-        <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
-        Clear button settings
+        <!-- Clear Button Settings -->
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          🔘 Clear Button Settings
         </h2>
-      
-        <div class ="flex justify-start space-x-6">
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Button  Margin X </span>
-            <input
-              id = "buttonMarginX"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="X"
-            />
-          </label>
+        <div class="flex flex-wrap -m-2 mb-8">
+          <div class="p-2 w-full md:w-1/2">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Margin X (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Horizontal position of the clear button
+                  </span>
+                </span>
+              </span>
+              <input
+                id="buttonMarginX"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="0"
+              />
+            </label>
+          </div>
 
-          <label class="block text-sm">
-            <span class="text-gray-700 dark:text-gray-400">Button  Margin Y </span>
-            <input
-              id = "buttonMarginY"
-              class="block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
-              placeholder="Y"
-            />
-          </label>
+          <div class="p-2 w-full md:w-1/2">
+            <label class="block text-sm">
+              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+                Margin Y (px)
+                <span class="relative group ml-2">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                    Vertical position of the clear button
+                  </span>
+                </span>
+              </span>
+              <input
+                id="buttonMarginY"
+                type="number"
+                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                placeholder="0"
+              />
+            </label>
+          </div>
         </div>
 
-        <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
+        <!-- Resource Overlay Settings -->
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
           📊 Resource Overlay Settings
         </h2>
 
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <!-- Enchantment Indicator -->
           <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
               ✨ Enchantment Indicator
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                  Displays colored dots (.1 = green, .2 = blue, .3 = purple, .4 = gold)
+                </span>
+              </span>
             </h3>
             <label class="flex items-center space-x-2 mb-2">
               <input type="checkbox" id="settingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="dark:text-white">Static resources (.1, .2, .3, .4)</span>
+              <span class="text-gray-600 dark:text-gray-300">Static resources (.1, .2, .3, .4)</span>
             </label>
             <label class="flex items-center space-x-2">
               <input type="checkbox" id="settingLivingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="dark:text-white">Living resources (.1, .2, .3, .4)</span>
+              <span class="text-gray-600 dark:text-gray-300">Living resources (.1, .2, .3, .4)</span>
             </label>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Displays colored dots for enchanted resources
+              Visual indicators for enchanted resource types
             </p>
           </div>
 
           <!-- Resource Count Badge -->
           <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
               📦 Resource Count Badge
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                  Shows total quantity including gathering bonuses
+                </span>
+              </span>
             </h3>
             <label class="flex items-center space-x-2">
               <input type="checkbox" id="settingResourceCount" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="dark:text-white">Show resource quantity</span>
+              <span class="text-gray-600 dark:text-gray-300">Show resource quantity</span>
             </label>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Shows total resources considering bonuses
+              Displays harvestable amount per resource node
             </p>
           </div>
 
           <!-- Distance Indicator -->
           <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
               📍 Distance Indicator
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                  Color-coded: Green (&lt;20m), Yellow (20-40m), Red (&gt;40m)
+                </span>
+              </span>
             </h3>
             <label class="flex items-center space-x-2 mb-2">
               <input type="checkbox" id="settingResourceDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="dark:text-white">Show distance from player</span>
+              <span class="text-gray-600 dark:text-gray-300">Show distance from player</span>
             </label>
             <label class="flex items-center space-x-2 ml-7">
               <input type="checkbox" id="settingResourceDistanceLivingOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded-md">
-              <span class="text-sm dark:text-white">Living resources only</span>
+              <span class="text-sm text-gray-600 dark:text-gray-300">Living resources only</span>
             </label>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Distance in meters (color-coded by proximity)
+              Distance in meters from your current position
             </p>
           </div>
 
           <!-- Cluster Indicator -->
           <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
-            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
               🗂️ Cluster Indicator
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500 whitespace-nowrap pointer-events-none">
+                  Groups nearby resources for efficient harvesting routes
+                </span>
+              </span>
             </h3>
             <label class="flex items-center space-x-2 mb-3">
               <input type="checkbox" id="settingResourceClusters" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="dark:text-white">Show resource clusters</span>
+              <span class="text-gray-600 dark:text-gray-300">Show resource clusters</span>
             </label>
             <div class="ml-7 space-y-3">
               <label class="block text-sm">
-                <span class="text-gray-700 dark:text-gray-400 text-xs">Cluster radius (meters)</span>
+                <span class="text-gray-600 dark:text-gray-300 text-xs">Cluster radius (meters)</span>
                 <input
                   id="settingClusterRadius"
                   type="number"
                   min="10"
                   max="100"
                   step="5"
-                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
+                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
                   placeholder="30"
                 />
               </label>
               <label class="block text-sm">
-                <span class="text-gray-700 dark:text-gray-400 text-xs">Min resources per cluster</span>
+                <span class="text-gray-600 dark:text-gray-300 text-xs">Min resources per cluster</span>
                 <input
                   id="settingClusterMinSize"
                   type="number"
                   min="2"
                   max="10"
                   step="1"
-                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input"
+                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
                   placeholder="2"
                 />
               </label>
             </div>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Groups nearby resources of same type/tier
+              Groups resources of same type/tier within radius
             </p>
           </div>
         </div>
 
         <div class="mt-4 p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-          <p class="text-sm text-blue-800 dark:text-blue-200">
+          <p class="text-sm text-blue-800 dark:text-blue-300">
             💡 <strong>Tip:</strong> Distance and cluster indicators work best for tracking valuable resources.
             Disable them for better performance when not needed.
           </p>
@@ -205,31 +365,44 @@
       </div>
     </div>
 
+    <!-- Action Buttons Card -->
     <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-      <div>
-        <button
-        class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
-        onclick="LoadSettings();"
-        disabled
-        >
-          <p>Load Settings</p>
-        </button>
+      <div class="w-full">
+        <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">💾 Settings Actions</h4>
 
-        <button
-        class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple"
-        onclick="SaveSettings();"
-        disabled
-        >
-          <p>Save Settings File</p>
-        </button>
+        <div class="flex flex-wrap -m-2">
+          <div class="p-2 w-full md:w-1/2">
+            <button
+              class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              onclick="LoadSettings();"
+              disabled
+            >
+              📂 Load Settings
+            </button>
+          </div>
+
+          <div class="p-2 w-full md:w-1/2">
+            <button
+              class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              onclick="SaveSettings();"
+              disabled
+            >
+              💾 Save Settings File
+            </button>
+          </div>
+        </div>
+
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+          Note: Load/Save functionality is currently disabled. Settings are auto-saved to browser storage.
+        </p>
       </div>
     </div>
   </div>
 </div>
-        
+
 
   <script>
-    // TODO
+    // TODO: Implement load/save functionality
     function LoadSettings()
     {
       fetch('/config/tests.json')
@@ -241,11 +414,10 @@
 
     function SaveSettings()
     {
-
+      // Future implementation
     }
 
-
-    // Get references to the input fields and checkboxes
+    // Get references to all input fields and checkboxes
     const mainWindowMarginXInput = document.getElementById("mainWindowMarginX");
     const mainWindowMarginYInput = document.getElementById("mainWindowMarginY");
     const itemsWindowMarginXInput = document.getElementById("itemsWindowMarginX");
@@ -258,8 +430,7 @@
     const itemsWidthInput = document.getElementById("itemsWidth");
     const itemsHeightInput = document.getElementById("itemsHeight");
 
-    // Overlay settings (using setting* prefix for consistency)
-
+    // Resource overlay settings (using setting* prefix for consistency)
     const settingResourceEnchantOverlayCheckbox = document.getElementById("settingResourceEnchantOverlay");
     const settingLivingResourceEnchantOverlayCheckbox = document.getElementById("settingLivingResourceEnchantOverlay");
     const settingResourceCountCheckbox = document.getElementById("settingResourceCount");
@@ -269,41 +440,36 @@
     const settingClusterRadiusInput = document.getElementById("settingClusterRadius");
     const settingClusterMinSizeInput = document.getElementById("settingClusterMinSize");
 
-    // Function to save a value to local storage
+    // Save value to local storage
     function saveToLocalStorage(key, value) {
       localStorage.setItem(key, value);
     }
 
-    // Function to retrieve a value from local storage
+    // Retrieve value from local storage
     function getFromLocalStorage(key) {
       return localStorage.getItem(key);
     }
 
-    // Add event listeners to the input fields
-
-        itemsWidthInput.addEventListener("input", function (event) {
+    // Add event listeners to all input fields
+    itemsWidthInput.addEventListener("input", function (event) {
       const value = event.target.value;
       saveToLocalStorage("itemsWidth", value);
     });
 
-
-        itemsHeightInput.addEventListener("input", function (event) {
+    itemsHeightInput.addEventListener("input", function (event) {
       const value = event.target.value;
       saveToLocalStorage("itemsHeight", value);
     });
 
-        buttonMarginXInput.addEventListener("input", function (event) {
+    buttonMarginXInput.addEventListener("input", function (event) {
       const value = event.target.value;
       saveToLocalStorage("buttonMarginX", value);
     });
 
-
-        buttonMarginYInput.addEventListener("input", function (event) {
+    buttonMarginYInput.addEventListener("input", function (event) {
       const value = event.target.value;
       saveToLocalStorage("buttonMarginY", value);
     });
-
-
 
     mainWindowMarginXInput.addEventListener("input", function (event) {
       const value = event.target.value;
@@ -325,13 +491,13 @@
       saveToLocalStorage("itemsWindowMarginY", value);
     });
 
-    // Add event listener to the checkbox
+    // Add event listener to checkboxes
     settingItemsBorderCheckbox.addEventListener("change", function (event) {
       const isChecked = event.target.checked;
       saveToLocalStorage("settingItemsBorder", isChecked);
     });
 
-    // Overlay event listeners (using setting* prefix)
+    // Resource overlay event listeners
     settingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
       saveToLocalStorage("settingResourceEnchantOverlay", event.target.checked);
     });
@@ -364,7 +530,7 @@
       saveToLocalStorage("settingClusterMinSize", event.target.value);
     });
 
-    // Initialize the input fields and checkboxes with values from local storage (if available)
+    // Initialize all input fields and checkboxes with values from local storage (if available)
     mainWindowMarginXInput.value = getFromLocalStorage("mainWindowMarginX") || "";
     mainWindowMarginYInput.value = getFromLocalStorage("mainWindowMarginY") || "";
     itemsWindowMarginXInput.value = getFromLocalStorage("itemsWindowMarginX") || "";
@@ -377,7 +543,7 @@
     buttonMarginYInput.value = getFromLocalStorage("buttonMarginY") || "";
     settingItemsBorderCheckbox.checked = getFromLocalStorage("settingItemsBorder") === "true";
 
-    // Initialize overlay settings (defaults to enabled for better UX)
+    // Initialize resource overlay settings (defaults to enabled for better UX)
     settingResourceEnchantOverlayCheckbox.checked = getFromLocalStorage("settingResourceEnchantOverlay") === null ? true : getFromLocalStorage("settingResourceEnchantOverlay") === "true";
     settingLivingResourceEnchantOverlayCheckbox.checked = getFromLocalStorage("settingLivingResourceEnchantOverlay") === null ? true : getFromLocalStorage("settingLivingResourceEnchantOverlay") === "true";
     settingResourceCountCheckbox.checked = getFromLocalStorage("settingResourceCount") === null ? true : getFromLocalStorage("settingResourceCount") === "true";
@@ -387,3 +553,4 @@
     settingClusterRadiusInput.value = getFromLocalStorage("settingClusterRadius") || "30";
     settingClusterMinSizeInput.value = getFromLocalStorage("settingClusterMinSize") || "2";
   </script>
+

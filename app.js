@@ -132,6 +132,7 @@ function StartRadar()
   app.use('/scripts/Drawings', express.static(path.join(appDir, 'scripts', 'Drawings')));
   app.use('/scripts/Utils', express.static(path.join(appDir, 'scripts', 'Utils')));
   app.use('/scripts/Utils/languages', express.static(path.join(appDir, 'scripts', 'Utils', 'languages')));
+  app.use('/scripts/styles', express.static(path.join(appDir, 'scripts', 'styles')));
   app.use('/images/Resources', express.static(path.join(appDir, 'images', 'Resources')));
   app.use('/images/Maps', express.static(path.join(appDir, 'images', 'Maps')));
   app.use('/images/Items', express.static(path.join(appDir, 'images', 'Items')));

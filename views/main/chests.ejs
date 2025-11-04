@@ -8,151 +8,248 @@
 			</div>
 		</div>
 
-		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
-			<div>
-				<h2 id="chests-type-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+			<div class="w-full">
+				<h2 id="chests-type-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Type
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestGreen" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="green-text" class="dark:text-white ml-4">Green</span>
+					<span class="dark:text-white">Green</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show standard (green) chests - common loot.
+						</span>
+					</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestBlue" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="blue-text" class="dark:text-white ml-4">Blue</span>
+					<span class="dark:text-white">Blue</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show uncommon (blue) chests - better loot.
+						</span>
+					</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestPurple" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="purple-text" class="dark:text-white ml-4">Purple</span>
+					<span class="dark:text-white">Purple</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show rare (purple) chests - valuable loot.
+						</span>
+					</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingChestYellow" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="yellow-text" class="dark:text-white ml-4">Yellow</span>
+					<span class="dark:text-white">Yellow</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show legendary (yellow) chests - best loot.
+						</span>
+					</span>
 				</label>
 			</div>
 		</div>
 
 		<div class="mt-8 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 id="mists-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="mists-text" class="text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Mists
 				</h2>
 			</div>
 		</div>
 
 		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-			<div>
-				<h2 id="mists-type-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+			<div class="w-full">
+				<h2 id="mists-type-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Type
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistSolo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="mists-solo-text" class="dark:text-white ml-4">Solo</span>
+					<span class="dark:text-white">Solo</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show solo Mist portals (1 player difficulty).
+						</span>
+					</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistDuo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="mists-duo-text" class="dark:text-white ml-4">Duo</span>
+					<span class="dark:text-white">Duo</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show duo Mist portals (2 players difficulty).
+						</span>
+					</span>
 				</label>
 
-
-				<h2 id="mists-enchant-text" class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="mists-enchant-text" class="mt-4 mb-2 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Enchant
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistE0" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">E0</span>
+					<span class="dark:text-white">E0</span>
 				</label>
 				<label class="flex items-center space-x-2">
-					<input  type="checkbox" id="settingMistE1" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">E1</span>
+					<input type="checkbox" id="settingMistE1" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+					<span class="dark:text-white">E1</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistE2" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">E2</span>
+					<span class="dark:text-white">E2</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistE3" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">E3</span>
+					<span class="dark:text-white">E3</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingMistE4" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span class="dark:text-white ml-4">E4</span>
+					<span class="dark:text-white">E4</span>
 				</label>
 			</div>
 		</div>
 
 		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-			<div>
+			<div class="w-full">
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingCage" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="wisp-cages-text" class="dark:text-white ml-4">Show wisp cages</span>
+					<span class="dark:text-white">Show Wisp Cages</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show wisp cages in the Mists (capture for rewards).
+						</span>
+					</span>
 				</label>
 			</div>
 		</div>
 
 		<div class="mt-8 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
 			<div>
-				<h2 id="dungeons-text" class=" text-4xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="dungeons-text" class="text-4xl font-semibold text-gray-600 dark:text-gray-300">
 					Dungeons
 				</h2>
 			</div>
 		</div>
 
 		<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-			<div>
-				<h2 id="dungeons-type-text" class="text-2xl font-semibold text-gray-600 dark:text-gray-300">
+			<div class="w-full">
+				<h2 id="dungeons-type-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Type
 				</h2>
-				<label id="disabled-checkbox" for="disabled-checkbox" class="flex items-center space-x-2">
+				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingDungeonSolo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="dungeons-solo-text" class="dark:text-white ml-4">Solo</span>
+					<span class="dark:text-white">Solo</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show solo dungeon entrances (1 player difficulty).
+						</span>
+					</span>
 				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingDungeonDuo" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="dungeons-group-text" class="dark:text-white ml-4">Group</span>
+					<span class="dark:text-white">Group</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show group dungeon entrances (multiple players).
+						</span>
+					</span>
 				</label>
 
-				<h2 id="dungeons-enchant-text" class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="dungeons-enchant-text" class="mt-4 mb-2 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Enchant
 				</h2>
-				<div class="flex">
-					<label class="flex items-center">
+				<div class="flex flex-wrap gap-4">
+					<label class="flex items-center space-x-2">
 						<input type="checkbox" id="settingDungeonE0" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span class="dark:text-white ml-2">E0</span>
+						<span class="dark:text-white">E0</span>
 					</label>
-					<label  class="flex items-center ml-4">
+					<label class="flex items-center space-x-2">
 						<input type="checkbox" id="settingDungeonE1" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span class="dark:text-white ml-2">E1</span>
+						<span class="dark:text-white">E1</span>
 					</label>
-
-					<labe l class="flex items-center ml-4">
+					<label class="flex items-center space-x-2">
 						<input type="checkbox" id="settingDungeonE2" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span class="dark:text-white ml-2">E2</span>
-					</labe>
-					<label  class="flex items-center ml-4">
-						<input type="checkbox" id="settingDungeonE3" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span class="dark:text-white ml-2">E3</span>
+						<span class="dark:text-white">E2</span>
 					</label>
-					<label class="flex items-center ml-4">
-						<input  type="checkbox" id="settingDungeonE4" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span class="dark:text-white ml-2">E4</span>
+					<label class="flex items-center space-x-2">
+						<input type="checkbox" id="settingDungeonE3" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+						<span class="dark:text-white">E3</span>
+					</label>
+					<label class="flex items-center space-x-2">
+						<input type="checkbox" id="settingDungeonE4" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+						<span class="dark:text-white">E4</span>
 					</label>
 				</div>
 
-				<h2 id="other-text" class="mt-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+				<h2 id="other-text" class="mt-4 mb-2 text-2xl font-semibold text-gray-600 dark:text-gray-300">
 					Other
 				</h2>
 
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingDungeonCorrupted" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="corrupted-text" class="dark:text-white ml-4">Corrupted</span>
-				</label> 
+					<span class="dark:text-white">Corrupted</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show corrupted dungeon entrances (PvP dungeons).
+						</span>
+					</span>
+				</label>
 				<label class="flex items-center space-x-2">
 					<input type="checkbox" id="settingDungeonHellgate" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-					<span id="hellgate-text" class="dark:text-white ml-4">Hellgate</span>
+					<span class="dark:text-white">Hellgate</span>
+					<span class="relative group">
+						<svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+							<circle cx="12" cy="12" r="10"></circle>
+						</svg>
+						<span class="absolute top-1/2 left-full ml-2 transform -translate-y-1/2 bg-gray-800 text-white text-xs rounded p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+							Show hellgate entrances (high-risk PvP dungeons).
+						</span>
+					</span>
 				</label>
 			</div>
 		</div>
@@ -160,23 +257,19 @@
 </div>
 
 <script>
-	function returnLocalBool(item)
-	{
-		return localStorage.getItem(item) == "true";
+	function returnLocalBool(item) {
+		return localStorage.getItem(item) === "true";
 	}
 
-	let settingChestGreen = document.getElementById("settingChestGreen");
-	let settingChestBlue = document.getElementById("settingChestBlue");
-	let settingChestPurple = document.getElementById("settingChestPurple");
-	let settingChestYellow = document.getElementById("settingChestYellow");
-
-
+	const settingChestGreen = document.getElementById("settingChestGreen");
+	const settingChestBlue = document.getElementById("settingChestBlue");
+	const settingChestPurple = document.getElementById("settingChestPurple");
+	const settingChestYellow = document.getElementById("settingChestYellow");
 
 	settingChestGreen.checked = returnLocalBool("settingChestGreen");
 	settingChestBlue.checked = returnLocalBool("settingChestBlue");
 	settingChestPurple.checked = returnLocalBool("settingChestPurple");
 	settingChestYellow.checked = returnLocalBool("settingChestYellow");
-
 
 	settingChestGreen.addEventListener("click", () => {
 		localStorage.setItem("settingChestGreen", settingChestGreen.checked);
@@ -194,35 +287,23 @@
 		localStorage.setItem("settingChestYellow", settingChestYellow.checked);
 	});
 
-
-
-
-	let settingMistSolo = document.getElementById("settingMistSolo");
-	let settingMistDuo = document.getElementById("settingMistDuo");
-
-	let settingMistE0 = document.getElementById("settingMistE0");
-	let settingMistE1 = document.getElementById("settingMistE1");
-	let settingMistE2 = document.getElementById("settingMistE2");
-	let settingMistE3 = document.getElementById("settingMistE3");
-	let settingMistE4 = document.getElementById("settingMistE4");
-
-	let settingCage = document.getElementById("settingCage");
-	settingCage.checked = returnLocalBool("settingCage");
-	settingCage.addEventListener("click", () => {
-		localStorage.setItem("settingCage", settingCage.checked);
-	});
-
+	const settingMistSolo = document.getElementById("settingMistSolo");
+	const settingMistDuo = document.getElementById("settingMistDuo");
+	const settingMistE0 = document.getElementById("settingMistE0");
+	const settingMistE1 = document.getElementById("settingMistE1");
+	const settingMistE2 = document.getElementById("settingMistE2");
+	const settingMistE3 = document.getElementById("settingMistE3");
+	const settingMistE4 = document.getElementById("settingMistE4");
+	const settingCage = document.getElementById("settingCage");
 
 	settingMistSolo.checked = returnLocalBool("settingMistSolo");
 	settingMistDuo.checked = returnLocalBool("settingMistDuo");
-
 	settingMistE0.checked = returnLocalBool("settingMistE0");
 	settingMistE1.checked = returnLocalBool("settingMistE1");
 	settingMistE2.checked = returnLocalBool("settingMistE2");
 	settingMistE3.checked = returnLocalBool("settingMistE3");
 	settingMistE4.checked = returnLocalBool("settingMistE4");
-
-
+	settingCage.checked = returnLocalBool("settingCage");
 
 	settingMistSolo.addEventListener("click", () => {
 		localStorage.setItem("settingMistSolo", settingMistSolo.checked);
@@ -240,7 +321,6 @@
 		localStorage.setItem("settingMistE1", settingMistE1.checked);
 	});
 
-
 	settingMistE2.addEventListener("click", () => {
 		localStorage.setItem("settingMistE2", settingMistE2.checked);
 	});
@@ -253,38 +333,29 @@
 		localStorage.setItem("settingMistE4", settingMistE4.checked);
 	});
 
+	settingCage.addEventListener("click", () => {
+		localStorage.setItem("settingCage", settingCage.checked);
+	});
 
-
-
-
-
-	let settingDungeonSolo = document.getElementById("settingDungeonSolo");
-	let settingDungeonDuo = document.getElementById("settingDungeonDuo");
-			
-	let settingDungeonE0 = document.getElementById("settingDungeonE0");
-	let settingDungeonE1 = document.getElementById("settingDungeonE1");
-	let settingDungeonE2 = document.getElementById("settingDungeonE2");
-	let settingDungeonE3 = document.getElementById("settingDungeonE3");
-	let settingDungeonE4 = document.getElementById("settingDungeonE4");
-
-	let settingDungeonCorrupted = document.getElementById("settingDungeonCorrupted");
-	let settingDungeonHellgate = document.getElementById("settingDungeonHellgate");
-
+	const settingDungeonSolo = document.getElementById("settingDungeonSolo");
+	const settingDungeonDuo = document.getElementById("settingDungeonDuo");
+	const settingDungeonE0 = document.getElementById("settingDungeonE0");
+	const settingDungeonE1 = document.getElementById("settingDungeonE1");
+	const settingDungeonE2 = document.getElementById("settingDungeonE2");
+	const settingDungeonE3 = document.getElementById("settingDungeonE3");
+	const settingDungeonE4 = document.getElementById("settingDungeonE4");
+	const settingDungeonCorrupted = document.getElementById("settingDungeonCorrupted");
+	const settingDungeonHellgate = document.getElementById("settingDungeonHellgate");
 
 	settingDungeonSolo.checked = returnLocalBool("settingDungeonSolo");
 	settingDungeonDuo.checked = returnLocalBool("settingDungeonDuo");
-
 	settingDungeonE0.checked = returnLocalBool("settingDungeonE0");
 	settingDungeonE1.checked = returnLocalBool("settingDungeonE1");
 	settingDungeonE2.checked = returnLocalBool("settingDungeonE2");
 	settingDungeonE3.checked = returnLocalBool("settingDungeonE3");
 	settingDungeonE4.checked = returnLocalBool("settingDungeonE4");
-
 	settingDungeonCorrupted.checked = returnLocalBool("settingDungeonCorrupted");
 	settingDungeonHellgate.checked = returnLocalBool("settingDungeonHellgate");
-
-
-
 
 	settingDungeonSolo.addEventListener("click", () => {
 		localStorage.setItem("settingDungeonSolo", settingDungeonSolo.checked);
@@ -293,7 +364,6 @@
 	settingDungeonDuo.addEventListener("click", () => {
 		localStorage.setItem("settingDungeonDuo", settingDungeonDuo.checked);
 	});
-
 
 	settingDungeonE0.addEventListener("click", () => {
 		localStorage.setItem("settingDungeonE0", settingDungeonE0.checked);
@@ -315,7 +385,6 @@
 		localStorage.setItem("settingDungeonE4", settingDungeonE4.checked);
 	});
 
-
 	settingDungeonCorrupted.addEventListener("click", () => {
 		localStorage.setItem("settingDungeonCorrupted", settingDungeonCorrupted.checked);
 	});
@@ -323,5 +392,5 @@
 	settingDungeonHellgate.addEventListener("click", () => {
 		localStorage.setItem("settingDungeonHellgate", settingDungeonHellgate.checked);
 	});
-
 </script>
+

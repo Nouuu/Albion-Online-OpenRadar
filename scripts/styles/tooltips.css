@@ -1,0 +1,48 @@
+/* Tooltip styles - Global */
+
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.whitespace-nowrap {
+  white-space: nowrap;
+}
+
+.group .group-hover\:opacity-100 {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1;
+}
+
+.relative.group .absolute {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  transform: translateX(0.5rem) translateY(-50%);
+  pointer-events: none;
+}
+
+/* Tooltip positioning variants */
+.tooltip-left .absolute {
+  left: auto;
+  right: 100%;
+  transform: translateX(-0.5rem) translateY(-50%);
+}
+
+.tooltip-top .absolute {
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-0.5rem);
+}
+
+.tooltip-bottom .absolute {
+  top: 100%;
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%) translateY(0.5rem);
+}
+
