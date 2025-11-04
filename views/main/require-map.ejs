@@ -47,13 +47,14 @@
 <script>
     function SetLanguage(lang)
     {
-        document.getElementById("require-text").textContent = lang['require-map']['require'];
-        document.getElementById("download-text").textContent = lang['require-map']['download'];
-        document.getElementById("map-pack-text").textContent = lang['require-map']['map-pack'];
-        document.getElementById("extract-text").textContent = lang['require-map']['extract'];
-        document.getElementById("path-text").textContent = lang['require-map']['path'];
-        document.getElementById("refresh-text").textContent = lang['require-map']['refresh'];
-        document.getElementById("download2-text").textContent = lang['require-map']['download2'];
-        
+        const el = (id) => document.getElementById(id);
+        el("require-text") && (el("require-text").textContent = lang['require-map']['require']);
+        el("download-text") && (el("download-text").textContent = lang['require-map']['download']);
+        el("map-pack-text") && (el("map-pack-text").textContent = lang['require-map']['map-pack']);
+        el("extract-text") && (el("extract-text").textContent = lang['require-map']['extract']);
+        el("path-text") && (el("path-text").textContent = lang['require-map']['path']);
+        el("refresh-text") && (el("refresh-text").textContent = lang['require-map']['refresh']);
+        el("download2-text") && (el("download2-text").textContent = lang['require-map']['download2']);
+
     }
 </script>

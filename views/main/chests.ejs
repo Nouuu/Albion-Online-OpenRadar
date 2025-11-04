@@ -326,29 +326,30 @@
 
 	function SetLanguage(lang)
 	{
-		document.getElementById("chests-text").textContent = lang['other']['chests'];
-		document.getElementById("chests-type-text").textContent = lang['other']['type'];
-		document.getElementById("green-text").textContent = lang['other']['green'];
-		document.getElementById("blue-text").textContent = lang['other']['blue'];
-		document.getElementById("purple-text").textContent = lang['other']['purple'];
-		document.getElementById("yellow-text").textContent = lang['other']['yellow'];
+		const el = (id) => document.getElementById(id);
+		el("chests-text") && (el("chests-text").textContent = lang['other']['chests']);
+		el("chests-type-text") && (el("chests-type-text").textContent = lang['other']['type']);
+		el("green-text") && (el("green-text").textContent = lang['other']['green']);
+		el("blue-text") && (el("blue-text").textContent = lang['other']['blue']);
+		el("purple-text") && (el("purple-text").textContent = lang['other']['purple']);
+		el("yellow-text") && (el("yellow-text").textContent = lang['other']['yellow']);
 
-		document.getElementById("mists-text").textContent = lang['other']['mists'];
-		document.getElementById("mists-type-text").textContent = lang['other']['type'];
-		document.getElementById("mists-solo-text").textContent = lang['other']['solo'];
-		document.getElementById("mists-duo-text").textContent = lang['other']['duo'];
-		document.getElementById("mists-enchant-text").textContent = lang['other']['enchant'];
-		document.getElementById("wisp-cages-text").textContent = lang['other']['wisp-cages'];
+		el("mists-text") && (el("mists-text").textContent = lang['other']['mists']);
+		el("mists-type-text") && (el("mists-type-text").textContent = lang['other']['type']);
+		el("mists-solo-text") && (el("mists-solo-text").textContent = lang['other']['solo']);
+		el("mists-duo-text") && (el("mists-duo-text").textContent = lang['other']['duo']);
+		el("mists-enchant-text") && (el("mists-enchant-text").textContent = lang['other']['enchant']);
+		el("wisp-cages-text") && (el("wisp-cages-text").textContent = lang['other']['wisp-cages']);
 
-		document.getElementById("dungeons-text").textContent = lang['other']['dungeons'];
-		document.getElementById("dungeons-type-text").textContent = lang['other']['type'];
-		document.getElementById("dungeons-solo-text").textContent = lang['other']['solo'];
-		document.getElementById("dungeons-group-text").textContent = lang['other']['group'];
-		document.getElementById("dungeons-enchant-text").textContent = lang['other']['enchant'];
+		el("dungeons-text") && (el("dungeons-text").textContent = lang['other']['dungeons']);
+		el("dungeons-type-text") && (el("dungeons-type-text").textContent = lang['other']['type']);
+		el("dungeons-solo-text") && (el("dungeons-solo-text").textContent = lang['other']['solo']);
+		el("dungeons-group-text") && (el("dungeons-group-text").textContent = lang['other']['group']);
+		el("dungeons-enchant-text") && (el("dungeons-enchant-text").textContent = lang['other']['enchant']);
 
-		document.getElementById("other-text").textContent = lang['other']['other'];
-		document.getElementById("corrupted-text").textContent = lang['other']['corrupted'];
-		document.getElementById("hellgate-text").textContent = lang['other']['hellgate'];
+		el("other-text") && (el("other-text").textContent = lang['other']['other']);
+		el("corrupted-text") && (el("corrupted-text").textContent = lang['other']['corrupted']);
+		el("hellgate-text") && (el("hellgate-text").textContent = lang['other']['hellgate']);
 	}
 
 </script>

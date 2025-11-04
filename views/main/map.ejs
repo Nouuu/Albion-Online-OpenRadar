@@ -35,9 +35,10 @@
 
     function SetLanguage(lang)
   {
-    document.getElementById("map-text").textContent = lang['map']['map'];
-    document.getElementById("map-bg-text").textContent = lang['map']['map-bg'];
-    
+    const el = (id) => document.getElementById(id);
+    el("map-text") && (el("map-text").textContent = lang['map']['map']);
+    el("map-bg-text") && (el("map-bg-text").textContent = lang['map']['map-bg']);
+
   }
 
 </script>
