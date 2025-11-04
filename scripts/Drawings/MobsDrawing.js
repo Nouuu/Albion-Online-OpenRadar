@@ -111,13 +111,10 @@ export class MobsDrawing extends DrawingUtils
                 this.drawEnchantmentIndicator(ctx, point.x, point.y, mobOne.enchantmentLevel);
             }
 
-            // 📍 Distance indicator for living resources (if enabled)
+            // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)
             if (isLivingResource && this.settings.overlayDistance) {
-                // Player is at canvas center (250, 250)
-                const playerX = 250;
-                const playerY = 250;
-                const distance = this.calculateDistance(point.x, point.y, playerX, playerY);
-                this.drawDistanceIndicator(ctx, point.x, point.y, distance);
+                const distanceGameUnits = this.calculateDistance(mobOne.hX, mobOne.hY, 0, 0);
+                this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
             }
 
             if (drawHp)

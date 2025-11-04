@@ -262,18 +262,18 @@ class DrawingUtils {
      * @param {number} y - Y position
      * @param {number} distance - Distance value
      */
-    drawDistanceIndicator(ctx, x, y, distance) {
-        if (distance <= 0) return;
+    drawDistanceIndicator(ctx, x, y, distance)
+    {
+        // distance is expected in game-units (hX/hY space). Convert to meters using central method
+        if (!distance || distance <= 0) return;
 
         ctx.save();
 
-        // Divide distance by 3 for correct scale (game units to meters)
-        const realDistance = distance / 3;
-
-        // Format distance (meters)
-        const text = realDistance < 1000 ? `${Math.round(realDistance)}m` : `${(realDistance / 1000).toFixed(1)}km`;
+        const realDistance = this.convertGameUnitsToMeters(distance);
 
         ctx.font = "bold 9px monospace";
+        const text = realDistance < 1000 ? `${Math.round(realDistance)}m` : `${(realDistance / 1000).toFixed(1)}km`;
+
         const textWidth = ctx.measureText(text).width;
         const padding = 3;
         const rectWidth = textWidth + (padding * 2);
@@ -521,14 +521,18 @@ class DrawingUtils {
         const typeText = cluster.type || '';
         const tierText = (cluster.tier !== undefined && cluster.tier !== null) ? `T${cluster.tier}` : '';
 
-        const distanceGameUnits = Math.round(Math.sqrt((cluster.x || 0) * (cluster.x || 0) + (cluster.y || 0) * (cluster.y || 0)));
-        const distanceMeters = Math.round(distanceGameUnits / 3);
+        // Use unified distance calculation (in game units), then convert to meters using central method
+        const distanceGameUnits = Math.round(this.calculateDistance(cluster.x || 0, cluster.y || 0, 0, 0));
+        const distanceMeters = this.convertGameUnitsToMeters(distanceGameUnits);
         const distText = distanceMeters < 1000 ? `${distanceMeters}m` : `${(distanceMeters / 1000).toFixed(1)}km`;
 
         const stacksText = `${totalStacks}`;
 
+        // Include configured cluster radius (meters) if available
+        const clusterRadiusMeters = (this.settings && this.settings.overlayClusterRadius) ? this.settings.overlayClusterRadius : null;
+
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
-        const line2 = `${stacksText} stakck(s) · ${distText}`;
+        const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
 
         ctx.font = 'bold 12px monospace';
         const w1 = ctx.measureText(line1).width;
@@ -584,6 +588,23 @@ class DrawingUtils {
         ctx.textAlign = 'start';
 
         ctx.restore();
+    }
+
+    /**
+     * Convert game units distance to meters applying global scale factor.
+     * Default: baseUnit = 3 (game units → meters), scaleFactor ≈ 2.5 (to increase distances globally)
+     * @param {number} gameUnits
+     * @returns {number} meters
+     */
+    convertGameUnitsToMeters(gameUnits)
+    {
+        const baseUnit = 3; // original conversion (game units -> meters)
+        // allow override from settings if provided and numeric
+        const scaleFactor = (this.settings && typeof this.settings.overlayDistanceScale === 'number') ?
+            this.settings.overlayDistanceScale : 1.67; // default increase reduced (~2.5 / 1.5 ≈ 1.67)
+
+        const meters = (gameUnits / baseUnit) * scaleFactor;
+        return Math.round(meters);
     }
 
     /**

@@ -79,13 +79,10 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 this.drawEnchantmentIndicator(ctx, point.x, point.y, harvestableOne.charges);
             }
 
-            // 📍 Distance indicator (if enabled and not restricted to living only)
-            if (this.settings.overlayDistance && !this.settings.overlayDistanceLivingOnly) {
-                // Player is at canvas center (250, 250)
-                const playerX = 250;
-                const playerY = 250;
-                const distance = this.calculateDistance(point.x, point.y, playerX, playerY);
-                this.drawDistanceIndicator(ctx, point.x, point.y, distance);
+            // 📍 Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
+            if (this.settings.overlayDistance) {
+                const distanceGameUnits = this.calculateDistance(harvestableOne.hX, harvestableOne.hY, 0, 0);
+                this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
             }
 
             // 📊 Resource count badge (if enabled)
