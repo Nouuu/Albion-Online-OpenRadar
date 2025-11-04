@@ -386,9 +386,4 @@
     settingResourceClustersCheckbox.checked = getFromLocalStorage("settingResourceClusters") === null ? false : getFromLocalStorage("settingResourceClusters") === "true";
     settingClusterRadiusInput.value = getFromLocalStorage("settingClusterRadius") || "30";
     settingClusterMinSizeInput.value = getFromLocalStorage("settingClusterMinSize") || "2";
-
-    // Empty SetLanguage function for compatibility with layout.ejs ChangeLanguage
-    function SetLanguage(lang) {
-      console.log('[Settings] Language changed to:', lang);
-    }
   </script>

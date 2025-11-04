@@ -563,42 +563,7 @@
   </div>
 
   <script>
-    ChangeLanguage(localStorage.getItem('language') || 'EN');
-
-    function ChangeLanguage(lang)
-    {
-      console.log(lang);
-      switch (lang)
-      {
-        case 'RU':
-          fetch('/scripts/Utils/languages/russian.json')
-          .then((response) => response.json())
-          .then((json) => {
-            SetLanguage(json);
-          });
-          localStorage.setItem('language', 'RU');
-          break;
-
-        case 'ID':
-          fetch('/scripts/Utils/languages/indonesian.json')
-          .then((response) => response.json())
-          .then((json) => {
-            SetLanguage(json);
-          });
-          localStorage.setItem('language', 'ID');
-          break;
-      
-        default:
-        case 'EN':
-          fetch('/scripts/Utils/languages/english.json')
-          .then((response) => response.json())
-          .then((json) => {
-            SetLanguage(json);
-          });
-          localStorage.setItem('language', 'EN');
-          break;
-      }
-    }
+    // Language system removed - using English only
   </script>
 
 </body>

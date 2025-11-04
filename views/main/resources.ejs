@@ -2030,30 +2030,4 @@
         }
     }
 	//#endregion
-
-	function SetLanguage(lang)
-  {
-    const el = (id) => document.getElementById(id);
-    el("static-text")?.textContent && (el("static-text").textContent = lang['resources']['static']);
-    el("s-fiber-text")?.textContent && (el("s-fiber-text").textContent = lang['resources']['s-fiber']);
-    el("s-hide-text")?.textContent && (el("s-hide-text").textContent = lang['resources']['s-hide']);
-    el("s-wood-text")?.textContent && (el("s-wood-text").textContent = lang['resources']['s-wood']);
-    el("s-ore-text")?.textContent && (el("s-ore-text").textContent = lang['resources']['s-ore']);
-    el("s-rock-text")?.textContent && (el("s-rock-text").textContent = lang['resources']['s-rock']);
-
-	el("living-text")?.textContent && (el("living-text").textContent = lang['resources']['living']);
-    el("l-fiber-text")?.textContent && (el("l-fiber-text").textContent = lang['resources']['l-fiber']);
-    el("l-hide-text")?.textContent && (el("l-hide-text").textContent = lang['resources']['l-hide']);
-    el("l-wood-text")?.textContent && (el("l-wood-text").textContent = lang['resources']['l-wood']);
-    el("l-ore-text")?.textContent && (el("l-ore-text").textContent = lang['resources']['l-ore']);
-    el("l-rock-text")?.textContent && (el("l-rock-text").textContent = lang['resources']['l-rock']);
-
-    el("other-text")?.textContent && (el("other-text").textContent = lang['resources']['other']);
-    el("fishing-text")?.textContent && (el("fishing-text").textContent = lang['resources']['fishing']);
-
-    el("debug-text")?.textContent && (el("debug-text").textContent = lang['resources']['debug']);
-    el("size-text")?.textContent && (el("size-text").textContent = lang['resources']['size']);
-    el("health-text")?.textContent && (el("health-text").textContent = lang['resources']['health']);
-    el("id-text")?.textContent && (el("id-text").textContent = lang['resources']['id']);
-  }
 </script>

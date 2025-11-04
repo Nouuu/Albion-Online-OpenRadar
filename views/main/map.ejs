@@ -33,12 +33,4 @@
         localStorage.setItem("settingShowMap", settingShowMap.checked);
     });
 
-    function SetLanguage(lang)
-  {
-    const el = (id) => document.getElementById(id);
-    el("map-text") && (el("map-text").textContent = lang['map']['map']);
-    el("map-bg-text") && (el("map-bg-text").textContent = lang['map']['map-bg']);
-
-  }
-
 </script>

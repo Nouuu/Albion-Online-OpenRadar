@@ -300,28 +300,8 @@
   settingDangerousPlayers.addEventListener("click", () => {
     localStorage.setItem("settingDangerousPlayers", settingDangerousPlayers.checked)
   });
-
-  function SetLanguage(lang)
-  {
-    const el = (id) => document.getElementById(id);
-    el("players-text") && (el("players-text").textContent = lang['pvp']['players']);
-    el("show-text") && (el("show-text").textContent = lang['pvp']['show']);
-    el("items-text") && (el("items-text").textContent = lang['pvp']['items']);
-    el("items-tooltip") && (el("items-tooltip").textContent = lang['pvp']['items-tooltip']);
-    el("items-dev-text") && (el("items-dev-text").textContent = lang['pvp']['items-dev']);
-    el("items-dev-tooltip") && (el("items-dev-tooltip").textContent = lang['pvp']['items-dev-tooltip']);
-    el("flash-text") && (el("flash-text").textContent = lang['pvp']['screenflash']);
-    el("flash-tooltip") && (el("flash-tooltip").textContent = lang['pvp']['screenflash-tooltip']);
-    el("sound-text") && (el("sound-text").textContent = lang['pvp']['sound']);
-    el("sound-tooltip") && (el("sound-tooltip").textContent = lang['pvp']['sound-tooltip']);
-
-    el("types-text") && (el("types-text").textContent = lang['pvp']['types']);
-    el("passive-text") && (el("passive-text").textContent = lang['pvp']['passive']);
-    el("faction-text") && (el("faction-text").textContent = lang['pvp']['faction']);
-    el("dangerous-text") && (el("dangerous-text").textContent = lang['pvp']['dangerous']);
-    el("dangerous-tooltip") && (el("dangerous-tooltip").textContent = lang['pvp']['dangerous-tooltip']);
-  }
 </script>
+
 
 <style>
   .group:hover .group-hover\:opacity-100 {

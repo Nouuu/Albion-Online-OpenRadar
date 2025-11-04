@@ -288,28 +288,4 @@
     settingDebugEnemies.addEventListener("click", () => {localStorage.setItem("settingDebugEnemies", settingDebugEnemies.checked);});
     //#endregion
 
-    function SetLanguage(lang)
-    {
-        const el = (id) => document.getElementById(id);
-        el("enemies-text") && (el("enemies-text").textContent = lang['enemies']['enemies']);
-        el("classic-enemies-text") && (el("classic-enemies-text").textContent = lang['enemies']['classic-enemies']);
-        el("all-text") && (el("all-text").textContent = lang['enemies']['all']);
-        el("normal-text") && (el("normal-text").textContent = lang['enemies']['normal']);
-        el("medium-text") && (el("medium-text").textContent = lang['enemies']['medium']);
-        el("enchanted-text") && (el("enchanted-text").textContent = lang['enemies']['enchanted']);
-        el("mini-boss-text") && (el("mini-boss-text").textContent = lang['enemies']['mini-boss']);
-        el("boss-text") && (el("boss-text").textContent = lang['enemies']['boss']);
-
-        el("show-minimum-text") && (el("show-minimum-text").textContent = lang['enemies']['show-minimum']);
-        el("minimum-text") && (el("minimum-text").textContent = lang['enemies']['minimum']);
-
-        el("other-text") && (el("other-text").textContent = lang['enemies']['other']);
-        el("avalone-drones-text") && (el("avalone-drones-text").textContent = lang['enemies']['avalone-drones']);
-        el("event-text") && (el("event-text").textContent = lang['enemies']['event']);
-
-        el("debug-text") && (el("debug-text").textContent = lang['enemies']['debug']);
-        el("health-text") && (el("health-text").textContent = lang['enemies']['health']);
-        el("id-text") && (el("id-text").textContent = lang['enemies']['id']);
-    }
-
 </script>
