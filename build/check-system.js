@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * check-system.js
- * Vérifie que toutes les dépendances système sont installées
+ * Checks that all system dependencies are installed
  */
 
 const {execSync} = require('child_process');
@@ -25,175 +25,175 @@ function compareVersions(a, b) {
     return 0;
 }
 
-// Exécuter les contrôles stricts seulement si on est dans l'exécutable packagé (pkg)
+// Execute strict checks only if we're in packaged executable (pkg)
 const isPackaged = !!process.pkg;
-const strictMode = isPackaged; // strictMode = true uniquement dans l'exécutable final
+const strictMode = isPackaged; // strictMode = true only in final executable
 
 let hasErrors = false;
 
-console.log('\n🔍 Vérification des dépendances système...\n');
+console.log('\n🔍 Checking system dependencies...\n');
 if (!strictMode) {
-    console.log('⚠️  Mode développement détecté — les contrôles stricts (Npcap >= ' + REQUIRED_NPCAP_VERSION + ') sont désactivés.');
-    console.log('   Ces vérifications s\'exécuteront uniquement dans l\'exécutable packagé.\n');
+    console.log('⚠️  Development mode detected — strict checks (Npcap >= ' + REQUIRED_NPCAP_VERSION + ') are disabled.');
+    console.log('   These checks will only run in the packaged executable.\n');
 }
 
-// Vérifier Node.js version
+// Check Node.js version
 try {
-    const nodeVersion = process.version.substring(1); // Enlever le 'v'
+    const nodeVersion = process.version.substring(1); // Remove the 'v'
     console.log(`✓ Node.js: ${process.version}`);
 
     if (nodeVersion !== REQUIRED_NODE_VERSION) {
-        console.warn(`⚠️  Version recommandée: v${REQUIRED_NODE_VERSION}`);
+        console.warn(`⚠️  Recommended version: v${REQUIRED_NODE_VERSION}`);
     }
 } catch (error) {
-    console.error('✗ Node.js non trouvé !');
+    console.error('✗ Node.js not found!');
     hasErrors = true;
 }
 
-// Vérifier npm
+// Check npm
 try {
     const npmVersion = execSync('npm --version', {encoding: 'utf8'}).trim();
     console.log(`✓ npm: v${npmVersion}`);
 } catch (error) {
-    console.error('✗ npm non trouvé !');
+    console.error('✗ npm not found!');
     hasErrors = true;
 }
 
-// Vérifier les modules natifs
-console.log('\n📦 Vérification des modules natifs...\n');
+// Check native modules
+console.log('\n📦 Checking native modules...\n');
 
 const nativeModules = [
     {
         name: 'cap',
         path: path.join(__dirname, '../node_modules/cap/build/Release/cap.node'),
-        description: 'Module de capture réseau (essentiel)'
+        description: 'Network capture module (essential)'
     },
     {
         name: 'node-sass',
         path: path.join(__dirname, '../node_modules/node-sass/vendor'),
-        description: 'Compilation SASS'
+        description: 'SASS compilation'
     }
 ];
 
 nativeModules.forEach(mod => {
     if (fs.existsSync(mod.path)) {
-        console.log(`✓ ${mod.name}: Module natif compilé`);
+        console.log(`✓ ${mod.name}: Native module compiled`);
     } else {
-        const msg = `✗ ${mod.name}: Module natif manquant !`;
+        const msg = `✗ ${mod.name}: Native module missing!`;
         if (strictMode) {
             console.error(msg);
-            console.error(`  → Exécutez: npm rebuild ${mod.name}`);
+            console.error(`  → Run: npm rebuild ${mod.name}`);
             hasErrors = true;
         } else {
             console.warn(msg);
-            console.warn(`  → En dev: exécutez si besoin 'npm rebuild ${mod.name}'`);
+            console.warn(`  → In dev: run if needed 'npm rebuild ${mod.name}'`);
         }
     }
 });
 
-// Vérifier Npcap sur Windows
+// Check Npcap on Windows
 if (process.platform === 'win32') {
     if (!strictMode) {
-        console.log('\n🔌 Vérification Npcap: sautée en mode développement (vérification stricte activée dans l\'exe).\n');
+        console.log('\n🔌 Npcap check: skipped in development mode (strict check enabled in exe).\n');
     } else {
-        console.log('\n🔌 Vérification de Npcap (Windows)...\n');
+        console.log('\n🔌 Checking Npcap (Windows)...\n');
 
         try {
-            // Vérifier dans le registre Windows (compatible WSL avec reg.exe)
+            // Check in Windows registry (WSL compatible with reg.exe)
             const regCommand = process.env.WINDIR
                 ? 'reg.exe query "HKLM\\SOFTWARE\\Npcap"'
                 : 'reg query "HKLM\\SOFTWARE\\Npcap"';
 
             const regOutput = execSync(regCommand, {encoding: 'utf8', stdio: 'pipe'});
-            console.log(`✓ Npcap installé`);
+            console.log(`✓ Npcap installed`);
 
-            // Essayer d'extraire la version si disponible
+            // Try to extract version if available
             const versionMatch = regOutput.match(/Version\s+REG_SZ\s+([\d.]+)/);
             if (versionMatch) {
                 const detected = versionMatch[1];
-                console.log(`  Version détectée: ${detected}`);
+                console.log(`  Detected version: ${detected}`);
                 const cmp = compareVersions(detected, REQUIRED_NPCAP_VERSION);
                 if (cmp < 0) {
-                    console.error(`✗ Npcap version ${detected} détectée — version minimale requise: ${REQUIRED_NPCAP_VERSION}`);
-                    console.error(`  → Mettez à jour Npcap: https://npcap.com/`);
+                    console.error(`✗ Npcap version ${detected} detected — minimum required version: ${REQUIRED_NPCAP_VERSION}`);
+                    console.error(`  → Update Npcap: https://npcap.com/`);
                     hasErrors = true;
                 } else {
-                    console.log(`  Note: Version ${REQUIRED_NPCAP_VERSION}+ recommandée — OK`);
+                    console.log(`  Note: Version ${REQUIRED_NPCAP_VERSION}+ recommended — OK`);
                 }
             } else {
-                console.warn('⚠️  Npcap détecté mais impossible de lire la version depuis le registre');
-                console.warn(`  → Vérifiez manuellement que Npcap >= ${REQUIRED_NPCAP_VERSION} est installé: https://npcap.com/`);
-                // En CI / exécutable strict, considérer cela comme une erreur
+                console.warn('⚠️  Npcap detected but unable to read version from registry');
+                console.warn(`  → Manually verify that Npcap >= ${REQUIRED_NPCAP_VERSION} is installed: https://npcap.com/`);
+                // In CI / strict executable, consider this an error
                 hasErrors = true;
             }
         } catch (error) {
-            // Vérifier aussi WinPcap comme fallback
+            // Also check WinPcap as fallback
             try {
                 const regCommand = process.env.WINDIR
                     ? 'reg.exe query "HKLM\\SOFTWARE\\WinPcap"'
                     : 'reg query "HKLM\\SOFTWARE\\WinPcap"';
                 execSync(regCommand, {encoding: 'utf8', stdio: 'pipe'});
-                console.log(`⚠️  WinPcap détecté (ancien)`);
-                console.log(`  → Recommandé: Installer Npcap ${REQUIRED_NPCAP_VERSION}+ à la place`);
+                console.log(`⚠️  WinPcap detected (legacy)`);
+                console.log(`  → Recommended: Install Npcap ${REQUIRED_NPCAP_VERSION}+ instead`);
                 hasErrors = true;
             } catch {
-                console.warn('⚠️  Npcap non détecté dans le registre');
-                console.warn(`  Note: Si Npcap est installé, ce warning peut être ignoré`);
-                console.warn(`  → Vérifiez manuellement ou téléchargez: https://npcap.com/dist/npcap-${REQUIRED_NPCAP_VERSION}.exe`);
-                // Marquer comme erreur en CI strict
+                console.warn('⚠️  Npcap not detected in registry');
+                console.warn(`  Note: If Npcap is installed, this warning can be ignored`);
+                console.warn(`  → Manually verify or download: https://npcap.com/dist/npcap-${REQUIRED_NPCAP_VERSION}.exe`);
+                // Mark as error in strict CI
                 hasErrors = true;
             }
         }
     }
 } else {
-    console.log('\n⚠️  Plateforme: ' + process.platform);
-    console.log('   Note: Npcap est requis uniquement sur Windows');
+    console.log('\n⚠️  Platform: ' + process.platform);
+    console.log('   Note: Npcap is only required on Windows');
 }
 
-// Vérifier les outils de build
-console.log('\n🛠️  Vérification des outils de build...\n');
+// Check build tools
+console.log('\n🛠️  Checking build tools...\n');
 
-// Python (requis pour node-gyp)
+// Python (required for node-gyp)
 try {
     const pythonVersion = execSync('python --version', {encoding: 'utf8', stdio: 'pipe'}).trim();
     console.log(`✓ Python: ${pythonVersion}`);
 } catch (error) {
-    console.warn('⚠️  Python non trouvé (requis pour compiler les modules natifs)');
-    console.warn('  → Recommandé: Python 3.10.2');
+    console.warn('⚠️  Python not found (required to compile native modules)');
+    console.warn('  → Recommended: Python 3.10.2');
 }
 
-// Vérifier pkg pour le build
+// Check pkg for build
 const pkgInstalled = fs.existsSync(path.join(__dirname, '../node_modules/pkg'));
 if (pkgInstalled) {
-    console.log(`✓ pkg: Installé (outil de packaging)`);
+    console.log(`✓ pkg: Installed (packaging tool)`);
 } else {
-    console.log(`⚠️  pkg: Non installé (sera installé si nécessaire)`);
+    console.log(`⚠️  pkg: Not installed (will be installed if needed)`);
 }
 
-// Résumé
+// Summary
 console.log('\n' + '='.repeat(50));
 if (hasErrors) {
     if (!strictMode) {
-        console.log('⚠️  Certaines dépendances manquent, mais vous êtes en mode développement — le script ne bloque pas ici.');
-        console.log('Actions recommandées:');
-        console.log('  1. Vérifiez Node.js v18.18.2');
-        console.log(`  2. Installez Npcap ${REQUIRED_NPCAP_VERSION} (Windows) si vous prévoyez d\'exécuter l\'exécutable)`);
-        console.log('  3. Exécutez: npm install');
-        console.log('  4. Exécutez: npm rebuild cap node-sass');
+        console.log('⚠️  Some dependencies are missing, but you\'re in development mode — script won\'t block here.');
+        console.log('Recommended actions:');
+        console.log('  1. Check Node.js v18.18.2');
+        console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows) if you plan to run the executable)`);
+        console.log('  3. Run: npm install');
+        console.log('  4. Run: npm rebuild cap node-sass');
         console.log('='.repeat(50) + '\n');
         process.exit(0);
     }
 
-    console.log('✗ Certaines dépendances manquent !');
-    console.log('\nActions recommandées:');
-    console.log('  1. Vérifiez Node.js v18.18.2');
-    console.log(`  2. Installez Npcap ${REQUIRED_NPCAP_VERSION} (Windows)`);
-    console.log('  3. Exécutez: npm install');
-    console.log('  4. Exécutez: npm rebuild cap node-sass');
+    console.log('✗ Some dependencies are missing!');
+    console.log('\nRecommended actions:');
+    console.log('  1. Check Node.js v18.18.2');
+    console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows)`);
+    console.log('  3. Run: npm install');
+    console.log('  4. Run: npm rebuild cap node-sass');
     console.log('='.repeat(50) + '\n');
     process.exit(1);
 } else {
-    console.log('✓ Toutes les dépendances essentielles sont OK !');
+    console.log('✓ All essential dependencies are OK!');
     console.log('='.repeat(50) + '\n');
     process.exit(0);
 }

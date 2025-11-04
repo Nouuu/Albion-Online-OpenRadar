@@ -166,8 +166,8 @@ function StartRadar()
   var c = new Cap();
 
   let adapterIp;
-  // En mode build (pkg) : ip.txt à côté de l'exécutable
-  // En mode dev : ip.txt dans server-scripts/
+  // In build mode (pkg): ip.txt next to executable
+  // In dev mode: ip.txt in server-scripts/
   const ipFilePath = isPkg ? path.join(appDir, 'ip.txt') : path.join(appDir, 'server-scripts', 'ip.txt');
 
   if (fs.existsSync(ipFilePath))

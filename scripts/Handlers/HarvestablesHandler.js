@@ -116,7 +116,7 @@ class HarvestablesHandler
             const harvestable = this.harvestableList.find(h => h.id === this.pendingHarvestableId);
 
             if (harvestable) {
-                // ✅ Ressource détectée par le radar (living resources)
+                // ✅ Resource detected by radar (living resources)
 
                 // 📋 Logger la découverte itemId pour référence future (une seule fois)
                 if (!this.discoveredItemIds.has(itemId)) {
@@ -137,7 +137,7 @@ class HarvestablesHandler
                 // Mettre à jour les stats avec le nombre EXACT (inclut tous les bonus)
                 this.updateStatsHarvested(harvestable.type, harvestable.tier, harvestable.charges, gained);
             } else {
-                // ⚠️ Ressource NON détectée par le radar (static harvestables: Wood, Ore, Rock)
+                // ⚠️ Resource NOT detected by radar (static harvestables: Wood, Ore, Rock)
                 if (window.debugLogs) {
                     console.warn(`⚠️ [NewSimpleItem] +${gained} resources but harvestable NOT in list (static resource?). ItemId: ${itemId}`);
                 }

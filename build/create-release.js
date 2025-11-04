@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * create-release.js
- * Crée un package ZIP de release avec tous les fichiers nécessaires
+ * Creates a release ZIP package with all necessary files
  */
 
 const fs = require('fs');
@@ -12,23 +12,23 @@ const DIST_DIR = path.join(__dirname, '../dist');
 const RELEASE_NAME = `ZQRadar-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`;
 const RELEASE_DIR = path.join(DIST_DIR, RELEASE_NAME);
 
-console.log('\n📦 Création du package de release...\n');
+console.log('\n📦 Creating release package...\n');
 
-// Vérifier que l'exécutable existe
+// Check that executable exists
 const exePath = path.join(DIST_DIR, 'ZQRadar.exe');
 if (!fs.existsSync(exePath)) {
-    console.error('✗ ZQRadar.exe non trouvé !');
-    console.error('  Exécutez "npm run build:win" d\'abord.');
+    console.error('✗ ZQRadar.exe not found!');
+    console.error('  Run "npm run build:win" first.');
     process.exit(1);
 }
 
-// Créer le dossier de release
+// Create release folder
 if (!fs.existsSync(RELEASE_DIR)) {
     fs.mkdirSync(RELEASE_DIR, { recursive: true });
 }
 
-// Copier les fichiers essentiels
-console.log('📁 Copie des fichiers...\n');
+// Copy essential files
+console.log('📁 Copying files...\n');
 
 const filesToCopy = [
     { src: exePath, dest: 'ZQRadar.exe' },
@@ -43,54 +43,53 @@ filesToCopy.forEach(file => {
         fs.copyFileSync(file.src, destPath);
         console.log(`✓ ${file.dest}`);
     } else if (!file.optional) {
-        console.error(`✗ ${file.src} non trouvé !`);
+        console.error(`✗ ${file.src} not found!`);
         process.exit(1);
     }
 });
 
-// Créer un fichier INSTALL.txt avec les instructions
+// Create INSTALL.txt file with instructions
 const installInstructions = `╔════════════════════════════════════════════════════════════╗
 ║                    ZQRadar - Installation                  ║
 ╚════════════════════════════════════════════════════════════╝
 
-📋 ÉTAPES D'INSTALLATION :
+📋 INSTALLATION STEPS:
 
-1. Installer Npcap 1.84 (OBLIGATOIRE)
+1. Install Npcap 1.84 (REQUIRED)
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Téléchargez depuis : https://npcap.com/
-   Lien direct (optionnel) : https://npcap.com/dist/npcap-1.84.exe
+   Download from: https://npcap.com/
+   Direct link (optional): https://npcap.com/dist/npcap-1.84.exe
 
-   ⚠️  IMPORTANT : Sans Npcap (version 1.84+), ZQRadar ne pourra pas capturer
-       les paquets réseau et ne fonctionnera pas !
+   ⚠️  IMPORTANT: Without Npcap (version 1.84+), ZQRadar will not be able
+       to capture network packets and will not work!
 
-2. Lancer ZQRadar
+2. Launch ZQRadar
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Double-cliquez sur ZQRadar.exe
+   Double-click on ZQRadar.exe
 
-3. Sélectionner l'adaptateur réseau
+3. Select network adapter
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Choisissez l'adaptateur réseau que vous utilisez pour vous
-   connecter à Internet.
+   Choose the network adapter you use to connect to the Internet.
 
-   ⚠️  NE PAS sélectionner 127.0.0.1 (localhost)
+   ⚠️  DO NOT select 127.0.0.1 (localhost)
 
-4. Accéder au radar
+4. Access the radar
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Ouvrez votre navigateur et allez à :
+   Open your browser and go to:
 
    👉 http://localhost:5001
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📌 PRÉREQUIS :
+📌 PREREQUISITES:
 
-   • Windows 10 ou 11
-   • Npcap 1.84 ou plus récent installé
-   • Albion Online en cours d'exécution
+   • Windows 10 or 11
+   • Npcap 1.84 or newer installed
+   • Albion Online running
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🆘 SUPPORT :
+🆘 SUPPORT:
 
    Discord  : https://discord.gg/XAWjmzeaD3
    GitHub   : https://github.com/Zeldruck/Albion-Online-ZQRadar
@@ -98,16 +97,16 @@ const installInstructions = `╔════════════════
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📝 NOTES TECHNIQUES :
+📝 TECHNICAL NOTES:
 
-   • Tous les assets (views, scripts, images, sons) sont intégrés
-     dans ZQRadar.exe - aucun autre fichier n'est nécessaire !
+   • All assets (views, scripts, images, sounds) are integrated
+     into ZQRadar.exe - no other files needed!
 
-   • Les modules natifs (cap.node pour la capture réseau) sont
-     également intégrés dans l'exécutable
+   • Native modules (cap.node for network capture) are
+     also integrated in the executable
 
-   • Le fichier ip.txt sera créé automatiquement lors de la
-     première exécution pour sauvegarder votre choix d'adaptateur
+   • The ip.txt file will be created automatically on
+     first run to save your adapter choice
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -119,33 +118,33 @@ Build   : ${new Date().toISOString()}
 fs.writeFileSync(path.join(RELEASE_DIR, 'INSTALL.txt'), installInstructions, 'utf8');
 console.log('✓ INSTALL.txt\n');
 
-// Créer l'archive ZIP
-console.log('🗜️  Création de l\'archive ZIP...\n');
+// Create ZIP archive
+console.log('🗜️  Creating ZIP archive...\n');
 
 const zipPath = path.join(DIST_DIR, `${RELEASE_NAME}.zip`);
 const output = fs.createWriteStream(zipPath);
 const archive = archiver('zip', {
-    zlib: { level: 9 } // Compression maximale
+    zlib: { level: 9 } // Maximum compression
 });
 
 output.on('close', () => {
     const sizeMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
-    console.log(`\n✓ Archive créée: ${RELEASE_NAME}.zip (${sizeMB} MB)`);
-    console.log(`\n📍 Emplacement: ${zipPath}`);
+    console.log(`\n✓ Archive created: ${RELEASE_NAME}.zip (${sizeMB} MB)`);
+    console.log(`\n📍 Location: ${zipPath}`);
 
-    // Nettoyer le dossier temporaire
+    // Clean temporary folder
     fs.rmSync(RELEASE_DIR, { recursive: true, force: true });
 
-    console.log('\n✅ Package de release créé avec succès !\n');
-    console.log('Contenu du package:');
+    console.log('\n✅ Release package created successfully!\n');
+    console.log('Package contents:');
     console.log('  • ZQRadar.exe');
     console.log('  • README.md');
     console.log('  • INSTALL.txt');
-    console.log('  • zqradar.ico (si disponible)\n');
+    console.log('  • zqradar.ico (if available)\n');
 });
 
 archive.on('error', (err) => {
-    console.error('\n✗ Erreur lors de la création de l\'archive !');
+    console.error('\n✗ Error creating archive!');
     console.error(err);
     process.exit(1);
 });

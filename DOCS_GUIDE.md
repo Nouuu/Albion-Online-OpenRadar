@@ -190,5 +190,5 @@ Code/
 
 ---
 
-**Last update**: 2025-11-03 (corrections visuelles + stats fonctionnelles)
+**Last update**: 2025-11-03 (visual fixes + functional stats)
 

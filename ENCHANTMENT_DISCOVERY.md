@@ -1,78 +1,78 @@
-# 🎉 DÉCOUVERTE MAJEURE - Enchantements Living Resources (2025-11-03)
+# 🎉 MAJOR DISCOVERY - Living Resources Enchantments (2025-11-03)
 
-**Statut:** ✅ **RÉSOLU - Système fonctionnel**
-
----
-
-## 🔍 Le Mystère
-
-**Observation initiale :**
-Vous avez vu une "Fiber T4.1" sur le radar, mais les logs montraient `"enchant":0`.
-
-**Question :**
-Comment le radar affiche-t-il le bon enchantement alors que `params[33]` est toujours 0 ?
+**Status:** ✅ **RESOLVED - System Functional**
 
 ---
 
-## 💡 La Découverte
+## 🔍 The Mystery
 
-### Session Terrain 2025-11-03 11:46
+**Initial Observation:**
+You saw a "Fiber T4.1" on the radar, but logs showed `"enchant":0`.
 
-**Vous avez tué une Hide T5.1 :**
+**Question:**
+How does the radar display the correct enchantment when `params[33]` is always 0?
+
+---
+
+## 💡 The Discovery
+
+### Field Session 2025-11-03 11:46
+
+**You killed a Hide T5.1:**
 
 ```javascript
 [DEBUG_PARAMS] TypeID 427 | params[19]=257 params[33]=0
-[LIVING_JSON] {"typeId":427,"resource":{"type":"Hide","tier":5,"enchant":0}}  ← Logging faux
+[LIVING_JSON] {"typeId":427,"resource":{"type":"Hide","tier":5,"enchant":0}}  ← Wrong logging
 
-// Mais HarvestablesHandler avait raison :
+// But HarvestablesHandler was right:
 [DEBUG Hide T4+ UPDATE] TypeID=427, tier=5, enchant=1  ← Radar correct!
 ```
 
-**Révélation :**
-- **Hide T5.0** : TypeID **427**, rarity=112 → enchant=0
-- **Hide T5.1** : TypeID **427**, rarity=257 → enchant=1
+**Revelation:**
+- **Hide T5.0**: TypeID **427**, rarity=112 → enchant=0
+- **Hide T5.1**: TypeID **427**, rarity=257 → enchant=1
 
-**Le TypeID est IDENTIQUE ! L'enchantement est calculé depuis la rarity !**
+**The TypeID is IDENTICAL! Enchantment is calculated from rarity!**
 
 ---
 
 ## ✅ Conclusion
 
-### Ce qui était déjà correct
+### What was already correct
 
-`HarvestablesHandler.js` calculait déjà l'enchantement depuis la rarity :
+`HarvestablesHandler.js` already calculated enchantment from rarity:
 ```javascript
-// Ligne ~140
+// Line ~140
 const enchant = this.calculateEnchantmentFromRarity(rarity, tier);
 ```
 
-### Ce qui était incorrect
+### What was incorrect
 
-`MobsHandler.js` loggait `params[33]` directement au lieu de calculer :
+`MobsHandler.js` logged `params[33]` directly instead of calculating:
 ```javascript
-// AVANT (faux)
+// BEFORE (wrong)
 logData.resource.enchant = enchant;  // = params[33] = 0 ❌
 
-// APRÈS (correct)
-logData.resource.enchant = realEnchant;  // Calculé depuis rarity ✓
+// AFTER (correct)
+logData.resource.enchant = realEnchant;  // Calculated from rarity ✓
 ```
 
 ---
 
-## 📊 Formule Validée
+## 📊 Validated Formula
 
-### Base Rarity par Tier
+### Base Rarity per Tier
 
-| Tier | Base Rarity | Statut |
+| Tier | Base Rarity | Status |
 |------|-------------|--------|
-| T3   | 78          | ✅ Confirmé terrain |
-| T4   | 92          | ✅ Confirmé terrain |
-| T5   | 112         | ✅ Confirmé terrain |
-| T6   | 132         | ⚠️ Estimé (+20/tier) |
-| T7   | 152         | ⚠️ Estimé |
-| T8   | 172         | ⚠️ Estimé |
+| T3   | 78          | ✅ Field confirmed |
+| T4   | 92          | ✅ Field confirmed |
+| T5   | 112         | ✅ Field confirmed |
+| T6   | 132         | ⚠️ Estimated (+20/tier) |
+| T7   | 152         | ⚠️ Estimated |
+| T8   | 172         | ⚠️ Estimated |
 
-### Calcul Enchantement
+### Enchantment Calculation
 
 ```javascript
 diff = rarity - baseRarity
@@ -84,9 +84,9 @@ if (diff < 155)  → enchant = 3  // +~145
 if (diff >= 155) → enchant = 4  // +~155+
 ```
 
-### Exemples Validés Terrain
+### Field Validated Examples
 
-| Ressource | TypeID | Rarity | Base | Diff | Enchant | ✓ |
+| Resource  | TypeID | Rarity | Base | Diff | Enchant | ✓ |
 |-----------|--------|--------|------|------|---------|---|
 | Hide T5.1 | 427    | 257    | 112  | 145  | 1       | ✅ |
 | Fiber T4.0| 530    | 92     | 92   | 0    | 0       | ✅ |
@@ -94,31 +94,31 @@ if (diff >= 155) → enchant = 4  // +~155+
 
 ---
 
-## 🔧 Modifications Appliquées
+## 🔧 Applied Modifications
 
-### 1. Ajout méthode `getBaseRarity()`
+### 1. Added `getBaseRarity()` method
 
-**Fichier:** `scripts/Handlers/MobsHandler.js`
+**File:** `scripts/Handlers/MobsHandler.js`
 
 ```javascript
 getBaseRarity(tier) {
     const baseRarities = {
         1: 0, 2: 0,
-        3: 78,   // Validé terrain
-        4: 92,   // Validé terrain
-        5: 112,  // Validé terrain
-        6: 132,  // Estimé
-        7: 152,  // Estimé
-        8: 172   // Estimé
+        3: 78,   // Field validated
+        4: 92,   // Field validated
+        5: 112,  // Field validated
+        6: 132,  // Estimated
+        7: 152,  // Estimated
+        8: 172   // Estimated
     };
     return baseRarities[tier] || 0;
 }
 ```
 
-### 2. Calcul `realEnchant` dans le logging
+### 2. `realEnchant` calculation in logging
 
-**Fichier:** `scripts/Handlers/MobsHandler.js`  
-**Méthode:** `logLivingCreatureEnhanced()`
+**File:** `scripts/Handlers/MobsHandler.js`  
+**Method:** `logLivingCreatureEnhanced()`
 
 ```javascript
 // Calculate REAL enchantment from rarity
@@ -137,12 +137,12 @@ if (rarity !== null && rarity !== undefined) {
 
 // Use calculated enchant
 logData.resource.enchant = realEnchant;
-console.log(`... T${tier}.${realEnchant} ...`);  // Affichage correct
+console.log(`... T${tier}.${realEnchant} ...`);  // Correct display
 ```
 
-### 3. Debug paramètres ajouté
+### 3. Debug parameters added
 
-**Pour investigation future :**
+**For future investigation:**
 ```javascript
 [DEBUG_PARAMS] TypeID ${typeId} | params[19]=${rarity} params[33]=${enchant}
 ```
@@ -151,100 +151,100 @@ console.log(`... T${tier}.${realEnchant} ...`);  // Affichage correct
 
 ## 🎯 Impact
 
-### ✅ Positif
+### ✅ Positive
 
-1. **Pas besoin de collecter TypeIDs enchantés**
-   - TypeID 427 = Hide T5 pour .0, .1, .2, .3, .4
-   - TypeID 530 = Fiber T4 pour tous enchantements
-   - MobsInfo.js déjà complet !
+1. **No need to collect enchanted TypeIDs**
+   - TypeID 427 = Hide T5 for .0, .1, .2, .3, .4
+   - TypeID 530 = Fiber T4 for all enchantments
+   - MobsInfo.js already complete!
 
-2. **Système fonctionnel pour tous les enchantements**
-   - Formule calcule automatiquement
-   - Radar affiche correctement
-   - Logs maintenant cohérents
+2. **System functional for all enchantments**
+   - Formula calculates automatically
+   - Radar displays correctly
+   - Logs now consistent
 
-3. **Architecture simplifiée**
-   - Pas de base de données à enrichir
-   - Pas de collecte manuelle
-   - Code maintenable
+3. **Simplified architecture**
+   - No database to enrich
+   - No manual collection
+   - Maintainable code
 
-### ⚠️ À Valider
+### ⚠️ To Validate
 
-**Prochaine session terrain (1-2h) :**
-- [ ] Tester Hide/Fiber .2, .3, .4
-- [ ] Valider T6, T7, T8
-- [ ] Affiner les seuils (20, 65, 110, 155)
-- [ ] Cas limites (diff pile sur seuil)
-
----
-
-## 📝 Documentation Mise à Jour
-
-### Fichiers modifiés
-
-- ✅ `scripts/Handlers/MobsHandler.js` - Code corrigé
-- ✅ `TODO.md` - Section ÉTAT ACTUEL + PROCHAINES ÉTAPES
-- ✅ Ce fichier - Résumé découverte
-
-### Guides créés lors de l'investigation
-
-- `tools/DEBUG_ENCHANT.md` - Guide debug paramètres
-- `tools/STATUS.md` - État système logging
-- `tools/QUICK_START.md` - Guide collecte (maintenant obsolète)
-- `tools/COLLECTION_GUIDE.md` - Guide détaillé (maintenant obsolète)
-
-**Note :** Les guides de collecte ne sont plus nécessaires puisqu'on n'a pas besoin de collecter les TypeIDs enchantés !
+**Next field session (1-2h):**
+- [ ] Test Hide/Fiber .2, .3, .4
+- [ ] Validate T6, T7, T8
+- [ ] Refine thresholds (20, 65, 110, 155)
+- [ ] Edge cases (diff exactly on threshold)
 
 ---
 
-## 🚀 Prochaines Actions
+## 📝 Updated Documentation
 
-### Immédiat
-1. ✅ **Tester le nouveau logging**
-   - Activer "Log Living Creatures"
-   - Tuer une créature enchantée
-   - Vérifier que le log affiche le bon enchantement
+### Modified files
 
-### Court Terme (cette semaine)
-1. **Session terrain validation (1-2h)**
-   - Tester .2, .3, .4
-   - Différents tiers T4-T8
-   - Hide ET Fiber
-   - Affiner formule si nécessaire
+- ✅ `scripts/Handlers/MobsHandler.js` - Code fixed
+- ✅ `TODO.md` - CURRENT STATE + NEXT STEPS sections
+- ✅ This file - Discovery summary
 
-2. **Nettoyer documentation obsolète**
-   - Archiver ou supprimer guides collecte
-   - Mettre à jour README si besoin
+### Guides created during investigation
 
-### Moyen Terme
-1. Session longue (2h+) avec validation complète
-2. Analyser nécessité EventNormalizer
-3. Décision basée sur stabilité système
+- `tools/DEBUG_ENCHANT.md` - Debug parameters guide
+- `tools/STATUS.md` - Logging system status
+- `tools/QUICK_START.md` - Collection guide (now obsolete)
+- `tools/COLLECTION_GUIDE.md` - Detailed guide (now obsolete)
+
+**Note:** Collection guides are no longer needed since we don't need to collect enchanted TypeIDs!
+
+---
+
+## 🚀 Next Actions
+
+### Immediate
+1. ✅ **Test new logging**
+   - Enable "Log Living Creatures"
+   - Kill an enchanted creature
+   - Verify log displays correct enchantment
+
+### Short Term (this week)
+1. **Validation field session (1-2h)**
+   - Test .2, .3, .4
+   - Different tiers T4-T8
+   - Hide AND Fiber
+   - Refine formula if needed
+
+2. **Clean obsolete documentation**
+   - Archive or delete collection guides
+   - Update README if needed
+
+### Medium Term
+1. Long session (2h+) with complete validation
+2. Analyze EventNormalizer necessity
+3. Decision based on system stability
 
 ---
 
 ## 🎉 Conclusion
 
-**Le système de détection des enchantements living resources est OPÉRATIONNEL !**
+**The living resources enchantment detection system is OPERATIONAL!**
 
-**Ce qu'on a appris :**
-- ✅ TypeID identique pour tous enchantements
-- ✅ Enchantement calculé depuis rarity
-- ✅ params[33] jamais utilisé pour living resources
-- ✅ HarvestablesHandler le savait déjà
-- ✅ MobsHandler corrigé
+**What we learned:**
+- ✅ Identical TypeID for all enchantments
+- ✅ Enchantment calculated from rarity
+- ✅ params[33] never used for living resources
+- ✅ HarvestablesHandler already knew it
+- ✅ MobsHandler corrected
 
-**Résultat :**
-- Plus besoin de collecte manuelle
-- Système fonctionne pour .0 à .4
-- Architecture simple et maintenable
+**Result:**
+- No more manual collection needed
+- System works for .0 to .4
+- Simple and maintainable architecture
 
-**Prochaine étape :**
-Session terrain pour valider la formule sur tous les tiers/enchantements ! 🎮🔍
+**Next step:**
+Field session to validate formula on all tiers/enchantments! 🎮🔍
 
 ---
 
-**Auteur :** Investigation collaborative  
-**Date :** 2025-11-03  
-**Statut :** ✅ Production Ready
+**Author:** Collaborative investigation  
+**Date:** 2025-11-03  
+**Status:** ✅ Production Ready
 

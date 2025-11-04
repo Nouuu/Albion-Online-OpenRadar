@@ -79,9 +79,9 @@ const createReadme = (platform) => {
                     platform === 'linux-x64' ? 'ZQRadar-linux' : 'ZQRadar-macos';
 
     const installInstructions = platform === 'win64' ?
-`1. **Install Npcap** (REQUIRED - version 1.79 or newer)
+`1. **Install Npcap** (REQUIRED - version 1.84 or newer)
    Download: https://npcap.com/
-   Direct link (v1.79): https://npcap.com/dist/npcap-1.79.exe
+   Direct link (v1.84): https://npcap.com/dist/npcap-1.84.exe
 
 2. **Launch ${exeName}**
    Double-click on ${exeName}` :
@@ -111,7 +111,7 @@ ${installInstructions}
 ## Prerequisites
 
 - ${platform === 'win64' ? 'Windows 10/11' : platform === 'linux-x64' ? 'Linux (Ubuntu 18.04+, Debian 10+, etc.)' : 'macOS 10.15+'}
-- ${platform === 'win64' ? 'Npcap 1.79 or newer' : 'libpcap'} installed
+- ${platform === 'win64' ? 'Npcap 1.84 or newer' : 'libpcap'} installed
 - Internet connection to play Albion Online
 
 ## Support

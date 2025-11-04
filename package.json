@@ -7,7 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "check": "node build/check-system.js",
-        "check:runtime": "node -e \"try { const ok = require('./scripts/Utils/runtime-check').runRuntimeChecks(); process.exit(ok ? 0 : 1); } catch (e) { console.error(e); process.exit(1); }\"",
+    "check:runtime": "node -e \"try { const ok = require('./scripts/Utils/runtime-check').runRuntimeChecks(); process.exit(ok ? 0 : 1); } catch (e) { console.error(e); process.exit(1); }\"",
     "prebuild": "npm run check",
     "build": "pkg . --compress GZip",
     "build:win": "pkg . --targets node18-win-x64 --compress GZip --output dist/ZQRadar.exe",

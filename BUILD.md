@@ -1,35 +1,35 @@
 # 🛠️ Build Guide - ZQRadar
 
-Guide pour builder ZQRadar en exécutable Windows (.exe).
+Guide to build ZQRadar as Windows executable (.exe).
 
-## Prérequis
+## Prerequisites
 
 - Node.js v18.18.2
-- Python 3.10.2 + Visual Studio Build Tools (pour modules natifs cap.node et node-sass)
+- Python 3.10.2 + Visual Studio Build Tools (for native modules cap.node and node-sass)
 - Npcap 1.84 or newer
-- GNU Make (optionnel : WSL, Git Bash, ou `choco install make`)
+- GNU Make (optional: WSL, Git Bash, or `choco install make`)
 
 ## Quick Start
 
-### Avec Makefile (recommandé si vous avez make)
+### With Makefile (recommended if you have make)
 
 ```bash
-make install      # Installer les dépendances
-make check        # Vérifier le système
-make build        # Builder ZQRadar.exe
-make release      # Build + créer ZIP de release
+make install      # Install dependencies
+make check        # Check system
+make build        # Build ZQRadar.exe
+make release      # Build + create release ZIP
 ```
 
-### Sans Make (Windows CMD/PowerShell)
+### Without Make (Windows CMD/PowerShell)
 
 ```bash
-build.bat install   # Installer les dépendances
-build.bat check     # Vérifier le système
-build.bat build     # Builder ZQRadar.exe
-build.bat release   # Build + créer ZIP de release
+build.bat install   # Install dependencies
+build.bat check     # Check system
+build.bat build     # Build ZQRadar.exe
+build.bat release   # Build + create release ZIP
 ```
 
-### Avec npm directement
+### With npm directly
 
 ```bash
 npm install
@@ -38,84 +38,85 @@ npm run build:win
 npm run release
 ```
 
-## Commandes Makefile
+## Makefile Commands
 
-| Commande          | Description                                                   |
-|-------------------|---------------------------------------------------------------|
-| `make help`       | Afficher l'aide avec toutes les commandes                     |
-| `make install`    | Installer toutes les dépendances npm + rebuild modules natifs |
-| `make check`      | Vérifier Node.js, npm, Npcap, modules natifs compilés         |
-| `make start`      | Lancer ZQRadar en mode développement (node app.js)            |
-| `make dev`        | Lancer avec auto-reload (nodemon)                             |
-| `make build`      | Builder l'exécutable Windows (dist/ZQRadar.exe)               |
-| `make build-all`  | Builder pour Windows ET Linux                                 |
-| `make clean`      | Supprimer dist/, build/temp/, *.log                           |
-| `make clean-all`  | clean + supprimer node_modules                                |
-| `make rebuild`    | clean + install + build (rebuild complet)                     |
-| `make package`    | Créer le ZIP de release (ZQRadar-YYYYMMDD.zip)                |
-| `make release`    | rebuild + package (release complète)                          |
-| `make test-build` | Vérifier que le .exe a été créé                               |
-| `make info`       | Afficher les infos du projet                                  |
+| Command           | Description                                                    |
+|-------------------|----------------------------------------------------------------|
+| `make help`       | Display help with all commands                                 |
+| `make install`    | Install all npm dependencies + rebuild native modules          |
+| `make check`      | Check Node.js, npm, Npcap, compiled native modules             |
+| `make start`      | Run ZQRadar in development mode (node app.js)                  |
+| `make dev`        | Run with auto-reload (nodemon)                                 |
+| `make build`      | Build Windows executable (dist/ZQRadar.exe)                    |
+| `make build-all`  | Build for Windows AND Linux                                    |
+| `make clean`      | Remove dist/, build/temp/, *.log                               |
+| `make clean-all`  | clean + remove node_modules                                    |
+| `make rebuild`    | clean + install + build (complete rebuild)                     |
+| `make package`    | Create release ZIP (ZQRadar-YYYYMMDD.zip)                      |
+| `make release`    | rebuild + package (complete release)                           |
+| `make test-build` | Verify that .exe was created                                   |
+| `make info`       | Display project information                                    |
 
-## Commandes npm
+## npm Commands
 
-| Commande                 | Description                       |
+| Command                  | Description                       |
 |--------------------------|-----------------------------------|
-| `npm start`              | Lancer ZQRadar (node app.js)      |
-| `npm run dev`            | Mode développement avec nodemon   |
-| `npm run check`          | Vérifier les dépendances système  |
-| `npm run build:win`      | Builder pour Windows x64          |
-| `npm run build:all`      | Builder Windows + Linux           |
-| `npm run clean`          | Nettoyer dist/ et logs            |
-| `npm run clean:all`      | Nettoyer + supprimer node_modules |
-| `npm run rebuild:native` | Rebuild cap et node-sass          |
-| `npm run package`        | Créer le ZIP de release           |
+| `npm start`              | Run ZQRadar (node app.js)         |
+| `npm run dev`            | Development mode with nodemon     |
+| `npm run check`          | Check system dependencies         |
+| `npm run build:win`      | Build for Windows x64             |
+| `npm run build:all`      | Build Windows + Linux             |
+| `npm run clean`          | Clean dist/ and logs              |
+| `npm run clean:all`      | Clean + remove node_modules       |
+| `npm run rebuild:native` | Rebuild cap and node-sass         |
+| `npm run package`        | Create release ZIP                |
 | `npm run release`        | build:win + package               |
 
-## Résultat du Build
+## Build Output
 
-Le build crée dans `dist/` :
+The build creates in `dist/`:
 
-- **ZQRadar.exe** : Exécutable Windows standalone (contient Node.js + code + assets + modules natifs)
-- **README.txt** : Instructions d'installation pour l'utilisateur final
-- **ZQRadar-YYYYMMDD.zip** : Archive de release (créée par `make package` ou `make release`)
+- **ZQRadar.exe**: Standalone Windows executable (contains Node.js + code + assets + native modules)
+- **README.txt**: Installation instructions for end user
+- **ZQRadar-YYYYMMDD.zip**: Release archive (created by `make package` or `make release`)
 
-Le `.exe` est **totalement autonome** et contient :
+The `.exe` is **completely standalone** and contains:
 
 - Node.js v18 runtime
-- Tout le code source
+- All source code
 - Assets (views/, scripts/, images/, sounds/)
-- Modules natifs (cap.node, node-sass)
+- Native modules (cap.node, node-sass)
 
-## Configuration pkg
+## pkg Configuration
 
-La config dans `package.json` spécifie :
+Config in `package.json` specifies:
 
-- **Cible** : node18-win-x64
-- **Assets inclus** : views/, scripts/, images/, sounds/, modules natifs
-- **Compression** : GZip
-- **Point d'entrée** : app.js
+- **Target**: node18-win-x64
+- **Included assets**: views/, scripts/, images/, sounds/, native modules
+- **Compression**: GZip
+- **Entry point**: app.js
 
 ## Troubleshooting
 
-**Erreur "Cannot find module 'cap'"**
+**Error "Cannot find module 'cap'"**
 
 ```bash
 npm rebuild cap node-sass
 ```
 
-**node-gyp échoue**
+**node-gyp fails**
 
-- Vérifier Python 3.10.2 installé
-- Vérifier Visual Studio Build Tools installés
+- Verify Python 3.10.2 is installed
+- Verify Visual Studio Build Tools are installed
 
 ```bash
 npm config set python "C:\Python310\python.exe"
 npm config set msvs_version 2022
 ```
 
-**Le .exe ne démarre pas**
+**The .exe doesn't start**
 
-- Installer Npcap 1.84 ou plus récent (OBLIGATOIRE)
-- Lancer en tant qu'administrateur (requis pour capture réseau)
-- Vérifier l'antivirus (peut bloquer)
+- Install Npcap 1.84 or newer (REQUIRED)
+- Run as administrator (required for network capture)
+- Check antivirus (may block)
+
