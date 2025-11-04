@@ -487,6 +487,7 @@ export class Settings
 
         this.enemiesHP = this.returnLocalBool("settingEnemiesHP");
         this.enemiesID = this.returnLocalBool("settingEnemiesID");
+        this.debugEnemies = this.returnLocalBool("settingDebugEnemies");
 
         //#region Mists
         // TODO

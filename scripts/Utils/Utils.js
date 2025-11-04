@@ -278,13 +278,32 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.RegenerationHealthChanged:
+            // 🐛 DEBUG: Log health regeneration events
+            if (settings && settings.debugEnemies) {
+                const mobInfo = mobsHandler.debugLogMobById(Parameters[0]);
+                console.log(`[DEBUG_HP] Event 91 (RegenerationHealthChanged) | ID=${Parameters[0]} | ${mobInfo} | params[2]=${Parameters[2]} params[3]=${Parameters[3]} | ALL:`, Parameters);
+            }
             playersHandler.UpdatePlayerHealth(Parameters);
+            mobsHandler.updateMobHealthRegen(Parameters);  // Update mob HP
             break;
 
         case EventCodes.HealthUpdate:
+            // 🐛 DEBUG: Log health update events
+            if (settings && settings.debugEnemies) {
+                const mobInfo = mobsHandler.debugLogMobById(Parameters[0]);
+                console.log(`[DEBUG_HP] Event 6 (HealthUpdate) | ID=${Parameters[0]} | ${mobInfo} | params[3]=${Parameters[3]} | ALL:`, Parameters);
+            }
             playersHandler.UpdatePlayerLooseHealth(Parameters);
+            mobsHandler.updateMobHealth(Parameters);  // Update mob HP
             break;
 
+        case EventCodes.HealthUpdates:
+            // 🐛 DEBUG: Log bulk health updates (multiple entities at once)
+            if (settings && settings.debugEnemies) {
+                console.log(`[DEBUG_HP] Event 7 (HealthUpdates - BULK) | ALL:`, Parameters);
+            }
+            mobsHandler.updateMobHealthBulk(Parameters);
+            break;
 
         case EventCodes.CharacterEquipmentChanged:
             playersHandler.updateItems(id, Parameters);

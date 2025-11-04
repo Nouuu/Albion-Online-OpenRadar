@@ -14,13 +14,14 @@ const EnemyType =
 
 class Mob
 {
-    constructor(id, typeId, posX, posY, health, enchantmentLevel, rarity)
+    constructor(id, typeId, posX, posY, health, maxHealth, enchantmentLevel, rarity)
     {
         this.id = id;
         this.typeId = typeId;
         this.posX = posX;
         this.posY = posY;
-        this.health = health;
+        this.health = health;           // Normalized (0-255) = current HP percentage
+        this.maxHealth = maxHealth;     // Real max HP
         this.enchantmentLevel = enchantmentLevel;
         this.rarity = rarity;
         this.tier = 0;
@@ -29,6 +30,22 @@ class Mob
         this.exp = 0;
         this.hX = 0;
         this.hY = 0;
+    }
+
+    /**
+     * Get real current HP
+     * @returns {number} Current HP (not normalized)
+     */
+    getCurrentHP() {
+        return Math.round((this.health / 255) * this.maxHealth);
+    }
+
+    /**
+     * Get HP percentage
+     * @returns {number} HP percentage (0-100)
+     */
+    getHealthPercent() {
+        return Math.round((this.health / 255) * 100);
     }
 }
 
@@ -413,12 +430,18 @@ class MobsHandler {
         const loc = parameters[7] || [0, 0];
         const posX = this.normalizeNumber(loc[0], 0);
         const posY = this.normalizeNumber(loc[1], 0);
-        const health = this.normalizeNumber(parameters[2], 0) || this.normalizeNumber(parameters[13], 0) || 0;
+        const healthNormalized = this.normalizeNumber(parameters[2], 255);  // Current HP (0-255)
+        const maxHealth = this.normalizeNumber(parameters[13], 0);          // Max HP (real value)
         const enchant = this.normalizeNumber(parameters[33], 0) || 0;
         const rarity = this.normalizeNumber(parameters[19], null);
 
         let name;
         try { name = parameters[32] || parameters[31] || null; } catch (e) { name = null; }
+
+        // 🐛 DEBUG: Log raw parameters from server
+        if (this.settings && this.settings.debugEnemies) {
+            console.log(`[DEBUG_ENEMY] RAW PARAMS | ID=${id} TypeID=${typeId} | params[2]=${parameters[2]} (normalized) params[13]=${parameters[13]} (maxHP) params[19]=${parameters[19]} (rarity) params[33]=${parameters[33]} | name=${name}`);
+        }
 
         // 🔍 DEBUG: Log ALL parameters for living resources to find enchantment
         if (this.settings && this.settings.logLivingCreatures) {
@@ -431,16 +454,16 @@ class MobsHandler {
         if (name) {
             this.AddMist(id, posX, posY, name, enchant);
         } else {
-            this.AddEnemy(id, typeId, posX, posY, health, enchant, rarity);
+            this.AddEnemy(id, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity);
         }
     }
 
-    AddEnemy(id, typeId, posX, posY, health, enchant, rarity) {
+    AddEnemy(id, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity) {
         if (this.mobsList.some(m => m.id === id)) return;
         if (this.harvestablesNotGood.some(m => m.id === id)) return;
 
-        const mob = new Mob(id, typeId, posX, posY, health, enchant, rarity);
-        const normHealth = Number(health) || 0;
+        const mob = new Mob(id, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity);
+        const normHealth = Number(healthNormalized) || 0;
 
         // Get known info from mobinfo database
         const knownInfo = this.mobinfo[typeId];
@@ -450,6 +473,11 @@ class MobsHandler {
             mob.type = knownInfo[1] || EnemyType.Enemy;
             mob.name = knownInfo[2] || null;
             hasKnownInfo = true;
+        }
+
+        // 🐛 DEBUG: Log enemy creation with type info
+        if (this.settings && this.settings.debugEnemies) {
+            console.log(`[DEBUG_ENEMY] NEW MOB | ID=${id} TypeID=${typeId} HP=${mob.getCurrentHP()}/${maxHealth} (${mob.getHealthPercent()}%) | Enchant=${enchant} Rarity=${rarity} | Assigned Type=${mob.type} (${this.getEnemyTypeName(mob.type)}) | Name=${mob.name} | HasInfo=${hasKnownInfo}`);
         }
 
         // Get cross-referenced static resource info
@@ -574,6 +602,113 @@ class MobsHandler {
         if (found) { found.enchantmentLevel = enchantmentLevel; }
     }
 
+    // 🐛 DEBUG: Find and log mob info by ID (for HP tracking)
+    debugLogMobById(id) {
+        const mob = this.mobsList.find(m => m.id === id);
+        if (mob) {
+            return `TypeID=${mob.typeId} Type=${this.getEnemyTypeName(mob.type)} HP=${mob.getCurrentHP()}/${mob.maxHealth} Name=${mob.name || 'Unknown'}`;
+        }
+        return 'NOT_FOUND_IN_MOBSLIST';
+    }
+
+    /**
+     * Update mob health from HealthUpdate event (Event 6)
+     * @param {Object} parameters - Event parameters
+     * @param {number} parameters[0] - Mob ID
+     * @param {number} parameters[2] - HP delta (negative = damage, positive = heal)
+     * @param {number} parameters[3] - Current HP (real value, not normalized) - undefined = dead
+     * @param {number} parameters[6] - Attacker ID (optional)
+     */
+    updateMobHealth(parameters) {
+        const mobId = parameters[0];
+        const hpDelta = parameters[2];
+        const currentHP = parameters[3];  // Real HP value (not normalized)
+        const attackerId = parameters[6];
+
+        // Find mob in list
+        const mob = this.mobsList.find(m => m.id === mobId);
+        if (!mob) return; // Not a mob (probably player)
+
+        // 🐛 DEBUG: Log health update
+        if (this.settings && this.settings.debugEnemies) {
+            const oldHP = mob.getCurrentHP();
+            console.log(`[MobsHandler] 💔 HP Update | ID=${mobId} | ${oldHP}→${currentHP}/${mob.maxHealth} (Δ${hpDelta}) | Attacker=${attackerId}`);
+        }
+
+        // Handle death (currentHP is undefined when entity dies)
+        if (currentHP === undefined || currentHP <= 0) {
+            if (this.settings && this.settings.debugEnemies) {
+                console.log(`[MobsHandler] ☠️ Mob DIED | ID=${mobId} TypeID=${mob.typeId} | Removing from list`);
+            }
+            this.removeMob(mobId);
+            return;
+        }
+
+        // Convert real HP to normalized (0-255)
+        if (mob.maxHealth > 0) {
+            mob.health = Math.round((currentHP / mob.maxHealth) * 255);
+        }
+    }
+
+    /**
+     * Update mob health from RegenerationHealthChanged event (Event 91)
+     * @param {Object} parameters - Event parameters
+     * @param {number} parameters[0] - Mob ID
+     * @param {number} parameters[2] - Current HP (normalized 0-255)
+     * @param {number} parameters[3] - Max HP (normalized 0-255)
+     */
+    updateMobHealthRegen(parameters) {
+        const mobId = parameters[0];
+        const currentHPNormalized = parameters[2];
+        const maxHPNormalized = parameters[3];
+
+        // Find mob in list
+        const mob = this.mobsList.find(m => m.id === mobId);
+        if (!mob) return; // Not a mob (probably player)
+
+        // 🐛 DEBUG: Log health regen
+        if (this.settings && this.settings.debugEnemies) {
+            console.log(`[MobsHandler] 💚 HP Regen | ID=${mobId} | HP=${currentHPNormalized}/${maxHPNormalized} (normalized)`);
+        }
+
+        // Update normalized health directly
+        mob.health = currentHPNormalized;
+    }
+
+    /**
+     * Update multiple mob healths from HealthUpdates bulk event (Event 7)
+     * @param {Object} parameters - Event parameters with arrays
+     * @param {Array} parameters[1] - Array of timestamps
+     * @param {Array} parameters[2] - Array of HP deltas
+     * @param {Array} parameters[3] - Array of current HPs
+     */
+    updateMobHealthBulk(parameters) {
+        // Event 7 sends arrays of values for multiple entities at once
+        const timestamps = parameters[1];
+        const hpDeltas = parameters[2];
+        const currentHPs = parameters[3];
+
+        if (!Array.isArray(timestamps) || !Array.isArray(currentHPs)) return;
+
+        // Process each entity in the bulk update
+        for (let i = 0; i < currentHPs.length; i++) {
+            // Create fake parameters object for single update
+            const singleParams = {
+                0: parameters[0],  // First entity ID (might not be accurate for bulk?)
+                2: hpDeltas[i],
+                3: currentHPs[i],
+                6: parameters[6] ? parameters[6][i] : undefined
+            };
+
+            // 🐛 DEBUG: Log bulk processing
+            if (this.settings && this.settings.debugEnemies) {
+                console.log(`[MobsHandler] 📦 Bulk HP Update [${i}/${currentHPs.length}] | Δ${hpDeltas[i]} → ${currentHPs[i]}`);
+            }
+
+            this.updateMobHealth(singleParams);
+        }
+    }
+
     getMobList() {
         return [...this.mobsList];
     }
@@ -609,6 +744,27 @@ class MobsHandler {
 
     getMobInfo(typeId) {
         return this.mobinfo[typeId] || null;
+    }
+
+    /**
+     * Get human-readable name for enemy type (for debugging)
+     * @param {number} type - EnemyType enum value
+     * @returns {string} Type name
+     */
+    getEnemyTypeName(type) {
+        const names = {
+            0: "LivingHarvestable",
+            1: "LivingSkinnable",
+            2: "Enemy",
+            3: "MediumEnemy",
+            4: "EnchantedEnemy",
+            5: "MiniBoss",
+            6: "Boss",
+            7: "Drone",
+            8: "MistBoss",
+            9: "Events"
+        };
+        return names[type] || `Unknown(${type})`;
     }
 }
 

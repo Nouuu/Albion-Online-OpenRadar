@@ -13,28 +13,28 @@
                     Classic Enemies
                 </h4>
                 <label class="flex items-center">
-                    <input disabled type="checkbox" id="settingAllEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <input type="checkbox" id="settingAllEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span id="all-text" class="dark:text-white ml-2">All</span>
                 </label>
                 <label class="flex items-center">
-                    <input disabled type="checkbox" id="settingNormalEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="normal-text" class="dark:text-white ml-2">Normal</span>
+                    <input type="checkbox" id="settingNormalEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="normal-text" class="dark:text-white ml-2">Normal 🟢</span>
                 </label>
                 <label class="flex items-center">
-                    <input disabled type="checkbox" id="settingMediumEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="medium-text" class="dark:text-white ml-2">Medium</span>
+                    <input type="checkbox" id="settingMediumEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="medium-text" class="dark:text-white ml-2">Medium 🟡</span>
                 </label>
                 <label class="flex items-center">
-                    <input disabled type="checkbox" id="settingEnchantedEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="enchanted-text" class="dark:text-white ml-2">Enchanted</span>
+                    <input type="checkbox" id="settingEnchantedEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="enchanted-text" class="dark:text-white ml-2">Enchanted 🟣</span>
                 </label>
                 <label class="flex items-center">
-                    <input disabled type="checkbox" id="settingMiniBossEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="mini-boss-text" class="dark:text-white ml-2">Mini-Boss</span>
+                    <input type="checkbox" id="settingMiniBossEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="mini-boss-text" class="dark:text-white ml-2">Mini-Boss 🟠</span>
                 </label>
                 <label class="flex items-center">
-                    <input disabled type="checkbox" id="settingBossEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span id="boss-text" class="dark:text-white ml-2">Boss</span>
+                    <input type="checkbox" id="settingBossEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span id="boss-text" class="dark:text-white ml-2">Boss 🔴</span>
                 </label>
                 <br>
                 <label class="flex items-center">
@@ -105,6 +105,11 @@
                 <label class="flex items-center">
                     <input type="checkbox" id="settingEnemiesID" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span id="id-text" class="dark:text-white ml-2">Show ID</span>
+                </label>
+                <br>
+                <label class="flex items-center">
+                    <input type="checkbox" id="settingDebugEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span class="dark:text-white ml-2">🐛 Debug Enemies (Console log)</span>
                 </label>
 			</div>
 		</div>
@@ -277,6 +282,10 @@
     const settingEnemiesID = document.getElementById("settingEnemiesID");
     settingEnemiesID.checked = returnLocalBool("settingEnemiesID");
     settingEnemiesID.addEventListener("click", () => {localStorage.setItem("settingEnemiesID", settingEnemiesID.checked);});
+
+    const settingDebugEnemies = document.getElementById("settingDebugEnemies");
+    settingDebugEnemies.checked = returnLocalBool("settingDebugEnemies");
+    settingDebugEnemies.addEventListener("click", () => {localStorage.setItem("settingDebugEnemies", settingDebugEnemies.checked);});
     //#endregion
 
     function SetLanguage(lang)
