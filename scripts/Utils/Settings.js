@@ -487,6 +487,12 @@ export class Settings
         this.enemiesID = this.returnLocalBool("settingEnemiesID");
         this.debugEnemies = this.returnLocalBool("settingDebugEnemies");
 
+        // 🐛 Debug & Logging settings (dynamic update)
+        this.logLivingCreatures = this.returnLocalBool("settingLogLivingCreatures");
+        this.logLivingResources = this.returnLocalBool("settingLogLivingResources");
+        this.livingResourcesHealthBar = this.returnLocalBool("settingLivingResourcesHealthBar");
+        this.livingResourcesID = this.returnLocalBool("settingLivingResourcesID");
+
         //#region Mists
         // TODO
         // Mists beasts

@@ -35,6 +35,30 @@ var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
 import { Settings } from './Settings.js';
 const settings = new Settings();
 
+// 🔄 Dynamic Settings Update: Listen for localStorage changes
+// This allows settings to update in real-time without page reload
+window.addEventListener('storage', (event) => {
+    if (event.key && event.key.startsWith('setting')) {
+        console.log(`🔄 [Settings] Dynamic update: ${event.key} = ${event.newValue}`);
+        settings.update();
+    }
+});
+
+// 🔄 Custom event for same-page localStorage changes
+// (storage event doesn't fire on the same page that made the change)
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    const event = new Event('localStorageChange');
+    event.key = key;
+    event.newValue = value;
+    originalSetItem.apply(this, arguments);
+
+    if (key.startsWith('setting')) {
+        console.log(`🔄 [Settings] Same-page update: ${key} = ${value}`);
+        settings.update();
+    }
+};
+
 
 
 const harvestablesDrawing = new HarvestablesDrawing(settings);
