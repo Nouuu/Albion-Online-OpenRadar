@@ -49,11 +49,40 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 };
 
+                // 📺 Affichage console formaté
+                this.logToConsole(logEntry);
+
                 this.buffer.push(logEntry);
 
                 if (this.buffer.length >= this.maxBufferSize) {
                     this.flush();
                 }
+            }
+
+            logToConsole(entry) {
+                const emoji = {
+                    'DEBUG': '🔍',
+                    'INFO': 'ℹ️',
+                    'WARN': '⚠️',
+                    'ERROR': '❌',
+                    'CRITICAL': '��'
+                }[entry.level] || '📝';
+
+                const color = {
+                    'DEBUG': 'color: #888',
+                    'INFO': 'color: #0af',
+                    'WARN': 'color: #fa0',
+                    'ERROR': 'color: #f00',
+                    'CRITICAL': 'color: #f0f; font-weight: bold'
+                }[entry.level] || 'color: #000';
+
+                const time = new Date(entry.timestamp).toLocaleTimeString('fr-FR');
+                console.log(
+                    `%c${emoji} [${entry.level}] ${entry.category}.${entry.event} @ ${time}`,
+                    color,
+                    entry.data,
+                    entry.context.page ? `(page: ${entry.context.page})` : ''
+                );
             }
 
             debug(category, event, data, context) {
