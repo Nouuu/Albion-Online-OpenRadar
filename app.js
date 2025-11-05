@@ -137,7 +137,7 @@ function StartRadar()
   app.use('/images/Resources', express.static(path.join(appDir, 'images', 'Resources')));
   app.use('/images/Maps', express.static(path.join(appDir, 'images', 'Maps')));
   app.use('/images/Items', express.static(path.join(appDir, 'images', 'Items')));
-  app.use('/images/Flags', express.static(path.join(appDir, 'imageps', 'Flags')));
+  app.use('/images/Flags', express.static(path.join(appDir, 'images', 'Flags')));
   app.use('/sounds', express.static(path.join(appDir, 'sounds')));
   app.use('/config', express.static(path.join(appDir, 'config')));
   app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));

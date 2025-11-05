@@ -110,11 +110,24 @@ class MobsHandler {
                         count: this.livingResourcesMetadata.length
                     });
                 }
+            } else {
+                // ⚠️ WARNING - Fichier non trouvé
+                if (window.logger) {
+                    window.logger.warn('MOB', 'LoadMetadataNotFound', {
+                        status: response.status,
+                        statusText: response.statusText,
+                        url: response.url
+                    });
+                } else {
+                    console.warn(`[MobsHandler] ⚠️ Could not load living-resources-enhanced.json: ${response.status} ${response.statusText}`);
+                }
             }
         } catch (e) {
             // ❌ ERROR (toujours loggé) - Échec critique
             if (window.logger) {
                 window.logger.error('MOB', 'LoadMetadataFailed', e);
+            } else {
+                console.error('[MobsHandler] ❌ Error loading living-resources-enhanced.json:', e);
             }
         }
     }
@@ -739,10 +752,10 @@ class MobsHandler {
      */
     updateMobHealthRegen(parameters) {
         const mobId = parseInt(parameters[0]);
+        const mob = this.mobsList.find(m => m.id === mobId);
 
         // 🐛 DEBUG: Log RegenerationHealthChanged avec analyse HP
         if (this.settings.debugEnemies && window.logger) {
-            const mob = this.mobsList.find(m => m.id === mobId);
             const allParams = {};
             for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
@@ -764,8 +777,10 @@ class MobsHandler {
             });
         }
 
-        // Update normalized health directly
-        mob.health = parameters[2];
+        // Update normalized health directly if mob exists
+        if (mob) {
+            mob.health = parameters[2];
+        }
     }
 
     /**
