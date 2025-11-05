@@ -147,7 +147,7 @@ if (builtPlatforms.includes('win')) {
 
 // Copy all assets next to the exe
 // This approach makes the executable lighter and facilitates updates
-const assetsToCopy = ['views', 'scripts', 'images', 'sounds', 'config'];
+const assetsToCopy = ['views', 'scripts', 'server-scripts', 'images', 'sounds', 'config'];
 
 function copyRecursiveSync(src, dest) {
     if (!fs.existsSync(src)) {
@@ -203,6 +203,7 @@ console.log('  - Executables');
 console.log('  - README files');
 console.log('  - views/');
 console.log('  - scripts/');
+console.log('  - server-scripts/');
 console.log('  - images/ (602 MB - will be optimized)');
 console.log('  - sounds/');
 console.log('  - config/');

@@ -28,7 +28,11 @@
   "pkg": {
     "assets": [
       "node_modules/cap/build/**/*",
-      "node_modules/node-sass/vendor/**/*"
+      "node_modules/node-sass/vendor/**/*",
+      "server-scripts/**/*.json",
+      "server-scripts/**/*.txt",
+      "scripts/**/*.txt",
+      "scripts/**/*.json"
     ],
     "targets": [
       "node18-win-x64",
