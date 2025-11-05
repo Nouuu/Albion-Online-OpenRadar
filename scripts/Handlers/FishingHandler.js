@@ -67,9 +67,12 @@ export class FishingHandler
     {
         if (!this.settings.showFish) return;
 
-        console.log("Fishing END:");
-        console.log(Parameters);
-        console.log();
+        // 🐛 DEBUG: Log fishing end event
+        if (this.settings.debugFishing && window.logger) {
+            window.logger.debug('FISHING', 'FishingEnd', {
+                parameters: Parameters
+            });
+        }
 
         const id = Parameters[0];
 

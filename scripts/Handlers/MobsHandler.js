@@ -104,10 +104,16 @@ class MobsHandler {
                 }
 
                 this.livingResourcesMetadata = allResources;
-                console.log(`[MobsHandler] ✅ Loaded ${this.livingResourcesMetadata.length} living resources metadata`);
+                if (window.logger && this.settings && this.settings.debugEnemies) {
+                    window.logger.info('MOB', 'LoadMetadata', {
+                        count: this.livingResourcesMetadata.length
+                    });
+                }
             }
         } catch (e) {
-            console.warn('[MobsHandler] Could not load living resources metadata:', e);
+            if (window.logger && this.settings && this.settings.debugEnemies) {
+                window.logger.error('MOB', 'LoadMetadataFailed', e);
+            }
         }
     }
 
@@ -147,36 +153,29 @@ class MobsHandler {
     printLoggingGuide() {
         if (!this.settings.logLivingCreatures) return;
 
-        console.log('\n╔════════════════════════════════════════════════════════════════╗');
-        console.log('║         📋 LIVING RESOURCES COLLECTION GUIDE                   ║');
-        console.log('╚════════════════════════════════════════════════════════════════╝');
-        console.log('');
-        console.log('🎯 OBJECTIF: Collecter les TypeIDs des créatures enchantées');
-        console.log('');
-        console.log('📊 FORMAT DES LOGS:');
-        console.log('  - JSON structuré: Pour parsing automatique');
-        console.log('  - Validation HP: ✓ si HP correspond à la créature attendue');
-        console.log('  - État: ALIVE/DEAD pour suivre les kills');
-        console.log('');
-        console.log('🔍 CRÉATURES PAR TIER:');
-
-        if (this.livingResourcesMetadata) {
-            const tiers = [3, 4, 5, 6, 7, 8];
-            tiers.forEach(tier => {
-                const creatures = this.livingResourcesMetadata.filter(m => m.tier === tier && m.faction);
-                if (creatures.length > 0) {
-                    console.log(`\n  T${tier} Hide/Fiber:`);
-                    const uniqueAnimals = [...new Set(creatures.map(c => c.animal))];
-                    uniqueAnimals.slice(0, 3).forEach(animal => {
-                        const example = creatures.find(c => c.animal === animal);
-                        console.log(`    - ${animal} (HP ~${example.hp})`);
-                    });
-                }
+        if (window.logger && this.settings && this.settings.debugEnemies) {
+            window.logger.info('MOB', 'CollectionGuide', {
+                title: 'LIVING RESOURCES COLLECTION GUIDE',
+                objective: 'Collecter les TypeIDs des créatures enchantées',
+                format: 'JSON structuré pour parsing automatique',
+                tierCount: this.livingResourcesMetadata ? this.livingResourcesMetadata.filter(m => m.faction).length : 0
             });
-        }
 
-        console.log('\n═══════════════════════════════════════════════════════════════');
-        console.log('✅ Logging actif - Bonne collecte!\n');
+            if (this.livingResourcesMetadata) {
+                const tiers = [3, 4, 5, 6, 7, 8];
+                tiers.forEach(tier => {
+                    const creatures = this.livingResourcesMetadata.filter(m => m.tier === tier && m.faction);
+                    if (creatures.length > 0) {
+                        const uniqueAnimals = [...new Set(creatures.map(c => c.animal))];
+                        const examples = uniqueAnimals.slice(0, 3).map(animal => {
+                            const example = creatures.find(c => c.animal === animal);
+                            return { animal, hp: example.hp };
+                        });
+                        window.logger.debug('MOB', `CollectionGuide_T${tier}`, { creatures: examples });
+                    }
+                });
+            }
+        }
     }
 
     loadCachedTypeIDs() {
@@ -195,10 +194,17 @@ class MobsHandler {
                     this.staticResourceTypeIDs.set(numericTypeId, info);
                     loadedCount++;
                 }
-                console.log(`[MobsHandler] ✅ Loaded ${loadedCount} cached TypeID mappings${skippedCount > 0 ? ` (skipped ${skippedCount} unstable)` : ''}`);
+                if (window.logger && this.settings && this.settings.debugEnemies) {
+                    window.logger.info('MOB', 'LoadCachedTypeIDs', {
+                        loaded: loadedCount,
+                        skipped: skippedCount
+                    });
+                }
             }
         } catch (e) {
-            console.error('[MobsHandler] Failed to load cached TypeIDs from localStorage:', e);
+            if (window.logger && this.settings && this.settings.debugEnemies) {
+                window.logger.error('MOB', 'LoadCacheFailed', e);
+            }
         }
     }
 
@@ -314,7 +320,9 @@ class MobsHandler {
                 .filter(([typeId]) => typeId !== 65535); // Skip unstable TypeID only
             localStorage.setItem('cachedStaticResourceTypeIDs', JSON.stringify(entries));
         } catch (e) {
-            console.error('[MobsHandler] Failed to save cache:', e);
+            if (window.logger && this.settings && this.settings.debugEnemies) {
+                window.logger.error('MOB', 'SaveCacheFailed', e);
+            }
         }
     }
 
@@ -324,27 +332,33 @@ class MobsHandler {
             localStorage.removeItem('cachedStaticResourceTypeIDs');
             this.staticResourceTypeIDs.clear();
             this._registrationLogState.clear();
-            console.log(`[MobsHandler] ✅ Cleared ${count} TypeID mappings`);
+            if (window.logger && this.settings && this.settings.debugEnemies) {
+                window.logger.info('MOB', 'CacheCleared', { count });
+            }
         } catch (e) {
-            console.error('[MobsHandler] Failed to clear cache:', e);
+            if (window.logger && this.settings && this.settings.debugEnemies) {
+                window.logger.error('MOB', 'ClearCacheFailed', e);
+            }
             throw e;
         }
     }
 
     showCachedTypeIDs() {
-        console.log('═════════════════════════════════════════');
-        console.log('📦 CACHED TYPEIDS');
-        console.log('═════════════════════════════════════════');
+        if (window.logger && this.settings && this.settings.debugEnemies) {
+            const sorted = Array.from(this.staticResourceTypeIDs.entries())
+                .sort((a, b) => a[0] - b[0]);
 
-        const sorted = Array.from(this.staticResourceTypeIDs.entries())
-            .sort((a, b) => a[0] - b[0]);
+            const entries = sorted.map(([typeId, info]) => ({
+                typeId,
+                type: info.type,
+                tier: info.tier
+            }));
 
-        sorted.forEach(([typeId, info]) => {
-            console.log(`TypeID ${typeId} → ${info.type} T${info.tier}`);
-        });
-
-        console.log(`\n📊 Total: ${this.staticResourceTypeIDs.size} TypeIDs`);
-        console.log('═════════════════════════════════════════');
+            window.logger.info('MOB', 'DisplayCachedTypeIDs', {
+                total: this.staticResourceTypeIDs.size,
+                entries
+            });
+        }
     }
 
     normalizeNumber(value, defaultValue = null) {
@@ -364,7 +378,14 @@ class MobsHandler {
         if (knownInfo && knownInfo[2]) {
             // Use mobinfo name (Fiber, Hide, Wood, Ore, Rock)
             resourceType = knownInfo[2];
-            console.log(`[registerStaticResourceTypeID] ✅ Using mobinfo: TypeID ${typeId} = ${resourceType} T${tier} (overriding game typeNumber=${typeNumber})`);
+            if (window.logger && this.settings && this.settings.logLivingResources) {
+                window.logger.debug('MOB', 'UsingMobInfo', {
+                    typeId,
+                    resourceType,
+                    tier,
+                    gameTypeNumber: typeNumber
+                });
+            }
         } else {
             // Fallback: use game's typeNumber
             resourceType = this.getResourceTypeFromNumber(typeNumber);
@@ -375,22 +396,19 @@ class MobsHandler {
         const existing = this.staticResourceTypeIDs.get(typeId);
 
         // 📊 Log EVERY registration for analysis (capture typeNumber from game)
-        if (this.settings && this.settings.logLivingResources) {
+        if (this.settings && this.settings.logLivingResources && window.logger) {
             const isUpdate = !!existing;
             const changed = existing && (existing.type !== resourceType || existing.tier !== tier);
 
-            console.log(JSON.stringify({
-                timestamp: new Date().toISOString(),
-                module: 'MobsHandler',
-                event: isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER',
-                typeId: typeId,
-                typeNumber: typeNumber,
-                resourceType: resourceType,
-                tier: tier,
+            window.logger.debug('MOB', isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER', {
+                typeId,
+                typeNumber,
+                resourceType,
+                tier,
                 existing: existing || null,
-                changed: changed,
+                changed,
                 source: knownInfo ? 'mobinfo' : 'game-typeNumber'
-            }));
+            });
         }
 
         if (existing && existing.type === resourceType && existing.tier === tier) {
@@ -495,7 +513,9 @@ class MobsHandler {
                 this.AddEnemy(mobId, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity);
             }
         } catch (e) {
-            console.error('[MobsHandler] NewMobEvent error:', e);
+            if (window.logger && this.settings && this.settings.debugEnemies) {
+                window.logger.error('MOB', 'NewMobEventError', e);
+            }
         }
     }
 

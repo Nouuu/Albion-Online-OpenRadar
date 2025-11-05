@@ -445,9 +445,10 @@ function onEvent(Parameters)
             break;
 
         case 590:
-            console.log()
-            console.log("Key sync")
-            console.log(Parameters)
+            // Key sync event (debug)
+            if (settings && settings.debugRawPacketsConsole && window.logger) {
+                window.logger.debug('PACKET_RAW', 'KeySync', { Parameters });
+            }
             break;
 
         /*default:
@@ -533,7 +534,9 @@ function render()
             // keep clusters for later to draw info boxes above everything
             __clustersForInfo = clusters;
         } catch (e) {
-            console.error('[Cluster] Failed to compute/draw clusters:', e);
+            if (window.logger) {
+                window.logger.error('CLUSTER', 'ComputeFailed', e);
+            }
         }
     }
 
@@ -557,7 +560,9 @@ function render()
                     drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
                 }
             } catch (e) {
-                console.error('[Cluster] Failed to draw cluster info box:', e);
+                if (window.logger) {
+                    window.logger.error('CLUSTER', 'DrawInfoBoxFailed', e);
+                }
             }
         }
     }

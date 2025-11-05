@@ -188,6 +188,7 @@ export class Settings
         this.debugPlayers = false;
         this.debugChests = false;
         this.debugDungeons = false;
+        this.debugFishing = false;
 
         // 🐛 Debug & Logging settings
         this.logToConsole = true; // Default: enabled

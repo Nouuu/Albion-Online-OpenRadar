@@ -402,6 +402,10 @@
               <input type="checkbox" id="settingDebugDungeons" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
               <span class="text-gray-600 dark:text-gray-300">🏰 Debug Dungeons (verbose)</span>
             </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingDebugFishing" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">🎣 Debug Fishing (verbose)</span>
+            </label>
 
             <div class="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">
               <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Console & Server Output</h4>
@@ -659,6 +663,7 @@
     const settingDebugPlayersCheckbox = document.getElementById("settingDebugPlayers");
     const settingDebugChestsCheckbox = document.getElementById("settingDebugChests");
     const settingDebugDungeonsCheckbox = document.getElementById("settingDebugDungeons");
+    const settingDebugFishingCheckbox = document.getElementById("settingDebugFishing");
 
     // 🆕 Console & Server debug settings
     const settingLogToConsoleCheckbox = document.getElementById("settingLogToConsole");
@@ -756,6 +761,15 @@
       }
     });
 
+    settingDebugFishingCheckbox.addEventListener("change", function (event) {
+      saveToLocalStorage("settingDebugFishing", event.target.checked);
+      if (event.target.checked) {
+        console.log("🎣 Debug Fishing ENABLED");
+      } else {
+        console.log("🎣 Debug Fishing DISABLED");
+      }
+    });
+
     // 📺 Log to Console
     settingLogToConsoleCheckbox.addEventListener("change", function (event) {
       saveToLocalStorage("settingLogToConsole", event.target.checked);
@@ -838,6 +852,10 @@
     settingLogLivingCreaturesCheckbox.checked = getFromLocalStorage("settingLogLivingCreatures") === "true";
     settingLogLivingResourcesCheckbox.checked = getFromLocalStorage("settingLogLivingResources") === "true";
     settingDebugEnemiesCheckbox.checked = getFromLocalStorage("settingDebugEnemies") === "true";
+    settingDebugPlayersCheckbox.checked = getFromLocalStorage("settingDebugPlayers") === "true";
+    settingDebugChestsCheckbox.checked = getFromLocalStorage("settingDebugChests") === "true";
+    settingDebugDungeonsCheckbox.checked = getFromLocalStorage("settingDebugDungeons") === "true";
+    settingDebugFishingCheckbox.checked = getFromLocalStorage("settingDebugFishing") === "true";
 
     // Initialize console & server settings (defaults)
     settingLogToConsoleCheckbox.checked = getFromLocalStorage("settingLogToConsole") === null ? true : getFromLocalStorage("settingLogToConsole") === "true";
