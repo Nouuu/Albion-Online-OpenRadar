@@ -24,7 +24,8 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 
 ### 📝 Documentation Technique
 
-- **[LOGGING.md](./technical/LOGGING.md)** - Système de logging consolidé
+- **[LOGGING.md](./technical/LOGGING.md)** - Système de logging v2.0 (centralisé) ⭐
+- **[DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md)** - Guide complet debug & logging
 - **[SETTINGS.md](./technical/SETTINGS.md)** - Configuration et settings
 - **[ENCHANTMENTS.md](./technical/ENCHANTMENTS.md)** - Système d'enchantements
 
@@ -47,8 +48,9 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 
 - **Installer le projet** → [README principal](../README.md)
 - **Comprendre l'architecture** → [ARCHITECTURE.md](./dev/ARCHITECTURE.md)
-- **Utiliser les outils Python** → [TOOLS_OVERVIEW.md](./tools/TOOLS_OVERVIEW.md) ⭐
-- **Utiliser les outils Python** → [TOOLS_README.md](./tools/TOOLS_README.md)
+- **Débugger et tracer les événements** → [DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md) ⭐
+- **Utiliser les outils Python** → [WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md) ⭐
+- **Guide pour agents IA** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
 - **Configurer un agent IA** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
 - **Débugger le logging** → [LOGGING.md](./technical/LOGGING.md)
 

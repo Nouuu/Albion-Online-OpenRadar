@@ -1,103 +1,321 @@
-# 📊 Système de Logging - ZQRadar
+# 📊 Système de Logging & Debug - ZQRadar
 
 > **Dernière mise à jour:** 2025-11-05  
-> **Statut:** Plan de refactorisation documenté
+> **Statut:** ✅ Implémenté et fonctionnel  
+> **Mainteneur:** Nospy
 
 ---
 
-## 🎯 Objectif
+## 🎯 Vue d'ensemble
 
-Créer un système de logging unifié pour débugger les problèmes de détection, notamment les **living resources T6-T8**qui
-ne sont plus détectées correctement.
+Le système de logging et debug de ZQRadar permet de tracer les événements du jeu en temps réel directement dans la console du navigateur. Il est **centralisé**, **dynamique** et **facile à utiliser**.
+
+### Principes Clés
+
+- ✅ **Centralisation** : Tous les contrôles dans Settings.ejs
+- ✅ **Mise à jour dynamique** : Changements instantanés sans reload
+- ✅ **Persistance** : Settings sauvegardés dans localStorage
+- ✅ **Pas de duplication** : Un seul endroit pour chaque setting
 
 ---
 
 ## 📋 Architecture Actuelle
 
+### Flux de Données
+
 ```
-Albion Online (UDP 5056)
-    ↓
-app.js (capture paquets Photon)
-    ↓ WebSocket (port 5002)
-scripts/Utils/Utils.js (dispatch événements)
-    ↓
-scripts/handlers/*.js (gestion événements)
+┌─────────────────┐
+│  Settings.ejs   │ ← Utilisateur change une checkbox
+│  (Interface)    │
+└────────┬────────┘
+         │ onChange event
+         ▼
+┌─────────────────┐
+│  localStorage   │ ← Sauvegarde automatique
+│   (Storage)     │
+└────────┬────────┘
+         │ Custom setItem override
+         ▼
+┌─────────────────┐
+│   Settings.js   │ ← settings.update() appelé automatiquement
+│   (État)        │
+└────────┬────────┘
+         │ Propriétés mises à jour
+         ▼
+┌─────────────────┐
+│   Handlers      │ ← Vérifient this.settings.logXXX
+│  (Logique)      │
+└─────────────────┘
 ```
 
-**Problèmes actuels :**
+### Composants
 
-- ❌ Logs éparpillés avec `console.log`
-- ❌ Logs perdus au refresh du navigateur
-- ❌ Impossible de tracer un cycle complet de récolte
-- ❌ Pas de format structuré pour analyse
+```
+views/main/settings.ejs         # Interface utilisateur centralisée
+    ↓
+localStorage                     # Stockage persistant
+    ↓
+scripts/Utils/Utils.js          # Override setItem + listener
+    ↓
+scripts/Utils/Settings.js       # État global + update()
+    ↓
+scripts/Handlers/               # MobsHandler, HarvestablesHandler
+    │
+    ├── Vérifient this.settings.logXXX
+    └── Loggent dans console (F12)
+```
 
 ---
 
-## 🏗️ Architecture Proposée
+## 🎛️ Settings Disponibles
 
-### Structure des Dossiers
+### Settings Globaux (Settings.ejs)
 
-```
-C:\Projets\Albion-Online-ZQRadar\
-├── logs/                           # 🆕 Logs persistés
-│   ├── sessions/                   # Logs par session
-│   │   ├── session_2025-11-05_14-30-00.jsonl
-│   │   └── session_2025-11-05_15-45-00.jsonl
-│   ├── errors/                     # Erreurs critiques
-│   │   └── errors_2025-11-05.log
-│   └── debug/                      # Logs de debug détaillés
-│       └── harvestables_2025-11-05.jsonl
-│
-├── scripts/Utils/
-│   ├── Logger.js                   # 🆕 Client-side logger
-│   └── LoggerConfig.js             # 🆕 Configuration
-│
-├── server-scripts/
-│   └── LoggerServer.js             # 🆕 Server-side logger
-│
-└── app.js                          # Intégration du logger serveur
-```
+| Setting | localStorage Key | Propriété Settings | Usage |
+|---------|------------------|-------------------|-------|
+| 📊 Living Creatures | `settingLogLivingCreatures` | `logLivingCreatures` | Log JSON enhanced des mobs vivants |
+| 🔍 Living Resources | `settingLogLivingResources` | `logLivingResources` | Log CSV des ressources récoltées |
+| 🐛 Debug Enemies | `settingDebugEnemies` | `debugEnemies` | Debug verbose des ennemis |
 
-### Format de Log Unifié
+### Settings Visuels (Pages spécialisées)
 
-**Format JSON par ligne (JSONL) :**
+| Page | Setting | localStorage Key | Propriété |
+|------|---------|------------------|-----------|
+| Enemies | Health Bar | `settingEnemiesHealthBar` | `enemiesHealthBar` |
+| Enemies | Show ID | `settingEnemiesID` | `enemiesID` |
+| Resources | Health Bar | `settingLivingResourcesHealthBar` | `livingResourcesHealthBar` |
+| Resources | Show ID | `settingLivingResourcesID` | `livingResourcesID` |
 
-```json
-{
-  "timestamp": "2025-11-05T14:30:45.123Z",
-  "level": "DEBUG",
-  "category": "HARVESTABLE",
-  "event": "NewHarvestableObject",
-  "data": {
-    "id": 12345,
-    "typeId": 167890,
-    "tier": 7,
-    "enchant": 2,
-    "posX": 1234.56,
-    "posY": 7890.12,
-    "charges": 12,
-    "size": 3
-  },
-  "context": {
-    "sessionId": "uuid-here",
-    "mapName": "RandomDungeon001",
-    "playerPos": {
-      "x": 1200,
-      "y": 7800
+---
+
+## 🔧 Format des Logs
+
+### Living Creatures (Enhanced JSON)
+
+```javascript
+[LIVING_JSON] {
+    "timestamp": "2025-11-05T18:30:45.123Z",
+    "typeId": 12345,
+    "entity": {
+        "name": "Rabbit",
+        "tier": 4,
+        "enchant": 1,
+        "type": "Hide"
+    },
+    "state": {
+        "health": 850,
+        "alive": true,
+        "rarity": 112
+    },
+    "validation": {
+        "animal": "Rabbit",
+        "expectedHP": 850,
+        "match": true
     }
-  }
 }
 ```
 
-**Niveaux de log :**
+### Living Resources (CSV)
 
-- `DEBUG` - Détails de debug
-- `INFO` - Informations générales
-- `WARN` - Avertissements
-- `ERROR` - Erreurs
-- `CRITICAL` - Erreurs critiques
+```javascript
+🌱 [HarvestablesHandler] HarvestStart {
+    harvestableId: 67890,
+    timestamp: "2025-11-05T18:30:45.123Z"
+}
 
-**Catégories :**
+🆕 [ItemId Discovery] 12345 = Fiber T5.2
+```
+
+### Debug Enemies (Verbose)
+
+```javascript
+[DEBUG_ENEMY] RAW PARAMS | ID=123 TypeID=456 | 
+    params[2]=255 (health normalized) 
+    params[13]=1500 (maxHP) 
+    params[19]=112 (rarity)
+```
+
+---
+
+## 💻 Utilisation
+
+### Pour l'Utilisateur
+
+1. **Ouvrir Settings** → Cliquer sur l'onglet Settings
+2. **Section "🐛 Debug & Logging"** → Descendre jusqu'à la section
+3. **Cocher les options** → Activer les logs souhaités
+4. **Changements instantanés** → Pas besoin de reload
+5. **Ouvrir console** → F12 pour voir les logs
+6. **Export** → Bouton "Download Debug Logs" pour JSON complet
+
+### Pour le Développeur
+
+#### Ajouter un nouveau setting de debug
+
+**1. Settings.js (constructor + update)**
+```javascript
+// Constructor (~ligne 200)
+this.myNewDebugSetting = false;
+
+// update() method (~ligne 480)
+this.myNewDebugSetting = this.returnLocalBool("settingMyNewDebug");
+```
+
+**2. settings.ejs (checkbox + listener)**
+```html
+<!-- Checkbox -->
+<label class="flex items-center space-x-2">
+  <input type="checkbox" id="settingMyNewDebug" class="h-5 w-5">
+  <span>🆕 My New Debug</span>
+</label>
+
+<!-- Event listener -->
+<script>
+const checkbox = document.getElementById("settingMyNewDebug");
+checkbox.addEventListener("change", (e) => {
+  saveToLocalStorage("settingMyNewDebug", e.target.checked);
+});
+checkbox.checked = getFromLocalStorage("settingMyNewDebug") === "true";
+</script>
+```
+
+**3. Handler (utilisation)**
+```javascript
+someMethod() {
+    if (this.settings && this.settings.myNewDebugSetting) {
+        console.log('🆕 [MyHandler] Debug info:', data);
+    }
+}
+```
+
+---
+
+## 🚀 Mise à Jour Dynamique
+
+### Mécanisme (scripts/Utils/Utils.js)
+
+```javascript
+// Override localStorage.setItem pour détecter changements
+const originalSetItem = localStorage.setItem;
+localStorage.setItem = function(key, value) {
+    originalSetItem.apply(this, arguments);
+    
+    if (key.startsWith('setting')) {
+        console.log(`🔄 [Settings] Update: ${key} = ${value}`);
+        settings.update(); // ← Mise à jour instantanée !
+    }
+};
+```
+
+### Avantages
+
+- ✅ Changements **instantanés** (pas de reload nécessaire)
+- ✅ Fonctionne sur **même page** (storage event ne suffit pas)
+- ✅ Logs de tracking dans console
+- ✅ Cohérence garantie entre interface et handlers
+
+---
+
+## 📚 Documentation Complète
+
+Pour plus de détails, consulter :
+
+- **[DEBUG_LOGGING_GUIDE.md](../../work/DEBUG_LOGGING_GUIDE.md)** - Guide complet avec exemples
+- **[SETTINGS.md](./SETTINGS.md)** - Configuration globale
+- Memory Serena: `debug-logging-final-state.md`
+
+### Fichiers Concernés
+
+- `views/main/settings.ejs` - Interface centralisée
+- `scripts/Utils/Settings.js` - État et logique
+- `scripts/Utils/Utils.js` - Initialisation et listeners
+- `scripts/Handlers/MobsHandler.js` - Utilisation logging mobs
+- `scripts/Handlers/HarvestablesHandler.js` - Utilisation logging resources
+
+---
+
+## 🔧 Troubleshooting
+
+### Les changements ne prennent pas effet
+
+**Solutions:**
+1. Vérifier console (F12) : Le log `🔄 [Settings] Update` apparaît ?
+2. Vérifier localStorage : `localStorage.getItem("settingXXX")` = `"true"` ?
+3. Vérifier que le radar est connecté au jeu
+
+### Logs n'apparaissent pas
+
+**Solutions:**
+1. Vérifier niveau console : Warnings/Logs pas filtrés ?
+2. Vérifier que l'événement se produit réellement dans le jeu
+3. Vérifier que le setting est bien activé (checkbox cochée)
+
+---
+
+## ✅ Best Practices
+
+### ✅ DO
+- Préfixer clés localStorage par `setting`
+- Vérifier `this.settings &&` avant accès
+- Logger avec emojis pour clarté
+- Inclure timestamp dans logs
+- Utiliser formats structurés (JSON, CSV)
+
+### ❌ DON'T
+- Accéder directement à localStorage dans handlers
+- Dupliquer checkboxes entre pages
+- Oublier d'ajouter dans `update()`
+- Logger sans vérifier le setting
+
+---
+
+## 🚀 Prochaines Étapes (Phase 2)
+
+### 1. Créer le Logger Client
+- [ ] Créer `scripts/Utils/Logger.js`
+- [ ] Buffer des logs avant envoi
+- [ ] Connexion WebSocket au serveur de logs
+
+### 2. Créer le Logger Serveur
+- [ ] Créer `server-scripts/LoggerServer.js`
+- [ ] Écriture JSONL sur disque
+- [ ] Rotation des fichiers de logs
+
+### 3. Intégration
+- [ ] Modifier handlers pour utiliser logger.log() au lieu de console.log()
+- [ ] Créer dossier `logs/` avec sous-dossiers
+- [ ] Tests de bout en bout
+
+### 4. Outils d'Analyse
+- [ ] Script Python pour parser JSONL
+- [ ] Dashboard de visualisation
+- [ ] Détection automatique d'anomalies
+
+---
+
+## 📚 Documentation Complète
+
+### Phase 1 (Actuelle)
+- **[DEBUG_LOGGING_GUIDE.md](../../work/DEBUG_LOGGING_GUIDE.md)** - Guide complet du système debug centralisé
+- **[SETTINGS.md](./SETTINGS.md)** - Configuration globale
+- Memory Serena: `debug-logging-final-state.md`
+
+### Fichiers Concernés (Phase 1)
+- `views/main/settings.ejs` - Interface centralisée
+- `scripts/Utils/Settings.js` - État et update()
+- `scripts/Utils/Utils.js` - Override localStorage
+- `scripts/Handlers/MobsHandler.js` - Logs mobs
+- `scripts/Handlers/HarvestablesHandler.js` - Logs resources
+
+### À Créer (Phase 2)
+- `scripts/Utils/Logger.js` - Logger client
+- `server-scripts/LoggerServer.js` - Logger serveur
+- `logs/` - Dossier de logs persistés
+
+---
+
+**Maintenu par:** Nospy  
+**Dernière mise à jour:** 2025-11-05
 
 - `HARVESTABLE` - Ressources récoltables
 - `MOB` - Créatures/ennemis
@@ -529,4 +747,3 @@ Détections par tier:
 - `LOGGING_ACTION_PLAN.md`
 - `LOGGING_ANALYSIS.md`
 - `TODO_LOGGING.md`
-
