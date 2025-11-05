@@ -36,6 +36,25 @@ How does the radar display the correct enchantment when `params[33]` is always 0
 
 ---
 
+## 🔬 Session de Debug (2025-11-03)
+
+**Méthode utilisée pour découvrir le système :**
+
+Un log de debug temporaire a été ajouté dans `MobsHandler.js` :
+
+```javascript
+[DEBUG_PARAMS] TypeID 530 | params[19]=92 params[33]=0 params[8]=undefined params[9]=undefined params[252]=undefined
+```
+
+**Paramètres surveillés :**
+- `params[19]` = rarity (contient l'enchantement encodé) ✅
+- `params[33]` = enchant supposé (toujours 0) ❌
+- `params[8]`, `params[9]`, `params[252]` = autres candidats testés
+
+**Résultat :** L'enchantement est calculé à partir de `rarity` (params[19]), pas un champ séparé.
+
+---
+
 ## ✅ Conclusion
 
 ### What was already correct

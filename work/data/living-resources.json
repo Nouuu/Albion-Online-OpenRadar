@@ -1,0 +1,2519 @@
+{
+  "animals": [
+    {
+      "uniqueName": "T4_MOB_TEMP_NEUTRAL_DIREBEAR_BOSS",
+      "prefab": "MOB_TRACKING_DIREBEAR_BOSS_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 21893,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T5_MOB_TEMP_MORGANA_WEREWOLF_BOSS",
+      "prefab": "MOB_TRACKING_WEREWOLF_BOSS_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 16254,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T4_MOB_TEMP_NEUTRAL_DIREBEAR_VETERAN_BOSS",
+      "prefab": "MOB_TRACKING_DIREBEAR_BOSS_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 91220,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T5_MOB_TEMP_MORGANA_WEREWOLF_VETERAN_BOSS",
+      "prefab": "MOB_TRACKING_WEREWOLF_BOSS_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 67727,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T4_MOB_TR_NEUTRAL_DIREBEAR_BOSS",
+      "prefab": "MOB_TRACKING_DIREBEAR_BOSS_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 21893,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T5_MOB_TR_MORGANA_WEREWOLF_BOSS",
+      "prefab": "MOB_TRACKING_WEREWOLF_BOSS_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 16254,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T6_MOB_TR_MORGANA_WEREWOLF_BOSS_PUDDLE_SUMMON",
+      "prefab": "MOB_INVISIBLE",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1000,
+      "faction": "SAVALON"
+    },
+    {
+      "uniqueName": "T4_MOB_TR_NEUTRAL_DIREBEAR_VETERAN_BOSS",
+      "prefab": "MOB_TRACKING_DIREBEAR_BOSS_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 91217,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T5_MOB_TR_MORGANA_WEREWOLF_VETERAN_BOSS",
+      "prefab": "MOB_TRACKING_WEREWOLF_BOSS_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 67724,
+      "faction": "TRACKING"
+    },
+    {
+      "uniqueName": "T7_MOB_TR_MORGANA_WEREWOLF_VETERAN_BOSS_PUDDLE_SUMMON",
+      "prefab": "MOB_INVISIBLE",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1000,
+      "faction": "SAVALON"
+    },
+    {
+      "uniqueName": "T1_MOB_VANITY_SUMMON_RABBIT",
+      "prefab": "MOB_VANITY_RABBIT_01",
+      "tier": 1,
+      "enchant": 0,
+      "animal": "Rabbit",
+      "type": "hide",
+      "hp": 20,
+      "faction": "RABBIT"
+    },
+    {
+      "uniqueName": "T1_MOB_VANITY_SUMMON_SNOWRABBIT",
+      "prefab": "MOB_VANITY_SNOWRABBIT_01",
+      "tier": 1,
+      "enchant": 0,
+      "animal": "Rabbit",
+      "type": "hide",
+      "hp": 20,
+      "faction": "RABBIT"
+    },
+    {
+      "uniqueName": "T2_MOB_HIDE_MISTS_FOX",
+      "prefab": "MOB_HIDE_FOX_02",
+      "tier": 2,
+      "enchant": 0,
+      "animal": "Fox",
+      "type": "hide",
+      "hp": 515,
+      "faction": "FOX"
+    },
+    {
+      "uniqueName": "T3_MOB_HIDE_MISTS_DEER",
+      "prefab": "MOB_HIDE_DEER_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Deer",
+      "type": "hide",
+      "hp": 685,
+      "faction": "GIANTSTAG"
+    },
+    {
+      "uniqueName": "T7_MOB_HIDE_MISTS_DIREBEAR",
+      "prefab": "MOB_HIDE_DIREBEAR_03",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 2287,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "T7_MOB_TREASURE_MISTS_DIREBEAR",
+      "prefab": "MOB_HIDE_DIREBEAR_03",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 2287,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "MOB_RABBIT",
+      "prefab": "MOB_HIDE_RABBIT_01",
+      "tier": 1,
+      "enchant": 0,
+      "animal": "Rabbit",
+      "type": "hide",
+      "hp": 20,
+      "faction": "RABBIT"
+    },
+    {
+      "uniqueName": "MOB_FOX",
+      "prefab": "MOB_HIDE_FOX_01",
+      "tier": 2,
+      "enchant": 0,
+      "animal": "Fox",
+      "type": "hide",
+      "hp": 515,
+      "faction": "FOX"
+    },
+    {
+      "uniqueName": "T2_MOB_HIDE_FOREST_FOX_TUTORIAL",
+      "prefab": "MOB_HIDE_FOX_01",
+      "tier": 2,
+      "enchant": 0,
+      "animal": "Fox",
+      "type": "hide",
+      "hp": 515,
+      "faction": "FOX"
+    },
+    {
+      "uniqueName": "MOB_WOLF",
+      "prefab": "MOB_HIDE_WOLF_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 685,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "MOB_DYNAMIC_WOLF",
+      "prefab": "MOB_HIDE_WOLF_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 685,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "MOB_BOAR",
+      "prefab": "MOB_HIDE_BOAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 1323,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "MOB_DYNAMIC_BOAR",
+      "prefab": "MOB_HIDE_BOAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 1323,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "MOB_BEAR",
+      "prefab": "MOB_HIDE_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1641,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "MOB_DYNAMIC_BEAR",
+      "prefab": "MOB_HIDE_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1641,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "MOB_DIREWOLF",
+      "prefab": "MOB_HIDE_DIREWOLF_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "MOB_DYNAMIC_DIREWOLF",
+      "prefab": "MOB_HIDE_DIREWOLF_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "T7_MOB_HIDE_FOREST_DIREBOAR_SMALL",
+      "prefab": "MOB_HIDE_DIREBOAR_02",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 1052,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "T7_MOB_DYNAMIC_HIDE_FOREST_DIREBOAR_SMALL",
+      "prefab": "MOB_HIDE_DIREBOAR_02",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 1052,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "MOB_DIREBOAR",
+      "prefab": "MOB_HIDE_DIREBOAR_01",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 2104,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "T8_MOB_HIDE_FOREST_DIREBEAR_SMALL",
+      "prefab": "MOB_HIDE_DIREBEAR_02",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1370,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "T8_MOB_DYNAMIC_HIDE_FOREST_DIREBEAR_SMALL",
+      "prefab": "MOB_HIDE_DIREBEAR_02",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1370,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "MOB_DIREBEAR",
+      "prefab": "MOB_HIDE_DIREBEAR_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 2740,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "T4_MOB_TREASURE_BOAR",
+      "prefab": "MOB_HIDE_BOAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 1323,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "T5_MOB_TREASURE_BEAR",
+      "prefab": "MOB_HIDE_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1641,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "T6_MOB_TREASURE_DIREWOLF",
+      "prefab": "MOB_HIDE_DIREWOLF_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "T7_MOB_TREASURE_DIREBOAR",
+      "prefab": "MOB_HIDE_DIREBOAR_01",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 2104,
+      "faction": "BOAR"
+    },
+    {
+      "uniqueName": "T8_MOB_TREASURE_DIREBEAR",
+      "prefab": "MOB_HIDE_DIREBEAR_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 2740,
+      "faction": "BEAR"
+    },
+    {
+      "uniqueName": "T3_MOB_HIDE_STEPPE_MOABIRD",
+      "prefab": "MOB_HIDE_MOABIRD_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Moabird",
+      "type": "hide",
+      "hp": 856,
+      "faction": "MOA"
+    },
+    {
+      "uniqueName": "T3_MOB_DYNAMIC_HIDE_STEPPE_MOABIRD",
+      "prefab": "MOB_HIDE_MOABIRD_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Moabird",
+      "type": "hide",
+      "hp": 856,
+      "faction": "MOA"
+    },
+    {
+      "uniqueName": "T5_MOB_HIDE_STEPPE_TERRORBIRD",
+      "prefab": "MOB_HIDE_TERRORBIRD_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Terrorbird",
+      "type": "hide",
+      "hp": 1367,
+      "faction": "TERRORBIRD"
+    },
+    {
+      "uniqueName": "T5_MOB_DYNAMIC_HIDE_STEPPE_TERRORBIRD",
+      "prefab": "MOB_HIDE_TERRORBIRD_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Terrorbird",
+      "type": "hide",
+      "hp": 1367,
+      "faction": "TERRORBIRD"
+    },
+    {
+      "uniqueName": "T6_MOB_HIDE_STEPPE_DESERTWOLF",
+      "prefab": "MOB_HIDE_DESERTWOLF_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "T6_MOB_DYNAMIC_HIDE_STEPPE_DESERTWOLF",
+      "prefab": "MOB_HIDE_DESERTWOLF_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "T8_MOB_HIDE_STEPPE_MAMMOTH",
+      "prefab": "MOB_HIDE_MAMMOTH_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Mammoth",
+      "type": "hide",
+      "hp": 1425,
+      "faction": "MAMMOTH"
+    },
+    {
+      "uniqueName": "T8_MOB_DYNAMIC_HIDE_STEPPE_MAMMOTH",
+      "prefab": "MOB_HIDE_MAMMOTH_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Mammoth",
+      "type": "hide",
+      "hp": 1425,
+      "faction": "MAMMOTH"
+    },
+    {
+      "uniqueName": "T8_MOB_HIDE_STEPPE_ANCIENTMAMMOTH",
+      "prefab": "MOB_HIDE_ANCIENTMAMMOTH_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Mammoth",
+      "type": "hide",
+      "hp": 2850,
+      "faction": "MAMMOTH"
+    },
+    {
+      "uniqueName": "T5_MOB_TREASURE_TERRORBIRD",
+      "prefab": "MOB_HIDE_TERRORBIRD_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Terrorbird",
+      "type": "hide",
+      "hp": 1367,
+      "faction": "TERRORBIRD"
+    },
+    {
+      "uniqueName": "T6_MOB_TREASURE_DESERTWOLF",
+      "prefab": "MOB_HIDE_DESERTWOLF_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "T8_MOB_TREASURE_ANCIENTMAMMOTH",
+      "prefab": "MOB_HIDE_ANCIENTMAMMOTH_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Mammoth",
+      "type": "hide",
+      "hp": 2850,
+      "faction": "MAMMOTH"
+    },
+    {
+      "uniqueName": "T1_MOB_HIDE_MOUNTAIN_RABBIT",
+      "prefab": "MOB_HIDE_SNOWRABBIT_01",
+      "tier": 1,
+      "enchant": 0,
+      "animal": "Rabbit",
+      "type": "hide",
+      "hp": 20,
+      "faction": "RABBIT"
+    },
+    {
+      "uniqueName": "T3_MOB_CRITTER_HIDE_COUGAR",
+      "prefab": "MOB_CRITTER_HIDE_COUGAR_T3",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 685,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T4_MOB_CRITTER_HIDE_COUGAR",
+      "prefab": "MOB_CRITTER_HIDE_COUGAR_T4",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 962,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T5_MOB_CRITTER_HIDE_COUGAR",
+      "prefab": "MOB_CRITTER_HIDE_COUGAR_T5",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1094,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T6_MOB_CRITTER_HIDE_COUGAR",
+      "prefab": "MOB_CRITTER_HIDE_COUGAR_T6",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1251,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T7_MOB_CRITTER_HIDE_COUGAR",
+      "prefab": "MOB_CRITTER_HIDE_COUGAR_T7",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1464,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T8_MOB_CRITTER_HIDE_COUGAR",
+      "prefab": "MOB_CRITTER_HIDE_COUGAR_T8",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1754,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T4_MOB_CRITTER_HIDE_MISTCOUGAR",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 962,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T5_MOB_CRITTER_HIDE_MISTCOUGAR",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_02",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1094,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T6_MOB_CRITTER_HIDE_MISTCOUGAR",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_03",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1180,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T7_MOB_CRITTER_HIDE_MISTCOUGAR",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_04",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1464,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T8_MOB_CRITTER_HIDE_MISTCOUGAR",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_05",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 1754,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T4_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 3176,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T5_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_02",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 3406,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T6_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_03",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 3674,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T7_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_04",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 4056,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T8_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_05",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 4584,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T4_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 6448,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T5_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_02",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 7329,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T6_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_03",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 7906,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T7_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_04",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 9808,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T8_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE",
+      "prefab": "MOB_CRITTER_HIDE_MISTCOUGAR_05",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Cougar",
+      "type": "hide",
+      "hp": 11750,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T6_MOB_GUARDIAN_STEPPE_MAMMOTH",
+      "prefab": "MOB_GUARDIAN_HIDE_MAMMOTH_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Mammoth",
+      "type": "hide",
+      "hp": 313695,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T6_MOB_MINIGUARDIAN_STEPPE_MAMMOTH",
+      "prefab": "MOB_GUARDIAN_HIDE_MAMMOTH_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Mammoth",
+      "type": "hide",
+      "hp": 63758,
+      "faction": "CRITTER"
+    },
+    {
+      "uniqueName": "T5_MOB_KEEPER_BEAR_VETERAN_TRASH",
+      "prefab": "MOB_KEEPER_BEAR_02",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 3323,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T5_MOB_KEEPER_BEAR_VETERAN",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 6830,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T5_MOB_KEEPER_BEAR_ELITE",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 23221,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T8_MOB_KEEPER_BEAR_ELITE",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 31256,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T5_MOB_CITY_FOREST_BOSS_DIREBOAR",
+      "prefab": "MOB_HIDE_DIREBOAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 2682,
+      "faction": "CITY_FOREST"
+    },
+    {
+      "uniqueName": "T6_MOB_CITY_FOREST_BOSS_DIREBOAR",
+      "prefab": "MOB_HIDE_DIREBOAR_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Boar",
+      "type": "hide",
+      "hp": 2893,
+      "faction": "CITY_FOREST"
+    },
+    {
+      "uniqueName": "SUMMON_FOX",
+      "prefab": "MOB_VANITY_FOX_01",
+      "tier": 2,
+      "enchant": 0,
+      "animal": "Fox",
+      "type": "hide",
+      "hp": 515,
+      "faction": "FOX"
+    },
+    {
+      "uniqueName": "T4_MOB_RD_KEEPER_BEAR",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1218,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T5_MOB_RD_KEEPER_BEAR",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1385,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T6_MOB_RD_KEEPER_BEAR",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1493,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T7_MOB_RD_KEEPER_BEAR",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 1853,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T8_MOB_RD_KEEPER_BEAR",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 2220,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T4_MOB_RD_KEEPER_BEAR_VETERAN",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 4,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 6820,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T5_MOB_RD_KEEPER_BEAR_VETERAN",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 5,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 7753,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T6_MOB_RD_KEEPER_BEAR_VETERAN",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 6,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 8363,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T7_MOB_RD_KEEPER_BEAR_VETERAN",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 7,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 10376,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "T8_MOB_RD_KEEPER_BEAR_VETERAN",
+      "prefab": "MOB_KEEPER_BEAR_01",
+      "tier": 8,
+      "enchant": 0,
+      "animal": "Bear",
+      "type": "hide",
+      "hp": 12430,
+      "faction": "KEEPER"
+    },
+    {
+      "uniqueName": "MOB_TESTWOLF",
+      "prefab": "MOB_HIDE_WOLF_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 100000,
+      "faction": "WOLF"
+    },
+    {
+      "uniqueName": "MOB_BUGWOLF",
+      "prefab": "MOB_HIDE_WOLF_01",
+      "tier": 3,
+      "enchant": 0,
+      "animal": "Wolf",
+      "type": "hide",
+      "hp": 10000,
+      "faction": "WOLF"
+    }
+  ],
+  "guardians": {
+    "fiber": [
+      {
+        "uniqueName": "T3_MOB_CRITTER_FIBER",
+        "prefab": "MOB_CRITTER_FIBER_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER",
+        "prefab": "MOB_CRITTER_FIBER_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER",
+        "prefab": "MOB_CRITTER_FIBER_03",
+        "tier": 7,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_FIBER_SWAMP_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_GREEN_T3",
+        "tier": 3,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_FIBER_SWAMP_RED",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_RED_T3",
+        "tier": 3,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_SWAMP_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_GREEN_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_SWAMP_RED",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_RED_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_SWAMP_RED",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_RED_T5",
+        "tier": 5,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_SWAMP_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_DEAD_T5",
+        "tier": 5,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_SWAMP_RED",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_RED_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1564,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_SWAMP_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_DEAD_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1564,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_SWAMP_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_DEAD_T7",
+        "tier": 7,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_SWAMP_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_SWAMP_DEAD_T8",
+        "tier": 8,
+        "enchant": 0,
+        "type": "fiber",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_ROADS",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_ROADS",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_ROADS",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_ROADS",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_ROADS",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 3970,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 4257,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 4592,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 5070,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 5730,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 8059,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 9162,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 9883,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 12260,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_FIBER_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "fiber",
+        "hp": 14688,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_FIBER_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_GREEN_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_GREEN_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_GREEN_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_GREEN_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_GREEN_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_GREEN_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_FIBER_MISTS_RED",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_RED_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_MISTS_RED",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_RED_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_MISTS_RED",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_RED_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_MISTS_RED",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_RED_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_MISTS_RED",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_RED_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_MISTS_RED",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_RED_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_FIBER_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_DEAD_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_FIBER_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_DEAD_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_FIBER_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_DEAD_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_FIBER_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_DEAD_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_FIBER_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_DEAD_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_FIBER_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_FIBER_MISTS_DEAD_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "fiber",
+        "hp": 2192,
+        "faction": "CRITTER"
+      }
+    ],
+    "wood": [
+      {
+        "uniqueName": "T3_MOB_CRITTER_WOOD_FOREST_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_GREEN_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1028,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_WOOD_FOREST_RED",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_RED_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1028,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_FOREST_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_GREEN_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_FOREST_RED",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_RED_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_FOREST_RED",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_RED_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1641,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_FOREST_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_DEAD_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1641,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_FOREST_RED",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_RED_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1876,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_FOREST_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_DEAD_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 1876,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_FOREST_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_DEAD_03",
+        "tier": 7,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 2196,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_FOREST_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_FOREST_DEAD_T8",
+        "tier": 8,
+        "enchant": 0,
+        "type": "wood",
+        "hp": 2631,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_ROADS",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_ROADS",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 1641,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_ROADS",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 1770,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_ROADS",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 2196,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_ROADS",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 2631,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 4764,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 5108,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 5510,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 6084,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 6876,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 9671,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 10994,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 11859,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 14713,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_WOOD_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "wood",
+        "hp": 17625,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_WOOD_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_GREEN_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_GREEN_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_GREEN_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1641,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_GREEN_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1770,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_GREEN_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 2196,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_GREEN_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 2631,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_WOOD_MISTS_RED",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_RED_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_MISTS_RED",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_RED_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_MISTS_RED",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_RED_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1641,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_MISTS_RED",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_RED_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1770,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_MISTS_RED",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_RED_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 2196,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_MISTS_RED",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_RED_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 2631,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_WOOD_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_DEAD_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_WOOD_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_DEAD_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1443,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_WOOD_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_DEAD_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1641,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_WOOD_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_DEAD_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 1770,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_WOOD_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_DEAD_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 2196,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_WOOD_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_WOOD_MISTS_DEAD_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "wood",
+        "hp": 2631,
+        "faction": "CRITTER"
+      }
+    ],
+    "ore": [
+      {
+        "uniqueName": "T3_MOB_CRITTER_ORE_MOUNTAIN_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_GREEN_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ORE_MOUNTAIN_RED",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_RED_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_MOUNTAIN_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_GREEN_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_MOUNTAIN_RED",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_RED_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_MOUNTAIN_RED",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_RED_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_MOUNTAIN_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_DEAD_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_MOUNTAIN_RED",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_RED_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1564,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_MOUNTAIN_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_DEAD_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1564,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_MOUNTAIN_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_DEAD_03",
+        "tier": 7,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_MOUNTAIN_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MOUNTAIN_DEAD_T8",
+        "tier": 8,
+        "enchant": 0,
+        "type": "ore",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_ROADS",
+        "prefab": "MOB_CRITTER_ORE_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_ROADS",
+        "prefab": "MOB_CRITTER_ORE_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_ROADS",
+        "prefab": "MOB_CRITTER_ORE_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_ROADS",
+        "prefab": "MOB_CRITTER_ORE_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_ROADS",
+        "prefab": "MOB_CRITTER_ORE_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ORE_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 3970,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ORE_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 4257,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ORE_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 4592,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ORE_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 5070,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ORE_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 5730,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ORE_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 8059,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ORE_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 9162,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ORE_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 9883,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ORE_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 12260,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ORE_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "ore",
+        "hp": 14688,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ORE_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MISTS_GREEN_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MISTS_GREEN_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MISTS_GREEN_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MISTS_GREEN_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MISTS_GREEN_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ORE_MISTS_GREEN_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ORE_MISTS_RED",
+        "prefab": "MOB_CRITTER_ORE_MISTS_RED_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_MISTS_RED",
+        "prefab": "MOB_CRITTER_ORE_MISTS_RED_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_MISTS_RED",
+        "prefab": "MOB_CRITTER_ORE_MISTS_RED_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_MISTS_RED",
+        "prefab": "MOB_CRITTER_ORE_MISTS_RED_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_MISTS_RED",
+        "prefab": "MOB_CRITTER_ORE_MISTS_RED_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_MISTS_RED",
+        "prefab": "MOB_CRITTER_ORE_MISTS_RED_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ORE_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MISTS_DEAD_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ORE_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MISTS_DEAD_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ORE_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MISTS_DEAD_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ORE_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MISTS_DEAD_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ORE_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MISTS_DEAD_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ORE_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ORE_MISTS_DEAD_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "ore",
+        "hp": 2192,
+        "faction": "CRITTER"
+      }
+    ],
+    "rock": [
+      {
+        "uniqueName": "T3_MOB_CRITTER_ROCK_HIGHLAND_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_GREEN_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ROCK_HIGHLAND_RED",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_RED_01",
+        "tier": 3,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 856,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_HIGHLAND_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_GREEN_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_HIGHLAND_RED",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_RED_T4",
+        "tier": 4,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_HIGHLAND_RED",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_RED_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_HIGHLAND_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_DEAD_02",
+        "tier": 5,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_HIGHLAND_RED",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_RED_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1564,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_HIGHLAND_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_DEAD_T6",
+        "tier": 6,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1564,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_HIGHLAND_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_DEAD_03",
+        "tier": 7,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_HIGHLAND_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_HIGHLAND_DEAD_T8",
+        "tier": 8,
+        "enchant": 0,
+        "type": "rock",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_ROADS",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_ROADS",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_ROADS",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_ROADS",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_ROADS",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 3970,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 4257,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 4592,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 5070,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_ROADS_VETERAN",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 5730,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_01",
+        "tier": 4,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 8059,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_02",
+        "tier": 5,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 9162,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_03",
+        "tier": 6,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 9883,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_04",
+        "tier": 7,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 12260,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_ROADS_ELITE",
+        "prefab": "MOB_CRITTER_ROCK_ROADS_05",
+        "tier": 8,
+        "enchant": 1,
+        "type": "rock",
+        "hp": 14688,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ROCK_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_GREEN_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_GREEN_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_GREEN_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_GREEN_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_GREEN_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_MISTS_GREEN",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_GREEN_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ROCK_MISTS_RED",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_RED_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_MISTS_RED",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_RED_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_MISTS_RED",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_RED_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_MISTS_RED",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_RED_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_MISTS_RED",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_RED_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_MISTS_RED",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_RED_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 2192,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T3_MOB_CRITTER_ROCK_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_DEAD_T3",
+        "tier": 3,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T4_MOB_CRITTER_ROCK_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_DEAD_T4",
+        "tier": 4,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1203,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T5_MOB_CRITTER_ROCK_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_DEAD_T5",
+        "tier": 5,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1367,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T6_MOB_CRITTER_ROCK_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_DEAD_T6",
+        "tier": 6,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1475,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T7_MOB_CRITTER_ROCK_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_DEAD_T7",
+        "tier": 7,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 1830,
+        "faction": "CRITTER"
+      },
+      {
+        "uniqueName": "T8_MOB_CRITTER_ROCK_MISTS_DEAD",
+        "prefab": "MOB_CRITTER_ROCK_MISTS_DEAD_T8",
+        "tier": 8,
+        "enchant": 2,
+        "type": "rock",
+        "hp": 2192,
+        "faction": "CRITTER"
+      }
+    ]
+  }
+}

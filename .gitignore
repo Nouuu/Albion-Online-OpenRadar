@@ -14,7 +14,17 @@ LOGS.json
 diff_*.txt
 TYPEIDS_SUSPECTS.json
 
-# Temporary documentation files (use DEV_NOTES.md and TODO.md only)
+# =============================================================================
+# DOCUMENTATION TEMPORAIRE (À NE JAMAIS CRÉER)
+# =============================================================================
+# ⚠️ Règle: Toute documentation temporaire doit utiliser les outils MCP:
+#   - Notes temporaires → mcp_serena_write_memory() ou aim_create_entities()
+#   - Documentation permanente → structure /docs (voir docs/README.md)
+#   - TODOs → docs/project/TODO.md
+#   - Bugs → GitHub Issues
+# =============================================================================
+
+# Fichiers MD temporaires interdits
 WORKING_*.md
 *_FIX.md
 *_ANALYSIS.md
@@ -22,21 +32,37 @@ WORKING_*.md
 *_SESSION.md
 *_FINAL.md
 *_TYPEIDS.md
-tools/
-.claude
+*_NOTES.md
+*_TODO.md
+MIGRATION_DOCS.md
 
-# Temporary Python scripts (tools/)
-tools/*.py
-tools/extract_*.py
-tools/scrape_*.py
-tools/fetch_*.py
-tools/analyze_*.py
-tools/debug_*.py
-tools/generate_*.py
+# Anciens fichiers de logging (consolidés dans docs/technical/LOGGING.md)
+LOGGING_GUIDE.md
+LOGGING_ANALYSIS.md
+LOGGING_ACTION_PLAN.md
+LOGGING_REFACTORING_PLAN.md
+TODO_LOGGING.md
 
-# Large downloaded JSON files (tools/)
-tools/*.json
-!tools/TYPEIDS_STATUS.json
+# Fichiers de diagnostic temporaires
+diff_*.txt
+TYPEIDS_SUSPECTS.json
+
+# =============================================================================
+# DOSSIER WORK (inclus dans git)
+# =============================================================================
+# Le dossier work/ contient des scripts Python utilitaires et données de dev
+# SAUF ao-bin-dumps-master/ qui est trop volumineux (dumps officiels Albion)
+# =============================================================================
+
+# Ignorer seulement ao-bin-dumps-master (dumps officiels trop volumineux)
+work/data/ao-bin-dumps-master/
+
+# =============================================================================
+# MEMORIES ET CONFIGURATION SERENA
+# =============================================================================
+# Serena MCP stocke ses memories ici - ne pas commit
+.serena/
+.claude/
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -189,3 +215,8 @@ ip.txt
 ZIP PACKAGE/
 
 HELPER PACKAGE/
+/.serena/memories/project_summary.md
+/.serena/memories/style_and_conventions.md
+/.serena/memories/suggested_commands.md
+/.serena/.gitignore
+/.serena/project.yml
