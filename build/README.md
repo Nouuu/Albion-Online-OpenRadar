@@ -1,27 +1,8 @@
 # build/
 
-Scripts et outils pour le build et le packaging de ZQRadar.
+Scripts et outils Node.js pour le build et le packaging de ZQRadar.
 
-## Scripts de Build
-
-### `build.bat`
-Script batch Windows pour build et release.
-
-```bash
-build.bat build    # Build Windows exe
-build.bat release  # Build + create release ZIP
-```
-
----
-
-### `Makefile`
-Makefile pour environnements Unix (WSL, Linux, macOS).
-
-```bash
-make build    # Build ZQRadar.exe
-make release  # Build + create release ZIP
-make clean    # Nettoyer dist/
-```
+**Note:** Les scripts `build.bat` et `Makefile` sont à la **racine du projet** pour faciliter l'accès.
 
 ---
 
@@ -62,11 +43,15 @@ Crée une release avec archives ZIP.
 
 ## 📝 Notes
 
+**Les scripts de build principaux sont à la racine :**
+- `../build.bat` - Script Windows
+- `../Makefile` - Script Unix/Linux/macOS
+
 **Pour builder :**
 ```bash
 npm run build:win     # Windows exe
 npm run build:all     # Toutes plateformes
 ```
 
-**Les fichiers de build ont été déplacés ici pour garder la racine propre.**
+**Ce dossier contient les scripts Node.js** utilisés pendant le build.
 

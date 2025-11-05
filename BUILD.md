@@ -11,32 +11,54 @@ Guide to build ZQRadar as Windows executable (.exe).
 
 ## Quick Start
 
-### With Makefile (recommended if you have make)
+### ✅ Méthode Recommandée (npm scripts)
 
+```bash
+npm install           # Install dependencies
+npm run check         # Check system
+npm run build:win     # Build Windows exe
+npm run release       # Build + create release ZIP
+```
+
+**Avantages:** Fonctionne partout, pas besoin de Make ou scripts batch.
+
+### Méthode Alternative (Scripts Directs)
+
+**Windows (CMD/PowerShell) :**
+```bash
+build-helper.bat install   # Install dependencies
+build-helper.bat check     # Check system
+build-helper.bat build     # Build ZQRadar.exe
+build-helper.bat release   # Build + create release ZIP
+```
+
+**Unix/Linux/macOS (Makefile) :**
 ```bash
 make install      # Install dependencies
 make check        # Check system
 make build        # Build ZQRadar.exe
 make release      # Build + create release ZIP
-```
+## Available Commands
 
-### Without Make (Windows CMD/PowerShell)
+### npm scripts (Recommandé - Fonctionne partout)
 
-```bash
-build.bat install   # Install dependencies
-build.bat check     # Check system
-build.bat build     # Build ZQRadar.exe
-build.bat release   # Build + create release ZIP
-```
+| Command                | Description                                    |
+|------------------------|------------------------------------------------|
+| `npm install`          | Install all dependencies                       |
+| `npm run check`        | Check system requirements                      |
+| `npm start`            | Run ZQRadar (production mode)                  |
+| `npm run dev`          | Run with auto-reload (nodemon)                 |
+| `npm run build:win`    | Build Windows executable                       |
+| `npm run build:linux`  | Build Linux executable                         |
+| `npm run build:macos`  | Build macOS executable                         |
+| `npm run build:all`    | Build all platforms                            |
+| `npm run release`      | Build Windows + create release ZIP             |
+| `npm run clean`        | Clean dist folder                              |
 
-### With npm directly
+### Makefile (Unix/Linux/macOS)
 
-```bash
-npm install
-npm run check
-npm run build:win
-npm run release
-```
+**Note:** Les scripts `build.bat` et `Makefile` sont dans le dossier `build/`.  
+Le wrapper `build-helper.bat` les appelle depuis la racine.
 
 ## Makefile Commands
 

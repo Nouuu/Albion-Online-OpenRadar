@@ -78,20 +78,22 @@ npm run dev
 ### Building Windows Executable
 
 ```bash
-# With Makefile (WSL/Git Bash)
-cd build
-make build          # Build ZQRadar.exe
-make release        # Build + create release ZIP
+# RECOMMANDÉ - Utiliser npm scripts (multiplateforme)
+npm run build:win     # Build Windows exe
+npm run build:all     # Toutes plateformes
+npm run release       # Build + create release ZIP
 
-# Without Make (Windows CMD)
-cd build
-build.bat build
-build.bat release
+# ALTERNATIF - Scripts directs
+# Windows (CMD/PowerShell)
+build.bat build       # Build Windows exe
+build.bat release     # Build + release
 
-# With npm (from root)
-npm run build:win
-npm run release
+# Unix/Linux/macOS (Makefile)
+make build            # Build Windows exe
+make release          # Build + release
 ```
+
+See [BUILD.md](BUILD.md) for detailed build instructions and all available commands.
 
 See [BUILD.md](BUILD.md) for detailed build instructions and all available commands
 8. You should see this:
