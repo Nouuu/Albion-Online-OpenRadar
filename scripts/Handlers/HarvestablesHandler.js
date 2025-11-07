@@ -385,48 +385,55 @@ class HarvestablesHandler
             }
         }
 
-        // 🐛 DEBUG: Log Hide T4+ enchanted resources
+        // 🐛 DEBUG: Log ALL harvestable detections (living + static)
         const stringType = this.GetStringType(type);
-        window.logger?.debug(this.CATEGORIES.HARVEST_HIDE_T4, this.EVENTS.Detection, {
+
+        // 🔍 Déterminer si living ou static resource
+        const isLiving = mobileTypeId === 65535;
+
+        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Detection, {
             id,
             mobileTypeId,
             type,
             tier,
             enchant: charges,
             size,
-            stringType
+            stringType,
+            isLiving
         });
 
+        // 🎯 Utiliser les settings appropriés selon le type de ressource (living vs static)
         switch (stringType)
         {
-            case HarvestableType.Fiber:
-                if (!this.settings.harvestingStaticFiber[`e${charges}`][tier-1]) return;
+            case HarvestableType.Fiber: {
+                const settingsKey = isLiving ? 'harvestingLivingFiber' : 'harvestingStaticFiber';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Hide:
-                // 🐛 DEBUG: Log settings check for Hide T4+
-                window.logger?.debug(this.CATEGORIES.HARVEST_HIDE_T4, this.EVENTS.SettingsCheck, {
-                    tier,
-                    charges,
-                    settingKey: `e${charges}`,
-                    settingIndex: tier - 1,
-                    settingValue: this.settings.harvestingStaticHide[`e${charges}`] ? this.settings.harvestingStaticHide[`e${charges}`][tier - 1] : undefined,
-                    passed: !!this.settings.harvestingStaticHide[`e${charges}`]?.[tier - 1]
-                });
-                if (!this.settings.harvestingStaticHide[`e${charges}`][tier-1]) return;
+            case HarvestableType.Hide: {
+                const settingsKey = isLiving ? 'harvestingLivingHide' : 'harvestingStaticHide';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Log:
-                if (!this.settings.harvestingStaticWood[`e${charges}`][tier-1]) return;
+            case HarvestableType.Log: {
+                const settingsKey = isLiving ? 'harvestingLivingWood' : 'harvestingStaticWood';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Ore:
-                if (!this.settings.harvestingStaticOre[`e${charges}`][tier-1]) return;
+            case HarvestableType.Ore: {
+                const settingsKey = isLiving ? 'harvestingLivingOre' : 'harvestingStaticOre';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Rock:
-                if (!this.settings.harvestingStaticRock[`e${charges}`][tier-1]) return;
+            case HarvestableType.Rock: {
+                const settingsKey = isLiving ? 'harvestingLivingRock' : 'harvestingStaticRock';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
             default:
                 return;
@@ -474,48 +481,55 @@ class HarvestablesHandler
             }
         }
 
-        // 🐛 DEBUG: Log Hide T4+ enchanted resources
+        // 🐛 DEBUG: Log ALL harvestable updates (living + static)
         const stringType = this.GetStringType(type);
-        window.logger?.debug(this.CATEGORIES.HARVEST_HIDE_T4, this.EVENTS.Update, {
+
+        // 🔍 Déterminer si living ou static resource
+        const isLiving = mobileTypeId === 65535;
+
+        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Update, {
             id,
             mobileTypeId,
             type,
             tier,
             enchant: charges,
             size,
-            stringType
+            stringType,
+            isLiving
         });
 
+        // 🎯 Utiliser les settings appropriés selon le type de ressource (living vs static)
         switch (stringType)
         {
-            case HarvestableType.Fiber:
-                if (!this.settings.harvestingStaticFiber[`e${charges}`][tier-1]) return;
+            case HarvestableType.Fiber: {
+                const settingsKey = isLiving ? 'harvestingLivingFiber' : 'harvestingStaticFiber';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Hide:
-                // 🐛 DEBUG: Log settings check for Hide T4+
-                window.logger?.debug(this.CATEGORIES.HARVEST_HIDE_T4, this.EVENTS.UpdateSettingsCheck, {
-                    tier,
-                    charges,
-                    settingKey: `e${charges}`,
-                    settingIndex: tier - 1,
-                    settingValue: this.settings.harvestingStaticHide[`e${charges}`] ? this.settings.harvestingStaticHide[`e${charges}`][tier - 1] : undefined,
-                    passed: !!this.settings.harvestingStaticHide[`e${charges}`]?.[tier - 1]
-                });
-                if (!this.settings.harvestingStaticHide[`e${charges}`][tier-1]) return;
+            case HarvestableType.Hide: {
+                const settingsKey = isLiving ? 'harvestingLivingHide' : 'harvestingStaticHide';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Log:
-                if (!this.settings.harvestingStaticWood[`e${charges}`][tier-1]) return;
+            case HarvestableType.Log: {
+                const settingsKey = isLiving ? 'harvestingLivingWood' : 'harvestingStaticWood';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Ore:
-                if (!this.settings.harvestingStaticOre[`e${charges}`][tier-1]) return;
+            case HarvestableType.Ore: {
+                const settingsKey = isLiving ? 'harvestingLivingOre' : 'harvestingStaticOre';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
-            case HarvestableType.Rock:
-                if (!this.settings.harvestingStaticRock[`e${charges}`][tier-1]) return;
+            case HarvestableType.Rock: {
+                const settingsKey = isLiving ? 'harvestingLivingRock' : 'harvestingStaticRock';
+                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
                 break;
+            }
 
             default:
                 return;

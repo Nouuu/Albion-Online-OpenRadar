@@ -1,0 +1,35 @@
+{
+  "total_events": 44738,
+  "harvest_events": 34926,
+  "by_category": {
+    "HARVEST_HIDE_T4": 22554,
+    "HARVEST": 12372
+  },
+  "by_tier": {
+    "5": {
+      "living": 442,
+      "static": 2968,
+      "total": 3410
+    },
+    "4": {
+      "living": 352,
+      "static": 2422,
+      "total": 2774
+    },
+    "1": {
+      "living": 0,
+      "static": 14560,
+      "total": 14560
+    },
+    "6": {
+      "living": 138,
+      "static": 1702,
+      "total": 1840
+    }
+  },
+  "t6_issues_count": 1964,
+  "t6_issues_summary": {
+    "Living resource with size=0": 130,
+    "Wrong category (HARVEST_HIDE_T4 for T6)": 1834
+  }
+}
