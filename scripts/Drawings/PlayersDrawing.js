@@ -1,10 +1,15 @@
-export class PlayersDrawing extends DrawingUtils 
+export class PlayersDrawing extends DrawingUtils
 {
     constructor(Settings)
     {
         super(Settings);
+        const { CATEGORIES, EVENTS } = window;
+        this.CATEGORIES = CATEGORIES;
+        this.EVENTS = EVENTS;
 
-        this.itemsInfo = {};  
+        this.itemsInfo = {};
+        this.loggedPlayers = new Set(); // Track players already logged
+        this.lastPlayerCount = 0; // Track player count changes
     }
 
     updateItemsInfo(newData)
@@ -14,7 +19,7 @@ export class PlayersDrawing extends DrawingUtils
 
     drawItems(context, canvas, players, devMode)
     {
-        if (!this.settings.settingDot)
+        if (!this.settings.settingShowPlayers)
             return;
 
         let posY = 15;
@@ -86,101 +91,77 @@ export class PlayersDrawing extends DrawingUtils
         }
     }
     
-    interpolate(players, lpX, lpY , t)
+    interpolate(players, lpX, lpY, t)
     {
-        /*for (const playerOne of players)
+        // ✅ FORMULE DE BASE - Identique à Harvestables et Mobs
+        for (const playerOne of players)
         {
-            const  hX = -1 * playerOne.posX + lpX;
-            const  hY = playerOne.posY - lpY;
-            let distance = Math.round(Math.sqrt(((playerOne.posX - lpX) * (playerOne.posX - lpX)) + ((playerOne.posY - lpY) * (playerOne.posY - lpY))));
-            playerOne.distance = distance;
+            const hX = -1 * playerOne.posX + lpX;
+            const hY = playerOne.posY - lpY;
 
             if (playerOne.hY == 0 && playerOne.hX == 0)
             {
                 playerOne.hX = hX;
                 playerOne.hY = hY;
-
             }
 
             playerOne.hX = this.lerp(playerOne.hX, hX, t);
             playerOne.hY = this.lerp(playerOne.hY, hY, t);
-        }*/
+        }
     }
 
     invalidate(context, players)
     {
-        /*for (const playerOne of players)
+        // Log player count changes only (INFO level)
+        if (players.length !== this.lastPlayerCount) {
+            window.logger?.info(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
+                playersCount: players.length,
+                previousCount: this.lastPlayerCount
+            });
+            this.lastPlayerCount = players.length;
+        }
+
+        // Filter out players without valid positions (still at 0,0 waiting for Move event)
+        const validPlayers = players.filter(p => p.posX !== 0 || p.posY !== 0);
+
+        // Limit display to 50 players maximum
+        const maxPlayers = 50;
+        const playersToDisplay = validPlayers.slice(0, maxPlayers);
+
+        if (validPlayers.length > maxPlayers) {
+            window.logger?.warn(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
+                totalPlayers: validPlayers.length,
+                displayedPlayers: maxPlayers,
+                hiddenPlayers: validPlayers.length - maxPlayers
+            });
+        }
+
+        for (const playerOne of playersToDisplay)
         {
             const point = this.transformPoint(playerOne.hX, playerOne.hY);
-            let space = 0;
-      
-            const flagId = playerOne.flagId || 0;
-            const flagName = FactionFlagInfo[flagId];
-      
-            // Draw a circle around the status icon if settingMounted is enabled
-            if (this.settings.settingMounted)
-            {
-                context.beginPath();
-                context.arc(point.x, point.y, 11, 0, 2 * Math.PI, false); // Adjust the circle position and radius as needed
-                if (playerOne.mounted)
-                {
-                    context.strokeStyle = 'green';
-                }
-                else
-                {
-                    context.strokeStyle = 'red';
-                }
-                
-                context.lineWidth = 3;
-                context.stroke();
-            }
-      
-            // Draw the status icon
-            this.DrawCustomImage(context, point.x, point.y, flagName, "Flags", 20);
-      
-            if (this.settings.settingNickname == true)
-            {
-                space = space + 23;
-                this.drawText(point.x, point.y + space, playerOne.nickname, context);
+
+            // Log new players only (DEBUG level, once per player)
+            if (!this.loggedPlayers.has(playerOne.id)) {
+                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
+                    id: playerOne.id,
+                    nickname: playerOne.nickname,
+                    hX: playerOne.hX,
+                    hY: playerOne.hY,
+                    pointX: point.x,
+                    pointY: point.y,
+                    flagId: playerOne.flagId
+                });
+                this.loggedPlayers.add(playerOne.id);
             }
 
-            if (this.settings.settingDistance)
-            {
-                this.drawText(point.x, point.y - 14, playerOne.distance + "m", context);
-            }
-      
-            if (this.settings.settingHealth)
-            {
-                space = space + 6;
-        
-                const percent = playerOne.currentHealth / playerOne.initialHealth;
-                let width = 60;
-                let height = 7;
-        
-                context.fillStyle = "#121317";
-                context.fillRect(
-                    point.x - width / 2,
-                    point.y - height / 2 + space,
-                    width,
-                    height
-                );
-        
-                context.fillStyle = "red";
-                context.fillRect(
-                    point.x - width / 2,
-                    point.y - height / 2 + space,
-                    width * percent,
-                    height
-                );
-            }
+            // Draw red circle for each player
+            this.drawFilledCircle(context, point.x, point.y, 10, '#FF0000');
+        }
 
-            if (this.settings.settingGuild)
-            {
-                space = space + 14;
-      
-                if (playerOne.guildName != "undefined")
-                this.drawText(point.x, point.y + space, playerOne.guildName, context);
-            }
-        }*/
+        // Clean up logged players that are no longer in the list (memory management)
+        if (this.loggedPlayers.size > 100) {
+            const currentPlayerIds = new Set(players.map(p => p.id));
+            this.loggedPlayers = new Set([...this.loggedPlayers].filter(id => currentPlayerIds.has(id)));
+        }
     }
 }

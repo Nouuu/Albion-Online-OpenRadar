@@ -50,7 +50,7 @@ itemsInfo.initItems().then(() => {
 
     function AddPlayer(parameters)
     {
-        if (!settings.settingDot)
+        if (!settings.settingShowPlayers)
             return;
 
         /* General */

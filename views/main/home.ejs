@@ -18,6 +18,20 @@
         </h4>
 
         <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingShowPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Show Players on Radar</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">
+              Master toggle to show players on the radar. Must be enabled for any player detection.
+            </span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
           <input type="checkbox" id="settingItems" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
           <span class="dark:text-white">Items</span>
           <span class="relative group">
@@ -135,6 +149,7 @@
   }
 
   // Get elements
+  const settingShowPlayers = document.getElementById("settingShowPlayers");
   const settingItems = document.getElementById("settingItems");
   const settingItemsDev = document.getElementById("settingItemsDev");
   const settingSound = document.getElementById("settingSound");
@@ -144,6 +159,7 @@
   const settingDangerousPlayers = document.getElementById("settingDangerousPlayers");
 
   // Load saved settings
+  settingShowPlayers.checked = returnLocalBool("settingShowPlayers");
   settingItems.checked = returnLocalBool("settingItems");
   settingItemsDev.checked = returnLocalBool("settingItemsDev");
   settingSound.checked = returnLocalBool("settingSound");
@@ -153,6 +169,10 @@
   settingDangerousPlayers.checked = returnLocalBool("settingDangerousPlayers");
 
   // Save on change
+  settingShowPlayers.addEventListener("click", () => {
+    localStorage.setItem("settingShowPlayers", settingShowPlayers.checked);
+  });
+
   settingItems.addEventListener("click", () => {
     localStorage.setItem("settingItems", settingItems.checked);
   });

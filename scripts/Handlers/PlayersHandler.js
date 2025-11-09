@@ -201,10 +201,26 @@ export class PlayersHandler {
         const player = new Player(posX, posY, id, nickname, guildName, currentHealth, initialHealth, items, flagId);
         this.playersInRange.push(player);
 
+        window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerAdded', {
+            playerId: id,
+            nickname: nickname,
+            guildName: guildName,
+            flagId: flagId,
+            position: `(${posX}, ${posY})`,
+            totalPlayers: this.playersInRange.length
+        });
+
         if (!sound) return 2;
 
+        // Play audio with error handling (browsers block autoplay)
         const audio = new Audio('/sounds/player.mp3');
-        audio.play();
+        audio.play().catch(err => {
+            // Silently ignore autoplay errors (expected in browsers)
+            window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.AudioPlayBlocked, {
+                error: err.message,
+                player: nickname
+            });
+        });
 
         return 2;
     }

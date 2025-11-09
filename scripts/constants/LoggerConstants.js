@@ -94,6 +94,12 @@ const EVENTS = {
   // Player events
   NewPlayerEvent_ALL_PARAMS: 'NewPlayerEvent_ALL_PARAMS',
   PlayerDebugInfo: 'PlayerDebugInfo',
+  MoveEvent: 'MoveEvent',
+  PlayerPositionUpdate: 'PlayerPositionUpdate',
+  PlayerAutoCreated: 'PlayerAutoCreated',
+  AudioPlayBlocked: 'AudioPlayBlocked',
+  WorldOffsetCalculated: 'WorldOffsetCalculated',
+  WorldOffsetSkipped: 'WorldOffsetSkipped',
 
   // Chest events
   NewChestEvent_ALL_PARAMS: 'NewChestEvent_ALL_PARAMS',
