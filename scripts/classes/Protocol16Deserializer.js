@@ -187,16 +187,15 @@ class Protocol16Deserializer {
 
 		const parameters = this.deserializeParameterTable(input);
 
-		
-		if(code==3)
-		{
+		// ✅ Event 3 (Move) - RESTORED ORIGINAL CODE that worked for mobs/resources
+		// Simple offsets 9/13 universally - NO complex detection needed
+		if(code==3) {
 			var bytes = new Uint8Array(parameters[1]);
-
 			var position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);
 			var position1 = new DataView(bytes.buffer, 13, 4).getFloat32(0, true);
 			parameters[4] = position0;
 			parameters[5] = position1;
-			parameters[252]  = 3;
+			parameters[252] = 3;
 		}
 		
 		return {code, parameters};

@@ -1,27 +1,30 @@
 # 🎯 Player Detection & Movement - Status Investigation
 
-**Dernière mise à jour**: 2025-11-17
-**Statut**: En investigation - Régression majeure corrigée, mouvement à réparer
+**Dernière mise à jour**: 2025-11-17 18:00
+**Statut**: Mobs/Resources OK - Investigation mouvement joueurs en cours
 
 ---
 
 ## 📊 Executive Summary
 
-### ✅ Ce qui fonctionne (après revert 2025-11-17)
-- Mobs apparaissent sur le radar
-- Resources (static) apparaissent sur le radar
-- Chests, dungeons, fish détectés correctement
-- Event Code 3 (Move) reçus pour mobs/resources
-- Architecture client/serveur clarifiée
+### ✅ Ce qui fonctionne (Confirmé 2025-11-17 18:00)
+- ✅ **Mobs** : Apparaissent ET bougent correctement (100% fonctionnel)
+- ✅ **Resources** : Apparaissent correctement (static par nature)
+- ✅ **Chests, dungeons, fish** : Détectés correctement
+- ✅ **Event Code 3 (Move)** : Désérialisation serveur fonctionne (param[4]/[5])
+- ✅ **Architecture client/serveur** : Clarifiée et validée
 
 ### ❌ Ce qui NE fonctionne PAS
-- **Mobs/Resources** : Visibles mais **NE BOUGENT PAS** (positions ne se mettent pas à jour)
-- **Players** : **N'apparaissent PAS du tout** sur le radar
-- Event Code 29 (NewCharacter) pour players non détectés ou non traités
+- ❌ **Players (Position initiale)** : Event 29 param[7] Buffer PAS désérialisé côté serveur
+- ❌ **Players (Mouvement)** : Event 3 (Move) pour joueurs problématique
+  - Hypothèse: Race condition ou format Buffer différent pour joueurs
+  - À investiguer: param[1] Buffer joueurs vs mobs
 
-### 🎯 Priorité #1
-**Réparer le mouvement des mobs/resources** avant de toucher aux players.
-Cause identifiée : Utils.js lit `Parameters[4]` et `Parameters[5]`, Protocol16Deserializer les set correctement, mais **handlers ne mettent pas à jour les positions**.
+### 🎯 Investigation en Cours
+**Comprendre pourquoi Event 3 fonctionne pour mobs mais pas pour joueurs**
+- Event 3 désérialisé identiquement (param[4]/[5]) pour tous
+- Mobs bougent → handlers OK
+- Joueurs ne bougent pas → handlers KO ou Move events pas reçus?
 
 ---
 
@@ -50,7 +53,12 @@ Cause identifiée : Utils.js lit `Parameters[4]` et `Parameters[5]`, Protocol16D
 **Le revert** :
 1. Restauration complète de Protocol16Deserializer.js à l'état "bugué mais fonctionnel"
 2. Fix Utils.js : `Parameters[253]/[254]` → `Parameters[4]/[5]`
-3. **RÉSULTAT** : Entités réapparaissent mais **ne bougent plus**
+3. **RÉSULTAT** : Mobs/resources réapparaissent et **bougent correctement** ✅
+
+### 2025-11-17 18:00 : État Validé
+- ✅ Mobs fonctionnent à 100% (apparition + mouvement)
+- ✅ Resources fonctionnent à 100%
+- ❌ Joueurs : Problème sur Event 29 (param[7]) ET Event 3 (mouvement)
 
 ---
 
@@ -279,46 +287,51 @@ case EventCodes.Move:
 **Status** :
 - ✅ Lit les bons paramètres (`[4]` et `[5]`)
 - ✅ Valide les positions
-- ✅ Appelle `updateMobPosition()`
-- ❌ **MAIS les mobs ne bougent PAS à l'écran**
+- ✅ Appelle `updateMobPosition()` et `updatePlayerPosition()`
+- ✅ **Mobs bougent correctement** (validé 2025-11-17 18:00)
 
-### Problème Restant
+### Problème Restant: Joueurs
 
-**Hypothèse** : `MobsHandler.updateMobPosition()` ne met pas à jour la position visuelle
-- La méthode existe (ligne 703 de MobsHandler.js)
-- Elle modifie `m.posX` et `m.posY` dans `mobsList`
-- MAIS peut-être que le rendu ne se rafraîchit pas?
-- Ou les positions sont en format incompatible?
+**Event 29 (NewCharacter) - Position initiale** :
+- param[7] Buffer PAS désérialisé côté serveur
+- Client reçoit `{type: "Buffer", data: [...]}` au lieu de Array [posX, posY]
+- `Buffer.isBuffer()` retourne false côté navigateur
+- Fallback sur param[19]/[20] (world coords incorrects)
 
-**À vérifier** :
-1. `MobsDrawing.interpolate()` - Est-ce que ça lit `mob.posX/posY`?
-2. `HarvestablesDrawing.interpolate()` - Même question pour resources
-3. Format des positions - radar coords vs world coords?
+**Event 3 (Move) - Mouvement joueurs** :
+- Désérialisation Event 3 identique pour mobs ET joueurs (param[4]/[5])
+- Mobs bougent ✅ → Event 3 fonctionne
+- Joueurs ne bougent pas ❌ → Pourquoi?
+  - Hypothèse 1: Race condition (Move avant NewCharacter)
+  - Hypothèse 2: PlayersHandler rejette silencieusement (player pas dans playersInRange)
+  - Hypothèse 3: Event 3 pas reçu pour joueurs (à vérifier logs)
 
 ---
 
 ## 🎯 Prochaines Étapes (Checklist)
 
-### Priorité 1 : Réparer mouvement mobs/resources
+### Priorité 1 : Fix Event 29 param[7] deserialization (Server-side)
 
-- [ ] Vérifier `MobsHandler.updateMobPosition()` ligne 703
-- [ ] Vérifier `MobsDrawing.interpolate()` - lit-il `mob.posX/posY`?
-- [ ] Vérifier `HarvestablesHandler` - même logique?
-- [ ] Tester avec logs : positions mises à jour dans `mobsList`?
-- [ ] Comparer avec code fonctionnel (commit HEAD~6)
+- [ ] Ajouter bloc Event 29 dans `Protocol16Deserializer.js deserializeEventData()`
+- [ ] Désérialiser param[7] Buffer → Array [posX, posY]
+- [ ] Identifier offsets corrects (probablement 0 et 4, pas 9 et 13 comme Event 3)
+- [ ] Tester: Joueur apparaît à position correcte quand entre dans vue
 
-### Priorité 2 : Investigation players (APRÈS mouvement fixé)
+### Priorité 2 : Investigation Event 3 (Move) pour joueurs
 
-- [ ] Analyser pourquoi Event Code 29 (NewCharacter) absent ou rare
-- [ ] Vérifier si players apparaissent AVANT le lancement de l'app
-- [ ] Chercher conditions de déclenchement Event 29
-- [ ] Analyser param[7] de NewCharacter (Buffer positions players)
+- [ ] Vérifier si Event 3 reçu pour joueurs (logs côté serveur)
+- [ ] Vérifier `PlayersHandler.updatePlayerPosition()` ligne 263
+  - Player existe dans playersInRange?
+  - Update silencieusement rejeté?
+- [ ] Comparer avec `MobsHandler.updateMobPosition()` (qui fonctionne)
+- [ ] Hypothèse race condition: Auto-créer player depuis Move si NewCharacter pas reçu?
 
-### Priorité 3 : Nettoyage (APRÈS validation complète)
+### Priorité 3 : Validation complète
 
-- [ ] Supprimer code debug verbeux si tout fonctionne
-- [ ] Supprimer logs excessifs
-- [ ] Nettoyer commentaires temporaires
+- [ ] Tester en jeu: Joueurs apparaissent ET bougent
+- [ ] Vérifier pas de régression sur mobs/resources
+- [ ] Supprimer code debug si tout fonctionne
+- [ ] Documenter solution finale
 
 ---
 
@@ -353,5 +366,7 @@ case EventCodes.Move:
 
 ---
 
-**Dernière modification** : 2025-11-17 13h30
-**Prochain objectif** : Réparer mouvement mobs/resources (param[4]/[5] → handlers → rendu)
+**Dernière modification** : 2025-11-17 18:00
+**Prochain objectif** :
+1. Ajouter Event 29 param[7] deserialization (server-side)
+2. Investiguer pourquoi Event 3 marche pour mobs mais pas joueurs
