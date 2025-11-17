@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.wsClient = socket;
             this.buffer = [];
             this.sessionId = this.generateSessionId();
-            this.maxBufferSize = 100;
+            this.maxBufferSize = 1000;
             this.flushInterval = 5000;
 
             this.startFlushInterval();
@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const logEntry = {
                 timestamp: new Date().toISOString(),
                 level,
-                category,
+                category: `[CLIENT] ${category}`, // Prefix all client logs with [CLIENT]
                 event,
                 data,
                 context: {
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const debugRawPacketsServer = localStorage.getItem('settingDebugRawPacketsServer') === 'true'; // Default: false
 
             // Skip RAW packets for server if disabled
-            if (logEntry.category === 'PACKET_RAW' && !debugRawPacketsServer) {
+            if (logEntry.category === '[CLIENT] PACKET_RAW' && !debugRawPacketsServer) {
                 return; // Skip server logging for RAW packets
             }
 
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         logToConsole(entry) {
             // Skip RAW packets in console if disabled
             const showRawPacketsConsole = localStorage.getItem('settingDebugRawPacketsConsole') === 'true';
-            if (entry.category === 'PACKET_RAW' && !showRawPacketsConsole) {
+            if (entry.category === '[CLIENT] PACKET_RAW' && !showRawPacketsConsole) {
                 return; // Skip console display for RAW packets
             }
 

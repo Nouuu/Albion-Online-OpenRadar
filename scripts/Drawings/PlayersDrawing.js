@@ -93,6 +93,54 @@ export class PlayersDrawing extends DrawingUtils
     
     interpolate(players, lpX, lpY, t)
     {
+        // ⚠️ GUARD: Don't interpolate if lpX/lpY not initialized yet (both 0 at startup)
+        // This prevents players from being placed off-canvas during the ~650ms delay
+        // between player detection and first OnRequest_Move event
+        if (lpX === 0 && lpY === 0) {
+            // 🔬 DIAG: Log when skipping interpolation due to uninitialized lpX/lpY
+            if (players.length > 0 && !window.__lpXInitSkipLogged) {
+                window.logger?.warn(this.CATEGORIES.PLAYER, 'DIAG_Interpolate_Skipped', {
+                    playerCount: players.length,
+                    lpX: lpX,
+                    lpY: lpY,
+                    note: '⚠️ Skipping interpolation - lpX/lpY not initialized yet (both 0)'
+                });
+                window.__lpXInitSkipLogged = true;
+            }
+            return; // Skip interpolation until lpX/lpY are initialized
+        }
+
+        // Reset flag once lpX/lpY are initialized
+        if (window.__lpXInitSkipLogged && (lpX !== 0 || lpY !== 0)) {
+            window.logger?.info(this.CATEGORIES.PLAYER, 'DIAG_Interpolate_Resumed', {
+                lpX: lpX,
+                lpY: lpY,
+                note: '✅ lpX/lpY initialized - resuming player interpolation'
+            });
+            window.__lpXInitSkipLogged = false;
+        }
+
+        // 🔬 DIAG: Log interpolate calculation if players exist
+        if (players.length > 0) {
+            window.logger?.warn(this.CATEGORIES.PLAYER, 'DIAG_Interpolate', {
+                playerCount: players.length,
+                lpX: lpX,
+                lpY: lpY,
+                t: t,
+                firstPlayer: {
+                    id: players[0].id,
+                    nickname: players[0].nickname,
+                    posX: players[0].posX,
+                    posY: players[0].posY,
+                    oldHX: players[0].hX,
+                    oldHY: players[0].hY,
+                    calculatedHX: -1 * players[0].posX + lpX,
+                    calculatedHY: players[0].posY - lpY
+                },
+                note: 'Interpolate called - check hX/hY calculation'
+            });
+        }
+
         // ✅ FORMULE DE BASE - Identique à Harvestables et Mobs
         for (const playerOne of players)
         {
@@ -121,8 +169,41 @@ export class PlayersDrawing extends DrawingUtils
             this.lastPlayerCount = players.length;
         }
 
-        // Filter out players without valid positions (still at 0,0 waiting for Move event)
-        const validPlayers = players.filter(p => p.posX !== 0 || p.posY !== 0);
+        // 🔬 DIAG: Log players BEFORE position filter
+        window.logger?.warn(this.CATEGORIES.PLAYER, 'DIAG_BeforeFilter', {
+            totalPlayers: players.length,
+            playersData: players.map(p => ({
+                id: p.id,
+                nickname: p.nickname,
+                posX: p.posX,
+                posY: p.posY,
+                hX: p.hX,
+                hY: p.hY
+            })),
+            note: 'Players BEFORE position filter'
+        });
+
+        // Filter out players without valid positions (world coords OR radar coords not initialized)
+        // posX/posY check: player has world coordinates (from NewCharacter event)
+        // hX/hY check: player has radar coordinates (from interpolate() with valid lpX/lpY)
+        const validPlayers = players.filter(p =>
+            (p.posX !== 0 || p.posY !== 0) &&  // Has world coordinates
+            (p.hX !== 0 || p.hY !== 0)         // Has radar coordinates (interpolated with valid lpX/lpY)
+        );
+
+        // 🔬 DIAG: Log players AFTER position filter
+        window.logger?.warn(this.CATEGORIES.PLAYER, 'DIAG_AfterFilter', {
+            beforeFilter: players.length,
+            afterFilter: validPlayers.length,
+            filteredOut: players.length - validPlayers.length,
+            validPlayersData: validPlayers.map(p => ({
+                id: p.id,
+                nickname: p.nickname,
+                posX: p.posX,
+                posY: p.posY
+            })),
+            note: 'Players AFTER position filter - these will be rendered'
+        });
 
         // Limit display to 50 players maximum
         const maxPlayers = 50;
@@ -139,6 +220,22 @@ export class PlayersDrawing extends DrawingUtils
         for (const playerOne of playersToDisplay)
         {
             const point = this.transformPoint(playerOne.hX, playerOne.hY);
+
+            // 🔬 DIAG: Log rendering details for each player
+            window.logger?.warn(this.CATEGORIES.PLAYER, 'DIAG_Rendering', {
+                playerId: playerOne.id,
+                nickname: playerOne.nickname,
+                posX: playerOne.posX,
+                posY: playerOne.posY,
+                hX: playerOne.hX,
+                hY: playerOne.hY,
+                transformedX: point.x,
+                transformedY: point.y,
+                canvasWidth: context.canvas.width,
+                canvasHeight: context.canvas.height,
+                isInCanvas: point.x >= 0 && point.x <= context.canvas.width && point.y >= 0 && point.y <= context.canvas.height,
+                note: 'Player being rendered - check transformed coordinates'
+            });
 
             // Log new players only (DEBUG level, once per player)
             if (!this.loggedPlayers.has(playerOne.id)) {

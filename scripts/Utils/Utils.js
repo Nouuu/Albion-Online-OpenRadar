@@ -160,6 +160,10 @@ playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 let lpX = 0.0;
 let lpY = 0.0;
 
+// 🌍 Expose lpX/lpY globally for DEEP DEBUG access
+window.lpX = lpX;
+window.lpY = lpY;
+
 var flashTime = -1;
 
 const drawingUtils = new DrawingUtils();
@@ -183,17 +187,90 @@ socket.addEventListener('message', (event) => {
 
   var extractedDictionary = JSON.parse(data.dictionary);
 
+  // 🐛 DEBUG: Log ALL network packets to see request/response/event distribution
+  if (!window.__packetTypeCount) window.__packetTypeCount = {};
+  if (!window.__packetTypeCount[extractedString]) window.__packetTypeCount[extractedString] = 0;
+  window.__packetTypeCount[extractedString]++;
+
+  // Log every 50 packets to track what we're receiving
+  const totalPackets = Object.values(window.__packetTypeCount).reduce((a, b) => a + b, 0);
+  if (totalPackets % 100 === 0) {
+    window.logger?.info(CATEGORIES.PACKET_RAW, 'PacketTypeDistribution', {
+      totalPackets,
+      distribution: window.__packetTypeCount,
+      note: 'Tracking all packet types from network'
+    });
+  }
+
   switch (extractedString)
   {
     case "request":
+        // 🐛 DEBUG: Log first 5 requests to see their structure
+        if (!window.__requestLogCount) window.__requestLogCount = 0;
+        window.__requestLogCount++;
+
+        if (window.__requestLogCount <= 5) {
+          window.logger?.warn(CATEGORIES.PACKET_RAW, 'Request_Packet_Sample', {
+            requestNumber: window.__requestLogCount,
+            parameters: extractedDictionary["parameters"],
+            note: 'Sample request packet for analysis'
+          });
+        }
+
         onRequest(extractedDictionary["parameters"]);
         break;
 
     case "event":
+        // 🔍 DEBUG: Log full extractedDictionary to find Photon Event Code
+        if (!window.__eventDictLogCount) window.__eventDictLogCount = 0;
+        window.__eventDictLogCount++;
+
+        if (window.__eventDictLogCount <= 3) {
+            window.logger?.warn(CATEGORIES.PACKET_RAW, 'Event_Full_Dictionary', {
+                eventNumber: window.__eventDictLogCount,
+                fullDictionary: extractedDictionary,
+                dictionaryKeys: Object.keys(extractedDictionary),
+                note: 'Full extractedDictionary to find Photon Event Code'
+            });
+        }
+
+        // 🔍 DEBUG: Log Photon Event Codes 2 and 3 to identify player vs entity moves
+        const photonCode = extractedDictionary["code"];
+        if (photonCode === 2 || photonCode === 3) {
+            if (!window.__photonCodeCount) window.__photonCodeCount = {2: 0, 3: 0};
+            window.__photonCodeCount[photonCode]++;
+
+            if (window.__photonCodeCount[photonCode] <= 5) {
+                const params = extractedDictionary["parameters"];
+                window.logger?.warn(CATEGORIES.PACKET_RAW, `Photon_Event_Code_${photonCode}`, {
+                    count: window.__photonCodeCount[photonCode],
+                    photonCode: photonCode,
+                    id: params[0],
+                    hasBuffer: params[1]?.type === 'Buffer',
+                    bufferLength: params[1]?.data?.length,
+                    param252: params[252],
+                    allParamKeys: Object.keys(params),
+                    note: `Photon Event Code ${photonCode} analysis - first 5 occurrences`
+                });
+            }
+        }
+
         onEvent(extractedDictionary["parameters"]);
         break;
 
     case "response":
+        // 🐛 DEBUG: Log first 5 responses to see their structure
+        if (!window.__responseLogCount) window.__responseLogCount = 0;
+        window.__responseLogCount++;
+
+        if (window.__responseLogCount <= 5) {
+          window.logger?.warn(CATEGORIES.PACKET_RAW, 'Response_Packet_Sample', {
+            responseNumber: window.__responseLogCount,
+            parameters: extractedDictionary["parameters"],
+            note: 'Sample response packet for analysis'
+          });
+        }
+
         onResponse(extractedDictionary["parameters"]);
         break;
   }
@@ -203,13 +280,20 @@ socket.addEventListener('message', (event) => {
 function getEventName(eventCode) {
     const eventNames = {
         1: 'Leave',
-        2: 'Join',
-        3: 'CharacterEquipmentChanged',
+        2: 'JoinFinished',
+        3: 'Move',  // ✅ CORRIGÉ - Move = 3 selon EventCodes.js
+        4: 'Teleport',
+        5: 'ChangeEquipment',
         6: 'HealthUpdate',
         7: 'HealthUpdates',
         15: 'Damage',
-        21: 'Move',
+        21: 'Request_Move',  // ⚠️ Probablement une requête (onRequest), pas un événement
+        29: 'NewCharacter',
         35: 'ClusterChange',
+        38: 'NewSimpleHarvestableObject',
+        39: 'NewSimpleHarvestableObjectList',
+        40: 'NewHarvestableObject',
+        46: 'HarvestableChangeState',
         71: 'NewMob',
         72: 'MobChangeState',
         91: 'RegenerationHealthChanged',
@@ -290,17 +374,214 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.Move:
-            const posX = Parameters[4];
-            const posY = Parameters[5];
+            // 🔬 DEEP DEBUG: Log ALL parameters for tracked players when debugPlayers is enabled
+            if (settings.debugPlayers && window.__knownPlayerIds && window.__knownPlayerIds.has(id)) {
+                const allParams = {};
+                for (let i = 0; i <= 252; i++) {
+                    if (Parameters[i] !== undefined) {
+                        allParams[`param[${i}]`] = Parameters[i];
+                    }
+                }
 
-            //playersHandler.updatePlayerPosition(id, posX, posY, Parameters);
-            mobsHandler.updateMistPosition(id, posX, posY);
-            mobsHandler.updateMobPosition(id, posX, posY);
+                window.logger?.warn(CATEGORIES.PLAYER, 'DEEP_DEBUG_Move', {
+                    id,
+                    timestamp: Date.now(),
+                    lpX: window.lpX || 'not set',
+                    lpY: window.lpY || 'not set',
+                    allParameters: allParams,
+                    parameterCount: Object.keys(allParams).length
+                });
+            }
+
+            // 🎯 Move events: Server deserializes all positions and sends clean data
+            // Client receives param[4]=posX and param[5]=posY (already deserialized server-side)
+
+            let posX = 0;
+            let posY = 0;
+
+            // ✅ Validate position values (reject corrupted data)
+            const isValidPosition = (x, y) => {
+                return typeof x === 'number' && typeof y === 'number' &&
+                       isFinite(x) && isFinite(y) &&
+                       Math.abs(x) < 10000 && Math.abs(y) < 10000 &&
+                       !(x === 0 && y === 0);  // ✅ 0,0 is NOT valid (uninitialized)
+            };
+
+            // ✅ Use server-deserialized positions (param[4]=posX, param[5]=posY)
+            if (Parameters[4] !== undefined && Parameters[5] !== undefined) {
+                const serverPosX = Parameters[4];
+                const serverPosY = Parameters[5];
+
+                if (isValidPosition(serverPosX, serverPosY)) {
+                    posX = serverPosX;
+                    posY = serverPosY;
+
+                    // 🔍 DEBUG: Log first 5 Move events
+                    if (!window.__moveEventDeserializedCount) window.__moveEventDeserializedCount = 0;
+                    window.__moveEventDeserializedCount++;
+
+                    if (window.__moveEventDeserializedCount <= 5) {
+                        window.logger?.info(CATEGORIES.PLAYER, 'Move_PositionsReceived', {
+                            id,
+                            posX: serverPosX,
+                            posY: serverPosY,
+                            count: window.__moveEventDeserializedCount,
+                            note: '✅ Clean positions from server'
+                        });
+                    }
+                } else {
+                    // Invalid positions received from server
+                    window.logger?.warn(CATEGORIES.PLAYER, 'Move_InvalidPositions', {
+                        id,
+                        posX: serverPosX,
+                        posY: serverPosY,
+                        note: '⚠️ Server sent invalid positions'
+                    });
+                }
+            } else {
+                // Missing position data from server
+                if (!window.__missingPositionsCount) window.__missingPositionsCount = 0;
+                window.__missingPositionsCount++;
+
+                if (window.__missingPositionsCount <= 5) {
+                    window.logger?.error(CATEGORIES.PLAYER, 'Move_MissingPositions', {
+                        id,
+                        param4: Parameters[4],
+                        param5: Parameters[5],
+                        count: window.__missingPositionsCount,
+                        note: '❌ Server did not send positions - check server deserialization'
+                    });
+                }
+            }
+
+            // ✅ SERVER-SIDE DESERIALIZATION: All positions correctly deserialized
+            // Server sends clean param[4]=posX, param[5]=posY for Move events
+            // No need for client-side Buffer parsing or workarounds
+
+            if (isValidPosition(posX, posY)) {
+                // Track Move event frequency per ID
+                if (!window.__moveEventCount) window.__moveEventCount = {};
+                if (!window.__moveEventCount[id]) window.__moveEventCount[id] = 0;
+                window.__moveEventCount[id]++;
+
+                // After 100 Move events total, determine local player ID
+                const totalMoveEvents = Object.values(window.__moveEventCount).reduce((a, b) => a + b, 0);
+                
+                // 🐛 DEBUG: Log every 50 valid Move events to track progress
+                if (totalMoveEvents % 50 === 0 && totalMoveEvents < 150) {
+                    window.logger?.info(CATEGORIES.PLAYER, 'MoveEventTracking', {
+                        totalMoveEvents,
+                        topEntities: Object.entries(window.__moveEventCount)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 5)
+                            .map(([id, count]) => ({id: parseInt(id), count})),
+                        note: 'Tracking Move events to detect local player'
+                    });
+                }
+                
+                if (totalMoveEvents === 100 && !window.__localPlayerId) {
+                    // Find ID with most Move events = local player
+                    let maxCount = 0;
+                    let localId = null;
+                    for (let [entityId, count] of Object.entries(window.__moveEventCount)) {
+                        if (count > maxCount) {
+                            maxCount = count;
+                            localId = parseInt(entityId);
+                        }
+                    }
+                    
+                    if (localId && maxCount > 50) { // Local player should have >50% of Move events
+                        window.__localPlayerId = localId;
+                        window.logger?.info(CATEGORIES.PLAYER, 'LocalPlayerDetected', {
+                            localPlayerId: localId,
+                            moveEventCount: maxCount,
+                            totalMoveEvents: totalMoveEvents,
+                            note: 'Detected local player from Move event frequency'
+                        });
+                    }
+                }
+
+                // If this is local player, update lpX/lpY
+                if (window.__localPlayerId && id === window.__localPlayerId) {
+                    const oldLpX = lpX;
+                    const oldLpY = lpY;
+                    lpX = posX;
+                    lpY = posY;
+                    window.lpX = lpX;  // Sync global
+                    window.lpY = lpY;
+                    
+                    // 🐛 DEBUG: Log EVERY lpX/lpY update to see what's happening
+                    if (!window.__lpXUpdateCount) window.__lpXUpdateCount = 0;
+                    window.__lpXUpdateCount++;
+                    
+                    if (window.__lpXUpdateCount % 100 === 1) {
+                        window.logger?.info(CATEGORIES.PLAYER, 'LocalPlayerPositionUpdated', {
+                            lpX,
+                            lpY,
+                            deltaX: posX - oldLpX,
+                            deltaY: posY - oldLpY,
+                            updateCount: window.__lpXUpdateCount,
+                            source: 'Move event (EventCode 3)',
+                            note: 'lpX/lpY updated from local player Move events'
+                        });
+                    }
+                    
+                    // Log first update
+                    if (!window.__lpXInitialized) {
+                        window.__lpXInitialized = true;
+                        window.logger?.info(CATEGORIES.PLAYER, 'LocalPlayerPositionInitialized', {
+                            lpX,
+                            lpY,
+                            source: 'Move event (EventCode 3)',
+                            note: 'lpX/lpY initialized from local player Move events'
+                        });
+                    }
+                }
+
+                // ✅ Update ALL entities with validated positions
+                // Server deserializes positions for ALL entities (players, mobs, NPCs)
+                playersHandler.updatePlayerPosition(id, posX, posY, Parameters);
+                mobsHandler.updateMistPosition(id, posX, posY);
+                mobsHandler.updateMobPosition(id, posX, posY);
+            } else {
+                // Log corrupted Move events
+                if (!window.__corruptedMoveCount) window.__corruptedMoveCount = 0;
+                window.__corruptedMoveCount++;
+
+                if (window.__corruptedMoveCount % 100 === 1) {
+                    window.logger?.warn(CATEGORIES.PLAYER, 'MoveEvent_CorruptedPosition', {
+                        id,
+                        posX,
+                        posY,
+                        params4: Parameters[4],
+                        params5: Parameters[5],
+                        corruptedCount: window.__corruptedMoveCount,
+                        note: 'Rejected corrupted position - keeping previous position'
+                    });
+                }
+            }
             break;
 
         case EventCodes.NewCharacter:
             const ttt = playersHandler.handleNewPlayerEvent(Parameters, map.isBZ);
             flashTime = ttt < 0 ? flashTime : ttt;
+
+            // 🔬 DEEP DEBUG: Track player IDs for exhaustive logging
+            const playerName = Parameters[1];
+            if (playerName && typeof playerName === 'string' && playerName.length > 0 && Parameters[2]) {
+                // This is likely a player (has name and characterType)
+                if (!window.__knownPlayerIds) window.__knownPlayerIds = new Set();
+                if (!window.__knownPlayerIds.has(id)) {
+                    window.__knownPlayerIds.add(id);
+
+                    window.logger?.info(CATEGORIES.PLAYER, 'DEEP_DEBUG_PlayerTracked', {
+                        id,
+                        name: playerName,
+                        totalTracked: window.__knownPlayerIds.size,
+                        note: 'Player added to DEEP DEBUG tracking list'
+                    });
+                }
+            }
             break;
 
         case EventCodes.NewSimpleHarvestableObjectList:
@@ -466,13 +747,58 @@ function onEvent(Parameters)
 
 
 function onRequest(Parameters)
-{ 
+{
     // Player moving
     if (Parameters[253] == 21)
     {
-        lpX = Parameters[1][0];
-        lpY = Parameters[1][1];
-        // console.log(lpX)
+        // 🔍 CRITICAL: Verify Parameters[1] format every 100 moves
+        if (!window.__moveRequestCount) window.__moveRequestCount = 0;
+        window.__moveRequestCount++;
+
+        // If Buffer, decode it (browser-compatible)
+        if (Parameters[1] && Parameters[1].type === 'Buffer') {
+            const uint8Array = new Uint8Array(Parameters[1].data);
+            const dataView = new DataView(uint8Array.buffer);
+            lpX = dataView.getFloat32(0, true);  // little-endian
+            lpY = dataView.getFloat32(4, true);
+            window.lpX = lpX;  // Sync global
+            window.lpY = lpY;
+
+            if (window.__moveRequestCount % 100 === 1) {
+                window.logger?.warn(CATEGORIES.PLAYER, 'OnRequest_Move_BufferDecoded', {
+                    bufferLength: uint8Array.length,
+                    decodedLpX: lpX,
+                    decodedLpY: lpY,
+                    moveCount: window.__moveRequestCount,
+                    note: '⚠️ Parameters[1] was Buffer - decoded as floats'
+                });
+            }
+        }
+        // If Array, use directly
+        else if (Array.isArray(Parameters[1])) {
+            lpX = Parameters[1][0];
+            lpY = Parameters[1][1];
+            window.lpX = lpX;  // Sync global
+            window.lpY = lpY;
+
+            if (window.__moveRequestCount % 100 === 1) {
+                window.logger?.info(CATEGORIES.PLAYER, 'OnRequest_Move_Array', {
+                    lpX: lpX,
+                    lpY: lpY,
+                    moveCount: window.__moveRequestCount,
+                    note: '✅ Parameters[1] is Array - using values directly'
+                });
+            }
+        }
+        // Unknown format
+        else {
+            window.logger?.error(CATEGORIES.PLAYER, 'OnRequest_Move_UnknownFormat', {
+                param1: Parameters[1],
+                param1Type: typeof Parameters[1],
+                moveCount: window.__moveRequestCount,
+                note: '❌ Parameters[1] format unknown - lpX/lpY may be corrupted!'
+            });
+        }
     }
 }
 
@@ -486,11 +812,56 @@ function onResponse(Parameters)
     // All data on the player joining the map (us)
     else if (Parameters[253] == 2)
     {
-        lpX = Parameters[9][0];
-        lpY = Parameters[9][1];
+        // 🔍 CRITICAL: Verify Parameters[9] format (Array vs Buffer)
+        const param9Type = Array.isArray(Parameters[9]) ? 'array' :
+                          (Parameters[9]?.type === 'Buffer' ? 'buffer' : typeof Parameters[9]);
+
+        // If Buffer, decode it (browser-compatible)
+        if (Parameters[9] && Parameters[9].type === 'Buffer') {
+            const uint8Array = new Uint8Array(Parameters[9].data);
+            const dataView = new DataView(uint8Array.buffer);
+            lpX = dataView.getFloat32(0, true);  // little-endian
+            lpY = dataView.getFloat32(4, true);
+            window.lpX = lpX;  // Sync global
+            window.lpY = lpY;
+
+            // Convert to hex for logging
+            const bufferHex = Array.from(uint8Array)
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+
+            window.logger?.warn(CATEGORIES.PLAYER, 'OnResponse_JoinMap_BufferDecoded', {
+                bufferLength: uint8Array.length,
+                bufferHex: bufferHex,
+                decodedLpX: lpX,
+                decodedLpY: lpY,
+                note: '⚠️ Parameters[9] was Buffer - decoded as floats'
+            });
+        }
+        // If Array, use directly
+        else if (Array.isArray(Parameters[9])) {
+            lpX = Parameters[9][0];
+            lpY = Parameters[9][1];
+            window.lpX = lpX;  // Sync global
+            window.lpY = lpY;
+
+            window.logger?.info(CATEGORIES.PLAYER, 'OnResponse_JoinMap_Array', {
+                lpX: lpX,
+                lpY: lpY,
+                note: '✅ Parameters[9] is Array - using values directly'
+            });
+        }
+        // Unknown format
+        else {
+            window.logger?.error(CATEGORIES.PLAYER, 'OnResponse_JoinMap_UnknownFormat', {
+                param9: Parameters[9],
+                param9Type: typeof Parameters[9],
+                note: '❌ Parameters[9] format unknown - lpX/lpY may be corrupted!'
+            });
+        }
 
         // TODO bz portals does not trigger this event, so when change map check if map id is portal in event 35 above ^
-        // And clear everything too 
+        // And clear everything too
         map.isBZ = Parameters[103] == 2;
 
         ClearHandlers();
@@ -600,7 +971,17 @@ function update() {
     const deltaTime = currentTime - previousTime;
     const t = Math.min(1, deltaTime / 100);
 
-
+    // 🐛 DEBUG: Log local player position every 5 seconds
+    if (!window.__lastLpXLogTime || (currentTime - window.__lastLpXLogTime) > 5000) {
+        window.logger?.info(CATEGORIES.PLAYER, 'LocalPlayerPosition', {
+            lpX,
+            lpY,
+            localPlayerId: window.__localPlayerId,
+            isInitialized: window.__lpXInitialized || false,
+            note: 'Current lpX/lpY values'
+        });
+        window.__lastLpXLogTime = currentTime;
+    }
 
     if (settings.showMapBackground)
         mapsDrawing.interpolate(map, lpX, lpY, t);

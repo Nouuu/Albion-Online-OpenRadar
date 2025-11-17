@@ -64,7 +64,7 @@ class PhotonCommand {
 		this.payload.seek(this.payload.tell() + 1);
 		this.messageType = this.payload.readUInt8();
 		this.payload = this.payload.slice(this.payload.length - 2);
-	
+
 		switch (this.messageType) {
 		  case 2:
 			this.data = Protocol16Deserializer.deserializeOperationRequest(this.payload);
@@ -78,6 +78,20 @@ class PhotonCommand {
 			break;
 		  case 4:
 			this.data = Protocol16Deserializer.deserializeEventData(this.payload);
+
+			// 🔍 TRACE: Log après désérialisation pour Event 29
+			if (this.data.code === 29 && global.loggerServer) {
+				global.loggerServer.warn('PACKET_RAW', 'PhotonCommand_Event29_AfterDeserialize', {
+					code: this.data.code,
+					param7_type: typeof this.data.parameters[7],
+					param7_isBuffer: Buffer.isBuffer(this.data.parameters[7]),
+					param7_isArray: Array.isArray(this.data.parameters[7]),
+					param7_value: this.data.parameters[7],
+					param999: this.data.parameters[999],
+					param998: this.data.parameters[998],
+					note: 'Event 29 AFTER Protocol16Deserializer.deserializeEventData()'
+				});
+			}
 
 			this.parent.parent.emit('event', this.data);
 

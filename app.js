@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const PhotonParser = require('./scripts/classes/PhotonPacketParser');
 var Cap = require('cap').Cap;
 var decoders = require('cap').decoders;
@@ -203,11 +203,13 @@ function StartRadar()
   const filter = 'udp and (dst port 5056 or src port 5056)';
   var bufSize =  4096;
   var buffer = Buffer.alloc(4096);
+  // 📊 Initialize Logger Server BEFORE PhotonParser
+  const logger = new LoggerServer('./logs');
+  global.loggerServer = logger; // Make logger globally accessible (like window.logger on client)
+  console.log('📊 [App] Logger initialized and exposed as global.loggerServer');
+
   const manager = new PhotonParser();
   var linkType = c.open(device, filter, bufSize, buffer);
-  // 📊 Initialize Logger Server
-  const logger = new LoggerServer('./logs');
-  console.log('📊 [App] Logger initialized');
 
 
   c.setMinBytes && c.setMinBytes(0);
@@ -239,6 +241,21 @@ function StartRadar()
     manager.on('event', (dictonary) =>
     {
       const eventCode = dictonary["parameters"][252];
+
+      // 🔍 DEBUG: Log Event 29 to see if param[7] is already deserialized
+      if (eventCode === 29) {
+        loggerServer.warn('PACKET_RAW', 'APP_JS_Event29_Received', {
+          param7_type: typeof dictonary["parameters"][7],
+          param7_isArray: Array.isArray(dictonary["parameters"][7]),
+          param7_value: dictonary["parameters"][7],
+          param995_eventCode: dictonary["parameters"][995],  // 🔍 Raw event code from deserializer
+          param996_debug: dictonary["parameters"][996],  // ✅ Check exhaustive debug
+          param997_marker: dictonary["parameters"][997],  // ✅ Check execution proof
+          param999_marker: dictonary["parameters"][999],  // Check success/failure
+          param998_marker: dictonary["parameters"][998],
+          note: 'Event 29 received in app.js - checking if Protocol16Deserializer ran'
+        });
+      }
 
       switch (eventCode) {
         case EventCodes.EventCodes.NewCharacter:

@@ -92,85 +92,64 @@ export class PlayersHandler {
         }
     }
 
-    handleNewPlayerEvent(Parameters, isBZ)
-    {
-        // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
-        const allParams = {};
-        for (let key in Parameters) {
-            if (Parameters.hasOwnProperty(key)) {
-                allParams[`param[${key}]`] = Parameters[key];
-            }
-        }
+    handleNewPlayerEvent(id, Parameters) {
+	const nickname = Parameters[1];
+	const guildName = Parameters[8];
+	const allianceName = Parameters[9];
 
-        window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.NewPlayerEvent_ALL_PARAMS, {
-            playerId: Parameters[0],
-            nickname: Parameters[1],
-            guildName: Parameters[8],
-            alliance: Parameters[49],
-            health: Parameters[22],
-            flagId: Parameters[53],
-            allParameters: allParams,
-            parameterCount: Object.keys(Parameters).length
-        });
+	// CRITICAL: Extract player initial position
+	// ✅ SERVER-SIDE DESERIALIZATION: Server now deserializes param[7] Buffer to Array
+	// Protocol16Deserializer.js lines 275-308 handles NewCharacter param[7] deserialization
+	// Trust server-deserialized data FIRST, fallback to other params only if unavailable
+	let initialPosX, initialPosY;
+	let positionSource;
 
-        if (!this.settings.settingDot)
-            return -1;
+	// PRIORITY 1: param[7] deserialized server-side ✅ TRUST SERVER
+	if (Array.isArray(Parameters[7]) && Parameters[7].length >= 2) {
+		initialPosX = Parameters[7][0];
+		initialPosY = Parameters[7][1];
+		positionSource = 'param[7]_server_deserialized';
+	}
+	// PRIORITY 2: param[12]/[13] fallback (edge cases where server didn't deserialize)
+	else if (Array.isArray(Parameters[12]) && Parameters[12].length >= 2) {
+		initialPosX = Parameters[12][0];
+		initialPosY = Parameters[12][1];
+		positionSource = 'param[12]_array_fallback';
+	}
+	else if (Array.isArray(Parameters[13]) && Parameters[13].length >= 2) {
+		initialPosX = Parameters[13][0];
+		initialPosY = Parameters[13][1];
+		positionSource = 'param[13]_array_fallback';
+	}
+	// PRIORITY 3: World coordinates param[19]/[20] (LAST RESORT - won't work for radar)
+	else {
+		initialPosX = Parameters[19] || 0;
+		initialPosY = Parameters[20] || 0;
+		positionSource = 'param[19]_[20]_world_fallback';
 
-        /* General */
-        const id = Parameters[0];
-        const nickname = Parameters[1];
+		// ⚠️ WARNING: Using world coords means server deserialization may have failed
+		window.logger?.warn(CATEGORIES.PLAYER, 'Player_WorldCoords_Fallback', {
+			playerId: id,
+			nickname: nickname,
+			param7: Parameters[7],
+			param12: Parameters[12],
+			param13: Parameters[13],
+			note: '⚠️ Using world coords - server deserialization may have failed'
+		});
+	}
 
-        if (this.alreadyIgnoredPlayers.find(name => name === nickname.toUpperCase()))
-            return -1;
+	window.logger?.debug(CATEGORIES.PLAYER, EVENTS.PLAYER_NEW, {
+		playerId: id,
+		nickname: nickname,
+		guildName: guildName,
+		allianceName: allianceName,
+		initialPosX: initialPosX,
+		initialPosY: initialPosY,
+		positionSource: positionSource
+	});
 
-        if (this.ignorePlayers.find(name => name === nickname.toUpperCase()))
-        {
-            this.alreadyIgnoredPlayers.push(nickname.toUpperCase());
-            return -1;
-        }
-
-        const guildName = String(Parameters[8]); 
-
-        if (this.ignoreGuilds.find(name => name === guildName.toUpperCase()))
-        {
-            this.alreadyIgnoredPlayers.push(nickname.toUpperCase());
-            return -1;
-        }
-
-        const alliance = String(Parameters[49]);
-
-        if (this.ignoreAlliances.find(name => name === alliance.toUpperCase()))
-        {
-            this.alreadyIgnoredPlayers.push(nickname.toUpperCase());
-            return -1;
-        }
-
-        /* Position */
-        //var positionArray = Parameters[14];
-        /*const posX = positionArray[0];
-        const posY = positionArray[1];*/
-
-       
-
-        /* Health */
-        const currentHealth = Parameters[22];
-        const initialHealth = Parameters[23];
-
-        /* Items & flag */
-        const items = Parameters[40];
-        const flagId = Parameters[53] | 0;
-
-        if (isBZ)
-        {
-            if (!this.settings.settingDangerousPlayers) return -1;
-        }
-        else if ((flagId == 0 && !this.settings.settingPassivePlayers)
-            || (flagId >= 1 && flagId <= 6 && !this.settings.settingFactionPlayers)
-            || (flagId == 255 && !this.settings.settingDangerousPlayers)
-        ) return -1;
-
-        return this.addPlayer(0, 0, id, nickname, guildName, currentHealth, initialHealth, items, this.settings.settingSound, flagId);
-    }
+	this.addPlayer(id, nickname, initialPosX, initialPosY, guildName, allianceName);
+}
 
     handleMountedPlayerEvent(id, parameters)
     {
@@ -196,10 +175,30 @@ export class PlayersHandler {
     {
         const existingPlayer = this.playersInRange.find(player => player.id === id);
      
-        if (existingPlayer) return -1;
+        if (existingPlayer) {
+            window.logger?.debug(this.CATEGORIES.PLAYER, 'PlayerAlreadyExists', {
+                playerId: id,
+                nickname: nickname,
+                existingNickname: existingPlayer.nickname
+            });
+            return -1;
+        }
 
         const player = new Player(posX, posY, id, nickname, guildName, currentHealth, initialHealth, items, flagId);
         this.playersInRange.push(player);
+
+        // 🔬 DIAG: Verify coordinates are correctly assigned to player object
+        window.logger?.warn(this.CATEGORIES.PLAYER, 'DIAG_PlayerCreated', {
+            playerId: id,
+            nickname: nickname,
+            input_posX: posX,
+            input_posY: posY,
+            player_posX: player.posX,
+            player_posY: player.posY,
+            player_oldPosX: player.oldPosX,
+            player_oldPosY: player.oldPosY,
+            note: 'Player object created - check if coordinates are correctly assigned'
+        });
 
         window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerAdded', {
             playerId: id,
@@ -263,13 +262,36 @@ export class PlayersHandler {
 
     updatePlayerPosition(id, posX, posY, parameters)
     {
+        // 🐛 CRITICAL DEBUG: Log position updates to detect corrupted values
+        if (!window.__posUpdateCount) window.__posUpdateCount = 0;
+        window.__posUpdateCount++;
+
+        if (window.__posUpdateCount % 100 === 1 || Math.abs(posX) > 100000 || Math.abs(posY) > 100000) {
+            window.logger?.warn(this.CATEGORIES.PLAYER, 'PlayerPositionUpdate', {
+                id,
+                posX,
+                posY,
+                posXType: typeof posX,
+                posYType: typeof posY,
+                updateCount: window.__posUpdateCount,
+                isCorrupted: Math.abs(posX) > 100000 || Math.abs(posY) > 100000
+            });
+        }
+
+        // Find existing player
         for (const player of this.playersInRange)
         {
             if (player.id === id)
             {
-                const data = parameters[1]["data"];
+                player.posX = posX;
+                player.posY = posY;
+                return;
             }
         }
+
+        // Player not found - Move events with Buffer are skipped in Utils.js
+        // Only mobs/NPCs with direct param[4]/[5] positions reach here
+        // Ignore silently (mob positions are handled by mobsHandler)
     }
 
     UpdatePlayerHealth(Parameters)

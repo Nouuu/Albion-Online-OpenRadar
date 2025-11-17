@@ -58,7 +58,7 @@ class LoggerServer {
         const logEntry = {
             timestamp: new Date().toISOString(),
             level,
-            category,
+            category: `[SERVER] ${category}`, // Prefix all server logs with [SERVER]
             event,
             data,
             context: {
@@ -84,6 +84,25 @@ class LoggerServer {
         } catch (err) {
             console.error('❌ [LoggerServer] Error writing error log:', err);
         }
+    }
+
+    /**
+     * Convenience methods matching LoggerClient API
+     */
+    debug(category, event, data, context = {}) {
+        this.log('DEBUG', category, event, data, context);
+    }
+
+    info(category, event, data, context = {}) {
+        this.log('INFO', category, event, data, context);
+    }
+
+    warn(category, event, data, context = {}) {
+        this.log('WARN', category, event, data, context);
+    }
+
+    critical(category, event, data, context = {}) {
+        this.log('CRITICAL', category, event, data, context);
     }
 
     /**
