@@ -8,7 +8,7 @@
 
 ### Problème en Cours: Mouvement des Joueurs 🔴
 
-**Fichier de référence**: [`PLAYER_MOVEMENT_CURRENT_STATUS.md`](PLAYER_MOVEMENT_CURRENT_STATUS.md)
+**Fichier de référence**: [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md)
 
 **Résumé**:
 - ✅ Les joueurs sont **détectés** et apparaissent sur le radar
@@ -30,7 +30,7 @@
 
 | Fichier | Description | Status |
 |---------|-------------|--------|
-| [`PLAYER_MOVEMENT_CURRENT_STATUS.md`](PLAYER_MOVEMENT_CURRENT_STATUS.md) | État actuel du débogage joueurs | 🔴 EN COURS |
+| [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md) | État actuel du débogage joueurs et mouvement | 🔴 EN COURS |
 | [`IMPROVEMENTS.md`](IMPROVEMENTS.md) | Historique des améliorations | ✅ À jour |
 | [`COLLECTION_GUIDE.md`](COLLECTION_GUIDE.md) | Guide collecte TypeIDs mobs | ✅ Valide |
 | [`QUICK_START.md`](QUICK_START.md) | Démarrage rapide outils | ✅ Valide |
@@ -40,6 +40,7 @@
 ### Archive
 
 - `archive_2025-11-09/` → Anciennes investigations basées sur hypothèses incorrectes (protocole différent, chiffrement, etc.)
+- `archive_2025-11-17/` → Investigations mouvement joueurs (buffer deserialization, offsets, corrections appliquées)
 
 ---
 
@@ -47,11 +48,11 @@
 
 ### Si vous êtes Claude (ou un autre IA)
 
-1. **Lire d'abord**: [`PLAYER_MOVEMENT_CURRENT_STATUS.md`](PLAYER_MOVEMENT_CURRENT_STATUS.md)
-   - Contient l'état exact du problème
-   - Timeline du bug
-   - Hypothèses en cours
-   - Logs diagnostiques actifs
+1. **Lire d'abord**: [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md)
+   - Contient l'état exact du problème (détection + mouvement)
+   - Timeline complète des investigations
+   - Leçons apprises des régressions
+   - Prochaines étapes prioritaires
 
 2. **Vérifier**: [`IMPROVEMENTS.md`](IMPROVEMENTS.md) section "2025-11-10"
    - Résumé des corrections appliquées
@@ -77,17 +78,23 @@
 
 ---
 
-## ⚠️ Documents Obsolètes/Trompeurs (SUPPRIMÉS)
+## ⚠️ Documents Archivés
 
-Ces documents ont été **supprimés** car ils contenaient des conclusions incorrectes:
+Ces documents ont été **archivés** car ils concernent des investigations spécifiques désormais consolidées:
 
-- ~~`PLAYER_DETECTION_SOLUTION.md`~~ → Disait que tout était résolu (faux!)
-- Voir `archive_2025-11-09/README.md` pour la liste complète
+### `archive_2025-11-17/`
+- `BUFFER_DESERIALIZATION_STATUS.md` → Investigation détaillée buffer deserialization
+- `PLAYER_MOVEMENT_INVESTIGATION_2025-11-10_PM.md` → Investigation mouvement (session PM)
+- `PLAYER_MOVEMENT_CURRENT_STATUS.md` → Status mouvement (obsolète, voir PLAYER_DETECTION_STATUS.md)
+- `PLAYER_MOVEMENT_FIX_2025-11-10.md` → Tentative de fix (supercédé)
 
-**Pourquoi supprimés?**
-- Induisaient en erreur (détection initiale ≠ mouvement)
-- Conclusions basées sur tests incomplets
-- Créaient confusion sur l'état réel du projet
+### `archive_2025-11-09/`
+- Voir `archive_2025-11-09/README.md` pour détails
+
+**Pourquoi archivés?**
+- Consolidés dans [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md)
+- Conservés pour référence historique des investigations
+- Documentation des leçons apprises et erreurs à éviter
 
 ---
 

@@ -6,7 +6,7 @@
 
 **Problème :** Les joueurs sont détectés mais **ne bougent pas** (restent figés à position initiale)
 **Cause :** Move events ne mettent pas à jour les positions
-**Status :** 🔴 **EN COURS** (voir `PLAYER_MOVEMENT_CURRENT_STATUS.md`)
+**Status :** 🔴 **EN COURS** (voir [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md))
 
 ### Ce qui fonctionne ✅
 
@@ -42,8 +42,9 @@
 
 ### Documentation
 
-- 📋 `docs/work/PLAYER_MOVEMENT_CURRENT_STATUS.md` - **État actuel détaillé**
-- 📦 `docs/work/archive_2025-11-09/PLAYER_DETECTION_SOLUTION_OBSOLETE.md` - Conclusion prématurée (détection ≠ mouvement)
+- 📋 [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md) - **État consolidé détaillé** (détection + mouvement + leçons apprises)
+- 📦 `archive_2025-11-17/` - Investigations spécifiques (buffer deserialization, mouvement, fixes)
+- 📦 `archive_2025-11-09/PLAYER_DETECTION_SOLUTION_OBSOLETE.md` - Conclusion prématurée (détection ≠ mouvement)
 
 ---
 
