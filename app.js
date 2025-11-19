@@ -242,21 +242,6 @@ function StartRadar()
     {
       const eventCode = dictonary["parameters"][252];
 
-      // 🔍 DEBUG: Log Event 29 to see if param[7] is already deserialized
-      if (eventCode === 29) {
-        loggerServer.warn('PACKET_RAW', 'APP_JS_Event29_Received', {
-          param7_type: typeof dictonary["parameters"][7],
-          param7_isArray: Array.isArray(dictonary["parameters"][7]),
-          param7_value: dictonary["parameters"][7],
-          param995_eventCode: dictonary["parameters"][995],  // 🔍 Raw event code from deserializer
-          param996_debug: dictonary["parameters"][996],  // ✅ Check exhaustive debug
-          param997_marker: dictonary["parameters"][997],  // ✅ Check execution proof
-          param999_marker: dictonary["parameters"][999],  // Check success/failure
-          param998_marker: dictonary["parameters"][998],
-          note: 'Event 29 received in app.js - checking if Protocol16Deserializer ran'
-        });
-      }
-
       switch (eventCode) {
         case EventCodes.EventCodes.NewCharacter:
         case EventCodes.EventCodes.Leave:
