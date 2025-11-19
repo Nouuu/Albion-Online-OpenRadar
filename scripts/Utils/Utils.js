@@ -383,24 +383,41 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.NewCharacter:
-            const ttt = playersHandler.handleNewPlayerEvent(Parameters, map.isBZ);
-            flashTime = ttt < 0 ? flashTime : ttt;
+            // ✅ Event 29 - Player spawn handling
+            // param[253] contains structured player data from Protocol16Deserializer
+            // Only process if validation passed (has Guid, Name, ObjectId)
 
-            // 🔬 DEEP DEBUG: Track player IDs for exhaustive logging
-            const playerName = Parameters[1];
-            if (playerName && typeof playerName === 'string' && playerName.length > 0 && Parameters[2]) {
-                // This is likely a player (has name and characterType)
-                if (!window.__knownPlayerIds) window.__knownPlayerIds = new Set();
-                if (!window.__knownPlayerIds.has(id)) {
-                    window.__knownPlayerIds.add(id);
+            // 🔍 DEBUG: Log that we reached this case
+            window.logger?.warn(CATEGORIES.PLAYER, 'Event29_Case_Reached', {
+                eventCode: eventCode,
+                hasParam253: !!Parameters[253],
+                param253: Parameters[253],
+                id: id
+            });
 
-                    window.logger?.info(CATEGORIES.PLAYER, 'DEEP_DEBUG_PlayerTracked', {
-                        id,
-                        name: playerName,
-                        totalTracked: window.__knownPlayerIds.size,
-                        note: 'Player added to DEEP DEBUG tracking list'
-                    });
-                }
+            if (Parameters[253]) {
+                const playerData = Parameters[253];
+
+                // Call existing handler with enhanced data
+                const ttt = playersHandler.handleNewPlayerEvent(id, Parameters);
+                flashTime = ttt < 0 ? flashTime : ttt;
+
+                // Log player spawn with position
+                window.logger?.info(CATEGORIES.PLAYER, EVENTS.PlayerSpawn, {
+                    id: playerData.objectId,
+                    name: playerData.name,
+                    guild: playerData.guild,
+                    spawnX: playerData.spawnPosition.x,
+                    spawnY: playerData.spawnPosition.y,
+                    note: 'Player spawned - Event 29 processed'
+                });
+            } else {
+                // 🔍 DEBUG: Log if param[253] is missing
+                window.logger?.error(CATEGORIES.PLAYER, 'Event29_Missing_Param253', {
+                    eventCode: eventCode,
+                    id: id,
+                    allParamKeys: Object.keys(Parameters)
+                });
             }
             break;
 

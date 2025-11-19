@@ -1,3 +1,11 @@
+// 📊 Initialize Logger FIRST - before any other requires
+// This ensures global.loggerServer is available when PhotonParser and Protocol16Deserializer load
+const path = require("path");
+const LoggerServer = require('./server-scripts/LoggerServer');
+const logger = new LoggerServer('./logs');
+global.loggerServer = logger; // Make logger globally accessible
+console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerServer');
+
 const express = require('express');
 const PhotonParser = require('./scripts/classes/PhotonPacketParser');
 var Cap = require('cap').Cap;
@@ -5,7 +13,6 @@ var decoders = require('cap').decoders;
 const WebSocket = require('ws');
 
 const fs = require("fs");
-const path = require("path");
 
 // Runtime checks: use lightweight module included in the packaged executable
 try {
@@ -23,8 +30,6 @@ try {
 }
 
 const { getAdapterIp } = require('./server-scripts/adapter-selector');
-const LoggerServer = require('./server-scripts/LoggerServer');
-
 const EventCodes = require('./scripts/Utils/EventCodesApp.js')
 
 // Detect if application is packaged with pkg
@@ -203,10 +208,7 @@ function StartRadar()
   const filter = 'udp and (dst port 5056 or src port 5056)';
   var bufSize =  4096;
   var buffer = Buffer.alloc(4096);
-  // 📊 Initialize Logger Server BEFORE PhotonParser
-  const logger = new LoggerServer('./logs');
-  global.loggerServer = logger; // Make logger globally accessible (like window.logger on client)
-  console.log('📊 [App] Logger initialized and exposed as global.loggerServer');
+  // Logger already initialized at top of file (global.loggerServer available)
 
   const manager = new PhotonParser();
   var linkType = c.open(device, filter, bufSize, buffer);
@@ -241,6 +243,17 @@ function StartRadar()
     manager.on('event', (dictonary) =>
     {
       const eventCode = dictonary["parameters"][252];
+
+      // 🔍 DEBUG: Log Event 29 in app.js to see if param[253] exists
+      if (eventCode === 29) {
+        logger.info('PACKET_RAW', 'APP_JS_Event29_Received', {
+          objectId: dictonary["parameters"][0],
+          name: dictonary["parameters"][1],
+          hasParam253: !!dictonary["parameters"][253],
+          param253: dictonary["parameters"][253],
+          allParamKeys: Object.keys(dictonary["parameters"])
+        });
+      }
 
       switch (eventCode) {
         case EventCodes.EventCodes.NewCharacter:

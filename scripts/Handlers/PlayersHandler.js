@@ -97,20 +97,31 @@ export class PlayersHandler {
 	const guildName = Parameters[8];
 	const allianceName = Parameters[9];
 
-	// CRITICAL: Extract player initial position
-	// ✅ SERVER-SIDE DESERIALIZATION: Server now deserializes param[7] Buffer to Array
-	// Protocol16Deserializer.js lines 275-308 handles NewCharacter param[7] deserialization
-	// Trust server-deserialized data FIRST, fallback to other params only if unavailable
+	// ✅ PRIORITY 1: Use param[253] structured data from Protocol16Deserializer
+	// Server-side creates param[253] with: {objectId, name, guid, guild, spawnPosition: {x, y}}
 	let initialPosX, initialPosY;
 	let positionSource;
 
-	// PRIORITY 1: param[7] deserialized server-side ✅ TRUST SERVER
-	if (Array.isArray(Parameters[7]) && Parameters[7].length >= 2) {
+	if (Parameters[253] && Parameters[253].spawnPosition) {
+		initialPosX = Parameters[253].spawnPosition.x;
+		initialPosY = Parameters[253].spawnPosition.y;
+		positionSource = 'param[253]_structured_data';
+		
+		window.logger?.info(CATEGORIES.PLAYER, 'Player_Using_Param253', {
+			playerId: id,
+			nickname: nickname,
+			spawnX: initialPosX,
+			spawnY: initialPosY,
+			note: '✅ Using param[253] structured data from Protocol16Deserializer'
+		});
+	}
+	// PRIORITY 2: param[7] deserialized server-side (legacy fallback)
+	else if (Array.isArray(Parameters[7]) && Parameters[7].length >= 2) {
 		initialPosX = Parameters[7][0];
 		initialPosY = Parameters[7][1];
 		positionSource = 'param[7]_server_deserialized';
 	}
-	// PRIORITY 2: param[12]/[13] fallback (edge cases where server didn't deserialize)
+	// PRIORITY 3: param[12]/[13] fallback (edge cases where server didn't deserialize)
 	else if (Array.isArray(Parameters[12]) && Parameters[12].length >= 2) {
 		initialPosX = Parameters[12][0];
 		initialPosY = Parameters[12][1];
@@ -121,7 +132,7 @@ export class PlayersHandler {
 		initialPosY = Parameters[13][1];
 		positionSource = 'param[13]_array_fallback';
 	}
-	// PRIORITY 3: World coordinates param[19]/[20] (LAST RESORT - won't work for radar)
+	// PRIORITY 4: World coordinates param[19]/[20] (LAST RESORT - won't work for radar)
 	else {
 		initialPosX = Parameters[19] || 0;
 		initialPosY = Parameters[20] || 0;
@@ -131,10 +142,11 @@ export class PlayersHandler {
 		window.logger?.warn(CATEGORIES.PLAYER, 'Player_WorldCoords_Fallback', {
 			playerId: id,
 			nickname: nickname,
+			param253: Parameters[253],
 			param7: Parameters[7],
 			param12: Parameters[12],
 			param13: Parameters[13],
-			note: '⚠️ Using world coords - server deserialization may have failed'
+			note: '⚠️ Using world coords - param[253] not available'
 		});
 	}
 
@@ -148,7 +160,8 @@ export class PlayersHandler {
 		positionSource: positionSource
 	});
 
-	this.addPlayer(id, nickname, initialPosX, initialPosY, guildName, allianceName);
+	// ✅ CORRECT ORDER: addPlayer(posX, posY, id, nickname, guildName, ...)
+	this.addPlayer(initialPosX, initialPosY, id, nickname, guildName, allianceName);
 }
 
     handleMountedPlayerEvent(id, parameters)
