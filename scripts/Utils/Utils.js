@@ -601,6 +601,9 @@ function onRequest(Parameters)
             window.lpX = lpX;  // Sync global
             window.lpY = lpY;
 
+            // ✅ Sync playersHandler.localPlayer with lpX/lpY
+            playersHandler.updateLocalPlayerPosition(lpX, lpY);
+
             if (window.__moveRequestCount % 100 === 1) {
                 window.logger?.warn(CATEGORIES.PLAYER, 'OnRequest_Move_BufferDecoded', {
                     bufferLength: uint8Array.length,
@@ -617,6 +620,9 @@ function onRequest(Parameters)
             lpY = Parameters[1][1];
             window.lpX = lpX;  // Sync global
             window.lpY = lpY;
+
+            // ✅ Sync playersHandler.localPlayer with lpX/lpY
+            playersHandler.updateLocalPlayerPosition(lpX, lpY);
 
             if (window.__moveRequestCount % 100 === 1) {
                 window.logger?.info(CATEGORIES.PLAYER, 'OnRequest_Move_Array', {
@@ -662,6 +668,9 @@ function onResponse(Parameters)
             window.lpX = lpX;  // Sync global
             window.lpY = lpY;
 
+            // ✅ Sync playersHandler.localPlayer with lpX/lpY
+            playersHandler.updateLocalPlayerPosition(lpX, lpY);
+
             // Convert to hex for logging
             const bufferHex = Array.from(uint8Array)
                 .map(b => b.toString(16).padStart(2, '0'))
@@ -681,6 +690,9 @@ function onResponse(Parameters)
             lpY = Parameters[9][1];
             window.lpX = lpX;  // Sync global
             window.lpY = lpY;
+
+            // ✅ Sync playersHandler.localPlayer with lpX/lpY
+            playersHandler.updateLocalPlayerPosition(lpX, lpY);
 
             window.logger?.info(CATEGORIES.PLAYER, 'OnResponse_JoinMap_Array', {
                 lpX: lpX,

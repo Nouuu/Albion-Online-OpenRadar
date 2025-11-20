@@ -150,18 +150,44 @@ export class PlayersHandler {
 		});
 	}
 
+	// 🔍 Convert world coordinates to relative (same as mobs/resources)
+	// Mobs use param[7] which contains RELATIVE coords [-347.8, 32.3]
+	// Players use param[253].spawnPosition which contains WORLD ABSOLUTE coords [108.18, 7.70]
+	// Both use the same interpolation formula designed for RELATIVE coords
+	// Therefore: convert world → relative here to match mobs behavior
+	const localPosX = this.localPlayer.posX;
+	const localPosY = this.localPlayer.posY;
+	const relativePosX = initialPosX - localPosX;
+	const relativePosY = initialPosY - localPosY;
+
+	// 🔬 DIAG: Log world vs relative conversion
+	window.logger?.warn(CATEGORIES.PLAYER, 'DIAG_PlayerPositions', {
+		playerId: id,
+		nickname: nickname,
+		worldPosX: initialPosX,
+		worldPosY: initialPosY,
+		localPlayerX: localPosX,
+		localPlayerY: localPosY,
+		relativePosX: relativePosX,
+		relativePosY: relativePosY,
+		positionSource: positionSource,
+		note: 'World coords converted to relative (same as mobs/resources)'
+	});
+
 	window.logger?.debug(CATEGORIES.PLAYER, EVENTS.PLAYER_NEW, {
 		playerId: id,
 		nickname: nickname,
 		guildName: guildName,
 		allianceName: allianceName,
-		initialPosX: initialPosX,
-		initialPosY: initialPosY,
+		worldPosX: initialPosX,
+		worldPosY: initialPosY,
+		relativePosX: relativePosX,
+		relativePosY: relativePosY,
 		positionSource: positionSource
 	});
 
-	// ✅ CORRECT ORDER: addPlayer(posX, posY, id, nickname, guildName, ...)
-	this.addPlayer(initialPosX, initialPosY, id, nickname, guildName, allianceName);
+	// ✅ Use RELATIVE coords (not world) - same as mobs/resources
+	this.addPlayer(relativePosX, relativePosY, id, nickname, guildName, allianceName);
 }
 
     handleMountedPlayerEvent(id, parameters)
