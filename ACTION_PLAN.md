@@ -91,26 +91,26 @@ const hY = posY - lpY;
 - Ajouté logging events 10, 41, 45-50 (lignes 796-809)
 - **Logs attendus**: `SEARCH_MapInfo_Event{10,41,45-50}`
 
+#### ✅ Phase 2.4: Nettoyage Logs Debug (Terminé - Commit 6fe0e2b)
+**Fichiers nettoyés**:
+- `scripts/Handlers/PlayersHandler.js`: Supprimé DIAG_PlayerPositions, DIAG_PlayerCreated, Player_Using_Param253, Player_WorldCoords_Fallback
+- `scripts/Drawings/PlayersDrawing.js`: Supprimé logs verbeux DIAG_Interpolate, DIAG_Rendering
+- `scripts/Utils/Utils.js`: Nettoyage logs obsolètes
+- **Logs conservés**: Event29_MissingParam253 (error), PlayerAlreadyExists (debug), RawBuffer_WorldCoordsCandidate, DEEP_ANALYSIS
+
 #### ⏳ Phase 3: Analyse Logs (À faire)
 **Fichier à analyser**: `logs/sessions/session_2025-11-21T17-38-42.jsonl`
 
 **Vérifications**:
 1. Compter occurrences `RawBuffer_WorldCoordsCandidate` (avant: 0, maintenant: ?)
-2. Compter `CALC_lpWorld_FromSpawn` (nouveaux logs reverse-engineering)
-3. Compter `DEEP_ANALYSIS` (deep mode activé ?)
-4. Compter `WORKFLOW_Event29_PlayerDetected` (player spawns)
-5. Analyser si nouvelles données disponibles
+2. Compter `DEEP_ANALYSIS` (deep mode activé ?)
+3. Analyser si nouvelles données disponibles
 
 **Commandes d'analyse**:
 ```bash
 # Compter logs spécifiques
 grep -c "RawBuffer_WorldCoordsCandidate" session_2025-11-21T17-38-42.jsonl
-grep -c "CALC_lpWorld_FromSpawn" session_2025-11-21T17-38-42.jsonl
 grep -c "DEEP_ANALYSIS" session_2025-11-21T17-38-42.jsonl
-
-# Extraire samples
-grep "RawBuffer_WorldCoordsCandidate" session_2025-11-21T17-38-42.jsonl | head -3
-grep "CALC_lpWorld_FromSpawn" session_2025-11-21T17-38-42.jsonl | head -3
 ```
 
 ---
@@ -202,22 +202,99 @@ Photon Protocol:
 
 ---
 
-#### 🎯 Piste 0: Analyser PlayerMoving Requests des AUTRES Joueurs (⭐ PRIORITÉ #1)
+#### 🎯 Piste 0: Reproduire Approche AlbionRadar (⭐ PRIORITÉ #1)
 
-**Hypothèse**: PlayerMoving REQUEST contient mouvement autres joueurs en coords RELATIVES
+**Référence**: `raidenblackout/AlbionRadar` - [GitHub](https://github.com/raidenblackout/AlbionRadar)
 
-**Actions**:
-1. [✅] Analyser `app.js` - Comprendre flow Photon packets
-2. [✅] Vérifier que Requests/Responses sont gérés (CONFIRMÉ)
-3. [ ] Logger TOUS les PlayerMoving requests (pas juste local player)
-4. [ ] Identifier si certains requests concernent d'autres joueurs
-5. [ ] Comparer coords requests vs Event 29 spawn coords
-6. [ ] Tester si coords requests sont déjà RELATIVES
+**Leur Architecture** (PlayersHandler.cs):
+```csharp
+// HandlePlayerMoving() ligne ~120
+private void HandlePlayerMoving(OperationRequest operationRequest) {
+    object[] location = (object[])operationRequest.Parameters[(byte)1];
+    float.TryParse(location.GetValue(0)?.ToString(), out float posX);
+    float.TryParse(location.GetValue(1)?.ToString(), out float posY);
 
-**Implémentation**:
-- Modifier `Utils.js onRequest()` pour logger TOUS les Operation 21
-- Ajouter filtrage par player ID pour distinguer local vs autres
-- Comparer avec coords Event 29 des mêmes joueurs
+    _player.PositionX = posX;  // PAS de conversion!
+    _player.PositionY = posY;
+}
+```
+
+**Hypothèse Clé**: Ils utilisent PlayerMoving REQUEST (Operation 21) au lieu de Event 29 (NewCharacter) car les coords sont **déjà RELATIVES**
+
+---
+
+**📋 Plan d'Action Concret**:
+
+**Phase A: Investigation Requests** (Analyse)
+1. [✅] Vérifier que Operation 21 (PlayerMoving) est intercepté (CONFIRMÉ - Utils.js:586)
+2. [ ] Logger STRUCTURE complète de TOUS les Operation 21 requests:
+   - `Parameters[0]` = ID joueur?
+   - `Parameters[1]` = Array location[0]/[1]?
+   - `Parameters[253]` = Operation code (21)
+3. [ ] Identifier quels requests sont du LOCAL player vs AUTRES joueurs
+4. [ ] Comparer coords dans requests vs coords Event 29 spawn
+
+**Code à implémenter** (`Utils.js onRequest()`):
+```javascript
+function onRequest(Parameters) {
+    if (Parameters[253] == 21) {  // PlayerMoving
+        // 🔬 LOG STRUCTURE COMPLÈTE
+        window.logger?.warn(CATEGORIES.PLAYER, 'REQUEST_Operation21_Full', {
+            param0_playerId: Parameters[0],
+            param1_location: Parameters[1],
+            param253_opCode: Parameters[253],
+            allParams: Parameters,
+            note: '🔍 Analyse structure PlayerMoving request'
+        });
+
+        // Existing local player lpX/lpY extraction...
+    }
+}
+```
+
+---
+
+**Phase B: Test Approche AlbionRadar** (Implémentation)
+
+**Option 1: Modifier PlayersHandler pour utiliser Requests**
+
+1. [ ] Créer `PlayersHandler_V2.js` (nouveau fichier, rollback facile)
+2. [ ] Implémenter méthode `handlePlayerMoving(playerId, location)`:
+   ```javascript
+   handlePlayerMoving(playerId, location) {
+       const player = this.playersList.find(p => p.id === playerId);
+       if (!player) return;
+
+       // ✅ COMME ALBIONRADAR: Assign directement sans conversion
+       player.posX = location[0];
+       player.posY = location[1];
+
+       window.logger?.info(CATEGORIES.PLAYER, 'Player_MovedViaRequest', {
+           playerId: playerId,
+           posX: location[0],
+           posY: location[1],
+           note: '✅ AlbionRadar approach - coords from REQUEST (relative?)'
+       });
+   }
+   ```
+3. [ ] Modifier `Utils.js onRequest()` pour appeler `handlePlayerMoving()` pour TOUS les joueurs
+4. [ ] Tester si les joueurs sont correctement positionnés (plus de décalage?)
+
+**Option 2: Hybrid - Garder Event 29 spawn, utiliser Requests pour update**
+
+1. [ ] Event 29: Créer joueur avec coords initiales (comme actuellement)
+2. [ ] Operation 21 requests: Mettre à jour position avec coords directes (sans conversion)
+3. [ ] Comparer résultat vs Option 1
+
+---
+
+**Fichiers à modifier**:
+- `scripts/Utils/Utils.js` (ligne 586) - Fonction `onRequest()`
+- `scripts/Handlers/PlayersHandler.js` - Ajouter `handlePlayerMoving()`
+
+**Rollback**: Si ça ne fonctionne pas, supprimer `PlayersHandler_V2.js` et revert `Utils.js`
+
+**Critère de succès**: Joueurs positionnés correctement sans décalage par rapport à leur position réelle dans le jeu
 
 ---
 
@@ -510,5 +587,5 @@ Albion-Online-ZQRadar/
 
 ---
 
-**Dernière modification**: 2025-11-23 10:00
-**Prochaine étape**: **Piste 0 - Analyser PlayerMoving Requests des AUTRES joueurs**
+**Dernière modification**: 2025-11-23 18:45
+**Prochaine étape**: **Piste 0 Phase A - Logger structure Operation 21 requests pour analyse**
