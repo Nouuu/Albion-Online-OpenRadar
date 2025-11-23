@@ -256,13 +256,12 @@ function StartRadar()
       }
 
       switch (eventCode) {
-        case EventCodes.EventCodes.NewCharacter:
-        case EventCodes.EventCodes.Leave:
         case EventCodes.EventCodes.CharacterEquipmentChanged:
           server.clients.forEach(function(client) {
             client.send(JSON.stringify({ code : "items", dictionary: JSON.stringify(dictonary) }));
           });
-      
+          break;
+
         default:
           server.clients.forEach(function(client) {
             client.send(JSON.stringify({ code : "event", dictionary: JSON.stringify(dictonary) }));
@@ -276,7 +275,6 @@ function StartRadar()
       });*/
     });
 
-    
     manager.on('request', (dictonary) =>
     {
       const dictionaryDataJSON = JSON.stringify(dictonary);

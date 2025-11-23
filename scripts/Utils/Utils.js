@@ -377,7 +377,7 @@ function onEvent(Parameters)
             const posX = Parameters[4];
             const posY = Parameters[5];
 
-            //playersHandler.updatePlayerPosition(id, posX, posY, Parameters);
+            // playersHandler.updatePlayerPosition(id, posX, posY);
             mobsHandler.updateMistPosition(id, posX, posY);
             mobsHandler.updateMobPosition(id, posX, posY);
             break;
@@ -588,9 +588,6 @@ function onRequest(Parameters)
     // Player moving
     if (Parameters[253] == 21)
     {
-        // 🔍 CRITICAL: Verify Parameters[1] format every 100 moves
-        if (!window.__moveRequestCount) window.__moveRequestCount = 0;
-        window.__moveRequestCount++;
 
         // If Buffer, decode it (browser-compatible)
         if (Parameters[1] && Parameters[1].type === 'Buffer') {
@@ -603,16 +600,6 @@ function onRequest(Parameters)
 
             // ✅ Sync playersHandler.localPlayer with lpX/lpY
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
-
-            if (window.__moveRequestCount % 100 === 1) {
-                window.logger?.warn(CATEGORIES.PLAYER, 'OnRequest_Move_BufferDecoded', {
-                    bufferLength: uint8Array.length,
-                    decodedLpX: lpX,
-                    decodedLpY: lpY,
-                    moveCount: window.__moveRequestCount,
-                    note: '⚠️ Parameters[1] was Buffer - decoded as floats'
-                });
-            }
         }
         // If Array, use directly
         else if (Array.isArray(Parameters[1])) {
@@ -623,22 +610,12 @@ function onRequest(Parameters)
 
             // ✅ Sync playersHandler.localPlayer with lpX/lpY
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
-
-            if (window.__moveRequestCount % 100 === 1) {
-                window.logger?.info(CATEGORIES.PLAYER, 'OnRequest_Move_Array', {
-                    lpX: lpX,
-                    lpY: lpY,
-                    moveCount: window.__moveRequestCount,
-                    note: '✅ Parameters[1] is Array - using values directly'
-                });
-            }
         }
         // Unknown format
         else {
             window.logger?.error(CATEGORIES.PLAYER, 'OnRequest_Move_UnknownFormat', {
                 param1: Parameters[1],
                 param1Type: typeof Parameters[1],
-                moveCount: window.__moveRequestCount,
                 note: '❌ Parameters[1] format unknown - lpX/lpY may be corrupted!'
             });
         }
@@ -767,13 +744,12 @@ function render()
     }
 
     harvestablesDrawing.invalidate(context, harvestablesHandler.harvestableList);
-
     mobsDrawing.invalidate(context, mobsHandler.mobsList, mobsHandler.mistList);
     chestsDrawing.invalidate(context, chestsHandler.chestsList);
+    playersDrawing.invalidate(context, playersHandler.playersList);
     wispCageDrawing.Draw(context, wispCageHandler.cages);
     fishingDrawing.Draw(context, fishingHandler.fishes);
     dungeonsDrawing.Draw(context, dungeonsHandler.dungeonList);
-    playersDrawing.invalidate(context, playersHandler.playersInRange);
 
     // Draw cluster info boxes on top of all elements if any
     if (__clustersForInfo && __clustersForInfo.length) {
@@ -840,13 +816,13 @@ function update() {
 
 
     mobsDrawing.interpolate(mobsHandler.mobsList, mobsHandler.mistList, lpX, lpY, t);
+    playersDrawing.interpolate(playersHandler.playersList, lpX, lpY, t);
 
 
     chestsDrawing.interpolate(chestsHandler.chestsList, lpX, lpY, t);
     wispCageDrawing.Interpolate(wispCageHandler.cages, lpX, lpY, t);
     fishingDrawing.Interpolate(fishingHandler.fishes, lpX, lpY, t);
     dungeonsDrawing.interpolate(dungeonsHandler.dungeonList, lpX, lpY, t);
-    playersDrawing.interpolate(playersHandler.playersInRange, lpX, lpY, t);
 
     // Flash
     if (flashTime >= 0)
@@ -856,19 +832,6 @@ function update() {
 
     previousTime = currentTime;
 }
-
-function drawItems() {
-
-    contextItems.clearRect(0, 0, canvasItems.width, canvasItems.height);
-
-    if (settings.settingItems)
-    {
-        playersDrawing.drawItems(contextItems, canvasItems, playersHandler.playersInRange, settings.settingItemsDev);
-    }
-
-}
-const intervalItems = 500;
-setInterval(drawItems, intervalItems);
 
 function checkLocalStorage()
 {

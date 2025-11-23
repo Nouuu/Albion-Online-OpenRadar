@@ -258,16 +258,12 @@ class Protocol16Deserializer {
                 logger.info('PACKET_RAW', 'Event29_ServerSide_Validation', {
                     objectId: parameters[0],
                     name: parameters[1],
-                    param7_exists: !!parameters[7],
-                    param7_isBuffer: parameters[7] ? Buffer.isBuffer(parameters[7]) : false,
-                    param7_length: parameters[7] ? parameters[7].length : 0,
                     hasGuid,
                     hasName,
                     hasObjectId,
                     validationPassed: hasGuid && hasName && hasObjectId,
-                    param19: parameters[19],
-                    param20: parameters[20],
-                    allParamKeys: Object.keys(parameters)
+                    worldPosX: parameters[19],
+                    worldPosY: parameters[20]
                 });
             }
 
