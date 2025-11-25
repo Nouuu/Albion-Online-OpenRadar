@@ -180,18 +180,6 @@ class Protocol16Deserializer {
     static deserializeOperationRequest(input) {
         const operationCode = this.deserializeByte(input);
         const parameters = this.deserializeParameterTable(input);
-
-        // 🔍 DEBUG: Check if player data might be in OperationRequest
-        const logger = this.getLogger();
-        if (logger && parameters[1] && typeof parameters[1] === 'string' && parameters[7] && Buffer.isBuffer(parameters[7])) {
-            logger.info('PACKET_RAW', 'OperationRequest_PlayerLike', {
-                operationCode: operationCode,
-                name: parameters[1],
-                param7_length: parameters[7].length,
-                allParamKeys: Object.keys(parameters)
-            });
-        }
-
         return {operationCode, parameters};
     }
 
@@ -200,29 +188,15 @@ class Protocol16Deserializer {
         const returnCode = this.deserializeShort(input);
         const debugMessage = this.deserialize(input, this.deserializeByte(input));
         const parameters = this.deserializeParameterTable(input);
-
-        // 🔍 DEBUG: Check if player data might be in OperationResponse
-        const logger = this.getLogger();
-        if (logger && parameters[1] && typeof parameters[1] === 'string' && parameters[7] && Buffer.isBuffer(parameters[7])) {
-            logger.info('PACKET_RAW', 'OperationResponse_PlayerLike', {
-                operationCode: operationCode,
-                returnCode: returnCode,
-                name: parameters[1],
-                param7_length: parameters[7].length,
-                allParamKeys: Object.keys(parameters)
-            });
-        }
-
         return {operationCode, returnCode, debugMessage, parameters};
     }
 
     static deserializeEventData(input) {
         const code = this.deserializeByte(input);
-
         const parameters = this.deserializeParameterTable(input);
 
-        // ✅ Event 3 (Move) - RESTORED ORIGINAL CODE that worked for mobs/resources
-        // Simple offsets 9/13 universally - NO complex detection needed
+        // Event 3 (Move) - Decode positions for mobs/resources
+        // Simple float32 decode at offsets 9/13 (works for mobs, not for players)
         if (code == 3) {
             var bytes = new Uint8Array(parameters[1]);
             var position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);
@@ -230,66 +204,6 @@ class Protocol16Deserializer {
             parameters[4] = position0;
             parameters[5] = position1;
             parameters[252] = 3;
-        }
-
-        // ✅ Event 29 (NewCharacter) - PLAYERS ONLY
-        // NOTE: param[252] is ALREADY set by the protocol (not by us!)
-        // Check parameters[252] AFTER deserialization, not the event code
-        if (parameters[252] == 29) {
-            const logger = this.getLogger();
-            if (logger) {
-                logger.info('PACKET_RAW', 'Event29_Detected_ServerSide', {
-                    photonCode: code,
-                    param252: parameters[252],
-                    name: parameters[1],
-                    objectId: parameters[0]
-                });
-            }
-
-            // Extract player data for client handler
-            // Validation: Event 29 is ALWAYS a player (never a mob)
-            // Reference confirms: param[7] = Guid (16 bytes), params[19]/[20] = spawn position
-            const hasGuid = parameters[7] && Buffer.isBuffer(parameters[7]) && parameters[7].length === 16;
-            const hasName = parameters[1] && typeof parameters[1] === 'string' && parameters[1].length > 0;
-            const hasObjectId = parameters[0] !== undefined;
-
-            // 🔍 DEBUG: Log validation results server-side
-            if (logger) {
-                logger.info('PACKET_RAW', 'Event29_ServerSide_Validation', {
-                    objectId: parameters[0],
-                    name: parameters[1],
-                    hasGuid,
-                    hasName,
-                    hasObjectId,
-                    validationPassed: hasGuid && hasName && hasObjectId,
-                    worldPosX: parameters[19],
-                    worldPosY: parameters[20]
-                });
-            }
-
-            if (hasGuid && hasName && hasObjectId) {
-                // Store structured player data for client
-                parameters[253] = {
-                    objectId: parameters[0],
-                    name: parameters[1],
-                    guid: parameters[7],  // Keep as Buffer (16 bytes) - persistent player ID
-                    guild: parameters[8] || '',
-                    spawnPosition: {
-                        x: parameters[19] || 0,  // Float32 - confirmed by analysis
-                        y: parameters[20] || 0   // Float32 - confirmed by analysis
-                    }
-                };
-
-                // 🔍 DEBUG: Confirm param[253] created
-                if (logger) {
-                    logger.info('PACKET_RAW', 'Event29_Param253_Created', {
-                        objectId: parameters[253].objectId,
-                        name: parameters[253].name,
-                        spawnX: parameters[253].spawnPosition.x,
-                        spawnY: parameters[253].spawnPosition.y
-                    });
-                }
-            }
         }
 
         return {code, parameters};

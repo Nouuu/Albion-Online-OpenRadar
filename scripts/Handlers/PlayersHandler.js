@@ -55,12 +55,13 @@ export class PlayersHandler {
         const guildName = Parameters[8];
         const flagId = Parameters[11] || 0;
 
-        // ✅ Extract WORLD coords from param[253] (param[19]/[20])
+        // Validate param[253] exists (structured data from Protocol16Deserializer)
         if (!Parameters[253] || !Parameters[253].spawnPosition) {
-            window.logger?.error(CATEGORIES.PLAYER, 'Event29_MissingParam253', {
+            window.logger?.error(this.CATEGORIES.PLAYER, 'Event29_MissingParam253', {
                 playerId: id,
                 nickname: nickname,
-                note: '❌ param[253] missing - cannot add player'
+                hasParam253: !!Parameters[253],
+                paramKeys: Object.keys(Parameters)
             });
             return -1;
         }

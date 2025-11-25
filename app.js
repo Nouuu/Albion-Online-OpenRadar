@@ -244,17 +244,6 @@ function StartRadar()
     {
       const eventCode = dictonary["parameters"][252];
 
-      // 🔍 DEBUG: Log Event 29 in app.js to see if param[253] exists
-      if (eventCode === 29) {
-        logger.info('PACKET_RAW', 'APP_JS_Event29_Received', {
-          objectId: dictonary["parameters"][0],
-          name: dictonary["parameters"][1],
-          hasParam253: !!dictonary["parameters"][253],
-          param253: dictonary["parameters"][253],
-          allParamKeys: Object.keys(dictonary["parameters"])
-        });
-      }
-
       switch (eventCode) {
         case EventCodes.EventCodes.CharacterEquipmentChanged:
           server.clients.forEach(function(client) {

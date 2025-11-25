@@ -377,46 +377,22 @@ function onEvent(Parameters)
             const posX = Parameters[4];
             const posY = Parameters[5];
 
-            // playersHandler.updatePlayerPosition(id, posX, posY);
             mobsHandler.updateMistPosition(id, posX, posY);
             mobsHandler.updateMobPosition(id, posX, posY);
             break;
 
         case EventCodes.NewCharacter:
-            // ✅ Event 29 - Player spawn handling
-            // param[253] contains structured player data from Protocol16Deserializer
-            // Only process if validation passed (has Guid, Name, ObjectId)
-
-            // 🔍 DEBUG: Log that we reached this case
-            window.logger?.warn(CATEGORIES.PLAYER, 'Event29_Case_Reached', {
-                eventCode: eventCode,
-                hasParam253: !!Parameters[253],
-                param253: Parameters[253],
-                id: id
-            });
-
             if (Parameters[253]) {
                 const playerData = Parameters[253];
-
-                // Call existing handler with enhanced data
                 const ttt = playersHandler.handleNewPlayerEvent(id, Parameters);
                 flashTime = ttt < 0 ? flashTime : ttt;
 
-                // Log player spawn with position
                 window.logger?.info(CATEGORIES.PLAYER, EVENTS.PlayerSpawn, {
                     id: playerData.objectId,
                     name: playerData.name,
                     guild: playerData.guild,
                     spawnX: playerData.spawnPosition.x,
-                    spawnY: playerData.spawnPosition.y,
-                    note: 'Player spawned - Event 29 processed'
-                });
-            } else {
-                // 🔍 DEBUG: Log if param[253] is missing
-                window.logger?.error(CATEGORIES.PLAYER, 'Event29_Missing_Param253', {
-                    eventCode: eventCode,
-                    id: id,
-                    allParamKeys: Object.keys(Parameters)
+                    spawnY: playerData.spawnPosition.y
                 });
             }
             break;
@@ -585,38 +561,43 @@ function onEvent(Parameters)
 
 function onRequest(Parameters)
 {
-    // Player moving
+    // Player moving - Operation 21 is for LOCAL PLAYER ONLY
     if (Parameters[253] == 21)
     {
+        // ✅ Update lpX/lpY with EVERY Operation 21
+        // Operation 21 is ONLY for local player position tracking
+        if (Array.isArray(Parameters[1]) && Parameters[1].length === 2) {
+            const location = Parameters[1];
 
-        // If Buffer, decode it (browser-compatible)
-        if (Parameters[1] && Parameters[1].type === 'Buffer') {
+            // Update local player position (RELATIVE coords)
+            lpX = location[0];
+            lpY = location[1];
+            window.lpX = lpX;
+            window.lpY = lpY;
+            playersHandler.updateLocalPlayerPosition(lpX, lpY);
+
+            // 📊 LOG: Local player position updated
+            window.logger?.debug(CATEGORIES.PLAYER, 'Operation21_LocalPlayer', {
+                lpX: lpX,
+                lpY: lpY,
+                note: '✅ Local player position updated via Operation 21'
+            });
+        }
+        // Legacy Buffer handling (kept for compatibility)
+        else if (Parameters[1] && Parameters[1].type === 'Buffer') {
             const uint8Array = new Uint8Array(Parameters[1].data);
             const dataView = new DataView(uint8Array.buffer);
-            lpX = dataView.getFloat32(0, true);  // little-endian
+            lpX = dataView.getFloat32(0, true);
             lpY = dataView.getFloat32(4, true);
-            window.lpX = lpX;  // Sync global
+            window.lpX = lpX;
             window.lpY = lpY;
-
-            // ✅ Sync playersHandler.localPlayer with lpX/lpY
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
         }
-        // If Array, use directly
-        else if (Array.isArray(Parameters[1])) {
-            lpX = Parameters[1][0];
-            lpY = Parameters[1][1];
-            window.lpX = lpX;  // Sync global
-            window.lpY = lpY;
-
-            // ✅ Sync playersHandler.localPlayer with lpX/lpY
-            playersHandler.updateLocalPlayerPosition(lpX, lpY);
-        }
-        // Unknown format
         else {
             window.logger?.error(CATEGORIES.PLAYER, 'OnRequest_Move_UnknownFormat', {
                 param1: Parameters[1],
                 param1Type: typeof Parameters[1],
-                note: '❌ Parameters[1] format unknown - lpX/lpY may be corrupted!'
+                note: '❌ Parameters[1] format unknown!'
             });
         }
     }
