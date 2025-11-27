@@ -120,10 +120,6 @@ function StartRadar()
     res.render('main/radar-overlay');
   });
 
-  app.get('/stats', (req, res) => {
-    const viewName = 'main/stats';
-    res.render('layout', { mainContent: viewName });
-  });
 
   /*app.get('/logout', (req, res) => {
 
