@@ -211,6 +211,8 @@ images/Maps/
 images/Spells/
 images/*.zip
 
+public/ao-bin-dumps/*
+
 # IDE
 .idea/
 .vscode/
