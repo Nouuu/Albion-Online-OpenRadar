@@ -208,6 +208,7 @@ ip.txt
 images/Enemies/
 images/Items/
 images/Maps/
+images/Spells/
 images/*.zip
 
 # IDE

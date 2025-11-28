@@ -1,5 +1,5 @@
 class Player {
-    constructor(posX, posY, id, nickname, guildName1, flagId) {
+    constructor(posX, posY, id, nickname, guildName1, flagId, allianceName, factionName, equipments, spells) {
         this.posX = posX;
         this.posY = posY;
         this.oldPosX = posX;
@@ -7,17 +7,60 @@ class Player {
         this.id = id;
         this.nickname = nickname;
         this.guildName = guildName1;
+        this.allianceName = allianceName || null; // 👥 Parameters[51]
+        this.factionName = factionName || null; // 👥 Parameters[53]
         this.hX = 0;
         this.hY = 0;
         this.currentHealth = 0;
         this.initialHealth = 0;
-        this.items = null;
+        this.equipments = equipments || null; // 👥 Parameters[40] - Array of item IDs
+        this.spells = spells || null; // 👥 Parameters[43] - Array of spell IDs
+        this.items = null; // Legacy field (Event 90 CharacterEquipmentChanged)
         this.flagId = flagId;
         this.mounted = false;
+        this.detectedAt = Date.now(); // 👥 Timestamp de détection
     }
 
     setMounted(mounted) {
         this.mounted = mounted;
+    }
+
+    // 👥 Calculate average item power from equipments
+    // Equipment slots: 0=MainHand, 1=OffHand, 2=Head, 3=Chest, 4=Shoes, 5=Cape, 6=Mount, 7=Bag, 8=Food
+    // Uses ItemsDatabase to lookup actual itempower values from items.xml
+    getAverageItemPower() {
+        // Safety check: ensure equipments is an array
+        if (!this.equipments || !Array.isArray(this.equipments) || this.equipments.length === 0) {
+            return null;
+        }
+
+        // Wait for database to load
+        const itemsDB = window.itemsDatabase;
+        if (!itemsDB) {
+            return null; // Database not loaded yet
+        }
+
+        // Filter combat equipment slots (exclude Cape=5, Mount=6, Bag=7)
+        // Slots 0-4 (MainHand, OffHand, Head, Chest, Shoes) + Food=8
+        const combatSlots = this.equipments.filter((itemId, index) => {
+            return (index <= 4 || index === 8) && itemId && itemId > 0;
+        });
+
+        if (combatSlots.length === 0) return null;
+
+        // Lookup actual itempower from database
+        let totalPower = 0;
+        let validItems = 0;
+
+        for (const itemId of combatSlots) {
+            const item = itemsDB.getItemById(itemId);
+            if (item && item.itempower > 0) {
+                totalPower += item.itempower;
+                validItems++;
+            }
+        }
+
+        return validItems > 0 ? Math.round(totalPower / validItems) : null;
     }
 }
 
@@ -54,22 +97,49 @@ export class PlayersHandler {
         const nickname = Parameters[1];
         const guildName = Parameters[8];
         const flagId = Parameters[11] || 0;
+        const allianceName = Parameters[51] || null; // 👥 Alliance name (DEATHEYE offset)
+        const factionName = Parameters[53] || null; // 👥 Faction (Caerleon, etc.)
+        const equipments = Parameters[40] || null; // 👥 Equipment item IDs array
+        const spells = Parameters[43] || null; // 👥 Spell IDs array
 
-        // Validate param[253] exists (structured data from Protocol16Deserializer)
-        if (!Parameters[253] || !Parameters[253].spawnPosition) {
-            window.logger?.error(this.CATEGORIES.PLAYER, 'Event29_MissingParam253', {
-                playerId: id,
+        // MVP: Track players WITHOUT positions (positions are encrypted)
+        // Just add to list for counting and info display
+        const existingPlayer = this.playersList.find(player => player.id === id);
+
+        if (!existingPlayer) {
+            const player = new Player(0, 0, id, nickname, guildName, flagId, allianceName, factionName, equipments, spells);
+            this.playersList.push(player);
+
+            // 🐛 DEBUG: Log player equipment on detection
+            window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
+                id: id,
                 nickname: nickname,
-                hasParam253: !!Parameters[253],
-                paramKeys: Object.keys(Parameters)
+                guild: guildName,
+                alliance: allianceName,
+                faction: factionName,
+                equipments: equipments,
+                spells: spells,
+                playersCount: this.playersList.length
             });
-            return -1;
+
+            window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected', {
+                id: id,
+                nickname: nickname,
+                guild: guildName,
+                playersCount: this.playersList.length
+            });
+
+            // Play audio notification
+            const audio = new Audio('/sounds/player.mp3');
+            audio.play().catch(err => {
+                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.AudioPlayBlocked, {
+                    error: err.message,
+                    player: nickname
+                });
+            });
         }
 
-        const worldPosX = Parameters[253].spawnPosition.x;
-        const worldPosY = Parameters[253].spawnPosition.y;
-
-        return this.addPlayer(worldPosX, worldPosY, id, nickname, guildName, flagId);
+        return 2; // Return flashTime value
     }
 
     handleMountedPlayerEvent(id, parameters)

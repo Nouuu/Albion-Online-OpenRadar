@@ -19,6 +19,24 @@
                     <canvas class="ttcan" id="flashCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
                     <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
                     <canvas id="thirdCanvas" width="500" height="500" style="position: absolute; top: 520px; margin: 10px; left: 0; z-index: 1; display: none;"></canvas>
+
+                    <!-- Player Counter Overlay -->
+                    <div id="playerCounter" style="position: absolute; top: 15px; right: 15px; z-index: 10; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 14px; font-weight: bold;">
+                        Players: <span id="playerCount">0</span> 👥
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detected Players Section -->
+        <div id="playersSection" class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800" style="display: none;">
+            <div class="w-full">
+                <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+                    👥 Detected Players
+                </h4>
+
+                <div id="playersList" class="space-y-2">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 italic">No players detected yet...</p>
                 </div>
             </div>
         </div>
@@ -195,6 +213,30 @@
         const overlayCluster = document.getElementById("overlayCluster");
         const overlayClusterRadius = document.getElementById("overlayClusterRadius");
         const overlayClusterMinSize = document.getElementById("overlayClusterMinSize");
+
+        // Players section (👥 controlled by settingShowPlayers from home.ejs)
+        const playersSection = document.getElementById("playersSection");
+
+        // Function to update players section visibility
+        function updatePlayersSectionVisibility() {
+            const showPlayers = returnLocalBool("settingShowPlayers");
+            if (playersSection) {
+                playersSection.style.display = showPlayers ? "flex" : "none";
+            }
+        }
+
+        // Initial visibility check
+        updatePlayersSectionVisibility();
+
+        // Listen for changes to settingShowPlayers (from other tabs/windows)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'settingShowPlayers') {
+                updatePlayersSectionVisibility();
+            }
+        });
+
+        // Poll every 500ms to check for changes (in case changed from home.ejs in same tab)
+        setInterval(updatePlayersSectionVisibility, 500);
 
         // Load saved settings
         if (overlayEnchantment) overlayEnchantment.checked = returnLocalBool("overlayEnchantment");

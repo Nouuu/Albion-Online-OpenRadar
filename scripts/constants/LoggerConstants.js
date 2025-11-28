@@ -37,6 +37,7 @@ const CATEGORIES = {
   DEBUG: 'DEBUG',
   CLUSTER: 'CLUSTER',
   ITEM: 'ITEM',
+  ITEM_DATABASE: 'ITEM_DATABASE',
   MAP: 'MAP',
   MOBS: 'MOBS'
 };
@@ -183,6 +184,7 @@ const CATEGORY_SETTINGS_MAP = {
   DEBUG: null,
   CLUSTER: null,
   ITEM: null,
+  ITEM_DATABASE: null,
   MAP: null,
   MOBS: null
 };

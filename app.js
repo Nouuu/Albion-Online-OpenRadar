@@ -138,10 +138,12 @@ function StartRadar()
   app.use('/images/Resources', express.static(path.join(appDir, 'images', 'Resources')));
   app.use('/images/Maps', express.static(path.join(appDir, 'images', 'Maps')));
   app.use('/images/Items', express.static(path.join(appDir, 'images', 'Items')));
+  app.use('/images/Spells', express.static(path.join(appDir, 'images', 'Spells')));
   app.use('/images/Flags', express.static(path.join(appDir, 'images', 'Flags')));
   app.use('/sounds', express.static(path.join(appDir, 'sounds')));
   app.use('/config', express.static(path.join(appDir, 'config')));
   app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
+  app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
 
 
 

@@ -8,6 +8,8 @@ import { WispCageDrawing } from '../Drawings/WispCageDrawing.js';
 import { FishingDrawing } from '../Drawings/FishingDrawing.js';
 
 import { EventCodes } from './EventCodes.js';
+import { ItemsDatabase } from '../Data/ItemsDatabase.js';
+import { SpellsDatabase } from '../Data/SpellsDatabase.js';
 
 import { PlayersHandler } from '../Handlers/PlayersHandler.js';
 import { WispCageHandler } from '../Handlers/WispCageHandler.js';
@@ -41,6 +43,24 @@ const settings = new Settings();
 const { CATEGORIES, EVENTS } = window;
 
 console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');
+
+// 📊 Initialize Items Database
+const itemsDatabase = new ItemsDatabase();
+(async () => {
+    await itemsDatabase.load('/ao-bin-dumps/items.json');
+    window.itemsDatabase = itemsDatabase; // Expose globally for handlers
+    console.log('📊 [Utils.js] Items database loaded and ready');
+})();
+
+// 📊 Initialize Spells Database
+const spellsDatabase = new SpellsDatabase();
+(async () => {
+    await spellsDatabase.load('/ao-bin-dumps/spells.json');
+    window.spellsDatabase = spellsDatabase; // Expose globally for handlers
+    console.log('✨ [Utils.js] Spells database loaded and ready');
+})();
+
+console.log('🔧 [Utils.js] Items & Spells databases initialization started (async)');
 // 🔄 Dynamic Settings Update: Listen for localStorage changes
 // This allows settings to update in real-time without page reload
 window.addEventListener('storage', (event) => {
@@ -156,6 +176,170 @@ const playersDrawing = new PlayersDrawing(settings);
 const dungeonsDrawing = new DungeonsDrawing(settings);
 playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
+// 👥 Player Counter & List Update Function
+function updatePlayerCounter() {
+    const playerCountElement = document.getElementById('playerCount');
+    const playersListElement = document.getElementById('playersList');
+
+    if (playerCountElement) {
+        playerCountElement.textContent = playersHandler.playersList.length;
+    }
+
+    if (playersListElement) {
+        const players = playersHandler.playersList;
+
+        if (players.length === 0) {
+            playersListElement.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 italic">No players detected yet...</p>';
+        } else {
+            // Sort by detection time (newest first)
+            const sortedPlayers = [...players].sort((a, b) => b.detectedAt - a.detectedAt);
+
+            playersListElement.innerHTML = sortedPlayers.map(player => {
+                const elapsedMs = Date.now() - player.detectedAt;
+                const elapsedSec = Math.floor(elapsedMs / 1000);
+                const timeStr = elapsedSec < 60
+                    ? `${elapsedSec}s ago`
+                    : `${Math.floor(elapsedSec / 60)}m ago`;
+
+                // Guild & Alliance (couleurs plus claires pour lisibilité)
+                const guildStr = player.guildName ? `<span class="text-yellow-700t dark:text-yellow-200 font-semibold">[${player.guildName}]</span>` : '<span class="text-gray-500 dark:text-gray-400 text-xs italic">No Guild</span>';
+                const allianceStr = player.allianceName ? `<span class="text-purple-700 dark:text-purple-200 font-semibold">&lt;${player.allianceName}&gt;</span>` : '';
+
+                // Faction
+                const factionStr = player.factionName ? `<span class="text-blue-500 dark:text-blue-400 text-xs font-medium">⚔️ ${player.factionName}</span>` : '';
+
+                // Equipment details with item icons and names
+                let equipDetailsStr = '';
+                if (Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
+                    const validEquipments = player.equipments
+                        .map((itemId, index) => ({ itemId, index }))
+                        .filter(({itemId, index}) => (index <= 4 || index === 8) && itemId && itemId > 0);
+
+                    if (validEquipments.length > 0) {
+                        const itemsList = validEquipments.map(({itemId}) => {
+                            const item = window.itemsDatabase.getItemById(itemId);
+                            if (item) {
+                                const tierStr = item.tier > 0 ? `T${item.tier}` : '';
+                                const enchantStr = item.enchant > 0 ? `.${item.enchant}` : '';
+                                const ipStr = item.itempower > 0 ? `${item.itempower}` : '';
+
+                                // Extract base item name (without @enchant suffix)
+                                const baseName = item.name.split('@')[0];
+                                const iconPath = `/images/Items/${baseName}.png`;
+
+                                const tooltipText = `${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}`;
+                                return `
+                                    <div class="inline-flex items-center gap-2 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600" title="${tooltipText}">
+                                        <img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">
+                                        <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">${tierStr}${enchantStr}</span>
+                                        <span class="text-xs text-orange-700 dark:text-orange-300 font-bold">IP ${ipStr}</span>
+                                    </div>
+                                `;
+                            }
+                            return '';
+                        }).filter(s => s).join(' ');
+
+                        equipDetailsStr = `<div class="mt-3"><div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">🛡️ Equipment:</div><div class="flex flex-wrap gap-2">${itemsList}</div></div>`;
+                    }
+                }
+
+                // Spells details with icons (passive abilities from equipment)
+                let spellDetailsStr = '';
+                if (Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
+                    // Filter: Remove empty slots (0, 65535) and keep only valid spell indices
+                    const validSpells = player.spells.filter(spellId => spellId && spellId > 0 && spellId !== 65535);
+
+                    if (validSpells.length > 0) {
+                        const spellsList = validSpells.map(spellIndex => {
+                            const spell = window.spellsDatabase.getSpellByIndex(spellIndex);
+                            if (spell) {
+                                // Use uisprite for icon, fallback to generic spell icon
+                                const iconName = spell.uiSprite || 'SPELL_GENERIC';
+                                const iconPath = `/images/Spells/${iconName}.png`;
+                                const tooltipText = spell.uniqueName;
+
+                                return `
+                                    <div class="inline-flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 p-1 rounded-md border border-purple-200 dark:border-purple-700" title="${tooltipText}">
+                                        <img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain" onerror="this.src='/images/Spells/SPELL_GENERIC.png'">
+                                    </div>
+                                `;
+                            }
+                            return '';
+                        }).filter(s => s).join(' ');
+
+                        spellDetailsStr = `<div class="mt-3"><div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">✨ Spells:</div><div class="flex flex-wrap gap-2">${spellsList}</div></div>`;
+                    }
+                }
+
+                // Health bar (inline styles pour garantir couleurs)
+                let healthStr = '';
+                if (player.currentHealth > 0 && player.initialHealth > 0) {
+                    const healthPercent = Math.round((player.currentHealth / player.initialHealth) * 100);
+                    const healthColor = healthPercent > 60 ? '#22c55e' : (healthPercent > 30 ? '#eab308' : '#ef4444');
+                    healthStr = `
+                        <div class="mt-2.5">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-gray-700 dark:text-gray-300 font-medium min-w-[25px]">HP:</span>
+                                <div class="flex-1 h-3 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden border border-gray-400 dark:border-gray-500">
+                                    <div class="h-full transition-all" style="width: ${healthPercent}%; background-color: ${healthColor};"></div>
+                                </div>
+                                <span class="text-xs text-gray-700 dark:text-gray-300 font-bold min-w-[40px] text-right">${healthPercent}%</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Mounted status (icône plus visible)
+                const mountedIcon = player.mounted ? '<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded font-medium">🐴 Mounted</span>' : '';
+
+                // Average Item Power (ilvl) - plus visible
+                const avgItemPower = player.getAverageItemPower();
+                const itemPowerStr = avgItemPower ? `<span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded font-bold">⚔️ ${avgItemPower}</span>` : '';
+
+                return `
+                    <div class="mb-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <!-- Player Name & Mounted Status -->
+                                <div class="flex items-center gap-2 mb-2">
+                                    <p class="text-base font-bold text-gray-900 dark:text-white truncate">
+                                        👤 ${player.nickname}
+                                    </p>
+                                    ${mountedIcon}
+                                </div>
+
+                                <!-- Guild & Alliance (ligne séparée) -->
+                                <div class="flex flex-wrap gap-2 mb-2">
+                                    ${guildStr}
+                                    ${allianceStr}
+                                </div>
+
+                                <!-- Faction & IP (ligne séparée avec espacement) -->
+                                <div class="flex flex-wrap gap-2 items-center mb-2">
+                                    ${factionStr}
+                                    ${itemPowerStr}
+                                </div>
+
+                                <!-- Equipment & Spells Details -->
+                                ${equipDetailsStr}
+                                ${spellDetailsStr}
+
+                                <!-- Health Bar -->
+                                ${healthStr}
+                            </div>
+
+                            <!-- Timestamp -->
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">${timeStr}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-500 font-mono">ID: ${player.id}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
 
 let lpX = 0.0;
 let lpY = 0.0;
@@ -365,6 +549,7 @@ function onEvent(Parameters)
 
         case EventCodes.Leave:
             playersHandler.removePlayer(id);
+            updatePlayerCounter(); // 👥 Update player count
             mobsHandler.removeMist(id);
             mobsHandler.removeMob(id);
             dungeonsHandler.RemoveDungeon(id);
@@ -382,19 +567,9 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.NewCharacter:
-            if (Parameters[253]) {
-                const playerData = Parameters[253];
-                const ttt = playersHandler.handleNewPlayerEvent(id, Parameters);
-                flashTime = ttt < 0 ? flashTime : ttt;
-
-                window.logger?.info(CATEGORIES.PLAYER, EVENTS.PlayerSpawn, {
-                    id: playerData.objectId,
-                    name: playerData.name,
-                    guild: playerData.guild,
-                    spawnX: playerData.spawnPosition.x,
-                    spawnY: playerData.spawnPosition.y
-                });
-            }
+            const ttt = playersHandler.handleNewPlayerEvent(id, Parameters);
+            flashTime = ttt < 0 ? flashTime : ttt;
+            updatePlayerCounter(); // 👥 Update player count
             break;
 
         case EventCodes.NewSimpleHarvestableObjectList:
@@ -823,6 +998,9 @@ function checkLocalStorage()
 const interval = 300;
 setInterval(checkLocalStorage, interval)
 
+// 👥 Update player list timestamps every 5 seconds
+setInterval(updatePlayerCounter, 5000);
+
 
 
 document.getElementById("button").addEventListener("click", function () {
@@ -838,6 +1016,7 @@ function ClearHandlers()
     mobsHandler.Clear();
     playersHandler.Clear();
     wispCageHandler.CLear();
+    updatePlayerCounter(); // 👥 Reset counter to 0
 }
 
 setDrawingViews();
