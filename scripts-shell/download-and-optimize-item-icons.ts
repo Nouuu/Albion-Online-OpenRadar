@@ -1,13 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {
-    downloadFile,
-    DownloadStatus,
-    handleFileBuffer,
-    handleReplacing,
-    printSummary,
-    processBufferWithSharp
-} from "./common";
+import {downloadFile, DownloadStatus, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
 const ICONS_DIR = path.join(__dirname, '..', 'images', 'Items');
 const ITEMS_XML = path.join(__dirname, '..', 'public', 'ao-bin-dumps', 'items.xml');
@@ -106,59 +99,19 @@ async function processItemIcon(
     }
 
     const url = `${CDN_BASE}${filename}.png`;
-    res = await downloadFile(url, outputPath);
-    if (res.status === DownloadStatus.SUCCESS) {
-        console.log(`✅ [${index + 1}/${total}] Downloaded ${filename} (${res.size})`);
-    } else {
-        console.error(`❌ [${index + 1}/${total}] Failed to download ${filename}: ${res.status} - ${res.message}`);
-        return {
-            downloaded: false,
-            failed: true,
-            optimizeFail: false,
-            didReplace: false,
-            didSkip: false,
-            didOptimize: false
-        };
-    }
+    res = await downloadFile(url);
 
-    res = await processBufferWithSharp(res.buffer!, outputPath, onlyUpgrade, optimize, MAX_IMAGE_SIZE, IMAGE_QUALITY);
-    if (res.status === DownloadStatus.EXISTS) {
-        console.log(`⏭️️ [${index + 1}/${total}] ${res.message}`);
-        return {
-            downloaded: true,
-            failed: false,
-            optimizeFail: false,
-            didReplace: false,
-            didSkip: true,
-            didOptimize: false
-        };
-    }
-    if (res.status === DownloadStatus.ERROR) {
-        console.error(`❌ [${index + 1}/${total}] Optimization failed: ${res.message}`);
-        return {
-            downloaded: true,
-            failed: false,
-            optimizeFail: true,
-            didReplace: false,
-            didSkip: false,
-            didOptimize: false
-        };
-    }
-    if (res.status === DownloadStatus.OPTIMIZED || res.status === DownloadStatus.SUCCESS) {
-        console.log(`🖼️️ [${index + 1}/${total}] ${res.message} (${res.size})`);
-    }
-
-    res = handleFileBuffer(res.buffer!, outputPath);
-    console.log(`💾 [${index + 1}/${total}] ${res.message}`);
-
-    return {
-        downloaded: true,
-        failed: false,
-        optimizeFail: false,
-        didReplace: replaceExisting,
-        didSkip: false,
-        didOptimize: res.status === DownloadStatus.OPTIMIZED
-    };
+    return handleImageBuffer(
+        res,
+        outputPath,
+        index,
+        total,
+        replaceExisting,
+        onlyUpgrade,
+        optimize,
+        MAX_IMAGE_SIZE,
+        IMAGE_QUALITY
+    );
 }
 
 async function main() {
