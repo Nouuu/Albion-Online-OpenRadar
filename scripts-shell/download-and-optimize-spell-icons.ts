@@ -6,9 +6,9 @@ import {
     DownloadStatus,
     handleFileBuffer,
     handleReplacing,
+    printSummary,
     processBufferWithSharp
 } from "./common";
-
 
 // Paths
 const SPELLS_JSON_PATH = path.join(__dirname, '../public/ao-bin-dumps/spells.json');
@@ -159,16 +159,31 @@ async function processUiSprite(
     index: number,
     total: number,
     uiSpriteToLocalizedName: Map<string, string>
-): Promise<{ downloaded: boolean, failed: boolean, optimizeFail: boolean }> {
+): Promise<{
+    downloaded: boolean,
+    failed: boolean,
+    optimizeFail: boolean,
+    didReplace: boolean,
+    didSkip: boolean,
+    didOptimize: boolean
+}> {
     const filename = `${sprite}.png`;
     const localizedFilename = `${uiSpriteToLocalizedName.get(sprite)}.png`;
     const outputPath = path.join(OUTPUT_DIR, filename);
+    console.log();
 
     let res: DownloadResult;
     res = handleReplacing(outputPath, replaceExisting);
     if (res.status === DownloadStatus.EXISTS) {
         console.log(` ⏭️️ [${index + 1}/${total}] ${res.message}\n`);
-        return { downloaded: false, failed: false, optimizeFail: false };
+        return {
+            downloaded: false,
+            failed: false,
+            optimizeFail: false,
+            didReplace: false,
+            didSkip: true,
+            didOptimize: false
+        };
     }
 
     const url = `${CDN_BASE_URL}${filename}`;
@@ -183,17 +198,38 @@ async function processUiSprite(
         console.log(`✅ [${index + 1}/${total}] Downloaded ${filename} (${res.size})`);
     } else {
         console.error(`❌ [${index + 1}/${total}] Failed to download ${filename}: ${res.status} - ${res.message}`);
-        return { downloaded: false, failed: true, optimizeFail: false };
+        return {
+            downloaded: false,
+            failed: true,
+            optimizeFail: false,
+            didReplace: false,
+            didSkip: false,
+            didOptimize: false
+        };
     }
 
     res = await processBufferWithSharp(res.buffer!, outputPath, onlyUpgrade, optimize, MAX_IMAGE_SIZE, IMAGE_QUALITY);
     if (res.status === DownloadStatus.EXISTS) {
-        console.log(` ⏭️️ [${index + 1}/${total}] ${res.message}\n`);
-        return { downloaded: true, failed: false, optimizeFail: false };
+        console.log(` ⏭️️ [${index + 1}/${total}] ${res.message}`);
+        return {
+            downloaded: true,
+            failed: false,
+            optimizeFail: false,
+            didReplace: false,
+            didSkip: true,
+            didOptimize: false
+        };
     }
     if (res.status == DownloadStatus.ERROR) {
         console.error(`❌ [${index + 1}/${total}] Optimization failed: ${res.message}`);
-        return { downloaded: true, failed: false, optimizeFail: true };
+        return {
+            downloaded: true,
+            failed: false,
+            optimizeFail: true,
+            didReplace: false,
+            didSkip: false,
+            didOptimize: false
+        };
     }
     if (res.status == DownloadStatus.OPTIMIZED || res.status == DownloadStatus.SUCCESS) {
         console.log(`🖼️️ [${index + 1}/${total}] ${res.message} (${res.size})`);
@@ -202,9 +238,15 @@ async function processUiSprite(
     res = handleFileBuffer(res.buffer!, outputPath);
     console.log(`💾 [${index + 1}/${total}] ${res.message}`);
 
-    return { downloaded: true, failed: false, optimizeFail: false };
+    return {
+        downloaded: true,
+        failed: false,
+        optimizeFail: false,
+        didReplace: true,
+        didSkip: false,
+        didOptimize: res.status == DownloadStatus.OPTIMIZED,
+    };
 }
-
 
 async function main() {
     const {uiSpritesArray, uiSpriteToLocalizedName} = initPrerequisites();
@@ -213,10 +255,20 @@ async function main() {
     let completed = 0;
     let optimizeFail = 0;
     let failed = 0;
+    let optimized = 0;
+    let replaced = 0;
+    let skipped = 0;
     const now = Date.now();
 
     for (let i = 0; i < uiSpritesArray.length; i++) {
-        const { downloaded: didDownload, failed: didFail, optimizeFail: didOptimizeFail } = await processUiSprite(
+        const {
+            downloaded: didDownload,
+            failed: didFail,
+            optimizeFail: didOptimizeFail,
+            didReplace,
+            didSkip,
+            didOptimize
+        } = await processUiSprite(
             uiSpritesArray[i],
             i,
             uiSpritesArray.length,
@@ -226,24 +278,25 @@ async function main() {
         if (didDownload) downloaded++;
         if (didFail) failed++;
         if (didOptimizeFail) optimizeFail++;
+        if (didReplace) replaced++;
+        if (didSkip) skipped++;
+        if (didOptimize) optimized++;
         completed++;
     }
 
-    printSummary(now, completed, downloaded, failed, optimizeFail);
-
+    printSummary({
+        startTime: now,
+        completed,
+        downloaded,
+        replaced,
+        skipped,
+        optimized,
+        failed,
+        optimizeFail,
+        outputDir: OUTPUT_DIR
+    });
     process.exit(0);
 }
-
-function printSummary(now: number, completed: number, downloaded: number, failed: number, optimizeFail: number) {
-    console.log('📊 Summary:');
-    console.log(`   🕒 Time taken: ${((Date.now() - now) / 1000).toFixed(2)} seconds`);
-    console.log(`   ✅ Completed: ${completed}`);
-    console.log(`   📥 Downloaded: ${downloaded}`);
-    console.log(`   ❌ Failed: ${failed}`);
-    console.log(`   ⚠️ Optimization Failures: ${optimizeFail}`);
-    console.log(`   🗺️️ Location: ${OUTPUT_DIR}`);
-}
-
 
 main().catch(err => {
     console.error('❌ An error occurred:', err);

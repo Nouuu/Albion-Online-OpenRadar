@@ -1,7 +1,6 @@
-import './common'
 import fs from 'fs';
 import path from 'path';
-import {downloadFile, DownloadStatus, handleFileBuffer, handleReplacing} from "./common";
+import {downloadFile, DownloadStatus, handleFileBuffer, handleReplacing, printSummary} from "./common";
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master';
 const OUTPUT_DIR = path.join(__dirname, '..', 'public', 'ao-bin-dumps');
@@ -57,7 +56,6 @@ function initPrerequisites() {
         console.log('🔧  Replace existing files: ENABLED\n');
     }
 
-    // Create output directory if it doesn't exist
     if (!fs.existsSync(OUTPUT_DIR)) {
         fs.mkdirSync(OUTPUT_DIR, {recursive: true});
         console.log(`✅ Created directory: ${OUTPUT_DIR}\n`);
@@ -94,7 +92,7 @@ async function main() {
         } else {
             completedCount++;
             failedCount++;
-            console.error(`❌ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Failed to download ${filename}: ${res.message}`);
+            console.error(`❌ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Failed to download ${filename}: ${res.status} ${res.message}`);
             continue;
         }
 
@@ -104,19 +102,19 @@ async function main() {
         completedCount++;
     }
 
-    console.log('📊 Summary:');
-    console.log(`   🕒 Time taken: ${((new Date().getTime() - now.getTime()) / 1000).toFixed(2)} seconds`);
-    console.log(`   ✅ Completed: ${completedCount}`);
-    console.log(`   📥 Downloaded: ${downloadedCount}`);
-    console.log(`   ♻️ Replaced: ${replacedCount}`);
-    console.log(`   ⏭️ Skipped: ${skippedCount}`);
-    console.log(`   ❌ Failed: ${failedCount}`);
-    console.log(`   🗺️ Location: ${OUTPUT_DIR}`);
+    printSummary({
+        startTime: now.getTime(),
+        completed: completedCount,
+        downloaded: downloadedCount,
+        replaced: replacedCount,
+        skipped: skippedCount,
+        failed: failedCount,
+        outputDir: OUTPUT_DIR
+    });
 
     process.exit(0);
 }
 
-// Run
 main().catch(err => {
     console.error('❌ Fatal error:', err);
     process.exit(1);
