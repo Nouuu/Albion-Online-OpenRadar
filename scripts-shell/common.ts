@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import https from "https";
 import sharp from "sharp";
+import {PageWithCursor} from "puppeteer-real-browser";
 
 export enum DownloadStatus {
     SUCCESS = 'success',
@@ -24,11 +25,7 @@ function humanFileSize(size: number): string {
     return (size / Math.pow(1024, i)).toFixed(2) + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
 }
 
-export async function downloadFile(url: string, outputPath: string): Promise<DownloadResult> {
-
-    if (!fs.existsSync(path.dirname(outputPath))) {
-        fs.mkdirSync(path.dirname(outputPath), {recursive: true});
-    }
+export async function downloadFile(url: string): Promise<DownloadResult> {
 
     await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50)); // Throttle requests
     return new Promise((resolve) => {
@@ -36,7 +33,7 @@ export async function downloadFile(url: string, outputPath: string): Promise<Dow
         https.get(url, (response) => {
             if (response.statusCode === 302 || response.statusCode === 301) {
                 // Follow redirect
-                return downloadFile(response.headers.location!, outputPath)
+                return downloadFile(response.headers.location!)
                     .then(res => resolve(res))
                     .catch(err => resolve(err));
             }
@@ -73,6 +70,30 @@ export async function downloadFile(url: string, outputPath: string): Promise<Dow
     });
 }
 
+export async function downloadFileWithPlaywright(url: string, page: PageWithCursor): Promise<DownloadResult> {
+    console.log(`🌐 Downloading with Playwright: ${url}`);
+
+    const response = await page.goto(url, {waitUntil: 'networkidle2', timeout: 30000});
+
+    await new Promise(res => setTimeout(res, 1500 + Math.random() * 500)); // Random delay to mimic human behavior
+
+    if (response && (response.status() >= 200 && response.status() < 400)) {
+        const buffer = await response.buffer();
+        return {
+            status: DownloadStatus.SUCCESS,
+            size: humanFileSize(buffer.length),
+            buffer: buffer,
+            message: 'Downloaded successfully',
+        }
+    } else {
+        return {
+            status: DownloadStatus.FAIL,
+            message: `HTTP ${response ? response.status() : 'N/A'}`,
+        };
+    }
+}
+
+
 export function handleReplacing(outputPath: string, replaceExisting: boolean): DownloadResult {
     if (!replaceExisting && fs.existsSync(outputPath)) {
         return {status: DownloadStatus.EXISTS, message: `File already exists: ${outputPath}`};
@@ -81,6 +102,9 @@ export function handleReplacing(outputPath: string, replaceExisting: boolean): D
 }
 
 export function handleFileBuffer(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string): DownloadResult {
+    if (!fs.existsSync(path.dirname(outputPath))) {
+        fs.mkdirSync(path.dirname(outputPath), {recursive: true});
+    }
     fs.writeFileSync(outputPath, buffer);
     return {status: DownloadStatus.SUCCESS, message: `File written successfully: ${outputPath}`};
 }
@@ -103,7 +127,12 @@ export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayB
         }
     }
     if (!optimize) {
-        return {status: DownloadStatus.SUCCESS, buffer: buffer, message: `No optimization applied for: ${outputPath}`, size: humanFileSize(buffer.length)};
+        return {
+            status: DownloadStatus.SUCCESS,
+            buffer: buffer,
+            message: `No optimization applied for: ${outputPath}`,
+            size: humanFileSize(buffer.length)
+        };
     }
     try {
         buffer = await sharp(buffer)
@@ -119,7 +148,85 @@ export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayB
     } catch (error) {
         return {status: DownloadStatus.FAIL, message: `Image processing error: ${error}`};
     }
-    return {status: DownloadStatus.OPTIMIZED, buffer: buffer, message: `Image optimized for: ${outputPath}`, size: humanFileSize(buffer.length)};
+    return {
+        status: DownloadStatus.OPTIMIZED,
+        buffer: buffer,
+        message: `Image optimized for: ${outputPath}`,
+        size: humanFileSize(buffer.length)
+    };
+}
+
+export async function handleImageBuffer(
+    res: DownloadResult,
+    outputPath: string,
+    index: number,
+    total: number,
+    replaceExisting: boolean,
+    onlyUpgrade: boolean,
+    optimize: boolean,
+    MAX_IMAGE_SIZE: number,
+    IMAGE_QUALITY: number,
+): Promise<{
+    downloaded: boolean,
+    failed: boolean,
+    optimizeFail: boolean,
+    didReplace: boolean,
+    didSkip: boolean,
+    didOptimize: boolean
+}> {
+    if (res.status === DownloadStatus.SUCCESS) {
+        console.log(`✅ [${index + 1}/${total}] Downloaded ${path.basename(outputPath)} (${res.size})`);
+    } else {
+        console.error(`❌ [${index + 1}/${total}] Failed to download ${path.basename(outputPath)}: ${res.status} - ${res.message}`);
+        return {
+            downloaded: false,
+            failed: true,
+            optimizeFail: false,
+            didReplace: false,
+            didSkip: false,
+            didOptimize: false
+        };
+    }
+
+    res = await processBufferWithSharp(res.buffer!, outputPath, onlyUpgrade, optimize, MAX_IMAGE_SIZE, IMAGE_QUALITY);
+    if (res.status === DownloadStatus.EXISTS) {
+        console.log(`⏭️️ [${index + 1}/${total}] ${res.message}`);
+        return {
+            downloaded: true,
+            failed: false,
+            optimizeFail: false,
+            didReplace: false,
+            didSkip: true,
+            didOptimize: false
+        };
+    }
+    if (res.status === DownloadStatus.ERROR) {
+        console.error(`❌ [${index + 1}/${total}] Optimization failed: ${res.message}`);
+        return {
+            downloaded: true,
+            failed: false,
+            optimizeFail: true,
+            didReplace: false,
+            didSkip: false,
+            didOptimize: false
+        };
+    }
+
+    if (res.status === DownloadStatus.OPTIMIZED || res.status === DownloadStatus.SUCCESS) {
+        console.log(`🖼️️ [${index + 1}/${total}] ${res.message} (${res.size})`);
+    }
+
+    res = handleFileBuffer(res.buffer!, outputPath);
+    console.log(`💾 [${index + 1}/${total}] ${res.message}`);
+
+    return {
+        downloaded: true,
+        failed: false,
+        optimizeFail: false,
+        didReplace: replaceExisting,
+        didSkip: false,
+        didOptimize: res.status === DownloadStatus.OPTIMIZED
+    };
 }
 
 export function printSummary(context: {

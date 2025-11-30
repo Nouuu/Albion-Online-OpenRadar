@@ -173,13 +173,13 @@ clean-all: ## Complete cleanup (including optimized images + node_modules)
 
 update-ao-data: ## Update AO data files
 	@echo "$(YELLOW)Updating AO data files...$(NC)"
-	@node scripts-shell/update-ao-data.js
+	@tsx scripts-shell/update-ao-data.ts --replace-existing
 
 download-assets: ## Download required assets
 	@echo "$(YELLOW)Downloading required assets...$(NC)"
-	node scripts-shell/download-and-optimize-item-icons.js
-	node scripts-shell/download-and-optimize-spell-icons.js
-	node scripts-shell/download-and-optimize-map.js
+	@tsx scripts-shell/download-and-optimize-spell-icons.ts --replace-existing --only-upgrade
+	@tsx scripts-shell/download-and-optimize-item-icons.ts --replace-existing --only-upgrade
+	@tsx scripts-shell/download-and-optimize-map.ts --replace-existing --only-upgrade
 
 update-assets: ## Update all assets
 	@echo "$(YELLOW)Updating all assets...$(NC)"

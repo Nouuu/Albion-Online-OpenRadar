@@ -85,7 +85,7 @@ async function main() {
         }
 
         const url = `${GITHUB_RAW_BASE}/${filename}`;
-        res = await downloadFile(url, outputPath);
+        res = await downloadFile(url);
         if (res.status == DownloadStatus.SUCCESS) {
             downloadedCount++;
             console.log(`✅ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Downloaded ${filename} (${res.size})`);

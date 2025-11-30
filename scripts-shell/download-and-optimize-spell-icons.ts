@@ -1,14 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import {
-    downloadFile,
-    DownloadResult,
-    DownloadStatus,
-    handleFileBuffer,
-    handleReplacing,
-    printSummary,
-    processBufferWithSharp
-} from "./common";
+import {downloadFile, DownloadResult, DownloadStatus, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
 // Paths
 const SPELLS_JSON_PATH = path.join(__dirname, '../public/ao-bin-dumps/spells.json');
@@ -187,65 +179,24 @@ async function processUiSprite(
     }
 
     const url = `${CDN_BASE_URL}${filename}`;
-    res = await downloadFile(url, outputPath);
+    res = await downloadFile(url);
     if (res.status === DownloadStatus.NOT_FOUND && localizedFilename !== filename && localizedFilename !== 'undefined.png') {
         const localizedUrl = `${CDN_BASE_URL}${localizedFilename}`;
         console.log(`🔄 404 : Trying localized filename: ${localizedFilename}`);
-        res = await downloadFile(localizedUrl, outputPath);
+        res = await downloadFile(localizedUrl);
     }
 
-    if (res.status == DownloadStatus.SUCCESS) {
-        console.log(`✅ [${index + 1}/${total}] Downloaded ${filename} (${res.size})`);
-    } else {
-        console.error(`❌ [${index + 1}/${total}] Failed to download ${filename}: ${res.status} - ${res.message}`);
-        return {
-            downloaded: false,
-            failed: true,
-            optimizeFail: false,
-            didReplace: false,
-            didSkip: false,
-            didOptimize: false
-        };
-    }
-
-    res = await processBufferWithSharp(res.buffer!, outputPath, onlyUpgrade, optimize, MAX_IMAGE_SIZE, IMAGE_QUALITY);
-    if (res.status === DownloadStatus.EXISTS) {
-        console.log(` ⏭️️ [${index + 1}/${total}] ${res.message}`);
-        return {
-            downloaded: true,
-            failed: false,
-            optimizeFail: false,
-            didReplace: false,
-            didSkip: true,
-            didOptimize: false
-        };
-    }
-    if (res.status == DownloadStatus.ERROR) {
-        console.error(`❌ [${index + 1}/${total}] Optimization failed: ${res.message}`);
-        return {
-            downloaded: true,
-            failed: false,
-            optimizeFail: true,
-            didReplace: false,
-            didSkip: false,
-            didOptimize: false
-        };
-    }
-    if (res.status == DownloadStatus.OPTIMIZED || res.status == DownloadStatus.SUCCESS) {
-        console.log(`🖼️️ [${index + 1}/${total}] ${res.message} (${res.size})`);
-    }
-
-    res = handleFileBuffer(res.buffer!, outputPath);
-    console.log(`💾 [${index + 1}/${total}] ${res.message}`);
-
-    return {
-        downloaded: true,
-        failed: false,
-        optimizeFail: false,
-        didReplace: true,
-        didSkip: false,
-        didOptimize: res.status == DownloadStatus.OPTIMIZED,
-    };
+    return handleImageBuffer(
+        res,
+        outputPath,
+        index,
+        total,
+        replaceExisting,
+        onlyUpgrade,
+        optimize,
+        MAX_IMAGE_SIZE,
+        IMAGE_QUALITY
+    );
 }
 
 async function main() {
