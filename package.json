@@ -68,6 +68,7 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@types/typescript": "^2.0.0",
     "archiver": "^7.0.1",
     "nodemon": "^3.1.7",
     "pkg": "^5.8.1",
@@ -75,6 +76,8 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "puppeteer-real-browser": "^1.4.4",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   }
 }
