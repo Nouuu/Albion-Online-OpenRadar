@@ -128,8 +128,6 @@ async function processMapTile(
 }
 
 async function main() {
-
-
     const {mapFiles, page} = await initPrerequisites();
 
     let downloaded = 0;
