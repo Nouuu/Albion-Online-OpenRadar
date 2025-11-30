@@ -167,7 +167,7 @@ async function main() {
     let completed = 0;
     let optimizeFail = 0;
     let failed = 0;
-    let now = Date.now();
+    const now = Date.now();
 
     await page.goto(CDN_BASE_URL, {waitUntil: 'networkidle2', timeout: 30000});
     await new Promise(res => setTimeout(res, 3000)); // Initial delay
