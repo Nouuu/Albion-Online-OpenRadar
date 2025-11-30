@@ -122,7 +122,7 @@ async function main() {
     let downloadedCount = 0;
     let completedCount = 0;
     let failedCount = 0;
-    let now = new Date();
+    const now = new Date();
 
     for (let i = 0; i < FILES_TO_DOWNLOAD.length; i++) {
         const filename = FILES_TO_DOWNLOAD[i];
@@ -141,6 +141,8 @@ async function main() {
             failedCount++;
             console.error(`❌ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Failed to download ${filename}: ${res.message}\n`);
         }
+
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50)); // Throttle requests
     }
 
     console.log('📊 Summary:');

@@ -24,7 +24,7 @@ function downloadAndOptimizeSpellIcon(url, outputPath) {
         fs.mkdirSync(path.dirname(outputPath), {recursive: true});
     }
 
-    if (!replaceExisting && fs.existsSync(outputPath)) {
+    if (!replaceExisting && !onlyUpgrade && fs.existsSync(outputPath)) {
         console.log(`⏭️️ Skipping existing file: ${path.basename(outputPath)}`);
         return {status: 'exists', name: outputPath};
     }
@@ -161,7 +161,7 @@ function buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsArray)
 function parseArgs() {
     const args = process.argv.slice(2);
     if (args.includes('--help') || args.includes('-h')) {
-        console.log('Usage: node download-and-optimize-map.js [--replace-existing] [--no-optimize]');
+        console.log('Usage: node download-and-optimize-spell-icons.js [--replace-existing] [--no-optimize] [--only-upgrade]');
         console.log('--replace-existing : Replace existing files in the output directory.');
         console.log('--no-optimize     : Skip image optimization step.');
         console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');
@@ -242,7 +242,7 @@ async function main() {
     let completed = 0;
     let optimizeFail = 0;
     let failed = 0;
-    let now = Date.now();
+    const now = Date.now();
 
     for (let i = 0; i < uiSpritesArray.length; i++) {
         const filename = `${uiSpritesArray[i]}.png`;
@@ -272,15 +272,17 @@ async function main() {
             failed++;
             console.error(` ❌ [${i + 1}/${totalSpells}] Failed to download ${filename}: ${res.message}\n`);
         }
+
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50)); // Throttle requests
     }
 
-     console.log('📊 Summary:');
+    console.log('📊 Summary:');
     console.log(`   🕒 Time taken: ${((Date.now() - now) / 1000).toFixed(2)} seconds`);
     console.log(`   ✅ Completed: ${completed}`);
     console.log(`   📥 Downloaded: ${downloaded}`);
     console.log(`   ❌ Failed: ${failed}`);
     console.log(`   ⚠️ Optimization Failures: ${optimizeFail}`);
-    console.log(`   🧙‍♂️ Location: ${OUTPUT_DIR}`);
+    console.log(`   🗺️️ Location: ${OUTPUT_DIR}`);
 
     process.exit(0);
 }
