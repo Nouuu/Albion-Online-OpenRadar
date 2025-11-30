@@ -67,6 +67,8 @@ function initPrerequisites() {
 async function main() {
     initPrerequisites();
     let downloadedCount = 0;
+    let replacedCount = 0;
+    let skippedCount = 0;
     let completedCount = 0;
     let failedCount = 0;
     const now = new Date();
@@ -74,10 +76,12 @@ async function main() {
     for (let i = 0; i < FILES_TO_DOWNLOAD.length; i++) {
         const filename = FILES_TO_DOWNLOAD[i];
         const outputPath = path.join(OUTPUT_DIR, filename);
+        console.log();
 
         let res = handleReplacing(outputPath, replaceExisting);
         if (res.status === DownloadStatus.EXISTS) {
             completedCount++;
+            skippedCount++;
             console.log(`⏭️️ [${i + 1}/${FILES_TO_DOWNLOAD.length}] ${res.message}`);
             continue;
         }
@@ -86,27 +90,26 @@ async function main() {
         res = await downloadFile(url, outputPath);
         if (res.status == DownloadStatus.SUCCESS) {
             downloadedCount++;
-            console.log(`✅ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Downloaded ${filename} (${res.size})\n`);
-        } else if (res.status === DownloadStatus.EXISTS) {
-            completedCount++;
-            console.log(`⏭️️ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Skipped existing file: ${filename}\n`);
-            continue;
+            console.log(`✅ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Downloaded ${filename} (${res.size})`);
         } else {
+            completedCount++;
             failedCount++;
-            console.error(`❌ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Failed to download ${filename}: ${res.message}\n`);
+            console.error(`❌ [${i + 1}/${FILES_TO_DOWNLOAD.length}] Failed to download ${filename}: ${res.message}`);
             continue;
         }
 
         res = handleFileBuffer(res.buffer!, outputPath);
-
-
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50)); // Throttle requests
+        console.log(`💾 [${i + 1}/${FILES_TO_DOWNLOAD.length}] ${res.message}`);
+        replacedCount += replaceExisting ? 1 : 0;
+        completedCount++;
     }
 
     console.log('📊 Summary:');
     console.log(`   🕒 Time taken: ${((new Date().getTime() - now.getTime()) / 1000).toFixed(2)} seconds`);
     console.log(`   ✅ Completed: ${completedCount}`);
     console.log(`   📥 Downloaded: ${downloadedCount}`);
+    console.log(`   ♻️ Replaced: ${replacedCount}`);
+    console.log(`   ⏭️ Skipped: ${skippedCount}`);
     console.log(`   ❌ Failed: ${failedCount}`);
     console.log(`   🗺️ Location: ${OUTPUT_DIR}`);
 

@@ -34,6 +34,7 @@ export async function downloadFile(url: string, outputPath: string): Promise<Dow
         fs.mkdirSync(path.dirname(outputPath), {recursive: true});
     }
 
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50)); // Throttle requests
     return new Promise((resolve) => {
         console.log(`📥 Downloading: ${url}`);
         https.get(url, (response) => {
@@ -88,14 +89,6 @@ export function handleReplacing(outputPath: string, replaceExisting: boolean): D
     return {status: DownloadStatus.SUCCESS, message: `File can be written: ${outputPath}`};
 }
 
-export async function handleImageBuffer(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string, onlyUpgrade: boolean, replaceExisting: boolean, MAX_IMAGE_SIZE: number, IMAGE_QUALITY: number): Promise<DownloadResult> {
-    const processResult = await processBufferWithSharp(buffer, outputPath, onlyUpgrade, MAX_IMAGE_SIZE, IMAGE_QUALITY);
-    if (processResult.status === DownloadStatus.OPTIMIZED) {
-        return processBufferToFile(processResult.buffer!, outputPath, replaceExisting);
-    }
-    return processResult;
-}
-
 export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string, onlyUpgrade: boolean, MAX_IMAGE_SIZE: number, IMAGE_QUALITY: number): Promise<DownloadResult> {
     if (onlyUpgrade && fs.existsSync(outputPath)) {
         try {
@@ -128,12 +121,4 @@ export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayB
         return {status: DownloadStatus.FAIL, message: `Image processing error: ${error}`};
     }
     return {status: DownloadStatus.OPTIMIZED, buffer: buffer, message: 'Image processed successfully'};
-}
-
-export function processBufferToFile(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string, replaceExisting: boolean): DownloadResult {
-    if (!replaceExisting && fs.existsSync(outputPath)) {
-        return {status: DownloadStatus.EXISTS, message: 'File already exists'};
-    }
-    fs.writeFileSync(outputPath, buffer);
-    return {status: DownloadStatus.SUCCESS, message: 'File written successfully'};
 }
