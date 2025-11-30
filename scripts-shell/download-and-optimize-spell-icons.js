@@ -1,15 +1,3 @@
-/**
- * Unified Spell Icon Downloader & Optimizer
- * Downloads all spell icons from spells.json using Albion Online CDN
- * and compresses them to 128x128px in a single pass
- *
- * Features:
- * - Downloads from CDN with retry and correct /spell/ URL patterns
- * - Compresses and resizes images to 128x128px (max)
- * - Overwrites existing files with optimized versions
- * - Uses sharp for high-quality image processing
- */
-
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
@@ -25,70 +13,120 @@ const CDN_BASE_URL = 'https://render.albiononline.com/v1/spell/';
 const MAX_IMAGE_SIZE = 128; // Max width/height in pixels
 const IMAGE_QUALITY = 85;   // PNG quality (1-100)
 
-// Stats
+let optimize = true;
+let replaceExisting = false;
+let onlyUpgrade = false;
+
 let totalSpells = 0;
-let downloaded = 0;
-let optimized = 0;
-let alreadyOptimized = 0;
-let failed = 0;
-let totalBytesBefore = 0;
-let totalBytesAfter = 0;
 
-console.log('🔮 Unified Spell Icon Downloader & Optimizer');
-console.log('=============================================\n');
-
-// Check if sharp is installed
-try {
-    require.resolve('sharp');
-} catch (e) {
-    console.error('❌ ERROR: sharp module not found!');
-    console.error('   Please install it with: npm install sharp');
-    process.exit(1);
-}
-
-// Create output directory if it doesn't exist
-if (!fs.existsSync(OUTPUT_DIR)) {
-    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    console.log(`✅ Created directory: ${OUTPUT_DIR}\n`);
-}
-
-// Load and parse spells.json
-console.log(`📄 Loading ${SPELLS_JSON_PATH}...`);
-const spellsData = JSON.parse(fs.readFileSync(SPELLS_JSON_PATH, 'utf8'));
-
-if (!spellsData.spells) {
-    console.error('❌ Invalid spells.json structure: missing "spells" root');
-    process.exit(1);
-}
-
-// Load and parse localization.json
-console.log(`📄 Loading ${LOCALIZATION_JSON_PATH}... (this may take a moment)`);
-const localizationData = JSON.parse(fs.readFileSync(LOCALIZATION_JSON_PATH, 'utf8'));
-
-// Build localization map (@namelocatag -> English name)
-const localizationMap = new Map();
-for (const tu of localizationData.tmx.body.tu) {
-    const tuid = tu['@tuid'];
-    if (!tuid) continue;
-
-    const tuv = tu.tuv;
-    if (!tuv) continue;
-
-    // Handle both single tuv and array of tuv
-    const seg = Array.isArray(tuv)
-        ? tuv.find(t => t['@xml:lang'] === 'EN-US')?.seg
-        : tuv.seg;
-
-    if (seg) {
-        localizationMap.set(tuid, seg);
+function downloadAndOptimizeSpellIcon(url, outputPath) {
+    if (!fs.existsSync(path.dirname(outputPath))) {
+        fs.mkdirSync(path.dirname(outputPath), {recursive: true});
     }
+
+    if (!replaceExisting && fs.existsSync(outputPath)) {
+        console.log(`⏭️️ Skipping existing file: ${path.basename(outputPath)}`);
+        return {status: 'exists', name: outputPath};
+    }
+    return new Promise((resolve, reject) => {
+        console.log(`📥 Downloading: ${url}`);
+        https.get(url, (response) => {
+            if (response.statusCode === 302 || response.statusCode === 301) {
+                // Follow redirect
+                return downloadAndOptimizeSpellIcon(response.headers.location, outputPath)
+                    .then(res => resolve(res))
+                    .catch(err => reject(err));
+            }
+
+            if (response.statusCode === 404) {
+                resolve({status: 'not-found', message: '404 Not Found'});
+                return;
+            }
+
+            if (response.statusCode !== 200) {
+                resolve({status: 'fail', message: `HTTP ${response.statusCode} - ${response.statusMessage}`});
+                return;
+            }
+
+            const chunks = [];
+            response.on('data', (chunk) => chunks.push(chunk));
+
+            response.on('end', () => {
+                const buffer = Buffer.concat(chunks);
+                console.log(`✅ Downloaded: ${url}, size: ${humanFileSize(buffer.length)}`);
+                processBufferWithSharp(buffer, outputPath).then(res => resolve(res)).catch(err => resolve(err));
+            });
+        }).on('error', (err) => {
+            resolve({status: 'error', message: err.message});
+        });
+    });
 }
-console.log(`✅ Loaded ${localizationMap.size} localizations\n`);
 
-// Extract unique uisprite values (these will be the icon filenames)
-const uiSprites = new Set();
+async function processBufferWithSharp(buffer, outputPath) {
+    const imgName = path.basename(outputPath);
+    if (!replaceExisting && onlyUpgrade && fs.existsSync(outputPath)) {
+        try {
+            const existingMetadata = await sharp(fs.readFileSync(outputPath)).metadata();
+            const newMetadata = await sharp(buffer).metadata();
+            if (newMetadata.width <= existingMetadata.width &&
+                newMetadata.height <= existingMetadata.height) {
+                console.log(`⏭️ Existing file is equal or better quality, skipping: ${imgName}`);
+                return {status: 'exists', name: outputPath};
+            }
+        } catch (err) {
+            console.log(`⚠️ Could not read existing file metadata, proceeding with download: ${imgName}`);
+        }
+    }
 
-function extractUiSprites(spellsArray) {
+    if (optimize) {
+        try {
+            buffer = await sharp(buffer)
+                .resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
+                    fit: 'inside',
+                    withoutEnlargement: true
+                })
+                .png({
+                    quality: IMAGE_QUALITY,
+                    compressionLevel: 9
+                })
+                .toBuffer();
+        } catch (error) {
+            return {status: 'optimize-fail', name: imgName, message: error.message};
+        }
+    }
+    fs.writeFileSync(outputPath, buffer);
+    console.log(`💾 Saved: ${outputPath}, size after optimization: ${humanFileSize(buffer.length)}`);
+    return {status: 'success', name: imgName, size: humanFileSize(buffer.length)};
+}
+
+function humanFileSize(size) {
+    const i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
+    return (size / Math.pow(1024, i)).toFixed(2) + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
+}
+
+function buildLocalizationMap(localizationData) {
+    // Build localization map (@namelocatag -> English name)
+    const localizationMap = new Map();
+    for (const tu of localizationData.tmx.body.tu) {
+        const tuid = tu['@tuid'];
+        if (!tuid) continue;
+
+        const tuv = tu.tuv;
+        if (!tuv) continue;
+
+        // Handle both single tuv and array of tuv
+        const seg = Array.isArray(tuv)
+            ? tuv.find(t => t['@xml:lang'] === 'EN-US')?.seg
+            : tuv.seg;
+
+        if (seg) {
+            localizationMap.set(tuid, seg);
+        }
+    }
+    return localizationMap;
+}
+
+function extractUiSprites(uiSprites, spellsArray) {
     if (!spellsArray) return;
 
     const arr = Array.isArray(spellsArray) ? spellsArray : [spellsArray];
@@ -102,18 +140,7 @@ function extractUiSprites(spellsArray) {
     }
 }
 
-// Process all spell types
-extractUiSprites(spellsData.spells.passivespell);
-extractUiSprites(spellsData.spells.activespell);
-extractUiSprites(spellsData.spells.togglespell);
-
-totalSpells = uiSprites.size;
-console.log(`✅ Found ${totalSpells} unique spell uisprites\n`);
-
-// Build reverse map: uisprite -> localized name (for API calls)
-const uiSpriteToLocalizedName = new Map();
-
-function buildUiSpriteMap(spellsArray) {
+function buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsArray) {
     if (!spellsArray) return;
 
     const arr = Array.isArray(spellsArray) ? spellsArray : [spellsArray];
@@ -131,244 +158,135 @@ function buildUiSpriteMap(spellsArray) {
     }
 }
 
-// Build the map
-buildUiSpriteMap(spellsData.spells.passivespell);
-buildUiSpriteMap(spellsData.spells.activespell);
-buildUiSpriteMap(spellsData.spells.togglespell);
-
-console.log(`✅ Built uisprite->localized name map: ${uiSpriteToLocalizedName.size} mappings\n`);
-
-/**
- * Optimize an image with sharp
- * @param {Buffer} buffer - Image buffer
- * @param {string} filePath - Output file path
- * @returns {Promise<{success: boolean, bytesBefore: number, bytesAfter: number}>}
- */
-async function optimizeImage(buffer, filePath) {
-    try {
-        const bytesBefore = buffer.length;
-
-        // Process with sharp
-        const optimizedBuffer = await sharp(buffer)
-            .resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
-                fit: 'inside',
-                withoutEnlargement: true
-            })
-            .png({
-                quality: IMAGE_QUALITY,
-                compressionLevel: 9
-            })
-            .toBuffer();
-
-        const bytesAfter = optimizedBuffer.length;
-
-        // Write optimized image
-        fs.writeFileSync(filePath, optimizedBuffer);
-
-        totalBytesBefore += bytesBefore;
-        totalBytesAfter += bytesAfter;
-
-        return { success: true, bytesBefore, bytesAfter };
-    } catch (error) {
-        return { success: false, error: error.message };
+function parseArgs() {
+    const args = process.argv.slice(2);
+    if (args.includes('--help') || args.includes('-h')) {
+        console.log('Usage: node download-and-optimize-map.js [--replace-existing] [--no-optimize]');
+        console.log('--replace-existing : Replace existing files in the output directory.');
+        console.log('--no-optimize     : Skip image optimization step.');
+        console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');
+        process.exit(0);
+    }
+    if (args.includes('--replace-existing')) {
+        replaceExisting = true;
+    }
+    if (args.includes('--no-optimize')) {
+        optimize = false;
+    }
+    if (args.includes('--only-upgrade')) {
+        onlyUpgrade = true;
     }
 }
 
-/**
- * Download and optimize a spell icon
- * @param {string} uiSprite - Spell uisprite identifier
- * @param {number} retryCount - Current retry attempt
- * @returns {Promise<{success: boolean, exists?: boolean, uiSprite?: string}>}
- */
-function downloadAndOptimizeSpellIcon(uiSprite, retryCount = 0) {
-    const MAX_RETRIES = 2;
-    const TIMEOUT_MS = 2000;
+function initPrerequisites() {
+    console.log('🔮 Unified Spell Icon Downloader & Optimizer');
+    console.log('=============================================\n');
 
-    return new Promise((resolve) => {
-        const fileName = `${uiSprite}.png`;
-        const filePath = path.join(OUTPUT_DIR, fileName);
+    parseArgs();
 
-        // Get localized name for API call
-        const localizedName = uiSpriteToLocalizedName.get(uiSprite) || uiSprite;
+    if (optimize) {
+        console.log(`⚙️ Image optimization is ENABLED`);
+    }
+    if (replaceExisting) {
+        console.log(`⚙️ Existing icons will be REPLACED`);
+    }
+    if (onlyUpgrade) {
+        console.log(`⚙️ Only UPGRADE existing icons if new version is larger`);
+    }
 
-        // CORRECT URL PATTERNS - PRIORITIZE /spell/ endpoints!
-        const urlPatterns = [
-            `${CDN_BASE_URL}${encodeURIComponent(uiSprite)}.png`,           // 1. spell endpoint with uiSprite
-            `${CDN_BASE_URL}${encodeURIComponent(localizedName)}.png`,      // 2. spell endpoint with localized name
-        ];
+    // Create output directory if it doesn't exist
+    if (!fs.existsSync(OUTPUT_DIR)) {
+        fs.mkdirSync(OUTPUT_DIR, {recursive: true});
+        console.log(`✅ Created directory: ${OUTPUT_DIR}\n`);
+    }
 
-        let currentUrlIndex = 0;
+    // Load and parse spells.json
+    console.log(`📄 Loading ${SPELLS_JSON_PATH}...`);
+    const spellsData = JSON.parse(fs.readFileSync(SPELLS_JSON_PATH, 'utf8'));
 
-        function tryDownload() {
-            if (currentUrlIndex >= urlPatterns.length) {
-                // All URLs failed, try retry
-                if (retryCount < MAX_RETRIES) {
-                    setTimeout(() => {
-                        downloadAndOptimizeSpellIcon(uiSprite, retryCount + 1).then(resolve);
-                    }, 100 * (retryCount + 1)); // Exponential backoff
-                    return;
-                }
+    if (!spellsData.spells) {
+        console.error('❌ Invalid spells.json structure: missing "spells" root');
+        process.exit(1);
+    }
 
-                // All retries exhausted
-                failed++;
-                resolve({ success: false, uiSprite });
-                return;
-            }
+    // Load and parse localization.json
+    console.log(`📄 Building ${LOCALIZATION_JSON_PATH} map... (this may take a moment)`);
+    const localizationMap = buildLocalizationMap(JSON.parse(fs.readFileSync(LOCALIZATION_JSON_PATH, 'utf8')));
+    console.log(`✅ Loaded ${localizationMap.size} localizations\n`);
 
-            const url = urlPatterns[currentUrlIndex];
-            currentUrlIndex++;
+    // Extract unique uisprite values (these will be the icon filenames)
+    const uiSprites = new Set();
+    // Process all spell types
+    extractUiSprites(uiSprites, spellsData.spells.passivespell);
+    extractUiSprites(uiSprites, spellsData.spells.activespell);
+    extractUiSprites(uiSprites, spellsData.spells.togglespell);
+    totalSpells = uiSprites.size;
+    console.log(`✅ Found ${totalSpells} unique spell uisprites\n`);
 
-            const request = https.get(url, async (response) => {
-                if (response.statusCode === 200) {
-                    // Download to buffer
-                    const chunks = [];
-                    response.on('data', chunk => chunks.push(chunk));
-                    response.on('end', async () => {
-                        const buffer = Buffer.concat(chunks);
+    // Build reverse map: uisprite -> localized name (for API calls)
+    const uiSpriteToLocalizedName = new Map();
+    // Build the map
+    buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsData.spells.passivespell);
+    buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsData.spells.activespell);
+    buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsData.spells.togglespell);
+    console.log(`✅ Built uisprite->localized name map: ${uiSpriteToLocalizedName.size} mappings\n`);
 
-                        // Optimize and save
-                        const result = await optimizeImage(buffer, filePath);
+    const uiSpritesArray = Array.from(uiSprites);
+    return {uiSpritesArray, uiSpriteToLocalizedName};
+}
 
-                        if (result.success) {
-                            downloaded++;
-                            optimized++;
-                            resolve({ success: true, exists: false });
-                        } else {
-                            console.error(`\n⚠️  Optimization failed for ${uiSprite}: ${result.error}`);
-                            tryDownload(); // Try next URL
-                        }
-                    });
+async function main() {
+    const {uiSpritesArray, uiSpriteToLocalizedName} = initPrerequisites();
 
-                    response.on('error', () => {
-                        tryDownload(); // Try next URL
-                    });
-                } else {
-                    tryDownload(); // Try next URL
-                }
-            });
+    let downloaded = 0;
+    let completed = 0;
+    let optimizeFail = 0;
+    let failed = 0;
+    let now = Date.now();
 
-            // Set timeout
-            request.setTimeout(TIMEOUT_MS, () => {
-                request.destroy();
-                tryDownload(); // Try next URL
-            });
+    for (let i = 0; i < uiSpritesArray.length; i++) {
+        const filename = `${uiSpritesArray[i]}.png`;
+        const localizedFilename = `${uiSpriteToLocalizedName.get(uiSpritesArray[i])}.png`;
+        const outputPath = path.join(OUTPUT_DIR, filename);
 
-            request.on('error', () => {
-                tryDownload(); // Try next URL
-            });
+        let url = `${CDN_BASE_URL}${filename}`;
+        let res = await downloadAndOptimizeSpellIcon(url, outputPath);
+
+        if (res.status === 'not-found' && url !== `${CDN_BASE_URL}${localizedFilename}`) {
+            console.log(` ⚠️ 🔄 Icon not found with uisprite name: ${filename}, trying localized name: ${localizedFilename}`);
+            url = `${CDN_BASE_URL}${localizedFilename}`;
+            res = await downloadAndOptimizeSpellIcon(url, outputPath);
         }
 
-        tryDownload();
-    });
-}
-
-/**
- * Re-optimize existing image files
- * @param {string} uiSprite - Spell uisprite identifier
- * @returns {Promise<{success: boolean}>}
- */
-async function reOptimizeExistingIcon(uiSprite) {
-    const fileName = `${uiSprite}.png`;
-    const filePath = path.join(OUTPUT_DIR, fileName);
-
-    try {
-        if (!fs.existsSync(filePath)) {
-            return { success: false };
+        if (res.status === 'success') {
+            downloaded++;
+            completed++;
+            console.log(` ✅ [${i + 1}/${totalSpells}] Downloaded ${filename} (${res.size})\n`);
+        } else if (res.status === 'exists') {
+            completed++;
+            console.log(` ⏭️️ [${i + 1}/${totalSpells}] Skipped existing file: ${filename}\n`);
+        } else if (res.status === 'optimize-fail') {
+            optimizeFail++;
+            console.log(` ⚠️ [${i + 1}/${totalSpells}] Optimization failed for: ${filename} - ${res.message}\n`);
+        } else {
+            failed++;
+            console.error(` ❌ [${i + 1}/${totalSpells}] Failed to download ${filename}: ${res.message}\n`);
         }
-
-        const buffer = fs.readFileSync(filePath);
-        const result = await optimizeImage(buffer, filePath);
-
-        if (result.success) {
-            alreadyOptimized++;
-            return { success: true };
-        }
-
-        return { success: false };
-    } catch (error) {
-        console.error(`\n⚠️  Failed to re-optimize ${uiSprite}: ${error.message}`);
-        return { success: false };
     }
+
+     console.log('📊 Summary:');
+    console.log(`   🕒 Time taken: ${((Date.now() - now) / 1000).toFixed(2)} seconds`);
+    console.log(`   ✅ Completed: ${completed}`);
+    console.log(`   📥 Downloaded: ${downloaded}`);
+    console.log(`   ❌ Failed: ${failed}`);
+    console.log(`   ⚠️ Optimization Failures: ${optimizeFail}`);
+    console.log(`   🧙‍♂️ Location: ${OUTPUT_DIR}`);
+
+    process.exit(0);
 }
 
-/**
- * Download and optimize all spell icons
- */
-async function processAllSpells() {
-    const uiSpriteArray = Array.from(uiSprites);
-    const BATCH_SIZE = 5; // Process 5 at a time (lower due to optimization overhead)
-    const failedSpells = [];
 
-    console.log(`📥 Starting download and optimization of ${totalSpells} spell icons...\n`);
-    console.log(`⚙️  Settings: Max size ${MAX_IMAGE_SIZE}x${MAX_IMAGE_SIZE}px, Quality ${IMAGE_QUALITY}%\n`);
-
-    for (let i = 0; i < uiSpriteArray.length; i += BATCH_SIZE) {
-        const batch = uiSpriteArray.slice(i, i + BATCH_SIZE);
-        const results = await Promise.all(
-            batch.map(async (uiSprite) => {
-                const fileName = `${uiSprite}.png`;
-                const filePath = path.join(OUTPUT_DIR, fileName);
-
-                // If file exists, re-optimize it; otherwise download and optimize
-                // if (fs.existsSync(filePath)) {
-                //     return await reOptimizeExistingIcon(uiSprite);
-                // } else {
-                //     return await downloadAndOptimizeSpellIcon(uiSprite);
-                // }
-                return await downloadAndOptimizeSpellIcon(uiSprite);
-            })
-        );
-
-        // Track failed spells
-        results.forEach((result, idx) => {
-            if (!result.success) {
-                failedSpells.push(batch[idx]);
-            }
-        });
-
-        // Progress update
-        const progress = Math.min(i + BATCH_SIZE, totalSpells);
-        const percent = ((progress / totalSpells) * 100).toFixed(1);
-        const savedBytes = totalBytesBefore - totalBytesAfter;
-        const savedMB = (savedBytes / (1024 * 1024)).toFixed(2);
-        process.stdout.write(
-            `\r⏳ Progress: ${progress}/${totalSpells} (${percent}%) - ` +
-            `Downloaded: ${downloaded}, Re-optimized: ${alreadyOptimized}, Failed: ${failed} | ` +
-            `Saved: ${savedMB}MB`
-        );
-    }
-
-    console.log('\n\n✅ Processing complete!\n');
-    console.log('📊 Summary:');
-    console.log(`   Total spells: ${totalSpells}`);
-    console.log(`   Downloaded & optimized: ${downloaded}`);
-    console.log(`   Re-optimized existing: ${alreadyOptimized}`);
-    console.log(`   Failed: ${failed}`);
-    console.log(`   Success rate: ${(((downloaded + alreadyOptimized) / totalSpells) * 100).toFixed(1)}%`);
-
-    // Size reduction stats
-    if (totalBytesBefore > 0) {
-        const savedBytes = totalBytesBefore - totalBytesAfter;
-        const savedMB = (savedBytes / (1024 * 1024)).toFixed(2);
-        const reductionPercent = ((savedBytes / totalBytesBefore) * 100).toFixed(1);
-        console.log(`\n💾 Storage Optimization:`);
-        console.log(`   Before: ${(totalBytesBefore / (1024 * 1024)).toFixed(2)} MB`);
-        console.log(`   After: ${(totalBytesAfter / (1024 * 1024)).toFixed(2)} MB`);
-        console.log(`   Saved: ${savedMB} MB (${reductionPercent}% reduction)`);
-    }
-
-    if (failedSpells.length > 0) {
-        console.log(`\n⚠️  ${failedSpells.length} spell icons could not be processed:`);
-        failedSpells.forEach(spell => {
-            const localizedName = uiSpriteToLocalizedName.get(spell) || 'N/A';
-            console.log(`   - ${spell} (${localizedName})`);
-        });
-        console.log('\n   These spells will use the generic fallback icon (SPELL_GENERIC.png).');
-    }
-}
-
-// Run
-processAllSpells().catch(err => {
-    console.error('❌ Fatal error:', err);
+main().catch(err => {
+    console.error('❌ An error occurred:', err);
     process.exit(1);
 });
