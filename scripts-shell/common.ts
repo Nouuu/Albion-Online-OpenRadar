@@ -12,16 +12,12 @@ export enum DownloadStatus {
     ERROR = 'error'
 }
 
-interface DownloadResult {
+export interface DownloadResult {
     status: DownloadStatus;
     size?: string;
     message?: string;
     buffer?: Buffer<ArrayBuffer | ArrayBufferLike>;
 }
-
-/**
- * Download a file from URL to local path
- */
 
 function humanFileSize(size: number): string {
     const i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
@@ -77,11 +73,6 @@ export async function downloadFile(url: string, outputPath: string): Promise<Dow
     });
 }
 
-export function handleFileBuffer(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string): DownloadResult {
-    fs.writeFileSync(outputPath, buffer);
-    return {status: DownloadStatus.SUCCESS, message: `File written successfully: ${outputPath}`};
-}
-
 export function handleReplacing(outputPath: string, replaceExisting: boolean): DownloadResult {
     if (!replaceExisting && fs.existsSync(outputPath)) {
         return {status: DownloadStatus.EXISTS, message: `File already exists: ${outputPath}`};
@@ -89,7 +80,12 @@ export function handleReplacing(outputPath: string, replaceExisting: boolean): D
     return {status: DownloadStatus.SUCCESS, message: `File can be written: ${outputPath}`};
 }
 
-export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string, onlyUpgrade: boolean, MAX_IMAGE_SIZE: number, IMAGE_QUALITY: number): Promise<DownloadResult> {
+export function handleFileBuffer(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string): DownloadResult {
+    fs.writeFileSync(outputPath, buffer);
+    return {status: DownloadStatus.SUCCESS, message: `File written successfully: ${outputPath}`};
+}
+
+export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayBufferLike>, outputPath: string, onlyUpgrade: boolean, optimize: boolean, MAX_IMAGE_SIZE: number, IMAGE_QUALITY: number): Promise<DownloadResult> {
     if (onlyUpgrade && fs.existsSync(outputPath)) {
         try {
             const existingMetadata = await sharp(fs.readFileSync(outputPath)).metadata();
@@ -106,6 +102,9 @@ export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayB
             console.log(`⚠️ Could not read existing file metadata, proceeding with download: ${err}`);
         }
     }
+    if (!optimize) {
+        return {status: DownloadStatus.SUCCESS, buffer: buffer, message: `No optimization applied for: ${outputPath}`, size: humanFileSize(buffer.length)};
+    }
     try {
         buffer = await sharp(buffer)
             .resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
@@ -120,5 +119,41 @@ export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayB
     } catch (error) {
         return {status: DownloadStatus.FAIL, message: `Image processing error: ${error}`};
     }
-    return {status: DownloadStatus.OPTIMIZED, buffer: buffer, message: 'Image processed successfully'};
+    return {status: DownloadStatus.OPTIMIZED, buffer: buffer, message: `Image optimized for: ${outputPath}`, size: humanFileSize(buffer.length)};
+}
+
+export function printSummary(context: {
+    startTime: number,
+    completed: number,
+    downloaded?: number,
+    replaced?: number,
+    skipped?: number,
+    optimized?: number,
+    failed?: number,
+    optimizeFail?: number,
+    outputDir: string
+}) {
+    const elapsed = ((Date.now() - context.startTime) / 1000).toFixed(2);
+    console.log('📊 Summary:');
+    console.log(`   🕒 Time taken: ${elapsed} seconds`);
+    console.log(`   ✅ Completed: ${context.completed}`);
+    if (context.downloaded !== undefined) {
+        console.log(`   📥 Downloaded: ${context.downloaded}`);
+    }
+    if (context.optimized !== undefined) {
+        console.log(`   🖼️ Optimized: ${context.optimized}`);
+    }
+    if (context.replaced !== undefined) {
+        console.log(`   ♻️ Replaced: ${context.replaced}`);
+    }
+    if (context.skipped !== undefined) {
+        console.log(`   ⏭️ Skipped: ${context.skipped}`);
+    }
+    if (context.failed !== undefined) {
+        console.log(`   ❌ Failed: ${context.failed}`);
+    }
+    if (context.optimizeFail !== undefined) {
+        console.log(`   ⚠️ Optimization Failures: ${context.optimizeFail}`);
+    }
+    console.log(`   🗺️ Location: ${context.outputDir}`);
 }
