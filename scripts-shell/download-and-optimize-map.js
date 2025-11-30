@@ -37,8 +37,9 @@ async function downloadAndOptimizeWithPlaywright(mapName, page) {
     await new Promise(res => setTimeout(res, 1500 + Math.random() * 500)); // Random delay to mimic human behavior
 
     if (response && (response.status() >= 200 && response.status() < 400)) {
-        let buffer = await response.buffer();
-        return await processBufferWithSharp(buffer, mapName, mapFileName, outputPath);
+        const buffer = await response.buffer();
+        console.log(`✅ Downloaded: ${mapUrl}, size: ${humanFileSize(buffer.length)}`);
+        return await processBufferWithSharp(buffer, outputPath);
     } else {
         return {
             status: 'fail',
@@ -48,25 +49,23 @@ async function downloadAndOptimizeWithPlaywright(mapName, page) {
     }
 }
 
-async function processBufferWithSharp(buffer, mapName, mapFileName, outputPath) {
+async function processBufferWithSharp(buffer, outputPath) {
+    const imgName = path.basename(outputPath);
     if (onlyUpgrade && fs.existsSync(outputPath)) {
         try {
-            const existingImage = sharp(fs.readFileSync(outputPath));
-            const existingMetadata = await existingImage.metadata();
-            const newImage = sharp(buffer);
-            const newMetadata = await newImage.metadata();
+            const existingMetadata = await sharp(fs.readFileSync(outputPath)).metadata();
+            const newMetadata = await sharp(buffer).metadata();
 
             if (newMetadata.width <= existingMetadata.width &&
                 newMetadata.height <= existingMetadata.height) {
-                console.log(`⏭️ Existing file is equal or better quality, skipping: ${mapFileName}`);
-                return {status: 'exists', name: mapName};
+                console.log(`⏭️ Existing file is equal or better quality, skipping: ${imgName}`);
+                return {status: 'exists', name: outputPath}
             }
         } catch (err) {
-            console.log(`⚠️ Could not read existing file metadata, proceeding with download: ${mapFileName}`);
+            console.log(`⚠️ Could not read existing file metadata, proceeding with download: ${imgName}`);
         }
     }
 
-    console.log(`✅ Downloaded: ${mapName}, size: ${humanFileSize(buffer.length)}`);
     if (optimize) {
         try {
             buffer = await sharp(buffer)
@@ -81,12 +80,12 @@ async function processBufferWithSharp(buffer, mapName, mapFileName, outputPath) 
                 .toBuffer();
 
         } catch (err) {
-            return {status: 'optimize-fail', name: mapName, message: err.message};
+            return {status: 'optimize-fail', name: imgName, message: err.message};
         }
     }
     fs.writeFileSync(outputPath, buffer);
     console.log(`💾 Saved: ${outputPath}, size after optimization: ${humanFileSize(buffer.length)}`);
-    return {status: 'success', name: mapName, size: humanFileSize(buffer.length)};
+    return {status: 'success', name: imgName, size: humanFileSize(buffer.length)};
 }
 
 function humanFileSize(size) {
@@ -95,7 +94,7 @@ function humanFileSize(size) {
 }
 
 function parseArgs() {
-    const args = process.argv.slice(4);
+    const args = process.argv.slice(2);
     if (args.includes('--help') || args.includes('-h')) {
         console.log('Usage: node download-and-optimize-map.js [--replace-existing] [--no-optimize]');
         console.log('--replace-existing : Replace existing files in the output directory.');
@@ -201,6 +200,8 @@ async function main() {
     console.log(`⚠️ Optimization failures: ${optimizeFail}`);
     console.log(`❌ Failed downloads: ${failed}`);
     console.log('Total map tiles processed: ' + totalMapTiles);
+
+    process.exit(0);
 }
 
 main().catch(err => {

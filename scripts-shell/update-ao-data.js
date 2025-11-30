@@ -1,12 +1,3 @@
-/**
- * update-ao-data.js
- *
- * Simple script to download/update Albion Online data files from ao-data/ao-bin-dumps
- *
- * Usage:
- *   node scripts-shell/update-ao-data.js
- */
-
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -126,14 +117,12 @@ function initPrerequisites() {
     }
 }
 
-/**
- * Main function
- */
 async function main() {
     initPrerequisites();
     let downloadedCount = 0;
     let completedCount = 0;
     let failedCount = 0;
+    let now = new Date();
 
     for (let i = 0; i < FILES_TO_DOWNLOAD.length; i++) {
         const filename = FILES_TO_DOWNLOAD[i];
@@ -154,13 +143,14 @@ async function main() {
         }
     }
 
-    // console.log('\n🎉 All files updated successfully!');
-    // console.log(`📍 Location: ${OUTPUT_DIR}`);
     console.log('📊 Summary:');
+    console.log(`   🕒 Time taken: ${((new Date() - now) / 1000).toFixed(2)} seconds`);
     console.log(`   ✅ Completed: ${completedCount}`);
     console.log(`   📥 Downloaded: ${downloadedCount}`);
     console.log(`   ❌ Failed: ${failedCount}`);
     console.log(`   🗺️ Location: ${OUTPUT_DIR}`);
+
+    process.exit(0);
 }
 
 // Run
