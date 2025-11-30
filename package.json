@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon --config config/nodemon.json app.js",
-    "check": "node build/check-system.js",
+    "check": "node scripts-shell/check-system.js",
     "check:runtime": "node -e \"try { const ok = require('./scripts/Utils/runtime-check').runRuntimeChecks(); process.exit(ok ? 0 : 1); } catch (e) { console.error(e); process.exit(1); }\"",
     "prebuild": "npm run check",
     "build": "pkg . --compress GZip",
@@ -14,13 +14,12 @@
     "build:linux": "pkg . --targets node18-linux-x64 --compress GZip --output dist/ZQRadar-linux",
     "build:macos": "pkg . --targets node18-macos-x64 --compress GZip --output dist/ZQRadar-macos",
     "build:all": "pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --compress GZip",
-    "postbuild": "node build/post-build.js",
-    "optimize:images": "node build/optimize-images.js",
-    "clean": "node -e \"const fs=require('fs');const path=require('path');if(fs.existsSync('dist/images/.optimized')){console.log('Preserving optimized images');const items=fs.readdirSync('dist');items.forEach(i=>{if(i!=='images'){const p=path.join('dist',i);fs.rmSync(p,{recursive:true,force:true})}})}else{fs.rmSync('dist',{recursive:true,force:true})}\"",
+    "postbuild": "node scripts-shell/post-build.js",
+    "clean": "node -e \"const fs=require('fs');const path=require('path');const items=fs.readdirSync('dist');items.forEach(i=>{if(i!=='images'){const p=path.join('dist',i);fs.rmSync(p,{recursive:true,force:true})}})}else{fs.rmSync('dist',{recursive:true,force:true})}\"",
     "clean:all": "if exist dist rmdir /s /q dist && if exist build\\temp rmdir /s /q build\\temp && del /q *.log 2>nul",
-    "clean:images": "if exist dist\\images rmdir /s /q dist\\images && echo Optimized images deleted - next build will re-optimize",
+    "clean:images": "if exist dist\\images rmdir /s /q dist\\images && echo Images deleted ",
     "rebuild:native": "npm rebuild cap node-sass",
-    "package": "node build/create-release.js",
+    "package": "node scripts-shell/create-release.js",
     "release": "npm run build:win && npm run package",
     "install:deps": "npm install && npm run rebuild:native"
   },
@@ -72,6 +71,10 @@
     "archiver": "^7.0.1",
     "nodemon": "^3.1.7",
     "pkg": "^5.8.1",
+    "puppeteer": "^24.31.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "puppeteer-real-browser": "^1.4.4",
     "sharp": "^0.33.5"
   }
 }

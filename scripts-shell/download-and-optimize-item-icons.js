@@ -10,7 +10,7 @@ const https = require('https');
 const sharp = require('sharp');
 
 const ICONS_DIR = path.join(__dirname, '..', 'images', 'Items');
-const ITEMS_XML = path.join(__dirname, '..', 'work', 'data', 'ao-bin-dumps', 'items.xml');
+const ITEMS_XML = path.join(__dirname, '..', 'public', 'ao-bin-dumps', 'items.xml');
 const CDN_BASE = 'https://render.albiononline.com/v1/item';
 
 const MAX_IMAGE_SIZE = 128;

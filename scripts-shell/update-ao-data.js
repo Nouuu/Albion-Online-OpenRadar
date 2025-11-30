@@ -15,8 +15,30 @@ const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/
 const OUTPUT_DIR = path.join(__dirname, '..', 'public', 'ao-bin-dumps');
 
 const FILES_TO_DOWNLOAD = [
+    'formatted/items.txt',
+    'formatted/world.json',
+    'formatted/world.txt',
+    'harvestables.json',
+    'harvestables.xml',
     'items.json',
-    'spells.json'
+    'items.xml',
+    'localization.json',
+    'mobs.json',
+    'mobs.xml',
+    'randomdungeons.json',
+    'randomdungeons.xml',
+    'randomspawnbehaviors.json',
+    'randomspawnbehaviors.xml',
+    'rareresourcedistribution.json',
+    'rareresourcedistribution.xml',
+    'resourcedistpresets.json',
+    'resourcedistpresets.xml',
+    'resources.json',
+    'resources.xml',
+    'spells.json',
+    'spells.xml',
+    'treasures.json',
+    'treasures.xml'
 ];
 
 /**
@@ -75,12 +97,15 @@ async function main() {
         console.log(`📁 Creating directory: ${OUTPUT_DIR}`);
         fs.mkdirSync(OUTPUT_DIR, {recursive: true});
     }
-
     // Download all files
+
     for (const filename of FILES_TO_DOWNLOAD) {
+        const outputDir = path.dirname(path.join(OUTPUT_DIR, filename));
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, {recursive: true});
+        }
         const url = `${GITHUB_RAW_BASE}/${filename}`;
         const outputPath = path.join(OUTPUT_DIR, filename);
-
         try {
             await downloadFile(url, outputPath);
         } catch (error) {

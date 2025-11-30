@@ -16,8 +16,8 @@ const https = require('https');
 const sharp = require('sharp');
 
 // Paths
-const SPELLS_JSON_PATH = path.join(__dirname, '../work/data/ao-bin-dumps/spells.json');
-const LOCALIZATION_JSON_PATH = path.join(__dirname, '../work/data/ao-bin-dumps/localization.json');
+const SPELLS_JSON_PATH = path.join(__dirname, '../public/ao-bin-dumps/spells.json');
+const LOCALIZATION_JSON_PATH = path.join(__dirname, '../public/ao-bin-dumps/localization.json');
 const OUTPUT_DIR = path.join(__dirname, '../images/Spells');
 const CDN_BASE_URL = 'https://render.albiononline.com/v1/spell/';
 
