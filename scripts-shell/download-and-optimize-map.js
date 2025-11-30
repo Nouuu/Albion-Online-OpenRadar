@@ -14,7 +14,8 @@ const MAX_IMAGE_SIZE = 1024; // Max width or height in pixels
 const IMAGE_QUALITY = 80; // PNG quality (1-100)
 
 let optimize = true;
-let replaceExisting = false;
+let replaceExisting = false
+let onlyUpgrade = false;
 
 let totalMapTiles = 0;
 
@@ -33,31 +34,11 @@ async function downloadAndOptimizeWithPlaywright(mapName, page) {
 
     const response = await page.goto(mapUrl, {waitUntil: 'networkidle2', timeout: 30000});
 
-    await new Promise(res => setTimeout(res, 2000 + Math.random() * 500)); // Random delay between 2-2.5s
+    await new Promise(res => setTimeout(res, 1500 + Math.random() * 500)); // Random delay to mimic human behavior
 
     if (response && (response.status() >= 200 && response.status() < 400)) {
         let buffer = await response.buffer();
-        console.log(`✅ Downloaded: ${mapName}, size: ${humanFileSize(buffer.length)}`);
-        if (optimize) {
-            try {
-                buffer = await sharp(buffer)
-                    .resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
-                        fit: 'inside',
-                        withoutEnlargement: true
-                    })
-                    .png({
-                        quality: IMAGE_QUALITY,
-                        compressionLevel: 9
-                    })
-                    .toBuffer();
-
-            } catch (err) {
-                return {status: 'optimize-fail', name: mapName, message: err.message};
-            }
-        }
-        fs.writeFileSync(outputPath, buffer);
-        console.log(`💾 Saved: ${outputPath}, size after optimization: ${humanFileSize(buffer.length)}`);
-        return {status: 'success', name: mapName, size: humanFileSize(buffer.length)};
+        return await processBufferWithSharp(buffer, mapName, mapFileName, outputPath);
     } else {
         return {
             status: 'fail',
@@ -67,22 +48,66 @@ async function downloadAndOptimizeWithPlaywright(mapName, page) {
     }
 }
 
+async function processBufferWithSharp(buffer, mapName, mapFileName, outputPath) {
+    if (onlyUpgrade && fs.existsSync(outputPath)) {
+        try {
+            const existingImage = sharp(fs.readFileSync(outputPath));
+            const existingMetadata = await existingImage.metadata();
+            const newImage = sharp(buffer);
+            const newMetadata = await newImage.metadata();
+
+            if (newMetadata.width <= existingMetadata.width &&
+                newMetadata.height <= existingMetadata.height) {
+                console.log(`⏭️ Existing file is equal or better quality, skipping: ${mapFileName}`);
+                return {status: 'exists', name: mapName};
+            }
+        } catch (err) {
+            console.log(`⚠️ Could not read existing file metadata, proceeding with download: ${mapFileName}`);
+        }
+    }
+
+    console.log(`✅ Downloaded: ${mapName}, size: ${humanFileSize(buffer.length)}`);
+    if (optimize) {
+        try {
+            buffer = await sharp(buffer)
+                .resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
+                    fit: 'inside',
+                    withoutEnlargement: true
+                })
+                .png({
+                    quality: IMAGE_QUALITY,
+                    compressionLevel: 9
+                })
+                .toBuffer();
+
+        } catch (err) {
+            return {status: 'optimize-fail', name: mapName, message: err.message};
+        }
+    }
+    fs.writeFileSync(outputPath, buffer);
+    console.log(`💾 Saved: ${outputPath}, size after optimization: ${humanFileSize(buffer.length)}`);
+    return {status: 'success', name: mapName, size: humanFileSize(buffer.length)};
+}
+
 function humanFileSize(size) {
     const i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
     return (size / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
 }
 
 function parseArgs() {
-    const args = process.argv.slice(3);
+    const args = process.argv.slice(4);
     if (args.includes('--help') || args.includes('-h')) {
         console.log('Usage: node download-and-optimize-map.js [--replace-existing] [--no-optimize]');
         console.log('--replace-existing : Replace existing files in the output directory.');
         console.log('--no-optimize     : Skip image optimization step.');
+        console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');
         process.exit(0);
     } else if (args.includes('--replace-existing')) {
         replaceExisting = true;
     } else if (args.includes('--no-optimize')) {
         optimize = false;
+    } else if (args.includes('--only-upgrade')) {
+        onlyUpgrade = true;
     }
 }
 
@@ -98,14 +123,8 @@ function initPrerequisites() {
     if (replaceExisting) {
         console.log('⚙️  Replacing existing files is ENABLED');
     }
-
-    // Check if sharp is installed
-    try {
-        require.resolve('sharp');
-    } catch (e) {
-        console.error('❌ ERROR: sharp module not found!');
-        console.error('   Please install it with: npm install sharp');
-        process.exit(1);
+    if (onlyUpgrade) {
+        console.log('⚙️  Only upgrading lower quality files is ENABLED');
     }
 
     // Create output directory if it doesn't exist
