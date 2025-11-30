@@ -5,7 +5,7 @@
 # Requires: Node.js v18.18.2, npm, Npcap 1.84
 # ============================================
 
-.PHONY: help install start dev check build build-linux build-macos build-all release clean rebuild package optimize-images all-in-one clean-all
+.PHONY: help install start dev check build build-linux build-macos build-all release clean rebuild package all-in-one clean-all update-ao-data download-assets update-assets
 
 # Variables
 NODE_VERSION = v18.18.2
@@ -68,8 +68,7 @@ build: ## Build Windows executable
 	@echo ""
 	@echo "$(GREEN)✓ Build complete: dist/ZQRadar.exe$(NC)"
 	@echo ""
-	@echo "$(YELLOW)💡 Run 'node build/post-build.js' to copy assets + create archives$(NC)"
-	@echo "$(YELLOW)💡 Or run 'npm run optimize:images' first to reduce archive size$(NC)"
+	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
 
 build-linux: ## Build Linux executable
 	@echo "$(GREEN)Building Linux executable...$(NC)"
@@ -77,7 +76,7 @@ build-linux: ## Build Linux executable
 	@echo ""
 	@echo "$(GREEN)✓ Build complete: dist/ZQRadar-linux$(NC)"
 	@echo ""
-	@echo "$(YELLOW)💡 Run 'node build/post-build.js' to copy assets + create archives$(NC)"
+	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
 
 build-macos: ## Build macOS executable
 	@echo "$(GREEN)Building macOS executable...$(NC)"
@@ -85,7 +84,7 @@ build-macos: ## Build macOS executable
 	@echo ""
 	@echo "$(GREEN)✓ Build complete: dist/ZQRadar-macos$(NC)"
 	@echo ""
-	@echo "$(YELLOW)💡 Run 'node build/post-build.js' to copy assets + create archives$(NC)"
+	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
 
 build-all: ## Build for all platforms
 	@echo "$(GREEN)Building for all platforms (Windows, Linux, macOS)...$(NC)"
@@ -100,7 +99,7 @@ build-all: ## Build for all platforms
 	@echo ""
 	@echo "$(YELLOW)Next steps:$(NC)"
 	@echo "  1. Optimize: npm run optimize:images (optional, reduces archives by 30-40%)"
-	@echo "  2. Package: node build/post-build.js (copies assets + creates archives)"
+	@echo "  2. Package: node scripts-shell/post-build.js (copies assets + creates archives)"
 
 # All-in-one build
 all-in-one: ## Complete build process (install + build all platforms + package)
@@ -108,20 +107,23 @@ all-in-one: ## Complete build process (install + build all platforms + package)
 	@echo "$(GREEN)  ZQRadar - Complete Build Process     $(NC)"
 	@echo "$(GREEN)═══════════════════════════════════════$(NC)"
 	@echo ""
-	@echo "$(YELLOW)Step 1/4: Installing dependencies...$(NC)"
+	@echo "$(YELLOW)Step 1/6: Installing dependencies...$(NC)"
 	@npm install
 	@echo ""
-	@echo "$(YELLOW)Step 2/4: Rebuilding native modules...$(NC)"
+	@echo "$(YELLOW)Step 2/6: Rebuilding native modules...$(NC)"
 	@npm rebuild cap node-sass
 	@echo ""
-	@echo "$(YELLOW)Step 3/4: Installing build tools...$(NC)"
+	@echo "$(YELLOW)Step 3/6: Installing build tools...$(NC)"
 	@npm install -D pkg archiver sharp
 	@echo ""
-	@echo "$(YELLOW)Step 4/4: Building all platforms...$(NC)"
+	@echo "$(YELLOW)Step 4/6: Building all platforms...$(NC)"
 	@npm run build:all
 	@echo ""
-	@echo "$(YELLOW)Step 5/5: Creating release packages...$(NC)"
-	@node build/post-build.js
+	@echo "$(YELLOW)Step 5/6: Updating assets...$(NC)"
+	@run update-assets
+	@echo ""
+	@echo "$(YELLOW)Step 6/6: Creating release packages...$(NC)"
+	@node scripts-shell/post-build.js
 	@echo ""
 	@echo "$(GREEN)✓ Complete build process finished!$(NC)"
 	@echo ""
@@ -142,7 +144,7 @@ rebuild: ## Clean and rebuild from scratch
 	@npm run build:win
 	@echo ""
 	@echo "$(YELLOW)Creating release packages...$(NC)"
-	@node build/post-build.js
+	@node scripts-shell/post-build.js
 	@echo ""
 	@echo "$(GREEN)✓ Rebuild complete!$(NC)"
 
@@ -154,29 +156,36 @@ release: ## Build and create release (Windows only)
 	@echo "$(GREEN)✓ Release created!$(NC)"
 
 # Cleaning
-clean: ## Clean build artifacts (keep optimized images if any)
+clean: ## Clean build artifacts
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
-	@if [ -d "$(DIST_DIR)/images/.optimized" ]; then \
-		echo "$(GREEN)Preserving optimized images...$(NC)"; \
-		find $(DIST_DIR) -mindepth 1 -maxdepth 1 ! -name images -exec rm -rf {} +; \
-	else \
-		rm -rf $(DIST_DIR); \
-	fi
-	@rm -rf $(BUILD_DIR)/temp
-	@rm -f *.log
+	@rm -rf $(DIST_DIR)
+	@rm -rf $(BUILD_DIR)
 	@echo "$(GREEN)✓ Clean complete!$(NC)"
 
 clean-all: ## Complete cleanup (including optimized images + node_modules)
 	@echo "$(RED)Complete cleanup (including node_modules)...$(NC)"
 	@rm -rf $(DIST_DIR)
-	@rm -rf $(BUILD_DIR)/temp
+	@rm -rf $(BUILD_DIR)
 	@rm -rf node_modules package-lock.json
 	@rm -f *.log
 	@echo "$(GREEN)✓ Complete cleanup done!$(NC)"
 
-# Image optimization
-optimize-images: ## Optimize images to reduce package size
-	npm run optimize:images
+
+update-ao-data: ## Update AO data files
+	@echo "$(YELLOW)Updating AO data files...$(NC)"
+	@node scripts-shell/update-ao-data.js
+
+download-assets: ## Download required assets
+	@echo "$(YELLOW)Downloading required assets...$(NC)"
+	node scripts-shell/download-and-optimize-item-icons.js
+	node scripts-shell/download-and-optimize-spell-icons.js
+	node scripts-shell/download-and-optimize-map.js
+
+update-assets: ## Update all assets
+	@echo "$(YELLOW)Updating all assets...$(NC)"
+	@run update-ao-data
+	@run download-assets
+
 
 # Default target
 .DEFAULT_GOAL := help
