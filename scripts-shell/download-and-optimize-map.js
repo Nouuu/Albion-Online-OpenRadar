@@ -102,11 +102,14 @@ function parseArgs() {
         console.log('--no-optimize     : Skip image optimization step.');
         console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');
         process.exit(0);
-    } else if (args.includes('--replace-existing')) {
+    }
+    if (args.includes('--replace-existing')) {
         replaceExisting = true;
-    } else if (args.includes('--no-optimize')) {
+    }
+    if (args.includes('--no-optimize')) {
         optimize = false;
-    } else if (args.includes('--only-upgrade')) {
+    }
+    if (args.includes('--only-upgrade')) {
         onlyUpgrade = true;
     }
 }
@@ -151,7 +154,7 @@ function initPrerequisites() {
     return {mapFiles};
 }
 
-(async function () {
+async function main() {
     const {page} = await connect({
         headless: 'auto',
         fingerprint: true,
@@ -168,7 +171,7 @@ function initPrerequisites() {
     let now = Date.now();
 
     await page.goto(CDN_BASE_URL, {waitUntil: 'networkidle2', timeout: 30000});
-    await new Promise(res =>setTimeout(res, 3000)); // Initial delay
+    await new Promise(res => setTimeout(res, 3000)); // Initial delay
 
     for (let i = 0; i < mapFiles.length; i++) {
         const mapName = mapFiles[i];
@@ -198,4 +201,9 @@ function initPrerequisites() {
     console.log(`⚠️ Optimization failures: ${optimizeFail}`);
     console.log(`❌ Failed downloads: ${failed}`);
     console.log('Total map tiles processed: ' + totalMapTiles);
-})();
+}
+
+main().catch(err => {
+    console.error('❌ An error occurred:', err);
+    process.exit(1);
+});
