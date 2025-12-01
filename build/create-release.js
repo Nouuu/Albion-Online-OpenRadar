@@ -9,15 +9,15 @@ const path = require('path');
 const archiver = require('archiver');
 
 const DIST_DIR = path.join(__dirname, '../dist');
-const RELEASE_NAME = `ZQRadar-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`;
+const RELEASE_NAME = `OpenRadar-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`;
 const RELEASE_DIR = path.join(DIST_DIR, RELEASE_NAME);
 
 console.log('\n📦 Creating release package...\n');
 
 // Check that executable exists
-const exePath = path.join(DIST_DIR, 'ZQRadar.exe');
+const exePath = path.join(DIST_DIR, 'OpenRadar.exe');
 if (!fs.existsSync(exePath)) {
-    console.error('✗ ZQRadar.exe not found!');
+    console.error('✗ OpenRadar.exe not found!');
     console.error('  Run "npm run build:win" first.');
     process.exit(1);
 }
@@ -31,9 +31,9 @@ if (!fs.existsSync(RELEASE_DIR)) {
 console.log('📁 Copying files...\n');
 
 const filesToCopy = [
-    { src: exePath, dest: 'ZQRadar.exe' },
+    { src: exePath, dest: 'OpenRadar.exe' },
     { src: path.join(__dirname, '../README.md'), dest: 'README.md' },
-    { src: path.join(__dirname, '../zqradar.ico'), dest: 'zqradar.ico', optional: true }
+    { src: path.join(__dirname, '../openradar.ico'), dest: 'openradar.ico', optional: true }
 ];
 
 filesToCopy.forEach(file => {
@@ -50,7 +50,7 @@ filesToCopy.forEach(file => {
 
 // Create INSTALL.txt file with instructions
 const installInstructions = `╔════════════════════════════════════════════════════════════╗
-║                    ZQRadar - Installation                  ║
+║                   OpenRadar - Installation                 ║
 ╚════════════════════════════════════════════════════════════╝
 
 📋 INSTALLATION STEPS:
@@ -60,12 +60,12 @@ const installInstructions = `╔════════════════
    Download from: https://npcap.com/
    Direct link (optional): https://npcap.com/dist/npcap-1.84.exe
 
-   ⚠️  IMPORTANT: Without Npcap (version 1.84+), ZQRadar will not be able
+   ⚠️  IMPORTANT: Without Npcap (version 1.84+), OpenRadar will not be able
        to capture network packets and will not work!
 
-2. Launch ZQRadar
+2. Launch OpenRadar
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Double-click on ZQRadar.exe
+   Double-click on OpenRadar.exe
 
 3. Select network adapter
    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -92,15 +92,15 @@ const installInstructions = `╔════════════════
 🆘 SUPPORT:
 
    Discord  : https://discord.gg/XAWjmzeaD3
-   GitHub   : https://github.com/Zeldruck/Albion-Online-ZQRadar
-   Issues   : https://github.com/Zeldruck/Albion-Online-ZQRadar/issues
+   GitHub   : https://github.com/Nouuu/Albion-Online-ZQRadar
+   Issues   : https://github.com/Nouuu/Albion-Online-ZQRadar/issues
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📝 TECHNICAL NOTES:
 
    • All assets (views, scripts, images, sounds) are integrated
-     into ZQRadar.exe - no other files needed!
+     into OpenRadar.exe - no other files needed!
 
    • Native modules (cap.node for network capture) are
      also integrated in the executable
@@ -137,10 +137,10 @@ output.on('close', () => {
 
     console.log('\n✅ Release package created successfully!\n');
     console.log('Package contents:');
-    console.log('  • ZQRadar.exe');
+    console.log('  • OpenRadar.exe');
     console.log('  • README.md');
     console.log('  • INSTALL.txt');
-    console.log('  • zqradar.ico (if available)\n');
+    console.log('  • openradar.ico (if available)\n');
 });
 
 archive.on('error', (err) => {

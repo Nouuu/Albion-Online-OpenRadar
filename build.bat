@@ -1,6 +1,6 @@
 @echo off
 REM ============================================
-REM ZQRadar - Build Helper for Windows
+REM OpenRadar - Build Helper for Windows
 REM ============================================
 REM Alternative to Makefile for those who don't have GNU Make
 REM Usage: build.bat [command]
@@ -28,7 +28,7 @@ goto error
 :help
 echo.
 echo ╔════════════════════════════════════════════════════════════╗
-echo ║          ZQRadar - Build Helper for Windows                ║
+echo ║         OpenRadar - Build Helper for Windows               ║
 echo ╚════════════════════════════════════════════════════════════╝
 echo.
 echo Usage: build.bat [command]
@@ -47,7 +47,7 @@ echo   release     Create complete release package
 echo   clean       Clean temporary files (preserves optimized images)
 echo   clean:all   Clean everything (including optimized images)
 echo   optimize    Optimize images in dist/ (after build)
-echo   start       Launch ZQRadar in dev mode
+echo   start       Launch OpenRadar in dev mode
 echo   help        Display this help
 echo.
 echo ────────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ goto end
 
 :build
 echo.
-echo 🏗️  Building ZQRadar for Windows...
+echo 🏗️  Building OpenRadar for Windows...
 echo.
 echo [1/4] Checking...
 call npm run check
@@ -126,14 +126,14 @@ if errorlevel 1 (
 echo.
 echo ✅ Build completed!
 echo.
-echo 📍 Executable created: dist\ZQRadar.exe
-echo 📦 Archives created: dist\ZQRadar-*.zip, dist\ZQRadar-*.tar.gz
+echo 📍 Executable created: dist\OpenRadar.exe
+echo 📦 Archives created: dist\OpenRadar-*.zip, dist\OpenRadar-*.tar.gz
 echo.
 goto end
 
 :buildlinux
 echo.
-echo 🏗️  Building ZQRadar for Linux...
+echo 🏗️  Building OpenRadar for Linux...
 echo.
 echo [1/2] Installing pkg and archiver...
 call npm install -D pkg archiver
@@ -152,13 +152,13 @@ call node build\post-build.js
 echo.
 echo ✅ Build completed!
 echo.
-echo 📍 Executable created: dist\ZQRadar-linux
+echo 📍 Executable created: dist\OpenRadar-linux
 echo.
 goto end
 
 :buildmacos
 echo.
-echo 🏗️  Building ZQRadar for macOS...
+echo 🏗️  Building OpenRadar for macOS...
 echo.
 echo [1/2] Installing pkg and archiver...
 call npm install -D pkg archiver
@@ -177,13 +177,13 @@ call node build\post-build.js
 echo.
 echo ✅ Build completed!
 echo.
-echo 📍 Executable created: dist\ZQRadar-macos
+echo 📍 Executable created: dist\OpenRadar-macos
 echo.
 goto end
 
 :buildall
 echo.
-echo 🏗️  Building ZQRadar for all platforms...
+echo 🏗️  Building OpenRadar for all platforms...
 echo.
 echo [1/2] Installing pkg and archiver...
 call npm install -D pkg archiver
@@ -203,14 +203,14 @@ echo.
 echo ✅ Build completed for all platforms!
 echo.
 echo 📍 Executables created:
-echo   - dist\ZQRadar.exe (Windows)
-echo   - dist\ZQRadar-linux (Linux)
-echo   - dist\ZQRadar-macos (macOS)
+echo   - dist\OpenRadar.exe (Windows)
+echo   - dist\OpenRadar-linux (Linux)
+echo   - dist\OpenRadar-macos (macOS)
 echo.
 :allinone
 echo.
 echo ════════════════════════════════════════════════════════════
-echo          ZQRadar - Complete Build Workflow
+echo          OpenRadar - Complete Build Workflow
 echo ════════════════════════════════════════════════════════════
 echo.
 echo [1/6] Cleaning (preserving optimized images)...
@@ -270,7 +270,7 @@ goto end
 
 :rebuild
 echo.
-echo 🔄 Complete rebuild of ZQRadar...
+echo 🔄 Complete rebuild of OpenRadar...
 echo.
 echo [1/4] Cleaning...
 if exist dist (
@@ -320,7 +320,7 @@ if errorlevel 1 (
 echo.
 echo ✅ Complete rebuild finished!
 echo.
-echo 📍 Executable created: dist\ZQRadar.exe
+echo 📍 Executable created: dist\OpenRadar.exe
 echo.
 goto end
 
@@ -363,12 +363,12 @@ if exist dist\images\.optimized (
         if exist "%%f" del /q "%%f" 2>nul
     )
     REM Delete specific executables (both naming conventions)
-    if exist dist\ZQRadar.exe del /q dist\ZQRadar.exe 2>nul
-    if exist dist\ZQRadar-linux del /q dist\ZQRadar-linux 2>nul
-    if exist dist\ZQRadar-macos del /q dist\ZQRadar-macos 2>nul
-    if exist dist\albion-zqradar-win.exe del /q dist\albion-zqradar-win.exe 2>nul
-    if exist dist\albion-zqradar-linux del /q dist\albion-zqradar-linux 2>nul
-    if exist dist\albion-zqradar-macos del /q dist\albion-zqradar-macos 2>nul
+    if exist dist\OpenRadar.exe del /q dist\OpenRadar.exe 2>nul
+    if exist dist\OpenRadar-linux del /q dist\OpenRadar-linux 2>nul
+    if exist dist\OpenRadar-macos del /q dist\OpenRadar-macos 2>nul
+    if exist dist\albion-openradar-win.exe del /q dist\albion-openradar-win.exe 2>nul
+    if exist dist\albion-openradar-linux del /q dist\albion-openradar-linux 2>nul
+    if exist dist\albion-openradar-macos del /q dist\albion-openradar-macos 2>nul
     REM Delete README files
     for %%f in (dist\README*.txt) do (
         if exist "%%f" del /q "%%f" 2>nul
@@ -429,7 +429,7 @@ goto end
 
 :start
 echo.
-echo 🚀 Starting ZQRadar...
+echo 🚀 Starting OpenRadar...
 echo.
 call npm start
 goto end
