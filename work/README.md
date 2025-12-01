@@ -1,16 +1,16 @@
-# 🔧 work/ - Zone de Travail Développeur
+# 🔧 work/ - Developer Workspace
 
-> **Dossier de travail** pour scripts utilitaires et données de développement  
-> **Git:** Versionné (sauf `ao-bin-dumps-master/`)
+> **Working directory** for utility scripts and development data  
+> **Git:** Versioned (except `ao-bin-dumps-master/`)
 
 ---
 
-## 🎯 Objectif
+## 🎯 Purpose
 
-Ce dossier contient les **outils et données nécessaires au développement** de ZQRadar :
-- Scripts Python pour analyser les logs et TypeIDs
-- Dumps officiels Albion Online (sources de données)
-- Données générées (bases TypeIDs, métadonnées)
+This directory contains **tools and data required for OpenRadar development**:
+- Python scripts to analyze logs and TypeIDs
+- Official Albion Online dumps (data sources)
+- Generated data (TypeID databases, metadata)
 
 ---
 
@@ -18,40 +18,40 @@ Ce dossier contient les **outils et données nécessaires au développement** de
 
 ```
 work/
-├── README.md                          ← Ce fichier
-├── .gitignore                         ← Ignore seulement ao-bin-dumps-master/
+├── README.md                          ← This file
+├── .gitignore                         ← Ignores only ao-bin-dumps-master/
 │
-├── 🗂️ data/                           ← Données sources et générées
-│   ├── ao-bin-dumps-master/          ⭐ Dumps officiels Albion (git-ignoré)
-│   ├── living-resources.json         ← 225 métadonnées créatures
-│   └── all-typeids.json              ← Base complète TypeIDs
+├── 🗂️ data/                           ← Source and generated data
+│   ├── ao-bin-dumps-master/          ⭐ Official Albion dumps (git-ignored)
+│   ├── living-resources.json         ← 225 creature metadata entries
+│   └── all-typeids.json              ← Complete TypeID database
 │
-└── 🐍 scripts/                        ← Scripts Python utilitaires
-    ├── parse-living-logs.py          ⭐ Parser logs de collecte
-    ├── analyze-typeids.py            ← Analyser TypeIDs manquants
-    └── extract-metadata.py           ← Extraire métadonnées mobs
+└── 🐍 scripts/                        ← Python utility scripts
+    ├── parse-living-logs.py          ⭐ Parse collection logs
+    ├── analyze-typeids.py            ← Analyze missing TypeIDs
+    └── extract-metadata.py           ← Extract mob metadata
 ```
 
 ---
 
-## 🐍 Scripts Python
+## 🐍 Python Scripts
 
 ### parse-living-logs.py ⭐
-Parser les logs de collecte de TypeIDs
+Parse TypeID collection logs
 
 ```bash
 python work/scripts/parse-living-logs.py logs-session-2025-11-05.txt
 ```
 
 ### analyze-typeids.py
-Analyser les TypeIDs manquants dans `MobsInfo.js`
+Analyze missing TypeIDs in `MobsInfo.js`
 
 ```bash
 python work/scripts/analyze-typeids.py
 ```
 
 ### extract-metadata.py
-Extraire les métadonnées des mobs depuis les dumps officiels
+Extract mob metadata from official dumps
 
 ```bash
 python work/scripts/extract-metadata.py
@@ -59,36 +59,36 @@ python work/scripts/extract-metadata.py
 
 ---
 
-## 🗂️ Données
+## 🗂️ Data Files
 
 ### ao-bin-dumps-master/ ⭐
-Dumps officiels d'Albion Online
+Official Albion Online data dumps
 - **Source:** https://github.com/ao-data/ao-bin-dumps
-- **Contenu:** `mobs.json`, `items.txt`, etc.
-- **Utilité:** Référence pour TypeIDs et métadonnées
+- **Content:** `mobs.json`, `items.txt`, etc.
+- **Usage:** Reference for TypeIDs and metadata
 - **Setup:** `git clone https://github.com/ao-data/ao-bin-dumps.git work/data/ao-bin-dumps-master`
 
 ### living-resources.json
-225 métadonnées de créatures (HP, prefabs, factions)
+225 creature metadata entries (HP, prefabs, factions)
 
 ### all-typeids.json
-Base de données complète TypeID → Item/Resource
+Complete TypeID → Item/Resource database
 
 ---
 
-## 📚 Documentation Complète
+## 📚 Complete Documentation
 
-Pour plus de détails sur l'utilisation des scripts :
-👉 **`docs/work/` - Guides complets**
+For detailed script usage guides:
+👉 **`docs/work/` - Complete guides**
 
 ---
 
 ## ⚠️ Important
 
-- **Ce dossier est versionné dans git** ✅
-- **Exception:** `data/ao-bin-dumps-master/` est git-ignoré (trop volumineux)
-- Les scripts Python et données JSON sont inclus dans les commits
-- Nouveaux développeurs doivent télécharger `ao-bin-dumps-master/` manuellement:
+- **This directory is versioned in git** ✅
+- **Exception:** `data/ao-bin-dumps-master/` is git-ignored (too large)
+- Python scripts and JSON data are included in commits
+- New developers must download `ao-bin-dumps-master/` manually:
   ```bash
   git clone https://github.com/ao-data/ao-bin-dumps.git work/data/ao-bin-dumps-master
   ```

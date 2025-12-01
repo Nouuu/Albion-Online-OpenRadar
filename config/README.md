@@ -1,11 +1,11 @@
 # config/
 
-Configuration files pour ZQRadar.
+Configuration files for OpenRadar.
 
-## Fichiers
+## Files
 
 ### `nodemon.json`
-Configuration pour nodemon (auto-reload en développement).
+Configuration for nodemon (auto-reload in development).
 
 ```json
 {
@@ -24,45 +24,45 @@ npm run dev  # Utilise automatiquement cette config
 
 ## 📝 Notes
 
-Ce dossier contient les fichiers de configuration qui n'ont pas besoin d'être à la racine du projet.
+This directory contains configuration files that don't need to be at the project root.
 # scripts-shell/
 
-Scripts batch Windows pour faciliter l'utilisation de ZQRadar.
+Windows batch scripts to facilitate OpenRadar usage.
 
-## Scripts Disponibles
+## Available Scripts
 
 ### `_INSTALL.bat`
-Installation des dépendances du projet.
+Install project dependencies.
 
 ```bash
 _INSTALL.bat
 ```
 
-**Actions :**
-- Vérifie Node.js
-- Installe les dépendances npm
-- Rebuild les modules natifs
+**Actions:**
+- Check Node.js
+- Install npm dependencies
+- Rebuild native modules
 
 ---
 
 ### `_RUN.bat`
-Lance ZQRadar en mode production.
+Run OpenRadar in production mode.
 
 ```bash
 _RUN.bat
 ```
 
-**Actions :**
-- Lance `npm start`
-- Ouvre le navigateur sur http://localhost:5001
+**Actions:**
+- Run `npm start`
+- Open browser at http://localhost:5001
 
 ---
 
 ## 📝 Notes
 
-Ces scripts sont des wrappers pour simplifier l'utilisation sous Windows.
+These scripts are wrappers to simplify usage on Windows.
 
-**Pour le développement, préférer :**
+**For development, prefer:**
 ```bash
 npm run dev  # Auto-reload avec nodemon
 ```

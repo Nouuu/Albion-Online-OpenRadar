@@ -43,15 +43,15 @@ Crée une release avec archives ZIP.
 
 ## 📝 Notes
 
-**Les scripts de build principaux sont à la racine :**
-- `../build.bat` - Script Windows
-- `../Makefile` - Script Unix/Linux/macOS
+**Main build scripts are at the root:**
+- `../build.bat` - Windows script
+- `../Makefile` - Unix/Linux/macOS script
 
-**Pour builder :**
+**To build:**
 ```bash
 npm run build:win     # Windows exe
-npm run build:all     # Toutes plateformes
+npm run build:all     # All platforms
 ```
 
-**Ce dossier contient les scripts Node.js** utilisés pendant le build.
+**This directory contains Node.js scripts** used during the build process.
 

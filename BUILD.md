@@ -1,6 +1,6 @@
-# 🛠️ Build Guide - ZQRadar
+# 🛠️ Build Guide - OpenRadar
 
-Guide to build ZQRadar as Windows executable (.exe).
+Guide to build OpenRadar as Windows executable (.exe).
 
 ## Prerequisites
 
@@ -20,9 +20,9 @@ npm run build:win     # Build Windows exe
 npm run release       # Build + create release ZIP
 ```
 
-**Avantages:** Fonctionne partout, pas besoin de Make ou scripts batch.
+**Advantages:** Works everywhere, no need for Make or batch scripts.
 
-### Méthode Alternative (Scripts Directs)
+### Alternative Method (Direct Scripts)
 
 **Windows (CMD/PowerShell) :**
 ```bash
@@ -57,8 +57,8 @@ make release      # Build + create release ZIP
 
 ### Makefile (Unix/Linux/macOS)
 
-**Note:** Les scripts `build.bat` et `Makefile` sont dans le dossier `build/`.  
-Le wrapper `build-helper.bat` les appelle depuis la racine.
+**Note:** The `build.bat` and `Makefile` scripts are in the `build/` folder.  
+The `build-helper.bat` wrapper calls them from the root.
 
 ## Makefile Commands
 
@@ -98,9 +98,9 @@ Le wrapper `build-helper.bat` les appelle depuis la racine.
 
 The build creates in `dist/`:
 
-- **ZQRadar.exe**: Standalone Windows executable (contains Node.js + code + assets + native modules)
+- **OpenRadar.exe**: Standalone Windows executable (contains Node.js + code + assets + native modules)
 - **README.txt**: Installation instructions for end user
-- **ZQRadar-YYYYMMDD.zip**: Release archive (created by `make package` or `make release`)
+- **OpenRadar-YYYYMMDD.zip**: Release archive (created by `make package` or `make release`)
 
 The `.exe` is **completely standalone** and contains:
 
