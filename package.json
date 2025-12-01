@@ -15,7 +15,7 @@
     "build:macos": "pkg . --targets node18-macos-x64 --compress GZip --output dist/ZQRadar-macos",
     "build:all": "pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --compress GZip",
     "postbuild": "node scripts-shell/post-build.js",
-    "clean": "node -e \"const fs=require('fs');const path=require('path');const items=fs.readdirSync('dist');items.forEach(i=>{if(i!=='images'){const p=path.join('dist',i);fs.rmSync(p,{recursive:true,force:true})}})}else{fs.rmSync('dist',{recursive:true,force:true})}\"",
+    "clean": "node -e \"const fs=require('fs');const path=require('path');const dist='dist';if(fs.existsSync(dist)){fs.readdirSync(dist).forEach(i=>{if(i!=='images'){fs.rmSync(path.join(dist,i),{recursive:true,force:true});}});}\"",
     "clean:all": "if exist dist rmdir /s /q dist && if exist build\\temp rmdir /s /q build\\temp && del /q *.log 2>nul",
     "clean:images": "if exist dist\\images rmdir /s /q dist\\images && echo Images deleted ",
     "rebuild:native": "npm rebuild cap node-sass",

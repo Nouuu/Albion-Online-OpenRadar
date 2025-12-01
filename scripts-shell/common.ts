@@ -215,6 +215,7 @@ export async function handleImageBuffer(
     if (res.status === DownloadStatus.OPTIMIZED || res.status === DownloadStatus.SUCCESS) {
         console.log(`🖼️️ [${index + 1}/${total}] ${res.message} (${res.size})`);
     }
+    let didOptimize = res.status === DownloadStatus.OPTIMIZED;
 
     res = handleFileBuffer(res.buffer!, outputPath);
     console.log(`💾 [${index + 1}/${total}] ${res.message}`);
@@ -225,7 +226,7 @@ export async function handleImageBuffer(
         optimizeFail: false,
         didReplace: replaceExisting,
         didSkip: false,
-        didOptimize: res.status === DownloadStatus.OPTIMIZED
+        didOptimize: didOptimize
     };
 }
 
