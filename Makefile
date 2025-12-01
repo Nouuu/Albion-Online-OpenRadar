@@ -120,7 +120,7 @@ all-in-one: ## Complete build process (install + build all platforms + package)
 	@npm run build:all
 	@echo ""
 	@echo "$(YELLOW)Step 5/6: Updating assets...$(NC)"
-	@run update-assets
+	@$(MAKE) update-assets
 	@echo ""
 	@echo "$(YELLOW)Step 6/6: Creating release packages...$(NC)"
 	@node scripts-shell/post-build.js
@@ -183,8 +183,8 @@ download-assets: ## Download required assets
 
 update-assets: ## Update all assets
 	@echo "$(YELLOW)Updating all assets...$(NC)"
-	@run update-ao-data
-	@run download-assets
+	@$(MAKE) update-ao-data
+	@$(MAKE) download-assets
 
 
 # Default target

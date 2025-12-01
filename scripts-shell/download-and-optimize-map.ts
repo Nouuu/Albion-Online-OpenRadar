@@ -20,7 +20,7 @@ let onlyUpgrade = false;
 function parseArgs() {
     const args = process.argv.slice(2);
     if (args.includes('--help') || args.includes('-h')) {
-        console.log('Usage: tsx download-and-optimize-map.tsc [--replace-existing] [--no-optimize]');
+        console.log('Usage: tsx download-and-optimize-map.ts [--replace-existing] [--no-optimize]');
         console.log('--replace-existing : Replace existing files in the output directory.');
         console.log('--no-optimize     : Skip image optimization step.');
         console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');

@@ -68,7 +68,6 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
-    "@types/typescript": "^2.0.0",
     "archiver": "^7.0.1",
     "nodemon": "^3.1.7",
     "pkg": "^5.8.1",
