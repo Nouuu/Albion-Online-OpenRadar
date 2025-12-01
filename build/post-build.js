@@ -258,7 +258,7 @@ function getVersion() {
 const createArchive = (platform, format) => {
     return new Promise((resolve, reject) => {
         const exe = executables[platform];
-        const archiveName = `ZQRadar-${version}-${exe.platform}.${format.ext}`;
+        const archiveName = `OpenRadar-${version}-${exe.platform}.${format.ext}`;
         const archivePath = path.join(DIST_DIR, archiveName);
         const output = fs.createWriteStream(archivePath);
 
