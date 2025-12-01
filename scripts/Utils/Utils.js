@@ -100,6 +100,43 @@ mobsInfo.initMobs();
 var map = new MapH(-1);
 const mapsDrawing = new MapDrawing(settings);
 
+// 🔄 Restore map from sessionStorage if available
+(function restoreMapFromSession() {
+    try {
+        const savedMap = sessionStorage.getItem('lastMapDisplayed');
+        window.logger?.debug(CATEGORIES.MAP, 'SessionRestoreAttempt', {
+            hasData: !!savedMap,
+            rawData: savedMap
+        });
+
+        if (savedMap) {
+            const data = JSON.parse(savedMap);
+
+            // Validate data structure (mapId can be string or number)
+            if (data.mapId !== undefined && data.mapId !== null && data.mapId !== -1) {
+                map.id = data.mapId;
+                map.hX = data.hX || 0;
+                map.hY = data.hY || 0;
+                map.isBZ = data.isBZ || false;
+
+                window.logger?.info(CATEGORIES.MAP, 'MapRestoredFromSession', {
+                    mapId: map.id,
+                    mapIdType: typeof map.id,
+                    age: Date.now() - (data.timestamp || 0)
+                });
+            } else {
+                window.logger?.debug(CATEGORIES.MAP, 'SessionMapInvalid', {
+                    mapId: data.mapId,
+                    mapIdType: typeof data.mapId,
+                    reason: 'mapId is undefined, null, or -1'
+                });
+            }
+        }
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'SessionRestoreFailed', { error: e?.message });
+    }
+})();
+
 const chestsHandler = new ChestsHandler(settings);
 const mobsHandler = new MobsHandler(settings);
 mobsHandler.updateMobInfo(mobsInfo.moblist);
@@ -784,6 +821,20 @@ function onResponse(Parameters)
     if (Parameters[253] == 35)
     {
         map.id = Parameters[0];
+
+        // 💾 Save to sessionStorage
+        try {
+            sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
+                mapId: map.id,
+                hX: map.hX,
+                hY: map.hY,
+                isBZ: map.isBZ,
+                timestamp: Date.now()
+            }));
+            window.logger?.debug(CATEGORIES.MAP, 'MapSavedToSession', { mapId: map.id });
+        } catch (e) {
+            window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', { error: e?.message });
+        }
     }
     // All data on the player joining the map (us)
     else if (Parameters[253] == 2)
@@ -1017,6 +1068,14 @@ function ClearHandlers()
     playersHandler.Clear();
     wispCageHandler.CLear();
     updatePlayerCounter(); // 👥 Reset counter to 0
+
+    // 🗑️ Clear session map cache
+    try {
+        sessionStorage.removeItem('lastMapDisplayed');
+        window.logger?.debug(CATEGORIES.MAP, 'SessionMapCleared');
+    } catch (e) {
+        // Silent fail
+    }
 }
 
 setDrawingViews();
