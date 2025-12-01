@@ -6,5 +6,4 @@
 *.{bat,[bB][aA][tT]} text eol=crlf
 *.{ics,[iI][cC][sS]} text eol=crlf
 *.sh text eol=lf
-public/ao-bin-dumps/** filter=lfs -diff merge=lfs
 images/** binary -diff
