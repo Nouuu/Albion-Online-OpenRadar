@@ -110,6 +110,21 @@ export class PlayersHandler {
             const player = new Player(0, 0, id, nickname, guildName, flagId, allianceName, factionName, equipments, spells);
             this.playersList.push(player);
 
+            // 👥 Limit playersList to max players (keep most recent)
+            const maxPlayers = Math.min(100, parseInt(localStorage.getItem('settingMaxPlayersDisplay')) || 50);
+            if (this.playersList.length > maxPlayers) {
+                // Sort by detectedAt (newest first) and keep only maxPlayers
+                this.playersList.sort((a, b) => b.detectedAt - a.detectedAt);
+                const removed = this.playersList.splice(maxPlayers);
+
+                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
+                    totalDetected: this.playersList.length + removed.length,
+                    keptPlayers: this.playersList.length,
+                    removedPlayers: removed.length,
+                    removedOldest: removed.map(p => p.nickname)
+                });
+            }
+
             // 🐛 DEBUG: Log player equipment on detection
             window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
                 id: id,
@@ -142,53 +157,18 @@ export class PlayersHandler {
         return 2; // Return flashTime value
     }
 
-    handleMountedPlayerEvent(id, parameters)
-    {
+    handleMountedPlayerEvent(id, parameters) {
         let ten = parameters[10];
-    
+
         let mounted = parameters[11];
 
-        if (mounted == "true" || mounted == true)
-        {
+        if (mounted == "true" || mounted == true) {
             this.updatePlayerMounted(id, true);
-        } 
-        else if (ten == "-1")
-        {
+        } else if (ten == "-1") {
             this.updatePlayerMounted(id, true);
-        } 
-        else
-        {
+        } else {
             this.updatePlayerMounted(id, false);
         }
-    }
-
-    addPlayer(posX, posY, id, nickname, guildName, flagId) {
-        const existingPlayer = this.playersList.find(player => player.id === id);
-
-        if (existingPlayer) {
-            window.logger?.debug(this.CATEGORIES.PLAYER, 'PlayerAlreadyExists', {
-                playerId: id,
-                nickname: nickname,
-                existingNickname: existingPlayer.nickname
-            });
-            // Remove existing player to avoid duplicates
-            this.playersList = this.playersList.filter(player => player.id !== id);
-        }
-
-        const player = new Player(posX, posY, id, nickname, guildName, flagId);
-        this.playersList.push(player);
-
-        // Play audio with error handling (browsers block autoplay)
-        const audio = new Audio('/sounds/player.mp3');
-        audio.play().catch(err => {
-            // Silently ignore autoplay errors (expected in browsers)
-            window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.AudioPlayBlocked, {
-                error: err.message,
-                player: nickname
-            });
-        });
-
-        return 2;
     }
 
     updateLocalPlayerNextPosition(posX, posY) {

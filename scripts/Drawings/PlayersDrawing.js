@@ -30,19 +30,8 @@ export class PlayersDrawing extends DrawingUtils {
     }
 
     invalidate(context, players) {
-        // Limit display to 100 players maximum
-        const maxPlayers = 100;
-        const playersToDisplay = players.slice(0, maxPlayers);
-
-        if (players.length > maxPlayers) {
-            window.logger?.warn(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
-                totalPlayers: players.length,
-                displayedPlayers: maxPlayers,
-                hiddenPlayers: players.length - maxPlayers
-            });
-        }
-
-        for (const playerOne of playersToDisplay) {
+        // Players list is already filtered by PlayersHandler.getDisplayedPlayers()
+        for (const playerOne of players) {
             const point = this.transformPoint(playerOne.hX, playerOne.hY);
 
             // Draw red circle for each player
