@@ -1,0 +1,11 @@
+* text=auto
+
+# Force batch scripts to always use CRLF line endings so that if a repo is accessed
+# in Windows via a file share from Linux, the scripts will work.
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+*.{ics,[iI][cC][sS]} text eol=crlf
+*.sh text eol=lf
+public/ao-bin-dumps/** filter=lfs -diff merge=lfs
+images/** binary -diff
+public/ao-bin-dumps/** filter=lfs diff=lfs merge=lfs -text
