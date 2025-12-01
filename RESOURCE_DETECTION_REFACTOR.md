@@ -1,8 +1,30 @@
 # Plan de Refonte du Système de Détection des Ressources
 
 **Date:** 2025-12-02
-**Statut:** En planification
+**Statut:** Phase 1 ✅ COMPLÉTÉE | En cours: Phase 2
 **Objectif:** Corriger le bug T6+ fiber/leather et simplifier le système de détection
+
+---
+
+## 📊 Statut de Progression
+
+### ✅ Phase 1: HarvestablesDatabase - COMPLÉTÉE
+- ✅ Fichier `HarvestablesDatabase.js` créé
+- ✅ Import ajouté dans `Utils.js`
+- ✅ Initialisation avec logging
+- ✅ Exposé à `window.harvestablesDatabase`
+- ✅ **Résultat:** 5 types chargés, 190 combinaisons validées en 84ms
+
+### 🔄 Phase 2: Suppression Cache - EN COURS
+- ⏳ Propriétés à supprimer
+- ⏳ Méthodes à retirer
+- ⏳ Events à désactiver
+
+### ⏸️ Phase 3: Fix Bug T6+ - EN ATTENTE
+
+### ⏸️ Phase 4: Simplification - EN ATTENTE
+
+### ⏸️ Phase 5: Tests - EN ATTENTE
 
 ---
 

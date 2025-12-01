@@ -39,11 +39,13 @@ export class HarvestablesDatabase {
         const startTime = performance.now();
 
         try {
-            window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
-                'HarvestablesLoading',
-                {path: jsonPath}
-            );
+            if (window.logger) {
+                window.logger.info(
+                    CATEGORIES.ITEM_DATABASE,
+                    'HarvestablesLoading',
+                    { path: jsonPath }
+                );
+            }
 
             const response = await fetch(jsonPath);
             if (!response.ok) {
@@ -66,27 +68,35 @@ export class HarvestablesDatabase {
             this.stats.loadTimeMs = Math.round(performance.now() - startTime);
             this.isLoaded = true;
 
-            window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
-                'HarvestablesLoaded',
-                {
-                    typesLoaded: this.stats.typesLoaded,
-                    combinationsLoaded: this.stats.combinationsLoaded,
-                    loadTimeMs: this.stats.loadTimeMs,
-                    resources: Array.from(this.harvestableTypes.keys()),
-                }
-            );
+            if (window.logger) {
+                window.logger.info(
+                    CATEGORIES.ITEM_DATABASE,
+                    'HarvestablesLoaded',
+                    {
+                        typesLoaded: this.stats.typesLoaded,
+                        combinationsLoaded: this.stats.combinationsLoaded,
+                        loadTimeMs: this.stats.loadTimeMs,
+                        resources: Array.from(this.harvestableTypes.keys()),
+                    }
+                );
+            } else {
+                console.log(`✅ HarvestablesDatabase loaded: ${this.stats.typesLoaded} types, ${this.stats.combinationsLoaded} valid combinations (${this.stats.loadTimeMs}ms)`);
+            }
 
         } catch (error) {
-            window.logger?.error(
-                CATEGORIES.ITEM_DATABASE,
-                'HarvestablesLoadError',
-                {
-                    error: error.message,
-                    stack: error.stack,
-                    path: jsonPath
-                }
-            );
+            if (window.logger) {
+                window.logger.error(
+                    CATEGORIES.ITEM_DATABASE,
+                    'HarvestablesLoadError',
+                    {
+                        error: error.message,
+                        stack: error.stack,
+                        path: jsonPath
+                    }
+                );
+            } else {
+                console.error('❌ Error loading HarvestablesDatabase:', error);
+            }
             throw error;
         }
     }

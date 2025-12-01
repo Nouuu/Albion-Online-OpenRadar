@@ -7,9 +7,11 @@ import {MapDrawing} from '../Drawings/MapsDrawing.js';
 import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
 import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
-import {EventCodes} from './EventCodes.js';
-import {ItemsDatabase} from '../Data/ItemsDatabase.js';
-import {SpellsDatabase} from '../Data/SpellsDatabase.js';
+import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
+import { EventCodes } from './EventCodes.js';
+import { ItemsDatabase } from '../Data/ItemsDatabase.js';
+import { SpellsDatabase } from '../Data/SpellsDatabase.js';
+import { HarvestablesDatabase } from '../Data/HarvestablesDatabase.js';
 
 import {PlayersHandler} from '../Handlers/PlayersHandler.js';
 import {WispCageHandler} from '../Handlers/WispCageHandler.js';
@@ -53,7 +55,27 @@ const spellsDatabase = new SpellsDatabase();
     console.log('✨ [Utils.js] Spells database loaded and ready');
 })();
 
-console.log('🔧 [Utils.js] Items & Spells databases initialization started (async)');
+// 📊 Initialize Harvestables Database
+const harvestablesDatabase = new HarvestablesDatabase();
+(async () => {
+    try {
+        await harvestablesDatabase.load('/ao-bin-dumps/harvestables.json');
+        window.harvestablesDatabase = harvestablesDatabase; // Expose globally for handlers
+        console.log('🌾 [Utils.js] Harvestables database loaded and ready');
+    } catch (error) {
+        window.logger?.error(
+            window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+            'HarvestablesDatabaseInitFailed',
+            {
+                error: error.message,
+                fallback: 'Using event-driven detection only'
+            }
+        );
+        console.error('❌ [Utils.js] Failed to load Harvestables database:', error);
+    }
+})();
+
+console.log('🔧 [Utils.js] Items, Spells & Harvestables databases initialization started (async)');
 
 const harvestablesDrawing = new HarvestablesDrawing();
 const dungeonsHandler = new DungeonsHandler();
