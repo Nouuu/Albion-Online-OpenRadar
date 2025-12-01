@@ -1,4 +1,4 @@
-# 🎯 ZQRadar - Albion Online Radar Tool
+# 🎯 OpenRadar - Albion Online Radar Tool
 
 [![Discord](https://img.shields.io/discord/1191823969167352039?style=for-the-badge&logo=discord&label=Discord)](https://discord.gg/XAWjmzeaD3)
 [![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Nouuu/Albion-Online-ZQRadar/main?style=for-the-badge&label=Last%20Commit)]()
@@ -11,17 +11,19 @@
 
 ## 📖 About
 
-**ZQRadar** is a powerful real-time radar tool for **Albion Online** that provides comprehensive situational awareness without game injection. Built with modern web technologies, it offers a clean, customizable interface for tracking players, resources, enemies, and events.
+**OpenRadar** is a powerful real-time radar tool for **Albion Online** that provides comprehensive situational awareness without game injection. Built with modern web technologies, it offers a clean, customizable interface for tracking players, resources, enemies, and events.
+
+OpenRadar is a heavily modified fork of the original **ZQRadar** project, with extended logging, documentation and tooling. It keeps the original spirit while focusing on clarity, maintainability and advanced debug features.
 
 ### Key Highlights
 
-- ✅ **No Injection** - Lower risk of detection/banning
-- 🗺️ **Real-time Map** - Live tracking with background map overlay
-- 🎨 **Fully Customizable** - Filter by tier, enchantment, and type
-- 📊 **Advanced Logging v2.1** - Centralized debug system with granular control
-- 🪟 **Overlay Mode** - Popup window with drag handle for seamless gameplay
+- ✅ **No Injection** – Lower risk of detection/banning
+- 🗺️ **Real-time Map** – Live tracking with background map overlay
+- 🎨 **Fully Customizable** – Filter by tier, enchantment, and type
+- 📊 **Advanced Logging v2.1** – Centralized debug system with granular control
+- 🧲 **Overlay Mode** – Popup window with drag handle for seamless gameplay
 
-> 💡 **Pro Tip**: Use [DeskPins](https://efotinis.neocities.org/deskpins/) (free) to keep the overlay window always on top
+> 💡 **Tip**: Use [DeskPins](https://efotinis.neocities.org/deskpins/) (free) to keep the overlay window always on top
 
 ---
 
@@ -34,7 +36,7 @@
 - Guild and alliance information
 
 ### Resource Detection
-- **Harvestables**: Trees, ores, stone, fiber, hide (T1-T8 + enchantments)
+- **Harvestables**: Trees, ores, stone, fiber, hide (T1–T8 + enchantments)
 - **Living Resources**: Animals and skinnable creatures
 - **Fishing spots**: All tiers with enchantment support
 - Customizable filters per resource type
@@ -52,10 +54,10 @@
 ### Advanced Features
 - 📍 **Background Maps**: Visual context for radar positioning
 - 🔍 **Smart Filters**: Tier, enchantment, and category-based
-- 📊 **Logging System v2.1**: Centralized debug with 6 customizable categories
+- 📈 **Logging System v2.1**: Centralized debug with 6 customizable categories
 - 🎛️ **Settings Persistence**: All preferences saved locally
 - 🌐 **Web Interface**: Access from any browser at `http://localhost:5001`
-- 🪟 **Overlay Mode**: Draggable popup window for multi-monitor setups
+- 🧲 **Overlay Mode**: Draggable popup window for multi-monitor setups
 
 ---
 
@@ -67,16 +69,17 @@ Download and install **Npcap** (version **1.84** or newer):
 - [Official Npcap Download Page](https://npcap.com/)
 - [Direct Link: Npcap 1.84](https://npcap.com/dist/npcap-1.84.exe)
 
-### 2. Download ZQRadar
+### 2. Download OpenRadar
 
 Get the latest release from:
-- [📦 Releases Page](https://github.com/Nouuu/Albion-Online-ZQRadar/releases)
+- 📦 [Releases Page](https://github.com/Nouuu/Albion-Online-ZQRadar/releases)
 
 ### 3. Run the Application
 
 1. Extract the ZIP file
-2. Run `ZQRadar.exe`
+2. Run `ZQRadar.exe` (executable name is kept for compatibility in current releases)
 3. Select your network adapter:
+
 ```
 Please select one of the adapter that you use to connect to the internet:
   1. Ethernet adapter
@@ -85,6 +88,7 @@ Please select one of the adapter that you use to connect to the internet:
 
 input the number here:
 ```
+
 4. Choose the correct adapter (⚠️ **NOT** 127.0.0.1)
 5. Authenticate with Discord (one-time setup)
 6. Click **"Launch Radar"**
@@ -92,7 +96,7 @@ input the number here:
 
 ### 4. Configure Settings
 
-Navigate to **Settings** page to:
+Navigate to the **Settings** page to:
 - Enable debug logging categories (Enemies, Players, Harvestables, etc.)
 - Customize visual overlays
 - Configure tier and enchantment filters
@@ -100,7 +104,7 @@ Navigate to **Settings** page to:
 
 ---
 
-## 👨‍💻 For Developers
+## 🧑‍💻 For Developers
 
 ### Prerequisites
 
@@ -130,7 +134,7 @@ npm run dev
 npm start
 ```
 
-The web interface will be available at **http://localhost:5001**
+The web interface will be available at **http://localhost:5001**.
 
 ### Building for Production
 
@@ -146,6 +150,7 @@ npm run release
 ```
 
 **Alternative build methods:**
+
 ```bash
 # Windows (CMD/PowerShell)
 build.bat build      # Build executable
@@ -156,7 +161,7 @@ make build           # Build executable
 make release         # Build + package
 ```
 
-📖 See [BUILD.md](BUILD.md) for detailed build instructions.
+📘 See `BUILD.md` for detailed build instructions.
 
 ---
 
@@ -193,7 +198,7 @@ Enhance the radar with visual assets:
 
 ### Key Components
 
-```
+```text
 Albion-Online-ZQRadar/
 ├── scripts/              # Client-side JavaScript
 │   ├── Handlers/         # Event handlers (Mobs, Players, Harvestables)
@@ -204,38 +209,38 @@ Albion-Online-ZQRadar/
 │   └── layout.ejs        # Shared layout
 ├── docs/                 # Documentation
 │   ├── technical/        # LOGGING.md, SETTINGS.md
-│   └── project/          # DEBUG_LOGGING_GUIDE.md
+│   └── project/          # ROOT_FILES.md, TODO.md
 ├── server-scripts/       # Server-side Node.js
 └── images/               # Visual assets
 ```
 
 ### Logging System v2.1
 
-ZQRadar features a centralized logging system with:
+OpenRadar features a centralized logging system with:
 - ✅ **6 Debug Categories**: Enemies, Players, Chests, Dungeons, Fishing, Harvestables
 - ✅ **Dynamic Updates**: Changes apply instantly without reload
 - ✅ **Strict Filtering Rules**: DEBUG filtered, INFO/WARN/ERROR always logged
 - ✅ **Console & Server Logging**: Dual output with independent controls
 - ✅ **RAW Packet Debug**: Optional verbose packet inspection
 
-📖 See [docs/technical/LOGGING.md](docs/technical/LOGGING.md) for complete logging documentation.
+📘 See `docs/technical/LOGGING.md` for complete logging documentation.
 
 ---
 
 ## 📚 Documentation
 
 ### User Guides
-- **[SETUP.md](SETUP.md)** - Complete setup guide
-- **[BUILD.md](BUILD.md)** - Build and packaging instructions
+- `SETUP.md` – Complete setup guide
+- `BUILD.md` – Build and packaging instructions
 
 ### Developer Documentation
-- **[docs/technical/LOGGING.md](docs/technical/LOGGING.md)** - Logging System v2.1 (technical reference)
-- **[work/DEBUG_LOGGING_GUIDE.md](work/DEBUG_LOGGING_GUIDE.md)** - Debug & Logging Guide (developer guide)
-- **[docs/dev/ARCHITECTURE.md](docs/dev/ARCHITECTURE.md)** - System architecture
-- **[docs/README.md](docs/README.md)** - Documentation index
+- `docs/technical/LOGGING.md` – Logging System v2.1 (technical reference)
+- `work/DEBUG_LOGGING_GUIDE.md` – Debug & Logging Guide (developer guide)
+- `docs/dev/DEV_GUIDE.md` – System architecture and dev workflow
+- `docs/README.md` – Documentation index
 
 ### AI Agent Guides
-- **[docs/ai/AI_AGENT_GUIDE.md](docs/ai/AI_AGENT_GUIDE.md)** - For AI-assisted development
+- `docs/ai/AI_AGENT_GUIDE.md` – For AI-assisted development
 
 ---
 
@@ -259,15 +264,25 @@ Contributions are welcome! Please:
 
 ---
 
+## 🌐 Language Policy
+
+OpenRadar is an English-only project:
+
+- All code, comments, documentation, commit messages and issues **must be written in English**.
+- No French (or other languages) should appear in the repository, except inside quoted external references (e.g. copied logs).
+- If you find non-English text in the repository, please open an issue or a pull request to help clean it up.
+
+---
+
 ## 📜 License
 
 This project is distributed under the terms specified by the original authors.
 
 ## 🙏 Credits
 
-**Fork Maintainer**: [@Nouuu](https://github.com/Nouuu) (nospy)
+**Current Maintainer**: [@Nouuu](https://github.com/Nouuu) (nospy)
 
-**Original ZQRadar**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
+**Original Project**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
 
 **Based on**: [QRadar](https://github.com/FashionFlora/Albion-Online-Radar-QRadar) by [@FashionFlora](https://github.com/FashionFlora)
 
@@ -275,13 +290,4 @@ This project is distributed under the terms specified by the original authors.
 
 ---
 
-## 🔗 Links
-
-- 💬 [Discord Community](https://discord.gg/XAWjmzeaD3)
-- 🐛 [Report Issues](https://github.com/Nouuu/Albion-Online-ZQRadar/issues)
-- 📦 [Latest Releases](https://github.com/Nouuu/Albion-Online-ZQRadar/releases)
-- ☕ [Support on Ko-fi](https://ko-fi.com/F1F1VMA9G)
-
----
-
-**⚠️ Disclaimer**: This tool is for educational purposes. Use at your own risk. The authors are not responsible for any consequences resulting from its use.
+⚠️ **Disclaimer**: This tool is for educational purposes. Use at your own risk. The authors are not responsible for any consequences resulting from its use.

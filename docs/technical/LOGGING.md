@@ -1,333 +1,152 @@
-# 📊 Système de Logging & Debug - ZQRadar v2.2
+# 📊 Logging & Debug System - OpenRadar v2.2
 
-> **Version:** 2.2 (Refactoring constantes & filtrage centralisé)
-> **Dernière mise à jour:** 2025-11-06
-> **Statut:** ✅ Implémenté et fonctionnel
-> **Mainteneur:** Nospy
-
-## 🔄 Migration v2.1 → v2.2
-
-**Changements majeurs :**
-
-- ✅ **Nouveau** : `LoggerConstants.js` - Constantes centralisées (42 CATEGORIES, 90+ EVENTS)
-- ✅ **Nouveau** : Filtrage centralisé dans `LoggerClient.shouldLog()` - Lit localStorage en temps réel
-- ✅ **Supprimé** : ~40+ conditions `if (settings.debugX && window.logger)` dans les handlers
-- ✅ **Remplacé** : TOUS les strings de catégories/events par constantes (`CATEGORIES.MOB`, `EVENTS.NewMobEvent`)
-- ✅ **Standardisé** : Patterns d'import cohérents (classes: `this.CATEGORIES`, fonctions: `window.CATEGORIES`)
-
-**Avant v2.2 (OLD) :**
-```javascript
-// ❌ Duplication des conditions partout
-if (this.settings.debugEnemies && window.logger) {
-    window.logger.debug('MOB', 'NewMobEvent', {...}); // ❌ Strings hardcodés
-}
-```
-
-**Après v2.2 (NEW) :**
-```javascript
-// ✅ Filtrage centralisé dans LoggerClient + constantes
-window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
-```
-
-## 🔄 Migration v2.0 → v2.1
-
-**Changements de catégories debug :**
-
-- ❌ **Supprimé** : `logLivingCreatures` → ✅ **Remplacé par** : `debugEnemies`
-- ❌ **Supprimé** : `logLivingResources` → ✅ **Remplacé par** : `debugHarvestables`
-- ❌ **Supprimé** : Catégorie log `LIVING_CREATURE` → ✅ **Remplacé par** : `HARVEST`
-
-**Nouveaux settings ajoutés :**
-- ✅ `debugHarvestables` : Debug verbose des ressources récoltables (living + static)
-- ✅ `debugFishing` : Debug verbose de la pêche (complètement intégré)
+> **Last update:** 2025-11-06  
+> **Version:** 2.2 (Refactored constants & centralized filtering)  
+> **Status:** ✅ Implemented and working
 
 ---
 
-## 🎯 Vue d'ensemble
+## 🎯 Goals
 
-Le système de logging v2.0 de ZQRadar est un système **centralisé**, **offline-capable** et **hautement configurable**
-qui permet de tracer tous les événements du jeu en temps réel.
+OpenRadar uses a centralized, configurable logging system to:
 
-### ✨ Nouveautés v2.0
+- Give clear visibility into what happens in the radar (players, mobs, harvestables, chests, dungeons, fishing, etc.).
+- Make debugging easier without spamming the console.
+- Allow **fine-grained filtering** by category (enemies, players, harvestables, etc.).
+- Support **structured logs** (JSONL) on the server side.
 
-- 🔌 **Mode Offline** : Fonctionne sans serveur WebSocket
-- 🎨 **Logs Colorés** : Affichage console avec émojis et couleurs
-- 🎛️ **Contrôle Granulaire** : 4 checkboxes de configuration
-- 📦 **RAW Packet Debug** : Trace tous les paquets réseau (optionnel)
-- 💾 **Export JSONL** : Sauvegarde logs dans des fichiers (optionnel)
+Version **2.2** introduces:
 
-### Principes Clés
-
-- ✅ **Centralisation** : Tous les contrôles dans Settings
-- ✅ **Filtrage Intelligent** : RAW packets séparés des logs normaux
-- ✅ **Performance** : Pas d'overhead si désactivé
-- ✅ **Persistance** : Settings sauvegardés dans localStorage
+- ✅ Centralized constants in `LoggerConstants.js` (categories, events, mapping)
+- ✅ Centralized filtering in `LoggerClient.shouldLog()`
+- ✅ Standardized imports (consistent patterns across the codebase)
+- ✅ Real-time settings (no page reload needed)
+- ✅ Safer RAW packet filtering (console vs server)
+- ✅ Backward-compatible API for `window.logger`
 
 ---
 
-## 🏗️ Architecture v2.2
+## 🧱 Architecture Overview
 
-### Composants Principaux
+### Components
 
-#### 1. **LoggerConstants.js** - Constantes Centralisées (NOUVEAU v2.2)
+- **LoggerClient.js** (client-side)
+  - Loaded globally in `views/layout.ejs`.
+  - Responsible for:
+    - Console logging (with colors & emojis).
+    - Buffering and sending logs to the server (via WebSocket) when enabled.
+    - Centralized filtering logic.
 
-- Fichier: `scripts/constants/LoggerConstants.js`
-- Expose: `window.CATEGORIES`, `window.EVENTS`, `window.CATEGORY_SETTINGS_MAP`
-- **42 CATEGORIES** : MOB, HARVEST, PLAYER, CHEST, DUNGEON, FISHING, etc.
-- **90+ EVENTS** : NewMobEvent, HarvestStart, HealthUpdate, etc.
-- **Mapping catégorie → setting** : MOB → debugEnemies, HARVEST → debugHarvestables
+- **LoggerServer.js** (server-side)
+  - Instantiated in `app.js` and exposed as `global.loggerServer`.
+  - Writes JSONL session files in `logs/sessions/`.
+  - Dedicated error file in `logs/errors/`.
 
-#### 2. **LoggerClient.js** - Cœur du système + Filtrage Centralisé (v2.2)
+- **LoggerConstants.js**
+  - Declares:
+    - `CATEGORIES` (MOB, PLAYER, HARVEST, CHEST, DUNGEON, FISHING, PACKET_RAW, etc.)
+    - `EVENTS` (NewMobEvent, HarvestStart, LoadMetadata, etc.)
+    - `CATEGORY_SETTINGS_MAP` → Mapping from category to user setting (debugEnemies, debugPlayers, debugHarvestables, ...)
 
-- Fichier: `scripts/LoggerClient.js`
-- Exposé globalement: `window.logger`
-- Fonctionne offline (sans WebSocket)
-- Affichage console avec couleurs et émojis
-- Buffer pour envoi serveur (optionnel)
-- **NOUVEAU :** Méthode `shouldLog()` - Filtrage centralisé temps réel
-
-#### 3. **Settings.js** - Configuration
-
-- Fichier: `scripts/Utils/Settings.js`
-- Propriétés: `logToConsole`, `logToServer`, `debugRawPacketsConsole`, `debugRawPacketsServer`
-- Méthode `returnLocalBool(key, defaultValue)` - Support valeurs par défaut
-
-#### 4. **Settings.ejs** - Interface
-
-- Fichier: `views/main/settings.ejs`
-- Section "Console & Server Output"
-- 4 checkboxes de contrôle granulaire
+- **Settings UI** (`views/main/settings.ejs`)
+  - Controls:
+    - Display logs in console
+    - Send logs to server
+    - RAW packets in console
+    - RAW packets to server
+    - Category-specific debug toggles (enemies, players, harvestables, chests, dungeons, fishing)
 
 ---
 
-## 🎛️ Settings Disponibles v2.0
+## 🔣 Constants (LoggerConstants.js)
 
-### Console & Server Output (Settings.ejs)
+### Categories
 
-| Setting                    | localStorage Key                | Default | Description                                      |
-|----------------------------|---------------------------------|---------|--------------------------------------------------|
-| 📺 Display logs in console | `settingLogToConsole`           | ✅ ON    | Affiche logs en console (F12) avec couleurs      |
-| 📤 Send logs to server     | `settingLogToServer`            | ❌ OFF   | Envoie logs au serveur → `logs/sessions/*.jsonl` |
-| 📦 RAW packets in console  | `settingDebugRawPacketsConsole` | ❌ OFF   | Affiche TOUS les paquets en console ⚠️ VERBEUX   |
-| 📦 RAW packets to server   | `settingDebugRawPacketsServer`  | ❌ OFF   | Envoie TOUS les paquets au serveur ⚠️ VERBEUX    |
-
-### Debug Settings (Settings.ejs)
-
-| Setting              | localStorage Key             | Propriété Settings    | Usage                                      |
-|----------------------|------------------------------|-----------------------|--------------------------------------------|
-| 🐛 Debug Enemies     | `settingDebugEnemies`        | `debugEnemies`        | Debug verbose des ennemis/mobs             |
-| 👥 Debug Players     | `settingDebugPlayers`        | `debugPlayers`        | Debug verbose des joueurs                  |
-| 📦 Debug Chests      | `settingDebugChests`         | `debugChests`         | Debug verbose des coffres                  |
-| 🏰 Debug Dungeons    | `settingDebugDungeons`       | `debugDungeons`       | Debug verbose des donjons                  |
-| 🎣 Debug Fishing     | `settingDebugFishing`        | `debugFishing`        | Debug verbose de la pêche                  |
-| 🌱 Debug Harvestables| `settingDebugHarvestables`   | `debugHarvestables`   | Debug verbose des ressources récoltables   |
-
-### Visual Debug Settings (Pages spécialisées)
-
-| Page      | Setting    | localStorage Key                  | Propriété                  |
-|-----------|------------|-----------------------------------|----------------------------|
-| Enemies   | Health Bar | `settingEnemiesHealthBar`         | `enemiesHealthBar`         |
-| Enemies   | Show ID    | `settingEnemiesID`                | `enemiesID`                |
-| Resources | Health Bar | `settingLivingResourcesHealthBar` | `livingResourcesHealthBar` |
-| Resources | Show ID    | `settingLivingResourcesID`        | `livingResourcesID`        |
-
----
-
-## 📊 API du Logger v2.2
-
-### Constantes Disponibles (NOUVEAU v2.2)
+Examples (non-exhaustive):
 
 ```javascript
-// Chargées depuis LoggerConstants.js, disponibles globalement
+const CATEGORIES = {
+  MOB: 'MOB',
+  MOB_HEALTH: 'MOB_HEALTH',
+  MOB_DRAW: 'MOB_DRAW',
 
-// CATEGORIES - 42 catégories
-window.CATEGORIES.MOB
-window.CATEGORIES.MOB_HEALTH
-window.CATEGORIES.HARVEST
-window.CATEGORIES.PLAYER
-window.CATEGORIES.CHEST
-window.CATEGORIES.DUNGEON
-window.CATEGORIES.FISHING
-window.CATEGORIES.PACKET_RAW
-// ... etc.
+  HARVEST: 'HARVEST',
+  HARVEST_HIDE_T4: 'HARVEST_HIDE_T4',
 
-// EVENTS - 90+ événements
-window.EVENTS.NewMobEvent
-window.EVENTS.HarvestStart
-window.EVENTS.HealthUpdate
-window.EVENTS.Connected
-// ... etc.
+  PLAYER: 'PLAYER',
+  PLAYER_HEALTH: 'PLAYER_HEALTH',
 
-// CATEGORY_SETTINGS_MAP - Mapping filtrage
-window.CATEGORY_SETTINGS_MAP.MOB // → 'debugEnemies'
-window.CATEGORY_SETTINGS_MAP.HARVEST // → 'debugHarvestables'
-// null pour catégories toujours loggées (WEBSOCKET, CACHE, etc.)
+  CHEST: 'CHEST',
+  DUNGEON: 'DUNGEON',
+  FISHING: 'FISHING',
+
+  PACKET_RAW: 'PACKET_RAW',
+
+  WEBSOCKET: 'WEBSOCKET',
+  CACHE: 'CACHE',
+  ITEM: 'ITEM'
+  // ...
+};
 ```
 
-### Méthodes Disponibles
+### Events
 
 ```javascript
-// window.logger est disponible globalement sur toutes les pages
+const EVENTS = {
+  NewMobEvent: 'NewMobEvent',
+  NewMobEvent_ALL_PARAMS: 'NewMobEvent_ALL_PARAMS',
+  LoadMetadata: 'LoadMetadata',
+  LoadMetadataFailed: 'LoadMetadataFailed',
 
-// DEBUG - Informations détaillées pour le debug (FILTRÉ par settings)
-window.logger?.debug(category, event, data, context);
+  HarvestStart: 'HarvestStart',
+  NoCacheWarning: 'NoCacheWarning',
 
-// INFO - Informations générales (TOUJOURS loggé)
-window.logger?.info(category, event, data, context);
+  Connected: 'Connected',
+  Disconnected: 'Disconnected',
 
-// WARN - Avertissements (TOUJOURS loggé)
-window.logger?.warn(category, event, data, context);
+  CacheCleared: 'CacheCleared',
 
-// ERROR - Erreurs (TOUJOURS loggé)
-window.logger?.error(category, event, data, context);
+  ItemIdDiscovery: 'ItemIdDiscovery',
 
-// CRITICAL - Erreurs critiques (TOUJOURS loggé)
-window.logger?.critical(category, event, data, context);
+  CriticalError: 'CriticalError',
+  // ...
+};
 ```
 
-### Paramètres
-
-- **category** (const) : Catégorie du log depuis `CATEGORIES` (ex: `CATEGORIES.MOB`)
-- **event** (const) : Nom de l'événement depuis `EVENTS` (ex: `EVENTS.NewMobEvent`)
-- **data** (object) : Données à logger
-- **context** (object, optionnel) : Contexte additionnel
-
-### Catégories et Filtrage (v2.2)
-
-| Catégorie         | Événements                                   | Fichiers                       | Filtré par                    | Mapping                    |
-|-------------------|----------------------------------------------|--------------------------------|-------------------------------|----------------------------|
-| `MOB`             | NewMobEvent, UsingMobInfo                    | MobsHandler.js                 | `settingDebugEnemies`         | `debugEnemies`             |
-| `MOB_HEALTH`      | HealthUpdate, RegenerationHealthChanged      | Utils.js, MobsHandler.js       | `settingDebugEnemies`         | `debugEnemies`             |
-| `HARVEST`         | HarvestStart, HarvestCancel, ItemIdDiscovery | HarvestablesHandler.js         | `settingDebugHarvestables`    | `debugHarvestables`        |
-| `PLAYER`          | NewPlayerEvent, PlayerHealthUpdate           | PlayersHandler.js              | `settingDebugPlayers`         | `debugPlayers`             |
-| `CHEST`           | NewChestEvent                                | ChestsHandler.js               | `settingDebugChests`          | `debugChests`              |
-| `DUNGEON`         | NewDungeonEvent                              | DungeonsHandler.js             | `settingDebugDungeons`        | `debugDungeons`            |
-| `FISHING`         | FishingEnd                                   | FishingHandler.js              | `settingDebugFishing`         | `debugFishing`             |
-| `PACKET_RAW`      | Event_* (tous les événements)                | Utils.js                       | `settingDebugRawPackets*`     | `debugRawPackets`          |
-| `WEBSOCKET`       | Connected                                    | Divers                         | **Toujours loggé** (null)     | -                          |
-| `CACHE`           | CacheCleared, LoadCache                      | ResourcesHelper.js             | **Toujours loggé** (null)     | -                          |
-
-### Exemples d'Utilisation v2.2
+### Category → Setting Mapping
 
 ```javascript
-// ✅ NOUVEAU v2.2 - Classes (MobsHandler.js)
-class MobsHandler {
-    constructor(settings) {
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-    }
-    
-    NewMobEvent(params) {
-        // ✅ Plus besoin de if (settings.debugEnemies) !
-        // Filtrage automatique dans LoggerClient.shouldLog()
-        window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {
-            id: params[0],
-            typeId: params[1]
-        });
-    }
-}
+const CATEGORY_SETTINGS_MAP = {
+  MOB: 'debugEnemies',
+  MOB_HEALTH: 'debugEnemies',
+  MOB_DRAW: 'debugEnemies',
 
-// ✅ NOUVEAU v2.2 - Scripts locaux (Utils.js)
-const { CATEGORIES, EVENTS } = window;
+  HARVEST: 'debugHarvestables',
+  HARVEST_HIDE_T4: 'debugHarvestables',
 
-window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, {
-    page: 'drawing'
-});
+  PLAYER: 'debugPlayers',
+  PLAYER_HEALTH: 'debugPlayers',
 
-// ✅ NOUVEAU v2.2 - Fonctions globales (ResourcesHelper.js)
-function clearCache() {
-    window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.CacheCleared, {});
-}
-```
+  CHEST: 'debugChests',
+  DUNGEON: 'debugDungeons',
+  FISHING: 'debugFishing',
 
-### Filtrage Centralisé v2.2
+  PACKET_RAW: 'debugRawPackets',
 
-```javascript
-// Dans LoggerClient.js - shouldLog() lit localStorage en temps réel
-shouldLog(category, level) {
-    // INFO/WARN/ERROR/CRITICAL → toujours loggés
-    if (level !== 'DEBUG') return true;
-    
-    // Récupère le mapping catégorie → setting
-    const settingKey = window.CATEGORY_SETTINGS_MAP?.[category];
-    if (!settingKey) return true; // Pas de mapping = toujours loggé
-    
-    // Lit le setting depuis localStorage (TEMPS RÉEL, pas de cache)
-    const localStorageKey = 'setting' + settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
-    return localStorage.getItem(localStorageKey) === 'true';
-}
-```
-
-**Avantages :**
-- ✅ Changements de checkboxes **instantanés** (lit localStorage sans cache)
-- ✅ Handlers **simples** (pas de condition `if (settings.debug)`)
-- ✅ **Un seul endroit** pour toute la logique de filtrage
-
----
-
-## 🎯 Niveaux de Log
-
-Le logger supporte 4 niveaux avec des **règles de filtrage strictes** :
-
-### Définition des Niveaux
-
-- **`debug`** : Logs verbeux, détails techniques (ex: tous les paramètres d'un événement)
-    - **FILTRÉ** par les settings de debug (`debugEnemies`, `debugFishing`, etc.)
-    - Peut être désactivé pour améliorer les performances
-
-- **`info`** : Actions importantes, découvertes, chargements (ex: chargement de metadata, découverte d'itemId)
-    - **TOUJOURS LOGGÉ** - Pas de filtrage par settings
-    - Critique pour comprendre le flux de l'application
-
-- **`warn`** : Situations anormales mais non-critiques (ex: ressource non détectée, cache manquant)
-    - **TOUJOURS LOGGÉ** - Pas de filtrage par settings
-    - Indique des problèmes potentiels nécessitant attention
-
-- **`error`** : Erreurs critiques, exceptions (ex: échec de chargement, erreur de parsing)
-    - **TOUJOURS LOGGÉ** - Pas de filtrage par settings
-    - Nécessite une action immédiate
-
-### ⚠️ Règle de Filtrage v2.2 (Centralisé)
-
-```javascript
-// ✅ CORRECT v2.2 - INFO/WARN/ERROR toujours loggés, pas de condition
-window.logger?.info(CATEGORIES.MOB, EVENTS.LoadMetadata, {data});
-window.logger?.warn(CATEGORIES.HARVEST, EVENTS.NoCacheWarning, {details});
-window.logger?.error(CATEGORIES.MOB, EVENTS.LoadMetadataFailed, error);
-
-// ✅ CORRECT v2.2 - DEBUG filtré automatiquement dans LoggerClient
-// Plus besoin de if (settings.debugEnemies) !
-window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {allParams});
-
-// ❌ INCORRECT v2.2 - Ne PAS vérifier settings manuellement
-if (this.settings.debugEnemies && window.logger) {
-    window.logger.debug('MOB', 'DetailedParams', {allParams}); // Duplication inutile
-}
-
-// ❌ INCORRECT v2.2 - Ne PAS utiliser strings hardcodés
-window.logger?.debug('MOB', 'NewMobEvent', {data}); // Utiliser CATEGORIES.MOB et EVENTS.NewMobEvent
-```
-
-**Migration v2.1 → v2.2 :**
-
-```javascript
-// ❌ AVANT v2.1 - Condition manuelle partout
-if (this.settings.debugEnemies && window.logger) {
-    window.logger.debug('MOB', 'NewMobEvent', {...});
-}
-
-// ✅ APRÈS v2.2 - Filtrage automatique + constantes
-window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
+  // Always logged (no setting)
+  WEBSOCKET: null,
+  CACHE: null,
+  ITEM: null,
+};
 ```
 
 ---
 
-## 🎨 Format des Logs v2.0
+## 🖥️ Output Formats
 
-### Affichage Console (Coloré)
+### Colored Console Output
 
-```
+```text
 🔍 [DEBUG] MOB.NewMobEvent_RAW @ 18:30:45
 {id: 12345, typeId: 456, health: 850, position: {x: 100, y: 200}}
 (page: /drawing)
@@ -345,13 +164,13 @@ window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
 (page: /resources)
 
 🚨 [CRITICAL] MOB.CriticalError @ 18:35:00
-{message: "Parser failed", stack: "..."}
+{message: "Parser failed", stack: "...}
 (page: /drawing)
 ```
 
-### Fichiers JSONL (Serveur)
+### JSONL Files (Server)
 
-**Emplacement:** `logs/sessions/session_<timestamp>_<id>.jsonl`
+**Location:** `logs/sessions/session_<timestamp>.jsonl`
 
 **Format:**
 
@@ -362,210 +181,211 @@ window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
 
 ---
 
-## 💻 Utilisation
+## 👤 User Perspective
 
-### Pour l'Utilisateur
+### Enabling Logging in Settings
 
-1. **Ouvrir Settings** → Onglet Settings dans le menu
-2. **Section "Console & Server Output"** → Descendre jusqu'à la section Debug & Logging
-3. **Activer les logs souhaités** :
-    - ✅ **Display logs in console** → Pour voir les logs en temps réel (recommandé)
-    - ✅ **Send logs to server** → Pour sauvegarder dans des fichiers JSONL
-    - ⚠️ **RAW packets in console** → Seulement pour debug profond (TRÈS VERBEUX !)
-    - ⚠️ **RAW packets to server** → Seulement pour debug profond (TRÈS VERBEUX !)
-4. **Ouvrir console (F12)** → Voir les logs colorés en temps réel
-5. **Export JSON** → Bouton "Download Debug Logs" pour snapshot complet
+1. Open **Settings** → Settings tab in the menu.
+2. Scroll to **Debug & Logging** section.
+3. Enable the options you need:
+   - ✅ **Display logs in console** → See logs in real time (recommended)
+   - ✅ **Send logs to server** → Save JSONL files in `logs/sessions/`
+   - ⚠️ **RAW packets in console** → Only for deep debugging (VERY VERBOSE!)
+   - ⚠️ **RAW packets to server** → Only for deep debugging (VERY VERBOSE!)
+4. Open browser console (F12) → see colored logs in real time.
+5. Use **Download Debug Logs** button to export a JSON snapshot.
 
-### Pour le Développeur v2.2
+---
 
-#### Patterns d'Import des Constantes
+## 🧑‍💻 Developer Usage (v2.2)
 
-**1. Classes (Handlers, Drawings) :**
+### Import Patterns for Constants
+
+#### 1. Classes (Handlers, Drawings)
+
 ```javascript
 class MobsHandler {
-    constructor(settings) {
-        // Import une seule fois dans le constructor
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        this.settings = settings;
-    }
-    
-    someMethod() {
-        // Utiliser avec this.
-        window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
-    }
+  constructor(settings) {
+    // Import once in constructor
+    const { CATEGORIES, EVENTS } = window;
+    this.CATEGORIES = CATEGORIES;
+    this.EVENTS = EVENTS;
+    this.settings = settings;
+  }
+  
+  someMethod() {
+    // Use with this.
+    window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, { /* ... */ });
+  }
 }
 ```
 
-**2. Scripts avec Scope Local (Utils.js, ItemsPage.js) :**
+#### 2. Local-scope Scripts (`Utils.js`, `ItemsPage.js`)
+
 ```javascript
-// Import en haut du module
+// Import at top of module
 const { CATEGORIES, EVENTS } = window;
 
-// Utiliser directement (sans this.)
-window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, {...});
+// Use directly (no this.)
+window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, { /* ... */ });
 ```
 
-**3. Fonctions Globales (ResourcesHelper.js) :**
+#### 3. Global Functions (`ResourcesHelper.js`)
+
 ```javascript
 function clearCache() {
-    // Utiliser window.CATEGORIES directement
-    window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.CacheCleared, {});
+  // Use window.CATEGORIES directly
+  window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.CacheCleared, {});
 }
 ```
 
-#### Ajouter des Logs dans le Code v2.2
+### Adding Logs in Code (v2.2)
 
 ```javascript
-// ✅ NOUVEAU v2.2 - Utiliser constantes + optional chaining
+// ✅ NEW v2.2 - Use constants + optional chaining
 window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {
-    data1: value1,
-    data2: value2
+  data1: value1,
+  data2: value2
 }, {
-    // Contexte optionnel
-    additionalInfo: 'some context'
+  additionalInfo: 'some context'
 });
 
-// ✅ Filtrage automatique - Plus besoin de if (settings.debugX)
-window.logger?.info(CATEGORIES.HARVEST, EVENTS.HarvestStart, {...});
+// ✅ Automatic filtering - no more `if (settings.debugX)`
+window.logger?.info(CATEGORIES.HARVEST, EVENTS.HarvestStart, { /* ... */ });
 
-// ❌ ANCIEN v2.1 - Ne plus utiliser
+// ❌ OLD v2.1 - Do not use anymore
 if (settings.debugEnemies && window.logger) {
-    window.logger.debug('MOB', 'EventName', {...}); // Obsolète
+  window.logger.debug('MOB', 'EventName', { /* ... */ }); // Deprecated
 }
 ```
 
-#### Ajouter une Nouvelle Catégorie ou Event
+### Adding a New Category or Event
 
-**1. Ajouter dans LoggerConstants.js :**
+**1. Add it in `LoggerConstants.js`:**
+
 ```javascript
-// Ajouter la catégorie
+// Add category
 const CATEGORIES = {
-    // ... existants
-    MY_NEW_CATEGORY: 'MY_NEW_CATEGORY'
+  // ... existing
+  MY_NEW_CATEGORY: 'MY_NEW_CATEGORY'
 };
 
-// Ajouter l'événement
+// Add event
 const EVENTS = {
-    // ... existants
-    MyNewEvent: 'MyNewEvent'
+  // ... existing
+  MyNewEvent: 'MyNewEvent'
 };
 
-// Ajouter le mapping si filtrage souhaité
+// Add mapping if you want filtering
 const CATEGORY_SETTINGS_MAP = {
-    // ... existants
-    MY_NEW_CATEGORY: 'debugMyFeature', // ou null si toujours loggé
+  // ... existing
+  MY_NEW_CATEGORY: 'debugMyFeature', // or null if always logged
 };
 ```
 
-**2. Utiliser dans le code :**
+**2. Use it in code:**
+
 ```javascript
-window.logger?.debug(this.CATEGORIES.MY_NEW_CATEGORY, this.EVENTS.MyNewEvent, {...});
+window.logger?.debug(this.CATEGORIES.MY_NEW_CATEGORY, this.EVENTS.MyNewEvent, { /* ... */ });
 ```
 
-#### Filtrage Automatique (v2.2)
+### Automatic Filtering (v2.2)
 
 ```javascript
-// ✅ Plus besoin de vérifier settings manuellement !
-// Le filtrage est fait automatiquement dans LoggerClient.shouldLog()
+// ✅ No need to manually check settings!
+// Filtering is done in LoggerClient.shouldLog()
 
-// DEBUG → Filtré selon CATEGORY_SETTINGS_MAP
-window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
+// DEBUG → Filtered according to CATEGORY_SETTINGS_MAP
+window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, { /* ... */ });
 
-// INFO/WARN/ERROR → Toujours loggés (pas de filtrage)
-window.logger?.info(CATEGORIES.CACHE, EVENTS.CacheCleared, {...});
+// INFO/WARN/ERROR → Always logged
+window.logger?.info(CATEGORIES.CACHE, EVENTS.CacheCleared, { /* ... */ });
 ```
 
 ---
 
-## 📊 Bonnes Pratiques v2.2
+## ✅ Best Practices (v2.2)
 
-### 1. Utiliser les Constantes Partout
+### 1. Always Use Constants
 
 ```javascript
 // ✅ CORRECT v2.2
-window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {...});
+window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, { /* ... */ });
 
-// ❌ INCORRECT - Strings hardcodés
-window.logger?.debug('MOB', 'NewMobEvent', {...});
+// ❌ INCORRECT - Hardcoded strings
+window.logger?.debug('MOB', 'NewMobEvent', { /* ... */ });
 ```
 
-### 2. Choisir le Bon Niveau
+### 2. Choose the Right Level
 
-**DEBUG** - Détails techniques et verbeux (filtré automatiquement)
+**DEBUG** – Technical, verbose details (filtered automatically)
 
 ```javascript
-// ✅ v2.2 - Filtrage automatique, pas de if
 window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent_ALL_PARAMS, {
-    mobId, typeId, allParameters
+  mobId,
+  typeId,
+  allParameters
 });
 ```
 
-**INFO** - Actions importantes (TOUJOURS loggé)
+**INFO** – Important actions (ALWAYS logged)
 
 ```javascript
-// ✅ v2.2 - Pas de condition nécessaire
 window.logger?.info(this.CATEGORIES.MOB, this.EVENTS.LoadMetadata, {
-    count: this.metadata.length
+  count: this.metadata.length
 });
 ```
 
-**WARN** - Situations anormales (TOUJOURS loggé)
+**WARN** – Abnormal situations (ALWAYS logged)
 
 ```javascript
-// ✅ v2.2
 window.logger?.warn(this.CATEGORIES.HARVEST, this.EVENTS.NoCacheWarning, {
-    note: 'Resource tracking may be incomplete'
+  note: 'Resource tracking may be incomplete'
 });
 ```
 
-**ERROR** - Erreurs critiques (TOUJOURS loggé)
+**ERROR** – Critical errors (ALWAYS logged)
 
 ```javascript
-// ✅ v2.2
 window.logger?.error(this.CATEGORIES.MOB, this.EVENTS.LoadMetadataFailed, error);
 ```
 
-### 3. Respecter les Patterns d'Import
+### 3. Respect Import Patterns
 
-**Classes :**
+**Classes:**
 ```javascript
-// Import dans constructor, utiliser avec this.
 constructor(settings) {
-    const { CATEGORIES, EVENTS } = window;
-    this.CATEGORIES = CATEGORIES;
-    this.EVENTS = EVENTS;
+  const { CATEGORIES, EVENTS } = window;
+  this.CATEGORIES = CATEGORIES;
+  this.EVENTS = EVENTS;
 }
 ```
 
-**Scripts locaux :**
+**Local scripts:**
 ```javascript
-// Import en haut du module
 const { CATEGORIES, EVENTS } = window;
 ```
 
-**Fonctions globales :**
+**Global functions:**
 ```javascript
-// Utiliser window.CATEGORIES directement
-window.CATEGORIES.CACHE
+window.CATEGORIES.CACHE;
 ```
 
-### 4. Ne PAS Vérifier Settings Manuellement
+### 4. Do NOT Manually Check Settings
 
 ```javascript
-// ✅ CORRECT v2.2 - Filtrage automatique
-window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, {data});
+// ✅ CORRECT v2.2 - Automatic filtering
+window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent, { data });
 
-// ❌ INCORRECT v2.2 - Duplication inutile
+// ❌ INCORRECT v2.2 - Redundant check
 if (this.settings.debugEnemies && window.logger) {
-    window.logger.debug(...); // Le filtrage est déjà dans LoggerClient !
+  window.logger.debug(/* ... */); // Filtering already handled in LoggerClient
 }
 ```
 
-### 5. Mapping Catégories → Settings
+### 5. Category → Setting Mapping
 
-Le système gère automatiquement le mapping :
+The system handles mapping automatically:
 
 - MOB, MOB_HEALTH, MOB_DRAW → `debugEnemies`
 - HARVEST, HARVEST_HIDE_T4 → `debugHarvestables`
@@ -574,151 +394,149 @@ Le système gère automatiquement le mapping :
 - DUNGEON → `debugDungeons`
 - FISHING → `debugFishing`
 - PACKET_RAW → `debugRawPackets`
-- WEBSOCKET, CACHE, ITEM, etc. → **Toujours loggés** (null)
+- WEBSOCKET, CACHE, ITEM, etc. → **always logged** (`null` mapping)
 
-### 6. Temps Réel Garanti
+### 6. Real-Time Behavior
 
 ```javascript
-// ✅ Les changements de checkboxes sont instantanés
-// LoggerClient.shouldLog() lit localStorage.getItem() sans cache
-// → Pas besoin de reload de page !
+// ✅ Checkbox changes take effect immediately
+// LoggerClient.shouldLog() reads localStorage on each call (no cache)
+// → No page reload required
 ```
 
 ---
 
-## 🔧 Fonctionnement Interne
+## 🔧 Internals
 
-### Filtrage Centralisé v2.2 (NOUVEAU)
+### Centralized Filtering (v2.2)
 
-**LoggerClient.shouldLog() - Décision centralisée en temps réel :**
+**`LoggerClient.shouldLog()` – single point of truth:**
 
 ```javascript
 shouldLog(category, level) {
-    // 1. INFO/WARN/ERROR/CRITICAL → toujours loggés
-    if (level !== 'DEBUG') return true;
-    
-    // 2. Récupère le mapping catégorie → setting
-    const settingKey = window.CATEGORY_SETTINGS_MAP?.[category];
-    
-    // 3. Pas de mapping = toujours loggé (WEBSOCKET, CACHE, etc.)
-    if (!settingKey) return true;
-    
-    // 4. Gestion spéciale RAW packets (console OU serveur)
-    if (settingKey === 'debugRawPackets') {
-        const consoleEnabled = localStorage.getItem('settingDebugRawPacketsConsole') === 'true';
-        const serverEnabled = localStorage.getItem('settingDebugRawPacketsServer') === 'true';
-        return consoleEnabled || serverEnabled;
-    }
-    
-    // 5. Lit le setting depuis localStorage (TEMPS RÉEL, pas de cache)
-    const localStorageKey = 'setting' + settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
-    return localStorage.getItem(localStorageKey) === 'true';
+  // 1. INFO/WARN/ERROR/CRITICAL → always logged
+  if (level !== 'DEBUG') return true;
+  
+  // 2. Get mapping category → setting
+  const settingKey = window.CATEGORY_SETTINGS_MAP?.[category];
+  
+  // 3. No mapping = always logged (WEBSOCKET, CACHE, etc.)
+  if (!settingKey) return true;
+  
+  // 4. Special RAW packets handling (console OR server)
+  if (settingKey === 'debugRawPackets') {
+    const consoleEnabled = localStorage.getItem('settingDebugRawPacketsConsole') === 'true';
+    const serverEnabled = localStorage.getItem('settingDebugRawPacketsServer') === 'true';
+    return consoleEnabled || serverEnabled;
+  }
+  
+  // 5. Read setting from localStorage (REAL TIME, no cache)
+  const localStorageKey = 'setting' + settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
+  return localStorage.getItem(localStorageKey) === 'true';
 }
 ```
 
-**Appel dans log() :**
+**Used inside `log()`:**
+
 ```javascript
 log(level, category, event, data, context = {}) {
-    // ⚡ Exit early si filtré - Performance optimale
-    if (!this.shouldLog(category, level)) return;
-    
-    // ... reste de la logique de logging
+  // ⚡ Exit early if filtered out (performance)
+  if (!this.shouldLog(category, level)) return;
+  
+  // ... rest of logging logic
 }
 ```
 
-**Avantages :**
-- ✅ **Temps réel** : Lit localStorage à chaque appel (pas de cache)
-- ✅ **Exit early** : Return immédiat si log filtré (performance)
-- ✅ **Un seul endroit** : Toute la logique de filtrage centralisée
-- ✅ **Handlers simples** : Plus besoin de `if (settings.debugX)`
+**Benefits:**
+- ✅ **Real-time**: always reads from localStorage (no cache)
+- ✅ **Early exit**: immediate return if log is filtered (performance)
+- ✅ **Single place**: all filtering logic is centralized
+- ✅ **Simple handlers**: no more `if (settings.debugX)` scattered everywhere
 
-### Mode Offline
+### Offline Mode
 
-Le logger fonctionne **même sans serveur WebSocket** :
+The logger works even if the WebSocket server is not available:
 
-- ✅ Logs console toujours fonctionnels
-- ❌ Logs serveur ignorés (buffer vidé silencieusement)
-- 📢 Messages console informatifs : `"logs will be console-only"`
+- ✅ Console logs always work
+- ❌ Server logs are skipped silently (buffer is cleared)
+- 📢 Informative console messages: "logs will be console-only"
 
-### Filtrage RAW Packets
+### RAW Packet Filtering
 
-**Logique intelligente :**
-
+**Smart logic:**
 ```javascript
-// Dans log() - Buffer pour serveur
-if (logEntry.category === 'PACKET_RAW' && !debugRawPacketsServer) {
-    return; // Skip server logging for RAW packets
+// In log() - server buffering
+if (logEntry.category === '[CLIENT] PACKET_RAW' && !debugRawPacketsServer) {
+  return; // Skip server logging for RAW packets
 }
 
-// Dans logToConsole() - Affichage console
-if (entry.category === 'PACKET_RAW' && !showRawPacketsConsole) {
-    return; // Skip console display for RAW packets
+// In logToConsole() - console output
+if (entry.category === '[CLIENT] PACKET_RAW' && !showRawPacketsConsole) {
+  return; // Skip console display for RAW packets
 }
 ```
 
-**Résultat :**
+**Result:**
+- RAW packets do not pollute normal logs
+- Separate enable/disable for console vs server
+- Optimal performance when disabled
 
-- Les RAW packets ne polluent pas les logs normaux
-- Activation séparée console vs serveur
-- Performance optimale si désactivé
-
-### Buffer et Flush
+### Buffer & Flush
 
 ```javascript
-// Buffer automatique
+// Automatic buffer
 this.buffer.push(logEntry);
 
-// Flush si buffer plein
+// Flush when buffer is full
 if (this.buffer.length >= this.maxBufferSize) {
-    this.flush(); // Envoie au serveur
+  this.flush(); // Send to server
 }
 
-// Flush périodique (toutes les 5s)
+// Periodic flush (every 5 seconds)
 setInterval(() => this.flush(), 5000);
 ```
 
 ---
 
-## ⚠️ Avertissements et Limitations
+## ⚠️ Warnings & Limitations
 
 ### RAW Packet Debugging
 
-**⚠️ TRÈS VERBEUX !**
+**⚠️ EXTREMELY VERBOSE!**
 
-Quand activé, le logger trace **CHAQUE paquet réseau** capturé :
+When enabled, the logger traces **EVERY network packet** captured:
 
-- Peut générer 100+ logs par seconde en combat
-- Impact performance en console (affichage lent)
-- Fichiers JSONL volumineux (plusieurs Mo par minute)
+- Can generate 100+ logs per second during fights
+- Performance impact if console is open (rendering lots of logs)
+- Big JSONL files (several MB per minute)
 
-**Recommandation :**
+**Recommendations:**
+- ❌ Do NOT enable all the time
+- ✅ Enable only to investigate a specific problem
+- ✅ Disable it as soon as the analysis is done
 
-- ❌ Ne PAS activer en permanence
-- ✅ Activer uniquement pour analyser un problème spécifique
-- ✅ Désactiver dès que l'analyse est terminée
+### Offline Mode
 
-### Mode Offline
+If the WebSocket server is not available:
 
-Si le serveur WebSocket n'est pas disponible :
-
-- ✅ Console fonctionne normalement
-- ❌ Logs serveur ignorés (pas d'erreur, juste ignorés)
-- 📢 Messages dans console : `"logs will be console-only"`
+- ✅ Console logging works as usual
+- ❌ Server logs are ignored (no error, just dropped)
+- 📢 Console message: "logs will be console-only"
 
 ### Performance
 
-- ✅ Pas d'overhead si `settingLogToConsole = false`
-- ✅ Filtrage intelligent des RAW packets
-- ⚠️ Impact si console ouverte avec beaucoup de logs
+- ✅ No overhead if `settingLogToConsole = false`
+- ✅ Smart RAW packets filtering
+- ⚠️ Impact if console is open with many logs
 
 ---
 
-## 📚 Voir Aussi
+## 📚 See Also
 
-- **[DEBUG_LOGGING_GUIDE.md](../../work/DEBUG_LOGGING_GUIDE.md)** - Guide complet debug & logging
-- **[AI_AGENT_GUIDE.md](../ai/AI_AGENT_GUIDE.md)** - Guide pour les agents IA
-- **[ARCHITECTURE.md](../dev/ARCHITECTURE.md)** - Architecture du projet
+- `work/DEBUG_LOGGING_GUIDE.md` – Complete debug & logging guide (developer oriented)
+- `docs/ai/AI_AGENT_GUIDE.md` – Guide for AI agents
+- `docs/dev/DEV_GUIDE.md` – Project architecture & dev workflow
 
 ---
 
-*Système de Logging v2.0 - Centralisé, Configurable, Performant* 🎉
+*OpenRadar Logging System v2.2 – Centralized, Configurable, Performant* 🎉
