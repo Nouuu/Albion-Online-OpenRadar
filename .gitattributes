@@ -1,2 +1,2 @@
-public/ao-bin-dumps/**/* -diff
-images/**/* -diff
+public/ao-bin-dumps/* linguist-generated
+images/* linguist-generated
