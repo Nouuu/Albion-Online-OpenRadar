@@ -288,7 +288,7 @@ const getFormats = (platform) => {
             }
         }
         console.log(`\n✅ All release packages ready for distribution!\n`);
-        console.log('💡 Tip: Run "npm run optimize:images" to reduce archive size by 20-40%\n');
+        process.exit(0);
     } catch (err) {
         console.error('✗ Archive creation failed:', err.message);
         process.exit(1);
