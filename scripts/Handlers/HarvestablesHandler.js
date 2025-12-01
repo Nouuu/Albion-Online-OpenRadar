@@ -359,6 +359,34 @@ class HarvestablesHandler
         });
     }
 
+    /**
+     * Helper method to check if a harvestable should be displayed based on settings
+     * @param {string} stringType - Resource type (Fiber, Hide, Log, Ore, Rock)
+     * @param {boolean} isLiving - Is living resource (vs static)
+     * @param {number} tier - Resource tier (1-8)
+     * @param {number} charges - Enchantment level (0-4)
+     * @returns {boolean} - True if should be displayed
+     */
+    shouldDisplayHarvestable(stringType, isLiving, tier, charges) {
+        // Map resource type to settings key suffix
+        const settingsMap = {
+            [HarvestableType.Fiber]: 'Fiber',
+            [HarvestableType.Hide]: 'Hide',
+            [HarvestableType.Log]: 'Wood',
+            [HarvestableType.Ore]: 'Ore',
+            [HarvestableType.Rock]: 'Rock'
+        };
+
+        const resourceType = settingsMap[stringType];
+        if (!resourceType) return false;
+
+        // Build settings key (e.g., 'harvestingLivingFiber' or 'harvestingStaticWood')
+        const settingsKey = isLiving ? `harvestingLiving${resourceType}` : `harvestingStatic${resourceType}`;
+
+        // Check if settings exist and if this tier/enchant combination is enabled
+        return this.settings[settingsKey]?.[`e${charges}`]?.[tier-1] ?? false;
+    }
+
 
     addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
@@ -402,41 +430,9 @@ class HarvestablesHandler
             isLiving
         });
 
-        // 🎯 Utiliser les settings appropriés selon le type de ressource (living vs static)
-        switch (stringType)
-        {
-            case HarvestableType.Fiber: {
-                const settingsKey = isLiving ? 'harvestingLivingFiber' : 'harvestingStaticFiber';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Hide: {
-                const settingsKey = isLiving ? 'harvestingLivingHide' : 'harvestingStaticHide';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Log: {
-                const settingsKey = isLiving ? 'harvestingLivingWood' : 'harvestingStaticWood';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Ore: {
-                const settingsKey = isLiving ? 'harvestingLivingOre' : 'harvestingStaticOre';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Rock: {
-                const settingsKey = isLiving ? 'harvestingLivingRock' : 'harvestingStaticRock';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            default:
-                return;
+        // 🎯 Check if this harvestable should be displayed based on settings
+        if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
+            return;
         }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
@@ -498,41 +494,9 @@ class HarvestablesHandler
             isLiving
         });
 
-        // 🎯 Utiliser les settings appropriés selon le type de ressource (living vs static)
-        switch (stringType)
-        {
-            case HarvestableType.Fiber: {
-                const settingsKey = isLiving ? 'harvestingLivingFiber' : 'harvestingStaticFiber';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Hide: {
-                const settingsKey = isLiving ? 'harvestingLivingHide' : 'harvestingStaticHide';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Log: {
-                const settingsKey = isLiving ? 'harvestingLivingWood' : 'harvestingStaticWood';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Ore: {
-                const settingsKey = isLiving ? 'harvestingLivingOre' : 'harvestingStaticOre';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            case HarvestableType.Rock: {
-                const settingsKey = isLiving ? 'harvestingLivingRock' : 'harvestingStaticRock';
-                if (!this.settings[settingsKey][`e${charges}`][tier-1]) return;
-                break;
-            }
-
-            default:
-                return;
+        // 🎯 Check if this harvestable should be displayed based on settings
+        if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
+            return;
         }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);

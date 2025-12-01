@@ -145,7 +145,7 @@ class Protocol16Deserializer {
 
         for (let i = 0; i < tableSize; i++) {
             const typeCode = this.deserializeByte(input);
-            ouput[i] = deserialize(input, typeCode);
+            ouput[i] = this.deserialize(input, typeCode);
         }
 
         return ouput;
