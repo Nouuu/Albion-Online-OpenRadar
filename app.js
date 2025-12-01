@@ -127,6 +127,27 @@ function StartRadar()
     res.redirect('/');
   });*/
 
+  // 📊 API: Get server logs status
+  app.get('/api/settings/server-logs', (req, res) => {
+    res.json({ enabled: global.loggerServer.isEnabled() });
+  });
+
+  // 📊 API: Set server logs status
+  app.post('/api/settings/server-logs', express.json(), (req, res) => {
+    const { enabled } = req.body;
+    
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'Invalid value for enabled, must be boolean' });
+    }
+
+    global.loggerServer.setEnabled(enabled);
+    
+    res.json({ 
+      success: true, 
+      enabled: global.loggerServer.isEnabled() 
+    });
+  });
+
 
 
   app.use('/scripts', express.static(path.join(appDir, 'scripts')));

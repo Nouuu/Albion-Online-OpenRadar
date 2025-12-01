@@ -578,6 +578,32 @@
 
   <script>
     // Language system removed - using English only
+
+    // 🖥️ Send server logs state to backend on app startup
+    (async () => {
+      try {
+        // Read from localStorage (source of truth)
+        const enabled = localStorage.getItem("settingServerLogsEnabled");
+        const serverLogsEnabled = enabled === null ? false : enabled === "true";
+
+        // Send to backend
+        const response = await fetch('/api/settings/server-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: serverLogsEnabled })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log(`🖥️ [Layout] Server-side logging initialized: ${serverLogsEnabled ? 'ENABLED' : 'DISABLED'}`);
+        } else {
+          console.error('❌ [Layout] Failed to initialize server logs setting');
+        }
+      } catch (error) {
+        console.error('❌ [Layout] Error initializing server logs setting:', error);
+      }
+    })();
   </script>
 
 </body>

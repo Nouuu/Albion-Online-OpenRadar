@@ -190,23 +190,43 @@ Ajouter un contrôle UI sur le frontend permettant de configurer le nombre maxim
 
 ---
 
-### ⏳ 13. Nettoyer Logs Inutiles + Toggle Logs Serveur
-**Status:** ⏳ PLANIFIÉ
+### ✅ 13. Toggle Logs Serveur (Backend)
+**Status:** ✅ TERMINÉ
 
 **Description :**
-Audit et nettoyage des logs non-essentiels. Intégrer le toggle serveur logs (checkbox `settingLogToServer` existante).
+Ajouter un toggle frontend pour activer/désactiver les logs côté **backend** (serveur). L'application utilise déjà un logger maison (front + back), et l'envoi front → back est déjà implémenté via `settingLogToServer`.
 
-**Travail :**
-1. Audit des `console.log()` dans `scripts/Utils/Utils.js`, `scripts/Drawings/`, `scripts/Handlers/`
-2. Supprimer/réduire logs non-essentiels
-3. Intégrer vérification `localStorage.getItem('settingLogToServer')` avant envoyer JSONL
+**Ce qui a été implémenté :**
 
-**Fichiers à modifier :**
-- `scripts/LoggerClient.js` - Vérifier flag avant log
-- `scripts/Utils/Utils.js` - Audit et nettoyage
-- `scripts/Handlers/*.js` - Audit et nettoyage
+1. **LoggerServer.js** ✅
+   - Propriété `this.enabled` (default: true)
+   - Méthode `setEnabled(boolean)` pour activer/désactiver
+   - Méthode `isEnabled()` pour vérifier l'état
+   - Vérification `this.enabled` dans `writeLogs()` avant écriture
 
-**Note :** Checkbox `settingLogToServer` déjà existante dans settings.ejs
+2. **app.js - Endpoints API** ✅
+   - `GET /api/settings/server-logs` : Retourne l'état actuel
+   - `POST /api/settings/server-logs` : Change l'état (body: `{ enabled: boolean }`)
+   - Validation et retour JSON
+
+3. **views/main/settings.ejs** ✅
+   - Checkbox `settingServerLogsEnabled` dans section "Debug & Logging"
+   - Sauvegarde dans `localStorage` (source de vérité)
+   - Event listener envoie au backend via API POST
+   - Chargement depuis `localStorage` au démarrage (default: true)
+
+4. **views/layout.ejs** ✅
+   - Script d'initialisation au démarrage de l'app
+   - Lit `localStorage.getItem('settingServerLogsEnabled')`
+   - Envoie l'état au backend via API POST
+   - Console log confirme l'initialisation
+
+**Architecture finale :**
+- Source de vérité : Frontend (`localStorage`)
+- Au démarrage : Layout envoie l'état au backend
+- Changement : Settings envoie l'état au backend
+- Backend : Applique l'état reçu sans persister
+
 
 ---
 
@@ -233,16 +253,16 @@ Garder en mémoire la dernière map affichée durant une session. Si F5 ou retou
 
 ```
 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100% (11/11 tâches PR #4 TERMINÉES)
-[▓▓▓▓▓▓▓░░░░░░░░░░░░] 33% (1/3 tâches finalisation player detection)
+[▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░] 67% (2/3 tâches finalisation player detection)
 ```
 
 **Tâches PR #4 terminées :** 11/11 ✅
-**Tâches finalisation terminées :** 1/3 ✅
+**Tâches finalisation terminées :** 2/3 ✅
   - ✅ Tâche 12 : Configurable Max Players
-  - ⏳ Tâche 13 : Nettoyer Logs + Toggle Serveur
+  - ✅ Tâche 13 : Toggle Logs Serveur (Backend)
   - ⏳ Tâche 14 : Mémoriser Dernière Map
 
-**Phase actuelle :** Finalisation player detection en cours
+**Phase actuelle :** Finalisation player detection en cours (dernière tâche restante)
 
 ---
 
@@ -307,5 +327,5 @@ Garder en mémoire la dernière map affichée durant une session. Si F5 ou retou
 
 ---
 
-**Dernière mise à jour :** 2025-12-01 - Tâche 12 TERMINÉE ✅ (1/3 finalisation)
-**Tâches restantes :** Tâches 13-14 (Logs + Map mémoire)
+**Dernière mise à jour :** 2025-12-01 - Tâches 12-13 TERMINÉES ✅ (2/3 finalisation)
+**Tâche restante :** Tâche 14 (Mémoriser dernière map en session)

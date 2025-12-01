@@ -5,9 +5,28 @@ const path = require('path');
 class LoggerServer {
     constructor(logsDir = './logs') {
         this.logsDir = logsDir;
+        this.enabled = true; // Logs enabled by default
         this.initializeDirectories();
         this.createSessionFile();
         console.log(`📊 [LoggerServer] Session file: ${this.currentSessionFile}`);
+        console.log(`📊 [LoggerServer] Logging enabled: ${this.enabled}`);
+    }
+
+    /**
+     * Enable or disable server-side logging
+     * @param {boolean} enabled - true to enable, false to disable
+     */
+    setEnabled(enabled) {
+        this.enabled = !!enabled;
+        console.log(`📊 [LoggerServer] Logging ${this.enabled ? 'ENABLED' : 'DISABLED'}`);
+    }
+
+    /**
+     * Get current logging state
+     * @returns {boolean} - true if enabled, false if disabled
+     */
+    isEnabled() {
+        return this.enabled;
     }
 
     initializeDirectories() {
@@ -55,6 +74,7 @@ class LoggerServer {
      * @param {Object} context - Additional context
      */
     log(level, category, event, data, context = {}) {
+        if (!this.enabled) return; // Skip if logging is disabled
         const logEntry = {
             timestamp: new Date().toISOString(),
             level,
