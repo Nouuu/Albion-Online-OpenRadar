@@ -497,7 +497,7 @@ socket.addEventListener('message', (event) => {
   }
 });
 
-// Helper function pour obtenir le nom de l'événement (pour debug)
+// Helper function to get event name (for debugging)
 function getEventName(eventCode) {
     const eventNames = {
         1: 'Leave',
@@ -536,16 +536,16 @@ function onEvent(Parameters)
     const id = parseInt(Parameters[0]);
     const eventCode = Parameters[252];
 
-    // 📦 DEBUG RAW: Log tous les paquets bruts (très verbeux, pour debug profond uniquement)
-    // Note: debugRawPacketsConsole contrôle l'affichage console, debugRawPacketsServer contrôle l'envoi au serveur
+    // 📦 DEBUG RAW: Log all raw packets (very verbose, for deep debugging only)
+    // Note: debugRawPacketsConsole controls console output, debugRawPacketsServer controls server logging
     window.logger?.debug(CATEGORIES.PACKET_RAW, `Event_${eventCode}`, {
         id,
         eventCode,
         allParameters: Parameters
     });
 
-    // 🔍 DEBUG ALL EVENTS: Log événement avec détails si debug activé
-    // Permet d'identifier les patterns et correspondances paramètres <-> événements
+    // 🔍 DEBUG ALL EVENTS: Log event with details if debug enabled
+    // Allows identifying patterns and parameter <-> event correspondence
     if (eventCode !== 91) { // Skip RegenerationHealthChanged car trop verbeux
         const paramDetails = {};
         for (let key in Parameters) {

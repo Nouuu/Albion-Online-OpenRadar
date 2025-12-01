@@ -178,11 +178,11 @@ class MobsHandler {
     }
 
     printLoggingGuide() {
-        // 🐛 DEBUG (filtré par debugEnemies) - Guide de collecte verbeux
+        // 🐛 DEBUG (filtered by debugEnemies) - Verbose collection guide
         window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.CollectionGuide, {
                 title: 'LIVING RESOURCES COLLECTION GUIDE',
-                objective: 'Collecter les TypeIDs des créatures enchantées',
-                format: 'JSON structuré pour parsing automatique',
+                objective: 'Collect TypeIDs of enchanted creatures',
+                format: 'Structured JSON for automatic parsing',
                 tierCount: this.livingResourcesMetadata ? this.livingResourcesMetadata.filter(m => m.faction).length : 0
             });
 
@@ -382,7 +382,7 @@ class MobsHandler {
     }
 
     showCachedTypeIDs() {
-        // ℹ️ INFO (toujours loggué) - Affichage du cache (action utilisateur)
+        // ℹ️ INFO (always logged) - Display cache (user action)
         if (window.logger) {
             const sorted = Array.from(this.staticResourceTypeIDs.entries())
                 .sort((a, b) => a[0] - b[0]);

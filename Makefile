@@ -1,5 +1,5 @@
 # ============================================
-# ZQRadar - Makefile
+# OpenRadar - Makefile
 # ============================================
 # Usage: make [target]
 # Requires: Node.js v18.18.2, npm, Npcap 1.84
@@ -12,7 +12,7 @@ NODE_VERSION = v18.18.2
 NPCAP_VERSION = 1.84
 DIST_DIR = dist
 BUILD_DIR = build
-RELEASE_NAME = ZQRadar-$(shell date +%Y%m%d)
+RELEASE_NAME = OpenRadar-$(shell date +%Y%m%d)
 
 # Colors for display
 GREEN = \033[0;32m
@@ -22,7 +22,7 @@ NC = \033[0m # No Color
 
 help: ## Display help
 	@echo ""
-	@echo "$(GREEN)ZQRadar - Available Commands$(NC)"
+	@echo "$(GREEN)OpenRadar - Available Commands$(NC)"
 	@echo "=================================="
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
@@ -37,7 +37,7 @@ install: ## Install all dependencies
 	@echo ""
 	@echo "$(GREEN)✓ Installation complete!$(NC)"
 
-start: ## Run ZQRadar in development mode
+start: ## Run OpenRadar in development mode
 	npm start
 
 dev: ## Run with auto-reload (nodemon)
@@ -66,7 +66,7 @@ build: ## Build Windows executable
 	@echo ""
 	npm run build:win
 	@echo ""
-	@echo "$(GREEN)✓ Build complete: dist/ZQRadar.exe$(NC)"
+	@echo "$(GREEN)✓ Build complete: dist/OpenRadar.exe$(NC)"
 	@echo ""
 	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
 
@@ -74,7 +74,7 @@ build-linux: ## Build Linux executable
 	@echo "$(GREEN)Building Linux executable...$(NC)"
 	npm run build:linux
 	@echo ""
-	@echo "$(GREEN)✓ Build complete: dist/ZQRadar-linux$(NC)"
+	@echo "$(GREEN)✓ Build complete: dist/OpenRadar-linux$(NC)"
 	@echo ""
 	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
 
@@ -82,7 +82,7 @@ build-macos: ## Build macOS executable
 	@echo "$(GREEN)Building macOS executable...$(NC)"
 	npm run build:macos
 	@echo ""
-	@echo "$(GREEN)✓ Build complete: dist/ZQRadar-macos$(NC)"
+	@echo "$(GREEN)✓ Build complete: dist/OpenRadar-macos$(NC)"
 	@echo ""
 	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
 
@@ -95,7 +95,7 @@ build-all: ## Build for all platforms
 	@echo "$(GREEN)✓ Build complete!$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Files created:$(NC)"
-	@ls -lh $(DIST_DIR)/*.exe $(DIST_DIR)/ZQRadar-* 2>/dev/null || true
+	@ls -lh $(DIST_DIR)/*.exe $(DIST_DIR)/OpenRadar-* 2>/dev/null || true
 	@echo ""
 	@echo "$(YELLOW)Next steps:$(NC)"
 	@echo "  1. Optimize: npm run optimize:images (optional, reduces archives by 30-40%)"
@@ -104,7 +104,7 @@ build-all: ## Build for all platforms
 # All-in-one build
 all-in-one: ## Complete build process (install + build all platforms + package)
 	@echo "$(GREEN)═══════════════════════════════════════$(NC)"
-	@echo "$(GREEN)  ZQRadar - Complete Build Process     $(NC)"
+	@echo "$(GREEN)  OpenRadar - Complete Build Process   $(NC)"
 	@echo "$(GREEN)═══════════════════════════════════════$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Step 1/6: Installing dependencies...$(NC)"
