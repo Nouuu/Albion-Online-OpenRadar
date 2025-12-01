@@ -7,20 +7,16 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 ### 🎯 Pour les Utilisateurs
 
 - **[README principal](../README.md)** - Guide utilisateur, installation, features
-- **[SETUP.md](../SETUP.md)** - Setup développeur après clone ⭐
 - **[BUILD.md](../BUILD.md)** - Instructions de build et packaging
 
 ### 👨‍💻 Pour les Développeurs
 
 - **[DEV_GUIDE.md](./dev/DEV_GUIDE.md)** - Guide complet de développement
-- **[ARCHITECTURE.md](./dev/ARCHITECTURE.md)** - Architecture du projet
-- **[STYLE_GUIDE.md](./dev/STYLE_GUIDE.md)** - Conventions de code et style
 
 ### 🤖 Pour les Agents IA
 
 - **[AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)** - Guide principal pour les agents IA
 - **[MCP_TOOLS.md](./ai/MCP_TOOLS.md)** - Documentation des outils MCP disponibles
-- **[WORKFLOWS.md](./ai/WORKFLOWS.md)** - Workflows courants et bonnes pratiques
 
 ### 🧪 Documentation Technique
 
@@ -43,7 +39,6 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 ### 📋 Gestion de Projet
 
 - **[TODO.md](./project/TODO.md)** - Tâches en cours et à venir
-- **[CHANGELOG.md](./project/CHANGELOG.md)** - Historique des changements
 
 ---
 
@@ -52,7 +47,6 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 ### Je veux...
 
 - **Installer le projet** → [README principal](../README.md)
-- **Comprendre l'architecture** → [ARCHITECTURE.md](./dev/ARCHITECTURE.md)
 - **Débugger et tracer les événements** → [DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md) ⭐
 - **Utiliser les outils Python** → [WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md) ⭐
 - **Player detection système (architecture & UI)** → [PLAYERS.md](./technical/PLAYERS.md) ⭐

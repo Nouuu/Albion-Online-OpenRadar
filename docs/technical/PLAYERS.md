@@ -229,21 +229,21 @@ See the existing sections below for full details of each change and file.
 // Access players in range
 const players = playersHandler.playersInRange;
 
-// Player object structure
-{
-  id: number,           // Unique player ID
-  nickname: string,     // Player name
-  guildName: string,    // Guild name
-  posX: number,         // World X position
-  posY: number,         // Radar X (interpolated)
-  hX: number,           // Radar X (interpolated)
-  hY: number,           // Radar Y (interpolated)
-  currentHealth: number,
-  initialHealth: number,
-  items: Array,         // Equipment items
-  flagId: number,       // Faction status (0=passive, 1-6=faction, 255=hostile)
-  mounted: boolean      // Mount status
-}
+// Example player object structure
+const examplePlayer = {
+  id: 12345,            // Unique player ID
+  nickname: 'PlayerName', // Player name
+  guildName: 'GuildName', // Guild name
+  posX: 100.0,          // World X position
+  posY: 200.0,          // World Y position
+  hX: 120.5,            // Radar X (interpolated)
+  hY: -45.2,            // Radar Y (interpolated)
+  currentHealth: 850,
+  initialHealth: 1000,
+  items: [],            // Equipment items
+  flagId: 0,            // Faction status (0=passive, 1-6=faction, 255=hostile)
+  mounted: false        // Mount status
+};
 ```
 
 #### Extending Drawing Logic
