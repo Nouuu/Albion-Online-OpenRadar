@@ -119,8 +119,8 @@ all-in-one: ## Complete build process (install + build all platforms + package)
 	@echo "$(YELLOW)Step 4/6: Building all platforms...$(NC)"
 	@npm run build:all
 	@echo ""
-	@echo "$(YELLOW)Step 5/6: Updating assets...$(NC)"
-	@$(MAKE) update-assets
+	@echo "$(YELLOW)Step 5/6: Updating ao-data files...$(NC)"
+	@$(MAKE) update-ao-data
 	@echo ""
 	@echo "$(YELLOW)Step 6/6: Creating release packages...$(NC)"
 	@node scripts-shell/post-build.js
