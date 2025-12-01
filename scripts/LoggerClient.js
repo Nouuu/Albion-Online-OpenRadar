@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 'CRITICAL': 'color: #f0f; font-weight: bold'
             }[entry.level] || 'color: #000';
 
-            const time = new Date(entry.timestamp).toLocaleTimeString('fr-FR');
+            const time = new Date(entry.timestamp).toLocaleTimeString('en-GB');
             console.log(
                 `%c${emoji} [${entry.level}] ${entry.category}.${entry.event} @ ${time}`,
                 color,
@@ -213,4 +213,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('✅ [LoggerClient] Logger initialized and exposed as window.logger');
 });
-

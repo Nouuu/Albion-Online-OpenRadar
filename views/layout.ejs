@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZQRadar</title>
+    <title>OpenRadar - Albion Online Radar</title>
 
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
@@ -45,7 +45,7 @@
               x-show="!sidebarCollapsed || sidebarHoverExpanded"
               href="#"
             >
-              ZQRadar
+              OpenRadar
             </a>
             <button
               @click="toggleSidebar"
@@ -321,7 +321,7 @@
             class="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200"
             href="#"
           >
-            ZQRadar
+            OpenRadar
           </a>
           <ul class="mt-6">
             <!-- Home -->
@@ -387,7 +387,7 @@
                 >
                   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.147 15.085a7.159 7.159 0 0 1-6.189 3.307A6.713 6.713 0 0 1 3.1 15.444c-2.679-4.513.287-8.737.888-9.548A4.373 4.373 0 0 0 5 1.608c1.287.953 6.445 3.218 5.537 10.5 1.5-1.122 2.706-3.01 2.853-6.14 1.433 1.049 3.993 5.395 1.757 9.117Z"/>
                 </svg>
-                <span class="ml-4">Enemies</span>
+                <span class="ml-4" x-show="!sidebarCollapsed || sidebarHoverExpanded">Enemies</span>
               </a>
             </li>
             <li class="relative px-6 py-3">
@@ -411,7 +411,7 @@
                     d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                   ></path>
                 </svg>
-                <span class="ml-4">Other</span>
+                <span class="ml-4" x-show="!sidebarCollapsed || sidebarHoverExpanded">Other</span>
               </a>
             </li>
             <li class="relative px-6 py-3">
@@ -432,7 +432,7 @@
                   <path d="M8 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
                   <path d="M13.8 12.938h-.01a7 7 0 1 0-11.465.144h-.016l.141.17c.1.128.2.252.3.372L8 20l5.13-6.248c.193-.209.373-.429.54-.66l.13-.154Z"/>
                 </svg>
-                <span class="ml-4">Map</span>
+                <span class="ml-4" x-show="!sidebarCollapsed || sidebarHoverExpanded">Map</span>
               </a>
             </li>
             <li class="relative px-6 py-3">
@@ -457,7 +457,7 @@
                   ></path>
                   <path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
                 </svg>
-                <span class="ml-4">Ignore List</span>
+                <span class="ml-4" x-show="!sidebarCollapsed || sidebarHoverExpanded">Ignore List</span>
               </a>
             </li>
             <li class="relative px-6 py-3">
@@ -482,7 +482,7 @@
                 ></path>
                 <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
-              <span class="ml-4">Settings</span>
+              <span class="ml-4" x-show="!sidebarCollapsed || sidebarHoverExpanded">Settings</span>
             </a>
           </li>
           </ul>
@@ -591,7 +591,6 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ enabled: serverLogsEnabled })
-        });
 
         const result = await response.json();
 
