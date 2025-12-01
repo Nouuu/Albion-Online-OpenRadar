@@ -153,21 +153,40 @@ node scripts-shell/download-all-spell-icons.js
 
 ## 🔄 FINALISATION PLAYER DETECTION - PROCHAINES ÉTAPES
 
-### ⏳ 12. Configurable Max Players Affichés (Frontend)
-**Status:** ⏳ PLANIFIÉ
+### ✅ 12. Configurable Max Players Affichés (Frontend)
+**Status:** ✅ TERMINÉ
 
 **Description :**
-Ajouter un contrôle UI sur le frontend permettant de configurer le nombre maximum de joueurs affichés sur le radar (actuellement hardcodé, limite max 100).
+Ajouter un contrôle UI sur le frontend permettant de configurer le nombre maximum de joueurs affichés sur le radar.
 
-**Architecture à suivre (pattern existant) :**
-- ✅ Input numérique dans `views/main/settings.ejs` avec tooltip et icon emoji
-- ✅ Stockage en `localStorage` avec clé `settingMaxPlayersDisplay`
-- ✅ Lecture depuis `scripts/Utils/Utils.js` et application du filtre lors du rendu
-- ✅ Validation côté client (min: 1, max: 100, default: 50)
+**Ce qui a été implémenté :**
 
-**Fichiers à modifier :**
-1. `views/main/settings.ejs` - Ajouter section "Players Detection Settings"
-2. `scripts/Utils/Utils.js` - Lire `localStorage` et filtrer l'affichage des joueurs
+1. **UI dans `views/main/home.ejs`** ✅
+   - Nouvelle section "⚙️ Display Settings" après "Types"
+   - Input numérique `settingMaxPlayersDisplay` (min: 1, max: 100, placeholder: 50)
+   - Tooltip informatif
+   - Sauvegarde/chargement automatique via `localStorage`
+
+2. **Logique dans `scripts/Handlers/PlayersHandler.js`** ✅
+   - Limitation appliquée **au moment de l'ajout** d'un nouveau joueur dans `handleNewPlayerEvent()`
+   - Garde automatiquement les X joueurs les plus récents (tri par `detectedAt`)
+   - Supprime les plus anciens quand limite dépassée
+   - Log debug des joueurs supprimés
+
+3. **Affichage dans `scripts/Utils/Utils.js`** ✅
+   - `playersDrawing.invalidate()` utilise `playersList` (déjà limitée par PlayersHandler)
+   - `updatePlayerCounter()` affiche la liste HTML (déjà limitée)
+   - Décommenté l'affichage des joueurs sur le radar
+
+4. **Dessin dans `scripts/Drawings/PlayersDrawing.js`** ✅
+   - Simplifié : plus de filtrage, utilise directement la liste reçue
+   - Commentaire explicatif ajouté
+
+**Architecture finale :**
+- Centralisation de la logique dans `PlayersHandler` (pattern métier propre)
+- `localStorage` utilisé pour la persistance du setting
+- Limite max forcée à 100 (sécurité)
+- Default à 50 joueurs si non configuré
 
 ---
 
@@ -214,12 +233,16 @@ Garder en mémoire la dernière map affichée durant une session. Si F5 ou retou
 
 ```
 [▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓] 100% (11/11 tâches PR #4 TERMINÉES)
-Prochaines étapes : 12-14 (Finalisation player detection)
+[▓▓▓▓▓▓▓░░░░░░░░░░░░] 33% (1/3 tâches finalisation player detection)
 ```
 
 **Tâches PR #4 terminées :** 11/11 ✅
-**Phase actuelle :** PR #4 complétée
-**Prochaine phase :** Finalisation player detection (tâches 12-14)
+**Tâches finalisation terminées :** 1/3 ✅
+  - ✅ Tâche 12 : Configurable Max Players
+  - ⏳ Tâche 13 : Nettoyer Logs + Toggle Serveur
+  - ⏳ Tâche 14 : Mémoriser Dernière Map
+
+**Phase actuelle :** Finalisation player detection en cours
 
 ---
 
@@ -284,5 +307,5 @@ Prochaines étapes : 12-14 (Finalisation player detection)
 
 ---
 
-**Dernière mise à jour :** 2025-12-01 - PR #4 TERMINÉE ✅ (11/11 tâches)
-**Prochaines tâches :** Tâches 12-14 (Finalisation player detection)
+**Dernière mise à jour :** 2025-12-01 - Tâche 12 TERMINÉE ✅ (1/3 finalisation)
+**Tâches restantes :** Tâches 13-14 (Logs + Map mémoire)
