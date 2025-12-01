@@ -158,16 +158,14 @@ release: ## Build and create release (Windows only)
 # Cleaning
 clean: ## Clean build artifacts
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
-	@rm -rf $(DIST_DIR)
-	@rm -rf $(BUILD_DIR)
+	@rm -rf $(DIST_DIR);
 	@echo "$(GREEN)✓ Clean complete!$(NC)"
 
 clean-all: ## Complete cleanup (including optimized images + node_modules)
 	@echo "$(RED)Complete cleanup (including node_modules)...$(NC)"
 	@rm -rf $(DIST_DIR)
-	@rm -rf $(BUILD_DIR)
 	@rm -rf node_modules package-lock.json
-	@rm -f *.log
+	@rm -rf logs/
 	@echo "$(GREEN)✓ Complete cleanup done!$(NC)"
 
 
