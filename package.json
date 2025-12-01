@@ -1,6 +1,6 @@
 {
   "name": "albion-openradar",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "OpenRadar - Real-time radar for Albion Online",
   "main": "app.js",
   "scripts": {
