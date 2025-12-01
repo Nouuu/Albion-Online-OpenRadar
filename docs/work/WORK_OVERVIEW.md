@@ -1,212 +1,195 @@
-# 🛠️ Scripts Utilitaires - ZQRadar
+# 🗂 Work Folder Overview – OpenRadar
 
-> **Documentation des scripts Python utilitaires**  
-> **Dossier:** `work/` (git-ignoré sauf README)
+> **Folder:** `work/` (git-ignored except this README and `.gitignore`)
 
----
-
-## 📋 Scripts Disponibles (work/scripts/)
-
-### 🌟 Scripts Principaux
-
-#### 1. `parse-living-logs.py` ⭐
-
-**Objectif:** Parser les logs de collecte de TypeIDs
-
-**Usage:**
-
-```bash
-python work/scripts/parse-living-logs.py logs-session-2025-11-05.txt
-```
-
-**Sortie:**
-
-- Résumé des TypeIDs collectés
-- Statistiques de validation HP
-- Analyse de couverture (enchantements manquants)
-- Entrées `MobsInfo.js` prêtes à copier
+The `work/` folder contains **development-time tools and data** used to analyze Albion Online dumps, collect TypeIDs, and generate reference files for OpenRadar.
 
 ---
 
-#### 2. `analyze-typeids.py`
+## 📁 Structure of `work/`
 
-**Objectif:** Analyser les TypeIDs manquants dans `MobsInfo.js`
-
-**Usage:**
-
-```bash
-python work/scripts/analyze-typeids.py
-```
-
-**Sortie:**
-
-- Liste des TypeIDs non mappés
-- Analyse des collisions potentielles
-- Recommandations
-
----
-
-#### 3. `extract-metadata.py`
-
-**Objectif:** Extraire les métadonnées des mobs depuis les dumps officiels
-
-**Usage:**
-
-```bash
-python work/scripts/extract-metadata.py
-```
-
-**Génère:** `work/data/living-resources.json` (225 créatures)
-
----
-
-## 📁 Structure du Dossier work/
-
-```
+```text
 work/
 ├── README.md                          ✅ Documentation
-├── .gitignore                         ✅ Tout ignoré sauf README
-├── data/                              ← Données sources et générées
-│   ├── ao-bin-dumps-master/          ⭐ Dumps officiels Albion
-│   ├── living-resources.json         ← 225 métadonnées créatures
-│   └── all-typeids.json              ← Base complète TypeIDs
-└── scripts/                           ← Scripts Python utilitaires
-    ├── parse-living-logs.py          ⭐ Parser logs
-    ├── analyze-typeids.py            ← Analyser TypeIDs
-    └── extract-metadata.py           ← Extraire métadonnées
+├── .gitignore                         ✅ Ignore everything except README
+├── data/                              ← Source and generated data
+│   ├── ao-bin-dumps-master/           ★ Official Albion dumps
+│   ├── living-resources.json          ← 225 creature metadata records
+│   └── all-typeids.json               ← Complete TypeID database
+└── scripts/                           ← Utility Python scripts
+    ├── parse-living-logs.py           ★ Parse logs
+    ├── analyze-typeids.py             ← Analyze TypeIDs
+    └── extract-metadata.py            ← Extract metadata
 ```
 
 ---
 
-## 🗂️ Données (work/data/)
+## 📊 Data Files (work/data/)
 
-### ao-bin-dumps-master/ ⭐
+### 1. `ao-bin-dumps-master/` ★
 
-Dumps officiels d'Albion Online
+Official Albion Online dumps.
 
 - **Source:** https://github.com/ao-data/ao-bin-dumps
-- **Contenu:** `mobs.json`, `items.txt`, etc.
-- **Utilité:** Référence pour TypeIDs et métadonnées
+- **Contents:** `mobs.json`, `items.txt`, etc.
+- **Use:** Reference for TypeIDs and metadata.
 
-### living-resources.json
+### 2. `living-resources.json`
 
-225 métadonnées de créatures (HP, prefabs, factions)
+225 living resource metadata entries (animals, guardians, etc.).
 
-### all-typeids.json
+- HP per creature.
+- Prefab (internal name).
+- Faction.
+- Tier.
+- (Optional) inferred enchantment hints.
 
-Base de données complète TypeID → Item/Resource
+### 3. `all-typeids.json`
+
+Complete mapping TypeID → Item/Resource static information.
+
+- Used during earlier investigations for coverage and collisions.
 
 ---
 
-## 🎯 Workflows Courants
+## 🧪 Python Utility Scripts (work/scripts/)
 
-### Workflow 1: Collecter de nouveaux TypeIDs
+### 1. `parse-living-logs.py` ★
 
-1. **Activer le logging dans le jeu**
-    - Settings → Debug → "Log Living Creatures"
+**Goal:** Parse enriched logging output to collect living resource TypeIDs.
 
-2. **Farmer des ressources vivantes**
-    - Tuer des créatures de différents tiers
-    - Les logs s'enregistrent automatiquement
+**Usage:**
 
-3. **Parser les logs**
+```bash
+cd work/scripts
+python parse-living-logs.py ../logs-session-2025-11-05.txt
+```
+
+**Output:**
+
+- Summary of collected TypeIDs.
+- HP validation statistics.
+- Coverage analysis (missing enchantments).
+- `MobsInfo.js` entries ready to copy.
+
+---
+
+### 2. `analyze-typeids.py`
+
+**Goal:** Analyze missing TypeIDs in `MobsInfo.js`.
+
+**Usage:**
+
+```bash
+cd work/scripts
+python analyze-typeids.py
+```
+
+**Output:**
+
+- List of unmapped TypeIDs.
+- Analysis of potential collisions.
+- Suggestions for improvements.
+
+---
+
+### 3. `extract-metadata.py`
+
+**Goal:** Extract mob metadata from official dumps.
+
+**Usage:**
+
+```bash
+cd work/scripts
+python extract-metadata.py
+```
+
+**Generates:**
+
+- `work/data/living-resources.json` (225 creatures).
+
+---
+
+## 🔄 Typical Workflows
+
+### Workflow 1: Collect New TypeIDs (Legacy)
+
+> Note: With the rarity-based enchantment formula, collecting enchanted TypeIDs is mostly obsolete, but the workflow is kept here for historical reference.
+
+1. **Enable logging in-game**
+   - Settings → Debug → "Log Living Creatures".
+
+2. **Farm living resources**
+   - Kill creatures of various tiers.
+   - Logs are recorded in the browser console.
+
+3. **Parse logs**
+
    ```bash
-   python work/scripts/parse-living-logs.py logs-session-2025-11-05.txt
+   cd work/scripts
+   python parse-living-logs.py ../logs-session-YYYY-MM-DD.txt
    ```
 
-4. **Copier les entrées dans `MobsInfo.js`**
+4. **Update `MobsInfo.js`**
+   - Copy the generated entries.
 
----
-
-### Workflow 2: Mettre à jour les bases de données
-
-```bash
-# Extraire les métadonnées des mobs
-python work/scripts/extract-metadata.py
-
-# Les données sont dans work/data/
-```
-
----
-
-## 📖 Guides Détaillés
-
-### Pour Collecter des TypeIDs
-
-👉 **[COLLECTION_GUIDE.md](./COLLECTION_GUIDE.md)**
-
-- Guide complet de collecte
-- Méthode de validation
-- Templates et exemples
-
-### Pour Démarrer Rapidement
-
-👉 **[QUICK_START.md](./QUICK_START.md)**
-
-- Setup rapide
-- Premiers pas
-- Commandes essentielles
-
----
-
-## 🔄 Migration tools/ → work/ (2025-11-05)
-
-**Changements:**
-
-- ✅ Dossier `tools/` supprimé
-- ✅ Dossier `work/` créé avec seulement l'essentiel
-- ✅ 3 scripts Python principaux conservés (au lieu de 8)
-- ✅ Données essentielles dans `work/data/`
-- ✅ Documentation mise à jour
-
-**Fichiers conservés:**
-
-- `work/scripts/parse-living-logs.py` ⭐
-- `work/scripts/analyze-typeids.py`
-- `work/scripts/extract-metadata.py`
-- `work/data/ao-bin-dumps-master/` ⭐
-- `work/data/living-resources.json`
-- `work/data/all-typeids.json`
-
-**Philosophie:**
-Le dossier `work/` contient **uniquement l'essentiel** pour le développement, contrairement à l'ancien `tools/` qui
-accumulait beaucoup de scripts redondants.
-
----
-
-## ⚠️ Notes Importantes
-
-### Dossier work/ Git-Ignoré
-
-- Le dossier `work/` est git-ignoré (sauf README.md et .gitignore)
-- **Raison:** Contient des scripts utilitaires et données volumineuses
-- **Documentation:** Dans `docs/work/` pour référence
-
-### Régénération des Données
-
-Tous les fichiers dans `work/data/` peuvent être régénérés :
+### Workflow 2: Update Metadata from Dumps
 
 ```bash
-python work/scripts/extract-metadata.py
+cd work/scripts
+python extract-metadata.py ../data/ao-bin-dumps-master/mobs.json
 ```
 
-### Sources Officielles
+- Reads `ao-bin-dumps-master/`.
+- Regenerates `living-resources.json`.
 
-`work/data/ao-bin-dumps-master/` contient les dumps officiels d'Albion Online:
+### Workflow 3: Analyze TypeID Coverage
 
-- **Source:** https://github.com/ao-data/ao-bin-dumps
-- **Mise à jour:** Manuellement quand une nouvelle version du jeu sort
+```bash
+cd work/scripts
+python analyze-typeids.py
+```
 
----
-
-## 🔗 Liens Utiles
-
-- **Documentation principale:** `docs/README.md`
-- **Système de logging:** `docs/technical/LOGGING.md`
-- **Enchantements:** `docs/technical/ENCHANTMENTS.md`
-- **TODOs:** `docs/project/TODO.md`
+- Shows which TypeIDs are still not mapped in `MobsInfo.js`.
+- Helps target in-game collection (if still needed).
 
 ---
 
-*Scripts Python utilitaires pour le développement de ZQRadar*
+## ⚠️ Important Notes
 
+### `work/` is Git-Ignored
+
+- `work/` is ignored by Git (except `README.md` and `.gitignore`).
+- **Reason:** Contains temporary data and heavy files.
+- All permanent documentation lives under `docs/`.
+
+### Data is Regenerable
+
+All files under `work/data/` can be regenerated from:
+
+- Official dumps (`ao-bin-dumps-master/`).
+- Python scripts in `work/scripts/`.
+
+Example:
+
+```bash
+cd work/scripts
+python extract-metadata.py ../data/ao-bin-dumps-master/mobs.json
+```
+
+### Official Sources
+
+`work/data/ao-bin-dumps-master/` should be updated manually when a new game version is released.
+
+---
+
+## 🔗 Useful Links
+
+- Main docs: `docs/README.md`
+- Logging system: `docs/technical/LOGGING.md`
+- Enchantments details: `docs/technical/ENCHANTMENTS.md`
+- TypeID collection guide: `docs/work/COLLECTION_GUIDE.md`
+
+---
+
+_This overview explains the purpose and structure of the `work/` folder used during OpenRadar development._

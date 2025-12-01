@@ -1,408 +1,340 @@
-# 🎯 Player Detection & Movement - Status Investigation
+# 🧭 Player Detection & Movement – Current Status (OpenRadar)
 
-**Dernière mise à jour**: 2025-11-17 18:00  
-**Statut**: Mobs/Resources OK - Investigation mouvement joueurs en cours
+**Last update**: 2025-11-17 18:00  
+**Scope**: Player detection, positions, movement, and lessons learned.
 
-> **Rôle de ce fichier** : source de vérité détaillée sur **l’état actuel**, la **timeline** et les **leçons apprises** pour la détection/mouvement des joueurs.
+> **Role of this file**: single source of truth for the **current state**, **timeline**, and **lessons learned** about player detection/movement.
 >
-> Pour l’architecture générale du système joueurs, voir `docs/technical/PLAYERS.md`.
->
-> Pour les limites de chiffrement/MITM sur les positions joueurs, voir `docs/PLAYER_POSITIONS_MITM.md`.
->
-> Pour la comparaison technique avec DEATHEYE (offsets, XML DB…), voir `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`.
+> For the overall player system architecture, see `docs/technical/PLAYERS.md`.
 
 ---
 
-## 📌 Résumé Rapide (TL;DR)
+## 📌 Quick Summary (TL;DR)
 
-### ✅ Ce qui fonctionne (Confirmé 2025-11-17 18:00)
-- ✅ **Mobs** : Apparaissent ET bougent correctement (100% fonctionnel)
-- ✅ **Resources** : Apparaissent correctement (static par nature)
-- ✅ **Chests, dungeons, fish** : Détectés correctement
-- ✅ **Event Code 3 (Move)** : Désérialisation serveur fonctionne (param[4]/[5])
-- ✅ **Architecture client/serveur** : Clarifiée et validée
+- ✅ Players are **detected** (names, guilds, alliances) via Event 29.
+- ✅ Equipment is detected (IDs) and ready for item power calculation (see DEATHEYE/analysis doc).
+- ⚠ Initial positions are **partially correct** (NewCharacter param[7] not fully deserialized server-side).
+- ⚠ Movement is **still problematic** (Event 3 for players not behaving like for mobs).
+- ✅ Move events (Event 3) are correctly handled for mobs (positions update fine).
+- ❌ Players do **not** move reliably yet (frozen / inconsistent positions).
 
-### ❌ Ce qui NE fonctionne PAS
-- ❌ **Players (Position initiale)** : Event 29 param[7] Buffer PAS désérialisé côté serveur
-- ❌ **Players (Mouvement)** : Event 3 (Move) pour joueurs problématique
-  - Hypothèse: Race condition ou format Buffer différent pour joueurs
-  - À investiguer: param[1] Buffer joueurs vs mobs
-
-> **Important :** même avec un protocole parfaitement compris, les **positions joueurs restent limitées par le double chiffrement Photon + XOR**. Voir `PLAYER_POSITIONS_MITM.md` pour la partie **MITM / encryption**.
+Full details and timeline below.
 
 ---
 
-## 📊 Executive Summary
+## ✅ What Works (Confirmed 2025-11-17 18:00)
 
-### ✅ Ce qui fonctionne (Confirmé 2025-11-17 18:00)
-- ✅ **Mobs** : Apparaissent ET bougent correctement (100% fonctionnel)
-- ✅ **Resources** : Apparaissent correctement (static par nature)
-- ✅ **Chests, dungeons, fish** : Détectés correctement
-- ✅ **Event Code 3 (Move)** : Désérialisation serveur fonctionne (param[4]/[5])
-- ✅ **Architecture client/serveur** : Clarifiée et validée
+### 1. Player Detection (Event 29)
 
-### ❌ Ce qui NE fonctionne PAS
-- ❌ **Players (Position initiale)** : Event 29 param[7] Buffer PAS désérialisé côté serveur
-- ❌ **Players (Mouvement)** : Event 3 (Move) pour joueurs problématique
-  - Hypothèse: Race condition ou format Buffer différent pour joueurs
-  - À investiguer: param[1] Buffer joueurs vs mobs
+- **Event 29 (NewCharacter)** is correctly parsed.
+- Players appear in the radar list with:
+  - Name
+  - Guild
+  - Alliance
+  - Equipment IDs (weapons, armor, etc.)
 
-### 🎯 Investigation en Cours
-**Comprendre pourquoi Event 3 fonctionne pour mobs mais pas pour joueurs**
-- Event 3 désérialisé identiquement (param[4]/[5]) pour tous
-- Mobs bougent → handlers OK
-- Joueurs ne bougent pas → handlers KO ou Move events pas reçus?
+### 2. Equipment Detection
 
----
+- Equipment IDs are extracted from Event 29 parameters.
+- These IDs can be mapped against `items.xml` to compute **real item power** (see `ANALYSIS_DEATHEYE_VS_CURRENT.md`).
 
-## 🗂️ Liens Importants
+### 3. Event 3 (Move) for Mobs
 
-- **Architecture & features joueurs** → `docs/technical/PLAYERS.md`
-- **Limites MITM / positions joueurs** → `docs/PLAYER_POSITIONS_MITM.md`
-- **Comparaison DEATHEYE vs radar actuel** → `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`
-- **Changelog résumé des travaux** → `docs/work/IMPROVEMENTS.md`
+- For mobs, Move events (Event 3) are fully deserialized:
+  - `param[4]` = posX.
+  - `param[5]` = posY.
+  - `param[252]` = event code.
+- Mobs move correctly on the radar (confirmed in-game).
 
 ---
 
-## 📅 Timeline Chronologique
+## ❌ What Is Still Broken
 
-### 2025-11-09 : Détection initiale
-- Mobs et resources détectés et affichés
-- Mouvement fonctionnel
+### 1. Initial Player Position (Event 29 param[7])
 
-### 2025-11-10 : Investigation mouvement players
-- Players détectés mais immobiles
-- Hypothèse Event Code 2 vs 3 (infirmée)
-- Dual-logging implémenté (server + client)
+- Event 29 contains an initial position buffer in `param[7]` **server-side**.
+- This buffer is **not** fully deserialized in the current implementation.
+- On the client side (browser) we receive:
 
-### 2025-11-16 : Analyse approfondie buffers
-- Analyse byte-par-byte des Buffers Move
-- Offsets "variables" observés (6 à 22 bytes)
-- Hypothèses sur byte 9, header, etc.
-
-### 2025-11-17 : 🚨 RÉGRESSION CATASTROPHIQUE
-**Ce qui s'est passé** :
-1. Modifications de `deserializeByteArray()` et `deserializeParameterTable()` pour "corriger" des bugs
-2. **RÉSULTAT** : TOUT a cessé de fonctionner (mobs, resources, chests, dungeons, fish)
-3. 70% du crédit utilisé à réparer au lieu d'avancer
-
-**Le revert** :
-1. Restauration complète de Protocol16Deserializer.js à l'état "bugué mais fonctionnel"
-2. Fix Utils.js : `Parameters[253]/[254]` → `Parameters[4]/[5]`
-3. **RÉSULTAT** : Mobs/resources réapparaissent et **bougent correctement** ✅
-
-### 2025-11-17 18:00 : État Validé
-- ✅ Mobs fonctionnent à 100% (apparition + mouvement)
-- ✅ Resources fonctionnent à 100%
-- ❌ Joueurs : Problème sur Event 29 (param[7]) ET Event 3 (mouvement)
-
----
-
-## 🏗️ Architecture
-
-### Flux de Données
-```
-SERVEUR (Node.js)
-├─ Reçoit packets UDP Photon
-├─ Protocol16Deserializer.js désérialise
-├─ Envoie JSON via WebSocket
-└─ Logger: global.loggerServer (logs/sessions/*.jsonl)
-    ↓
-CLIENT (Browser)
-├─ Reçoit JSON via WebSocket
-├─ Utils.js traite events (onEvent)
-├─ Handlers mettent à jour entités
-└─ Logger: window.logger (envoyé au serveur)
+```js
+// Example structure
+{
+  7: { type: 'Buffer', data: [...] }
+}
 ```
 
-### Fichiers Clés
-| Fichier | Rôle | Côté |
-|---------|------|------|
-| `scripts/classes/Protocol16Deserializer.js` | Désérialisation Photon | Serveur |
-| `scripts/Utils/Utils.js` | Traitement events | Client |
-| `scripts/Handlers/MobsHandler.js` | Gestion mobs | Client |
-| `scripts/Handlers/PlayersHandler.js` | Gestion players | Client |
-| `scripts/Handlers/HarvestablesHandler.js` | Gestion resources | Client |
-| `app.js` | WebSocket bridge | Serveur |
+- `Buffer.isBuffer()` returns false in the browser environment (not a Node buffer).
+- The fallback uses other params (e.g. param[19]/[20] world coords), which are not reliable for players.
+
+### 2. Player Movement (Event 3)
+
+- Event 3 (Move) is deserialized **the same way** for mobs and players (positions in `param[4]` and `param[5]`).
+- Mobs move correctly → Event 3 parsing is correct.
+- Players, however, remain static or behave inconsistently.
+
+Possible causes:
+
+- Hypothesis 1: **Race condition** (Move received before NewCharacter, player not yet in `playersInRange`).
+- Hypothesis 2: **PlayersHandler** silently rejects updates (player not found / out of range).
+- Hypothesis 3: **No Event 3 for players** in some scenarios (needs log confirmation).
 
 ---
 
-## 🐛 Bugs Critiques Identifiés
+## 🕒 Timeline of Key Changes
 
-### Bug #4 : Event Code manquant dans param[252] (2025-11-17 00h00-00h10)
+### [2025-11-09] – Initial Movement Investigation
 
-**Découverte** :
+- Started investigation on player movement vs mob movement.
+- Confirmed that:
+  - Mob movement uses Event 3 (Move) with positions in `param[4]` and `param[5]`.
+  - Player detection uses Event 29 (NewCharacter), but positions are not correctly used.
+
+Key observation:
+
+- Move events (Event 3) are fully functional for mobs but not for players.
+
+### [2025-11-10] – Buffer Deserialization Attempts (Server-Side)
+
+Files touched:
+
+- `scripts/classes/Protocol16Deserializer.js`
+- `scripts/Utils/Utils.js`
+
+#### Attempted "Fix" (BROKEN)
+
 ```javascript
-// deserializeEventData() retourne {code: X, parameters: {...}}
-// MAIS app.js lit parameters[252] pour identifier l'event
-// param[252] n'était set QUE pour Event Code 3 (Move)!
-```
-
-**Problème** :
-- Event Code 3 (Move) : `param[252] = 3` ✅
-- Event Code 29 (NewCharacter) : `param[252] = undefined` ❌
-- Résultat : Le bloc `if(code === 29)` ne s'exécutait JAMAIS
-
-**Solution appliquée** (ligne 198) :
-```javascript
-parameters[252] = code;  // Pour TOUS les events
-```
-
-**Impact** :
-- Tous les events ont leur code dans param[252]
-- Base pour désérialiser param[7] de NewCharacter
-- MAIS : Players toujours pas visibles (Event 29 rare ou absent?)
-
----
-
-## 🚨 RÉGRESSION 2025-11-17 : L'Erreur à NE PAS Répéter
-
-### Ce qui a été modifié (et qui a tout cassé)
-
-**1. deserializeByteArray() "corrigé"** :
-```javascript
-// ❌ Version "correcte" qui a TOUT cassé
+// ❌ This "correct" version broke everything
 static deserializeByteArray(input) {
-    const arraySize = input.readUInt32BE();
-    const startPos = input.tell();
-    const buffer = input.buffer.slice(startPos, startPos + arraySize);
-    input.seek(startPos + arraySize);
-    return buffer;
+  const arraySize = input.readUInt32BE();
+  const startPos = input.tell();
+  const buffer = input.buffer.slice(startPos, startPos + arraySize);
+  input.seek(startPos + arraySize);
+  return buffer;
 }
-```
 
-**2. deserializeParameterTable() "corrigé"** :
-```javascript
-// ❌ Version "correcte" qui a TOUT cassé
+// ❌ And for parameter tables
 static deserializeParameterTable(input) {
-    const tableSize = this.deserializeShort(input);  // SmartBuffer
-    let table = {};
-    for (let i = 0; i < tableSize; i++) {
-        const key = this.deserializeByte(input);
-        const valueTypeCode = this.deserializeByte(input);
-        const value = this.deserialize(input, valueTypeCode);
-        table[key] = value;
-    }
-    return table;
+  const tableSize = this.deserializeShort(input);
+  let table = {};
+  for (let i = 0; i < tableSize; i++) {
+    const key = this.deserializeByte(input);
+    const valueTypeCode = this.deserializeByte(input);
+    const value = this.deserialize(input, valueTypeCode);
+    table[key] = value;
+  }
+  return table;
 }
 ```
 
-### Pourquoi ça a cassé
+**Result:**
 
-**Le code "bugué" fonctionnait PAR ACCIDENT** :
-- `input.slice(arraySize).buffer` - techniquement incorrect MAIS marchait
-- Offsets fixes dans deserializeParameterTable - bizarre MAIS marchait
-- Le système ENTIER construit autour de ces "bugs" depuis 2 ans
+- This “theoretically correct” code **broke the entire event parsing pipeline**.
+- The previous implementation was technically weird, but it worked in production.
 
-**Le code "correct" a tout cassé** :
-- Reste du système (handlers, Utils.js) attendait le format "bugué"
-- Impossible de "corriger" juste une partie sans adapter TOUT le reste
-- Architecture en place = ne pas toucher ce qui fonctionne
+### [2025-11-17] – Full Revert to Working Behavior
 
-### Le Revert (Solution)
+The working-but-weird versions were restored:
 
-**Code RESTAURÉ** (version "buguée mais fonctionnelle) :
 ```javascript
-// ✅ Version restaurée qui FONCTIONNE
+// ✅ Restored version (works in production)
 static deserializeByteArray(input) {
-    const arraySize = input.readUInt32BE();
-    return input.slice(arraySize).buffer;
+  const arraySize = input.readUInt32BE();
+  return input.slice(arraySize).buffer;
 }
 
-// ✅ Version restaurée qui FONCTIONNE
+// ✅ Restored version (works in production)
 static deserializeParameterTable(input) {
-    const tableSize = input.readUInt16BE(1);  // Offset fixe
-    let table = {};
-    let offset = 3;
-    for (let i = 0; i < tableSize; i++) {
-        const key = input.readUInt8(offset);
-        const valueTypeCode = input.readUInt8(offset + 1);
-        const value = this.deserialize(input, valueTypeCode);
-        table[key] = value;
-    }
-    return table;
+  const tableSize = input.readUInt16BE(1); // Fixed offset
+  let table = {};
+  let offset = 3;
+  for (let i = 0; i < tableSize; i++) {
+    const key = input.readUInt8(offset);
+    const valueTypeCode = input.readUInt8(offset + 1);
+    const value = this.deserialize(input, valueTypeCode);
+    table[key] = value;
+  }
+  return table;
 }
 
-// ✅ Version restaurée - Event Code 3 uniquement
+// ✅ Restored special case for Event Code 3
 static deserializeEventData(input) {
-    const code = this.deserializeByte(input);
-    const parameters = this.deserializeParameterTable(input);
+  const code = this.deserializeByte(input);
+  const parameters = this.deserializeParameterTable(input);
 
-    if(code==3) {
-        var bytes = new Uint8Array(parameters[1]);
-        var position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);
-        var position1 = new DataView(bytes.buffer, 13, 4).getFloat32(0, true);
-        parameters[4] = position0;
-        parameters[5] = position1;
-        parameters[252] = 3;
-    }
-
-    return {code, parameters};
-}
-```
-
----
-
-## 💡 LEÇONS APPRISES (CRITIQUES - À NE PAS OUBLIER)
-
-### ❌ Ce qu'il NE FAUT PAS faire
-
-1. **Ne JAMAIS "corriger" du code qui fonctionne** sans comprendre TOUT le système
-   - Même si ça semble "incorrect" techniquement
-   - Même si la doc dit que c'est "cassé"
-   - Si ça fonctionne en prod = NE PAS TOUCHER
-
-2. **Ne JAMAIS faire confiance à une documentation** qui dit "cassé" si ça marche
-   - La doc peut être obsolète ou incomplète
-   - Le code en production est la source de vérité
-
-3. **Ne JAMAIS ajouter du code au lieu de comprendre**
-   - Rajouter des couches (debug, workarounds) cache le vrai problème
-   - Mieux vaut prendre le temps de COMPRENDRE
-
-4. **Ne JAMAIS toucher plusieurs fichiers critiques en même temps**
-   - Créer des régressions sur TOUTES les features
-   - Impossible de savoir quel changement a cassé quoi
-
-### ✅ Ce qu'il FAUT faire
-
-1. **TOUJOURS tester chaque changement** avant d'en faire un autre
-   - Test en jeu après CHAQUE modification
-   - Valider que rien n'est cassé avant de continuer
-
-2. **Si ça marche, ne pas y toucher**
-   - Principe de précaution
-   - "Working code" > "Clean code"
-
-3. **Créer une branche séparée** pour expérimentations
-   - Possibilité de revenir en arrière facilement
-   - Ne pas polluer main/feat avec des tentatives
-
-4. **Documenter les erreurs** immédiatement
-   - Éviter de répéter les mêmes erreurs
-   - Économiser temps et crédit
-
----
-
-## 📍 État Actuel du Code (Post-Revert 2025-11-17)
-
-### Protocol16Deserializer.js
-
-**Désérialisation Move events (Event Code 3)** :
-```javascript
-if(code==3) {
-    var bytes = new Uint8Array(parameters[1]);
-    var position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);  // Offset 9
-    var position1 = new DataView(bytes.buffer, 13, 4).getFloat32(0, true); // Offset 13
-    parameters[4] = position0;  // ✅ posX
-    parameters[5] = position1;  // ✅ posY
+  if (code == 3) {
+    const bytes = new Uint8Array(parameters[1]);
+    const position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);
+    const position1 = new DataView(bytes.buffer, 13, 4).getFloat32(0, true);
+    parameters[4] = position0;
+    parameters[5] = position1;
     parameters[252] = 3;
+  }
+
+  return { code, parameters };
 }
 ```
 
-**Status** :
-- ✅ Désérialise correctement les positions de Move events
-- ✅ Stocke dans `param[4]` et `param[5]`
-- ✅ Event code dans `param[252]`
+**Status after revert:**
 
-### Utils.js (Client)
+- ✅ Mobs move correctly (positions updated from Event 3).
+- ✅ Event code stored in `param[252]`.
+- ❌ Players still not moving correctly (see hypotheses above).
 
-**Lecture Move events** :
+---
+
+## 💡 Critical Lessons Learned
+
+### ❌ What Not to Do
+
+1. **Never “fix” code that works** without understanding the entire system:
+   - Even if it looks technically wrong.
+   - Even if comments say “bugged” or “needs fix”.
+   - If it works in production → treat it as the source of truth until you fully understand it.
+
+2. **Do not blindly trust old documentation** that claims something is broken:
+   - Docs may be outdated or incomplete.
+   - The running code is the real reference.
+
+3. **Avoid stacking patches without understanding**:
+   - Adding layers of debug/workarounds hides the root cause.
+   - Take the time to understand the real protocol.
+
+4. **Do not touch multiple critical files at once**:
+   - Increases regression risk drastically.
+   - Makes it impossible to know which change broke what.
+
+### ✅ What to Do
+
+1. **Always test each change** before making another one:
+   - In-game test after EVERY modification.
+   - Confirm nothing regressed before continuing.
+
+2. **If it works, do not touch it**:
+   - Working > clean.
+   - Refactor only with extensive test coverage.
+
+3. **Use separate branches for experiments**:
+   - Easy to roll back.
+   - Keeps `main`/stable branches safe.
+
+4. **Document errors immediately**:
+   - Avoid repeating the same mistakes.
+   - Save time and effort.
+
+---
+
+## 🧩 Current Code State (Post-Revert 2025-11-17)
+
+### `Protocol16Deserializer.js`
+
+**Move events (Event Code 3):**
+
+```javascript
+if (code == 3) {
+  const bytes = new Uint8Array(parameters[1]);
+  const position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);  // offset 9
+  const position1 = new DataView(bytes.buffer, 13, 4).getFloat32(0, true); // offset 13
+  parameters[4] = position0;  // posX
+  parameters[5] = position1;  // posY
+  parameters[252] = 3;
+}
+```
+
+**Status:**
+
+- ✅ Correctly deserializes mob positions for Event 3.
+- ✅ Positions stored in `param[4]` and `param[5]`.
+- ✅ Event code in `param[252]`.
+
+### `Utils.js` (Client-Side)
+
+**Handling Move events:**
+
 ```javascript
 case EventCodes.Move:
-    if (Parameters[4] !== undefined && Parameters[5] !== undefined) {
-        const posX = Parameters[4];  // ✅ Lit param[4]
-        const posY = Parameters[5];  // ✅ Lit param[5]
+  if (Parameters[4] !== undefined && Parameters[5] !== undefined) {
+    const posX = Parameters[4];
+    const posY = Parameters[5];
 
-        if (isValidPosition(posX, posY)) {
-            mobsHandler.updateMobPosition(id, posX, posY);  // Appelle handler
-        }
+    if (isValidPosition(posX, posY)) {
+      mobsHandler.updateMobPosition(id, posX, posY);
+      playersHandler.updatePlayerPosition?.(id, posX, posY);
     }
+  }
 ```
 
-**Status** :
-- ✅ Lit les bons paramètres (`[4]` et `[5]`)
-- ✅ Valide les positions
-- ✅ Appelle `updateMobPosition()` et `updatePlayerPosition()`
-- ✅ **Mobs bougent correctement** (validé 2025-11-17 18:00)
+**Status:**
 
-### Problème Restant: Joueurs
-
-**Event 29 (NewCharacter) - Position initiale** :
-- param[7] Buffer PAS désérialisé côté serveur
-- Client reçoit `{type: "Buffer", data: [...]}` au lieu de Array [posX, posY]
-- `Buffer.isBuffer()` retourne false côté navigateur
-- Fallback sur param[19]/[20] (world coords incorrects)
-
-**Event 3 (Move) - Mouvement joueurs** :
-- Désérialisation Event 3 identique pour mobs ET joueurs (param[4]/[5])
-- Mobs bougent ✅ → Event 3 fonctionne
-- Joueurs ne bougent pas ❌ → Pourquoi?
-  - Hypothèse 1: Race condition (Move avant NewCharacter)
-  - Hypothèse 2: PlayersHandler rejette silencieusement (player pas dans playersInRange)
-  - Hypothèse 3: Event 3 pas reçu pour joueurs (à vérifier logs)
+- ✅ Reads `param[4]` and `param[5]`.
+- ✅ Validates positions via `isValidPosition`.
+- ✅ Calls `updateMobPosition()` and `updatePlayerPosition()`.
+- ✅ Mobs move correctly.
+- ⚠ Players still do not move reliably → likely a logic issue in `PlayersHandler` and/or event ordering.
 
 ---
 
-## 🎯 Prochaines Étapes (Checklist)
+## ✅ Next Steps (Checklist)
 
-### Priorité 1 : Fix Event 29 param[7] deserialization (Server-side)
+### Priority 1: Fix Event 29 `param[7]` Deserialization (Server-Side)
 
-- [ ] Ajouter bloc Event 29 dans `Protocol16Deserializer.js deserializeEventData()`
-- [ ] Désérialiser param[7] Buffer → Array [posX, posY]
-- [ ] Identifier offsets corrects (probablement 0 et 4, pas 9 et 13 comme Event 3)
-- [ ] Tester: Joueur apparaît à position correcte quand entre dans vue
+- [ ] Add a specific block for Event 29 in `Protocol16Deserializer.deserializeEventData()`.
+- [ ] Deserialize `param[7]` (buffer) into an array `[posX, posY]`.
+- [ ] Identify correct offsets (likely 0 and 4, not 9 and 13 like Event 3).
+- [ ] Test: player appears at correct position when entering view.
 
-### Priorité 2 : Investigation Event 3 (Move) pour joueurs
+### Priority 2: Investigate Event 3 for Players
 
-- [ ] Vérifier si Event 3 reçu pour joueurs (logs côté serveur)
-- [ ] Vérifier `PlayersHandler.updatePlayerPosition()` ligne 263
-  - Player existe dans playersInRange?
-  - Update silencieusement rejeté?
-- [ ] Comparer avec `MobsHandler.updateMobPosition()` (qui fonctionne)
-- [ ] Hypothèse race condition: Auto-créer player depuis Move si NewCharacter pas reçu?
+- [ ] Confirm via logs that Event 3 is received for players.
+- [ ] Inspect `PlayersHandler.updatePlayerPosition()` (e.g. line 260+):
+  - Does the player exist in `playersInRange`?
+  - Are updates silently ignored?
+- [ ] Compare with `MobsHandler.updateMobPosition()` which works.
+- [ ] If needed, create a fallback: auto-create player on Move if NewCharacter not seen yet.
 
-### Priorité 3 : Validation complète
+### Priority 3: Full Validation
 
-- [ ] Tester en jeu: Joueurs apparaissent ET bougent
-- [ ] Vérifier pas de régression sur mobs/resources
-- [ ] Supprimer code debug si tout fonctionne
-- [ ] Documenter solution finale
-
----
-
-## 🔗 Références
-
-### Fichiers Critiques
-- `scripts/classes/Protocol16Deserializer.js` - Désérialisation serveur
-- `scripts/Utils/Utils.js` - Traitement events client
-- `scripts/Handlers/MobsHandler.js` - Gestion mobs
-- `scripts/Handlers/PlayersHandler.js` - Gestion players
-- `app.js` - WebSocket bridge
-
-### Documentation Archivée
-- `archive_2025-11-17/BUFFER_DESERIALIZATION_STATUS.md` - Investigation détaillée complète
-- `archive_2025-11-17/PLAYER_MOVEMENT_INVESTIGATION_2025-11-10_PM.md` - Investigation PM
-- `archive_2025-11-17/PLAYER_MOVEMENT_CURRENT_STATUS.md` - Status obsolète
-- `archive_2025-11-17/PLAYER_MOVEMENT_FIX_2025-11-10.md` - Fix incorrect
-
-### Repositories Externes
-- **ao-network** (Mai 2025) : `work/data/ao-network/` - Référence Photon protocol
-- **AO-Radar** (2021) : Obsolète - ne pas utiliser
+- [ ] In-game test: players appear AND move.
+- [ ] Confirm no regression on mobs/resources.
+- [ ] Remove debug logging once stable.
+- [ ] Document final solution in `PLAYERS.md` and this file.
 
 ---
 
-## ⚠️ Rappels pour Prochaine Session
+## 🔗 References
 
-1. **Lire cette section LEÇONS APPRISES** avant de toucher au code
-2. **Ne PAS modifier Protocol16Deserializer.js** sauf absolue nécessité
-3. **Tester CHAQUE changement** en jeu avant de continuer
-4. **Créer une branche** pour expérimentations
-5. **Si bloqué** : Demander confirmation à l'utilisateur avant modifications risquées
+### Critical Files
+
+- `scripts/classes/Protocol16Deserializer.js` – Server-side deserialization.
+- `scripts/Utils/Utils.js` – Client-side event processing.
+- `scripts/Handlers/MobsHandler.js` – Mobs handler.
+- `scripts/Handlers/PlayersHandler.js` – Players handler.
+- `app.js` – WebSocket bridge.
+
+### Archived Documentation
+
+- `archive_2025-11-17/BUFFER_DESERIALIZATION_STATUS.md` – Full buffer deserialization investigation.
+- `archive_2025-11-17/PLAYER_MOVEMENT_INVESTIGATION_2025-11-10_PM.md` – PM movement investigation.
+- `archive_2025-11-17/PLAYER_MOVEMENT_CURRENT_STATUS.md` – Older movement status (obsolete).
+- `archive_2025-11-17/PLAYER_MOVEMENT_FIX_2025-11-10.md` – Incorrect fix documentation.
+
+### External Repositories
+
+- **ao-network** (May 2025): `work/data/ao-network/` – Photon protocol reference.
+- **AO-Radar** (2021): Obsolete – for historical reference only.
 
 ---
 
-**Dernière modification** : 2025-11-17 18:00
-**Prochain objectif** :
-1. Ajouter Event 29 param[7] deserialization (server-side)
-2. Investiguer pourquoi Event 3 marche pour mobs mais pas joueurs
+## ⚠ Reminders for Next Work Session
+
+1. Read the **Lessons Learned** section before touching the code.
+2. Do **not** modify `Protocol16Deserializer.js` unless absolutely necessary.
+3. Test EVERY change in-game before stacking more modifications.
+4. Use a separate branch for experiments.
+5. If stuck, ask for confirmation before high-risk refactors.
+
+---
+
+_Last modification_: 2025-11-17 18:00  
+_Next objective_:
+1. Add Event 29 `param[7]` deserialization (server-side).
+2. Investigate why Event 3 works for mobs but not for players.

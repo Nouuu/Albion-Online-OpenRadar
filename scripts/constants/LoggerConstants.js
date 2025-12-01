@@ -1,5 +1,5 @@
 /**
- * Logger Constants - ZQRadar v2.2
+ * Logger Constants - OpenRadar v2.2
  * Centralized definitions for logging categories and their debug settings mapping
  */
 

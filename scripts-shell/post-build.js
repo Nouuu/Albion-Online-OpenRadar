@@ -23,26 +23,26 @@ if (!fs.existsSync(DIST_DIR)) {
 const executables = {
     win: {
         paths: [
-            path.join(DIST_DIR, 'ZQRadar.exe'),
-            path.join(DIST_DIR, 'albion-zqradar-win.exe')
+            path.join(DIST_DIR, 'OpenRadar.exe'),
+            path.join(DIST_DIR, 'albion-openradar-win.exe')
         ],
-        name: 'ZQRadar.exe',
+        name: 'OpenRadar.exe',
         platform: 'win64'
     },
     linux: {
         paths: [
-            path.join(DIST_DIR, 'ZQRadar-linux'),
-            path.join(DIST_DIR, 'albion-zqradar-linux')
+            path.join(DIST_DIR, 'OpenRadar-linux'),
+            path.join(DIST_DIR, 'albion-openradar-linux')
         ],
-        name: 'ZQRadar-linux',
+        name: 'OpenRadar-linux',
         platform: 'linux-x64'
     },
     macos: {
         paths: [
-            path.join(DIST_DIR, 'ZQRadar-macos'),
-            path.join(DIST_DIR, 'albion-zqradar-macos')
+            path.join(DIST_DIR, 'OpenRadar-macos'),
+            path.join(DIST_DIR, 'albion-openradar-macos')
         ],
-        name: 'ZQRadar-macos',
+        name: 'OpenRadar-macos',
         platform: 'macos-x64'
     }
 };
@@ -75,8 +75,8 @@ if (builtPlatforms.length === 0) {
 
 // Create README file for dist (platform-aware)
 const createReadme = (platform) => {
-    const exeName = platform === 'win64' ? 'ZQRadar.exe' :
-                    platform === 'linux-x64' ? 'ZQRadar-linux' : 'ZQRadar-macos';
+    const exeName = platform === 'win64' ? 'OpenRadar.exe' :
+                    platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
 
     const installInstructions = platform === 'win64' ?
 `1. **Install Npcap** (REQUIRED - version 1.84 or newer)
@@ -95,7 +95,7 @@ const createReadme = (platform) => {
 3. **Launch ${exeName}**
    ./${exeName}`;
 
-    return `# ZQRadar - Albion Online Radar
+    return `# OpenRadar - Albion Online Radar
 
 ## Installation
 
@@ -117,7 +117,7 @@ ${installInstructions}
 ## Support
 
 Discord: https://discord.gg/XAWjmzeaD3
-GitHub: https://github.com/Zeldruck/Albion-Online-ZQRadar
+GitHub: https://github.com/Zeldruck/Albion-Online-OpenRadar
 
 ## Note
 
@@ -222,7 +222,7 @@ function getVersion() {
 const createArchive = (platform, format) => {
     return new Promise((resolve, reject) => {
         const exe = executables[platform];
-        const archiveName = `ZQRadar-${version}-${exe.platform}.${format.ext}`;
+        const archiveName = `OpenRadar-${version}-${exe.platform}.${format.ext}`;
         const archivePath = path.join(DIST_DIR, archiveName);
         const output = fs.createWriteStream(archivePath);
 

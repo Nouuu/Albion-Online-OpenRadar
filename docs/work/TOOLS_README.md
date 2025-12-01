@@ -1,61 +1,38 @@
-# 🛠️ Tools - Albion Online ZQRadar
+# 🛠 Work Tools – Python Utilities for OpenRadar
 
-Outils d'analyse et de diagnostic pour le développement du radar.
-
-> 🚀 **Nouveau ?** Commencez par le [Quick Start Guide](QUICK_START.md) pour collecter des TypeIDs immédiatement !
-
----
-
-## 📂 Structure
-
-```
-tools/
-├── README.md                          ← Ce fichier
-├── COLLECTION_GUIDE.md                ← Guide de collecte TypeIDs
-├── parse-living-logs.py               ← Parser de logs JSON
-├── analyze-missing-typeids.py         ← Analyse des TypeIDs manquants
-├── extract-mob-metadata.py            ← Extraction métadonnées mobs
-├── list-living-resources.py           ← Liste ressources vivantes
-├── parse-all-resources.py             ← Parse toutes les ressources
-├── search-living-mobs.py              ← Recherche mobs vivants
-└── output/                            ← Données générées
-    ├── living-resources-enhanced.json ← 225 métadonnées créatures (HP, prefabs, factions)
-    ├── living-resources-reference.js  ← Module JS de référence
-    ├── harvestables-typeids.js        ← TypeIDs items statiques (backpacks, journals)
-    ├── all-resources-typeids.json     ← Base de données complète items (JSON)
-    ├── all-resources-typeids.csv      ← Base de données complète items (CSV)
-    └── ao-bin-dumps-master/           ← Dumps sources (mobs.json, items.txt)
-```
+> **Purpose:** Analysis and diagnostic tools for radar development.  
+> **Folder:** `work/` (git-ignored except README)
 
 ---
 
-## 🔧 Scripts Principaux
+## 📌 Available Scripts (work/scripts/)
 
-### 1. `parse-living-logs.py` ⭐ NOUVEAU
+### ⭐ 1. `parse-living-logs.py`
 
-**Objectif :** Parser les logs de collecte de TypeIDs
+**Goal:** Parse enriched logs for living resource TypeIDs.
 
-**Usage :**
+**Usage:**
 
 ```bash
-python parse-living-logs.py logs-session-2025-11-03.txt
+cd work/scripts
+python parse-living-logs.py ../logs-session-2025-11-05.txt
 ```
 
-**Sortie :**
+**Output:**
 
-- Résumé des TypeIDs collectés
-- Statistiques de validation HP
-- Analyse de couverture (enchantements manquants)
-- Entrées MobsInfo.js prêtes à copier
+- Summary of collected TypeIDs.
+- HP validation statistics.
+- Coverage analysis (missing enchantments).
+- `MobsInfo.js` entries ready to copy.
 
-**Exemple :**
+Example report:
 
-```
+```text
 📊 LIVING RESOURCES COLLECTION REPORT
-═════════════════════════════════════
+══════════════════════════════════════
 
 🔢 Total logs: 150
-🆔 Unique TypeIDs: 25
+Ⓜ Unique TypeIDs: 25
 
 TypeID 425 → hide T4.0 | Boar ✓ | 🟢 45 🔴 12
 TypeID 426 → hide T4.1 | Unknown | 🟢 12 🔴 3
@@ -67,74 +44,77 @@ TypeID 426 → hide T4.1 | Unknown | 🟢 12 🔴 3
 
 ---
 
-### 2. `analyze-missing-typeids.py`
+### 2. `analyze-typeids.py`
 
-**Objectif :** Analyser les TypeIDs manquants dans MobsInfo.js
+**Goal:** Analyze which TypeIDs are missing in `MobsInfo.js`.
 
-**Usage :**
+**Usage:**
 
 ```bash
-python analyze-missing-typeids.py
+cd work/scripts
+python analyze-typeids.py
 ```
 
-**Sortie :**
+**Output:**
 
-- Liste des TypeIDs non mappés
-- Analyse des collisions potentielles
-- Recommandations d'amélioration
+- List of unmapped TypeIDs.
+- Potential collision analysis.
+- Suggestions for improvements.
 
 ---
 
-### 3. `extract-mob-metadata.py`
+### 3. `extract-metadata.py`
 
-**Objectif :** Extraire métadonnées des mobs depuis ao-bin-dumps
+**Goal:** Extract mob metadata from `ao-bin-dumps`.
 
-**Usage :**
+**Usage:**
 
 ```bash
-python extract-mob-metadata.py path/to/ao-bin-dumps/mobs.json
+cd work/scripts
+python extract-metadata.py ../data/ao-bin-dumps-master/mobs.json
 ```
 
-**Sortie :**
+**Output:**
 
-- `living-resources-enhanced.json` : Métadonnées complètes
-- `living-resources-reference.js` : Module JS utilisable
+- `living-resources-enhanced.json` – Complete creature metadata.
+- `living-resources-reference.js` – Usable JS module.
 
-**Données extraites :**
+**Extracted data includes:**
 
-- HP par créature
-- Prefab (nom interne)
-- Faction
-- Tier
-- Enchantement
+- HP per creature.
+- Prefab (internal name).
+- Faction.
+- Tier.
+- Inferred enchantment hints.
 
 ---
 
 ### 4. `list-living-resources.py`
 
-**Objectif :** Lister toutes les ressources vivantes
+**Goal:** List all living resources.
 
-**Usage :**
+**Usage:**
 
 ```bash
+cd work/scripts
 python list-living-resources.py
 ```
 
-**Sortie :**
+**Output:**
 
-- Liste par type (Hide, Fiber, Wood...)
-- Liste par tier
-- Liste par faction
+- Lists by type (Hide, Fiber, Wood, etc.).
+- Lists by tier.
+- Lists by faction.
 
 ---
 
-## 📊 Données de Référence
+## 📚 Reference Data
 
 ### `output/living-resources-enhanced.json`
 
-**225 métadonnées de créatures** extraites d'ao-bin-dumps
+**225 creature metadata entries** extracted from ao-bin-dumps.
 
-**Format :**
+**Format:**
 
 ```json
 {
@@ -147,13 +127,13 @@ python list-living-resources.py
 }
 ```
 
-**Usage dans le code :**
+**Usage in code:**
 
 ```javascript
-// Chargé automatiquement par MobsHandler.js
+// Loaded automatically by MobsHandler.js
 const metadata = this.findCreatureMetadata(tier, resourceType, hp);
 if (metadata) {
-    console.log(`Animal: ${metadata.animal}, Expected HP: ${metadata.hp}`);
+  console.log(`Animal: ${metadata.animal}, Expected HP: ${metadata.hp}`);
 }
 ```
 
@@ -161,144 +141,138 @@ if (metadata) {
 
 ### `output/harvestables-typeids.js`
 
-**TypeIDs d'items statiques liés au gathering** (backpacks, journals, fragments)
+**Static item TypeIDs related to gathering** (backpacks, journals, fragments).
 
-⚠️ **Important** : Ce ne sont **PAS** les TypeIDs des ressources harvestables elles-mêmes (arbres, rochers, fibres),
-mais les **items** associés au gathering (équipement, trophées).
+⚠ **Important:** These are **not** the TypeIDs of harvestable nodes themselves (trees, rocks, fibers), but the **items** associated with gathering.
 
-**Format :**
+**Format:**
 
 ```javascript
-// WOOD Items
-913, // T1.0 - Rough Logs
-    11734, // T2.0 - Novice Lumberjack's Trophy Journal (Full)
-    5908, // T4.1 - Adept's Lumberjack Backpack
+// WOOD items
+913,   // T1.0 - Rough Logs
+11734, // T2.0 - Novice Lumberjack's Trophy Journal (Full)
+5908,  // T4.1 - Adept's Lumberjack Backpack
 ...
 
-// ORE Items
+// ORE items
 11762, // T2.0 - Novice Prospector's Trophy Journal (Full)
-    5708, // T4.1 - Adept's Miner Backpack
+5708,  // T4.1 - Adept's Miner Backpack
 ...
 ```
 
-**Utilité :**
+**Use:**
 
-- Référence pour les items de gathering
-- Pas utilisé pour la détection des ressources sur le radar
-- Les vrais TypeIDs harvestables sont collectés in-game via logging
-
----
-
-## 🎯 Workflow de Collecte
-
-### Étape 1 : Préparation
-
-1. Lire [`COLLECTION_GUIDE.md`](COLLECTION_GUIDE.md)
-2. Vider le cache TypeID
-3. Activer le logging enrichi
-
-### Étape 2 : Session in-game
-
-1. Se déplacer dans les zones cibles
-2. Tuer des créatures enchantées
-3. Observer les logs dans la console
-
-### Étape 3 : Analyse
-
-1. Sauvegarder les logs console
-2. Exécuter `parse-living-logs.py`
-3. Vérifier la couverture
-
-### Étape 4 : Intégration
-
-1. Copier les entrées MobsInfo.js générées
-2. Mettre à jour `scripts/classes/MobsInfo.js`
-3. Tester avec le radar
+- Reference for gathering-related items.  
+- **Not** used directly for radar resource detection.  
+- Real harvestable TypeIDs are collected in-game via logging.
 
 ---
 
-## 📝 Notes Techniques
+## 🔁 Collection Workflow (Legacy)
 
-### Métadonnées Living Resources
+> Note: Thanks to the rarity-based enchantment detection, collecting enchanted TypeIDs is mostly obsolete. Workflow kept for reference.
 
-**Source :** ao-bin-dumps `mobs.json`
+### Step 1: Preparation
 
-**Limitations :**
+1. Read [`COLLECTION_GUIDE.md`](./COLLECTION_GUIDE.md).
+2. Clear any previous TypeID cache.
+3. Enable enriched logging.
 
-- ❌ Pas de TypeIDs (identifiants serveur runtime)
-- ✅ HP par créature
-- ✅ Prefab (nom interne)
-- ✅ Faction/famille
+### Step 2: In-Game Session
 
-**Utilité :**
+1. Move to target zones.
+2. Kill enchanted creatures.
+3. Watch logs in the browser console.
 
-- Validation HP en temps réel
-- Identification automatique des animaux
-- Détection des anomalies
+### Step 3: Analysis
 
-### TypeIDs Collectés
+1. Save console logs.
+2. Run `parse-living-logs.py`.
+3. Check coverage.
 
-**Méthode actuelle :** In-game logging (seule méthode viable)
+### Step 4: Integration
 
-**Raison :**
-
-- TypeIDs = identifiants serveur dynamiques
-- Non présents dans les dumps statiques
-- Varient selon l'enchantement
-
-**Preuve :**
-Voir [DEV_NOTES.md § Investigation TypeIDs](../DEV_NOTES.md#-investigation-typeids---ao-bin-dumps-2025-11-03)
+1. Copy generated `MobsInfo.js` entries.
+2. Update `scripts/classes/MobsInfo.js`.
+3. Test with the radar.
 
 ---
 
-## 🔬 Scripts d'Analyse (ao-bin-dumps)
+## 🧠 Technical Notes
+
+### Living Resources Metadata
+
+**Source:** `ao-bin-dumps` `mobs.json`.
+
+**Limitations:**
+
+- ❌ No TypeIDs (server runtime identifiers only).  
+- ✅ HP per creature.  
+- ✅ Prefab names.  
+- ✅ Faction/family.
+
+**Use:**
+
+- Real-time HP validation.
+- Automatic animal identification.
+- Anomaly detection.
+
+### Collected TypeIDs
+
+**Current method:** In-game logging (the only viable method).
+
+**Reason:**
+
+- TypeIDs = dynamic server identifiers.  
+- Not present as-is in static dumps.  
+- Vary with enchantment in some contexts.
+
+---
+
+## 🧪 Additional Analysis Scripts
 
 ### `parse-all-resources.py`
 
-Parse toutes les ressources depuis les dumps
-
-**Usage :**
+Parse all resources from dumps.
 
 ```bash
-python parse-all-resources.py path/to/ao-bin-dumps/
+cd work/scripts
+python parse-all-resources.py ../data/ao-bin-dumps-master/
 ```
 
 ### `search-living-mobs.py`
 
-Recherche mobs vivants spécifiques
-
-**Usage :**
+Search for specific living mobs.
 
 ```bash
+cd work/scripts
 python search-living-mobs.py --tier 4 --type hide
 ```
 
 ---
 
-## 🤝 Contribuer
+## 🤝 Contributing
 
-### Ajouter un nouveau script
+### Add a New Script
 
-1. Créer `tools/mon-script.py`
-2. Documenter dans ce README
-3. Ajouter exemples d'utilisation
+1. Create `work/scripts/my-script.py`.
+2. Document it in this README.
+3. Add usage examples.
 
-### Améliorer les données
+### Improve Data
 
-1. Collecte in-game avec logging
-2. Parser avec `parse-living-logs.py`
-3. Soumettre les TypeIDs collectés
-
----
-
-## 📚 Références
-
-- **Guide de collecte :** [`COLLECTION_GUIDE.md`](COLLECTION_GUIDE.md)
-- **Documentation technique :** [`../DEV_NOTES.md`](../DEV_NOTES.md)
-- **Investigation TypeIDs :
-  ** [DEV_NOTES.md § Investigation](../DEV_NOTES.md#-investigation-typeids---ao-bin-dumps-2025-11-03)
+1. Collect in-game logs with enriched logging.
+2. Parse with `parse-living-logs.py`.
+3. Contribute any new insights/TypeIDs via PR or docs.
 
 ---
 
-**Dernière mise à jour :** 2025-11-03
+## 📚 Related Documentation
 
+- **Collection guide:** [`COLLECTION_GUIDE.md`](./COLLECTION_GUIDE.md)
+- **Technical notes:** see `docs/technical/LOGGING.md` and `docs/technical/ENCHANTMENTS.md`.
+- **Player system:** `docs/technical/PLAYERS.md`
+
+---
+
+_Last updated: 2025-11-03_

@@ -1,7 +1,7 @@
 {
-  "name": "albion-zqradar",
-  "version": "1.0.0",
-  "description": "ZQRadar - Real-time radar for Albion Online",
+  "name": "albion-openradar",
+  "version": "1.1.0",
+  "description": "OpenRadar - Real-time radar for Albion Online",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -10,9 +10,9 @@
     "check:runtime": "node -e \"try { const ok = require('./scripts/Utils/runtime-check').runRuntimeChecks(); process.exit(ok ? 0 : 1); } catch (e) { console.error(e); process.exit(1); }\"",
     "prebuild": "npm run check",
     "build": "pkg . --compress GZip",
-    "build:win": "pkg . --targets node18-win-x64 --compress GZip --output dist/ZQRadar.exe",
-    "build:linux": "pkg . --targets node18-linux-x64 --compress GZip --output dist/ZQRadar-linux",
-    "build:macos": "pkg . --targets node18-macos-x64 --compress GZip --output dist/ZQRadar-macos",
+    "build:win": "pkg . --targets node18-win-x64 --compress GZip --output dist/OpenRadar.exe",
+    "build:linux": "pkg . --targets node18-linux-x64 --compress GZip --output dist/OpenRadar-linux",
+    "build:macos": "pkg . --targets node18-macos-x64 --compress GZip --output dist/OpenRadar-macos",
     "build:all": "pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --compress GZip",
     "postbuild": "node scripts-shell/post-build.js",
     "clean": "node -e \"const fs=require('fs');const path=require('path');const dist='dist';if(fs.existsSync(dist)){fs.readdirSync(dist).forEach(i=>{if(i!=='images'){fs.rmSync(path.join(dist,i),{recursive:true,force:true});}});}\"",

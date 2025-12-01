@@ -1,177 +1,176 @@
-# 📊 Guide de Collecte - TypeIDs Living Resources
+# 📊 Collection Guide – Living Resources TypeIDs
 
-## 🎯 Objectif
+## 🎯 Goal
 
-Collecter les TypeIDs des créatures enchantées (Hide/Fiber T4-T8 .1/.2/.3) en utilisant le nouveau système de logging
-enrichi.
-
----
-
-## ⚙️ Préparation
-
-### 1. Vider le cache (IMPORTANT!)
-
-Avant de commencer, vider le cache localStorage :
-
-1. Ouvrir la console (F12)
-2. Aller dans les Settings du radar
-3. Cliquer sur "Clear TypeID Cache"
-4. Recharger la page (F5)
-
-### 2. Activer le logging
-
-1. Ouvrir Settings → Debug
-2. Cocher **"🔍 Log Living Creatures"**
-3. Un guide de collecte s'affiche dans la console
-
-### 3. Ouvrir la console
-
-- Appuyer sur F12
-- Onglet "Console"
-- Garder la console ouverte pendant toute la session
+Collect TypeIDs for enchanted living creatures (Hide/Fiber T4–T8 .1/.2/.3) using the new enriched logging system.
 
 ---
 
-## 🎮 Session de Collecte
+## ⚙️ Preparation
 
-### Format des logs
+### 1. Clear cache (IMPORTANT!)
 
-Vous verrez 2 types de logs :
+Before starting, clear the localStorage cache:
 
-**1. JSON (pour parsing automatique) :**
+1. Open the browser console (F12).
+2. Go to the radar Settings.
+3. Click **"Clear TypeID Cache"**.
+4. Reload the page (F5).
 
-```
+### 2. Enable logging
+
+1. Open Settings → Debug.
+2. Check **"🔍 Log Living Creatures"**.
+3. A collection guide appears in the console.
+
+### 3. Open the console
+
+- Press F12.
+- Go to the **Console** tab.
+- Keep the console open during the entire session.
+
+---
+
+## 🎮 Collection Session
+
+### Log Format
+
+You will see two types of logs:
+
+**1. JSON (for automatic parsing):**
+
+```text
 [LIVING_JSON] {"timestamp":"2025-11-03T...","typeId":425,"resource":...}
 ```
 
-**2. Lisible (pour vous) :**
+**2. Human-readable (for you):**
 
-```
+```text
 🟢 ✓ TypeID 425 | hide T4.0 | HP: 1323 (expected ~1323, diff: 0) → Boar
 │
-├─ 🟢 = Créature vivante
-├─ ✓ = HP correspond à la créature attendue
-├─ TypeID 425 = Identifiant unique
-├─ hide T4.0 = Type/Tier/Enchantement
-└─ → Boar = Animal identifié
+├─ 🟢 = Living creature
+├─ ✓ = HP matches expected creature
+├─ TypeID 425 = Unique identifier
+├─ hide T4.0 = Type/Tier/Enchantment
+└─ → Boar = Identified animal
 ```
 
-### Symboles
+### Symbols
 
-- **🟢** = Créature VIVANTE
-- **🔴** = Créature MORTE (cadavre)
-- **✓** = HP validé (correspond à une créature connue)
-- **?** = HP non validé (créature inconnue)
+- **🟢** = LIVING creature.
+- **🔴** = DEAD creature (corpse).
+- **✓** = HP validated (matches a known creature).
+- **?** = HP not validated (unknown creature).
 
 ---
 
-## 🗺️ Zones recommandées
+## 🗺️ Recommended Zones
 
-### Pour Hide (Animaux)
+### For Hide (animals)
 
-#### T4 Enchantés (.1 .2 .3)
+#### T4 Enchanted (.1 .2 .3)
 
-- **Bridgewatch** - Nord-Ouest (zones rouges)
-- **Caerleon** - Steppes autour (zones T4-T5)
+- **Bridgewatch** – North-West (red zones).
+- **Caerleon** – Surrounding steppes (T4–T5 zones).
 
-#### T5 Enchantés (.1 .2 .3)
+#### T5 Enchanted (.1 .2 .3)
 
-- **Forest** - Zones rouges T5
-- **Swamp** - Zones rouges T5
+- **Forest** – T5 red zones.
+- **Swamp** – T5 red zones.
 
-#### T6+ Enchantés
+#### T6+ Enchanted
 
-- **Black Zone** - Routes principales
-- **Avalon Roads** - Chemins aléatoires
+- **Black Zone** – Main routes.
+- **Avalon Roads** – Random roads.
 
-### Pour Fiber (Plantes vivantes)
+### For Fiber (living plants)
 
-#### T4-T5
+#### T4–T5
 
-- **Highland** - Zones T4-T5 (Keeper)
-- **Forest** - Bordures de zones
+- **Highland** – T4–T5 zones (Keeper).
+- **Forest** – Zone edges.
 
 #### T6+
 
-- **Black Zone** - Zones contestées
-- **Hideouts** - Autour des zones de farm
+- **Black Zone** – Contested zones.
+- **Hideouts** – Around active farming areas.
 
 ---
 
-## 📝 Pendant la Session
+## 📝 During the Session
 
-### Ce que vous devez faire
+### What you must do
 
-1. **Se déplacer** dans les zones cibles
-2. **Tuer des créatures enchantées** (.1, .2, .3)
-3. **Observer les logs** dans la console
-4. **Vérifier** que le TypeID change pour chaque enchantement
+1. **Move** through target zones.
+2. **Kill enchanted creatures** (.1, .2, .3).
+3. **Watch logs** in the console.
+4. **Check** that TypeID changes for each enchantment.
 
-### Ce que vous devez noter
+### What you must record
 
-Pour chaque créature tuée :
+For each killed creature:
 
-- ✅ TypeID affiché
-- ✅ Tier (T4, T5, T6...)
-- ✅ Enchantement (.1, .2, .3)
-- ✅ Type (Hide ou Fiber)
-- ✅ Validation HP (✓ ou ?)
+- ✅ Displayed TypeID.
+- ✅ Tier (T4, T5, T6...).
+- ✅ Enchantment (.1, .2, .3).
+- ✅ Type (Hide or Fiber).
+- ✅ HP validation (✓ or ?).
 
-### Exemple de session
+### Example Session
 
-```
-Zone: Bridgewatch T4 Red (animaux enchantés)
+```text
+Zone: Bridgewatch T4 Red (enchanted animals)
 
-🟢 ✓ TypeID 425 | hide T4.0 | HP: 1323 → Boar        ← .0 (déjà connu)
-🟢 ? TypeID 426 | hide T4.1 | HP: 1450 → Unknown     ← .1 À COLLECTER!
-🔴 ? TypeID 426 | hide T4.1 | HP: 0 → Unknown        ← Même créature morte
-🟢 ? TypeID 432 | hide T4.2 | HP: 1580 → Unknown     ← .2 À COLLECTER!
-🟢 ? TypeID 438 | hide T4.3 | HP: 1720 → Unknown     ← .3 À COLLECTER!
+🟢 ✓ TypeID 425 | hide T4.0 | HP: 1323 → Boar        ← .0 (already known)
+🟢 ? TypeID 426 | hide T4.1 | HP: 1450 → Unknown     ← .1 TO COLLECT!
+🔴 ? TypeID 426 | hide T4.1 | HP: 0   → Unknown      ← Same creature dead
+🟢 ? TypeID 432 | hide T4.2 | HP: 1580 → Unknown     ← .2 TO COLLECT!
+🟢 ? TypeID 438 | hide T4.3 | HP: 1720 → Unknown     ← .3 TO COLLECT!
 ```
 
 ---
 
-## 💾 Après la Session
+## 💾 After the Session
 
-### 1. Sauvegarder les logs
+### 1. Save Logs
 
-**Méthode 1 : Copier manuellement**
+**Method 1: Manual save**
 
-- Clic droit dans la console → "Save as..."
-- Sauvegarder en `logs-session-YYYY-MM-DD.txt`
+- Right click in the console → **"Save as..."**.
+- Save as `logs-session-YYYY-MM-DD.txt`.
 
-**Méthode 2 : Filtrer et copier**
+**Method 2: Filter and copy**
 
 ```javascript
-// Coller dans la console pour extraire tous les logs LIVING_JSON
+// Paste into the console to extract all LIVING_JSON logs
 let logs = [];
 document.querySelectorAll('.console-message').forEach(msg => {
-    if (msg.textContent.includes('[LIVING_JSON]')) {
-        logs.push(msg.textContent);
-    }
+  if (msg.textContent.includes('[LIVING_JSON]')) {
+    logs.push(msg.textContent);
+  }
 });
 copy(logs.join('\n'));
-console.log(`✅ ${logs.length} logs copiés dans le presse-papier!`);
+console.log(`✅ ${logs.length} logs copied to clipboard!`);
 ```
 
-**Méthode 3 : Filtrer directement dans la console**
+**Method 3: Filter directly in the console**
 
-1. Cliquer sur l'icône "Filter" (entonnoir) en haut de la console
-2. Taper: `LIVING_JSON`
-3. Clic droit → "Save as..." → Sauvegarder le fichier filtré
+1. Click the "Filter" (funnel) icon at the top of the console.
+2. Type: `LIVING_JSON`.
+3. Right click → **"Save as..."** → save the filtered file.
 
-### 2. Parser les logs
+### 2. Parse Logs
 
-Utiliser le script Python fourni :
+Use the provided Python script:
 
 ```bash
-cd tools
-python parse-living-logs.py logs-session-2025-11-03.txt
+cd work/scripts
+python parse-living-logs.py ../logs-session-2025-11-03.txt
 ```
 
-**Sortie attendue :**
+**Expected output:**
 
-```
+```text
 📊 LIVING RESOURCES COLLECTION REPORT
 ═══════════════════════════════════════════════════════════
 
@@ -194,7 +193,7 @@ TypeID   432 →   hide T4.2 |      Unknown   | 🟢   8 🔴   2 | Validated: 0
 hide:
   T4: Found [.0, .1, .2, .3] | Missing [None]
   T5: Found [.0, .1] | Missing [.2, .3]
-  T6: Found [.0] | Missing [.1, .2, .3]
+  T6: Found [.0]      | Missing [.1, .2, .3]
 
 ───────────────────────────────────────────────────────────
 📝 MobsInfo.js Entries (Copy-paste ready):
@@ -206,114 +205,112 @@ hide:
     ...
 ```
 
-### 3. Envoyer les résultats
+### 3. Share Results
 
-Partager :
+Share:
 
-- Fichier de logs brut (`logs-session-XXX.txt`)
-- Sortie du script Python
-- Screenshots si possible (validation visuelle)
+- Raw log file (`logs-session-XXX.txt`).
+- Python script output.
+- Screenshots if possible (visual validation).
 
 ---
 
 ## 🐛 Troubleshooting
 
-### Problème : Pas de logs
+### Issue: No logs
 
-**Solution :**
+**Solution:**
 
-1. Vérifier que "Log Living Creatures" est coché
-2. Recharger la page (F5)
-3. Vérifier que la console est ouverte
+1. Check that **"Log Living Creatures"** is enabled.
+2. Reload the page (F5).
+3. Ensure the console is open.
 
-### Problème : Tous les logs affichent "?"
+### Issue: All logs show "?"
 
-**Cause :** Métadonnées non chargées
+**Cause:** Metadata not loaded.
 
-**Solution :**
+**Solution:**
 
-1. Vérifier que `/tools/output/living-resources-enhanced.json` existe
-2. Recharger la page (F5)
-3. Vérifier les erreurs de chargement dans la console
+1. Check that `/tools/output/living-resources-enhanced.json` exists.
+2. Reload the page (F5).
+3. Check for loading errors in the console.
 
-### Problème : Toujours les mêmes TypeIDs
+### Issue: Always the same TypeIDs
 
-**Cause :** Vous tuez toujours les mêmes créatures .0
+**Cause:** You are always killing the same `.0` creatures.
 
-**Solution :**
+**Solution:**
 
-- Aller dans des zones **enchantées** (rouges/noires)
-- Vérifier que l'enchantement change (.1, .2, .3)
-- Regarder le cadavre après kill (enchantement visible)
+- Go to **enchanted** zones (red/black).
+- Ensure enchantment level changes (.1, .2, .3).
+- Check the corpse after the kill (enchantment glow).
 
-### Problème : Trop de logs
+### Issue: Too many logs
 
-**Solution :**
-Filtrer dans la console :
+**Solution:** Filter logs in the console:
 
-```
-Clic sur "Filter" → Taper "LIVING_JSON"
+```text
+Click "Filter" → Type "LIVING_JSON".
 ```
 
 ---
 
-## 📊 Objectifs de Collecte
+## 📊 Collection Objectives
 
-### Priorité P1 (Critique)
+### Priority P1 (Critical)
 
-- [ ] Hide T4 (.1, .2, .3) - **15 TypeIDs**
-- [ ] Hide T5 (.1, .2, .3) - **15 TypeIDs**
-- [ ] Fiber T4 (.1, .2, .3) - **9 TypeIDs**
-- [ ] Fiber T5 (.1, .2, .3) - **9 TypeIDs**
+- [ ] Hide T4 (.1, .2, .3) – **15 TypeIDs**.
+- [ ] Hide T5 (.1, .2, .3) – **15 TypeIDs**.
+- [ ] Fiber T4 (.1, .2, .3) – **9 TypeIDs**.
+- [ ] Fiber T5 (.1, .2, .3) – **9 TypeIDs**.
 
-### Priorité P2 (Important)
+### Priority P2 (Important)
 
-- [ ] Hide T6 (.1, .2, .3) - **15 TypeIDs**
-- [ ] Fiber T6 (.1, .2, .3) - **9 TypeIDs**
+- [ ] Hide T6 (.1, .2, .3) – **15 TypeIDs**.
+- [ ] Fiber T6 (.1, .2, .3) – **9 TypeIDs**.
 
-### Priorité P3 (Optionnel)
+### Priority P3 (Optional)
 
-- [ ] Hide T7-T8 enchantés
-- [ ] Fiber T7-T8 enchantés
-- [ ] Wood/Ore/Rock living resources
+- [ ] Hide T7–T8 enchanted.
+- [ ] Fiber T7–T8 enchanted.
+- [ ] Wood/Ore/Rock living resources.
 
 ---
 
 ## 🎯 Tips
 
-### Maximiser l'efficacité
+### Maximize Efficiency
 
-1. **Groupe avec scanner** - Quelqu'un avec mount rapide scanne, vous collectez
-2. **Routes commerciales** - Black zone routes = beaucoup de créatures enchantées
-3. **Hideouts farming** - Zones autour des hideouts actifs
-4. **Avalon roads** - Chemins aléatoires avec spawns variés
+1. **Group with a scout** – Someone on a fast mount scouts, you collect.
+2. **Trade routes** – Black zone routes = many enchanted creatures.
+3. **Hideout farming** – Areas around active hideouts.
+4. **Avalon roads** – Random paths with varied spawns.
 
-### Identifier rapidement l'enchantement
+### Quickly Identify Enchantment
 
-Après un kill, regarder le cadavre :
+After a kill, look at the corpse:
 
-- **Pas de glow** = .0 (normal)
-- **Glow vert** = .1
-- **Glow bleu** = .2
-- **Glow violet** = .3
+- **No glow** = .0 (normal).
+- **Green glow** = .1.
+- **Blue glow** = .2.
+- **Purple glow** = .3.
 
-### Optimiser le temps
+### Optimize Time
 
-- **1h session** = ~30-50 TypeIDs collectés (zones T4-T5)
-- **2h session** = ~70-100 TypeIDs collectés (mixte T4-T6)
-- **4h session** = ~150-200 TypeIDs collectés (complet T4-T8)
+- **1h session** = ~30–50 TypeIDs collected (T4–T5 zones).
+- **2h session** = ~70–100 TypeIDs collected (mixed T4–T6).
+- **4h session** = ~150–200 TypeIDs collected (full T4–T8).
 
 ---
 
 ## 📞 Support
 
-Questions? Problèmes?
+Questions? Issues?
 
-- **GitHub Issues** : [Lien vers le repo]
-- **Discord** : [Lien Discord du projet]
-- **Contact** : @Nouuu
+- **GitHub Issues**: [link to repo]
+- **Discord**: [project Discord link]
+- **Contact**: @Nouuu
 
 ---
 
-**Bonne collecte! 🎮🔍**
-
+**Happy collecting! 🎮🔍**

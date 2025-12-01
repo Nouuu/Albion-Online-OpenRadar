@@ -706,7 +706,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `zqradar-debug-${timestamp}.json`;
+      a.download = `openradar-debug-${timestamp}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
