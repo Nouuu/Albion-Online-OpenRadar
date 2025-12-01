@@ -40,9 +40,6 @@ export class HarvestablesHandler
         this.harvestableList = [];
         this.mobsHandler = mobsHandler;
 
-        // 💾 Cache pour ressources
-        this.lastHarvestCache = new Map();
-
         // 📊 Statistics tracking
         this.stats = {
             totalDetected: 0,
@@ -66,59 +63,6 @@ export class HarvestablesHandler
         for (let i = 1; i <= 8; i++) {
             this.stats.byTier[i] = { detected: 0, harvested: 0 };
         }
-    }
-
-    // Get resource info from itemId (for static harvestables)
-    getResourceInfoFromItemId(itemId) {
-        // Theoretical mapping itemId → resource info
-        const theoreticalMap = {
-            // === FIBER (T2-T8) ===
-            412: { type: 'Fiber', tier: 2, charges: 0 },
-            413: { type: 'Fiber', tier: 3, charges: 0 },
-            414: { type: 'Fiber', tier: 4, charges: 0 }, 419: { type: 'Fiber', tier: 4, charges: 1 }, 424: { type: 'Fiber', tier: 4, charges: 2 }, 429: { type: 'Fiber', tier: 4, charges: 3 }, 434: { type: 'Fiber', tier: 4, charges: 4 },
-            415: { type: 'Fiber', tier: 5, charges: 0 }, 420: { type: 'Fiber', tier: 5, charges: 1 }, 425: { type: 'Fiber', tier: 5, charges: 2 }, 430: { type: 'Fiber', tier: 5, charges: 3 }, 435: { type: 'Fiber', tier: 5, charges: 4 },
-            416: { type: 'Fiber', tier: 6, charges: 0 }, 421: { type: 'Fiber', tier: 6, charges: 1 }, 426: { type: 'Fiber', tier: 6, charges: 2 }, 431: { type: 'Fiber', tier: 6, charges: 3 }, 436: { type: 'Fiber', tier: 6, charges: 4 },
-            417: { type: 'Fiber', tier: 7, charges: 0 }, 422: { type: 'Fiber', tier: 7, charges: 1 }, 427: { type: 'Fiber', tier: 7, charges: 2 }, 432: { type: 'Fiber', tier: 7, charges: 3 }, 437: { type: 'Fiber', tier: 7, charges: 4 },
-            418: { type: 'Fiber', tier: 8, charges: 0 }, 423: { type: 'Fiber', tier: 8, charges: 1 }, 428: { type: 'Fiber', tier: 8, charges: 2 }, 433: { type: 'Fiber', tier: 8, charges: 3 }, 438: { type: 'Fiber', tier: 8, charges: 4 },
-
-            // === HIDE (T2-T8) ===
-            385: { type: 'Hide', tier: 2, charges: 0 },
-            386: { type: 'Hide', tier: 3, charges: 0 },
-            387: { type: 'Hide', tier: 4, charges: 0 }, 392: { type: 'Hide', tier: 4, charges: 1 }, 397: { type: 'Hide', tier: 4, charges: 2 }, 402: { type: 'Hide', tier: 4, charges: 3 }, 407: { type: 'Hide', tier: 4, charges: 4 },
-            388: { type: 'Hide', tier: 5, charges: 0 }, 393: { type: 'Hide', tier: 5, charges: 1 }, 398: { type: 'Hide', tier: 5, charges: 2 }, 403: { type: 'Hide', tier: 5, charges: 3 }, 408: { type: 'Hide', tier: 5, charges: 4 },
-            389: { type: 'Hide', tier: 6, charges: 0 }, 394: { type: 'Hide', tier: 6, charges: 1 }, 399: { type: 'Hide', tier: 6, charges: 2 }, 404: { type: 'Hide', tier: 6, charges: 3 }, 409: { type: 'Hide', tier: 6, charges: 4 },
-            390: { type: 'Hide', tier: 7, charges: 0 }, 395: { type: 'Hide', tier: 7, charges: 1 }, 400: { type: 'Hide', tier: 7, charges: 2 }, 405: { type: 'Hide', tier: 7, charges: 3 }, 410: { type: 'Hide', tier: 7, charges: 4 },
-            391: { type: 'Hide', tier: 8, charges: 0 }, 396: { type: 'Hide', tier: 8, charges: 1 }, 401: { type: 'Hide', tier: 8, charges: 2 }, 406: { type: 'Hide', tier: 8, charges: 3 }, 411: { type: 'Hide', tier: 8, charges: 4 },
-
-            // === ORE (T2-T8) ===
-            357: { type: 'Ore', tier: 2, charges: 0 },
-            358: { type: 'Ore', tier: 3, charges: 0 },
-            359: { type: 'Ore', tier: 4, charges: 0 }, 364: { type: 'Ore', tier: 4, charges: 1 }, 369: { type: 'Ore', tier: 4, charges: 2 }, 374: { type: 'Ore', tier: 4, charges: 3 }, 379: { type: 'Ore', tier: 4, charges: 4 },
-            360: { type: 'Ore', tier: 5, charges: 0 }, 365: { type: 'Ore', tier: 5, charges: 1 }, 370: { type: 'Ore', tier: 5, charges: 2 }, 375: { type: 'Ore', tier: 5, charges: 3 }, 380: { type: 'Ore', tier: 5, charges: 4 },
-            361: { type: 'Ore', tier: 6, charges: 0 }, 366: { type: 'Ore', tier: 6, charges: 1 }, 371: { type: 'Ore', tier: 6, charges: 2 }, 376: { type: 'Ore', tier: 6, charges: 3 }, 381: { type: 'Ore', tier: 6, charges: 4 },
-            362: { type: 'Ore', tier: 7, charges: 0 }, 367: { type: 'Ore', tier: 7, charges: 1 }, 372: { type: 'Ore', tier: 7, charges: 2 }, 377: { type: 'Ore', tier: 7, charges: 3 }, 382: { type: 'Ore', tier: 7, charges: 4 },
-            363: { type: 'Ore', tier: 8, charges: 0 }, 368: { type: 'Ore', tier: 8, charges: 1 }, 373: { type: 'Ore', tier: 8, charges: 2 }, 378: { type: 'Ore', tier: 8, charges: 3 }, 383: { type: 'Ore', tier: 8, charges: 4 },
-
-            // === ROCK (T2-T8) - Only .0-.3 (no .4) ===
-            335: { type: 'Rock', tier: 2, charges: 0 },
-            336: { type: 'Rock', tier: 3, charges: 0 },
-            337: { type: 'Rock', tier: 4, charges: 0 }, 342: { type: 'Rock', tier: 4, charges: 1 }, 347: { type: 'Rock', tier: 4, charges: 2 }, 352: { type: 'Rock', tier: 4, charges: 3 },
-            338: { type: 'Rock', tier: 5, charges: 0 }, 343: { type: 'Rock', tier: 5, charges: 1 }, 348: { type: 'Rock', tier: 5, charges: 2 }, 353: { type: 'Rock', tier: 5, charges: 3 },
-            339: { type: 'Rock', tier: 6, charges: 0 }, 344: { type: 'Rock', tier: 6, charges: 1 }, 349: { type: 'Rock', tier: 6, charges: 2 }, 354: { type: 'Rock', tier: 6, charges: 3 },
-            340: { type: 'Rock', tier: 7, charges: 0 }, 345: { type: 'Rock', tier: 7, charges: 1 }, 350: { type: 'Rock', tier: 7, charges: 2 }, 355: { type: 'Rock', tier: 7, charges: 3 },
-            341: { type: 'Rock', tier: 8, charges: 0 }, 346: { type: 'Rock', tier: 8, charges: 1 }, 351: { type: 'Rock', tier: 8, charges: 2 }, 356: { type: 'Rock', tier: 8, charges: 3 },
-
-            // === LOG/WOOD (T2-T8) ===
-            307: { type: 'Log', tier: 2, charges: 0 },
-            308: { type: 'Log', tier: 3, charges: 0 },
-            309: { type: 'Log', tier: 4, charges: 0 }, 314: { type: 'Log', tier: 4, charges: 1 }, 319: { type: 'Log', tier: 4, charges: 2 }, 324: { type: 'Log', tier: 4, charges: 3 }, 329: { type: 'Log', tier: 4, charges: 4 },
-            310: { type: 'Log', tier: 5, charges: 0 }, 315: { type: 'Log', tier: 5, charges: 1 }, 320: { type: 'Log', tier: 5, charges: 2 }, 325: { type: 'Log', tier: 5, charges: 3 }, 330: { type: 'Log', tier: 5, charges: 4 },
-            311: { type: 'Log', tier: 6, charges: 0 }, 316: { type: 'Log', tier: 6, charges: 1 }, 321: { type: 'Log', tier: 6, charges: 2 }, 326: { type: 'Log', tier: 6, charges: 3 }, 331: { type: 'Log', tier: 6, charges: 4 },
-            312: { type: 'Log', tier: 7, charges: 0 }, 317: { type: 'Log', tier: 7, charges: 1 }, 322: { type: 'Log', tier: 7, charges: 2 }, 327: { type: 'Log', tier: 7, charges: 3 }, 332: { type: 'Log', tier: 7, charges: 4 },
-            313: { type: 'Log', tier: 8, charges: 0 }, 318: { type: 'Log', tier: 8, charges: 1 }, 323: { type: 'Log', tier: 8, charges: 2 }, 328: { type: 'Log', tier: 8, charges: 3 }, 333: { type: 'Log', tier: 8, charges: 4 },
-        };
-
-        return theoreticalMap[itemId] || null;
     }
 
     /**
@@ -309,54 +253,7 @@ export class HarvestablesHandler
 
         if (Parameters[1] === undefined)
         {
-            // LAST STACK - Called BEFORE harvestFinished!
-            const cacheEntry = this.lastHarvestCache.get(id);
-
-            if (cacheEntry) {
-                const resources = cacheEntry.resources;
-
-                // CASE 1: trackedByNewSimpleItem = true → Already tracked by NewSimpleItem (living resources)
-                if (cacheEntry.trackedByNewSimpleItem) {
-                    window.logger?.debug(CATEGORIES.HARVEST, EVENTS.AlreadyTracked, {
-                        note: 'Already tracked by NewSimpleItem - SKIP'
-                    });
-                }
-                // CASE 2: trackedByNewSimpleItem = false → Static harvestable, must track here
-                else {
-                    // Deduce type/tier from itemId
-                    const resourceInfo = this.getResourceInfoFromItemId(cacheEntry.itemId);
-
-                    if (resourceInfo) {
-                        // INFO (always logged) - Tracking static resources
-                        window.logger?.info(CATEGORIES.HARVEST, EVENTS.TrackingStaticResources, {
-                            resources,
-                            type: resourceInfo.type,
-                            tier: resourceInfo.tier,
-                            charges: resourceInfo.charges
-                        });
-                    } else {
-                        // Fallback: just increment total if we can't map itemId
-                        // WARN (always logged) - Unknown itemId
-                        window.logger?.warn(CATEGORIES.HARVEST, EVENTS.UnknownItemId, {
-                            itemId: cacheEntry.itemId,
-                            note: 'Tracking total only'
-                        });
-                        this.stats.totalHarvested += resources;
-                    }
-                }
-
-                // Nettoyer le cache
-                this.lastHarvestCache.delete(id);
-            } else {
-                // No cache at all
-                // WARN (always logged) - No cache available
-                window.logger?.warn(CATEGORIES.HARVEST, EVENTS.NoCacheWarning, {
-                    note: 'NO CACHE! Resource tracking may be incomplete'
-                });
-            }
-
-            // DO NOT delete here! NewSimpleItem arrives AFTER and needs the harvestable
-            // Deletion will be done by harvestFinished
+            // 🔥 DERNIER STACK - Appelé AVANT harvestFinished!
             return;
         }
 
