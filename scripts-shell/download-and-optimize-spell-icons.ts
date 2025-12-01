@@ -73,7 +73,7 @@ function buildUiSpriteMap(localizationMap: Map<string, string>, uiSpriteToLocali
 function parseArgs() {
     const args = process.argv.slice(2);
     if (args.includes('--help') || args.includes('-h')) {
-        console.log('Usage: node download-and-optimize-spell-icons.js [--replace-existing] [--no-optimize] [--only-upgrade]');
+        console.log('Usage: tsx download-and-optimize-spell-icons.ts [--replace-existing] [--no-optimize] [--only-upgrade]');
         console.log('--replace-existing : Replace existing files in the output directory.');
         console.log('--no-optimize     : Skip image optimization step.');
         console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');

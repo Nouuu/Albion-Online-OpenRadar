@@ -37,7 +37,7 @@ let replaceExisting = false;
 function parseArgs() {
     const args = process.argv.slice(2);
     if (args.includes('--help') || args.includes('-h')) {
-        console.log('Usage: node update-ao-data.js [--replace-existing]');
+        console.log('Usage: tsx update-ao-data.ts [--replace-existing]');
         console.log('--replace-existing : Replace existing files in the output directory.');
         process.exit(0);
     }

@@ -17,7 +17,7 @@ let onlyUpgrade = false;
 function parseArgs() {
     const args = process.argv.slice(2);
     if (args.includes('--help') || args.includes('-h')) {
-        console.log('Usage: node download-and-optimize-item-icons.js [options]');
+        console.log('Usage: tsx download-and-optimize-item-icons.ts [options]');
         console.log('--replace-existing : Replace existing files in the output directory.');
         console.log('--no-optimize     : Skip image optimization step.');
         console.log('--only-upgrade    : Only replace files that are higher quality than existing ones.');
@@ -98,7 +98,7 @@ async function processItemIcon(
         };
     }
 
-    const url = `${CDN_BASE}${filename}.png`;
+    const url = `${CDN_BASE}${filename}`;
     res = await downloadFile(url);
 
     return handleImageBuffer(
@@ -155,7 +155,7 @@ async function main() {
         failed: failed,
         optimizeFail: optimizeFail,
         outputDir: ICONS_DIR
-    })
+    });
 
     process.exit(0);
 }
