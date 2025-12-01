@@ -126,8 +126,6 @@ all-in-one: ## Complete build process (install + build all platforms + package)
 	@node scripts-shell/post-build.js
 	@echo ""
 	@echo "$(GREEN)✓ Complete build process finished!$(NC)"
-	@echo ""
-	@ls -lh $(DIST_DIR)/*.zip 2>/dev/null || true
 
 # Rebuild (clean + build)
 rebuild: ## Clean and rebuild from scratch

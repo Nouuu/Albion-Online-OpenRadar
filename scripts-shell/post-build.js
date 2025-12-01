@@ -116,8 +116,7 @@ ${installInstructions}
 
 ## Support
 
-Discord: https://discord.gg/XAWjmzeaD3
-GitHub: https://github.com/Zeldruck/Albion-Online-OpenRadar
+GitHub: https://github.com/Nouuu/Albion-Online-ZQRadar
 
 ## Note
 
