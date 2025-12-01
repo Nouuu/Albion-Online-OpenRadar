@@ -37,6 +37,7 @@ const CATEGORIES = {
   DEBUG: 'DEBUG',
   CLUSTER: 'CLUSTER',
   ITEM: 'ITEM',
+  ITEM_DATABASE: 'ITEM_DATABASE',
   MAP: 'MAP',
   MOBS: 'MOBS'
 };
@@ -94,6 +95,12 @@ const EVENTS = {
   // Player events
   NewPlayerEvent_ALL_PARAMS: 'NewPlayerEvent_ALL_PARAMS',
   PlayerDebugInfo: 'PlayerDebugInfo',
+  MoveEvent: 'MoveEvent',
+  PlayerPositionUpdate: 'PlayerPositionUpdate',
+  PlayerAutoCreated: 'PlayerAutoCreated',
+  AudioPlayBlocked: 'AudioPlayBlocked',
+  WorldOffsetCalculated: 'WorldOffsetCalculated',
+  WorldOffsetSkipped: 'WorldOffsetSkipped',
 
   // Chest events
   NewChestEvent_ALL_PARAMS: 'NewChestEvent_ALL_PARAMS',
@@ -177,6 +184,7 @@ const CATEGORY_SETTINGS_MAP = {
   DEBUG: null,
   CLUSTER: null,
   ITEM: null,
+  ITEM_DATABASE: null,
   MAP: null,
   MOBS: null
 };

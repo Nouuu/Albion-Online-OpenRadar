@@ -60,7 +60,7 @@ TYPEIDS_SUSPECTS.json
 # =============================================================================
 
 # Ignorer seulement ao-bin-dumps-master (dumps officiels trop volumineux)
-work/data/ao-bin-dumps-master/
+work/data/*
 
 # =============================================================================
 # MEMORIES ET CONFIGURATION SERENA
@@ -208,9 +208,10 @@ ip.txt
 images/Enemies/
 images/Items/
 images/Maps/
+images/Spells/
 images/*.zip
-# All the json config files
-config/
+
+public/ao-bin-dumps/*
 
 # IDE
 .idea/

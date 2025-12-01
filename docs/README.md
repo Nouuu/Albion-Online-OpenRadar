@@ -7,38 +7,38 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 ### 🎯 Pour les Utilisateurs
 
 - **[README principal](../README.md)** - Guide utilisateur, installation, features
-- **[SETUP.md](../SETUP.md)** - Setup développeur après clone ⭐
 - **[BUILD.md](../BUILD.md)** - Instructions de build et packaging
 
 ### 👨‍💻 Pour les Développeurs
 
 - **[DEV_GUIDE.md](./dev/DEV_GUIDE.md)** - Guide complet de développement
-- **[ARCHITECTURE.md](./dev/ARCHITECTURE.md)** - Architecture du projet
-- **[STYLE_GUIDE.md](./dev/STYLE_GUIDE.md)** - Conventions de code et style
 
 ### 🤖 Pour les Agents IA
 
 - **[AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)** - Guide principal pour les agents IA
 - **[MCP_TOOLS.md](./ai/MCP_TOOLS.md)** - Documentation des outils MCP disponibles
-- **[WORKFLOWS.md](./ai/WORKFLOWS.md)** - Workflows courants et bonnes pratiques
 
-### 📝 Documentation Technique
+### 🧪 Documentation Technique
 
 - **[LOGGING.md](./technical/LOGGING.md)** - Système de logging v2.0 (centralisé) ⭐
 - **[DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md)** - Guide complet debug & logging
 - **[SETTINGS.md](./technical/SETTINGS.md)** - Configuration et settings
 - **[ENCHANTMENTS.md](./technical/ENCHANTMENTS.md)** - Système d'enchantements
+- **[PLAYERS.md](./technical/PLAYERS.md)** - Player detection & radar display ⭐
+- **[PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md)** - Limites protocolaires & chiffrement (MITM, positions joueurs) ⭐
+- **[ANALYSIS_DEATHEYE_VS_CURRENT.md](./ANALYSIS_DEATHEYE_VS_CURRENT.md)** - Analyse détaillée DEATHEYE vs implémentation actuelle (offsets, XML, équipements)
 
 ### 🔧 Scripts Utilitaires (work/)
 
 - **[WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md)** - Vue d'ensemble des scripts Python ⭐
 - **[COLLECTION_GUIDE.md](./work/COLLECTION_GUIDE.md)** - Guide de collecte de données
 - **[QUICK_START.md](./work/QUICK_START.md)** - Démarrage rapide des scripts des outils
+- **[PLAYER_DETECTION_STATUS.md](./work/PLAYER_DETECTION_STATUS.md)** - Statut détaillé détection & mouvement joueurs (timeline, leçons)
+- **[IMPROVEMENTS.md](./work/IMPROVEMENTS.md)** - Résumé des améliorations récentes (dont joueurs)
 
 ### 📋 Gestion de Projet
 
 - **[TODO.md](./project/TODO.md)** - Tâches en cours et à venir
-- **[CHANGELOG.md](./project/CHANGELOG.md)** - Historique des changements
 
 ---
 
@@ -47,9 +47,12 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 ### Je veux...
 
 - **Installer le projet** → [README principal](../README.md)
-- **Comprendre l'architecture** → [ARCHITECTURE.md](./dev/ARCHITECTURE.md)
 - **Débugger et tracer les événements** → [DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md) ⭐
 - **Utiliser les outils Python** → [WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md) ⭐
+- **Player detection système (architecture & UI)** → [PLAYERS.md](./technical/PLAYERS.md) ⭐
+- **Comprendre les limites sur les positions joueurs / MITM** → [PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md) ⭐
+- **Suivre l’état détaillé du bug mouvement joueurs** → [PLAYER_DETECTION_STATUS.md](./work/PLAYER_DETECTION_STATUS.md)
+- **Comparer DEATHEYE et ce projet** → [ANALYSIS_DEATHEYE_VS_CURRENT.md](./ANALYSIS_DEATHEYE_VS_CURRENT.md)
 - **Guide pour agents IA** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
 - **Configurer un agent IA** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
 - **Débugger le logging** → [LOGGING.md](./technical/LOGGING.md)
@@ -75,7 +78,16 @@ Cette documentation est organisée en plusieurs sections pour faciliter la navig
 | Scripts Python utilitaires   | `tools/` (git-ignoré mais documenté)    |
 | Scripts Python utilitaires   | `work/` (git-ignoré sauf README)        |
 
+### ✅ Règles spécifiques pour la partie "joueurs"
+
+- **Architecture & features joueurs stables** → `docs/technical/PLAYERS.md`
+- **État d’investigation / bugs / timeline** → `docs/work/PLAYER_DETECTION_STATUS.md`
+- **Limites MITM / chiffrement / positions joueurs** → `docs/PLAYER_POSITIONS_MITM.md`
+- **Analyses avancées vs DEATHEYE / offsets / XML** → `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`
+
+Ne pas dupliquer ces contenus :
+- Résumer en quelques lignes et **pointer vers le bon fichier** au lieu de réécrire l’analyse complète.
+
 ---
 
-*Dernière mise à jour: 2025-11-05*
-
+*Dernière mise à jour: 2025-12-01*

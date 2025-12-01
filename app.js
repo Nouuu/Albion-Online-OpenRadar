@@ -1,11 +1,18 @@
-﻿const express = require('express');
+// 📊 Initialize Logger FIRST - before any other requires
+// This ensures global.loggerServer is available when PhotonParser and Protocol16Deserializer load
+const path = require("path");
+const LoggerServer = require('./server-scripts/LoggerServer');
+const logger = new LoggerServer('./logs');
+global.loggerServer = logger; // Make logger globally accessible
+console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerServer');
+
+const express = require('express');
 const PhotonParser = require('./scripts/classes/PhotonPacketParser');
 var Cap = require('cap').Cap;
 var decoders = require('cap').decoders;
 const WebSocket = require('ws');
 
 const fs = require("fs");
-const path = require("path");
 
 // Runtime checks: use lightweight module included in the packaged executable
 try {
@@ -23,8 +30,6 @@ try {
 }
 
 const { getAdapterIp } = require('./server-scripts/adapter-selector');
-const LoggerServer = require('./server-scripts/LoggerServer');
-
 const EventCodes = require('./scripts/Utils/EventCodesApp.js')
 
 // Detect if application is packaged with pkg
@@ -115,16 +120,33 @@ function StartRadar()
     res.render('main/radar-overlay');
   });
 
-  app.get('/stats', (req, res) => {
-    const viewName = 'main/stats';
-    res.render('layout', { mainContent: viewName });
-  });
 
   /*app.get('/logout', (req, res) => {
 
     req.session.destroy();
     res.redirect('/');
   });*/
+
+  // 📊 API: Get server logs status
+  app.get('/api/settings/server-logs', (req, res) => {
+    res.json({ enabled: global.loggerServer.isEnabled() });
+  });
+
+  // 📊 API: Set server logs status
+  app.post('/api/settings/server-logs', express.json(), (req, res) => {
+    const { enabled } = req.body;
+    
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'Invalid value for enabled, must be boolean' });
+    }
+
+    global.loggerServer.setEnabled(enabled);
+    
+    res.json({ 
+      success: true, 
+      enabled: global.loggerServer.isEnabled() 
+    });
+  });
 
 
 
@@ -137,10 +159,12 @@ function StartRadar()
   app.use('/images/Resources', express.static(path.join(appDir, 'images', 'Resources')));
   app.use('/images/Maps', express.static(path.join(appDir, 'images', 'Maps')));
   app.use('/images/Items', express.static(path.join(appDir, 'images', 'Items')));
+  app.use('/images/Spells', express.static(path.join(appDir, 'images', 'Spells')));
   app.use('/images/Flags', express.static(path.join(appDir, 'images', 'Flags')));
   app.use('/sounds', express.static(path.join(appDir, 'sounds')));
   app.use('/config', express.static(path.join(appDir, 'config')));
   app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
+  app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
 
 
 
@@ -203,11 +227,10 @@ function StartRadar()
   const filter = 'udp and (dst port 5056 or src port 5056)';
   var bufSize =  4096;
   var buffer = Buffer.alloc(4096);
+  // Logger already initialized at top of file (global.loggerServer available)
+
   const manager = new PhotonParser();
   var linkType = c.open(device, filter, bufSize, buffer);
-  // 📊 Initialize Logger Server
-  const logger = new LoggerServer('./logs');
-  console.log('📊 [App] Logger initialized');
 
 
   c.setMinBytes && c.setMinBytes(0);
@@ -241,13 +264,12 @@ function StartRadar()
       const eventCode = dictonary["parameters"][252];
 
       switch (eventCode) {
-        case EventCodes.EventCodes.NewCharacter:
-        case EventCodes.EventCodes.Leave:
         case EventCodes.EventCodes.CharacterEquipmentChanged:
           server.clients.forEach(function(client) {
             client.send(JSON.stringify({ code : "items", dictionary: JSON.stringify(dictonary) }));
           });
-      
+          break;
+
         default:
           server.clients.forEach(function(client) {
             client.send(JSON.stringify({ code : "event", dictionary: JSON.stringify(dictonary) }));
@@ -261,7 +283,6 @@ function StartRadar()
       });*/
     });
 
-    
     manager.on('request', (dictonary) =>
     {
       const dictionaryDataJSON = JSON.stringify(dictonary);

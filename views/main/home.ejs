@@ -18,6 +18,20 @@
         </h4>
 
         <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingShowPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Show Players on Radar</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">
+              Master toggle to show players on the radar. Must be enabled for any player detection.
+            </span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
           <input type="checkbox" id="settingItems" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
           <span class="dark:text-white">Items</span>
           <span class="relative group">
@@ -125,6 +139,40 @@
         </label>
       </div>
     </div>
+
+    <!-- Display Settings Section -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          ⚙️ Display Settings
+        </h4>
+
+        <div class="p-2 w-full md:w-1/2">
+          <label class="block text-sm">
+            <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+              Maximum Players Displayed
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="tooltip-base tooltip-right">
+                  Maximum number of players to display on the radar (1-100). Default: 50
+                </span>
+              </span>
+            </span>
+            <input
+              id="settingMaxPlayersDisplay"
+              type="number"
+              min="1"
+              max="100"
+              class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+              placeholder="50"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -135,6 +183,7 @@
   }
 
   // Get elements
+  const settingShowPlayers = document.getElementById("settingShowPlayers");
   const settingItems = document.getElementById("settingItems");
   const settingItemsDev = document.getElementById("settingItemsDev");
   const settingSound = document.getElementById("settingSound");
@@ -142,8 +191,10 @@
   const settingPassivePlayers = document.getElementById("settingPassivePlayers");
   const settingFactionPlayers = document.getElementById("settingFactionPlayers");
   const settingDangerousPlayers = document.getElementById("settingDangerousPlayers");
+  const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
 
   // Load saved settings
+  settingShowPlayers.checked = returnLocalBool("settingShowPlayers");
   settingItems.checked = returnLocalBool("settingItems");
   settingItemsDev.checked = returnLocalBool("settingItemsDev");
   settingSound.checked = returnLocalBool("settingSound");
@@ -151,8 +202,13 @@
   settingPassivePlayers.checked = returnLocalBool("settingPassivePlayers");
   settingFactionPlayers.checked = returnLocalBool("settingFactionPlayers");
   settingDangerousPlayers.checked = returnLocalBool("settingDangerousPlayers");
+  settingMaxPlayersDisplay.value = localStorage.getItem("settingMaxPlayersDisplay") || "50";
 
   // Save on change
+  settingShowPlayers.addEventListener("click", () => {
+    localStorage.setItem("settingShowPlayers", settingShowPlayers.checked);
+  });
+
   settingItems.addEventListener("click", () => {
     localStorage.setItem("settingItems", settingItems.checked);
   });
@@ -179,5 +235,12 @@
 
   settingDangerousPlayers.addEventListener("click", () => {
     localStorage.setItem("settingDangerousPlayers", settingDangerousPlayers.checked);
+  });
+
+  settingMaxPlayersDisplay.addEventListener("input", () => {
+    const value = parseInt(settingMaxPlayersDisplay.value);
+    if (value >= 1 && value <= 100) {
+      localStorage.setItem("settingMaxPlayersDisplay", value);
+    }
   });
 </script>

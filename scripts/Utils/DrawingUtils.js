@@ -227,8 +227,8 @@ class DrawingUtils {
         const rectY = y - 20;
 
         let color;
-        if (realDistance < 30) color = "rgba(0,200,0,0.85)";
-        else if (realDistance < 60) color = "rgba(255,200,0,0.85)";
+        if (realDistance < 10) color = "rgba(0,200,0,0.85)";
+        else if (realDistance < 20) color = "rgba(255,200,0,0.85)";
         else color = "rgba(255,100,0,0.85)";
 
         ctx.fillStyle = color;

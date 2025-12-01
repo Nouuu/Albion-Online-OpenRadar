@@ -1,6 +1,11 @@
 const Protocol16Deserializer = require('./Protocol16Deserializer');
 
 class PhotonCommand {
+	// Get logger instance - ALWAYS use global.loggerServer (no fallback)
+	static getLogger() {
+		return global.loggerServer || null;
+	}
+
 	constructor(parent, payload) {
 		this.parent = parent;
 		this.payload = payload;
@@ -64,7 +69,7 @@ class PhotonCommand {
 		this.payload.seek(this.payload.tell() + 1);
 		this.messageType = this.payload.readUInt8();
 		this.payload = this.payload.slice(this.payload.length - 2);
-	
+
 		switch (this.messageType) {
 		  case 2:
 			this.data = Protocol16Deserializer.deserializeOperationRequest(this.payload);
@@ -79,9 +84,26 @@ class PhotonCommand {
 		  case 4:
 			this.data = Protocol16Deserializer.deserializeEventData(this.payload);
 
+			// 🔍 TRACE: Log après désérialisation pour Event 29
+			if (this.data.code === 29) {
+				const logger = PhotonCommand.getLogger();
+				if (logger) {
+					logger.warn('PACKET_RAW', 'PhotonCommand_Event29_AfterDeserialize', {
+						code: this.data.code,
+						hasParam253: !!this.data.parameters[253],
+						param253: this.data.parameters[253],
+						param7_type: typeof this.data.parameters[7],
+						param7_isBuffer: Buffer.isBuffer(this.data.parameters[7]),
+						param7_length: this.data.parameters[7] ? this.data.parameters[7].length : 0,
+						allParamKeys: Object.keys(this.data.parameters),
+						note: 'Event 29 AFTER Protocol16Deserializer.deserializeEventData()'
+					});
+				}
+			}
+
 			this.parent.parent.emit('event', this.data);
 
-			
+
 			break;
 		}
 	}

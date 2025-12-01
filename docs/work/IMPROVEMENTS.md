@@ -1,6 +1,27 @@
-# 📊 Résumé des Améliorations - Session de Logging
+# 📊 Résumé des Améliorations
 
-**Date :** 2025-11-03  
+---
+
+## 🚧 [2025-11-10] Debug mouvement joueurs (résumé)
+
+> Tous les détails (timeline complète, hypothèses, fichiers modifiés) sont consolidés dans [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md).
+
+- ✅ Détection initiale des joueurs corrigée (Event 29 → bons paramètres de position)
+- ✅ Les joueurs apparaissent sur le radar
+- ❌ Le mouvement des joueurs reste problématique (positions figées / incohérentes)
+- 🔁 Investigation en cours documentée uniquement dans `PLAYER_DETECTION_STATUS.md`
+
+---
+
+## 🎯 [2025-11-09] Fix partiel – Détection des joueurs
+
+- Correction des paramètres de position initiale pour `NewCharacter (Event 29)`
+- Impact : les autres joueurs apparaissent correctement, mais le problème de mouvement persiste (voir `PLAYER_DETECTION_STATUS.md`)
+
+---
+
+## 📈 [2025-11-03] Session de Logging
+
 **Objectif :** Système de logging enrichi pour collecte TypeIDs
 
 ---
@@ -287,4 +308,3 @@ TODO.md                             ← État du projet
 ---
 
 **Système prêt pour la collecte ! 🎮🔍**
-

@@ -1,7 +1,7 @@
 # 📋 TODO
 
-**Last Update**: 2025-11-03  
-**Status**: ✅ Resource and enchantment detection improvements
+**Last Update**: 2025-11-07
+**Status**: ✅ Player detection system implemented
 
 > 📖 **Technical Details**: [DEV_NOTES.md](DEV_NOTES.md) | **Tools**: [tools/](tools/)  
 > 🎯 **New**: [Overlay Mode](OVERLAY_MODE.md) - Popup window for radar  
@@ -50,6 +50,14 @@
 - **localStorage Cache** : Functional (cross-reference HarvestablesHandler)
 - **Settings Filtering** : By Tier + Enchant operational
 - **🆕 Overlay Mode** : Popup window with opacity control ✅
+- **🆕 Player Detection (2025-11-07)** : ✅ **IMPLEMENTED**
+    - ✅ Basic radar display (red dots)
+    - ✅ Smooth position interpolation
+    - ✅ Type filtering (Passive/Faction/Dangerous)
+    - ✅ Debug logging system
+    - ✅ Master toggle `settingShowPlayers`
+    - ✅ UI in home.ejs
+    - 📖 See [PLAYERS.md](../technical/PLAYERS.md) for details
 
 ### ❌ Resolved Issues
 
@@ -65,12 +73,28 @@
 
 ## ✅ COMPLETED
 
+### Resources & Detection
 - ✅ Complete TypeIDs database (235 TypeIDs)
 - ✅ Fiber/Hide functional detection
 - ✅ Albion server bugs override (TypeID 528/530/531)
 - ✅ localStorage cache + Clear button
 - ✅ Analysis tools (tools/)
 - ✅ Organized documentation
+
+### Player Detection (2025-11-07)
+- ✅ Basic player radar display (red dots, 10px)
+- ✅ Position interpolation (smooth movement)
+- ✅ **Move event handling FIXED** (2025-11-07)
+    - ✅ Support for both player format (Parameters[1][x/y])  
+    - ✅ Support for entity format (Parameters[4/5])
+    - ✅ Detection based on Parameters[253] === 21
+    - ✅ Debug logging for both movement types
+- ✅ PlayersDrawing.js refactored (uncommented interpolate/invalidate)
+- ✅ Settings renamed: `settingDot` → `settingShowPlayers`
+- ✅ UI added in home.ejs with master toggle
+- ✅ Debug logging with CATEGORIES.PLAYER
+- ✅ Type filtering (Passive/Faction/Dangerous)
+- ✅ Documentation: docs/technical/PLAYERS.md
 
 ---
 
@@ -100,6 +124,7 @@
 
 ### Medium term
 
+#### Resources
 - [ ] Long field session (2h+) with complete validation
     - Different biomes and tiers
     - Analyze stability and performance
@@ -108,6 +133,36 @@
 - [ ] Analyze EventNormalizer necessity
     - Evaluate if current corrections are sufficient
     - Decision based on long session results
+
+#### Players (Priority 1 - Quick Wins)
+- [ ] **Nickname display** (~30 min)
+    - Add `settingNickname` checkbox in home.ejs
+    - Implement in `PlayersDrawing.invalidate()`
+    - Show player name near dot
+
+- [ ] **Health bar overlay** (~30 min)
+    - Add `settingHealth` checkbox in home.ejs
+    - Use existing `drawHealthBar()` method
+    - Display below player dot
+
+- [ ] **Distance indicator** (~30 min)
+    - Add `settingDistance` checkbox in home.ejs
+    - Use `calculateDistance()` method
+    - Show distance in meters
+
+- [ ] **Color-coded dots by faction** (~45 min)
+    - Green: Passive (flagId=0)
+    - Yellow/Orange: Faction (1-6)
+    - Red: Hostile (255)
+    - Pattern from `MobsDrawing.getEnemyColor()`
+
+- [ ] **Guild/Alliance tags** (~30 min)
+    - Add `settingGuild` checkbox in home.ejs
+    - Display guild name near dot
+
+- [ ] **Mount status indicator** (~30 min)
+    - Checkbox exists (`settingMounted`)
+    - Visual: circle border or icon
 
 ### Medium/Long term
 

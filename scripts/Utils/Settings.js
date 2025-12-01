@@ -14,7 +14,7 @@ export class Settings
         //#endregion
 
         //#region Players
-        this.settingDot = false;
+        this.settingShowPlayers = false;
         this.settingNickname = false;
         this.settingHealth = false;
         this.settingMounted = false;
@@ -390,7 +390,7 @@ export class Settings
         this.showMapBackground = this.returnLocalBool("settingShowMap");
 
         //#region Players
-        this.settingDot = this.returnLocalBool("settingDot");
+        this.settingShowPlayers = this.returnLocalBool("settingShowPlayers");
         this.settingNickname = this.returnLocalBool("settingNickname");
         this.settingHealth = this.returnLocalBool("settingHealth");
         this.settingMounted = this.returnLocalBool("settingMounted");

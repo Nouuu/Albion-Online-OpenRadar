@@ -1,0 +1,16 @@
+{
+  "watch": [
+    "app.js",
+    "views",
+    "public",
+    "scripts",
+    "server-scripts"
+  ],
+  "ext": "js,ejs,html,css",
+  "ignore": [
+    "dist/*",
+    "node_modules/*"
+  ],
+  "delay": "250"
+}
+
