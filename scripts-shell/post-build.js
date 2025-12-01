@@ -147,7 +147,7 @@ if (builtPlatforms.includes('win')) {
 
 // Copy all assets next to the exe
 // This approach makes the executable lighter and facilitates updates
-const assetsToCopy = ['views', 'scripts', 'server-scripts', 'images', 'sounds', 'config'];
+const assetsToCopy = ['views', 'scripts', 'server-scripts', 'images', 'sounds', 'config', 'public'];
 
 function copyRecursiveSync(src, dest) {
     if (!fs.existsSync(src)) {
@@ -175,19 +175,9 @@ function copyRecursiveSync(src, dest) {
 
 console.log('\n📁 Copying assets next to executable...\n');
 
-// Check if images are already optimized
-const optimizationMarker = path.join(DIST_DIR, 'images', '.optimized');
-const imagesAlreadyOptimized = fs.existsSync(optimizationMarker);
-
 for (const asset of assetsToCopy) {
     const srcPath = path.join(__dirname, '..', asset);
     const destPath = path.join(DIST_DIR, asset);
-
-    // Skip images if they already exist AND are optimized
-    if (asset === 'images' && imagesAlreadyOptimized) {
-        console.log(`✓ ${asset}/ already exists (keeping optimized version)`);
-        continue;
-    }
 
     try {
         copyRecursiveSync(srcPath, destPath);
@@ -204,36 +194,10 @@ console.log('  - README files');
 console.log('  - views/');
 console.log('  - scripts/');
 console.log('  - server-scripts/');
-console.log('  - images/ (602 MB - will be optimized)');
+console.log('  - images/');
+console.log('  - public/');
 console.log('  - sounds/');
 console.log('  - config/');
-
-// Optimize images before creating archives
-const optimizationMarkerPath = path.join(DIST_DIR, 'images', '.optimized');
-
-if (fs.existsSync(optimizationMarkerPath)) {
-    console.log('\n🖼️  Images already optimized (skipping)...\n');
-    console.log('   ✓ Optimization marker found: dist/images/.optimized');
-    console.log('   💡 To re-optimize, delete dist/images/ folder or run: npm run clean\n');
-} else {
-    console.log('\n🖼️  Optimizing images (this may take 2-3 minutes)...\n');
-    console.log('   Quality: 95% (near-lossless, imperceptible loss)');
-    console.log('   Expected: 602 MB → ~180 MB (70% compression)\n');
-
-    try {
-        const { execSync } = require('child_process');
-        execSync('node build/optimize-images.js', { stdio: 'inherit' });
-
-        // Create optimization marker
-        fs.writeFileSync(optimizationMarkerPath, new Date().toISOString(), 'utf8');
-        console.log('\n✓ Image optimization completed!\n');
-        console.log(`   ✓ Marker created: ${optimizationMarkerPath}`);
-        console.log('   💡 Next builds will skip optimization (much faster!)\n');
-    } catch (err) {
-        console.warn('\n⚠️  Image optimization failed (continuing with unoptimized images)');
-        console.warn('   Archives will be larger (~630 MB instead of ~250 MB)\n');
-    }
-}
 
 console.log('✓ Post-build completed!\n');
 console.log('Note: This approach makes the exe lighter and facilitates updates\n');
@@ -324,7 +288,7 @@ const getFormats = (platform) => {
             }
         }
         console.log(`\n✅ All release packages ready for distribution!\n`);
-        console.log('💡 Tip: Run "npm run optimize:images" to reduce archive size by 20-40%\n');
+        process.exit(0);
     } catch (err) {
         console.error('✗ Archive creation failed:', err.message);
         process.exit(1);
