@@ -1,8 +1,11 @@
 # RAPPORT D'ANALYSE APPROFONDIE: DEATHEYE vs IMPLÉMENTATION ACTUELLE
 
-**Date**: 2025-01-26
+**Date**: 2025-01-26  
 **Contexte**: Analyse des bugs du radar (T6+, living resources, donjons solo)
 **Référence**: `work/data/albion-radar-deatheye-2pc/`
+
+> ⚠️ Cette analyse se concentre sur les **events**, les **offsets**, les bases XML (items/harvestables/mobs) et la stratégie PvE (T6+, living resources, dungeons, equipment/IP).
+> Elle **ne traite pas** de la récupération des positions joueurs via MITM Photon. Pour tout ce qui concerne le chiffrement, le XorCode et la décision de ne pas implémenter de MITM, voir `PLAYER_POSITIONS_MITM.md`.
 
 ---
 

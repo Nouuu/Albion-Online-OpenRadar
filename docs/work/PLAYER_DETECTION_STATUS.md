@@ -1,7 +1,34 @@
 # 🎯 Player Detection & Movement - Status Investigation
 
-**Dernière mise à jour**: 2025-11-17 18:00
+**Dernière mise à jour**: 2025-11-17 18:00  
 **Statut**: Mobs/Resources OK - Investigation mouvement joueurs en cours
+
+> **Rôle de ce fichier** : source de vérité détaillée sur **l’état actuel**, la **timeline** et les **leçons apprises** pour la détection/mouvement des joueurs.
+>
+> Pour l’architecture générale du système joueurs, voir `docs/technical/PLAYERS.md`.
+>
+> Pour les limites de chiffrement/MITM sur les positions joueurs, voir `docs/PLAYER_POSITIONS_MITM.md`.
+>
+> Pour la comparaison technique avec DEATHEYE (offsets, XML DB…), voir `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`.
+
+---
+
+## 📌 Résumé Rapide (TL;DR)
+
+### ✅ Ce qui fonctionne (Confirmé 2025-11-17 18:00)
+- ✅ **Mobs** : Apparaissent ET bougent correctement (100% fonctionnel)
+- ✅ **Resources** : Apparaissent correctement (static par nature)
+- ✅ **Chests, dungeons, fish** : Détectés correctement
+- ✅ **Event Code 3 (Move)** : Désérialisation serveur fonctionne (param[4]/[5])
+- ✅ **Architecture client/serveur** : Clarifiée et validée
+
+### ❌ Ce qui NE fonctionne PAS
+- ❌ **Players (Position initiale)** : Event 29 param[7] Buffer PAS désérialisé côté serveur
+- ❌ **Players (Mouvement)** : Event 3 (Move) pour joueurs problématique
+  - Hypothèse: Race condition ou format Buffer différent pour joueurs
+  - À investiguer: param[1] Buffer joueurs vs mobs
+
+> **Important :** même avec un protocole parfaitement compris, les **positions joueurs restent limitées par le double chiffrement Photon + XOR**. Voir `PLAYER_POSITIONS_MITM.md` pour la partie **MITM / encryption**.
 
 ---
 
@@ -25,6 +52,15 @@
 - Event 3 désérialisé identiquement (param[4]/[5]) pour tous
 - Mobs bougent → handlers OK
 - Joueurs ne bougent pas → handlers KO ou Move events pas reçus?
+
+---
+
+## 🗂️ Liens Importants
+
+- **Architecture & features joueurs** → `docs/technical/PLAYERS.md`
+- **Limites MITM / positions joueurs** → `docs/PLAYER_POSITIONS_MITM.md`
+- **Comparaison DEATHEYE vs radar actuel** → `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`
+- **Changelog résumé des travaux** → `docs/work/IMPROVEMENTS.md`
 
 ---
 

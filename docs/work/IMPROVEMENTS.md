@@ -2,72 +2,25 @@
 
 ---
 
-## 🚧 [2025-11-10] DÉBOGAGE - Mouvement des Joueurs
+## 🚧 [2025-11-10] Debug mouvement joueurs (résumé)
 
-**Problème :** Les joueurs sont détectés mais **ne bougent pas** (restent figés à position initiale)
-**Cause :** Move events ne mettent pas à jour les positions
-**Status :** 🔴 **EN COURS** (voir [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md))
+> Tous les détails (timeline complète, hypothèses, fichiers modifiés) sont consolidés dans [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md).
 
-### Ce qui fonctionne ✅
-
-1. **Détection initiale (NewCharacter)**
-   - ✅ Utilise `param[12]` ou `param[13]` (corrigé le 2025-11-09)
-   - ✅ Joueurs apparaissent sur radar
-   - ✅ Position initiale correcte
-
-### Ce qui NE fonctionne PAS ❌
-
-1. **Mise à jour positions (Move)**
-   - ❌ Buffer offsets 9/13 donnent valeurs **invalides** (1.28e-28, 6.2e+21)
-   - ❌ `updatePlayerPosition()` jamais appelé (positions invalides → skip)
-   - ❌ Joueurs restent **figés** à leur position initiale
-   - ❌ Apparaissent "au centre" quand local player bouge
-
-### Investigation en Cours
-
-**Hypothèses:**
-1. Photon Event Code 2 vs 3 (joueurs vs entités génériques?)
-2. Format Buffer différent pour joueurs
-3. Workaround actif bloque mises à jour
-
-**Logs diagnostiques ajoutés:**
-- `Event_Full_Dictionary` → Cherche Photon Event Code
-- `DIAG_MoveBuffer_Structure` → Analyse bytes du Buffer
-- `DIAG_MoveBuffer_Decoded` → Valeurs décodées offsets 9/13
-
-### Fichiers Modifiés (2025-11-10)
-
-- `scripts/Drawings/PlayersDrawing.js` - Garde lpX/lpY, filtre hX/hY
-- `scripts/Utils/Utils.js` - Logs diagnostiques Buffer
-
-### Documentation
-
-- 📋 [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md) - **État consolidé détaillé** (détection + mouvement + leçons apprises)
-- 📦 `archive_2025-11-17/` - Investigations spécifiques (buffer deserialization, mouvement, fixes)
-- 📦 `archive_2025-11-09/PLAYER_DETECTION_SOLUTION_OBSOLETE.md` - Conclusion prématurée (détection ≠ mouvement)
+- ✅ Détection initiale des joueurs corrigée (Event 29 → bons paramètres de position)
+- ✅ Les joueurs apparaissent sur le radar
+- ❌ Le mouvement des joueurs reste problématique (positions figées / incohérentes)
+- 🔁 Investigation en cours documentée uniquement dans `PLAYER_DETECTION_STATUS.md`
 
 ---
 
-## 🎯 [2025-11-09] FIX PARTIEL - Détection des Joueurs
+## 🎯 [2025-11-09] Fix partiel – Détection des joueurs
 
-**Problème :** Les autres joueurs ne s'affichaient pas sur le radar
-**Cause :** Mauvais paramètres pour position initiale
-**Status :** ✅ **CORRIGÉ** (détection uniquement, pas le mouvement)
-
-### Correction Appliquée
-
-1. **NewCharacter (EventCode 29)** - Position initiale
-   - ❌ **Avant** : Lisait `param[7]`
-   - ✅ **Après** : Lit `param[12]` ou `param[13]`
-
-### Impact
-
-- ✅ Joueurs détectés et apparaissent
-- ❌ Ne bougent pas (problème différent, voir ci-dessus)
+- Correction des paramètres de position initiale pour `NewCharacter (Event 29)`
+- Impact : les autres joueurs apparaissent correctement, mais le problème de mouvement persiste (voir `PLAYER_DETECTION_STATUS.md`)
 
 ---
 
-## 📊 [2025-11-03] Session de Logging
+## 📈 [2025-11-03] Session de Logging
 
 **Objectif :** Système de logging enrichi pour collecte TypeIDs
 
@@ -355,4 +308,3 @@ TODO.md                             ← État du projet
 ---
 
 **Système prêt pour la collecte ! 🎮🔍**
-

@@ -1,33 +1,50 @@
 # 👥 Player Detection & Display System
 
-*Last updated: 2025-11-09*
+*Last updated: 2025-12-01*
 
+## 🧭 Scope & Related Docs
 
+This document describes the **architecture and stable behavior** of the player detection & display system.
 
-## 🔴 CRITICAL ISSUE - PLAYERS NOT DISPLAYING
+For up‑to‑date investigation status and protocol details, see:
+- `docs/work/PLAYER_DETECTION_STATUS.md` → **current status & timeline of investigations** (detection & movement)
+- `docs/PLAYER_POSITIONS_MITM.md` → **protocol & encryption limits** (Photon AES + XOR, MITM, why precise positions are out of scope)
+- `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md` → detailed **technical comparison with DEATHEYE** (equipment, XML DB, etc.)
 
-> !!! Check on :
-> - https://github.com/rafalfigura/AO-Radar
-> - https://github.com/Revalto/ao-network
-> - https://github.com/DocTi/albion-network
-> - https://github.com/kolloko2/AlbionOnlinePhotonEventIds
+---
 
-**Status**: ❌ **OTHER PLAYERS DO NOT APPEAR ON RADAR**
+## ⚠️ Historical Issues & Known Limitations
 
-### Known Issues:
-- ✅ Player **detection** works (NewCharacter events captured)
-- ✅ Local player position (lpX/lpY) works
-- ❌ **Other players DON'T display** - positions are corrupted in Move events
-- ❌ Buffer decoding at offsets 12-19 works for **MOBS only**, not players
-- ❌ param[4]/[5] in Move events contain corrupted values for players (2.733e-9, etc.)
+> This section summarizes past issues and the **current constraints**. For the full, dated timeline, always refer to `docs/work/PLAYER_DETECTION_STATUS.md`.
 
-**See**: `docs/work/PLAYERS_VS_MOBS_PROTOCOL_DIFFERENCES.md` for detailed analysis
+### Historical state (before 2025‑11‑10)
+
+- ✅ Player **detection** worked (NewCharacter events captured)
+- ✅ Local player position (lpX/lpY) worked
+- ❌ Other players either didn’t display or all appeared at (0, 0)
+- ❌ Move events for players had corrupted/unused coordinates
+- ✅ Buffer decoding at offsets 12–19 worked **for mobs only**, not players
+
+### Current functional scope (post‑2025‑11‑17)
+
+- ✅ Players are **detected** and can be displayed on the radar when the feature is enabled
+- ✅ Mobs and resources are fully functional (spawn + movement) – see `PLAYER_DETECTION_STATUS.md`
+- ⚠️ Player movement is still under investigation:
+  - Event 29 (NewCharacter) position buffer for players is not fully deserialized on server
+  - Event 3 (Move) works perfectly for mobs, but players can still exhibit incorrect/laggy positions depending on state
+- ❗ **Precise, reliable absolute positions for other players are out of scope without a Photon MITM proxy** → see `PLAYER_POSITIONS_MITM.md` for details
+
+In short:
+- Architecture and rendering are stable.
+- Detection works.
+- Movement and exact positions for other players are limited by both protocol investigations and encryption constraints.
 
 ---
 
 ## 📋 Table of Contents
 
-- [Critical Issue](#-critical-issue---players-not-displaying)
+- [Scope & Related Docs](#-scope--related-docs)
+- [Historical Issues & Known Limitations](#-historical-issues--known-limitations)
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -40,20 +57,27 @@
 
 ## Overview
 
-The player detection system **attempts to** track and display enemy players on the radar in real-time. Players are detected through network packet analysis but **currently do not display correctly** due to protocol differences between mobs and players.
+The player detection system tracks and displays enemy players on the radar in real time **within the limits of the protocol and encryption**.
+
+Players are detected through Photon network packet analysis. Display and movement rely on:
+- server‑side deserialization (`Protocol16Deserializer.js`),
+- client‑side handlers (`PlayersHandler.js`),
+- and drawing logic (`PlayersDrawing.js`).
+
+For encryption / MITM constraints, always refer to `PLAYER_POSITIONS_MITM.md`.
 
 ### Current Features ✅
 
 - **Player Detection**: NewCharacter events captured successfully
 - **Type Filtering**: Separate toggles for Passive/Faction/Dangerous players
-- **Debug Logging**: Detailed logs for detection events
+- **Debug Logging**: Detailed logs for detection and movement events
 - **Master Toggle**: `settingShowPlayers` to enable/disable all player detection
+- **Equipment IDs**: Player items captured from NewCharacter
 
-### NOT Working ❌
+### Not Guaranteed / Limited ❌
 
-- **Radar Display**: Players do NOT appear on radar (corrupted positions)
-- **Position Updates**: Move events contain corrupted coordinates for players
-- **Smooth Movement**: N/A - positions never update correctly
+- **Precise player positions**: limited by protocol + encryption; see `PLAYER_POSITIONS_MITM.md`
+- **Smooth movement for all players**: current behavior depends on ongoing work in `PLAYER_DETECTION_STATUS.md`
 
 ### Planned Features 🚧
 
@@ -61,7 +85,7 @@ The player detection system **attempts to** track and display enemy players on t
 - Health bar overlay
 - Distance indicator
 - Guild/Alliance tags
-- Color-coded dots by faction status
+- Color‑coded dots by faction status
 - Mount status indicator
 
 ---
@@ -147,85 +171,28 @@ Managed in `views/main/ignorelist.ejs`
 
 ## Implementation Status
 
-### ✅ Completed (2025-11-07)
+### ✅ Completed (as of 2025‑11‑09)
 
-#### 1. Core Drawing System
-- **File**: `scripts/Drawings/PlayersDrawing.js`
-- **Changes**:
-  - Uncommented `interpolate()` method (lines 94-109)
-  - Uncommented & refactored `invalidate()` method (lines 112-162)
-  - Added CATEGORIES/EVENTS constants for logging
-  - Implemented red dot drawing (`#FF0000`, 10px radius)
-  - **NEW**: Added persistent player tracking with `Set` (prevents duplicate logs)
-  - **NEW**: Added 50-player display limit to prevent performance issues in cities
-  - **NEW**: Optimized logging (only log count changes, not every frame)
+- Core drawing system (`scripts/Drawings/PlayersDrawing.js`)
+- Handler logic (`scripts/Handlers/PlayersHandler.js`)
+- Settings system (`scripts/Utils/Settings.js`, `views/main/home.ejs`)
+- Debug logging categories (`CATEGORIES.PLAYER`, `CATEGORIES.PLAYER_HEALTH`)
 
-#### 2. Handler Logic
-- **File**: `scripts/Handlers/PlayersHandler.js`
-- **Status**: Fully functional
-- **Features**:
-  - Detects new players from network packets
-  - Filters by type (Passive/Faction/Dangerous)
-  - Manages ignore lists
-  - Tracks health updates
-  - Handles mount status
-- **Bug Fixes (2025-11-07)**:
-  - **CRITICAL**: Fixed `updatePlayerPosition()` - was empty, now updates `posX`/`posY` (lines 248-259)
-  - **CRITICAL**: Enabled position updates in `Utils.js:296` (was commented out)
-  - **FIX**: Added error handling for audio autoplay (`NotAllowedError`) (lines 207-214)
-  - Players now appear at correct positions instead of all at (0, 0)
+See the existing sections below for full details of each change and file.
 
-#### 3. Settings System
-- **Files**:
-  - `scripts/Utils/Settings.js`
-  - `views/main/home.ejs`
-- **Changes**:
-  - Renamed `settingDot` → `settingShowPlayers` (consistent naming)
-  - Added UI checkbox in home.ejs (line 20-32)
-  - Added JavaScript handlers (lines 152-174)
-  - Settings persist in localStorage
+### 🚧 Under Active Investigation (see `PLAYER_DETECTION_STATUS.md`)
 
-#### 4. Debug Logging
-- **Category**: `CATEGORIES.PLAYER`, `CATEGORIES.PLAYER_HEALTH`
-- **Events**:
-  - `NewPlayerEvent_ALL_PARAMS` - Full detection details
-  - `PlayerDebugInfo` - Drawing info (position, nickname, etc.)
-  - `PlayerHealthUpdate_DETAIL` - Health changes
-- **Toggle**: `settingDebugPlayers` in Settings page
+- Server‑side deserialization of Event 29 (NewCharacter) position buffer for players
+- Behavior of Event 3 (Move) for players vs mobs
+- Edge cases where players appear frozen or jumpy
 
-### 🚧 Partially Implemented
+> **Do not rely on this file alone for the latest investigation status.**
+> Always cross‑check with `docs/work/PLAYER_DETECTION_STATUS.md`.
 
-#### 1. Additional Display Options
-- **Status**: Settings exist but not used in drawing
-- **Variables defined** (Settings.js:17-22):
-  - `settingNickname` - Defined but not rendered
-  - `settingHealth` - Defined but not rendered
-  - `settingDistance` - Defined but not rendered
-  - `settingGuild` - Defined but not rendered
-  - `settingMounted` - Defined but not rendered
+### ❌ Not Implemented Yet
 
-#### 2. Items Display
-- **File**: `scripts/Drawings/PlayersDrawing.js` - `drawItems()` method
-- **Status**: Implemented but separate from radar drawing
-- **Usage**: Shows equipment list in side panel (not on radar)
-
-### ❌ Not Implemented
-
-#### 1. Advanced Radar Features
-- Nickname overlay on radar
-- Health bar on radar dots
-- Distance indicators on radar
-- Guild tag on radar
-- Color-coded dots by faction
-- Mount status indicator on radar
-
-#### 2. UI for Additional Settings
-No checkboxes in `home.ejs` for:
-- `settingNickname`
-- `settingHealth`
-- `settingDistance`
-- `settingGuild`
-- `settingMounted`
+- Advanced radar overlays (nickname, health bar, distance, guild tag, mount icon) on the radar itself
+- Full UI wiring for `settingNickname`, `settingHealth`, `settingDistance`, `settingGuild`, `settingMounted`
 
 ---
 
@@ -268,7 +235,7 @@ const players = playersHandler.playersInRange;
   nickname: string,     // Player name
   guildName: string,    // Guild name
   posX: number,         // World X position
-  posY: number,         // World Y position
+  posY: number,         // Radar X (interpolated)
   hX: number,           // Radar X (interpolated)
   hY: number,           // Radar Y (interpolated)
   currentHealth: number,
@@ -389,75 +356,17 @@ CATEGORY_SETTINGS_MAP = {
 
 ## Future Improvements
 
-### Priority 1: Radar Enhancements 🎯
+At high level, future work on the player system splits into two tracks:
 
-#### 1. Nickname Display
-- **Goal**: Show player nickname near radar dot
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **UI**: Add checkbox in `home.ejs`
-- **Estimate**: ~30 minutes
+1. **UI / UX improvements** (safe, no protocol assumptions):
+   - Use existing settings: nickname, health, distance, guild, mount status
+   - Improve visual representation on radar (colors, shapes, clustering)
 
-#### 2. Health Bar Overlay
-- **Goal**: Show HP bar below player dot
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **UI**: Add checkbox in `home.ejs`
-- **Method**: Reuse `drawHealthBar()` from DrawingUtils
-- **Estimate**: ~30 minutes
+2. **Protocol‑level investigations** (must follow rules in `PLAYER_DETECTION_STATUS.md`):
+   - Any change to server‑side deserialization must be documented and validated there
+   - No attempt to bypass encryption or reimplement MITM in this project
 
-#### 3. Distance Indicator
-- **Goal**: Show distance in meters from local player
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **UI**: Add checkbox in `home.ejs`
-- **Calculation**: Already in `MobsDrawing` pattern
-- **Estimate**: ~30 minutes
-
-### Priority 2: Visual Improvements 🎨
-
-#### 4. Color-Coded Dots by Faction
-- **Goal**: Different colors per flagId
-  - Green: Passive (0)
-  - Yellow/Orange: Faction (1-6)
-  - Red: Hostile (255)
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **Pattern**: Similar to `MobsDrawing.getEnemyColor()`
-- **Estimate**: ~45 minutes
-
-#### 5. Guild/Alliance Tags
-- **Goal**: Show guild name or alliance tag
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **UI**: Add checkbox in `home.ejs`
-- **Estimate**: ~30 minutes
-
-#### 6. Mount Status Indicator
-- **Goal**: Visual indicator if player is mounted
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **UI**: Checkbox already exists (`settingMounted`)
-- **Design**: Circle border or icon
-- **Estimate**: ~30 minutes
-
-### Priority 3: Advanced Features 🚀
-
-#### 7. Faction Flag Icons
-- **Goal**: Show faction flag icon instead of circle
-- **Files**: `PlayersDrawing.js:invalidate()`
-- **Assets**: Use existing `FactionFlagInfo` + flag images
-- **Pattern**: Similar to mobs using `DrawCustomImage()`
-- **Estimate**: ~1 hour
-
-#### 8. Threat Level Indicator
-- **Goal**: Size/color based on gear or health
-- **Files**: `PlayersHandler.js`, `PlayersDrawing.js`
-- **Logic**: Analyze items array for tier/enchant
-- **Estimate**: ~2 hours
-
-#### 9. Player History/Tracking
-- **Goal**: Track player movements over time
-- **Files**: New file `PlayerTracker.js`
-- **Features**:
-  - Path visualization
-  - Time in area
-  - Alert on return
-- **Estimate**: ~4 hours
+Always document protocol experiments in `docs/work/PLAYER_DETECTION_STATUS.md`, not here.
 
 ---
 
