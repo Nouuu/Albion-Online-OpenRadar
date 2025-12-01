@@ -22,40 +22,7 @@ npm run release       # Build + create release ZIP
 
 **Advantages:** Works everywhere, no need for Make or batch scripts.
 
-### Alternative Method (Direct Scripts)
-
-**Windows (CMD/PowerShell) :**
-```bash
-build-helper.bat install   # Install dependencies
-build-helper.bat check     # Check system
-build-helper.bat build     # Build ZQRadar.exe
-build-helper.bat release   # Build + create release ZIP
-```
-
-**Unix/Linux/macOS (Makefile) :**
-```bash
-make install      # Install dependencies
-make check        # Check system
-make build        # Build ZQRadar.exe
-make release      # Build + create release ZIP
-## Available Commands
-
-### npm scripts (Recommandé - Fonctionne partout)
-
-| Command                | Description                                    |
-|------------------------|------------------------------------------------|
-| `npm install`          | Install all dependencies                       |
-| `npm run check`        | Check system requirements                      |
-| `npm start`            | Run ZQRadar (production mode)                  |
-| `npm run dev`          | Run with auto-reload (nodemon)                 |
-| `npm run build:win`    | Build Windows executable                       |
-| `npm run build:linux`  | Build Linux executable                         |
-| `npm run build:macos`  | Build macOS executable                         |
-| `npm run build:all`    | Build all platforms                            |
-| `npm run release`      | Build Windows + create release ZIP             |
-| `npm run clean`        | Clean dist folder                              |
-
-### Makefile (Unix/Linux/macOS)
+### Makefile (Unix/Linux/macOS/Windows with Make)
 
 **Note:** The `build.bat` and `Makefile` scripts are in the `build/` folder.  
 The `build-helper.bat` wrapper calls them from the root.
