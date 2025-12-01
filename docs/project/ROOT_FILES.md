@@ -1,59 +1,59 @@
-# 📋 Fichiers à la Racine - ZQRadar
+# 📋 Root Files - OpenRadar
 
-> **Guide de référence** - Organisation de la racine du projet
-
----
-
-## ✅ Fichiers Autorisés à la Racine (9 seulement)
-
-**Fichiers essentiels :**
-
-1. **`app.js`** ⭐ - Point d'entrée de l'application
-2. **`package.json`** ⭐ - Configuration npm
-3. **`package-lock.json`** - Lock des dépendances
-4. **`.gitignore`** - Configuration git
-5. **`README.md`** ⭐ - Guide utilisateur principal
-6. **`BUILD.md`** - Instructions de build
-7. **`SETUP.md`** - Guide setup développeur
-8. **`zqradar.ico`** - Icône de l'application
-9. **`build-helper.bat`** - Wrapper pour scripts de build (Windows)
+> **Reference guide** – Organization of the project root
 
 ---
 
-## 📁 Organisation des Autres Fichiers
+## ✅ Allowed Files at the Root (9 only)
+
+**Essential files:**
+
+1. **`app.js`** ⭐ – Application entry point
+2. **`package.json`** ⭐ – npm configuration
+3. **`package-lock.json`** – Dependency lockfile
+4. **`.gitignore`** – Git ignore rules
+5. **`README.md`** ⭐ – Main user guide
+6. **`BUILD.md`** – Build instructions
+7. **`SETUP.md`** – Developer setup guide
+8. **`zqradar.ico`** – Application icon (kept for compatibility)
+9. **`build-helper.bat`** – Wrapper for build scripts (Windows)
+
+---
+
+## 📁 Organization of Other Files
 
 ### `build/`
 
-Scripts de build Node.js
+Node.js build scripts:
 
-- `check-system.js` - Vérification système
-- `post-build.js` - Post-build
-- `optimize-images.js` - Optimisation images
-- `create-release.js` - Création release
-- `README.md` - Documentation
+- `check-system.js` – System checks
+- `post-build.js` – Post-build tasks
+- `optimize-images.js` – Image optimization
+- `create-release.js` – Release creation
+- `README.md` – Build docs
 
 ### `config/`
 
-Fichiers de configuration
+Configuration files:
 
-- `nodemon.json` - Configuration nodemon
-- `README.md` - Documentation
+- `nodemon.json` – Nodemon configuration
+- `README.md` – Documentation
 
 ### `scripts-shell/`
 
-Scripts batch Windows utilitaires
+Utility Windows batch scripts:
 
-- `_INSTALL.bat` - Installation
-- `_RUN.bat` - Lancement rapide
-- `README.md` - Documentation
+- `_INSTALL.bat` – Install
+- `_RUN.bat` – Quick launch
+- `README.md` – Documentation
 
-**Chaque dossier contient un README.md explicatif.**
+**Each folder must contain an explanatory `README.md`.**
 
 ---
 
-## ❌ Fichiers MD Temporaires Interdits
+## ❌ Forbidden Temporary Markdown Files
 
-**Patterns automatiquement git-ignorés :**
+**Automatically git-ignored patterns:**
 
 ```gitignore
 WORKING_*.md
@@ -73,57 +73,55 @@ PROJECT_SUMMARY.md
 CHANGELOG_ORGANIZATION.md
 ```
 
-**Raison :** Ces fichiers sont temporaires et créent du bazar.
+**Reason:** These files are temporary and create clutter.
 
 ---
 
-## ✅ Où Mettre Quoi
+## ✅ Where to Put What
 
-| Type de fichier/info | Destination                               |
-|----------------------|-------------------------------------------|
-| Notes temporaires    | `mcp_serena_write_memory()`               |
-| Infos importantes    | `aim_create_entities()` (Knowledge Graph) |
-| Documentation        | `docs/` avec structure appropriée         |
-| Scripts de build     | `build/`                                  |
-| Configuration        | `config/`                                 |
-| Scripts shell        | `scripts-shell/`                          |
-| TODOs                | `docs/project/TODO.md`                    |
-| Bugs                 | GitHub Issues                             |
-| Changelog            | `docs/project/CHANGELOG.md`               |
-
----
-
-## 🎯 Règle Stricte
-
-**SEULEMENT 9 fichiers à la racine**
-**SEULEMENT 8 fichiers à la racine**
-
-Tout le reste → dossiers organisés ou memories MCP !
+| File/info type        | Destination                          |
+|-----------------------|--------------------------------------|
+| Temporary notes       | Local notes or issues                |
+| Important information | `docs/` with the proper structure   |
+| Documentation         | `docs/`                             |
+| Build scripts         | `build/`                            |
+| Configuration         | `config/`                           |
+| Shell scripts         | `scripts-shell/`                    |
+| TODOs                 | `docs/project/TODO.md`              |
+| Bugs                  | GitHub Issues                       |
+| Changelog             | `docs/project/CHANGELOG.md`         |
 
 ---
 
-## 📊 Réorganisation (2025-11-05)
+## 🎯 Strict Rule
 
-**De 14 fichiers → 9 fichiers à la racine**
-**De 14 fichiers → 8 fichiers à la racine**
+**ONLY 9 files at the root.**
 
-**Fichiers déplacés :**
+Everything else → organized folders inside the repo.
+
+---
+
+## 📈 Reorganization (2025-11-05)
+
+**From 14 files → 9 files at the root.**
+
+**Moved files:**
 
 - `build.bat`, `Makefile` → `build/`
 - `nodemon.json` → `config/`
 - `_INSTALL.bat`, `_RUN.bat` → `scripts-shell/`
 
-**Fichiers supprimés :**
+**Removed files:**
 
-- `.browser_opened` (temporaire)
-  **Fichiers ajoutés :**
-- `build-helper.bat` (wrapper pour build/build.bat)
+- `.browser_opened` (temporary)
 
-**Résultat :** Racine propre et organisée !
-**Note importante :** Préférer `npm run build:win` aux scripts directs.
+**Added files:**
+- `build-helper.bat` (wrapper for `build/build.bat`)
 
+**Result:** Clean and organized root.
+
+**Important note:** Prefer `npm run build:win` over calling raw build scripts directly.
 
 ---
 
-*Référence - Racine propre et organisée (mise à jour 2025-11-05)*
-
+*Reference – Clean and organized root (updated 2025-11-05)*

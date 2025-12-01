@@ -1,722 +1,633 @@
-# 🛠️ Référence des Outils MCP - ZQRadar
+# 🛠 MCP Tools Reference - OpenRadar
 
-> **Guide technique** pour comprendre et utiliser efficacement tous les serveurs MCP disponibles.
-
----
-
-## 📑 Table des Matières
-
-1. [Serena (Code Symbolique)](#1-serena-code-symbolique)
-2. [Knowledge Graph (AIM)](#2-knowledge-graph-aim)
-3. [Git](#3-git)
-4. [Augments (Frameworks)](#4-augments-frameworks)
-5. [Sequential Thinking](#5-sequential-thinking)
-6. [JetBrains IDE](#6-jetbrains-ide)
+This document summarizes the main MCP tools you can use while working on the OpenRadar project.
 
 ---
 
-## 1. Serena (Code Symbolique)
+## 1. Serena-like Code Tools (Symbolic Analysis)
 
-**Pourquoi:** Analyse de code intelligent, lecture/édition symbolique  
-**Quand:** Dès que vous travaillez avec du code JavaScript/TypeScript
+**Why:** Intelligent code analysis, symbolic reading/editing (classes, methods, functions).  
+**When:** Any time you work with JavaScript/TypeScript code.
 
-### Configuration Initiale
-
-```javascript
-// TOUJOURS faire en premier
-mcp_serena_activate_project({project: "C:\\Projets\\Albion-Online-ZQRadar"})
-
-// Vérifier les memories disponibles
-mcp_serena_list_memories()
-
-// Lire les memories pertinentes
-mcp_serena_read_memory({memory_file_name: "project_summary"})
-mcp_serena_read_memory({memory_file_name: "style_and_conventions"})
-```
-
-### Exploration de Code
-
-#### A. Aperçu d'un fichier
+### 1.1 Symbol Overview of a File
 
 ```javascript
-// Obtenir la liste des symboles top-level (classes, fonctions, etc.)
 mcp_serena_get_symbols_overview({
-    relative_path: "scripts/classes/Player.js"
-})
-
-// Résultat: { symbols: [{ name, kind, location, children }] }
+  relative_path: "scripts/classes/Player.js",
+  max_answer_chars: -1
+});
 ```
 
-#### B. Recherche de symboles
+**Result:** `{ symbols: [{ name, kind, location, children }] }`
+
+Use this instead of reading the entire file:
+
+- ✅ Quick overview of structure (classes, methods).  
+- ✅ Helps decide where to focus.  
+- ❌ Avoid `read_file` on the whole file when this is enough.
+
+### 1.2 Find Symbols
 
 ```javascript
-// Recherche exacte
 mcp_serena_find_symbol({
-    name_path: "Player",  // Nom de classe
-    relative_path: "scripts/classes",  // Restreindre à un dossier
-    include_body: false,  // false = aperçu seulement
-    depth: 1  // 1 = inclure les méthodes de la classe
-})
-
-// Recherche par substring
-mcp_serena_find_symbol({
-    name_path: "parse",  // Trouve parseData, parsePacket, etc.
-    substring_matching: true,
-    include_body: false
-})
-
-// Lecture complète d'une méthode
-mcp_serena_find_symbol({
-    name_path: "Player/parseData",  // Notation: Classe/Méthode
-    include_body: true  // Inclure le code complet
-})
+  name_path_pattern: "Player/parseData",
+  relative_path: "scripts/classes/Player.js",
+  depth: 1,          // 1 = include child methods of the class
+  include_body: false, // false = overview only
+  max_answer_chars: -1,
+  substring_matching: true
+});
 ```
 
-**Notation name_path:**
+**Typical usages:**
+- `Player` → the class `Player`.
+- `Player/parseData` → the `parseData` method of `Player`.
 
-- `Player` → Classe Player (top-level)
-- `Player/constructor` → Constructeur de Player
-- `Player/parseData` → Méthode parseData de Player
-- `/Player` → Absolu (seulement top-level Player)
-- `parseData` → N'importe quel parseData (classe ou fonction)
+**Options:**
+- `depth: 0` → just the symbol.  
+- `depth: 1` → symbol + its children (for classes).  
+- `include_body: true` → returns full source of the symbol.
 
-#### C. Recherche de références
+### 1.3 Read a Method Body
 
 ```javascript
-// Trouver tous les endroits où Player est utilisé
+mcp_serena_find_symbol({
+  name_path_pattern: "Player/parseData",
+  relative_path: "scripts/classes/Player.js",
+  include_body: true,
+  depth: 0,
+  max_answer_chars: -1
+});
+```
+
+Use this to read a method **instead of** raw `read_file`.
+
+### 1.4 Find References
+
+```javascript
 mcp_serena_find_referencing_symbols({
-    name_path: "Player",
-    relative_path: "scripts/classes/Player.js",
-    include_kinds: [5, 6, 12],  // 5=class, 6=method, 12=function
-})
-
-// Résultat: [{ location, snippet, symbol_info }]
+  name_path: "Player",
+  relative_path: "scripts/classes/Player.js",
+  include_kinds: [],
+  exclude_kinds: [],
+  max_answer_chars: -1
+});
 ```
 
-#### D. Recherche par pattern (regex)
+**What it does:**
+- Shows where `Player` is used in the code (call sites, imports, etc.).
+
+### 1.5 Pattern Search
 
 ```javascript
-// Chercher un pattern dans tout le projet
 mcp_serena_search_for_pattern({
-    substring_pattern: "eventEmitter\\.emit\\(['\"].*['\"]",
-    paths_include_glob: "scripts/**/*.js",  // Seulement scripts/
-    context_lines_before: 2,
-    context_lines_after: 2
-})
-
-// Chercher dans un seul fichier
-mcp_serena_search_for_pattern({
-    substring_pattern: "console\\.log",
-    relative_path: "app.js"  // Un seul fichier
-})
+  relative_path: "scripts/",
+  substring_pattern: "window.logger?.debug",
+  paths_include_glob: "scripts/**/*.js",
+  paths_exclude_glob: "",
+  context_lines_before: 1,
+  context_lines_after: 2,
+  restrict_search_to_code_files: true,
+  max_answer_chars: -1
+});
 ```
 
-### Édition de Code
+**Result:** `[{ location, snippet, symbol_info }]`
 
-#### A. Remplacer un symbole complet
+Use this instead of scanning files manually when looking for a pattern.
+
+### 1.6 Editing Code
+
+#### A. Replace a Method Body
 
 ```javascript
 mcp_serena_replace_symbol_body({
-    name_path: "Player/parseData",
-    relative_path: "scripts/classes/Player.js",
-    body: `parseData(buffer) {
-    // Nouvelle implémentation
-    const data = buffer.readInt32LE(0);
-    return { id: data };
-  }`
-})
+  relative_path: "scripts/classes/Player.js",
+  name_path: "Player/parseData",
+  body: `
+    parseData(data) {
+      // New implementation
+      // ...
+    }
+  `
+});
 ```
 
-#### B. Insérer après un symbole
+#### B. Insert After a Symbol
 
 ```javascript
-// Ajouter une nouvelle méthode à la fin d'une classe
+// Add a new method after the Player class
 mcp_serena_insert_after_symbol({
-    name_path: "Player",  // Après la classe Player
-    relative_path: "scripts/classes/Player.js",
-    body: `
-  // Nouvelle méthode
-  getHealth() {
-    return this.health;
-  }
-`
-})
+  relative_path: "scripts/classes/Player.js",
+  name_path: "Player",  // after the Player class
+  body: `
+    class PlayerStats {
+      // ...
+    }
+  `
+});
 ```
 
-#### C. Insérer avant un symbole
+#### C. Insert Before a Symbol
 
 ```javascript
-// Ajouter un import en haut du fichier
 mcp_serena_insert_before_symbol({
-    name_path: "/Player",  // Absolu = premier symbole
-    relative_path: "scripts/classes/Player.js",
-    body: `const { EventEmitter } = require('events');\n`
-})
+  relative_path: "scripts/classes/Player.js",
+  name_path: "Player/parseData",  // before parseData
+  body: `
+    // Helper for parseData
+  `
+});
 ```
 
-#### D. Renommer un symbole
-
-```javascript
-mcp_serena_rename_symbol({
-    name_path: "parseData",
-    relative_path: "scripts/classes/Player.js",
-    new_name: "parsePlayerData"
-})
-// Renomme dans tout le projet (refactoring)
-```
-
-### Memories Serena
-
-```javascript
-// Écrire une note temporaire
-mcp_serena_write_memory({
-    memory_file_name: "packet-analysis-2025-11-05",
-    content: "# Analyse des paquets\n\nOpération 21 = harvestable..."
-})
-
-// Lire une note
-mcp_serena_read_memory({
-    memory_file_name: "packet-analysis-2025-11-05"
-})
-
-// Lister toutes les notes
-mcp_serena_list_memories()
-
-// Supprimer une note obsolète
-mcp_serena_delete_memory({
-    memory_file_name: "packet-analysis-2025-11-05"
-})
-```
-
-### Fichiers et Répertoires
-
-```javascript
-// Lister un répertoire
-mcp_serena_list_dir({
-    relative_path: "scripts/classes",
-    recursive: false
-})
-
-// Recherche de fichiers par nom
-mcp_serena_find_file({
-    file_mask: "Player*.js",
-    relative_path: "scripts"
-})
-```
+Use these editing tools for structural changes instead of manual line offsets.
 
 ---
 
 ## 2. Knowledge Graph (AIM)
 
-**Pourquoi:** Mémoire persistante, graph de connaissances  
-**Quand:** Stocker des infos importantes sur l'architecture, les modules, les bugs
+**Why:** Persistent memory and knowledge graph.  
+**When:** To store long-term information about modules, bugs, features, architecture, etc.
 
-### Concepts
-
-- **Entity (Entité):** Un nœud (module, classe, bug, feature, etc.)
-- **Relation:** Un lien entre deux entités (utilise, hérite, appelle, etc.)
-- **Observation:** Une note sur une entité
-- **Context:** Un "namespace" pour organiser (zqradar-dev, zqradar-bugs, etc.)
-
-### Gestion des Contextes
-
-```javascript
-// Lister tous les contextes disponibles
-mcp_knowledge - gra_aim_list_databases()
-
-// Résultat: { project: [...], global: [...] }
-```
-
-### Créer des Entités
+### 2.1 Create Entities
 
 ```javascript
 aim_create_entities({
-    context: "zqradar-dev",
-    location: "project",  // ou "global"
-    entities: [
-        {
-            name: "PacketParser",
-            entityType: "module",
-            observations: [
-                "Parse les paquets réseau Albion Online",
-                "Fichier: scripts/handlers/PacketHandler.js",
-                "Opération 21 = harvestable (ressources)",
-                "Opération 24 = players (joueurs)"
-            ]
-        },
-        {
-            name: "HarvestableHandler",
-            entityType: "class",
-            observations: [
-                "Gère les événements harvestable",
-                "Émet un event 'harvestable' via WebSocket",
-                "Extrait: tier, enchantment, position"
-            ]
-        }
-    ]
-})
+  context: "openradar-dev",
+  entities: [
+    {
+      name: "PacketParser",
+      entityType: "module",
+      observations: [
+        "Parses Albion Online network packets",
+        "Uses 'cap' to capture",
+        "Operations 21 = harvestable, 24 = players"
+      ]
+    }
+  ]
+});
 ```
 
-### Créer des Relations
+### 2.2 Search the Graph
 
 ```javascript
-aim_create_relations({
-    context: "zqradar-dev",
-    relations: [
-        {
-            from: "PacketParser",
-            to: "HarvestableHandler",
-            relationType: "utilise"
-        },
-        {
-            from: "HarvestableHandler",
-            to: "WebSocketServer",
-            relationType: "émet vers"
-        }
-    ]
-})
-```
-
-### Ajouter des Observations
-
-```javascript
-aim_add_observations({
-    context: "zqradar-dev",
-    observations: [
-        {
-            entityName: "PacketParser",
-            contents: [
-                "Bug: parfois rate les paquets en burst",
-                "Fix: ajouter un buffer circulaire"
-            ]
-        }
-    ]
-})
-```
-
-### Recherche dans le Graph
-
-```javascript
-// Recherche par texte
 aim_search_nodes({
-    context: "zqradar-dev",
-    query: "harvestable"
-})
+  context: "openradar-dev",
+  query: "PacketParser"
+});
 
-// Ouvrir des nœuds spécifiques
-aim_open_nodes({
-    context: "zqradar-dev",
-    names: ["PacketParser", "HarvestableHandler"]
-})
-
-// Lire tout le graph
-aim_read_graph({
-    context: "zqradar-dev"
-})
+// Or read the full graph
+aim_read_graph({ context: "openradar-dev" });
 ```
 
-### Suppression
+### 2.3 Add / Delete Observations & Relations
 
 ```javascript
-// Supprimer des entités
-aim_delete_entities({
-    context: "zqradar-dev",
-    entityNames: ["OldModule"]
-})
+// Add observations
+aim_add_observations({
+  context: "openradar-dev",
+  observations: [
+    {
+      entityName: "PacketParser",
+      contents: ["Runtime Npcap check", "Works with pkg builds"]
+    }
+  ]
+});
 
-// Supprimer des observations
+// Delete observations
 aim_delete_observations({
-    context: "zqradar-dev",
-    deletions: [
-        {
-            entityName: "PacketParser",
-            observations: ["Info obsolète"]
-        }
-    ]
-})
+  context: "openradar-dev",
+  deletions: [
+    {
+      entityName: "PacketParser",
+      observations: ["Obsolete info"]
+    }
+  ]
+});
 
-// Supprimer des relations
+// Delete relations
 aim_delete_relations({
-    context: "zqradar-dev",
-    relations: [
-        {
-            from: "ModuleA",
-            to: "ModuleB",
-            relationType: "old_relation"
-        }
-    ]
-})
+  context: "openradar-dev",
+  relations: [
+    {
+      from: "ModuleA",
+      to: "ModuleB",
+      relationType: "old_relation"
+    }
+  ]
+});
 ```
 
 ---
 
 ## 3. Git
 
-**Pourquoi:** Gestion de version, historique, branches  
-**Quand:** Commits, analyse de l'historique, création de branches
+**Why:** Version control, history, branches.  
+**When:** Commits, history analysis, branch management.
 
-### Status et Diff
+### 3.1 Status and Diff
 
 ```javascript
 const repoPath = "C:\\Projets\\Albion-Online-ZQRadar";
 
 // Status
-mcp_git_git_status({repo_path: repoPath})
+mcp_git_git_status({ repo_path: repoPath });
 
-// Diff non stagé
+// Unstaged diff
 mcp_git_git_diff_unstaged({
-    repo_path: repoPath,
-    context_lines: 5
-})
+  repo_path: repoPath,
+  context_lines: 5
+});
 
-// Diff stagé
-mcp_git_git_diff_staged({repo_path: repoPath})
+// Staged diff
+mcp_git_git_diff_staged({ repo_path: repoPath });
 
-// Diff entre branches
+// Diff between branches
 mcp_git_git_diff({
-    repo_path: repoPath,
-    target: "main..feature/new-parser"
-})
+  repo_path: repoPath,
+  target: "main..feature/new-parser"
+});
 ```
 
-### Log et Historique
+### 3.2 Log and History
 
 ```javascript
-// Derniers commits
+// Latest commits
 mcp_git_git_log({
-    repo_path: repoPath,
-    max_count: 20
-})
+  repo_path: repoPath,
+  max_count: 20
+});
 
-// Log avec filtre temporel
+// Log with time filter
 mcp_git_git_log({
-    repo_path: repoPath,
-    max_count: 50,
-    start_timestamp: "2024-11-01",  // ISO ou relative: "1 week ago"
-    end_timestamp: "2024-11-05"
-})
+  repo_path: repoPath,
+  max_count: 50,
+  start_timestamp: "2024-11-01",  // ISO or relative: "1 week ago"
+  end_timestamp: "2024-11-05"
+});
 
-// Afficher un commit
+// Show a commit
 mcp_git_git_show({
-    repo_path: repoPath,
-    revision: "abc123"  // SHA du commit
-})
+  repo_path: repoPath,
+  revision: "abc123"  // commit SHA
+});
 ```
 
-### Branches
+### 3.3 Branches
 
 ```javascript
-// Lister les branches locales
+// List local branches
 mcp_git_git_branch({
-    repo_path: repoPath,
-    branch_type: "local"
-})
+  repo_path: repoPath,
+  branch_type: "local"
+});
 
-// Lister les branches remote
+// List remote branches
 mcp_git_git_branch({
-    repo_path: repoPath,
-    branch_type: "remote"
-})
+  repo_path: repoPath,
+  branch_type: "remote"
+});
 
-// Toutes les branches
+// All branches
 mcp_git_git_branch({
-    repo_path: repoPath,
-    branch_type: "all"
-})
+  repo_path: repoPath,
+  branch_type: "all"
+});
 
-// Créer une branche
+// Create a branch
 mcp_git_git_create_branch({
-    repo_path: repoPath,
-    branch_name: "feature/packet-refactor",
-    base_branch: "main"  // Optionnel
-})
+  repo_path: repoPath,
+  branch_name: "feature/packet-refactor",
+  base_branch: "main"  // optional
+});
 
 // Checkout
 mcp_git_git_checkout({
-    repo_path: repoPath,
-    branch_name: "feature/packet-refactor"
-})
+  repo_path: repoPath,
+  branch_name: "feature/packet-refactor"
+});
 ```
 
-### Staging et Commit
+### 3.4 Staging and Commit
 
 ```javascript
-// Ajouter des fichiers
+// Add files
 mcp_git_git_add({
-    repo_path: repoPath,
-    files: ["app.js", "scripts/classes/Player.js"]
-})
+  repo_path: repoPath,
+  files: ["app.js", "scripts/classes/Player.js"]
+});
 
 // Commit
 mcp_git_git_commit({
-    repo_path: repoPath,
-    message: "feat: amélioration du parsing des paquets harvestable"
-})
+  repo_path: repoPath,
+  message: "feat: improve harvestable packet parsing"
+});
 
-// Reset (unstage tout)
-mcp_git_git_reset({repo_path: repoPath})
+// Reset (unstage all)
+mcp_git_git_reset({ repo_path: repoPath });
 ```
 
 ---
 
 ## 4. Augments (Frameworks)
 
-**Pourquoi:** Documentation officielle des frameworks  
-**Quand:** Besoin de référence Express, WebSocket, etc.
+**Why:** Official framework documentation (Express, WebSocket, etc.).  
+**When:** You need references for server/framework usage.
 
-### Recherche de Frameworks
+### 4.1 Framework Search
 
 ```javascript
-// Lister par catégorie
+// List by category
 mcp_augments_list_available_frameworks({
-    category: "backend"  // web, mobile, ai-ml, design, tools
-})
+  category: "backend"  // web, mobile, ai-ml, design, tools
+});
 
-// Chercher un framework
+// Search a framework
 mcp_augments_search_frameworks({
-    query: "express"
-})
+  query: "express"
+});
 
-// Info détaillée
+// Detailed info
 mcp_augments_get_framework_info({
-    framework: "express"
-})
+  framework: "express"
+});
 ```
 
-### Documentation
+### 4.2 Documentation
 
 ```javascript
-// Doc complète
+// Full docs
 mcp_augments_get_framework_docs({
-    framework: "express",
-    section: "routing",  // Optionnel
-    use_cache: true
-})
+  framework: "express",
+  section: "routing",  // optional
+  use_cache: true
+});
 
-// Exemples de code
+// Code examples
 mcp_augments_get_framework_examples({
-    framework: "express",
-    pattern: "middleware"
-})
+  framework: "express",
+  pattern: "middleware"
+});
 
-// Recherche dans la doc
+// Search in docs
 mcp_augments_search_documentation({
-    framework: "express",
-    query: "error handling",
-    limit: 10
-})
+  framework: "express",
+  query: "error handling",
+  limit: 10
+});
 ```
 
-### Contexte Multi-Framework
+### 4.3 Multi-Framework Context
 
 ```javascript
-// Obtenir un contexte combiné
+// Get combined context
 mcp_augments_get_framework_context({
-    frameworks: ["express", "websocket", "ejs"],
-    task_description: "Create a real-time web dashboard with Express, WebSocket and EJS templates"
-})
+  frameworks: ["express", "websocket", "ejs"],
+  task_description: "Create a real-time web dashboard with Express, WebSocket and EJS templates"
+});
 ```
 
-### Analyse de Compatibilité
+### 4.4 Compatibility Analysis
 
 ```javascript
 mcp_augments_analyze_code_compatibility({
-    code: `
+  code: `
     app.get('/api/players', (req, res) => {
       res.json({ players: [] });
     });
   `,
-    frameworks: ["express"]
-})
+  frameworks: ["express"]
+});
 ```
 
 ---
 
 ## 5. Sequential Thinking
 
-**Pourquoi:** Résolution de problèmes complexes étape par étape  
-**Quand:** Problème qui nécessite une réflexion approfondie
+**Why:** Step-by-step reasoning for complex problems.  
+**When:** A problem needs deep multi-step analysis.
 
 ```javascript
-mcp_sequential - th_sequentialthinking({
-    thought: "Étape 1: Analyser la structure des paquets...",
-    thoughtNumber: 1,
-    totalThoughts: 5,
-    nextThoughtNeeded: true,
-    isRevision: false
-})
+mcp_sequential-th_sequentialthinking({
+  thought: "Step 1: Analyze packet structure...",
+  thoughtNumber: 1,
+  totalThoughts: 5,
+  nextThoughtNeeded: true,
+  isRevision: false
+});
 
-// Puis étape 2, 3, etc.
-mcp_sequential - th_sequentialthinking({
-    thought: "Étape 2: Identifier les offsets des champs...",
-    thoughtNumber: 2,
-    totalThoughts: 5,
-    nextThoughtNeeded: true
-})
+// Then step 2, 3, etc.
+mcp_sequential-th_sequentialthinking({
+  thought: "Step 2: Identify field offsets...",
+  thoughtNumber: 2,
+  totalThoughts: 5,
+  nextThoughtNeeded: true
+});
 
-// Révision d'une étape précédente
-mcp_sequential - th_sequentialthinking({
-    thought: "Révision de l'étape 1: le format est Little Endian, pas Big Endian",
-    thoughtNumber: 3,
-    totalThoughts: 5,
-    nextThoughtNeeded: true,
-    isRevision: true,
-    revisesThought: 1
-})
+// Revision of a previous step
+mcp_sequential-th_sequentialthinking({
+  thought: "Revision of step 1: format is Little Endian, not Big Endian",
+  thoughtNumber: 3,
+  totalThoughts: 5,
+  nextThoughtNeeded: true,
+  isRevision: true,
+  revisesThought: 1
+});
 ```
 
 ---
 
 ## 6. JetBrains IDE
 
-**Pourquoi:** Intégration IDE (si applicable)  
-**Quand:** Fonctionnalités IDE avancées
+**Why:** IDE integration (if you use a JetBrains IDE).  
+**When:** Advanced IDE features: navigation, refactor, search, run configs.
 
-### Fichiers
+### 6.1 Files
 
 ```javascript
-// Ouvrir dans l'éditeur
+// Open in editor
 mcp_jetbrains_open_file_in_editor({
-    filePath: "scripts/classes/Player.js"
-})
+  filePath: "scripts/classes/Player.js"
+});
 
-// Reformater
+// Reformat
 mcp_jetbrains_reformat_file({
-    path: "scripts/classes/Player.js"
-})
+  path: "scripts/classes/Player.js"
+});
 
-// Problèmes (linting)
+// Problems (linting)
 mcp_jetbrains_get_file_problems({
-    filePath: "scripts/classes/Player.js",
-    errorsOnly: false
-})
+  filePath: "scripts/classes/Player.js",
+  errorsOnly: false
+});
 ```
 
-### Recherche
+### 6.2 Search
 
 ```javascript
-// Recherche par texte
+// Text search
 mcp_jetbrains_search_in_files_by_text({
-    searchText: "eventEmitter.emit",
-    fileMask: "*.js"
-})
+  searchText: "eventEmitter.emit",
+  fileMask: "*.js"
+});
 
-// Recherche par regex
+// Regex search
 mcp_jetbrains_search_in_files_by_regex({
-    regexPattern: "emit\\(['\"]\\w+['\"]",
-    fileMask: "*.js"
-})
+  regexPattern: "emit\\(['\"]\\w+['\"]",
+  fileMask: "*.js"
+});
 ```
 
-### Refactoring
+### 6.3 Refactoring
 
 ```javascript
-// Renommer (refactoring intelligent)
+// Rename (intelligent refactor)
 mcp_jetbrains_rename_refactoring({
-    pathInProject: "scripts/classes/Player.js",
-    symbolName: "parseData",
-    newName: "parsePlayerData"
-})
+  pathInProject: "scripts/classes/Player.js",
+  symbolName: "parseData",
+  newName: "parsePlayerData"
+});
 
-// Remplacer texte
+// Replace text
 mcp_jetbrains_replace_text_in_file({
-    pathInProject: "app.js",
-    oldText: "console.log('Debug:',",
-    newText: "logger.debug(",
-    replaceAll: true,
-    caseSensitive: true
-})
+  pathInProject: "app.js",
+  oldText: "console.log('Debug:',",
+  newText: "logger.debug(",
+  replaceAll: true,
+  caseSensitive: true
+});
 ```
 
 ---
 
-## 📊 Tableau de Décision Rapide
+## 📊 Quick Decision Table
 
-| Je veux...                              | Outil à utiliser                             |
-|-----------------------------------------|----------------------------------------------|
-| Voir les classes/fonctions d'un fichier | `mcp_serena_get_symbols_overview`            |
-| Trouver où un symbole est utilisé       | `mcp_serena_find_referencing_symbols`        |
-| Remplacer une méthode complète          | `mcp_serena_replace_symbol_body`             |
-| Ajouter une méthode à une classe        | `mcp_serena_insert_after_symbol`             |
-| Chercher un pattern regex               | `mcp_serena_search_for_pattern`              |
-| Stocker une info d'architecture         | `aim_create_entities` (context: zqradar-dev) |
-| Créer une note permanente               | `mcp_memory-bank_memory_bank_write`          |
-| Voir l'historique git                   | `mcp_git_git_log`                            |
-| Créer une branche                       | `mcp_git_git_create_branch`                  |
-| Doc d'un framework                      | `mcp_augments_get_framework_docs`            |
-| Problème complexe                       | `mcp_sequential-th_sequentialthinking`       |
+| I want to…                             | Tool to use                              |
+|----------------------------------------|------------------------------------------|
+| See classes/functions in a file        | `mcp_serena_get_symbols_overview`        |
+| Find where a symbol is used            | `mcp_serena_find_referencing_symbols`    |
+| Replace a complete method              | `mcp_serena_replace_symbol_body`         |
+| Add a method to a class                | `mcp_serena_insert_after_symbol`         |
+| Search for a regex pattern             | `mcp_serena_search_for_pattern`          |
+| Store architecture information         | `aim_create_entities` (context: openradar-dev) |
+| See Git history                        | `mcp_git_git_log`                        |
+| Create a Git branch                    | `mcp_git_git_create_branch`              |
+| Get framework documentation            | `mcp_augments_get_framework_docs`        |
+| Work on a complex reasoning problem    | `mcp_sequential-th_sequentialthinking`   |
 
 ---
 
-## ⚡ Combos Efficaces
+## ⚡ Effective Combos
 
-### Combo 1: Explorer un module inconnu
-
-```javascript
-// 1. Aperçu
-mcp_serena_get_symbols_overview({relative_path: "scripts/handlers/PacketHandler.js"})
-
-// 2. Lire les classes principales
-mcp_serena_find_symbol({name_path: "PacketHandler", include_body: true, depth: 1})
-
-// 3. Voir les usages
-mcp_serena_find_referencing_symbols({name_path: "PacketHandler", relative_path: "..."})
-
-// 4. Stocker dans le knowledge graph
-aim_create_entities({context: "zqradar-dev", entities: [...]})
-```
-
-### Combo 2: Refactoring complet
+### Combo 1: Explore an Unknown Module
 
 ```javascript
-// 1. Chercher toutes les occurrences
-mcp_serena_find_referencing_symbols({name_path: "oldMethod", ...})
+// 1. Overview
+mcp_serena_get_symbols_overview({ relative_path: "scripts/handlers/PacketHandler.js" });
 
-// 2. Créer un plan
+// 2. Read main classes
+mcp_serena_find_symbol({
+  name_path: "PacketHandler",
+  include_body: true,
+  depth: 1
+});
+
+// 3. See usages
+mcp_serena_find_referencing_symbols({
+  name_path: "PacketHandler",
+  relative_path: "scripts/"
+});
+
+// 4. Store knowledge in graph
 aim_create_entities({
-    context: "zqradar-dev",
-    entities: [{
-        name: "RefactoringOldMethod",
-        entityType: "task",
-        observations: ["Remplacer oldMethod par newMethod", "Fichiers: app.js, Player.js"]
-    }]
-})
+  context: "openradar-dev",
+  entities: [
+    {
+      name: "PacketHandler",
+      entityType: "module",
+      observations: ["Handles packet dispatch for events/requests"]
+    }
+  ]
+});
+```
 
-// 3. Renommer
-mcp_serena_rename_symbol({name_path: "oldMethod", new_name: "newMethod", ...})
+### Combo 2: Full Refactor
+
+```javascript
+// 1. Find all usages
+mcp_serena_find_referencing_symbols({
+  name_path: "oldMethod",
+  relative_path: "scripts/"
+});
+
+// 2. Plan (optional) – store as entity
+aim_create_entities({
+  context: "openradar-dev",
+  entities: [
+    {
+      name: "RefactorOldMethod",
+      entityType: "task",
+      observations: ["Replace oldMethod with newMethod", "Files: app.js, Player.js"]
+    }
+  ]
+});
+
+// 3. Rename
+mcp_serena_rename_symbol({
+  name_path: "oldMethod",
+  new_name: "newMethod",
+  relative_path: "scripts/"
+});
 
 // 4. Commit
-mcp_git_git_add({files: [...]})
-mcp_git_git_commit({message: "refactor: rename oldMethod to newMethod"})
+mcp_git_git_add({ repo_path: repoPath, files: ["scripts/"] });
+mcp_git_git_commit({ repo_path: repoPath, message: "refactor: rename oldMethod to newMethod" });
 ```
 
-### Combo 3: Debug d'un bug
+### Combo 3: Debug a Bug
 
 ```javascript
-// 1. Chercher dans l'historique
-mcp_git_git_log({start_timestamp: "1 week ago", max_count: 30})
+// 1. Inspect history
+mcp_git_git_log({
+  repo_path: repoPath,
+  start_timestamp: "1 week ago",
+  max_count: 30
+});
 
-// 2. Lire le code suspect
-mcp_serena_find_symbol({name_path: "buggyMethod", include_body: true})
+// 2. Read suspicious code
+mcp_serena_find_symbol({
+  name_path: "buggyMethod",
+  include_body: true,
+  relative_path: "scripts/"
+});
 
-// 3. Chercher le pattern d'erreur
-mcp_serena_search_for_pattern({substring_pattern: "throw new Error", ...})
+// 3. Search for error patterns
+mcp_serena_search_for_pattern({
+  substring_pattern: "throw new Error",
+  relative_path: "scripts/",
+  max_answer_chars: -1
+});
 
-// 4. Documenter le bug
+// 4. Store bug info in graph (optional)
 aim_create_entities({
-    context: "zqradar-bugs",
-    entities: [{
-        name: "BugParseHarvestable",
-        entityType: "bug",
-        observations: ["Crash quand tier > 8", "Fix: ajouter validation"]
-    }]
-})
+  context: "openradar-dev",
+  entities: [
+    {
+      name: "BugParseHarvestable",
+      entityType: "bug",
+      observations: ["Crash when tier > 8", "Fix: add input validation"]
+    }
+  ]
+});
 
-// 5. Fixer
-mcp_serena_replace_symbol_body({...})
+// 5. Fix
+mcp_serena_replace_symbol_body({
+  relative_path: "scripts/...", // target file
+  name_path: "buggyMethod",
+  body: "function buggyMethod(/* fixed */) { /* ... */ }"
+});
 ```
 
 ---
 
-*Référence complète - Gardez ce document sous la main !*
-
+*Keep this document handy as a complete MCP tools reference for OpenRadar.*

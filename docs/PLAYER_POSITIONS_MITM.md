@@ -1,55 +1,58 @@
-# Recherche: Détection Position Joueurs via MITM Proxy
+# Research: Player Position Detection via MITM Proxy
 
-**Date**: 2025-11-26
-**Status**: ❌ Non implémenté - Approche AlbionRadar adoptée
+**Date**: 2025-11-26  
+**Status**: ❌ Not implemented – AlbionRadar-style approach adopted
 
 ---
 
-## 🎯 Problème
+## 🎯 Problem
 
-Les joueurs sont détectés (noms, guildes, alliances) via Event 29, mais leurs positions sont **chiffrées** et illisibles.
+Players are detected (names, guilds, alliances) via Event 29, but their positions are **encrypted** and unreadable.
 
-## 🔐 Cause Racine: Double Chiffrement
+## 🔐 Root Cause: Double Encryption
 
-### Niveau 1: Photon AES-256-CBC
-Tout le trafic Photon (UDP) est chiffré avec:
+### Level 1: Photon AES-256-CBC
+All Photon traffic (UDP) is encrypted with:
 - **Algorithm**: AES-256-CBC
 - **IV**: 16 null bytes
 - **Key**: SHA256(DH_shared_secret)
-- **DH Prime**: Oakley 768-bit, Root: 22
+- **DH Prime**: Oakley 768-bit, Generator: 22
 
-### Niveau 2: XOR Albion
-Les positions (Event 29, Event 3) sont chiffrées avec un **XorCode** (8 bytes):
-```
-Position chiffrée XOR XorCode = Position RELATIVE
-```
+### Level 2: Albion XOR
+Player positions (Event 29, Event 3) are encrypted with a **XorCode** (8 bytes):
 
-**Le XorCode est transmis via Event 593 (KeySync)**, lui-même chiffré par Photon.
-
-## 🚫 Pourquoi Simple Capture Échoue
-
-```
-Wireshark/pcap → Traffic UDP chiffré AES
-    → Event 593 illisible
-        → Pas d'accès au XorCode
-            → Positions indéchiffrables
+```text
+EncryptedPosition XOR XorCode = RELATIVE Position
 ```
 
-## ✅ Solution Technique (DEATHEYE)
+**The XorCode is transmitted via Event 593 (KeySync)**, itself encrypted by Photon.
 
-DEATHEYE utilisait **Cryptonite** (MITM Proxy Photon):
-1. Proxy UDP transparent
-2. Intercepter DH key exchange
-3. Dériver AES key
-4. Déchiffrer Event 593 → Extraire XorCode
-5. Déchiffrer positions Event 29/3
+## 🚫 Why Simple Capture Fails
 
-### Spécifications MITM
+```text
+Wireshark/pcap → AES-encrypted UDP traffic
+    → Event 593 unreadable
+        → No access to XorCode
+            → Positions impossible to decrypt
+```
+
+## ✅ Technical Solution (DEATHEYE)
+
+DEATHEYE used **Cryptonite** (Photon MITM Proxy):
+
+1. Transparent UDP proxy
+2. Intercept Diffie-Hellman key exchange
+3. Derive AES key
+4. Decrypt Event 593 → Extract XorCode
+5. Decrypt positions from Event 29/3
+
+### MITM Specifications
+
 ```csharp
-// Event 593 déchiffré:
+// Decrypted Event 593:
 parameters[0] = XorCode (byte[8])
 
-// Utilisation:
+// Usage:
 float DecryptFloat(byte[] encrypted, byte[] xorCode) {
     byte[] decrypted = new byte[4];
     for (int i = 0; i < 4; i++) {
@@ -59,79 +62,89 @@ float DecryptFloat(byte[] encrypted, byte[] xorCode) {
 }
 ```
 
-## 📊 Preuves
+## 📊 Evidence
 
-### Discord (Jonyleeson - ex-dev DEATHEYE)
-> "The KeySync event itself is encrypted using photons built in encryption, **Cryptonite decrypted any photon event/operation response** that was encrypted"
+### Discord (Jonyleeson – ex DEATHEYE dev)
+
+> "The KeySync event itself is encrypted using photons built in encryption, **Cryptonite decrypted any photon event/operation response** that was encrypted."
 
 > "you won't be able to glean any information from listening on the wire, **you need to set up a (custom photon) mitm proxy**"
 
-### Code DEATHEYE
-- `Radar/Photon/PhotonParser.cs`: Gestion Event 593
-- `Protocol/Connect/Messages/KeySyncEvent.cs`: Extraction XorCode
-- Dependency: Cryptonite (proxy MITM)
+### DEATHEYE Code
 
-## ⚠️ Impasses Confirmées
+- `Radar/Photon/PhotonParser.cs`: Event 593 handling.
+- `Protocol/Connect/Messages/KeySyncEvent.cs`: XorCode extraction.
+- Dependency: Cryptonite (MITM proxy).
 
-### ❌ XOR avec Header
+## ⚠️ Dead Ends Confirmed
+
+### ❌ XOR with Header
+
 ```javascript
-const headerBytes = buffer.slice(1, 9);  // FAUX
+const headerBytes = buffer.slice(1, 9);  // WRONG
 const decrypted = coordBytes.map((b, i) => b ^ headerBytes[i]);
 // → GARBAGE (XorCode ≠ header)
 ```
 
-### ❌ Event 593 Capturé Non-Chiffré
-Logs montrent Event 593 avec journaux, **pas KeySync**:
+### ❌ Captured Event 593 (non-KeySync)
+
+Logs show Event 593 with journals, **not KeySync**:
+
 ```json
 {
   "eventCode": 593,
   "parameters": {
-    "0": 0,  // INT, pas byte[8]
-    "1": ["JOURNAL_..."]  // Journaux, pas XorCode
+    "0": 0,              // INT, not byte[8]
+    "1": ["JOURNAL_..."] // Journals, not XorCode
   }
 }
 ```
-Le vrai KeySync est chiffré AES → invisible sans MITM.
 
-## 🔄 Décision: Approche AlbionRadar
+The real KeySync is AES-encrypted → invisible without MITM.
 
-### Implémentation Actuelle
-- ✅ Détection spawn/despawn joueurs (Event 29)
-- ✅ Affichage noms/guildes/alliances
-- ✅ Détection équipement (IDs)
-- ❌ Positions joueurs (chiffrées)
+## 🔄 Decision: AlbionRadar-Style Approach
 
-### Comparaison
+### Current Implementation
 
-| Feature | DEATHEYE | AlbionRadar | Notre Radar |
-|---------|----------|-------------|-------------|
-| Spawn joueurs | ✅ | ✅ | ✅ |
-| Positions | ✅ MITM | ❌ | ❌ |
-| Equipment | ✅ | ✅ | ✅ (IDs) |
-| Item Power | ✅ XML | ✅ items.txt | 🚧 Phase 3 |
+- ✅ Detect player spawn/despawn (Event 29)
+- ✅ Display names/guilds/alliances
+- ✅ Detect equipment (IDs)
+- ❌ Player positions (encrypted)
+
+### Comparison
+
+| Feature            | DEATHEYE | AlbionRadar | Our Radar |
+|--------------------|----------|------------|-----------|
+| Player spawn       | ✅        | ✅          | ✅         |
+| Positions          | ✅ MITM   | ❌          | ❌         |
+| Equipment          | ✅        | ✅          | ✅ (IDs)   |
+| Item Power         | ✅ XML    | ✅ items.txt| 🟥 Phase 3 |
 
 ### Justification
-1. **MITM Proxy = 3-4 semaines dev** (DH interception, AES decrypt, XOR logic)
-2. **Risque détection**: Modification trafic réseau
-3. **Focus**: Features PvE (mobs, resources, equipment stats)
+
+1. **MITM Proxy = 3–4 weeks dev** (DH interception, AES decrypt, XOR logic).
+2. **Detection risk**: Modifying game network traffic.
+3. **Focus**: PvE features (mobs, resources, equipment stats) instead of MITM.
 
 ## 📁 Phase 3: Player Equipment & Item Power
 
-**Référence**: `ANALYSIS_DEATHEYE_VS_CURRENT.md` (docs/)
+**Reference**: `ANALYSIS_DEATHEYE_VS_CURRENT.md` (docs/)
 
-Au lieu de positions, focus sur:
-1. Parser `items.xml` → Database item ID ↔ itempower
-2. Lookup équipement joueurs (Event 29 parameters[17])
-3. Calculer Item Power moyen réel (700-1400 range)
-4. Afficher stats équipement détaillés
+Instead of positions, focus on:
 
-## 🔗 Références
+1. Parsing `items.xml` → item database (ID → item power).
+2. Player equipment lookup (Event 29 `parameters[17]`).
+3. Compute real average item power (700–1400 range typical).
+4. Display detailed equipment stats.
+
+## 🔗 References
 
 - **DEATHEYE Source**: `work/data/albion-radar-deatheye-2pc/`
-- **AlbionRadar**: Approche sans positions (spawn/despawn only)
-- **Photon Encryption**: Discord thread + Cryptonite dependency
+- **AlbionRadar**: Approach without positions (spawn/despawn only).
+- **Photon Encryption**: Discord thread + Cryptonite dependency.
 - **items.xml**: `work/data/ao-bin-dumps-master/items.xml`
 
 ---
 
-**Conclusion**: Positions joueurs nécessitent MITM Photon (hors scope). Focus Phase 3: Equipment stats avec XML database.
+**Conclusion**: Player positions require a Photon MITM (out of scope for OpenRadar).  
+Phase 3 focus: Equipment stats with XML database.

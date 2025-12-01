@@ -1,156 +1,54 @@
-# 📊 Résumé des Améliorations
+# 📊 Summary of Improvements – OpenRadar
+
+This document summarizes the main improvements made to OpenRadar during recent investigation and development phases.
 
 ---
 
-## 🚧 [2025-11-10] Debug mouvement joueurs (résumé)
+## 🚧 [2025-11-10] Player Movement Debug (Summary)
 
-> Tous les détails (timeline complète, hypothèses, fichiers modifiés) sont consolidés dans [`PLAYER_DETECTION_STATUS.md`](PLAYER_DETECTION_STATUS.md).
+> All detailed investigation (full timeline, hypotheses, modified files) is consolidated in `PLAYER_DETECTION_STATUS.md`.
 
-- ✅ Détection initiale des joueurs corrigée (Event 29 → bons paramètres de position)
-- ✅ Les joueurs apparaissent sur le radar
-- ❌ Le mouvement des joueurs reste problématique (positions figées / incohérentes)
-- 🔁 Investigation en cours documentée uniquement dans `PLAYER_DETECTION_STATUS.md`
+### Context
 
----
+- Initial implementation could detect players (names, guilds, alliances) but their movement was broken.
+- Only some entities moved correctly (mobs, some objects), players remained static or had inconsistent positions.
 
-## 🎯 [2025-11-09] Fix partiel – Détection des joueurs
+### What Was Fixed
 
-- Correction des paramètres de position initiale pour `NewCharacter (Event 29)`
-- Impact : les autres joueurs apparaissent correctement, mais le problème de mouvement persiste (voir `PLAYER_DETECTION_STATUS.md`)
+- ✅ Initial player detection fixed (Event 29 → correct position parameters).
+- ✅ Event codes decoded and standardized into `param[252]`.
+- ✅ Move events (Event 3) correctly deserialized server-side.
 
----
+### What Still Fails
 
-## 📈 [2025-11-03] Session de Logging
+- ❌ Player movement remains problematic:
+  - Players appear but do not move as expected.
+  - Some positions are frozen or jump inconsistently.
 
-**Objectif :** Système de logging enrichi pour collecte TypeIDs
-
----
-
-## ✅ Améliorations Implémentées
-
-### 1. 📊 Logging Enrichi (MobsHandler.js)
-
-**Avant :**
-
-```javascript
-// Logs CSV basiques
-console.log(`[LIVING_CSV] timestamp,typeId,tier,name,...`);
-```
-
-**Après :**
-
-```javascript
-// Double format : JSON parsable + Lisible humain
-[LIVING_JSON]
-{
-    "timestamp"
-:
-    "...", "typeId"
-:
-    425, "resource"
-:
-    {
-        "type"
-    :
-        "hide", "tier"
-    :
-        4
-    }
-,...
-}
-🟢 ✓ TypeID
-425 | hide
-T4
-.0 | HP
-:
-1323(expected
-~1323, diff
-:
-0
-) → Boar
-```
-
-**Nouvelles fonctionnalités :**
-
-- ✅ Validation HP automatique (comparaison avec métadonnées)
-- ✅ Identification de l'animal (Boar, Wolf, Fox, etc.)
-- ✅ État vivant/mort (🟢/🔴)
-- ✅ Match HP (✓/✗) pour confirmer la créature
-- ✅ Format JSON pour parsing automatique
-
-### 2. 🗺️ Guide de Collecte Interactif
-
-**Fichier :** `tools/COLLECTION_GUIDE.md`
-
-**Contenu :**
-
-- Guide étape par étape (préparation → collecte → parsing)
-- Zones recommandées par tier
-- Symboles et interprétation des logs
-- Troubleshooting
-- Objectifs de collecte (P1/P2/P3)
-
-### 3. 🔧 Script de Parsing Python
-
-**Fichier :** `tools/parse-living-logs.py`
-
-**Fonctionnalités :**
-
-- Parse les logs JSON automatiquement
-- Génère rapport de collecte (TypeIDs uniques, validation HP)
-- Analyse de couverture (enchantements manquants)
-- **Sortie prête à copier** : Entrées MobsInfo.js formatées
-
-**Exemple d'utilisation :**
-
-```bash
-python parse-living-logs.py logs-session-2025-11-03.txt
-```
-
-### 4. 📚 Documentation Consolidée
-
-**Fichiers créés/mis à jour :**
-
-- ✅ `tools/README.md` - Documentation complète des outils
-- ✅ `tools/COLLECTION_GUIDE.md` - Guide détaillé de collecte
-- ✅ `tools/QUICK_START.md` - Démarrage rapide (nouveau!)
-- ✅ `DEV_NOTES.md` - Section investigation TypeIDs
-
-### 5. 🎯 Métadonnées Living Resources
-
-**Fichier :** `tools/output/living-resources-enhanced.json`
-
-**225 créatures avec métadonnées :**
-
-- HP par créature
-- Prefab (nom interne)
-- Faction
-- Animal (nom lisible)
-
-**Utilisation :**
-
-```javascript
-// Chargé automatiquement au démarrage
-const metadata = this.findCreatureMetadata(tier, resourceType, hp);
-// → { animal: "Boar", hp: 1323, prefab: "MOB_HIDE_BOAR_01", ... }
-```
+Full technical details in `docs/work/PLAYER_DETECTION_STATUS.md`.
 
 ---
 
-## 🎨 Exemple de Logs Avant/Après
+## 📈 Implemented Improvements
 
-### Avant (CSV basique)
+### 1. Enriched Logging for Living Resources
 
-```
+**Goal:** Make it easier to collect and validate TypeIDs for living resources (Hide/Fiber).
+
+**File:** `scripts/Handlers/MobsHandler.js`
+
+**Before:**
+
+```text
 [LIVING_CSV] 2025-11-03T11:13:16Z,425,4,hide,Skinnable,0,1323,ALIVE,58459
 ```
 
-### Après (Enrichi)
+Difficult to read and automate.
+
+**After:**
 
 ```json
-[
-  LIVING_JSON
-] {
+[LIVING_JSON] {
   "timestamp": "2025-11-03T11:13:16.054Z",
   "typeId": 425,
   "resource": {
@@ -176,135 +74,229 @@ const metadata = this.findCreatureMetadata(tier, resourceType, hp);
 }
 ```
 
-**+ Log lisible :**
+Readable summary:
 
+```text
+🟢 ✓ TypeID 425 | hide T4.0 | HP: 1323 (expected ~1323, diff: 0) → Boar
 ```
+
+**New features:**
+
+- ✅ Automatic HP validation (comparison with metadata).
+- ✅ Animal identification (Boar, Wolf, Fox, etc.).
+- ✅ Alive/dead state (🟢/🔴).
+- ✅ HP match indicator (✓/✗) to confirm creature.
+- ✅ JSON format for automatic parsing.
+
+### 2. Interactive Collection Guide
+
+**File:** `docs/work/COLLECTION_GUIDE.md`
+
+**Contents:**
+
+- Step-by-step collection guide (preparation → collection → parsing).
+- Recommended zones by tier.
+- Symbols and log interpretation.
+- Troubleshooting.
+- Collection targets (P1/P2/P3).
+
+### 3. Python Parsing Script
+
+**File:** `work/scripts/parse-living-logs.py`
+
+**Features:**
+
+- Parses JSON logs automatically.
+- Generates collection report (unique TypeIDs, HP validation).
+- Coverage analysis (missing enchantments).
+- **Copy-ready output**: formatted `MobsInfo.js` entries.
+
+**Example usage:**
+
+```bash
+cd work/scripts
+python parse-living-logs.py ../logs-session-2025-11-03.txt
+```
+
+### 4. Consolidated Documentation
+
+**Files created/updated:**
+
+- ✅ `docs/work/TOOLS_README.md` – Complete tools documentation.
+- ✅ `docs/work/COLLECTION_GUIDE.md` – Detailed collection guide.
+- ✅ `docs/work/QUICK_START.md` – Quick start for collection.
+- ✅ `docs/dev/DEV_GUIDE.md` – Dev notes and investigations (EN-only now).
+
+### 5. Living Resources Metadata
+
+**File:** `work/data/living-resources.json`
+
+**225 creatures with metadata:**
+
+- HP per creature.
+- Prefab (internal name).
+- Faction.
+- Animal (human-readable name).
+
+**Usage:**
+
+```javascript
+// Loaded automatically at startup
+const metadata = this.findCreatureMetadata(tier, resourceType, hp);
+// → { animal: "Boar", hp: 1323, prefab: "MOB_HIDE_BOAR_01", ... }
+```
+
+---
+
+## 🎨 Before/After Logging Example
+
+### Before (basic CSV)
+
+```text
+[LIVING_CSV] 2025-11-03T11:13:16Z,425,4,hide,Skinnable,0,1323,ALIVE,58459
+```
+
+### After (enriched)
+
+```json
+[LIVING_JSON] {
+  "timestamp": "2025-11-03T11:13:16.054Z",
+  "typeId": 425,
+  "resource": {
+    "type": "hide",
+    "tier": 4,
+    "enchant": 0,
+    "category": "Skinnable"
+  },
+  "state": {
+    "health": 1323,
+    "alive": true,
+    "rarity": 92
+  },
+  "validation": {
+    "animal": "Boar",
+    "expectedHP": 1323,
+    "actualHP": 1323,
+    "hpDiff": 0,
+    "match": true,
+    "prefab": "MOB_HIDE_BOAR_01"
+  },
+  "entityId": 58459
+}
+```
+
+Readable log:
+
+```text
 🟢 ✓ TypeID 425 | hide T4.0 | HP: 1323 (expected ~1323, diff: 0) → Boar
 ```
 
 ---
 
-## 🚀 Workflow Complet
+## 🔁 End-to-End Workflow
 
-```
-┌─────────────────────────────────────────────────┐
-│ 1. PRÉPARATION                                  │
-│    - Activer "Log Living Creatures"             │
-│    - Vider cache TypeID                         │
-│    - Ouvrir console (F12)                       │
-└─────────────────────────────────────────────────┘
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ 1. PREPARATION                                               │
+│    - Enable "Log Living Creatures"                          │
+│    - Clear TypeID cache                                      │
+│    - Open console (F12)                                      │
+└──────────────────────────────────────────────────────────────┘
                     ↓
-┌─────────────────────────────────────────────────┐
-│ 2. COLLECTE IN-GAME (30-60 min)                │
-│    - Zones enchantées T4-T5                     │
-│    - Tuer créatures .1/.2/.3                    │
-│    - Observer logs enrichis                     │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ 2. IN-GAME COLLECTION (30–60 min)                           │
+│    - Enchanted zones T4–T5                                  │
+│    - Kill .1/.2/.3 creatures                                │
+│    - Watch enriched logs                                    │
+└──────────────────────────────────────────────────────────────┘
                     ↓
-┌─────────────────────────────────────────────────┐
-│ 3. SAUVEGARDE                                   │
-│    - Copier logs via script console             │
-│    - Ou "Save as..." dans console               │
-│    - Fichier: logs-session-YYYY-MM-DD.txt       │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ 3. SAVE LOGS                                                 │
+│    - Copy logs via console script                           │
+│    - Or "Save as..." from console                          │
+│    - File: logs-session-YYYY-MM-DD.txt                      │
+└──────────────────────────────────────────────────────────────┘
                     ↓
-┌─────────────────────────────────────────────────┐
-│ 4. PARSING AUTOMATIQUE                          │
-│    python parse-living-logs.py logs.txt         │
-│    → Rapport + Entrées MobsInfo.js              │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ 4. AUTOMATIC PARSING                                         │
+│    python parse-living-logs.py logs.txt                     │
+│    → Report + MobsInfo.js entries                           │
+└──────────────────────────────────────────────────────────────┘
                     ↓
-┌─────────────────────────────────────────────────┐
-│ 5. INTÉGRATION                                  │
-│    - Copier entrées dans MobsInfo.js            │
-│    - Test avec radar                            │
-│    - Validation terrain                         │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ 5. INTEGRATION                                               │
+│    - Copy entries into MobsInfo.js                          │
+│    - Test with radar                                        │
+│    - Validate in the field                                  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📊 Impact Attendu
+## 📊 Expected Impact
 
-### Avant les améliorations
+### Before Improvements
 
-- ❌ Logs bruts difficiles à lire
-- ❌ Parsing manuel requis
-- ❌ Pas de validation en temps réel
-- ❌ Incertitude sur les créatures
+- ❌ Raw logs hard to read.
+- ❌ Manual parsing required.
+- ❌ No real-time validation.
+- ❌ Uncertainty about which creature is which.
 
-### Après les améliorations
+### After Improvements
 
-- ✅ Logs JSON + lisibles
-- ✅ Parsing automatique (Python)
-- ✅ Validation HP immédiate
-- ✅ Identification automatique des animaux
-- ✅ Workflow complet documenté
-- ✅ Session de collecte efficace (2-4h au lieu de 8-12h)
-
----
-
-## 🎯 Prochaines Étapes
-
-### Court terme (cette semaine)
-
-1. ✅ Session de collecte (1-2h) - **PRÊT**
-2. ⏳ Parsing et validation des logs
-3. ⏳ Enrichissement MobsInfo.js
-
-### Moyen terme
-
-1. Couverture T4-T8 complète
-2. Fiber/Hide/Wood/Ore/Rock
-3. Validation terrain extensive
+- ✅ JSON + readable logs.
+- ✅ Automatic parsing (Python).
+- ✅ Immediate HP validation.
+- ✅ Automatic animal identification.
+- ✅ Fully documented workflow.
+- ✅ Efficient collection sessions (2–4h instead of 8–12h).
 
 ---
 
-## 📁 Fichiers Modifiés
+## 🎯 Next Steps
 
-```
-scripts/Handlers/MobsHandler.js     ← Logging enrichi
+### Short-Term (this week)
+
+1. ✅ One or two 1–2h collection sessions.
+2. ⏳ Parse and validate logs.
+3. ⏳ Enrich `MobsInfo.js` with new TypeIDs.
+
+### Medium-Term
+
+1. Achieve full T4–T8 coverage.
+2. Cover all resource types: Hide/Fiber/Wood/Ore/Rock.
+3. Validate in-game with multiple sessions.
+
+---
+
+## 📁 Modified Files (for this improvement set)
+
+```text
+scripts/Handlers/MobsHandler.js     ← Enriched logging
 views/main/resources.ejs            ← UI checkbox
-tools/parse-living-logs.py          ← Parser Python
-tools/COLLECTION_GUIDE.md           ← Guide détaillé
-tools/QUICK_START.md                ← Démarrage rapide
-tools/README.md                     ← Documentation
-DEV_NOTES.md                        ← Investigation TypeIDs
-TODO.md                             ← État du projet
+work/scripts/parse-living-logs.py   ← Python parser
+docs/work/COLLECTION_GUIDE.md       ← Collection guide
+docs/work/QUICK_START.md            ← Quick start
+docs/work/TOOLS_README.md           ← Tools documentation
+docs/dev/DEV_GUIDE.md               ← Dev notes / investigations
 ```
 
 ---
 
-## 🐛 Aucune Régression
+## 🐞 No Regressions
 
-**Système de détection existant :**
+**Existing detection system:**
 
-- ✅ Aucune modification de la logique de détection
-- ✅ Seuls les logs ont été améliorés
-- ✅ Fonctionnalités existantes préservées
+- ✅ Detection logic was not changed.
+- ✅ Only logging was enriched.
+- ✅ Existing features preserved.
 
-**Tests recommandés :**
+**Recommended tests:**
 
-1. Vérifier que le radar fonctionne normalement (sans logging)
-2. Activer logging et vérifier l'absence de lag
-3. Tester dans différentes zones (T3, T4, T5)
-
----
-
-## 📞 Support
-
-**Documentation complète :**
-
-- [QUICK_START.md](tools/QUICK_START.md) - Démarrage immédiat
-- [COLLECTION_GUIDE.md](tools/COLLECTION_GUIDE.md) - Guide détaillé
-- [README.md](tools/README.md) - Documentation outils
-- [DEV_NOTES.md](DEV_NOTES.md) - Investigation technique
-
-**Questions ?**
-
-- Vérifier [COLLECTION_GUIDE.md § Troubleshooting](tools/COLLECTION_GUIDE.md#-troubleshooting)
-- Consulter [DEV_NOTES.md § Investigation TypeIDs](DEV_NOTES.md#-investigation-typeids---ao-bin-dumps-2025-11-03)
+1. Verify the radar still works normally with logging disabled.
+2. Enable logging and check there is no lag.
+3. Test in various zones (T3, T4, T5) to confirm stability.
 
 ---
 
-**Système prêt pour la collecte ! 🎮🔍**
+_This document is an English summary of improvements applied to OpenRadar around living resource logging and TypeID collection._

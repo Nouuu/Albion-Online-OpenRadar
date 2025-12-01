@@ -1,93 +1,93 @@
-# 📚 Documentation ZQRadar
+# 📚 OpenRadar Documentation
 
-Cette documentation est organisée en plusieurs sections pour faciliter la navigation.
+This documentation is organized into several sections to make navigation easier.
 
-## 📂 Structure de la Documentation
+## 📂 Documentation Structure
 
-### 🎯 Pour les Utilisateurs
+### 🎯 For Users
 
-- **[README principal](../README.md)** - Guide utilisateur, installation, features
-- **[BUILD.md](../BUILD.md)** - Instructions de build et packaging
+- **[Main README](../README.md)** – User guide, installation, features
+- **[BUILD.md](../BUILD.md)** – Build and packaging instructions
 
-### 👨‍💻 Pour les Développeurs
+### 👨‍💻 For Developers
 
-- **[DEV_GUIDE.md](./dev/DEV_GUIDE.md)** - Guide complet de développement
+- **[DEV_GUIDE.md](./dev/DEV_GUIDE.md)** – Complete development guide
 
-### 🤖 Pour les Agents IA
+### 🤖 For AI Agents
 
-- **[AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)** - Guide principal pour les agents IA
-- **[MCP_TOOLS.md](./ai/MCP_TOOLS.md)** - Documentation des outils MCP disponibles
+- **[AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)** – Main guide for AI agents
+- **[MCP_TOOLS.md](./ai/MCP_TOOLS.md)** – Documentation for available MCP tools
 
-### 🧪 Documentation Technique
+### 🧪 Technical Documentation
 
-- **[LOGGING.md](./technical/LOGGING.md)** - Système de logging v2.0 (centralisé) ⭐
-- **[DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md)** - Guide complet debug & logging
-- **[SETTINGS.md](./technical/SETTINGS.md)** - Configuration et settings
-- **[ENCHANTMENTS.md](./technical/ENCHANTMENTS.md)** - Système d'enchantements
-- **[PLAYERS.md](./technical/PLAYERS.md)** - Player detection & radar display ⭐
-- **[PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md)** - Limites protocolaires & chiffrement (MITM, positions joueurs) ⭐
-- **[ANALYSIS_DEATHEYE_VS_CURRENT.md](./ANALYSIS_DEATHEYE_VS_CURRENT.md)** - Analyse détaillée DEATHEYE vs implémentation actuelle (offsets, XML, équipements)
+- **[LOGGING.md](./technical/LOGGING.md)** – Centralized logging system v2.2 ⭐
+- **[DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md)** – Complete debug & logging guide
+- **[SETTINGS.md](./technical/SETTINGS.md)** – Configuration and settings
+- **[ENCHANTMENTS.md](./technical/ENCHANTMENTS.md)** – Enchantments system
+- **[PLAYERS.md](./technical/PLAYERS.md)** – Player detection & radar display ⭐
+- **[PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md)** – Protocol and encryption limits (MITM, player positions) ⭐
+- **[ANALYSIS_DEATHEYE_VS_CURRENT.md](./ANALYSIS_DEATHEYE_VS_CURRENT.md)** – Detailed DEATHEYE vs current implementation analysis (offsets, XML, equipment)
 
-### 🔧 Scripts Utilitaires (work/)
+### 🔧 Utility Scripts (work/)
 
-- **[WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md)** - Vue d'ensemble des scripts Python ⭐
-- **[COLLECTION_GUIDE.md](./work/COLLECTION_GUIDE.md)** - Guide de collecte de données
-- **[QUICK_START.md](./work/QUICK_START.md)** - Démarrage rapide des scripts des outils
-- **[PLAYER_DETECTION_STATUS.md](./work/PLAYER_DETECTION_STATUS.md)** - Statut détaillé détection & mouvement joueurs (timeline, leçons)
-- **[IMPROVEMENTS.md](./work/IMPROVEMENTS.md)** - Résumé des améliorations récentes (dont joueurs)
+- **[WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md)** – Overview of Python scripts ⭐
+- **[COLLECTION_GUIDE.md](./work/COLLECTION_GUIDE.md)** – Data collection guide
+- **[QUICK_START.md](./work/QUICK_START.md)** – Quick start for tooling scripts
+- **[PLAYER_DETECTION_STATUS.md](./work/PLAYER_DETECTION_STATUS.md)** – Detailed status of player detection & movement (timeline, lessons)
+- **[IMPROVEMENTS.md](./work/IMPROVEMENTS.md)** – Summary of recent improvements (including players)
 
-### 📋 Gestion de Projet
+### 📋 Project Management
 
-- **[TODO.md](./project/TODO.md)** - Tâches en cours et à venir
-
----
-
-## 🔍 Recherche Rapide
-
-### Je veux...
-
-- **Installer le projet** → [README principal](../README.md)
-- **Débugger et tracer les événements** → [DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md) ⭐
-- **Utiliser les outils Python** → [WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md) ⭐
-- **Player detection système (architecture & UI)** → [PLAYERS.md](./technical/PLAYERS.md) ⭐
-- **Comprendre les limites sur les positions joueurs / MITM** → [PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md) ⭐
-- **Suivre l’état détaillé du bug mouvement joueurs** → [PLAYER_DETECTION_STATUS.md](./work/PLAYER_DETECTION_STATUS.md)
-- **Comparer DEATHEYE et ce projet** → [ANALYSIS_DEATHEYE_VS_CURRENT.md](./ANALYSIS_DEATHEYE_VS_CURRENT.md)
-- **Guide pour agents IA** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
-- **Configurer un agent IA** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
-- **Débugger le logging** → [LOGGING.md](./technical/LOGGING.md)
+- **[TODO.md](./project/TODO.md)** – Current and upcoming tasks
 
 ---
 
-## 🚨 Règles Importantes
+## 🔍 Quick Search
 
-### ⚠️ Ne PAS créer de fichiers MD temporaires
+### I want to…
+
+- **Install the project** → [Main README](../README.md)
+- **Debug and trace events** → [DEBUG_LOGGING_GUIDE.md](../work/DEBUG_LOGGING_GUIDE.md) ⭐
+- **Use Python tools** → [WORK_OVERVIEW.md](./work/WORK_OVERVIEW.md) ⭐
+- **Understand the player detection system (architecture & UI)** → [PLAYERS.md](./technical/PLAYERS.md) ⭐
+- **Understand limits on player positions / MITM** → [PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md) ⭐
+- **Follow the detailed status of the player movement bug** → [PLAYER_DETECTION_STATUS.md](./work/PLAYER_DETECTION_STATUS.md)
+- **Compare DEATHEYE and this project** → [ANALYSIS_DEATHEYE_VS_CURRENT.md](./ANALYSIS_DEATHEYE_VS_CURRENT.md)
+- **AI agent guide** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
+- **Configure an AI agent** → [AI_AGENT_GUIDE.md](./ai/AI_AGENT_GUIDE.md)
+- **Debug logging** → [LOGGING.md](./technical/LOGGING.md)
+
+---
+
+## 🚨 Important Rules
+
+### ⚠️ Do NOT create temporary Markdown files
 
 - ❌ `WORKING_*.md`, `*_FIX.md`, `*_ANALYSIS.md`, `*_SESSION.md`, etc.
-- ✅ Utiliser les fichiers existants ou les sections appropriées
-- ✅ Utiliser les memories Serena pour les notes temporaires
+- ✅ Use existing files or the appropriate sections
+- ✅ Keep long-lived information in `docs/` instead of ad-hoc files
 
-### ✅ Où mettre quoi
+### ✅ Where to put what
 
-| Type de contenu              | Destination                             |
-|------------------------------|-----------------------------------------|
-| Notes de session temporaires | Memories Serena (`write_memory`)        |
-| Documentation permanente     | `docs/` avec structure appropriée       |
-| TODOs                        | `docs/project/TODO.md`                  |
-| Bugs connus                  | GitHub Issues ou `docs/project/TODO.md` |
-| Scripts Python utilitaires   | `tools/` (git-ignoré mais documenté)    |
-| Scripts Python utilitaires   | `work/` (git-ignoré sauf README)        |
+| Content type                 | Destination                         |
+|-----------------------------|-------------------------------------|
+| Temporary session notes     | Local notes or issues               |
+| Permanent documentation     | `docs/` with the appropriate layout |
+| TODOs                       | `docs/project/TODO.md`              |
+| Known bugs                  | GitHub Issues or `docs/project/TODO.md` |
+| Utility Python scripts      | `tools/` (git-ignored but documented)   |
+| Work-in-progress tooling    | `work/` (git-ignored except README)    |
 
-### ✅ Règles spécifiques pour la partie "joueurs"
+### ✅ Player-related rules
 
-- **Architecture & features joueurs stables** → `docs/technical/PLAYERS.md`
-- **État d’investigation / bugs / timeline** → `docs/work/PLAYER_DETECTION_STATUS.md`
-- **Limites MITM / chiffrement / positions joueurs** → `docs/PLAYER_POSITIONS_MITM.md`
-- **Analyses avancées vs DEATHEYE / offsets / XML** → `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`
+- **Stable player architecture & features** → `docs/technical/PLAYERS.md`
+- **Investigation state / bugs / timeline** → `docs/work/PLAYER_DETECTION_STATUS.md`
+- **MITM / encryption / player positions limits** → `docs/PLAYER_POSITIONS_MITM.md`
+- **Advanced analysis vs DEATHEYE / offsets / XML** → `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md`
 
-Ne pas dupliquer ces contenus :
-- Résumer en quelques lignes et **pointer vers le bon fichier** au lieu de réécrire l’analyse complète.
+Do not duplicate these contents:
+- Summarize in a few lines and **point to the right file** instead of rewriting the full analysis.
 
 ---
 
-*Dernière mise à jour: 2025-12-01*
+*Last update: 2025-12-01*
