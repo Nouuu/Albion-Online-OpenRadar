@@ -51,8 +51,7 @@ TYPEIDS_SUSPECTS.json
 # SAUF ao-bin-dumps-master/ qui est trop volumineux (dumps officiels Albion)
 # =============================================================================
 
-# Ignorer seulement ao-bin-dumps-master (dumps officiels trop volumineux)
-work/data/*
+work/
 
 # =============================================================================
 # MEMORIES ET CONFIGURATION SERENA
@@ -119,8 +118,6 @@ jspm_packages/
 # Fichiers de test, pack, REPL, etc.
 *.tgz
 .yarn-integrity
-
-work/
 server-scripts/ip.txt
 
 public/ao-bin-dumps/*
@@ -134,8 +131,6 @@ ZIP PACKAGE/
 HELPER PACKAGE/
 
 # MEMORIES ET CONFIGURATION SERENA
-.serena/
-.claude/
 /.serena/memories/project_summary.md
 /.serena/memories/style_and_conventions.md
 /.serena/memories/suggested_commands.md
