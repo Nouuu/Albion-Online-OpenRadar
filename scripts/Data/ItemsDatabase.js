@@ -16,8 +16,6 @@ export class ItemsDatabase {
      * @param {string} jsonPath - Path to items.json file
      */
     async load(jsonPath) {
-        const { CATEGORIES, EVENTS } = window;
-
         try {
             console.log('📄 Loading items.json...');
 

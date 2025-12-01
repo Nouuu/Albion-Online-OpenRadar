@@ -111,7 +111,8 @@ export class PlayersHandler {
             this.playersList.push(player);
 
             // 👥 Limit playersList to max players (keep most recent)
-            const maxPlayers = Math.min(100, parseInt(localStorage.getItem('settingMaxPlayersDisplay')) || 50);
+            const parsedMaxPlayers = parseInt(localStorage.getItem('settingMaxPlayersDisplay'));
+            const maxPlayers = Math.min(100, Number.isNaN(parsedMaxPlayers) ? 50 : parsedMaxPlayers);
             if (this.playersList.length > maxPlayers) {
                 // Sort by detectedAt (newest first) and keep only maxPlayers
                 this.playersList.sort((a, b) => b.detectedAt - a.detectedAt);
