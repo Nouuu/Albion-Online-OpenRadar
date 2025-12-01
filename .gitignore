@@ -120,12 +120,8 @@ jspm_packages/
 *.tgz
 .yarn-integrity
 
-# Dossiers spécifiques au projet
-images/Enemies/
-images/Items/
-images/Maps/
-images/Spells/
-images/*.zip
+work/
+server-scripts/ip.txt
 
 public/ao-bin-dumps/*
 
