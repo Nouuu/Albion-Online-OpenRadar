@@ -1,7 +1,7 @@
 # 🤖 Guide pour les Agents IA - ZQRadar
 
-> **Version:** 1.0  
-> **Dernière mise à jour:** 2025-11-05  
+> **Version:** 2.0  
+> **Dernière mise à jour:** 2025-12-01  
 > **Public:** Agents IA (Claude, GPT, etc.)
 
 ---
@@ -10,6 +10,15 @@
 
 Ce guide vous aide à travailler efficacement sur le projet ZQRadar en utilisant les outils MCP disponibles et en
 respectant les conventions du projet.
+
+### ⚡ TL;DR (Résumé rapide)
+
+- **Lisez du code** → Serena (`get_symbols_overview`, `find_symbol`)
+- **Mémorisez** → Knowledge Graph AIM (`aim_create_entities`)
+- **N'utilisez PAS** → `read_file` pour les fichiers entiers
+- **Format JS** → CommonJS, 2 espaces, single quotes
+- **Debug vs Info** → DEBUG filtré par settings, INFO/WARN/ERROR toujours loggés
+- **En doute ?** → Consultez `MCP_TOOLS.md` ou les memories
 
 ---
 
@@ -28,7 +37,7 @@ respectant les conventions du projet.
 - **`scripts/`** - Classes, handlers, utilitaires (cœur métier)
 - **`server-scripts/`** - Scripts serveur (sélection adaptateur réseau)
 - **`views/`** - Templates EJS
-- **`build/`** - Scripts de build et packaging
+- **`scripts-shell/`** - Scripts de build et packaging
 - **`work/`** - Scripts Python et données de dev (VERSIONNÉ sauf ao-bin-dumps-master/)
 
 ---
@@ -124,6 +133,14 @@ mcp_git_git_create_branch({
 
 ---
 
+### 4. **Plan** - Création de Plans Multi-étapes
+
+**Pour planifier des tâches complexes et multi-étapes**
+
+Utilise cet agent pour obtenir des plans structurés avant de commencer le développement.
+
+---
+
 ### 5. **Augments** - Documentation des Frameworks
 
 **Accédez à la doc des frameworks utilisés**
@@ -144,7 +161,7 @@ mcp_augments_get_framework_context({
 
 ---
 
-### 6. **Sequential Thinking** - Résolution Complexe
+### 7. **Sequential Thinking** - Résolution Complexe
 
 **Pour les problèmes complexes nécessitant une réflexion approfondie**
 
@@ -261,37 +278,38 @@ function parseHarvestable(data) {
 
 ### 1. Analyse d'un Bug
 
-```
-1. Lire les memories Serena: read_memory("project_summary")
-2. Chercher le symbole: find_symbol({ name_path: "...", substring_matching: true })
-3. Analyser les références: find_referencing_symbols(...)
-4. Vérifier le git log: git_log({ start_timestamp: "..." })
-5. Créer une entrée knowledge graph: aim_create_entities(...)
-6. Éditer le code: replace_symbol_body(...)
-7. Documenter dans TODO.md
-```
+1. Lire les memories Serena: `read_memory("project_summary")`
+2. Chercher le symbole: `find_symbol({ name_path: "...", substring_matching: true })`
+3. Analyser les références: `find_referencing_symbols(...)`
+4. Vérifier le git log: `git_log({ start_timestamp: "..." })`
+5. Créer une entrée knowledge graph: `aim_create_entities(...)`
+6. Éditer le code: `replace_symbol_body(...)`
+7. Documenter dans `TODO.md`
 
 ### 2. Ajout d'une Feature
 
-```
-1. Activer le projet: activate_project("C:\\Projets\\Albion-Online-ZQRadar")
-2. Lire l'architecture: read_memory("project_summary")
-3. Explorer la structure: get_symbols_overview(...)
-4. Créer une branche: git_create_branch(...)
-5. Implémenter: insert_after_symbol(...) ou replace_symbol_body(...)
-6. Documenter: memory_bank_write(...)
-7. Commit: git_add(...) puis git_commit(...)
-```
+1. Activer le projet: `activate_project("C:\\Projets\\Albion-Online-ZQRadar")`
+2. Lire l'architecture: `read_memory("project_summary")`
+3. Explorer la structure: `get_symbols_overview(...)`
+4. Créer une branche: `git_create_branch(...)`
+5. Implémenter: `insert_after_symbol(...)` ou `replace_symbol_body(...)`
+6. Documenter: `memory_bank_write(...)`
+7. Commit: `git_add(...)` puis `git_commit(...)`
 
 ### 3. Refactoring
 
-```
-1. Chercher tous les usages: find_referencing_symbols(...)
-2. Créer un plan: aim_create_entities({ entityType: "refactoring-plan", ... })
-3. Renommer si besoin: rename_symbol(...)
-4. Remplacer les implémentations: replace_symbol_body(...)
-5. Vérifier les erreurs: get_file_problems(...)
-```
+1. Chercher tous les usages: `find_referencing_symbols(...)`
+2. Créer un plan: `aim_create_entities({ entityType: "refactoring-plan", ... })`
+3. Renommer si besoin: `rename_symbol(...)`
+4. Remplacer les implémentations: `replace_symbol_body(...)`
+5. Vérifier les erreurs: `get_file_problems(...)`
+
+### ⚠️ Erreurs à Éviter dans les Workflows
+
+- **Ne PAS** lire des fichiers entiers avec `read_file()` → utiliser Serena
+- **Ne PAS** oublier d'activer le projet Serena avant ses opérations
+- **Ne PAS** créer des fichiers MD temporaires (`WORKING_*.md`, `*_ANALYSIS.md`)
+- **NE PAS** deviner ou ignorer les outils MCP disponibles
 
 ---
 
@@ -299,59 +317,25 @@ function parseHarvestable(data) {
 
 ### Pour lire du code
 
-1. **🥇 `mcp_serena_get_symbols_overview`** - Aperçu rapide
-2. **🥈 `mcp_serena_find_symbol`** - Lecture ciblée
-3. **🥉 `mcp_serena_search_for_pattern`** - Recherche par regex
-4. **❌ `read_file`** - EN DERNIER RECOURS UNIQUEMENT
+1. `mcp_serena_get_symbols_overview` - Aperçu rapide
+2. `mcp_serena_find_symbol` - Lecture ciblée
+3. `mcp_serena_search_for_pattern` - Recherche par regex
+4. ❌ `read_file` - EN DERNIER RECOURS UNIQUEMENT
 
 ### Pour éditer du code
 
-1. **🥇 `mcp_serena_replace_symbol_body`** - Remplacement de symbole complet
-2. **🥈 `mcp_serena_insert_after_symbol` / `insert_before_symbol`** - Insertion
-3. **🥉 `replace_string_in_file`** - Remplacement simple
-4. **❌ `insert_edit_into_file`** - Si les autres ont échoué
+1. `mcp_serena_replace_symbol_body` - Remplacement de symbole complet
+2. `mcp_serena_insert_after_symbol` / `insert_before_symbol` - Insertion
+3. `replace_string_in_file` - Remplacement simple
+4. ❌ `insert_edit_into_file` - Si les autres ont échoué
 
 ### Pour se souvenir de quelque chose
 
-1. **🥇 `mcp_knowledge-gra_aim_create_entities`** - Graph de connaissances
-2. **🥈 `mcp_serena_write_memory`** - Notes Serena
+1. `mcp_knowledge-gra_aim_create_entities` - Graph de connaissances
+2. `mcp_serena_write_memory` - Notes Serena
 
 ---
 
-## ⚠️ Erreurs Fréquentes à Éviter
-
-### ❌ Ne PAS faire
-
-```javascript
-// Lire des fichiers entiers inutilement
-read_file({filePath: "scripts/classes/Player.js", startLine: 0, endLine: 999})
-
-// Oublier d'activer le projet Serena
-find_symbol({...}) // Error: No active project
-
-// Créer des fichiers MD temporaires
-create_file({filePath: "WORKING_NOTES.md", ...})
-
-// Ignorer les outils MCP
-// "Je vais lire le fichier manuellement..."
-```
-
-### ✅ Faire à la place
-
-```javascript
-// Analyse symbolique
-activate_project("C:\\Projets\\Albion-Online-ZQRadar")
-get_symbols_overview({relative_path: "scripts/classes/Player.js"})
-find_symbol({name_path: "Player/parseData", include_body: true})
-
-// Stocker dans le knowledge graph
-aim_create_entities({
-    context: "zqradar-dev",
-    entities: [{name: "...", observations: [...]}]
-})
-```
-
----
 
 ## 🧠 Checklist Avant Chaque Action
 
@@ -367,9 +351,8 @@ aim_create_entities({
 ## 📚 Documentation Complémentaire
 
 - **[MCP_TOOLS.md](./MCP_TOOLS.md)** - Référence complète des outils MCP
-- **[WORKFLOWS.md](./WORKFLOWS.md)** - Workflows détaillés avec exemples
-- **[../dev/ARCHITECTURE.md](../dev/ARCHITECTURE.md)** - Architecture du projet
-- **[../technical/LOGGING.md](../technical/LOGGING.md)** - Système de logging
+- **[DEV_GUIDE.md](../dev/DEV_GUIDE.md)** - Guide de développement du projet
+- **[LOGGING.md](../technical/LOGGING.md)** - Système de logging
 
 ---
 
