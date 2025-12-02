@@ -103,37 +103,21 @@ export class HarvestablesHandler
 
     addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // 🔗 Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
-        if (this.mobsHandler && mobileTypeId !== null) {
+        // 🔗 Register static TypeIDs in MobsHandler for analytics (no override)
+        if (this.mobsHandler && mobileTypeId !== null && mobileTypeId !== 65535) {
             this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
-
-            // 🔧 OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
-            const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
-            if (staticInfo && staticInfo.type) {
-                // Convert our type name (Fiber/Hide/Log/Ore/Rock) to typeNumber
-                const typeMap = {
-                    'Fiber': 14,
-                    'Hide': 20,
-                    'Log': 3,
-                    'Rock': 8,
-                    'Ore': 25
-                };
-
-                if (typeMap[staticInfo.type]) {
-                    type = typeMap[staticInfo.type]; // Override game typeNumber
-                    tier = staticInfo.tier; // Use our tier too
-                }
-            }
         }
 
-        // DEBUG: Log ALL harvestable detections (living + static)
-        const stringType = this.GetStringType(type);
-
-        // Determine if living or static resource
+        // 🔍 Determine resource type: living (animals) vs static
+        // - mobileTypeId === 65535 → Living resources (animals: Hide)
+        // - mobileTypeId === null → Static resources from Event 38 (batch spawn)
+        // - mobileTypeId === other → Static resources from Event 40 with TypeID
         const isLiving = mobileTypeId === 65535;
 
+        // 🎨 Get resource type string from typeNumber (0-27)
+        const stringType = this.GetStringType(type);
 
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Detection, {
+        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Detection, {
             id,
             mobileTypeId,
             type,
@@ -164,38 +148,18 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
-        if (this.mobsHandler && mobileTypeId !== null) {
+        // 🔗 Register static TypeIDs in MobsHandler for analytics (no override)
+        if (this.mobsHandler && mobileTypeId !== null && mobileTypeId !== 65535) {
             this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
-
-
-            // OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
-            const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
-            if (staticInfo && staticInfo.type) {
-                // Convert our type name (Fiber/Hide/Log/Ore/Rock) to typeNumber
-                const typeMap = {
-                    'Fiber': 14,
-                    'Hide': 20,
-                    'Log': 3,
-                    'Rock': 8,
-                    'Ore': 25
-                };
-
-                if (typeMap[staticInfo.type]) {
-                    type = typeMap[staticInfo.type]; // Override game typeNumber
-                    tier = staticInfo.tier; // Use our tier too
-                }
-            }
         }
 
-        // DEBUG: Log ALL harvestable updates (living + static)
-        const stringType = this.GetStringType(type);
-
-        // Determine if living or static resource
+        // 🔍 Determine resource type: living (animals) vs static
         const isLiving = mobileTypeId === 65535;
 
+        // 🎨 Get resource type string from typeNumber (0-27)
+        const stringType = this.GetStringType(type);
 
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Update, {
+        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Update, {
             id,
             mobileTypeId,
             type,

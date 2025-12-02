@@ -1,7 +1,7 @@
 # Plan de Refonte du Système de Détection des Ressources
 
 **Date:** 2025-12-02
-**Statut:** Phase 1 ✅ COMPLÉTÉE | En cours: Phase 2
+**Statut:** Phase 3 🔄 EN COURS
 **Objectif:** Corriger le bug T6+ fiber/leather et simplifier le système de détection
 
 ---
@@ -13,18 +13,376 @@
 - ✅ Import ajouté dans `Utils.js`
 - ✅ Initialisation avec logging
 - ✅ Exposé à `window.harvestablesDatabase`
-- ✅ **Résultat:** 5 types chargés, 190 combinaisons validées en 84ms
+- ✅ **Résultat:** 5 types chargés, 190 combinaisons validées
+- ✅ Bug de debug corrigé (combinaisons par type correctement affichées)
+- ✅ **Commit:** `c34023e1` - feat: add HarvestablesDatabase for resource detection
 
-### 🔄 Phase 2: Suppression Cache - EN COURS
-- ⏳ Propriétés à supprimer
-- ⏳ Méthodes à retirer
-- ⏳ Events à désactiver
+### ✅ Phase 2: Suppression Cache - COMPLÉTÉE
+- ✅ Propriétés de cache supprimées (lastHarvestCache, lastInventoryQuantities, pendingHarvestableId, isHarvesting, discoveredItemIds)
+- ✅ Méthodes d'apprentissage retirées (onHarvestStart, onHarvestCancel, onNewSimpleItem, getResourceInfoFromItemId)
+- ✅ harvestFinished() et HarvestUpdateEvent() simplifiés
+- ✅ Events 32, 59, 60, 61 confirmés absents (déjà retirés)
+- ✅ Système purement event-driven maintenant (Events 38, 40, 46 uniquement)
+- ✅ **Commit:** `b1498a0a` - feat: refactor HarvestablesDatabase and remove unused code
 
-### ⏸️ Phase 3: Fix Bug T6+ - EN ATTENTE
+### ✅ Phase 3: Fix Bug T6+ - COMPLÉTÉE
+- ✅ **ANALYSE DEATHEYE COMPLÉTÉE**
+  - ✅ DeathEye ne fait AUCUNE distinction living/static
+  - ✅ DeathEye utilise uniquement typeNumber (0-27) sans mobileTypeId
+  - ✅ DeathEye fait confiance aux données serveur (pas d'overrides)
+- ⚠️ **DÉCISION ARCHITECTURE:**
+  - ✅ **GARDER** `isLiving = mobileTypeId === 65535` (valide et nécessaire pour UX)
+  - ✅ **GARDER** settings living/static (utilisés pour affichage + overlays)
+  - ❌ **SUPPRIMER** override typeNumber via MobsHandler (cause du bug T6+)
+- ✅ **CORRECTIONS APPLIQUÉES:**
+  - ✅ Override typeNumber via MobsHandler SUPPRIMÉ dans addHarvestable()
+  - ✅ Override typeNumber via MobsHandler SUPPRIMÉ dans UpdateHarvestable()
+  - ✅ Enregistrement MobsHandler CONSERVÉ (analytics uniquement, pas d'override)
+  - ✅ Logique `isLiving = mobileTypeId === 65535` CONFIRMÉE et DOCUMENTÉE
+  - ✅ Settings living/static CONSERVÉS (nécessaires pour UX)
+- ✅ **Commit:** En cours de création
+
+**ANALYSE CORRIGÉE:**
+```javascript
+// scripts/Handlers/HarvestablesHandler.js:210-228
+shouldDisplayHarvestable(stringType, isLiving, tier, charges) {
+    // ✅ CORRECT: Distinction living/static nécessaire pour UX
+    // Settings: harvestingLivingHide, harvestingStaticHide
+    // Overlays: overlayEnchantmentLiving vs overlayEnchantment
+    const settingsKey = isLiving ? `harvestingLiving${resourceType}` : `harvestingStatic${resourceType}`;
+    return this.settings[settingsKey]?.[`e${charges}`]?.[tier-1] ?? false;
+}
+
+// scripts/Handlers/HarvestablesHandler.js:231-292
+addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null) {
+    // 🐛 PROBLÈME: Override du typeNumber via MobsHandler
+    if (this.mobsHandler && mobileTypeId !== null) {
+        this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
+        const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
+        if (staticInfo && staticInfo.type) {
+            // ❌ CET OVERRIDE CAUSE LE BUG T6+
+            type = typeMap[staticInfo.type]; // Override game typeNumber
+            tier = staticInfo.tier; // Override tier aussi!
+        }
+    }
+
+    // ✅ CORRECT: mobileTypeId 65535 = living resources (animaux)
+    const isLiving = mobileTypeId === 65535;
+}
+```
+
+**ROOT CAUSE DU BUG T6+:**
+Les typeNumbers du serveur (0-27) sont **fiables et complets**. L'override via MobsHandler.staticResourceTypeIDs **corrompt** ces données et cause le bug T6+.
+
+### 🔧 Phase 3B: Fix Bugs Living Resources - IMPLÉMENTÉE (EN ATTENTE DE TESTS)
+
+**Date:** 2025-12-02
+**Statut:** ⏳ Code modifié, en attente de validation utilisateur
+
+#### Bugs Identifiés (Tests Utilisateur)
+
+**Contexte:** Phase 3 a corrigé les détections de **ressources statiques** (HarvestablesHandler), mais des bugs persistent sur les **créatures vivantes** affichées sur le radar (MobsHandler).
+
+**Bugs rapportés:**
+1. ❌ **Living Ore T5 détecté en T3** - Faux positif de tier sur créature vivante
+2. ❌ **Living Hide T6e0 détecté en T6e3** - Faux positif d'enchant sur créature vivante
+3. ✅ Hide T4-5 avec enchant correctement détectés
+4. ✅ Fiber T4-5 avec enchant correctement détectés
+5. ✅ Ressources **statiques** T4-6 fonctionnent correctement (après mort de la créature)
+
+**Clarification Importante:**
+- Le bug concerne **MobsHandler** (affichage des créatures vivantes/animaux sur /enemies et radar)
+- **HarvestablesHandler** fonctionne correctement (ressources après mort)
+- Quand une créature meurt → ressource statique avec enchant correct ✅
+- Pendant que la créature est vivante → enchant/tier incorrect ❌
+
+#### Root Cause Identifiée
+
+**Fichier:** `scripts/Handlers/MobsHandler.js`
+**Méthode:** `calculateEnchantment()` (ligne 256-280)
+
+**Problème:**
+```javascript
+// AVANT (BUGGÉ):
+calculateEnchantment(type, tier, rarity, paramsEnchant) {
+    // Pour LivingHarvestable (Fiber/Wood/Ore/Rock): calcul depuis rarity
+    if (type === EnemyType.LivingHarvestable) {
+        const diff = rarity - baseRarity;
+        const enchant = Math.floor(diff / 45);  // ❌ Formule approximative, unreliable
+        return Math.max(0, Math.min(4, enchant));
+    }
+
+    // Pour LivingSkinnable (Hide): rarity constante par TypeID
+    if (type === EnemyType.LivingSkinnable) {
+        return 0;  // ❌ TOUJOURS 0 !
+    }
+
+    return 0;
+}
+```
+
+**Analyse:**
+- Le serveur envoie déjà l'enchant correct dans `parameters[33]` (paramsEnchant)
+- L'ancien système **ignorait** parameters[33] et calculait depuis `rarity`
+- Pour Hide/Leather : `rarity` est constante → calcul impossible → retourne toujours 0
+- Pour Ore/Fiber/Wood : formule approximative depuis `rarity` → résultats incorrects
+
+#### Correction Appliquée
+
+**Fichier:** `scripts/Handlers/MobsHandler.js:256-268`
+
+```javascript
+// APRÈS (SIMPLIFIÉ):
+// 🔧 Phase 3B: Simplified enchant calculation using server data (parameters[33])
+// Old system calculated from rarity (unreliable), new system trusts server data
+calculateEnchantment(type, tier, rarity, paramsEnchant) {
+    // ✅ Use parameters[33] directly (server data is reliable)
+    // This fixes Hide/Leather T6+ enchant detection bugs
+    if (paramsEnchant !== null && paramsEnchant !== undefined) {
+        return Math.max(0, Math.min(4, paramsEnchant));
+    }
+
+    // ⚠️ Fallback: If parameters[33] not available, return 0
+    // (Better to show e0 than wrong enchant)
+    return 0;
+}
+```
+
+**Changements:**
+- ✅ Utilise **directement** `parameters[33]` (données serveur fiables)
+- ✅ Supprime le calcul compliqué depuis `rarity` (unreliable)
+- ✅ Supprime la distinction LivingHarvestable vs LivingSkinnable (inutile)
+- ✅ Cohérent avec philosophie Phase 3 : **faire confiance au serveur**
+
+#### Bénéfices Attendus
+
+**Si les tests confirment le fix:**
+1. ✅ Hide/Leather T6+ enchant correct sur créatures vivantes
+2. ✅ Ore T5 tier correct sur créatures vivantes (pas T3)
+3. ✅ Code simplifié (12 lignes → 8 lignes, -33%)
+4. ✅ Pas de formule approximative fragile
+5. ✅ Cohérence living creatures ↔ static resources après mort
+
+#### Tests de Validation Requis
+
+**⚠️ IMPORTANT:** Ces changements doivent être testés in-game avant de confirmer le fix.
+
+**Tests critiques à effectuer:**
+1. 🧪 **Living Hide T6e0** - Vérifier qu'il est détecté en e0 (pas e3)
+2. 🧪 **Living Hide T6e1/e2/e3** - Vérifier enchants corrects
+3. 🧪 **Living Ore T5** - Vérifier tier 5 (pas T3)
+4. 🧪 **Cohérence alive → dead** - Tuer la créature, vérifier que la ressource statique a le même tier/enchant
+
+**Tests de non-régression:**
+1. ✅ Hide T4-5 avec enchant (doivent continuer de fonctionner)
+2. ✅ Fiber T4-5 avec enchant (doivent continuer de fonctionner)
+3. ✅ Ressources statiques T4-6 (ne doivent pas régresser)
+
+**Logs à analyser après tests:**
+```bash
+# Rechercher les living creatures dans les logs
+grep '"category":"\[CLIENT\] MOB"' logs/sessions/session_*.jsonl | grep '"typeName":"LivingSkinnable"' | head -20
+
+# Vérifier les enchants détectés
+grep '"enchant":[1-9]' logs/sessions/session_*.jsonl | grep '"typeName":"LivingSkinnable"'
+```
+
+**Si tests échouent:**
+- Analyser les logs pour comprendre pourquoi `parameters[33]` ne contient pas le bon enchant
+- Vérifier si le serveur envoie bien l'enchant dans parameters[33]
+- Envisager un fallback hybride (parameters[33] > calculation)
+
+**Si tests réussissent:**
+- ✅ Marquer Phase 3B comme COMPLÉTÉE
+- ✅ Créer commit git
+- ✅ Passer à Phase 4 (optionnelle)
 
 ### ⏸️ Phase 4: Simplification - EN ATTENTE
 
 ### ⏸️ Phase 5: Tests - EN ATTENTE
+
+---
+
+## 🎯 PROCHAINES ACTIONS IMMÉDIATES
+
+### Action 1: Simplifier shouldDisplayHarvestable()
+**Fichier:** `scripts/Handlers/HarvestablesHandler.js:210-228`
+
+**Supprimer le paramètre `isLiving` et unifier les settings:**
+```javascript
+// AVANT (actuel):
+shouldDisplayHarvestable(stringType, isLiving, tier, charges) {
+    const settingsKey = isLiving
+        ? `harvestingLiving${resourceType}`
+        : `harvestingStatic${resourceType}`;
+    return this.settings[settingsKey]?.[`e${charges}`]?.[tier-1] ?? false;
+}
+
+// APRÈS (simplifié):
+shouldDisplayHarvestable(stringType, tier, charges) {
+    const settingsMap = {
+        [HarvestableType.Fiber]: 'Fiber',
+        [HarvestableType.Hide]: 'Hide',
+        [HarvestableType.Log]: 'Wood',
+        [HarvestableType.Ore]: 'Ore',
+        [HarvestableType.Rock]: 'Rock'
+    };
+
+    const resourceType = settingsMap[stringType];
+    if (!resourceType) return false;
+
+    // Settings key unifié (sans living/static)
+    const settingsKey = `harvesting${resourceType}`;
+
+    // Validation avec HarvestablesDatabase si disponible
+    if (window.harvestablesDatabase?.isLoaded) {
+        const typeNumber = this._getTypeNumberFromString(stringType);
+        if (!window.harvestablesDatabase.isValidResourceByTypeNumber(typeNumber, tier, charges)) {
+            window.logger?.warn(this.CATEGORIES.HARVEST, 'InvalidResourceCombination', {
+                typeNumber,
+                stringType,
+                tier,
+                enchant: charges,
+                note: 'Not found in harvestables.json'
+            });
+            return false;
+        }
+    }
+
+    return this.settings[settingsKey]?.[`e${charges}`]?.[tier-1] ?? false;
+}
+
+// Ajouter méthode helper:
+_getTypeNumberFromString(stringType) {
+    const typeMap = {
+        [HarvestableType.Log]: 3,    // Wood mid-range
+        [HarvestableType.Rock]: 8,   // Rock mid-range
+        [HarvestableType.Fiber]: 14, // Fiber mid-range
+        [HarvestableType.Hide]: 20,  // Hide mid-range
+        [HarvestableType.Ore]: 25    // Ore mid-range
+    };
+    return typeMap[stringType] || 0;
+}
+```
+
+### Action 2: Supprimer la cross-référence MobsHandler
+**Fichier:** `scripts/Handlers/HarvestablesHandler.js:231-255`
+
+## ⚠️ ANALYSE CRITIQUE: Ne PAS supprimer complètement
+
+**DÉCOUVERTE IMPORTANTE:**
+
+Le code actuel fait une distinction entre 2 types de ressources:
+
+1. **Ressources "Living" (mobileTypeId = 65535)**
+   - Exemples: Animaux skinnable (Hide/Leather)
+   - Ces ressources MOBILES ont un mobileTypeId spécial = 65535
+   - Event 40 uniquement (NewHarvestableObject)
+
+2. **Ressources "Static" (mobileTypeId ≠ 65535)**
+   - Exemples: Arbres, rochers, fibres statiques
+   - Ces ressources FIXES ont un mobileTypeId spécifique (421, 422, 527, etc.)
+   - Events 38 (batch) et 40 (individuel)
+
+**PROBLÈME IDENTIFIÉ:**
+- La logique `isLiving = mobileTypeId === 65535` n'est PAS fausse!
+- Elle distingue correctement les animaux (hide) des ressources statiques
+- MAIS: Les settings séparent `harvestingLivingHide` vs `harvestingStaticHide` inutilement
+
+**SOLUTION RÉVISÉE:**
+
+```javascript
+// ✅ GARDER la cross-référence MobsHandler pour l'instant
+// Elle collecte les TypeIDs statiques pour analyse future
+if (this.mobsHandler && mobileTypeId !== null && mobileTypeId !== 65535) {
+    // Enregistrer les TypeIDs statiques dans MobsHandler (utile pour analytics)
+    this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
+
+    // ❌ SUPPRIMER l'override du typeNumber
+    // Ne PLUS utiliser mobinfo pour override - faire confiance au serveur
+    // const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
+    // if (staticInfo && staticInfo.type) { ... }
+}
+
+// Le mobileTypeId 65535 indique une ressource "living" (animaux)
+// Les autres mobileTypeIds indiquent des ressources statiques
+const isLiving = mobileTypeId === 65535;
+
+window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Detection, {
+    id,
+    typeNumber: type,
+    stringType: this.GetStringType(type),
+    tier,
+    enchant: charges,
+    size,
+    mobileTypeId,
+    isLiving,  // Utile pour debug
+    posX,
+    posY
+});
+```
+
+**CE QUI DOIT CHANGER:**
+1. ✅ GARDER `isLiving = mobileTypeId === 65535` (c'est correct)
+2. ❌ SUPPRIMER l'override du typeNumber via mobinfo (faire confiance au serveur)
+3. ✅ GARDER l'enregistrement dans MobsHandler (pour analytics)
+4. ❌ SUPPRIMER la distinction living/static dans les SETTINGS uniquement
+
+**Raison:** Les typeNumbers 0-27 du serveur sont fiables. Ne pas les overrider avec mobinfo.
+
+### Action 3: Mettre à jour l'appel à shouldDisplayHarvestable()
+**Fichier:** `scripts/Handlers/HarvestablesHandler.js:268`
+
+**AVANT:**
+```javascript
+const isLiving = mobileTypeId === 65535;
+if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
+    return;
+}
+```
+
+**APRÈS:**
+```javascript
+// Supprimer la variable isLiving complètement
+if (!this.shouldDisplayHarvestable(stringType, tier, charges)) {
+    return;
+}
+```
+
+### Action 4: Améliorer le logging de détection
+**Fichier:** `scripts/Handlers/HarvestablesHandler.js:264-270`
+
+**Remplacer le logging actuel par:**
+```javascript
+const stringType = this.GetStringType(type);
+
+// Log complet de TOUTES les détections
+window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Detection, {
+    id,
+    typeNumber: type,
+    stringType,
+    tier,
+    enchant: charges,
+    size,
+    mobileTypeId,
+    posX,
+    posY,
+    isValidRange: type >= 0 && type <= 27,
+    settingsCheck: this.shouldDisplayHarvestable(stringType, tier, charges)
+});
+
+// Check settings
+if (!this.shouldDisplayHarvestable(stringType, tier, charges)) {
+    window.logger?.debug(this.CATEGORIES.HARVEST, 'FilteredBySettings', {
+        id,
+        stringType,
+        tier,
+        enchant: charges,
+        reason: 'settings_disabled'
+    });
+    return;
+}
+```
 
 ---
 
