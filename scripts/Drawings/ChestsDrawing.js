@@ -1,4 +1,6 @@
-﻿export class ChestsDrawing extends DrawingUtils {
+﻿import {DrawingUtils} from "../Utils/DrawingUtils.js";
+
+export class ChestsDrawing extends DrawingUtils {
 
 
     constructor(Settings) {

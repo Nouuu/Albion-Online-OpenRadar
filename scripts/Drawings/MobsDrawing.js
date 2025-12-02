@@ -1,3 +1,6 @@
+import {DrawingUtils} from "../Utils/DrawingUtils.js";
+import {EnemyType} from "../Handlers/MobsHandler.js";
+
 export class MobsDrawing extends DrawingUtils
 {
     constructor(Settings)

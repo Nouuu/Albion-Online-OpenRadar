@@ -1,11 +1,11 @@
-import { PlayersDrawing } from '../Drawings/PlayersDrawing.js';
-import { HarvestablesDrawing } from '../Drawings/HarvestablesDrawing.js';
-import { MobsDrawing } from '../Drawings/MobsDrawing.js';
-import { ChestsDrawing } from '../Drawings/ChestsDrawing.js';
-import { DungeonsDrawing } from '../Drawings/DungeonsDrawing.js';
-import { MapDrawing } from '../Drawings/MapsDrawing.js';
-import { WispCageDrawing } from '../Drawings/WispCageDrawing.js';
-import { FishingDrawing } from '../Drawings/FishingDrawing.js';
+import {PlayersDrawing} from '../Drawings/PlayersDrawing.js';
+import {HarvestablesDrawing} from '../Drawings/HarvestablesDrawing.js';
+import {MobsDrawing} from '../Drawings/MobsDrawing.js';
+import {ChestsDrawing} from '../Drawings/ChestsDrawing.js';
+import {DungeonsDrawing} from '../Drawings/DungeonsDrawing.js';
+import {MapDrawing} from '../Drawings/MapsDrawing.js';
+import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
+import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
 import { EventCodes } from './EventCodes.js';
 import { ItemsDatabase } from '../Data/ItemsDatabase.js';
@@ -14,33 +14,42 @@ import { SpellsDatabase } from '../Data/SpellsDatabase.js';
 import { PlayersHandler } from '../Handlers/PlayersHandler.js';
 import { WispCageHandler } from '../Handlers/WispCageHandler.js';
 import { FishingHandler } from '../Handlers/FishingHandler.js';
+import { MobsHandler, EnemyType } from '../Handlers/MobsHandler.js';
+import { ChestsHandler } from '../Handlers/ChestsHandler.js';
+import { HarvestablesHandler } from '../Handlers/HarvestablesHandler.js';
+import { MapH } from '../Handlers/Map.js';
+
+import { Settings } from './Settings.js';
+import { DrawingUtils } from './DrawingUtils.js';
+import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
+import {ItemsInfo} from "../Handlers/ItemsInfo.js";
+import {MobsInfo} from "../Handlers/MobsInfo.js";
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 
 // Check if canvas elements exist (only on drawing page)
 var canvasMap = document.getElementById("mapCanvas");
+
 var contextMap = canvasMap ? canvasMap.getContext("2d") : null;
-
 var canvasGrid = document.getElementById("gridCanvas");
+
 var contextGrid = canvasGrid ? canvasGrid.getContext("2d") : null;
-
 var canvas = document.getElementById("drawCanvas");
+
 var context = canvas ? canvas.getContext("2d") : null;
-
 var canvasFlash = document.getElementById("flashCanvas");
+
 var contextFlash = canvasFlash ? canvasFlash.getContext("2d") : null;
-
 var canvasOurPlayer = document.getElementById("ourPlayerCanvas");
+
 var contextOurPlayer = canvasOurPlayer ? canvasOurPlayer.getContext("2d") : null;
+// var canvasItems = document.getElementById("thirdCanvas");
 
-var canvasItems = document.getElementById("thirdCanvas");
-var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
-
-import { Settings } from './Settings.js';
+// var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
 
 console.log('🔧 [Utils.js] Module loaded');
 
-const settings = new Settings();
+export const settings = new Settings();
 
-const { CATEGORIES, EVENTS } = window;
 
 console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');
 
@@ -454,7 +463,6 @@ socket.addEventListener('message', (event) => {
                 note: 'Full extractedDictionary to find Photon Event Code'
             });
         }
-
         // 🔍 DEBUG: Log Photon Event Codes 2 and 3 to identify player vs entity moves
         const photonCode = extractedDictionary["code"];
         if (photonCode === 2 || photonCode === 3) {
@@ -1054,7 +1062,7 @@ setInterval(updatePlayerCounter, 5000);
 
 
 
-document.getElementById("button").addEventListener("click", function () {
+document.getElementById("button")?.addEventListener("click", function () {
     ClearHandlers();
 });
 
@@ -1074,7 +1082,7 @@ function ClearHandlers()
         sessionStorage.removeItem('lastMapDisplayed');
         window.logger?.debug(CATEGORIES.MAP, 'SessionMapCleared');
     } catch (e) {
-        // Silent fail
+        window.logger?.warn(CATEGORIES.MAP, 'SessionStorageClearFailed', { error: e?.message });
     }
 }
 

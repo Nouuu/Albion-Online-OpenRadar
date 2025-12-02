@@ -1,3 +1,5 @@
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
 class Fish
 {
     constructor(id, posX, posY, type, sizeSpawned = 0, sizeLeftToSpawn = 0)
@@ -18,10 +20,6 @@ export class FishingHandler
 {
     constructor(settings)
     {
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
         this.settings = settings;
         this.fishes = [];
     }
@@ -72,7 +70,7 @@ export class FishingHandler
         if (!this.settings.showFish) return;
 
         // 🐛 DEBUG: Log fishing end event
-        window.logger?.debug(this.CATEGORIES.FISHING, this.EVENTS.FishingEnd, {
+        window.logger?.debug(CATEGORIES.FISHING, EVENTS.FishingEnd, {
             parameters: Parameters
         });
 

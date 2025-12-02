@@ -1,6 +1,6 @@
 // LoggerServer.js - Server-side logger avec persistance JSONL
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 class LoggerServer {
     constructor(logsDir = './logs') {
@@ -146,5 +146,5 @@ class LoggerServer {
     }
 }
 
-module.exports = LoggerServer;
+export default LoggerServer;
 

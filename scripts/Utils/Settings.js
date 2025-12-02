@@ -562,4 +562,9 @@ export class Settings
     isHumanLogFormat() {
         return this.logFormat === 'human';
     }
+
+    // Central accessor for overlay distance scale (prefer global helper if present)
+    getOverlayDistanceScale() {
+        return this.scale;
+    }
 }

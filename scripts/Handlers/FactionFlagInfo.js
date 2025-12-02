@@ -1,4 +1,4 @@
-const FactionFlagInfo = {
+export const FactionFlagInfo = {
     0: "FRIENDLY",
     1: "MARTLOCK",
     2: "LYMHURST",

@@ -49,7 +49,7 @@ class Dungeon
     }
 }
 
-class DungeonsHandler
+export class DungeonsHandler
 {
     constructor(Settings)
     {

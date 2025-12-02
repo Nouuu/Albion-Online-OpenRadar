@@ -159,11 +159,20 @@
 	</div>
 </div>
 
-<!-- Import ResourcesHelper utilities -->
-<script src="../scripts/Utils/ResourcesHelper.js"></script>
+<script type="module">
+    import {
+        attachCheckboxListeners,
+        generateResourceGrid,
+        initializeTierButtonStates,
+        returnLocalBool,
+        updateTierButtonState,
+        selectAllTierEnchants
+    } from '/scripts/Utils/ResourcesHelper.js';
 
-<script>
-	// Wait for DOM and dynamic grids to be ready
+    // Make selectAllTierEnchants available globally for inline onclick handlers
+    window.selectAllTierEnchants = selectAllTierEnchants;
+
+    // Wait for DOM and dynamic grids to be ready
 	document.addEventListener('DOMContentLoaded', () => {
 	// Unified resource configuration
 	const resources = [

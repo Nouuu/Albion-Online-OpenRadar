@@ -1,4 +1,4 @@
-class MobsInfo{
+export class MobsInfo{
 
 
     constructor()

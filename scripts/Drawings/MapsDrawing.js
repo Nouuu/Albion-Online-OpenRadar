@@ -1,11 +1,11 @@
-export class MapDrawing extends DrawingUtils 
+import {DrawingUtils} from "../Utils/DrawingUtils.js";
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
+export class MapDrawing extends DrawingUtils
 {
     constructor(Settings)
     {
         super(Settings);
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
     }
     
     interpolate(curr_map, lpX, lpY , t)
@@ -26,8 +26,7 @@ export class MapDrawing extends DrawingUtils
 
         this.DrawImageMap(ctx, curr_map.hX*4, curr_map.hY*4, curr_map.id.toString(), 825*4, curr_map);
     }
-
-    DrawImageMap(ctx, x, y, imageName, size, curr_map)
+    DrawImageMap(ctx, x, y, imageName, size)
     {
         // Fill background => if no map image or corner to prevent glitch textures
         ctx.fillStyle = '#1a1c23';
@@ -61,10 +60,10 @@ export class MapDrawing extends DrawingUtils
         {
             this.settings.preloadImageAndAddToList(src, "Maps")
             .then(() => {
-                window.logger?.info(this.CATEGORIES.MAP, this.EVENTS.MapLoaded, { src: src });
+                window.logger?.info(CATEGORIES.MAP, EVENTS.MapLoaded, { src: src });
             })
             .catch((error) => {
-                window.logger?.warn(this.CATEGORIES.MAP, this.EVENTS.MapLoadFailed, { src: src, error: error?.message });
+                window.logger?.warn(CATEGORIES.MAP, EVENTS.MapLoadFailed, { src: src, error: error?.message });
             });
         }
     }

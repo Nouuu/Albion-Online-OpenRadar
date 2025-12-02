@@ -1,10 +1,9 @@
 // LoggerClient.js - Global logger initialization for all pages
-// This file is loaded in layout.ejs to make logger available everywhere
+// This file is loaded as ES module in layout.ejs to make logger available everywhere
+
+import {CATEGORY_SETTINGS_MAP} from './constants/LoggerConstants.js';
 
 console.log('🔧 [LoggerClient] Script loaded, waiting for DOM ready...');
-
-// Logger constants are loaded from LoggerConstants.js (loaded before this file)
-// Available as: window.CATEGORIES, window.EVENTS, window.CATEGORY_SETTINGS_MAP
 
 let globalLogger = null;
 
@@ -33,8 +32,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.warn('📡 [LoggerClient] WebSocket error - logs will be console-only');
             socketConnected = false;
         });
-    } catch (error) {
+    } catch (e) {
         console.warn('📡 [LoggerClient] Failed to connect WebSocket - logs will be console-only');
+        console.warn(e);
     }
 
     // Create Logger class (works with or without WebSocket)
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // DEBUG logs filtered by settings
-            const settingKey = window.CATEGORY_SETTINGS_MAP?.[category];
+            const settingKey = CATEGORY_SETTINGS_MAP?.[category];
 
             // No setting = always log (e.g., WEBSOCKET, CACHE, etc.)
             if (!settingKey) {

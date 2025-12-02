@@ -1,9 +1,8 @@
-class DrawingUtils {
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {settings} from "./Utils.js";
+
+export class DrawingUtils {
     constructor(settings) {
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
         this.settings = settings || {};
         this.fontSize = "12px";
         this.fontFamily = "Arial";
@@ -28,6 +27,7 @@ class DrawingUtils {
     }
 
     initCanvas(canvas, context) {
+        window.logger?.debug(CATEGORIES, 'MAP', { width: canvas.width, height: canvas.height, ctx: context });
     }
 
     fillCtx(canvasBottom, contextBottom) {
@@ -77,10 +77,10 @@ class DrawingUtils {
         } else if (this.settings && typeof this.settings.preloadImageAndAddToList === 'function') {
             this.settings.preloadImageAndAddToList(src, folder)
                 .then(() => {
-                    window.logger?.info(this.CATEGORIES.ITEM, this.EVENTS.ItemLoaded, { src: src, folder: folder });
+                    window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src: src, folder: folder });
                 })
                 .catch((error) => {
-                    window.logger?.warn(this.CATEGORIES.ITEM, this.EVENTS.ItemLoadFailed, { src: src, folder: folder, error: error?.message });
+                    window.logger?.warn(CATEGORIES.ITEM, EVENTS.ItemLoadFailed, { src: src, folder: folder, error: error?.message });
                 });
         }
     }
@@ -203,7 +203,7 @@ class DrawingUtils {
         ctx.save();
 
         // compute real distance as float (avoid rounding for the threshold check)
-        const scaleFactor = this.getOverlayDistanceScale();
+        const scaleFactor = settings.getOverlayDistanceScale();
         const realDistanceFloat = (distance / 3) * scaleFactor; // baseUnit = 3
 
         // Don't show distance labels for very close resources (<= 2 meters)
@@ -407,7 +407,7 @@ class DrawingUtils {
             ctx.restore();
         } catch (e) {
             // ❌ ERROR (toujours loggé) - Erreur critique de fallback de rendu
-            window.logger?.error(this.CATEGORIES.CLUSTER, this.EVENTS.DrawRingsFallbackFailed, e);
+            window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawRingsFallbackFailed, e);
         }
     }
 
@@ -469,26 +469,16 @@ class DrawingUtils {
     // Convert game units distance to meters applying global scale factor.
     convertGameUnitsToMeters(gameUnits) {
         const baseUnit = 3;
-        const scaleFactor = this.getOverlayDistanceScale();
+        const scaleFactor = settings.getOverlayDistanceScale();
         const meters = (gameUnits / baseUnit) * scaleFactor;
         return Math.round(meters);
-    }
-
-    // Central accessor for overlay distance scale (prefer global helper if present)
-    getOverlayDistanceScale() {
-        if (typeof window !== 'undefined' && typeof window.getOverlayDistanceScale === 'function') {
-            try { return window.getOverlayDistanceScale(); } catch (e) { }
-        }
-        if (this.settings && typeof this.settings.overlayDistanceScale === 'number') return this.settings.overlayDistanceScale;
-        if (typeof window !== 'undefined' && typeof window.overlayDistanceScale === 'number') return window.overlayDistanceScale;
-        return 1.0;
     }
 
     // Inverse conversion: meters -> game units
     metersToGameUnits(meters) {
         if (!meters || meters <= 0) return 0;
         const baseUnit = 3;
-        const scale = this.getOverlayDistanceScale();
+        const scale = settings.getOverlayDistanceScale();
         if (typeof scale === 'number' && scale > 0) return Math.ceil((meters / scale) * baseUnit);
         for (let gu = 0; gu < 10000; gu++) if (this.convertGameUnitsToMeters(gu) >= meters) return gu;
         return Math.ceil(meters * baseUnit);
@@ -499,10 +489,10 @@ class DrawingUtils {
         const gameUnitsRadius = this.metersToGameUnits(clusterRadius);
         const clusters = [];
         const processed = new Set();
-
         const getTypeName = (res) => {
             if (!res) return 'Resource';
-            if (typeof this.getClusterCategory === 'function') return this.getClusterCategory(res);
+
+            // Check res.name first (most reliable)
             if (res.name && typeof res.name === 'string') {
                 const n = res.name.toLowerCase();
                 if (n.includes('fiber')) return 'Fiber';
@@ -511,8 +501,9 @@ class DrawingUtils {
                 if (n.includes('ore')) return 'Ore';
                 if (n.includes('rock')) return 'Rock';
             }
-            if (typeof res.type === 'number' && typeof this.getResourceTypeName === 'function') return this.getResourceTypeName(res.type);
-            if (typeof res.type === 'string') {
+
+            // Fallback to res.type if it's a string
+            if (res.type && typeof res.type === 'string') {
                 const t = res.type.toLowerCase();
                 if (t.includes('fiber')) return 'Fiber';
                 if (t.includes('hide')) return 'Hide';
@@ -520,6 +511,7 @@ class DrawingUtils {
                 if (t.includes('ore')) return 'Ore';
                 if (t.includes('rock')) return 'Rock';
             }
+
             return 'Resource';
         };
 

@@ -1,17 +1,18 @@
+import {ItemsInfo} from "../Handlers/ItemsInfo.js";
+import { Settings } from './Settings.js';
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
 var canvasItems = document.getElementById("thirdCanvas");
 var contextItems = canvasItems.getContext("2d");
 
-import { Settings } from './Settings.js';
 const settings = new Settings();
-
 var itemsInfo = new ItemsInfo();
 itemsInfo.initItems().then(() => {
     var players = [];
 
     const socket = new WebSocket('ws://localhost:5002');
-    const { CATEGORIES, EVENTS } = window;
-        
-    socket.addEventListener('open', (event) => {
+
+    socket.addEventListener('open', () => {
         window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, { page: 'ItemsPage' });
     });
 
@@ -63,7 +64,7 @@ itemsInfo.initItems().then(() => {
 
         /* Items & flag */
         const items = parameters[38];
-        const flagId = parameters[51];
+        // const flagId = parameters[51];
 
         players.push(new Player(id, items, currentHealth, initialHealth, nickname));
     }
@@ -84,9 +85,11 @@ itemsInfo.initItems().then(() => {
 
         try
         {
-            items = Parameters[2];
+            items = parameters[2];
         }
-        catch { }
+        catch {
+            return;
+        }
 
         if (items == undefined) return;
 

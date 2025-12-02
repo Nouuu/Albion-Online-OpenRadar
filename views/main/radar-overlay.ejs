@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ZQRADAR - Overlay</title>
+    <title>OpenRadar - Overlay</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="/scripts/classes/Settings.js"></script>
     <link rel="icon" type="image/x-icon" href="/zqradar.ico">
-    <link rel="stylesheet" href="/scripts/styles/overlay.css">
+    <script type="module" src="/scripts/Utils/Settings.js"></script>
 
     <style>
         * {
@@ -96,17 +95,14 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
-    <script src="/scripts/Handlers/HarvestablesHandler.js"></script>
-    <script src="/scripts/Handlers/MobsHandler.js"></script>
-    <script src="/scripts/Handlers/ChestsHandler.js"></script>
-    <script src="/scripts/Handlers/DungeonsHandler.js"></script>
-    <script src="/scripts/Handlers/Map.js"></script>
-    <script src="/scripts/Handlers/MobsInfo.js"></script>
-    <script src="/scripts/Handlers/ItemsInfo.js"></script>
-    <script src="/scripts/Handlers/FactionFlagInfo.js"></script>
-    <script src="/scripts/Utils/DrawingUtils.js"></script>
-    <script src="/scripts/Utils/DebugConfig.js"></script>
-
+    <script type="module" src="/scripts/Handlers/HarvestablesHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/MobsHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/DungeonsHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/Map.js"></script>
+    <script type="module" src="/scripts/Handlers/MobsInfo.js"></script>
+    <script type="module" src="/scripts/Handlers/ItemsInfo.js"></script>
+    <script type="module" src="/scripts/Utils/DrawingUtils.js"></script>
     <script type="module" src="/scripts/Utils/Utils.js"></script>
 
     <script>
@@ -157,7 +153,7 @@
                 }
             });
 
-            document.title = 'ZQRADAR Overlay - ESC:Close';
+            document.title = 'OpenRadar Overlay - ESC:Close';
         });
     </script>
 </body>

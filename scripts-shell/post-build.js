@@ -213,6 +213,7 @@ function getVersion() {
         const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
         return packageJson.version || '1.0.0';
     } catch (err) {
+        console.warn('⚠ Could not read version from package.json:', err.message);
         return '1.0.0';
     }
 }
@@ -266,12 +267,12 @@ const createArchive = (platform, format) => {
             archive.directory(path.join(DIST_DIR, 'config'), 'config');
         }
 
-        archive.finalize();
+        archive.finalize().then(() => resolve()).catch(err => reject(err));
     });
 };
 
 // Archive formats (ZIP only for all platforms)
-const getFormats = (platform) => {
+const getFormats = () => {
     return [
         { ext: 'zip', type: 'zip', level: 9 }
     ];
@@ -281,8 +282,7 @@ const getFormats = (platform) => {
 (async () => {
     try {
         for (const platform of builtPlatforms) {
-            const formats = getFormats(platform);
-            for (const format of formats) {
+            for (const format of getFormats()) {
                 await createArchive(platform, format);
             }
         }

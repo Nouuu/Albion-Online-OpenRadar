@@ -248,7 +248,7 @@
 <script>
     function returnLocalBool(item)
     {
-        if (localStorage.getItem(item) == "true")
+        if (localStorage.getItem(item) === "true")
         {
             return true;
         }
@@ -259,11 +259,11 @@
     }
 
     //#region Classic enemies
-    const settingNormalEnemy = document.getElementById("settingNormalEnemy");
-    const settingMediumEnemy = document.getElementById("settingMediumEnemy");
-    const settingEnchantedEnemy = document.getElementById("settingEnchantedEnemy");
-    const settingMiniBossEnemy = document.getElementById("settingMiniBossEnemy");
-    const settingBossEnemy = document.getElementById("settingBossEnemy");
+    let settingNormalEnemy = document.getElementById("settingNormalEnemy");
+    let settingMediumEnemy = document.getElementById("settingMediumEnemy");
+    let settingEnchantedEnemy = document.getElementById("settingEnchantedEnemy");
+    let settingMiniBossEnemy = document.getElementById("settingMiniBossEnemy");
+    let settingBossEnemy = document.getElementById("settingBossEnemy");
 
     settingNormalEnemy.checked = returnLocalBool("settingNormalEnemy");
     settingMediumEnemy.checked = returnLocalBool("settingMediumEnemy");
@@ -276,27 +276,27 @@
         localStorage.setItem("settingNormalEnemy", settingNormalEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingMediumEnemy.addEventListener("click", () => 
+    settingMediumEnemy.addEventListener("click", () =>
     {
         localStorage.setItem("settingMediumEnemy", settingMediumEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingEnchantedEnemy.addEventListener("click", () => 
+    settingEnchantedEnemy.addEventListener("click", () =>
     {
         localStorage.setItem("settingEnchantedEnemy", settingEnchantedEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingMiniBossEnemy.addEventListener("click", () => 
+    settingMiniBossEnemy.addEventListener("click", () =>
     {
         localStorage.setItem("settingMiniBossEnemy", settingMiniBossEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingBossEnemy.addEventListener("click", () => 
+    settingBossEnemy.addEventListener("click", () =>
     {
         localStorage.setItem("settingBossEnemy", settingBossEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    
+
 
     const settingShowUnmanagedEnemies = document.getElementById("settingShowUnmanagedEnemies");
     settingShowUnmanagedEnemies.checked = returnLocalBool("settingShowUnmanagedEnemies");
@@ -311,7 +311,7 @@
     if (!settingShowMinimumHealthEnemies.checked)
         settingTextMinimumHealthEnemies.setAttribute("disabled", "");
 
-    settingShowMinimumHealthEnemies.addEventListener("click", () => 
+    settingShowMinimumHealthEnemies.addEventListener("click", () =>
     {
         localStorage.setItem("settingShowMinimumHealthEnemies", settingShowMinimumHealthEnemies.checked);
 
@@ -326,7 +326,7 @@
             settingTextMinimumHealthEnemies.setAttribute("disabled", "");
     });
 
-    settingTextMinimumHealthEnemies.addEventListener("input", () => 
+    settingTextMinimumHealthEnemies.addEventListener("input", () =>
     {
         localStorage.setItem("settingTextMinimumHealthEnemies", settingTextMinimumHealthEnemies.value);
     });
@@ -343,15 +343,15 @@
 
         localStorage.setItem("settingAllEnemies", settingAllEnemies.checked);
 
-        if (settingNormalEnemy.checked != settingAllEnemies.checked)
+        if (settingNormalEnemy.checked !== settingAllEnemies.checked)
             settingNormalEnemy.click(true);
-        if (settingMediumEnemy.checked != settingAllEnemies.checked)
+        if (settingMediumEnemy.checked !== settingAllEnemies.checked)
             settingMediumEnemy.click(true);
-        if (settingEnchantedEnemy.checked != settingAllEnemies.checked)
+        if (settingEnchantedEnemy.checked !== settingAllEnemies.checked)
             settingEnchantedEnemy.click(true);
-        if (settingMiniBossEnemy.checked != settingAllEnemies.checked)
+        if (settingMiniBossEnemy.checked !== settingAllEnemies.checked)
             settingMiniBossEnemy.click(true);
-        if (settingBossEnemy.checked != settingAllEnemies.checked)
+        if (settingBossEnemy.checked !== settingAllEnemies.checked)
             settingBossEnemy.click(true);
 
         updatingAllEnemies = false;
@@ -379,7 +379,7 @@
     settingAvaloneDrones.checked = returnLocalBool("settingAvaloneDrones");
     settingAvaloneDrones.addEventListener("click", () => {localStorage.setItem("settingAvaloneDrones", settingAvaloneDrones.checked);});
 
-    
+
 
     const settingShowEventEnemies = document.getElementById("settingShowEventEnemies");
     settingShowEventEnemies.checked = returnLocalBool("settingShowEventEnemies");

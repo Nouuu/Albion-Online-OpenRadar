@@ -1,3 +1,5 @@
+import {DrawingUtils} from "../Utils/DrawingUtils.js";
+
 export class HarvestablesDrawing extends DrawingUtils  {
 
 

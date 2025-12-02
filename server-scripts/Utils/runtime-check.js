@@ -1,6 +1,6 @@
 // Runtime checks used inside the packaged executable
 // This module is lightweight and only checks runtime requirements (Npcap presence/version on Windows).
-const { execSync } = require('child_process');
+import { execSync } from 'child_process';
 
 const REQUIRED_NPCAP_VERSION = '1.84';
 
@@ -39,7 +39,7 @@ function checkNpcapWindows() {
         return true;
       }
       // If registry key exists but no version, try to extract from driver version
-      const driverMatch = regOutput.match(/DriverVer\s*=\s*[\d\/]+,([\d.]+)/i);
+      const driverMatch = regOutput.match(/DriverVer\s*=\s*[\d/]+,([\d.]+)/i);
       if (driverMatch) {
         // Extract major.minor from driver version (e.g., 14.42.10.379 -> 1.84)
         // Npcap uses version scheme where driver 14.x = Npcap 1.8x
@@ -61,6 +61,7 @@ function checkNpcapWindows() {
       return true;
     } catch (err) {
       // Registry path not found, try next one
+        console.warn(`Npcap not found in registry path: ${regPath} : ${err.message}`);
       continue;
     }
   }
@@ -98,5 +99,5 @@ function runRuntimeChecks() {
   return true;
 }
 
-module.exports = { runRuntimeChecks };
+export { runRuntimeChecks };
 

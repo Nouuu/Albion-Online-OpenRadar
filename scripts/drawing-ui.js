@@ -1,67 +1,6 @@
-// ========== Statistics Update ==========
-function initStats() {
-    // Check if stats elements exist before trying to update them
-    const statDuration = document.getElementById('statDuration');
-    if (!statDuration) return; // Stats elements don't exist on this page
+import {settings} from "./Utils/Utils.js";
 
-    setInterval(function () {
-        if (typeof harvestablesHandler !== 'undefined') {
-            const stats = harvestablesHandler.getStats();
-
-            // Format duration
-            const h = Math.floor(stats.sessionDuration / 3600);
-            const m = Math.floor((stats.sessionDuration % 3600) / 60);
-            const s = stats.sessionDuration % 60;
-            const statDurationEl = document.getElementById('statDuration');
-            if (statDurationEl) statDurationEl.textContent = `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-
-            // Main counters
-            const statDetectedEl = document.getElementById('statDetected');
-            const statHarvestedEl = document.getElementById('statHarvested');
-            if (statDetectedEl) statDetectedEl.textContent = stats.totalDetected;
-            if (statHarvestedEl) statHarvestedEl.textContent = stats.totalHarvested;
-
-            // By type (detected only for compact view)
-            const statFiberEl = document.getElementById('statFiber');
-            const statHideEl = document.getElementById('statHide');
-            const statWoodEl = document.getElementById('statWood');
-            const statOreEl = document.getElementById('statOre');
-            const statRockEl = document.getElementById('statRock');
-            if (statFiberEl) statFiberEl.textContent = stats.byType.Fiber.detected;
-            if (statHideEl) statHideEl.textContent = stats.byType.Hide.detected;
-            if (statWoodEl) statWoodEl.textContent = stats.byType.Log.detected;
-            if (statOreEl) statOreEl.textContent = stats.byType.Ore.detected;
-            if (statRockEl) statRockEl.textContent = stats.byType.Rock.detected;
-
-            // By tier (T4-T8 only for compact view)
-            const statT4El = document.getElementById('statT4');
-            const statT5El = document.getElementById('statT5');
-            const statT6El = document.getElementById('statT6');
-            const statT7El = document.getElementById('statT7');
-            const statT8El = document.getElementById('statT8');
-            if (statT4El) statT4El.textContent = stats.byTier[4].detected;
-            if (statT5El) statT5El.textContent = stats.byTier[5].detected;
-            if (statT6El) statT6El.textContent = stats.byTier[6].detected;
-            if (statT7El) statT7El.textContent = stats.byTier[7].detected;
-            if (statT8El) statT8El.textContent = stats.byTier[8].detected;
-
-            // Enchantments (harvested resources)
-            const statEnchant0El = document.getElementById('statEnchant0');
-            const statEnchant1El = document.getElementById('statEnchant1');
-            const statEnchant2El = document.getElementById('statEnchant2');
-            const statEnchant3El = document.getElementById('statEnchant3');
-            const statEnchant4El = document.getElementById('statEnchant4');
-            if (statEnchant0El) statEnchant0El.textContent = stats.byEnchantment.harvested[0] || 0;
-            if (statEnchant1El) statEnchant1El.textContent = stats.byEnchantment.harvested[1] || 0;
-            if (statEnchant2El) statEnchant2El.textContent = stats.byEnchantment.harvested[2] || 0;
-            if (statEnchant3El) statEnchant3El.textContent = stats.byEnchantment.harvested[3] || 0;
-            if (statEnchant4El) statEnchant4El.textContent = stats.byEnchantment.harvested[4] || 0;
-        }
-    }, 1000);
-}
-
-// ========== Overlay Window ==========
-function openOverlayWindow() {
+export function openOverlayWindow() {
     const features = [
         'width=520',
         'height=520',
@@ -81,7 +20,7 @@ function openOverlayWindow() {
 }
 
 // ========== Overlay Controls ==========
-function initOverlayControls() {
+export function initOverlayControls() {
     // Helper functions
     const getBool = (key, defaultVal = true) => {
         const val = localStorage.getItem(key);
@@ -156,9 +95,6 @@ function initOverlayControls() {
 
 // ========== Initialize on page load ==========
 document.addEventListener('DOMContentLoaded', function () {
-    // Initialize stats update interval
-    initStats();
-
     // Initialize overlay controls
     initOverlayControls();
 

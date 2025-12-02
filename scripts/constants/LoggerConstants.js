@@ -1,13 +1,14 @@
 /**
  * Logger Constants - OpenRadar v2.2
  * Centralized definitions for logging categories and their debug settings mapping
+ * @module LoggerConstants
  */
 
 /**
  * Log categories
  * @readonly
  */
-const CATEGORIES = {
+export const CATEGORIES = {
   // Mob/Enemy
   MOB: 'MOB',
   MOB_HEALTH: 'MOB_HEALTH',
@@ -46,7 +47,7 @@ const CATEGORIES = {
  * Common event names (add more as needed)
  * Use strings directly for dynamic/rare events
  */
-const EVENTS = {
+export const EVENTS = {
   // Mob events
   LoadMetadata: 'LoadMetadata',
   LoadMetadataFailed: 'LoadMetadataFailed',
@@ -154,7 +155,7 @@ const EVENTS = {
  * Mapping: Category → Debug Setting
  * null = always logged (not filtered)
  */
-const CATEGORY_SETTINGS_MAP = {
+export const CATEGORY_SETTINGS_MAP = {
   // Mob/Enemy → debugEnemies
   MOB: 'debugEnemies',
   MOB_HEALTH: 'debugEnemies',
@@ -188,15 +189,3 @@ const CATEGORY_SETTINGS_MAP = {
   MAP: null,
   MOBS: null
 };
-
-// Export CommonJS
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CATEGORIES, EVENTS, CATEGORY_SETTINGS_MAP };
-}
-
-// Export global pour browser
-if (typeof window !== 'undefined') {
-  window.CATEGORIES = CATEGORIES;
-  window.EVENTS = EVENTS;
-  window.CATEGORY_SETTINGS_MAP = CATEGORY_SETTINGS_MAP;
-}

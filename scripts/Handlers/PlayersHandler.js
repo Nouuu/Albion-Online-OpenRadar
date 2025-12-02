@@ -94,6 +94,11 @@ export class PlayersHandler {
     }
 
     handleNewPlayerEvent(id, Parameters) {
+        // 🔍 Check if player detection is enabled
+        if (!this.settings.settingShowPlayers) {
+            return 2; // Skip detection if disabled
+        }
+
         const nickname = Parameters[1];
         const guildName = Parameters[8];
         const flagId = Parameters[11] || 0;

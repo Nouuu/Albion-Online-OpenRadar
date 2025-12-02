@@ -7,7 +7,7 @@
     "start": "node app.js",
     "dev": "nodemon --config config/nodemon.json app.js",
     "check": "node scripts-shell/check-system.js",
-    "check:runtime": "node -e \"try { const ok = require('./scripts/Utils/runtime-check').runRuntimeChecks(); process.exit(ok ? 0 : 1); } catch (e) { console.error(e); process.exit(1); }\"",
+    "check:runtime": "node server-scripts/Utils/runtime-check.js",
     "prebuild": "npm run check",
     "build": "pkg . --compress GZip",
     "build:win": "pkg . --targets node18-win-x64 --compress GZip --output dist/OpenRadar.exe",
@@ -46,7 +46,7 @@
   },
   "author": "Zeldruck",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "engines": {
     "node": ">=18.18.2",
     "npm": ">=9.0.0"
@@ -68,6 +68,9 @@
     "ws": "^8.18.3"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.1",
     "archiver": "^7.0.1",
     "nodemon": "^3.1.7",
     "pkg": "^5.8.1",

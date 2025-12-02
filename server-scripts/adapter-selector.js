@@ -1,7 +1,12 @@
-const { networkInterfaces } = require('os')
-const readlineSync = require('readline-sync');
-const fs = require('node:fs');
-const path = require('path');
+import { networkInterfaces } from 'os';
+import readlineSync from 'readline-sync';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ESM equivalents for __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Detect if application is packaged with pkg
 const isPkg = typeof process.pkg !== 'undefined';
@@ -66,6 +71,4 @@ const getAdapterIp = () => {
     return selectedIp;
 }
 
-module.exports = {
-    getAdapterIp,
-}
+export { getAdapterIp };

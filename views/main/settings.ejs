@@ -538,21 +538,6 @@
 
 
   <script>
-    // TODO: Implement load/save functionality
-    function LoadSettings()
-    {
-      fetch('/config/tests.json')
-      .then(response => response.json())
-      .then(jsonResponse => {
-        console.log(jsonResponse);
-      });
-    }
-
-    function SaveSettings()
-    {
-      // Future implementation
-    }
-
     // Get references to all input fields and checkboxes
     const mainWindowMarginXInput = document.getElementById("mainWindowMarginX");
     const mainWindowMarginYInput = document.getElementById("mainWindowMarginY");

@@ -1,4 +1,4 @@
-﻿class Drawing {
+﻿export class Drawing {
 
     constructor() {
 

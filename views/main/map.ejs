@@ -1,4 +1,3 @@
-
 <div class="container px-6 mx-auto grid">
     <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
         <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
@@ -31,7 +30,7 @@
 <script>
     function returnLocalBool(item)
     {
-        return localStorage.getItem(item) == "true";
+        return localStorage.getItem(item) === "true";
     }
 
     let settingShowMap = document.getElementById("settingShowMap");

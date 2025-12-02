@@ -29,7 +29,7 @@ class Harvestable
     }
 }
 
-class HarvestablesHandler
+export class HarvestablesHandler
 {
     constructor(settings, mobsHandler = null)
     {

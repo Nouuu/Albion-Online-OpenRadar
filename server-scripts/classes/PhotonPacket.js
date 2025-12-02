@@ -1,5 +1,5 @@
-const BufferCursor = require('buffercursor');
-const PhotonCommand = require('./PhotonCommand.js');
+import BufferCursor from 'buffercursor';
+import PhotonCommand from './PhotonCommand.js';
 
 
 class PhotonPacket {
@@ -42,4 +42,4 @@ class PhotonPacket {
 	}
 }
 
-module.exports = PhotonPacket;
+export default PhotonPacket;

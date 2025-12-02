@@ -10,7 +10,7 @@ class Chest {
     }
 }
 
-class ChestsHandler {
+export class ChestsHandler {
     constructor(settings) {
         // Import constants once in constructor
         const { CATEGORIES, EVENTS } = window;
@@ -58,5 +58,4 @@ class ChestsHandler {
         }
         this.addChest(chestId, chestsPosition[0], chestsPosition[1], chestName);
     }
-  
 }

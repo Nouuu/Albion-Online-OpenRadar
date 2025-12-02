@@ -1,22 +1,32 @@
-// 📊 Initialize Logger FIRST - before any other requires
+// 📊 Initialize Logger FIRST - before any other imports
 // This ensures global.loggerServer is available when PhotonParser and Protocol16Deserializer load
-const path = require("path");
-const LoggerServer = require('./server-scripts/LoggerServer');
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
+import fs from 'fs';
+import express from 'express';
+import { WebSocketServer } from 'ws';
+import LoggerServer from './server-scripts/LoggerServer.js';
+import PhotonParser from './server-scripts/classes/PhotonPacketParser.js';
+import { getAdapterIp } from './server-scripts/adapter-selector.js';
+import { EventCodes } from './scripts/Utils/EventCodes.js';
+
+// ESM equivalents for __dirname and __filename
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// createRequire for CommonJS modules (cap)
+const require = createRequire(import.meta.url);
+const Cap = require('cap').Cap;
+const decoders = require('cap').decoders;
+
 const logger = new LoggerServer('./logs');
 global.loggerServer = logger; // Make logger globally accessible
 console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerServer');
 
-const express = require('express');
-const PhotonParser = require('./scripts/classes/PhotonPacketParser');
-var Cap = require('cap').Cap;
-var decoders = require('cap').decoders;
-const WebSocket = require('ws');
-
-const fs = require("fs");
-
 // Runtime checks: use lightweight module included in the packaged executable
 try {
-  const { runRuntimeChecks } = require('./scripts/Utils/runtime-check');
+  const { runRuntimeChecks } = await import('./server-scripts/Utils/runtime-check.js');
   const ok = runRuntimeChecks();
   const isPkg = typeof process.pkg !== 'undefined';
   if (!ok && isPkg) {
@@ -28,9 +38,6 @@ try {
 } catch (e) {
     console.warn('Runtime check module not available:', e?.message ?? e);
 }
-
-const { getAdapterIp } = require('./server-scripts/adapter-selector');
-const EventCodes = require('./scripts/Utils/EventCodesApp.js')
 
 // Detect if application is packaged with pkg
 const isPkg = typeof process.pkg !== 'undefined';
@@ -257,14 +264,14 @@ function StartRadar()
     handlePayloadAsync(payload);
   });
 
-  const server = new WebSocket.Server({ port: 5002, host: 'localhost'});
+  const server = new WebSocketServer({ port: 5002, host: 'localhost'});
   server.on('listening', () => {
     manager.on('event', (dictonary) =>
     {
       const eventCode = dictonary["parameters"][252];
 
       switch (eventCode) {
-        case EventCodes.EventCodes.CharacterEquipmentChanged:
+        case EventCodes.CharacterEquipmentChanged:
           server.clients.forEach(function(client) {
             client.send(JSON.stringify({ code : "items", dictionary: JSON.stringify(dictonary) }));
           });

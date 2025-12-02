@@ -45,7 +45,7 @@ try {
     if (nodeVersion !== REQUIRED_NODE_VERSION) {
         console.warn(`⚠️  Recommended version: v${REQUIRED_NODE_VERSION}`);
     }
-} catch (error) {
+} catch {
     console.error('✗ Node.js not found!');
     hasErrors = true;
 }
@@ -54,7 +54,7 @@ try {
 try {
     const npmVersion = execSync('npm --version', {encoding: 'utf8'}).trim();
     console.log(`✓ npm: v${npmVersion}`);
-} catch (error) {
+} catch {
     console.error('✗ npm not found!');
     hasErrors = true;
 }
@@ -135,7 +135,7 @@ if (process.platform === 'win32') {
                     // Registry key exists, so assume it's OK
                     break;
                 }
-            } catch (error) {
+            } catch {
                 // Registry path not found, try next one
                 continue;
             }
@@ -172,7 +172,7 @@ console.log('\n🛠️  Checking build tools...\n');
 try {
     const pythonVersion = execSync('python --version', {encoding: 'utf8', stdio: 'pipe'}).trim();
     console.log(`✓ Python: ${pythonVersion}`);
-} catch (error) {
+} catch {
     console.warn('⚠️  Python not found (required to compile native modules)');
     console.warn('  → Recommended: Python 3.10.2');
 }

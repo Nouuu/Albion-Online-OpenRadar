@@ -1,6 +1,9 @@
 // 🔍 DEBUG: Check if global.loggerServer exists when module loads
 console.log('🔍 [Protocol16Deserializer] Module loading, global.loggerServer exists?', !!global.loggerServer);
 
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+
 class Protocol16Deserializer {
     static protocol16Type = require('../enumerations/Protocol16Type.json');
 
@@ -227,4 +230,4 @@ class Protocol16Deserializer {
     }
 }
 
-module.exports = Protocol16Deserializer;
+export default Protocol16Deserializer;
