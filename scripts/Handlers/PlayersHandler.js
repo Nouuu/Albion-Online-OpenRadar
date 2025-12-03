@@ -71,6 +71,7 @@ export class PlayersHandler {
         this.playersList = [];
         this.localPlayer = new Player();
         this.settings = settings;
+        this.audio = new Audio('/sounds/player.mp3');
     }
 
     updateItems(id, Parameters) {
@@ -137,8 +138,7 @@ export class PlayersHandler {
         });
 
         // Play audio notification
-        const audio = new Audio('/sounds/player.mp3');
-        audio.play().catch(err => {
+        this.audio.play().catch(err => {
             window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
                 error: err.message,
                 player: nickname

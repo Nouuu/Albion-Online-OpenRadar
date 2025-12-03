@@ -70,19 +70,20 @@ if (builtPlatforms.length === 0) {
     process.exit(1);
 }
 
+
 // Create README file for dist (platform-aware)
 const createReadme = (platform) => {
     const exeName = platform === 'win64' ? 'OpenRadar.exe' :
-                    platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
+        platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
 
     const installInstructions = platform === 'win64' ?
-`1. **Install Npcap** (REQUIRED - version 1.84 or newer)
+        `1. **Install Npcap** (REQUIRED - version 1.84 or newer)
    Download: https://npcap.com/
    Direct link (v1.84): https://npcap.com/dist/npcap-1.84.exe
 
 2. **Launch ${exeName}**
    Double-click on ${exeName}` :
-`1. **Install libpcap** (REQUIRED)
+        `1. **Install libpcap** (REQUIRED)
    - Ubuntu/Debian: sudo apt-get install libpcap-dev
    - macOS: brew install libpcap (usually pre-installed)
 
@@ -148,10 +149,10 @@ function copyRecursiveSync(src, dest) {
     }
 
     if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
+        fs.mkdirSync(dest, {recursive: true});
     }
 
-    const entries = fs.readdirSync(src, { withFileTypes: true });
+    const entries = fs.readdirSync(src, {withFileTypes: true});
 
     for (let entry of entries) {
         const srcPath = path.join(src, entry.name);
@@ -216,21 +217,21 @@ const createArchive = (platform, format) => {
 
         let archive;
         if (format.type === 'zip') {
-            archive = archiver('zip', { zlib: { level: format.level } });
+            archive = archiver('zip', {zlib: {level: format.level}});
         } else if (format.type === 'tar') {
             archive = archiver('tar', {
                 gzip: format.gzip,
-                gzipOptions: { level: format.level }
+                gzipOptions: {level: format.level}
             });
         }
 
-        output.on('close', function() {
+        output.on('close', function () {
             const sizeMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
             console.log(`✓ ${archiveName} (${sizeMB} MB)`);
             resolve();
         });
 
-        archive.on('error', function(err) {
+        archive.on('error', function (err) {
             console.error(`✗ ${archiveName} creation failed:`, err.message);
             reject(err);
         });
@@ -238,15 +239,15 @@ const createArchive = (platform, format) => {
         archive.pipe(output);
 
         // Add platform-specific executable
-        archive.file(exe.path, { name: exe.name });
+        archive.file(exe.path, {name: exe.name});
 
         // Add README
         const readmeName = platform === 'win' ? 'README.txt' : `README-${platform}.txt`;
         if (fs.existsSync(path.join(DIST_DIR, readmeName))) {
-            archive.file(path.join(DIST_DIR, readmeName), { name: 'README.txt' });
+            archive.file(path.join(DIST_DIR, readmeName), {name: 'README.txt'});
         }
 
-        // Add shared assets
+        // Add shared assets (directories)
         for (const asset of assetsToCopy) {
             const assetPath = path.join(DIST_DIR, asset);
             if (fs.existsSync(assetPath)) {
@@ -260,7 +261,7 @@ const createArchive = (platform, format) => {
 // Archive formats (ZIP only for all platforms)
 const getFormats = () => {
     return [
-        { ext: 'zip', type: 'zip', level: 9 }
+        {ext: 'zip', type: 'zip', level: 9}
     ];
 };
 

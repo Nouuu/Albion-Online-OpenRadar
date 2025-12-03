@@ -132,7 +132,6 @@ output.on('close', () => {
     console.log('  • OpenRadar.exe');
     console.log('  • README.md');
     console.log('  • INSTALL.txt');
-    console.log('  • zqradar.ico (if available)\n');
 });
 
 archive.on('error', (err) => {

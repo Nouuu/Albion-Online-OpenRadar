@@ -15,8 +15,6 @@
 5. **`README.md`** ⭐ – Main user guide
 6. **`BUILD.md`** – Build instructions
 7. **`SETUP.md`** – Developer setup guide
-8. **`zqradar.ico`** – Application icon (kept for compatibility)
-9. **`build-helper.bat`** – Wrapper for build scripts (Windows)
 
 ---
 

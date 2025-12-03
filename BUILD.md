@@ -34,14 +34,14 @@ The `build-helper.bat` wrapper calls them from the root.
 | `make help`       | Display help with all commands                                 |
 | `make install`    | Install all npm dependencies + rebuild native modules          |
 | `make check`      | Check Node.js, npm, Npcap, compiled native modules             |
-| `make start`      | Run ZQRadar in development mode (node app.js)                  |
+| `make start`      | Run OpenRadar in development mode (node app.js)                |
 | `make dev`        | Run with auto-reload (nodemon)                                 |
-| `make build`      | Build Windows executable (dist/ZQRadar.exe)                    |
+| `make build`      | Build Windows executable (dist/OpenRadar.exe)                  |
 | `make build-all`  | Build for Windows AND Linux                                    |
 | `make clean`      | Remove dist/, build/temp/, *.log                               |
 | `make clean-all`  | clean + remove node_modules                                    |
 | `make rebuild`    | clean + install + build (complete rebuild)                     |
-| `make package`    | Create release ZIP (ZQRadar-YYYYMMDD.zip)                      |
+| `make package`    | Create release ZIP (OpenRadar-YYYYMMDD.zip)                    |
 | `make release`    | rebuild + package (complete release)                           |
 | `make test-build` | Verify that .exe was created                                   |
 | `make info`       | Display project information                                    |
@@ -50,7 +50,7 @@ The `build-helper.bat` wrapper calls them from the root.
 
 | Command                  | Description                   |
 |--------------------------|-------------------------------|
-| `npm start`              | Run ZQRadar (node app.js)     |
+| `npm start`              | Run OpenRadar (node app.js)   |
 | `npm run dev`            | Development mode with nodemon |
 | `npm run check`          | Check system dependencies     |
 | `npm run build:win`      | Build for Windows x64         |
