@@ -1,37 +1,3 @@
-# =============================================================================
-# DOCUMENTATION TEMPORAIRE (À NE JAMAIS CRÉER)
-# =============================================================================
-# ⚠️ Règle: Toute documentation temporaire doit utiliser les outils MCP:
-#   - Notes temporaires → mcp_serena_write_memory() ou aim_create_entities()
-#   - Documentation permanente → structure /docs (voir docs/README.md)
-#   - TODOs → docs/project/TODO.md
-#   - Bugs → GitHub Issues
-# =============================================================================
-
-# Fichiers MD temporaires interdits
-WORKING_*.md
-*_FIX.md
-*_ANALYSIS.md
-*_CLEANUP.md
-*_SESSION.md
-*_FINAL.md
-*_TYPEIDS.md
-*_NOTES.md
-*_TODO.md
-MIGRATION_DOCS.md
-REORGANIZATION_*.md
-WORK_*.md
-PASSE_*.md
-PROJECT_SUMMARY.md
-CHANGELOG_ORGANIZATION.md
-
-# Anciens fichiers de logging (consolidés dans docs/technical/LOGGING.md)
-LOGGING_GUIDE.md
-LOGGING_ANALYSIS.md
-LOGGING_ACTION_PLAN.md
-LOGGING_REFACTORING_PLAN.md
-TODO_LOGGING.md
-
 # Logs et fichiers de diagnostic
 logs
 *.log

@@ -66,11 +66,6 @@ const nativeModules = [
         name: 'cap',
         path: 'node_modules/cap/build/Release/cap.node',
         description: 'Network capture module (essential'
-    },
-    {
-        name: 'node-sass',
-        path: 'node_modules/node-sass/vendor',
-        description: 'SASS compilation'
     }
 ];
 
@@ -193,7 +188,7 @@ if (hasErrors) {
         console.log('  1. Check Node.js v18.18.2');
         console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows) if you plan to run the executable)`);
         console.log('  3. Run: npm install');
-        console.log('  4. Run: npm rebuild cap node-sass');
+        console.log('  4. Run: npm rebuild cap');
         console.log('='.repeat(50) + '\n');
         process.exit(0);
     }
@@ -203,7 +198,7 @@ if (hasErrors) {
     console.log('  1. Check Node.js v18.18.2');
     console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows)`);
     console.log('  3. Run: npm install');
-    console.log('  4. Run: npm rebuild cap node-sass');
+    console.log('  4. Run: npm rebuild cap');
     console.log('='.repeat(50) + '\n');
     process.exit(1);
 } else {

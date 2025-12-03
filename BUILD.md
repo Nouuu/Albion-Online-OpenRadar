@@ -5,7 +5,7 @@ Guide to build OpenRadar as Windows executable (.exe).
 ## Prerequisites
 
 - Node.js v18.18.2
-- Python 3.10.2 + Visual Studio Build Tools (for native modules cap.node and node-sass)
+- Python 3.10.2 + Visual Studio Build Tools (for native modules cap.node)
 - Npcap 1.84 or newer
 - GNU Make (optional: WSL, Git Bash, or `choco install make`)
 
@@ -48,18 +48,18 @@ The `build-helper.bat` wrapper calls them from the root.
 
 ## npm Commands
 
-| Command                  | Description                       |
-|--------------------------|-----------------------------------|
-| `npm start`              | Run ZQRadar (node app.js)         |
-| `npm run dev`            | Development mode with nodemon     |
-| `npm run check`          | Check system dependencies         |
-| `npm run build:win`      | Build for Windows x64             |
-| `npm run build:all`      | Build Windows + Linux             |
-| `npm run clean`          | Clean dist/ and logs              |
-| `npm run clean:all`      | Clean + remove node_modules       |
-| `npm run rebuild:native` | Rebuild cap and node-sass         |
-| `npm run package`        | Create release ZIP                |
-| `npm run release`        | build:win + package               |
+| Command                  | Description                   |
+|--------------------------|-------------------------------|
+| `npm start`              | Run ZQRadar (node app.js)     |
+| `npm run dev`            | Development mode with nodemon |
+| `npm run check`          | Check system dependencies     |
+| `npm run build:win`      | Build for Windows x64         |
+| `npm run build:all`      | Build Windows + Linux         |
+| `npm run clean`          | Clean dist/ and logs          |
+| `npm run clean:all`      | Clean + remove node_modules   |
+| `npm run rebuild:native` | Rebuild cap                   |
+| `npm run package`        | Create release ZIP            |
+| `npm run release`        | build:win + package           |
 
 ## Build Output
 
@@ -74,7 +74,7 @@ The `.exe` is **completely standalone** and contains:
 - Node.js v18 runtime
 - All source code
 - Assets (views/, scripts/, images/, sounds/)
-- Native modules (cap.node, node-sass)
+- Native modules (cap.node)
 
 ## pkg Configuration
 
@@ -90,7 +90,7 @@ Config in `package.json` specifies:
 **Error "Cannot find module 'cap'"**
 
 ```bash
-npm rebuild cap node-sass
+npm rebuild cap
 ```
 
 **node-gyp fails**

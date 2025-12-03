@@ -178,8 +178,6 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
 <script type="module" src="/scripts/Handlers/HarvestablesHandler.js"></script>
 <script type="module" src="/scripts/Handlers/MobsHandler.js"></script>
 <script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
@@ -213,7 +211,7 @@
         const overlayClusterRadius = document.getElementById("overlayClusterRadius");
         const overlayClusterMinSize = document.getElementById("overlayClusterMinSize");
 
-        // Players section (👥 controlled by settingShowPlayers from home.ejs)
+        // Players section (👥 controlled by settingShowPlayers from players.ejs)
         const playersSection = document.getElementById("playersSection");
 
         // Function to update players section visibility
@@ -234,7 +232,7 @@
             }
         });
 
-        // Poll every 500ms to check for changes (in case changed from home.ejs in same tab)
+        // Poll every 500ms to check for changes (in case changed from players.ejs in same tab)
         setInterval(updatePlayersSectionVisibility, 500);
 
         // Load saved settings

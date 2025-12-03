@@ -11,15 +11,15 @@
     "prebuild": "npm run check",
     "esbuild": "node scripts-shell/build-esbuild.js",
     "build": "npm run esbuild && pkg . --compress GZip",
-    "build:win": "npm run esbuild && pkg . --targets node18-win-x64 --compress GZip --output dist/OpenRadar.exe",
-    "build:linux": "npm run esbuild && pkg . --targets node18-linux-x64 --compress GZip --output dist/OpenRadar-linux",
-    "build:macos": "npm run esbuild && pkg . --targets node18-macos-x64 --compress GZip --output dist/OpenRadar-macos",
-    "build:all": "npm run esbuild && pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --compress GZip",
+    "build:win": "npm run esbuild && pkg . --targets node24-win-x64 --compress GZip --output dist/OpenRadar.exe",
+    "build:linux": "npm run esbuild && pkg . --targets node24-linux-x64 --compress GZip --output dist/OpenRadar-linux",
+    "build:macos": "npm run esbuild && pkg . --targets node24-macos-x64 --compress GZip --output dist/OpenRadar-macos",
+    "build:all": "npm run esbuild && pkg-fetch && pkg . --targets node24-win-x64,node24-linux-x64,node24-macos-x64 --compress GZip",
     "postbuild": "node scripts-shell/post-build.js",
     "clean": "node -e \"const fs=require('fs');const path=require('path');const dist='dist';if(fs.existsSync(dist)){fs.readdirSync(dist).forEach(i=>{if(i!=='images'){fs.rmSync(path.join(dist,i),{recursive:true,force:true});}});}\"",
     "clean:all": "if exist dist rmdir /s /q dist && if exist build\\temp rmdir /s /q build\\temp && del /q *.log 2>nul",
     "clean:images": "if exist dist\\images rmdir /s /q dist\\images && echo Images deleted ",
-    "rebuild:native": "npm rebuild cap node-sass",
+    "rebuild:native": "npm rebuild cap",
     "package": "node scripts-shell/create-release.js",
     "release": "npm run build:win && npm run package",
     "install:deps": "npm install && npm run rebuild:native"
@@ -27,13 +27,12 @@
   "bin": "app.cjs",
   "pkg": {
     "assets": [
-      "node_modules/cap/build/**/*",
-      "node_modules/node-sass/vendor/**/*"
+      "node_modules/cap/build/**/*"
     ],
     "targets": [
-      "node18-win-x64",
-      "node18-linux-x64",
-      "node18-macos-x64"
+      "node24-win-x64",
+      "node24-linux-x64",
+      "node24-macos-x64"
     ],
     "outputPath": "dist",
     "scripts": [
@@ -46,21 +45,16 @@
   "license": "ISC",
   "type": "module",
   "engines": {
-    "node": ">=18.18.2",
-    "npm": ">=9.0.0"
+    "node": ">=24.11.1",
+    "npm": ">=11.6.2"
   },
   "dependencies": {
-    "axios": "^1.13.1",
     "buffercursor": "^0.0.12",
     "cap": "^0.2.1",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "moment": "^2.30.1",
     "nan": "^2.23.0",
     "node-gyp": "^11.5.0",
-    "node-sass": "^9.0.0",
-    "npm": "^11.6.2",
-    "path": "^0.12.7",
     "readline-sync": "^1.4.10",
     "winreg": "^1.2.5",
     "ws": "^8.18.3"
@@ -69,12 +63,12 @@
     "@eslint/js": "^9.39.1",
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.1",
+    "@yao-pkg/pkg": "^6.10.1",
     "archiver": "^7.0.1",
     "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "nodemon": "^3.1.7",
-    "pkg": "^5.8.1",
     "puppeteer": "^24.31.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",

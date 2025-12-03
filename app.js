@@ -68,16 +68,21 @@ function StartRadar(isPkg, appDir)
 
 
   app.get('/', (req, res) => {
-    const viewName = 'main/home';
+    const viewName = 'main/drawing';
     res.render('layout', { mainContent: viewName});
   });
 
   app.get('/home', (req, res) => {
-    const viewName = 'main/home';
+    const viewName = 'main/drawing';
     res.render('./layout', { mainContent: viewName});
   });
 
-  app.get('/resources', (req, res) => {
+    app.get('/players', (req, res) => {
+        const viewName = 'main/players';
+        res.render('layout', { mainContent: viewName });
+    });
+
+    app.get('/resources', (req, res) => {
     const viewName = 'main/resources';
     res.render('layout', { mainContent: viewName });
   });
@@ -115,13 +120,6 @@ function StartRadar(isPkg, appDir)
 
   app.get('/settings', (req, res) => {
     const viewName = 'main/settings';
-    res.render('layout', { mainContent: viewName });
-  });
-
-
-
-  app.get('/drawing', (req, res) => {
-    const viewName = 'main/drawing';
     res.render('layout', { mainContent: viewName });
   });
 

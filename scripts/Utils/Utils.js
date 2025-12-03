@@ -235,9 +235,7 @@ function updatePlayerCounter() {
             playersListElement.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 italic">No players detected yet...</p>';
         } else {
             // Sort by detection time (newest first) - already limited in PlayersHandler
-            const sortedPlayers = [...players].sort((a, b) => b.detectedAt - a.detectedAt);
-
-            playersListElement.innerHTML = sortedPlayers.map(player => {
+            playersListElement.innerHTML = players.map(player => {
                 const elapsedMs = Date.now() - player.detectedAt;
                 const elapsedSec = Math.floor(elapsedMs / 1000);
                 const timeStr = elapsedSec < 60
