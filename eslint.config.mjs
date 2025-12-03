@@ -8,6 +8,7 @@ export default [
     // Browser-side code (front-end)
     {
         files: ["scripts/**/*.js"],
+        ignores: ["scripts/init-alpine.js"],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: "module",
