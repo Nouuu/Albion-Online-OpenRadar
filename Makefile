@@ -2,7 +2,7 @@
 # OpenRadar - Makefile
 # ============================================
 # Usage: make [target]
-# Requires: Node.js v18.18.2, npm, Npcap 1.84
+# Requires: Node.js v24.11.1, npm, Npcap 1.84
 # ============================================
 
 .PHONY: help install start dev check build build-linux build-macos build-all release clean rebuild package all-in-one clean-all update-ao-data download-assets update-assets

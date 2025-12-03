@@ -120,7 +120,7 @@ Navigate to the **Settings** page to:
 
 | Tool               | Version  | Download                                                                                     |
 |--------------------|----------|----------------------------------------------------------------------------------------------|
-| **Node.js**        | v18.18.2 | [Download](https://nodejs.org/dist/v18.18.2/node-v18.18.2-x64.msi)                           |
+| **Node.js**        | v24.11.1 | [Download](https://nodejs.org/dist/v24.11.1/node-v24.11.1-x64.msi)                           |
 | **Npcap**          | 1.84+    | [Download](https://npcap.com/)                                                               |
 | **VS Build Tools** | 2022     | [Download](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) |
 
@@ -246,7 +246,7 @@ Contributions are welcome! Please:
 - Follow **existing code style** (2-space indentation)
 - Add **JSDoc comments** for new functions
 - Update **documentation** for significant changes
-- Test with **Node.js v18.18.2**
+- Test with **Node.js v24.11.1**
 
 ---
 

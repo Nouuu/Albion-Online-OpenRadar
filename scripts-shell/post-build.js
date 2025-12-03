@@ -123,7 +123,7 @@ Native modules (cap.node) are integrated into the executable.
 ## Platform
 
 Built for: ${platform}
-Node.js: v18.18.2
+Node.js: v24.11.1
 `;
 };
 

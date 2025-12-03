@@ -4,7 +4,7 @@ Guide to build OpenRadar as Windows executable (.exe).
 
 ## Prerequisites
 
-- Node.js v18.18.2
+- Node.js v24.11.1
 - Python 3.10.2 + Visual Studio Build Tools (for native modules cap.node)
 - Npcap 1.84 or newer
 - GNU Make (optional: WSL, Git Bash, or `choco install make`)

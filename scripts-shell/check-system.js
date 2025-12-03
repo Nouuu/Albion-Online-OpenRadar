@@ -172,7 +172,7 @@ try {
 }
 
 // Check pkg for build
-const pkgInstalled = fs.existsSync('node_modules/pkg');
+const pkgInstalled = fs.existsSync('node_modules/@yao-pkg');
 if (pkgInstalled) {
     console.log(`✓ pkg: Installed (packaging tool)`);
 } else {
@@ -185,7 +185,7 @@ if (hasErrors) {
     if (!strictMode) {
         console.log('⚠️  Some dependencies are missing, but you\'re in development mode — script won\'t block here.');
         console.log('Recommended actions:');
-        console.log('  1. Check Node.js v18.18.2');
+        console.log('  1. Check Node.js v24.11.1');
         console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows) if you plan to run the executable)`);
         console.log('  3. Run: npm install');
         console.log('  4. Run: npm rebuild cap');
@@ -195,7 +195,7 @@ if (hasErrors) {
 
     console.log('✗ Some dependencies are missing!');
     console.log('\nRecommended actions:');
-    console.log('  1. Check Node.js v18.18.2');
+    console.log('  1. Check Node.js v24.11.1');
     console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows)`);
     console.log('  3. Run: npm install');
     console.log('  4. Run: npm rebuild cap');
