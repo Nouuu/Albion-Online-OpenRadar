@@ -34,12 +34,7 @@
       "node24-linux-x64",
       "node24-macos-x64"
     ],
-    "outputPath": "dist",
-    "scripts": [
-      "scripts/**/*.js",
-      "scripts-shell/**/*.js",
-      "server-scripts/**/*.js"
-    ]
+    "outputPath": "dist"
   },
   "author": "Nospy",
   "license": "ISC",
