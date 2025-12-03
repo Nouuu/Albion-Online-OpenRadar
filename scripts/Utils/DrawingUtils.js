@@ -27,7 +27,7 @@ export class DrawingUtils {
     }
 
     initCanvas(canvas, context) {
-        window.logger?.debug(CATEGORIES, 'MAP', { width: canvas.width, height: canvas.height, ctx: context });
+        window.logger?.debug(CATEGORIES.MAP, 'InitCanva', { width: canvas.width, height: canvas.height, ctx: context });
     }
 
     fillCtx(canvasBottom, contextBottom) {

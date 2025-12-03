@@ -369,14 +369,6 @@ export class RadarRenderer {
                 }
             }
         }
-
-        // Flash border (player detection)
-        if (this.settings.settingFlash && this.flashTime >= 0 && contextFlash) {
-            contextFlash.rect(0, 0, 500, 500);
-            contextFlash.rect(20, 20, 460, 460);
-            contextFlash.fillStyle = 'red';
-            contextFlash.fill('evenodd');
-        }
     }
 
     /**
