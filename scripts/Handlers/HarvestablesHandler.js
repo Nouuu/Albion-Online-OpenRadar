@@ -416,8 +416,6 @@ export class HarvestablesHandler
         // 🔍 Déterminer si living ou static resource
         const isLiving = mobileTypeId === 65535;
 
-        // 🎨 Get resource type string from typeNumber (0-27)
-        const stringType = this.GetStringType(type);
 
         window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Detection, {
             id,
@@ -483,8 +481,6 @@ export class HarvestablesHandler
         // 🔍 Déterminer si living ou static resource
         const isLiving = mobileTypeId === 65535;
 
-        // 🎨 Get resource type string from typeNumber (0-27)
-        const stringType = this.GetStringType(type);
 
         window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Update, {
             id,
