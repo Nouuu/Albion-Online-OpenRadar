@@ -7,6 +7,12 @@ export class Settings
         this.item_images = {}
         this.map_images = {}
         this.flag_images = {}
+
+        // 🔄 Track images currently being loaded to prevent duplicate requests
+        this.loading_images = new Set();
+        this.loading_item_images = new Set();
+        this.loading_map_images = new Set();
+        this.loading_flag_images = new Set();
         //#endregion
 
         //#region Maps
@@ -222,24 +228,43 @@ export class Settings
             switch (container)
             {
                 case "Resources":
-                    if (this.images[path])
+                    // Image already loaded (or already tried and failed - cached as null)
+                    if (path in this.images)
                     {
+                        // If it's null (404), reject to indicate failure
+                        if (this.images[path] === null) {
+                            reject(new Error('Image previously failed to load (404)'));
+                        } else {
+                            resolve();
+                        }
+                    }
+                    // Image already being loaded, wait
+                    else if (this.loading_images.has(path))
+                    {
+                        // Don't start a new request, just resolve immediately
+                        // The image will be available on next frame
                         resolve();
                     }
                     else
                     {
+                        // Mark as loading
+                        this.loading_images.add(path);
+
                         const img = new Image();
 
                         img.onload = () =>
                         {
                             this.images[path] = img;
+                            this.loading_images.delete(path);
                             resolve();
                         };
 
                         img.onerror = () => 
                         {
+                            // Cache the 404 as null to avoid retrying
                             this.images[path] = null;
-                            reject();
+                            this.loading_images.delete(path);
+                            reject(new Error('Image failed to load (404)'));
                         };
 
                         img.src = path;
@@ -248,24 +273,40 @@ export class Settings
                     break;
 
                 case "Maps":
-                    if (this.map_images[path])
+                    // Image already loaded (or already tried and failed - cached as null)
+                    if (path in this.map_images)
+                    {
+                        if (this.map_images[path] === null) {
+                            reject(new Error('Image previously failed to load (404)'));
+                        } else {
+                            resolve();
+                        }
+                    }
+                    // Image already being loaded, wait
+                    else if (this.loading_map_images.has(path))
                     {
                         resolve();
                     }
                     else
                     {
+                        // Mark as loading
+                        this.loading_map_images.add(path);
+
                         const img = new Image();
 
                         img.onload = () =>
                         {
-                            this.map_images[path] = img; 
+                            this.map_images[path] = img;
+                            this.loading_map_images.delete(path);
                             resolve();
                         };
 
                         img.onerror = () =>
                         {
+                            // Cache the 404 as null to avoid retrying
                             this.map_images[path] = null;
-                            reject();
+                            this.loading_map_images.delete(path);
+                            reject(new Error('Image failed to load (404)'));
                         };
 
                         img.src = path;
@@ -274,24 +315,40 @@ export class Settings
                     break;
 
                 case "Items":
-                    if (this.item_images[path])
+                    // Image already loaded (or already tried and failed - cached as null)
+                    if (path in this.item_images)
+                    {
+                        if (this.item_images[path] === null) {
+                            reject(new Error('Image previously failed to load (404)'));
+                        } else {
+                            resolve();
+                        }
+                    }
+                    // Image already being loaded, wait
+                    else if (this.loading_item_images.has(path))
                     {
                         resolve();
                     }
                     else
                     {
+                        // Mark as loading
+                        this.loading_item_images.add(path);
+
                         const img = new Image();
 
                         img.onload = () =>
                         {
-                            this.item_images[path] = img; 
+                            this.item_images[path] = img;
+                            this.loading_item_images.delete(path);
                             resolve();
                         };
 
                         img.onerror = () =>
                         {
+                            // Cache the 404 as null to avoid retrying
                             this.item_images[path] = null;
-                            reject();
+                            this.loading_item_images.delete(path);
+                            reject(new Error('Image failed to load (404)'));
                         };
 
                         img.src = path;
@@ -300,24 +357,40 @@ export class Settings
                     break;
                 
                 case "Flags":
-                    if (this.flag_images[path])
+                    // Image already loaded (or already tried and failed - cached as null)
+                    if (path in this.flag_images)
+                    {
+                        if (this.flag_images[path] === null) {
+                            reject(new Error('Image previously failed to load (404)'));
+                        } else {
+                            resolve();
+                        }
+                    }
+                    // Image already being loaded, wait
+                    else if (this.loading_flag_images.has(path))
                     {
                         resolve();
                     }
                     else
                     {
+                        // Mark as loading
+                        this.loading_flag_images.add(path);
+
                         const img = new Image();
 
                         img.onload = () =>
                         {
-                            this.flag_images[path] = img; 
+                            this.flag_images[path] = img;
+                            this.loading_flag_images.delete(path);
                             resolve();
                         };
 
                         img.onerror = () =>
                         {
+                            // Cache the 404 as null to avoid retrying
                             this.flag_images[path] = null;
-                            reject();
+                            this.loading_flag_images.delete(path);
+                            reject(new Error('Image failed to load (404)'));
                         };
 
                         img.src = path;
@@ -358,20 +431,26 @@ export class Settings
         {
             case "Resources":
                 this.images = {};
+                this.loading_images.clear();
                 break;
 
             case "Maps":
                 this.map_images = {};
+                this.loading_map_images.clear();
                 break;
 
             case "Items":
                 this.item_images = {};
+                this.loading_item_images.clear();
                 break;
 
             case "_ALL_":
                 this.images = {};
                 this.map_images = {};
                 this.item_images = {};
+                this.loading_images.clear();
+                this.loading_map_images.clear();
+                this.loading_item_images.clear();
                 break;
         }
     }

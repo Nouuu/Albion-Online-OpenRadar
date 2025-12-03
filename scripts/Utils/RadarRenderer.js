@@ -45,6 +45,13 @@ export class RadarRenderer {
         this.previousTime = performance.now();
         this.animationFrameId = null;
 
+        // 🎯 Performance optimization: FPS throttling + cluster cache
+        this.TARGET_FPS = 30; // Limit to 30 FPS instead of 60
+        this.FRAME_TIME = 1000 / this.TARGET_FPS;
+        this.CLUSTER_UPDATE_INTERVAL = 2000; // Recalculate clusters every 2 seconds
+        this.lastFrameTime = 0;
+        this.lastClusterUpdate = 0;
+        this.cachedClusters = null;
     }
 
     /**
@@ -103,12 +110,23 @@ export class RadarRenderer {
     }
 
     /**
-     * Main game loop - runs every frame
+     * Main game loop - runs every frame (throttled to TARGET_FPS)
      */
     gameLoop() {
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
+
+        const currentTime = performance.now();
+
+        // 🎯 Throttle to TARGET_FPS
+        const elapsed = currentTime - this.lastFrameTime;
+        if (elapsed < this.FRAME_TIME) {
+            return; // Skip this frame
+        }
+
+        this.lastFrameTime = currentTime - (elapsed % this.FRAME_TIME);
+
         this.update();
         this.render();
-        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
     }
 
     /**
@@ -233,29 +251,45 @@ export class RadarRenderer {
         }
 
         // Unified cluster detection + drawing (merge static harvestables + living resources)
+        // 🎯 OPTIMIZATION: Cache clusters and recalculate only every 2 seconds
         let clustersForInfo = null;
         if (this.settings.overlayCluster && context) {
-            try {
-                // Prepare merged list: static harvestables + living resources from mobs
-                const staticList = this.handlers.harvestablesHandler?.harvestableList || [];
-                const livingList = (this.handlers.mobsHandler && this.handlers.mobsHandler.mobsList)
-                    ? this.handlers.mobsHandler.mobsList.filter(mob =>
-                        mob.type === window.EnemyType?.LivingHarvestable ||
-                        mob.type === window.EnemyType?.LivingSkinnable
-                    )
-                    : [];
+            const currentTime = performance.now();
+            const timeSinceLastUpdate = currentTime - this.lastClusterUpdate;
 
-                // Merge arrays (no deep copy needed)
-                const merged = staticList.concat(livingList);
+            // Recalculate clusters only if cache is empty or expired
+            if (!this.cachedClusters || timeSinceLastUpdate > this.CLUSTER_UPDATE_INTERVAL) {
+                try {
+                    // Prepare merged list: static harvestables + living resources from mobs
+                    const staticList = this.handlers.harvestablesHandler?.harvestableList || [];
+                    const livingList = (this.handlers.mobsHandler && this.handlers.mobsHandler.mobsList)
+                        ? this.handlers.mobsHandler.mobsList.filter(mob =>
+                            mob.type === window.EnemyType?.LivingHarvestable ||
+                            mob.type === window.EnemyType?.LivingSkinnable
+                        )
+                        : [];
 
-                const clusters = this.drawingUtils.detectClusters(
-                    merged,
-                    this.settings.overlayClusterRadius,
-                    this.settings.overlayClusterMinSize
-                );
+                    // Merge arrays (no deep copy needed)
+                    const merged = staticList.concat(livingList);
 
+                    this.cachedClusters = this.drawingUtils.detectClusters(
+                        merged,
+                        this.settings.overlayClusterRadius,
+                        this.settings.overlayClusterMinSize
+                    );
+                    this.lastClusterUpdate = currentTime;
+                } catch (e) {
+                    // ❌ ERROR (always logged) - Critical cluster computation error
+                    window.logger?.error(CATEGORIES.CLUSTER, EVENTS.ComputeFailed, e);
+                }
+            }
+
+            // Use cached clusters
+            clustersForInfo = this.cachedClusters;
+
+            if (clustersForInfo) {
                 // Draw only rings now (behind resources)
-                for (const cluster of clusters) {
+                for (const cluster of clustersForInfo) {
                     if (this.drawingUtils && typeof this.drawingUtils.drawClusterRingsFromCluster === 'function') {
                         this.drawingUtils.drawClusterRingsFromCluster(context, cluster);
                     } else if (this.drawingUtils && typeof this.drawingUtils.drawClusterIndicatorFromCluster === 'function') {
@@ -263,12 +297,6 @@ export class RadarRenderer {
                         this.drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
                     }
                 }
-
-                // Keep clusters for later to draw info boxes above everything
-                clustersForInfo = clusters;
-            } catch (e) {
-                // ❌ ERROR (always logged) - Critical cluster computation error
-                window.logger?.error(CATEGORIES.CLUSTER, this.EVENTS.ComputeFailed, e);
             }
         }
 

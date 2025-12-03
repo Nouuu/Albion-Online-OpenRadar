@@ -263,10 +263,24 @@ function updatePlayerCounter() {
                                 const baseName = item.name.split('@')[0];
                                 const iconPath = `/images/Items/${baseName}.png`;
 
+                                // 🔄 Check if image is already loaded in cache before displaying
+                                const preloadedImage = settings.GetPreloadedImage(iconPath, "Items");
+
+                                let imgHtml = '';
+                                if (preloadedImage) {
+                                    // Image loaded successfully - display it
+                                    imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain">`;
+                                } else if (preloadedImage === undefined) {
+                                    // Not loaded yet - preload in background, show placeholder
+                                    settings.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
+                                    imgHtml = '<div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>';
+                                }
+                                // else preloadedImage === null (404) -> don't display, don't retry
+
                                 const tooltipText = `${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}`;
                                 return `
                                     <div class="inline-flex items-center gap-2 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600" title="${tooltipText}">
-                                        <img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">
+                                        ${imgHtml}
                                         <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">${tierStr}${enchantStr}</span>
                                         <span class="text-xs text-orange-700 dark:text-orange-300 font-bold">IP ${ipStr}</span>
                                     </div>
@@ -294,9 +308,23 @@ function updatePlayerCounter() {
                                 const iconPath = `/images/Spells/${iconName}.png`;
                                 const tooltipText = spell.uniqueName;
 
+                                // 🔄 Check cache before displaying spell icon
+                                const preloadedSpell = settings.GetPreloadedImage(iconPath, "Items");
+
+                                let spellImgHtml = '';
+                                if (preloadedSpell) {
+                                    // Spell icon loaded successfully
+                                    spellImgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain">`;
+                                } else if (preloadedSpell === undefined) {
+                                    // Not loaded yet - preload in background
+                                    settings.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
+                                    spellImgHtml = '<div class="w-8 h-8 bg-purple-300 dark:bg-purple-600 rounded animate-pulse"></div>';
+                                }
+                                // else preloadedSpell === null (404) -> don't display
+
                                 return `
                                     <div class="inline-flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 p-1 rounded-md border border-purple-200 dark:border-purple-700" title="${tooltipText}">
-                                        <img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain" onerror="this.src='/images/Spells/SPELL_GENERIC.png'">
+                                        ${spellImgHtml}
                                     </div>
                                 `;
                             }

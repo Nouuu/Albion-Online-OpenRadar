@@ -39,9 +39,6 @@ console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerSer
 
   // Detect if application is packaged with pkg
   const isPkg = typeof process.pkg !== 'undefined';
-  // For pkg: In the bundled CJS code, __dirname will be defined and point to the snapshot root
-  // For dev ESM: use process.cwd()
-  // We use a try-catch because __dirname doesn't exist in ESM but will exist after esbuild bundle to CJS
   let appDir= process.cwd();
   console.log(`📦 Application running in ${isPkg ? 'packaged' : 'development'} mode.`);
   console.log(`📂 App directory: ${appDir}`);
@@ -163,17 +160,15 @@ function StartRadar(isPkg, appDir)
 
 
 
+  const imagesCacheDuration = 24 * 60 * 60 *1000; // 24 hours
+  app.use('/images', express.static(path.join(appDir, 'images'), { maxAge: imagesCacheDuration }));
+
   app.use('/scripts', express.static(path.join(appDir, 'scripts')));
   app.use('/scripts/Handlers', express.static(path.join(appDir, 'scripts', 'Handlers')));
   app.use('/scripts/Drawings', express.static(path.join(appDir, 'scripts', 'Drawings')));
   app.use('/scripts/Utils', express.static(path.join(appDir, 'scripts', 'Utils')));
   app.use('/scripts/Utils/languages', express.static(path.join(appDir, 'scripts', 'Utils', 'languages')));
   app.use('/scripts/styles', express.static(path.join(appDir, 'scripts', 'styles')));
-  app.use('/images/Resources', express.static(path.join(appDir, 'images', 'Resources')));
-  app.use('/images/Maps', express.static(path.join(appDir, 'images', 'Maps')));
-  app.use('/images/Items', express.static(path.join(appDir, 'images', 'Items')));
-  app.use('/images/Spells', express.static(path.join(appDir, 'images', 'Spells')));
-  app.use('/images/Flags', express.static(path.join(appDir, 'images', 'Flags')));
   app.use('/sounds', express.static(path.join(appDir, 'sounds')));
   app.use('/config', express.static(path.join(appDir, 'config')));
   app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
@@ -186,19 +181,6 @@ function StartRadar(isPkg, appDir)
 
   app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-    // Open the browser only once to avoid opening a new tab on every nodemon restart.
-    // We use a small lock file `.browser_opened` in appDir to remember that we've already opened it.
-    // You can force open with an env var FORCE_BROWSER_OPEN=1 or by passing --open as an argument.
-    try {
-      const browserFlagPath = path.join(appDir, '.browser_opened');
-      const forceOpen = process.env.FORCE_BROWSER_OPEN === '1' || process.argv.includes('--open');
-      if (forceOpen || !fs.existsSync(browserFlagPath)) {
-        require('child_process').exec(`start http://localhost:${port}`);
-        try { fs.writeFileSync(browserFlagPath, Date.now().toString(), { encoding: 'utf8' }); } catch { /* non-fatal */ }
-      }
-    } catch (err) {
-      console.error('Error while trying to open the browser:', err);
-    }
   });
 
 
