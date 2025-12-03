@@ -1,14 +1,12 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
 import {EnemyType} from "../Handlers/MobsHandler.js";
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 
 export class MobsDrawing extends DrawingUtils
 {
     constructor(Settings)
     {
         super(Settings);
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
     }
 
     interpolate(mobs, mists, lpX, lpY, t)
@@ -127,7 +125,7 @@ export class MobsDrawing extends DrawingUtils
 
                 // 🐛 DEBUG: Log color assignment (only once per mob to avoid spam)
                 if (!mobOne._debugLogged) {
-                    window.logger?.debug(this.CATEGORIES.MOB_DRAW, this.EVENTS.MobDrawDetails, {
+                    window.logger?.debug(CATEGORIES.MOB_DRAW, EVENTS.MobDrawDetails, {
                         id: mobOne.id,
                         typeId: mobOne.typeId,
                         type: mobOne.type,

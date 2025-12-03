@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import {downloadFile, DownloadStatus, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
-const ICONS_DIR = path.join(__dirname, '..', 'images', 'Items');
-const ITEMS_XML = path.join(__dirname, '..', 'public', 'ao-bin-dumps', 'items.xml');
+const ICONS_DIR = path.join('images', 'Items');
+const ITEMS_XML = path.join('public', 'ao-bin-dumps', 'items.xml');
 const CDN_BASE = 'https://render.albiononline.com/v1/item/';
 
 const MAX_IMAGE_SIZE = 128;

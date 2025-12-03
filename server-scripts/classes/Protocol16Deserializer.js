@@ -1,11 +1,16 @@
-// 🔍 DEBUG: Check if global.loggerServer exists when module loads
+import fs from 'fs';
+import path from "path";
 console.log('🔍 [Protocol16Deserializer] Module loading, global.loggerServer exists?', !!global.loggerServer);
 
-import { createRequire } from 'module';
-const require = createRequire(import.meta.url);
-
 class Protocol16Deserializer {
-    static protocol16Type = require('../enumerations/Protocol16Type.json');
+    // static protocol16Type = require('../enumerations/Protocol16Type.json');
+    static protocol16Type = null;
+
+    static initialize(appDir) {
+    const file = fs.readFileSync(path.join(appDir, 'server-scripts/enumerations/Protocol16Type.json'), 'utf8');
+    this.protocol16Type = JSON.parse(file);
+        console.log('🛫 [Protocol16Deserializer] Module initialized.');
+    }
 
     // Get logger instance - ALWAYS use global.loggerServer (no fallback)
     static getLogger() {

@@ -19,13 +19,12 @@ import { ChestsHandler } from '../Handlers/ChestsHandler.js';
 import { HarvestablesHandler } from '../Handlers/HarvestablesHandler.js';
 import { MapH } from '../Handlers/Map.js';
 
-import { Settings } from './Settings.js';
+import settings from './Settings.js';
 import { DrawingUtils } from './DrawingUtils.js';
 import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
 import {MobsInfo} from "../Handlers/MobsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
-
 // Check if canvas elements exist (only on drawing page)
 var canvasMap = document.getElementById("mapCanvas");
 
@@ -47,8 +46,6 @@ var contextOurPlayer = canvasOurPlayer ? canvasOurPlayer.getContext("2d") : null
 // var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
 
 console.log('🔧 [Utils.js] Module loaded');
-
-export const settings = new Settings();
 
 
 console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');

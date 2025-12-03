@@ -26,7 +26,7 @@ export default [
         files: [
             "app.js",
             "server-scripts/**/*.js",
-            "scripts-shell/**/*.js"
+            "scripts-shell/*.js"
         ],
         languageOptions: {
             ecmaVersion: 2022,

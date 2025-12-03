@@ -1,6 +1,7 @@
 {
   "watch": [
     "app.js",
+    "app.cjs",
     "views",
     "public",
     "scripts",

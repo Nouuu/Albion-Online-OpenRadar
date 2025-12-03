@@ -70,6 +70,7 @@ coverage
 bower_components
 build/
 dist/
+app.cjs
 dist.7z
 *.exe
 *.zip
@@ -119,8 +120,6 @@ jspm_packages/
 *.tgz
 .yarn-integrity
 server-scripts/ip.txt
-
-public/ao-bin-dumps/*
 
 # IDE
 .idea/

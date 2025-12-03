@@ -1,51 +1,59 @@
 // 📊 Initialize Logger FIRST - before any other imports
 // This ensures global.loggerServer is available when PhotonParser and Protocol16Deserializer load
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { createRequire } from 'module';
 import fs from 'fs';
 import express from 'express';
-import { WebSocketServer } from 'ws';
+import {WebSocketServer} from 'ws';
 import LoggerServer from './server-scripts/LoggerServer.js';
 import PhotonParser from './server-scripts/classes/PhotonPacketParser.js';
-import { getAdapterIp } from './server-scripts/adapter-selector.js';
-import { EventCodes } from './scripts/Utils/EventCodes.js';
+import {getAdapterIp} from './server-scripts/adapter-selector.js';
+import {EventCodes} from './scripts/Utils/EventCodes.js';
+import protocol16Deserializer from "./server-scripts/classes/Protocol16Deserializer.js";
 
-// ESM equivalents for __dirname and __filename
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import pkg from 'cap';
+import {runRuntimeChecks} from "./server-scripts/Utils/runtime-check.js";
 
-// createRequire for CommonJS modules (cap)
-const require = createRequire(import.meta.url);
-const Cap = require('cap').Cap;
-const decoders = require('cap').decoders;
+const { Cap, decoders } = pkg
 
 const logger = new LoggerServer('./logs');
 global.loggerServer = logger; // Make logger globally accessible
 console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerServer');
 
-// Runtime checks: use lightweight module included in the packaged executable
-try {
-  const { runRuntimeChecks } = await import('./server-scripts/Utils/runtime-check.js');
-  const ok = runRuntimeChecks();
-  const isPkg = typeof process.pkg !== 'undefined';
-  if (!ok && isPkg) {
-    console.error('Startup runtime check failed: Npcap >= 1.84 required. Aborting.');
-    process.exit(1);
-  } else if (!ok) {
-    console.warn('Runtime check reported issues; continuing in development mode.');
+// Wrap initialization in async IIFE for esbuild CJS compatibility
+(async () => {
+  // Runtime checks: use lightweight module included in the packaged executable
+  try {
+    const isPkg = typeof process.pkg !== 'undefined';
+    const ok = await runRuntimeChecks();
+      if (!ok && isPkg) {
+          console.error('Startup runtime check failed: Npcap >= 1.84 required. Aborting.');
+          process.exit(1);
+      } else if (!ok) {
+          console.warn('Runtime check reported issues; continuing in development mode.');
+      } else {
+      console.warn('Runtime check reported issues; continuing in development mode.');
+    }
+  } catch (e) {
+      console.warn('Runtime check module not available:', e?.message ?? e);
   }
-} catch (e) {
-    console.warn('Runtime check module not available:', e?.message ?? e);
-}
 
-// Detect if application is packaged with pkg
-const isPkg = typeof process.pkg !== 'undefined';
-const appDir = isPkg ? path.dirname(process.execPath) : __dirname;
+  // Detect if application is packaged with pkg
+  const isPkg = typeof process.pkg !== 'undefined';
+  // For pkg: In the bundled CJS code, __dirname will be defined and point to the snapshot root
+  // For dev ESM: use process.cwd()
+  // We use a try-catch because __dirname doesn't exist in ESM but will exist after esbuild bundle to CJS
+  let appDir= process.cwd();
+  console.log(`📦 Application running in ${isPkg ? 'packaged' : 'development'} mode.`);
+  console.log(`📂 App directory: ${appDir}`);
 
-StartRadar();
+  protocol16Deserializer.initialize(appDir);
+  StartRadar(isPkg, appDir);
+})().catch((error) => {
+  console.error('Failed to initialize application:', error);
+  process.exit(1);
+});
 
-function StartRadar()
+function StartRadar(isPkg, appDir)
 {
   const app = express();
 
@@ -53,34 +61,34 @@ function StartRadar()
 
   // Configure views directory for pkg compatibility
   // When packaged with pkg, EJS needs access to real files
-  const viewsPath = isPkg ? path.join(appDir, 'views') : path.join(__dirname, 'views');
+  const viewsPath = path.join(appDir, 'views')
   app.set('views', viewsPath);
   app.set('view engine', 'ejs');
   app.use(express.static(viewsPath));
 
 
   app.get('/', (req, res) => {
-    const viewName = 'main/home'; 
+    const viewName = 'main/home';
     res.render('layout', { mainContent: viewName});
   });
 
   app.get('/home', (req, res) => {
-    const viewName = 'main/home'; 
+    const viewName = 'main/home';
     res.render('./layout', { mainContent: viewName});
   });
 
   app.get('/resources', (req, res) => {
-    const viewName = 'main/resources'; 
+    const viewName = 'main/resources';
     res.render('layout', { mainContent: viewName });
   });
 
   app.get('/enemies', (req, res) => {
-    const viewName = 'main/enemies'; 
+    const viewName = 'main/enemies';
     res.render('layout', { mainContent: viewName });
   });
 
   app.get('/chests', (req, res) => {
-    const viewName = 'main/chests'; 
+    const viewName = 'main/chests';
     res.render('layout', { mainContent: viewName });
   });
 
@@ -101,12 +109,12 @@ function StartRadar()
   });
 
   app.get('/ignorelist', (req, res) => {
-    const viewName = 'main/ignorelist'; 
+    const viewName = 'main/ignorelist';
     res.render('layout', { mainContent: viewName });
   });
 
   app.get('/settings', (req, res) => {
-    const viewName = 'main/settings'; 
+    const viewName = 'main/settings';
     res.render('layout', { mainContent: viewName });
   });
 
@@ -142,16 +150,16 @@ function StartRadar()
   // 📊 API: Set server logs status
   app.post('/api/settings/server-logs', express.json(), (req, res) => {
     const { enabled } = req.body;
-    
+
     if (typeof enabled !== 'boolean') {
       return res.status(400).json({ error: 'Invalid value for enabled, must be boolean' });
     }
 
     global.loggerServer.setEnabled(enabled);
-    
-    res.json({ 
-      success: true, 
-      enabled: global.loggerServer.isEnabled() 
+
+    res.json({
+      success: true,
+      enabled: global.loggerServer.isEnabled()
     });
   });
 
@@ -188,7 +196,7 @@ function StartRadar()
       const forceOpen = process.env.FORCE_BROWSER_OPEN === '1' || process.argv.includes('--open');
       if (forceOpen || !fs.existsSync(browserFlagPath)) {
         require('child_process').exec(`start http://localhost:${port}`);
-        try { fs.writeFileSync(browserFlagPath, Date.now().toString(), { encoding: 'utf8' }); } catch (e) { /* non-fatal */ }
+        try { fs.writeFileSync(browserFlagPath, Date.now().toString(), { encoding: 'utf8' }); } catch { /* non-fatal */ }
       }
     } catch (err) {
       console.error('Error while trying to open the browser:', err);
@@ -209,7 +217,7 @@ function StartRadar()
 
   if (!adapterIp)
   {
-    adapterIp = getAdapterIp()
+    adapterIp = getAdapterIp(appDir)
   }
   else
   {
@@ -227,7 +235,7 @@ function StartRadar()
     console.log(`Last adapter is not working, please choose a new one.`);
     console.log();
 
-    adapterIp = getAdapterIp();
+    adapterIp = getAdapterIp(appDir);
     device = Cap.findDevice(adapterIp);
   }
 
@@ -237,7 +245,7 @@ function StartRadar()
   // Logger already initialized at top of file (global.loggerServer available)
 
   const manager = new PhotonParser();
-  var linkType = c.open(device, filter, bufSize, buffer);
+  c.open(device, filter, bufSize, buffer);
 
 
   c.setMinBytes && c.setMinBytes(0);
@@ -252,14 +260,14 @@ function StartRadar()
   }
 
   // setup Cap event listener on global level
-  c.on('packet', function (nbytes, trunc) {
+  c.on('packet', function (nbytes) {
     const ret = decoders.Ethernet(buffer);
     const ipRet = decoders.IPV4(buffer, ret.offset);
     const udpRet = decoders.UDP(buffer, ipRet.offset);
-  
+
     // Slice the buffer to get the actual payload from the offset where the UDP packet data starts
     const payload = buffer.slice(udpRet.offset, nbytes);
-  
+
     // Call the asynchronous handler
     handlePayloadAsync(payload);
   });
@@ -314,7 +322,7 @@ function StartRadar()
     ws.on('message', (message) => {
       try {
         const data = JSON.parse(message);
-        
+
         // Handle logs from client
         if (data.type === 'logs' && Array.isArray(data.logs)) {
           logger.writeLogs(data.logs);

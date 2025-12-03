@@ -4,9 +4,8 @@
  * Checks that all system dependencies are installed
  */
 
-const {execSync} = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import {execSync} from "child_process";
+import fs from 'fs';
 
 const REQUIRED_NODE_VERSION = '18.18.2';
 const REQUIRED_NPCAP_VERSION = '1.84';
@@ -65,12 +64,12 @@ console.log('\n📦 Checking native modules...\n');
 const nativeModules = [
     {
         name: 'cap',
-        path: path.join(__dirname, '../node_modules/cap/build/Release/cap.node'),
-        description: 'Network capture module (essential)'
+        path: 'node_modules/cap/build/Release/cap.node',
+        description: 'Network capture module (essential'
     },
     {
         name: 'node-sass',
-        path: path.join(__dirname, '../node_modules/node-sass/vendor'),
+        path: 'node_modules/node-sass/vendor',
         description: 'SASS compilation'
     }
 ];
@@ -178,7 +177,7 @@ try {
 }
 
 // Check pkg for build
-const pkgInstalled = fs.existsSync(path.join(__dirname, '../node_modules/pkg'));
+const pkgInstalled = fs.existsSync('node_modules/pkg');
 if (pkgInstalled) {
     console.log(`✓ pkg: Installed (packaging tool)`);
 } else {

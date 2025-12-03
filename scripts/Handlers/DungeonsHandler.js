@@ -1,4 +1,6 @@
-const DungeonType = 
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
+const DungeonType =
 {
     Solo: 0,
     Group: 1,
@@ -54,10 +56,6 @@ export class DungeonsHandler
     constructor(Settings)
     {
         // Import constants once in constructor
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
         this.dungeonList = [];
         this.settings = Settings;
     }
@@ -72,7 +70,7 @@ export class DungeonsHandler
             }
         }
 
-        window.logger?.debug(this.CATEGORIES.DUNGEON, this.EVENTS.NewDungeonEvent_ALL_PARAMS, {
+        window.logger?.debug(CATEGORIES.DUNGEON, EVENTS.NewDungeonEvent_ALL_PARAMS, {
             dungeonId: parameters[0],
             position: parameters[7],
             allParameters: allParams,

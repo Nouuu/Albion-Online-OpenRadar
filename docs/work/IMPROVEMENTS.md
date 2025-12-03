@@ -269,6 +269,73 @@ Readable log:
 
 ---
 
+## 🚀 Planned Future Improvements
+
+### 1. Mob Detection System Refactor
+
+**Goal:** Implement a database-based system similar to resources, items, and spells.
+
+**Current State:**
+- ❌ Mobs are displayed as simple green dots.
+- ❌ No detailed information about mob types.
+
+**Planned Changes:**
+- ✅ Create a static database file for mobs (similar to HarvestablesDatabase).
+- ✅ Display detailed mob information on the radar (type, tier, enchantment).
+- ✅ Add visual differentiation based on mob types.
+- ✅ Enable filtering and configuration for specific mob types.
+
+### 2. Treasures and Dungeons Detection
+
+**Goal:** Implement a comprehensive detection system for treasures and dungeons.
+
+**Planned Features:**
+- ✅ Static treasure detection database.
+- ✅ Solo dungeon detection and display.
+- ✅ Group dungeon detection and display.
+- ✅ Visual indicators and filtering options.
+- ✅ Database-based approach for maintainability.
+
+### 3. Radar Display Unification
+
+**Goal:** Unify overlay and radar display code to avoid duplication.
+
+**Current State:**
+- ❌ Overlay and main radar use separate rendering logic.
+- ❌ Code duplication makes maintenance difficult.
+
+**Planned Changes:**
+- ✅ Refactor to a single, shared radar rendering module.
+- ✅ Both overlay and main radar display identical information.
+- ✅ Easier maintenance and feature additions.
+- ✅ Consistent behavior across both views.
+
+### 4. Enemy Counter Visibility Control
+
+**Goal:** Show enemy counter only when player detection is enabled.
+
+**Planned Changes:**
+- ✅ Conditional display based on player detection feature toggle.
+- ✅ Hide counter when feature is disabled.
+- ✅ Cleaner UI when not needed.
+
+### 5. Map Tile Size Normalization
+
+**Goal:** Fix minimap stretching issues with variable zone sizes.
+
+**Current Issue:**
+- ❌ Different map tiles have different sizes.
+- ❌ Small city zones cause minimap stretching.
+- ❌ Player position becomes inaccurate on stretched maps.
+
+**Planned Fixes:**
+- ✅ Normalize map tile dimensions.
+- ✅ Apply scaling correction for small zones.
+- ✅ Ensure accurate player position representation.
+- ✅ Prevent image distortion on the minimap.
+
+---
+
 ## 📁 Modified Files (for this improvement set)
 
 ```text

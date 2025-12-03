@@ -2,19 +2,8 @@ import { networkInterfaces } from 'os';
 import readlineSync from 'readline-sync';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-// ESM equivalents for __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Detect if application is packaged with pkg
-const isPkg = typeof process.pkg !== 'undefined';
-// In build mode: ip.txt next to executable
-// In dev mode: ip.txt in server-scripts/
-const appDir = isPkg ? path.dirname(process.execPath) : __dirname;
-
-const getAdapterIp = () => {
+const getAdapterIp = (appDir) => {
     const interfaces = networkInterfaces();
 
     console.log();

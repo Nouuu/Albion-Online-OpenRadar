@@ -1,14 +1,11 @@
-#!/usr/bin/env node
-/**
- * post-build.js
- * Script executed after pkg build to copy necessary assets
- * Cross-platform support for Windows, Linux, macOS
- */
+import fs from 'fs';
+import path from 'path';
+import archiver from 'archiver';
 
-const fs = require('fs');
-const path = require('path');
+const DIST_DIR = 'dist'
+const ES_BUILD_FILE = 'app.cjs';
+const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'server-scripts', 'public'];
 
-const DIST_DIR = path.join(__dirname, '../dist');
 
 console.log('\n📦 Post-build: Checking assets...\n');
 
@@ -144,10 +141,6 @@ if (builtPlatforms.includes('win')) {
     console.log('✓ README.txt created (Windows)');
 }
 
-// Copy all assets next to the exe
-// This approach makes the executable lighter and facilitates updates
-const assetsToCopy = ['views', 'scripts', 'server-scripts', 'images', 'sounds', 'config', 'public'];
-
 function copyRecursiveSync(src, dest) {
     if (!fs.existsSync(src)) {
         console.warn(`⚠ Source folder not found: ${src}`);
@@ -175,7 +168,7 @@ function copyRecursiveSync(src, dest) {
 console.log('\n📁 Copying assets next to executable...\n');
 
 for (const asset of assetsToCopy) {
-    const srcPath = path.join(__dirname, '..', asset);
+    const srcPath = path.join(asset);
     const destPath = path.join(DIST_DIR, asset);
 
     try {
@@ -190,13 +183,9 @@ console.log('\n✓ Assets copied!\n');
 console.log('Files in dist/:');
 console.log('  - Executables');
 console.log('  - README files');
-console.log('  - views/');
-console.log('  - scripts/');
-console.log('  - server-scripts/');
-console.log('  - images/');
-console.log('  - public/');
-console.log('  - sounds/');
-console.log('  - config/');
+for (const asset of assetsToCopy) {
+    console.log(`  - ${asset}/`);
+}
 
 console.log('✓ Post-build completed!\n');
 console.log('Note: This approach makes the exe lighter and facilitates updates\n');
@@ -204,13 +193,12 @@ console.log('Note: This approach makes the exe lighter and facilitates updates\n
 // Create compressed archives (multiple formats per platform)
 console.log('\n📦 Creating compressed archives...\n');
 
-const archiver = require('archiver');
 const version = getVersion();
 
 // Helper function to get version from package.json
 function getVersion() {
     try {
-        const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
         return packageJson.version || '1.0.0';
     } catch (err) {
         console.warn('⚠ Could not read version from package.json:', err.message);
@@ -259,14 +247,12 @@ const createArchive = (platform, format) => {
         }
 
         // Add shared assets
-        archive.directory(path.join(DIST_DIR, 'views'), 'views');
-        archive.directory(path.join(DIST_DIR, 'scripts'), 'scripts');
-        archive.directory(path.join(DIST_DIR, 'images'), 'images');
-        archive.directory(path.join(DIST_DIR, 'sounds'), 'sounds');
-        if (fs.existsSync(path.join(DIST_DIR, 'config'))) {
-            archive.directory(path.join(DIST_DIR, 'config'), 'config');
+        for (const asset of assetsToCopy) {
+            const assetPath = path.join(DIST_DIR, asset);
+            if (fs.existsSync(assetPath)) {
+                archive.directory(assetPath, asset);
+            }
         }
-
         archive.finalize().then(() => resolve()).catch(err => reject(err));
     });
 };
@@ -292,4 +278,8 @@ const getFormats = () => {
         console.error('✗ Archive creation failed:', err.message);
         process.exit(1);
     }
-})();
+})().finally(() => {
+    console.log('📦 Post-build archiving process finished.');
+    console.log('Moving app.cjs to dist/ folder.');
+    fs.renameSync(ES_BUILD_FILE, path.join(DIST_DIR, ES_BUILD_FILE));
+});

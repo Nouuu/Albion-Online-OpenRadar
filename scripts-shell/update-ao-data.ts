@@ -3,7 +3,7 @@ import path from 'path';
 import {downloadFile, DownloadStatus, handleFileBuffer, handleReplacing, printSummary} from "./common";
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master';
-const OUTPUT_DIR = path.join(__dirname, '..', 'public', 'ao-bin-dumps');
+const OUTPUT_DIR = 'public/ao-bin-dumps';
 
 const FILES_TO_DOWNLOAD = [
     'formatted/items.txt',

@@ -3,9 +3,9 @@ import path from 'path';
 import {downloadFile, DownloadResult, DownloadStatus, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
 // Paths
-const SPELLS_JSON_PATH = path.join(__dirname, '../public/ao-bin-dumps/spells.json');
-const LOCALIZATION_JSON_PATH = path.join(__dirname, '../public/ao-bin-dumps/localization.json');
-const OUTPUT_DIR = path.join(__dirname, '../images/Spells');
+const SPELLS_JSON_PATH = path.join( 'public/ao-bin-dumps/spells.json');
+const LOCALIZATION_JSON_PATH = path.join( 'public/ao-bin-dumps/localization.json');
+const OUTPUT_DIR = path.join( 'images/Spells');
 const CDN_BASE_URL = 'https://render.albiononline.com/v1/spell/';
 
 // Image optimization settings

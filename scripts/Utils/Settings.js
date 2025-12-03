@@ -568,3 +568,6 @@ export class Settings
         return this.scale;
     }
 }
+
+const settingsInstance = new Settings();
+export default settingsInstance;

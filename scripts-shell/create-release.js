@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 
-const DIST_DIR = path.join(__dirname, '../dist');
+const DIST_DIR = path.join('dist');
 const RELEASE_NAME = `OpenRadar-${new Date().toISOString().split('T')[0].replace(/-/g, '')}`;
 const RELEASE_DIR = path.join(DIST_DIR, RELEASE_NAME);
 
@@ -32,8 +32,8 @@ console.log('📁 Copying files...\n');
 
 const filesToCopy = [
     { src: exePath, dest: 'OpenRadar.exe' },
-    { src: path.join(__dirname, '../README.md'), dest: 'README.md' },
-    { src: path.join(__dirname, '../zqradar.ico'), dest: 'zqradar.ico', optional: true }
+    { src: path.join('README.md'), dest: 'README.md' },
+    { src: path.join('zqradar.ico'), dest: 'zqradar.ico', optional: true }
 ];
 
 filesToCopy.forEach(file => {

@@ -1,4 +1,4 @@
-import {settings} from "./Utils/Utils.js";
+import settings from "./Utils/Settings.js";
 
 export function openOverlayWindow() {
     const features = [

@@ -1,3 +1,5 @@
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
 class Player {
     constructor(posX, posY, id, nickname, guildName1, flagId, allianceName, factionName, equipments, spells) {
         this.posX = posX;
@@ -66,11 +68,6 @@ class Player {
 
 export class PlayersHandler {
     constructor(settings) {
-        // Import constants once in constructor
-        const {CATEGORIES, EVENTS} = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-
         this.playersList = [];
         this.localPlayer = new Player();
         this.settings = settings;
@@ -123,7 +120,7 @@ export class PlayersHandler {
                 this.playersList.sort((a, b) => b.detectedAt - a.detectedAt);
                 const removed = this.playersList.splice(maxPlayers);
 
-                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
+                window.logger?.debug(CATEGORIES.PLAYER, EVENTS.PlayerDebugInfo, {
                     totalDetected: this.playersList.length + removed.length,
                     keptPlayers: this.playersList.length,
                     removedPlayers: removed.length,
@@ -132,7 +129,7 @@ export class PlayersHandler {
             }
 
             // 🐛 DEBUG: Log player equipment on detection
-            window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
+            window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
                 id: id,
                 nickname: nickname,
                 guild: guildName,
@@ -143,7 +140,7 @@ export class PlayersHandler {
                 playersCount: this.playersList.length
             });
 
-            window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected', {
+            window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected', {
                 id: id,
                 nickname: nickname,
                 guild: guildName,
@@ -153,7 +150,7 @@ export class PlayersHandler {
             // Play audio notification
             const audio = new Audio('/sounds/player.mp3');
             audio.play().catch(err => {
-                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.AudioPlayBlocked, {
+                window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
                     error: err.message,
                     player: nickname
                 });
@@ -209,7 +206,7 @@ export class PlayersHandler {
             }
         }
 
-        window.logger?.debug(this.CATEGORIES.PLAYER_HEALTH, this.EVENTS.PlayerHealthUpdate_DETAIL, {
+        window.logger?.debug(CATEGORIES.PLAYER_HEALTH, EVENTS.PlayerHealthUpdate_DETAIL, {
             playerId: Parameters[0],
             params2_currentHP: Parameters[2],
             params3_maxHP: Parameters[3],

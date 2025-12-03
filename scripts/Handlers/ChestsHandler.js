@@ -1,3 +1,5 @@
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
 class Chest {
     constructor(id, posX, posY, name) {
         this.id = id;
@@ -12,11 +14,6 @@ class Chest {
 
 export class ChestsHandler {
     constructor(settings) {
-        // Import constants once in constructor
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
         this.settings = settings;
         this.chestsList = [];
     }
@@ -42,7 +39,7 @@ export class ChestsHandler {
                 allParams[`param[${key}]`] = Parameters[key];
             }
         }
-        window.logger?.debug(this.CATEGORIES.CHEST, this.EVENTS.NewChestEvent_ALL_PARAMS, {
+        window.logger?.debug(CATEGORIES.CHEST, EVENTS.NewChestEvent_ALL_PARAMS, {
             chestId: Parameters[0],
             position: Parameters[7],
             allParameters: allParams,

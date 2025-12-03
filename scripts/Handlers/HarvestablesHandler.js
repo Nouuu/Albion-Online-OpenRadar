@@ -1,4 +1,6 @@
-const HarvestableType = 
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
+const HarvestableType =
 {
     Fiber: 'Fiber',
     Hide: 'Hide',
@@ -33,11 +35,6 @@ export class HarvestablesHandler
 {
     constructor(settings, mobsHandler = null)
     {
-        // Import constants once in constructor
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
         this.harvestableList = [];
         this.settings = settings;
         this.mobsHandler = mobsHandler;
@@ -419,7 +416,10 @@ export class HarvestablesHandler
         // 🔍 Déterminer si living ou static resource
         const isLiving = mobileTypeId === 65535;
 
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Detection, {
+        // 🎨 Get resource type string from typeNumber (0-27)
+        const stringType = this.GetStringType(type);
+
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Detection, {
             id,
             mobileTypeId,
             type,
@@ -483,7 +483,10 @@ export class HarvestablesHandler
         // 🔍 Déterminer si living ou static resource
         const isLiving = mobileTypeId === 65535;
 
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Update, {
+        // 🎨 Get resource type string from typeNumber (0-27)
+        const stringType = this.GetStringType(type);
+
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Update, {
             id,
             mobileTypeId,
             type,
@@ -536,7 +539,7 @@ export class HarvestablesHandler
             }
         }
 
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.HarvestUpdateEvent_ALL_PARAMS, {
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.HarvestUpdateEvent_ALL_PARAMS, {
             harvestableId: Parameters[0],
             charges: Parameters[1],
             typeId: Parameters[5],
@@ -611,7 +614,7 @@ export class HarvestablesHandler
         // On met à jour uniquement si la valeur a augmenté (régénération)
         const newSize = Parameters[1];
         if (newSize > harvestable.size) {
-            window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Regeneration, {
+            window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Regeneration, {
                 oldSize: harvestable.size,
                 newSize
             });
@@ -757,7 +760,7 @@ export class HarvestablesHandler
         }
         else {
             // ⚠️ WARN (toujours loggé) - Type de ressource inconnu
-            window.logger?.warn(this.CATEGORIES.HARVEST, this.EVENTS.UnknownTypeNumber, {
+            window.logger?.warn(CATEGORIES.HARVEST, EVENTS.UnknownTypeNumber, {
                 typeNumber,
                 note: 'Unknown typeNumber in GetStringType'
             });

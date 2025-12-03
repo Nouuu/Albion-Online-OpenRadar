@@ -1,5 +1,5 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
-import {settings} from "./Utils.js";
+import settings from "./Settings.js";
 
 export class DrawingUtils {
     constructor(settings) {

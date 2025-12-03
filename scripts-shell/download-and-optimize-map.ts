@@ -5,8 +5,8 @@ import {connect, PageWithCursor} from 'puppeteer-real-browser';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import {downloadFileWithPlaywright, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
-const MAP_XML_FILES_DIR = path.join(__dirname, '..', 'work/data/ao-bin-dumps/cluster');
-const OUTPUT_DIR = path.join(__dirname, '..', 'images/Maps');
+const MAP_XML_FILES_DIR = path.join('work/data/ao-bin-dumps/cluster');
+const OUTPUT_DIR = path.join('images/Maps');
 const CDN_BASE_URL = 'https://cdn.albiononline2d.com/game-images/'
 
 // Image optimization settings

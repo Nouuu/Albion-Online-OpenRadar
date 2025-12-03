@@ -9,11 +9,12 @@
     "check": "node scripts-shell/check-system.js",
     "check:runtime": "node server-scripts/Utils/runtime-check.js",
     "prebuild": "npm run check",
-    "build": "pkg . --compress GZip",
-    "build:win": "pkg . --targets node18-win-x64 --compress GZip --output dist/OpenRadar.exe",
-    "build:linux": "pkg . --targets node18-linux-x64 --compress GZip --output dist/OpenRadar-linux",
-    "build:macos": "pkg . --targets node18-macos-x64 --compress GZip --output dist/OpenRadar-macos",
-    "build:all": "pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --compress GZip",
+    "esbuild": "node scripts-shell/build-esbuild.js",
+    "build": "npm run esbuild && pkg . --compress GZip",
+    "build:win": "npm run esbuild && pkg . --targets node18-win-x64 --compress GZip --output dist/OpenRadar.exe",
+    "build:linux": "npm run esbuild && pkg . --targets node18-linux-x64 --compress GZip --output dist/OpenRadar-linux",
+    "build:macos": "npm run esbuild && pkg . --targets node18-macos-x64 --compress GZip --output dist/OpenRadar-macos",
+    "build:all": "npm run esbuild && pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --compress GZip",
     "postbuild": "node scripts-shell/post-build.js",
     "clean": "node -e \"const fs=require('fs');const path=require('path');const dist='dist';if(fs.existsSync(dist)){fs.readdirSync(dist).forEach(i=>{if(i!=='images'){fs.rmSync(path.join(dist,i),{recursive:true,force:true});}});}\"",
     "clean:all": "if exist dist rmdir /s /q dist && if exist build\\temp rmdir /s /q build\\temp && del /q *.log 2>nul",
@@ -23,15 +24,11 @@
     "release": "npm run build:win && npm run package",
     "install:deps": "npm install && npm run rebuild:native"
   },
-  "bin": "app.js",
+  "bin": "app.cjs",
   "pkg": {
     "assets": [
       "node_modules/cap/build/**/*",
-      "node_modules/node-sass/vendor/**/*",
-      "server-scripts/**/*.json",
-      "server-scripts/**/*.txt",
-      "scripts/**/*.txt",
-      "scripts/**/*.json"
+      "node_modules/node-sass/vendor/**/*"
     ],
     "targets": [
       "node18-win-x64",
@@ -41,10 +38,11 @@
     "outputPath": "dist",
     "scripts": [
       "scripts/**/*.js",
+      "scripts-shell/**/*.js",
       "server-scripts/**/*.js"
     ]
   },
-  "author": "Zeldruck",
+  "author": "Nospy",
   "license": "ISC",
   "type": "module",
   "engines": {
@@ -72,6 +70,9 @@
     "@types/express": "^5.0.6",
     "@types/node": "^24.10.1",
     "archiver": "^7.0.1",
+    "esbuild": "^0.27.0",
+    "eslint": "^9.39.1",
+    "globals": "^16.5.0",
     "nodemon": "^3.1.7",
     "pkg": "^5.8.1",
     "puppeteer": "^24.31.0",
