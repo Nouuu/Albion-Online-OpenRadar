@@ -1,0 +1,371 @@
+/**
+ * RadarRenderer.js
+ *
+ * Unified rendering orchestrator for both main and overlay radar displays.
+ * Eliminates code duplication by providing a single, shared rendering pipeline.
+ *
+ * Features:
+ * - Manages game loop (update/render cycle)
+ * - Coordinates entity rendering via Drawing classes
+ * - Handles cluster detection and visualization
+ * - Flash border rendering (player detection)
+ * - Interpolation and position updates
+ *
+ * Architecture:
+ * - CanvasManager: Canvas setup and management
+ * - Handlers: Entity data storage and filtering
+ * - Drawing classes: Entity-specific rendering logic
+ * - DrawingUtils: Shared rendering utilities
+ */
+
+import { CanvasManager } from './CanvasManager.js';
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+
+export class RadarRenderer {
+    constructor(viewType, dependencies) {
+        this.viewType = viewType; // 'main' or 'overlay'
+
+        // Dependencies (injected from Utils.js)
+        this.settings = dependencies.settings;
+        this.handlers = dependencies.handlers;
+        this.drawings = dependencies.drawings;
+        this.drawingUtils = dependencies.drawingUtils;
+
+        // Canvas management
+        this.canvasManager = new CanvasManager(viewType);
+        this.contexts = {};
+
+        // Game state
+        this.lpX = 0; // Local player X position
+        this.lpY = 0; // Local player Y position
+        this.flashTime = -1; // Flash border timer
+        this.map = null; // Current map
+
+        // Frame timing
+        this.previousTime = performance.now();
+        this.animationFrameId = null;
+
+    }
+
+    /**
+     * Initialize the renderer (setup canvases)
+     */
+    initialize() {
+        const { canvases, contexts } = this.canvasManager.initialize();
+        this.contexts = contexts;
+
+        window.logger?.info(CATEGORIES.MAP, 'RadarRendererInitialized', { viewType: this.viewType });
+    }
+
+    /**
+     * Update local player position
+     * @param {number} x - Player X coordinate
+     * @param {number} y - Player Y coordinate
+     */
+    setLocalPlayerPosition(x, y) {
+        this.lpX = x;
+        this.lpY = y;
+    }
+
+    /**
+     * Update current map
+     * @param {Object} mapData - Map object
+     */
+    setMap(mapData) {
+        this.map = mapData;
+    }
+
+    /**
+     * Set flash border timer (player detection)
+     * @param {number} time - Flash duration
+     */
+    setFlashTime(time) {
+        this.flashTime = time;
+    }
+
+    /**
+     * Start the game loop
+     */
+    start() {
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
+        window.logger?.info(CATEGORIES.MAP, 'RadarRendererGameLoopStarted', { viewType: this.viewType });
+    }
+
+    /**
+     * Stop the game loop
+     */
+    stop() {
+        if (this.animationFrameId !== null) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+            window.logger?.info(CATEGORIES.MAP, 'RadarRendererGameLoopStopped', { viewType: this.viewType });
+        }
+    }
+
+    /**
+     * Main game loop - runs every frame
+     */
+    gameLoop() {
+        this.update();
+        this.render();
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
+    }
+
+    /**
+     * Update phase - interpolate entity positions
+     */
+    update() {
+        const currentTime = performance.now();
+        const deltaTime = currentTime - this.previousTime;
+        const t = Math.min(1, deltaTime / 100);
+
+        // 🐛 DEBUG: Log local player position every 5 seconds
+        if (!window.__lastLpXLogTime || (currentTime - window.__lastLpXLogTime) > 5000) {
+            window.logger?.info(CATEGORIES.PLAYER, 'LocalPlayerPosition', {
+                lpX: this.lpX,
+                lpY: this.lpY,
+                localPlayerId: window.__localPlayerId,
+                isInitialized: window.__lpXInitialized || false,
+                note: 'Current lpX/lpY values'
+            });
+            window.__lastLpXLogTime = currentTime;
+        }
+
+        // Interpolate map position
+        if (this.settings.showMapBackground && this.drawings.mapsDrawing) {
+            this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
+        }
+
+        // Interpolate harvestables
+        if (this.handlers.harvestablesHandler && this.drawings.harvestablesDrawing) {
+            this.handlers.harvestablesHandler.removeNotInRange(this.lpX, this.lpY);
+            this.drawings.harvestablesDrawing.interpolate(
+                this.handlers.harvestablesHandler.harvestableList,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Interpolate mobs
+        if (this.handlers.mobsHandler && this.drawings.mobsDrawing) {
+            this.drawings.mobsDrawing.interpolate(
+                this.handlers.mobsHandler.mobsList,
+                this.handlers.mobsHandler.mistList,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Interpolate players
+        if (this.handlers.playersHandler && this.drawings.playersDrawing) {
+            this.drawings.playersDrawing.interpolate(
+                this.handlers.playersHandler.playersList,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Interpolate chests
+        if (this.handlers.chestsHandler && this.drawings.chestsDrawing) {
+            this.drawings.chestsDrawing.interpolate(
+                this.handlers.chestsHandler.chestsList,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Interpolate wisp cages
+        if (this.handlers.wispCageHandler && this.drawings.wispCageDrawing) {
+            this.drawings.wispCageDrawing.Interpolate(
+                this.handlers.wispCageHandler.cages,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Interpolate fishing
+        if (this.handlers.fishingHandler && this.drawings.fishingDrawing) {
+            this.drawings.fishingDrawing.Interpolate(
+                this.handlers.fishingHandler.fishes,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Interpolate dungeons
+        if (this.handlers.dungeonsHandler && this.drawings.dungeonsDrawing) {
+            this.drawings.dungeonsDrawing.interpolate(
+                this.handlers.dungeonsHandler.dungeonList,
+                this.lpX,
+                this.lpY,
+                t
+            );
+        }
+
+        // Update flash timer
+        if (this.flashTime >= 0) {
+            this.flashTime -= t;
+        }
+
+        this.previousTime = currentTime;
+    }
+
+    /**
+     * Render phase - draw all entities
+     */
+    render() {
+        // Clear dynamic canvases
+        this.canvasManager.clearDynamicLayers();
+
+        const contextMap = this.contexts.mapCanvas;
+        const context = this.contexts.drawCanvas;
+        const contextFlash = this.contexts.flashCanvas;
+
+        // Draw map background
+        if (this.drawings.mapsDrawing && contextMap) {
+            this.drawings.mapsDrawing.Draw(contextMap, this.map);
+        }
+
+        // Unified cluster detection + drawing (merge static harvestables + living resources)
+        let clustersForInfo = null;
+        if (this.settings.overlayCluster && context) {
+            try {
+                // Prepare merged list: static harvestables + living resources from mobs
+                const staticList = this.handlers.harvestablesHandler?.harvestableList || [];
+                const livingList = (this.handlers.mobsHandler && this.handlers.mobsHandler.mobsList)
+                    ? this.handlers.mobsHandler.mobsList.filter(mob =>
+                        mob.type === window.EnemyType?.LivingHarvestable ||
+                        mob.type === window.EnemyType?.LivingSkinnable
+                    )
+                    : [];
+
+                // Merge arrays (no deep copy needed)
+                const merged = staticList.concat(livingList);
+
+                const clusters = this.drawingUtils.detectClusters(
+                    merged,
+                    this.settings.overlayClusterRadius,
+                    this.settings.overlayClusterMinSize
+                );
+
+                // Draw only rings now (behind resources)
+                for (const cluster of clusters) {
+                    if (this.drawingUtils && typeof this.drawingUtils.drawClusterRingsFromCluster === 'function') {
+                        this.drawingUtils.drawClusterRingsFromCluster(context, cluster);
+                    } else if (this.drawingUtils && typeof this.drawingUtils.drawClusterIndicatorFromCluster === 'function') {
+                        // fallback to legacy method
+                        this.drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
+                    }
+                }
+
+                // Keep clusters for later to draw info boxes above everything
+                clustersForInfo = clusters;
+            } catch (e) {
+                // ❌ ERROR (always logged) - Critical cluster computation error
+                window.logger?.error(CATEGORIES.CLUSTER, this.EVENTS.ComputeFailed, e);
+            }
+        }
+
+        // Draw entities in order
+        if (context) {
+            if (this.drawings.harvestablesDrawing && this.handlers.harvestablesHandler) {
+                this.drawings.harvestablesDrawing.invalidate(
+                    context,
+                    this.handlers.harvestablesHandler.harvestableList
+                );
+            }
+
+            if (this.drawings.mobsDrawing && this.handlers.mobsHandler) {
+                this.drawings.mobsDrawing.invalidate(
+                    context,
+                    this.handlers.mobsHandler.mobsList,
+                    this.handlers.mobsHandler.mistList
+                );
+            }
+
+            if (this.drawings.chestsDrawing && this.handlers.chestsHandler) {
+                this.drawings.chestsDrawing.invalidate(
+                    context,
+                    this.handlers.chestsHandler.chestsList
+                );
+            }
+
+            if (this.drawings.playersDrawing && this.handlers.playersHandler) {
+                this.drawings.playersDrawing.invalidate(
+                    context,
+                    this.handlers.playersHandler.playersList
+                );
+            }
+
+            if (this.drawings.wispCageDrawing && this.handlers.wispCageHandler) {
+                this.drawings.wispCageDrawing.Draw(
+                    context,
+                    this.handlers.wispCageHandler.cages
+                );
+            }
+
+            if (this.drawings.fishingDrawing && this.handlers.fishingHandler) {
+                this.drawings.fishingDrawing.Draw(
+                    context,
+                    this.handlers.fishingHandler.fishes
+                );
+            }
+
+            if (this.drawings.dungeonsDrawing && this.handlers.dungeonsHandler) {
+                this.drawings.dungeonsDrawing.Draw(
+                    context,
+                    this.handlers.dungeonsHandler.dungeonList
+                );
+            }
+        }
+
+        // Draw cluster info boxes on top of all elements if any
+        if (clustersForInfo && clustersForInfo.length && context) {
+            for (const cluster of clustersForInfo) {
+                try {
+                    if (this.drawingUtils && typeof this.drawingUtils.drawClusterInfoBox === 'function') {
+                        this.drawingUtils.drawClusterInfoBox(context, cluster);
+                    } else if (this.drawingUtils && typeof this.drawingUtils.drawClusterIndicatorFromCluster === 'function') {
+                        // fallback: draw both (legacy)
+                        this.drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
+                    }
+                } catch (e) {
+                    // ❌ ERROR (always logged) - Critical cluster rendering error
+                    window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawInfoBoxFailed, e);
+                }
+            }
+        }
+
+        // Flash border (player detection)
+        if (this.settings.settingFlash && this.flashTime >= 0 && contextFlash) {
+            contextFlash.rect(0, 0, 500, 500);
+            contextFlash.rect(20, 20, 460, 460);
+            contextFlash.fillStyle = 'red';
+            contextFlash.fill('evenodd');
+        }
+    }
+
+    /**
+     * Get flash time value
+     * @returns {number}
+     */
+    getFlashTime() {
+        return this.flashTime;
+    }
+}
+
+/**
+ * Factory function to create RadarRenderer instance
+ * @param {string} viewType - 'main' or 'overlay'
+ * @param {Object} dependencies - Handlers, drawings, settings, etc.
+ * @returns {RadarRenderer}
+ */
+export function createRadarRenderer(viewType, dependencies) {
+    return new RadarRenderer(viewType, dependencies);
+}

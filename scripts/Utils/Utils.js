@@ -25,25 +25,20 @@ import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
 import {MobsInfo} from "../Handlers/MobsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
-// Check if canvas elements exist (only on drawing page)
+import { createRadarRenderer } from './RadarRenderer.js';
+import settingsSync from './SettingsSync.js';
+// Legacy canvas variables (kept for compatibility with existing code)
+// Now managed by RadarRenderer via CanvasManager
 var canvasMap = document.getElementById("mapCanvas");
-
 var contextMap = canvasMap ? canvasMap.getContext("2d") : null;
 var canvasGrid = document.getElementById("gridCanvas");
-
 var contextGrid = canvasGrid ? canvasGrid.getContext("2d") : null;
 var canvas = document.getElementById("drawCanvas");
-
 var context = canvas ? canvas.getContext("2d") : null;
 var canvasFlash = document.getElementById("flashCanvas");
-
 var contextFlash = canvasFlash ? canvasFlash.getContext("2d") : null;
 var canvasOurPlayer = document.getElementById("ourPlayerCanvas");
-
 var contextOurPlayer = canvasOurPlayer ? canvasOurPlayer.getContext("2d") : null;
-// var canvasItems = document.getElementById("thirdCanvas");
-
-// var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
 
 console.log('🔧 [Utils.js] Module loaded');
 
@@ -609,6 +604,12 @@ function onEvent(Parameters)
         case EventCodes.NewCharacter:
             const ttt = playersHandler.handleNewPlayerEvent(id, Parameters);
             flashTime = ttt < 0 ? flashTime : ttt;
+
+            // Sync with RadarRenderer
+            if (radarRenderer && flashTime >= 0) {
+                radarRenderer.setFlashTime(flashTime);
+            }
+
             updatePlayerCounter(); // 👥 Update player count
             break;
 
@@ -791,6 +792,11 @@ function onRequest(Parameters)
             window.lpY = lpY;
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
 
+            // Sync with RadarRenderer
+            if (radarRenderer) {
+                radarRenderer.setLocalPlayerPosition(lpX, lpY);
+            }
+
             // 📊 LOG: Local player position updated
             window.logger?.debug(CATEGORIES.PLAYER, 'Operation21_LocalPlayer', {
                 lpX: lpX,
@@ -807,6 +813,11 @@ function onRequest(Parameters)
             window.lpX = lpX;
             window.lpY = lpY;
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
+
+            // Sync with RadarRenderer
+            if (radarRenderer) {
+                radarRenderer.setLocalPlayerPosition(lpX, lpY);
+            }
         }
         else {
             window.logger?.error(CATEGORIES.PLAYER, 'OnRequest_Move_UnknownFormat', {
@@ -824,6 +835,11 @@ function onResponse(Parameters)
     if (Parameters[253] == 35)
     {
         map.id = Parameters[0];
+
+        // Sync with RadarRenderer
+        if (radarRenderer) {
+            radarRenderer.setMap(map);
+        }
 
         // 💾 Save to sessionStorage
         try {
@@ -909,7 +925,64 @@ function onResponse(Parameters)
     }
 };
 
-requestAnimationFrame(gameLoop);
+// 🎨 Initialize RadarRenderer (unified rendering system)
+let radarRenderer = null;
+
+// Debug: Check canvas availability
+window.logger?.info(CATEGORIES.MAP, 'CanvasCheck', {
+    hasCanvas: !!canvas,
+    hasContext: !!context,
+    canvasId: canvas?.id || 'none',
+    note: 'Checking canvas availability for RadarRenderer'
+});
+
+// Only initialize RadarRenderer if canvas elements exist (drawing page)
+if (canvas && context) {
+    radarRenderer = createRadarRenderer('main', {
+        settings,
+        handlers: {
+            harvestablesHandler,
+            mobsHandler,
+            playersHandler,
+            chestsHandler,
+            dungeonsHandler,
+            wispCageHandler,
+            fishingHandler
+        },
+        drawings: {
+            mapsDrawing,
+            harvestablesDrawing,
+            mobsDrawing,
+            playersDrawing,
+            chestsDrawing,
+            dungeonsDrawing,
+            wispCageDrawing,
+            fishingDrawing
+        },
+        drawingUtils
+    });
+
+    radarRenderer.initialize();
+    radarRenderer.setMap(map);
+
+    // Expose globally for debugging
+    window.radarRenderer = radarRenderer;
+
+    // ✨ START THE NEW UNIFIED RENDERING SYSTEM
+    radarRenderer.start();
+
+    window.logger?.info(CATEGORIES.MAP, 'RadarRendererStarted', {
+        note: '✅ New unified RadarRenderer is now active!'
+    });
+} else {
+    // Fallback to legacy game loop if no canvas (shouldn't happen on drawing page)
+    requestAnimationFrame(gameLoop);
+    window.logger?.warn(CATEGORIES.MAP, 'LegacyGameLoopFallback', {
+        note: 'Canvas not found, using legacy gameLoop',
+        hasCanvas: !!canvas,
+        hasContext: !!context
+    });
+}
 
 function render()
 {
