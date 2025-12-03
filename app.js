@@ -61,7 +61,7 @@ function StartRadar(isPkg, appDir)
 
   // Configure views directory for pkg compatibility
   // When packaged with pkg, EJS needs access to real files
-  const viewsPath = path.join(appDir, 'views')
+  const viewsPath = path.join(appDir, 'views');
   app.set('views', viewsPath);
   app.set('view engine', 'ejs');
   app.use(express.static(viewsPath));
