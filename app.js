@@ -217,7 +217,7 @@ function StartRadar(isPkg, appDir)
 
   if (!adapterIp)
   {
-    adapterIp = getAdapterIp(appDir)
+    adapterIp = getAdapterIp(appDir);
   }
   else
   {
