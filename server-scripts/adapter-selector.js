@@ -1,63 +1,46 @@
 import { networkInterfaces } from 'os';
-import readlineSync from 'readline-sync';
 import fs from 'fs';
 import path from 'path';
+import readlineSync from 'readline-sync';
+
+function printAdapters(adapters) {
+    console.log('\nVeuillez sélectionner l\'adaptateur utilisé pour vous connecter à Internet :');
+    adapters.forEach((adapter, idx) => {
+        console.log(`  ${idx + 1}. ${adapter.name}\t ip address: ${adapter.address}`);
+    });
+    console.log();
+}
 
 const getAdapterIp = (appDir) => {
     const interfaces = networkInterfaces();
+    const adapters = Object.entries(interfaces)
+        .map(([name, values]) => {
+            const detail = values.find(v => v.family === 'IPv4');
+            return detail ? { name, address: detail.address } : null;
+        })
+        .filter(Boolean);
 
-    console.log();
-    console.log('Please select one of the adapter that you use to connect to the internet:');
-
-    let i = 1;
-    const selection = {};
-    const selectionName = {};
-    for (const [name, value] of Object.entries(interfaces)) {
-        const detail = value.find(v => v.family === 'IPv4');
-        if (!detail) continue;
-        selection[i] = detail.address;
-        selectionName[i] = name;
-        console.log(`  ${i}. ${name}\t ip address: ${detail.address}`);
-        i++;
-    }
-
-    let selectedIp;
-    let selectedName;
-
-    while (true)
-    {
-        console.log();
-        let userSelect = readlineSync.question('input the number here: ');
-        selectedIp = selection[userSelect];
-        selectedName = selectionName[userSelect];
-
-        if (selectedIp)
-            break;
-
+    let selectedIdx;
+    while (true) {
+        printAdapters(adapters);
+        const input = readlineSync.question('Entrez le numéro de l\'adaptateur : ');
+        selectedIdx = parseInt(input, 10) - 1;
+        if (adapters[selectedIdx]) break;
         console.clear();
-        console.log('Invalid input, try again');
-        console.log();
-
-        console.log();
-        console.log('Please select one of the adapter that you use to connect to the internet:');
-        
-        for (let j = 1; j < i; j++)
-        {
-            console.log(`  ${j}. ${selectionName[j]}\t ip address: ${selection[j]}`);
-        }
+        console.log('Entrée invalide, réessayez.\n');
     }
 
-    console.log();
-    console.log(`You have selected "${selectedName} - ${selectedIp}"`);
-    console.log();
+    const selected = adapters[selectedIdx];
+    console.log(`\nVous avez sélectionné "${selected.name} - ${selected.address}"\n`);
 
     const ipFilePath = path.join(appDir, 'ip.txt');
-    fs.writeFile(ipFilePath, selectedIp, (err) => {
-        if (err)
-            console.log("Error when saving ip.")
-    });
+    try {
+        fs.writeFileSync(ipFilePath, selected.address);
+    } catch {
+        console.log('Erreur lors de la sauvegarde de l\'IP.');
+    }
 
-    return selectedIp;
-}
+    return selected.address;
+};
 
 export { getAdapterIp };

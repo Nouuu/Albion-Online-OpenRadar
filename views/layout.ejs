@@ -21,9 +21,6 @@
     <!-- jQuery & SignalR -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js" ></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="flex h-screen bg-gray-900" :class="{ 'overflow-hidden': isSideMenuOpen }">
@@ -144,6 +141,8 @@
     </div>
   </div>
 
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
     document.addEventListener('alpine:initialized', () => {
       lucide.createIcons();

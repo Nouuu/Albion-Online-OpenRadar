@@ -62,8 +62,8 @@ function checkNpcapWindows() {
     } catch (err) {
       // Registry path not found, try next one
         console.warn(`Npcap not found in registry path: ${regPath} : ${err.message}`);
-      continue;
     }
+    return false;
   }
 
   // No Npcap found, try WinPcap fallback detection
@@ -74,16 +74,16 @@ function checkNpcapWindows() {
     return false;
   } catch {
     console.error(`Npcap not detected. Please install Npcap >= ${REQUIRED_NPCAP_VERSION} from https://npcap.com/`);
-    return false;
   }
+    return false;
 }
 
 function runRuntimeChecks() {
-  const isPackaged = !!process.pkg;
+  const isPackaged = typeof process.pkg !== 'undefined';
   if (!isPackaged) {
     // In development, skip strict runtime checks
     console.log('Runtime check: development mode — skipping strict runtime checks.');
-    return true;
+    return { isPackaged, ok: true };
   }
 
   // Only perform Windows Npcap check at runtime (packaged executable)
@@ -92,11 +92,11 @@ function runRuntimeChecks() {
     if (!ok) {
       console.error('\nERROR: Npcap >= ' + REQUIRED_NPCAP_VERSION + ' is required.');
     }
-    return ok;
+    return { isPackaged, ok };
   }
 
   // For non-Windows platforms, nothing to check here
-  return true;
+  return { isPackaged, ok: true };
 }
 
 export { runRuntimeChecks };

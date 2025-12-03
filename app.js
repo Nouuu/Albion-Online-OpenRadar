@@ -8,339 +8,237 @@ import LoggerServer from './server-scripts/LoggerServer.js';
 import PhotonParser from './server-scripts/classes/PhotonPacketParser.js';
 import {getAdapterIp} from './server-scripts/adapter-selector.js';
 import {EventCodes} from './scripts/Utils/EventCodes.js';
-import protocol16Deserializer from "./server-scripts/classes/Protocol16Deserializer.js";
-
-import pkg from 'cap';
 import {runRuntimeChecks} from "./server-scripts/Utils/runtime-check.js";
+import protocol16Deserializer from "./server-scripts/classes/Protocol16Deserializer.js";
+import pkg from 'cap';
+const {Cap, decoders} = pkg
 
-const { Cap, decoders } = pkg
+const port = 5001;
+const wsPort = 5002;
 
 const logger = new LoggerServer('./logs');
-global.loggerServer = logger; // Make logger globally accessible
+global.loggerServer = logger;
 console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerServer');
 
-// Wrap initialization in async IIFE for esbuild CJS compatibility
-(async () => {
-  // Runtime checks: use lightweight module included in the packaged executable
-  try {
-    const isPkg = typeof process.pkg !== 'undefined';
-    const ok = await runRuntimeChecks();
-      if (!ok && isPkg) {
-          console.error('Startup runtime check failed: Npcap >= 1.84 required. Aborting.');
-          process.exit(1);
-      } else if (!ok && !isPkg) {
-          console.warn('Runtime check reported issues; continuing in development mode.');
-      } else {
-      console.log('✅ Runtime check passed.');
-    }
-  } catch (e) {
-      console.warn('Runtime check module not available:', e?.message ?? e);
-  }
+const {isPkg, ok} = runRuntimeChecks();
+if (!ok && isPkg) {
+    process.exit(1);
+}
+console.log('✅ Runtime check passed.');
 
-  // Detect if application is packaged with pkg
-  const isPkg = typeof process.pkg !== 'undefined';
-  let appDir= process.cwd();
-  console.log(`📦 Application running in ${isPkg ? 'packaged' : 'development'} mode.`);
-  console.log(`📂 App directory: ${appDir}`);
+const appDir = process.cwd();
+console.log(`📦 Application running in ${isPkg ? 'packaged' : 'development'} mode.`);
+console.log(`📂 App directory: ${appDir}`);
 
-  protocol16Deserializer.initialize(appDir);
-  StartRadar(isPkg, appDir);
-})().catch((error) => {
-  console.error('Failed to initialize application:', error);
-  process.exit(1);
-});
+StartRadar(isPkg, appDir);
 
-function StartRadar(isPkg, appDir)
-{
-  const app = express();
+function StartRadar(isPkg, appDir) {
+    protocol16Deserializer.initialize(appDir);
 
-  BigInt.prototype.toJSON = function() { return this.toString() }
+    startServer(appDir, port);
+    const {wsServer, capInstance, bufferInstance} = startWebSocketServer(appDir, wsPort);
+    const manager = new PhotonParser();
 
-  // Configure views directory for pkg compatibility
-  // When packaged with pkg, EJS needs access to real files
-  const viewsPath = path.join(appDir, 'views');
-  app.set('views', viewsPath);
-  app.set('view engine', 'ejs');
-  app.use(express.static(viewsPath));
+    capInstance.on('packet', function (nBytes) {
+        const ret = decoders.Ethernet(bufferInstance);
+        const ipRet = decoders.IPV4(bufferInstance, ret.offset);
+        const udpRet = decoders.UDP(bufferInstance, ipRet.offset);
+        const payload = bufferInstance.slice(udpRet.offset, nBytes);
 
+        handlePayloadAsync(manager, payload).catch((error) => {
+            console.error('Error handling payload:', error);
+        });
+    });
 
-  app.get('/', (req, res) => {
-    const viewName = 'main/drawing';
-    res.render('layout', { mainContent: viewName});
-  });
+    handlePhotonEvents(wsServer, manager);
+}
 
-  app.get('/home', (req, res) => {
-    const viewName = 'main/drawing';
-    res.render('./layout', { mainContent: viewName});
-  });
+function startServer(appDir, port) {
+    const app = express();
+    const viewsPath = path.join(appDir, 'views');
+    const imagesCacheDuration = 24 * 60 * 60 * 1000; // 24 hours
+
+    app.set('views', viewsPath);
+    app.set('view engine', 'ejs');
+    app.use(express.static(viewsPath));
+
+    app.get('/', (req, res) => {
+        const viewName = 'main/drawing';
+        res.render('layout', {mainContent: viewName});
+    });
+
+    app.get('/home', (req, res) => {
+        const viewName = 'main/drawing';
+        res.render('./layout', {mainContent: viewName});
+    });
 
     app.get('/players', (req, res) => {
         const viewName = 'main/players';
-        res.render('layout', { mainContent: viewName });
+        res.render('layout', {mainContent: viewName});
     });
 
     app.get('/resources', (req, res) => {
-    const viewName = 'main/resources';
-    res.render('layout', { mainContent: viewName });
-  });
-
-  app.get('/enemies', (req, res) => {
-    const viewName = 'main/enemies';
-    res.render('layout', { mainContent: viewName });
-  });
-
-  app.get('/chests', (req, res) => {
-    const viewName = 'main/chests';
-    res.render('layout', { mainContent: viewName });
-  });
-
-  app.get('/map', (req, res) => {
-    const viewName = 'main/map';
-    const viewRequireName = 'main/require-map'
-
-    fs.access(path.join(appDir, 'images', 'Maps'), function(error) {
-      if (error)
-      {
-        res.render('layout', { mainContent: viewRequireName });
-      }
-      else
-      {
-        res.render('layout', { mainContent: viewName });
-      }
+        const viewName = 'main/resources';
+        res.render('layout', {mainContent: viewName});
     });
-  });
 
-  app.get('/ignorelist', (req, res) => {
-    const viewName = 'main/ignorelist';
-    res.render('layout', { mainContent: viewName });
-  });
+    app.get('/enemies', (req, res) => {
+        const viewName = 'main/enemies';
+        res.render('layout', {mainContent: viewName});
+    });
 
-  app.get('/settings', (req, res) => {
-    const viewName = 'main/settings';
-    res.render('layout', { mainContent: viewName });
-  });
+    app.get('/chests', (req, res) => {
+        const viewName = 'main/chests';
+        res.render('layout', {mainContent: viewName});
+    });
 
-  app.get('/items', (req, res) => {
+    app.get('/ignorelist', (req, res) => {
+        const viewName = 'main/ignorelist';
+        res.render('layout', {mainContent: viewName});
+    });
 
-    res.render('main/drawing-items');
-  });
+    app.get('/settings', (req, res) => {
+        const viewName = 'main/settings';
+        res.render('layout', {mainContent: viewName});
+    });
 
-  app.get('/radar-overlay', (req, res) => {
+    app.get('/items', (req, res) => {
+        const viewName = 'main/drawing-items';
+        res.render('layout', {mainContent: viewName});
+    });
 
-    res.render('main/radar-overlay');
-  });
+    app.get('/radar-overlay', (req, res) => {
+        res.render('main/radar-overlay');
+    });
 
 
-  /*app.get('/logout', (req, res) => {
+    app.get('/api/settings/server-logs', (req, res) => {
+        res.json({enabled: global.loggerServer.isEnabled()});
+    });
+    app.post('/api/settings/server-logs', express.json(), (req, res) => {
+        const {enabled} = req.body;
+        if (typeof enabled !== 'boolean') {
+            return res.status(400).json({error: 'Invalid value for enabled, must be boolean'});
+        }
+        global.loggerServer.setEnabled(enabled);
+        res.json({
+            success: true,
+            enabled: global.loggerServer.isEnabled()
+        });
+    });
 
-    req.session.destroy();
-    res.redirect('/');
-  });*/
+    app.use('/images', express.static(path.join(appDir, 'images'), {maxAge: imagesCacheDuration}));
 
-  // 📊 API: Get server logs status
-  app.get('/api/settings/server-logs', (req, res) => {
-    res.json({ enabled: global.loggerServer.isEnabled() });
-  });
+    app.use('/scripts', express.static(path.join(appDir, 'scripts')));
+    app.use('/scripts/Handlers', express.static(path.join(appDir, 'scripts', 'Handlers')));
+    app.use('/scripts/Drawings', express.static(path.join(appDir, 'scripts', 'Drawings')));
+    app.use('/scripts/Utils', express.static(path.join(appDir, 'scripts', 'Utils')));
+    app.use('/scripts/Utils/languages', express.static(path.join(appDir, 'scripts', 'Utils', 'languages')));
+    app.use('/scripts/styles', express.static(path.join(appDir, 'scripts', 'styles')));
+    app.use('/sounds', express.static(path.join(appDir, 'sounds')));
+    app.use('/config', express.static(path.join(appDir, 'config')));
+    app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
+    app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
 
-  // 📊 API: Set server logs status
-  app.post('/api/settings/server-logs', express.json(), (req, res) => {
-    const { enabled } = req.body;
+    app.listen(port, () => {
+        console.log(`Server is running on http://localhost:${port}`);
+    });
+    return app;
+}
 
-    if (typeof enabled !== 'boolean') {
-      return res.status(400).json({ error: 'Invalid value for enabled, must be boolean' });
+function startWebSocketServer(appDir, wsPort) {
+    const c = new Cap();
+    const ipFilePath = path.join(appDir, 'ip.txt');
+
+    let adapterIp = fs.existsSync(ipFilePath) ?
+        fs.readFileSync(ipFilePath, {encoding: 'utf-8', flag: 'r'}).trim() :
+        getAdapterIp(appDir);
+
+    console.log(`Using adapter IP: ${adapterIp}`);
+
+    let device = Cap.findDevice(adapterIp);
+    while (device === undefined) {
+        console.log(`Adapter with IP ${adapterIp} not found. Please select a new adapter.`);
+        adapterIp = getAdapterIp(appDir);
+        device = Cap.findDevice(adapterIp);
     }
 
-    global.loggerServer.setEnabled(enabled);
+    const filter = 'udp and (dst port 5056 or src port 5056)';
+    const bufSize = 4096;
+    const buffer = Buffer.alloc(4096);
 
-    res.json({
-      success: true,
-      enabled: global.loggerServer.isEnabled()
+    c.open(device, filter, bufSize, buffer);
+    c.setMinBytes && c.setMinBytes(0);
+    const wsServer = new WebSocketServer({port: wsPort, host: 'localhost'});
+    console.log(`📡 WebSocket server started on ws://localhost:${wsPort}`);
+
+    return {wsServer , capInstance: c, bufferInstance: buffer};
+}
+
+function handlePhotonEvents(server, manager) {
+    BigInt.prototype.toJSON = function() { return this.toString() }
+    server.on('listening', () => {
+        manager.on('event', (dictionary) => {
+            const eventCode = dictionary["parameters"][252];
+
+            switch (eventCode) {
+                case EventCodes.CharacterEquipmentChanged:
+                    server.clients.forEach(function (client) {
+                        client.send(JSON.stringify({code: "items", dictionary: JSON.stringify(dictionary)}));
+                    });
+                    break;
+                default:
+                    server.clients.forEach(function (client) {
+                        client.send(JSON.stringify({code: "event", dictionary: JSON.stringify(dictionary)}));
+                    });
+                    break;
+            }
+        });
+
+        manager.on('request', (dictionary) => {
+            const dictionaryDataJSON = JSON.stringify(dictionary);
+            server.clients.forEach(function (client) {
+                client.send(JSON.stringify({code: "request", dictionary: dictionaryDataJSON}))
+            });
+        });
+
+        manager.on('response', (dictionary) => {
+            const dictionaryDataJSON = JSON.stringify(dictionary);
+            server.clients.forEach(function (client) {
+                client.send(JSON.stringify({code: "response", dictionary: dictionaryDataJSON}))
+            });
+        });
     });
-  });
+    server.on('connection', (ws) => {
+        console.log('📡 [App] Client connected to WebSocket');
+        ws.on('message', (message) => {
+            try {
+                const data = JSON.parse(message);
 
+                // Handle logs from client
+                if (data.type === 'logs' && Array.isArray(data.logs)) {
+                    logger.writeLogs(data.logs);
+                }
+            } catch (error) {
+                console.error('❌ [App] Error processing WebSocket message:', error);
+            }
+        });
 
+        ws.on('close', () => {
+            console.log('📡 [App] Client disconnected from WebSocket');
+        });
+    });
 
-  const imagesCacheDuration = 24 * 60 * 60 *1000; // 24 hours
-  app.use('/images', express.static(path.join(appDir, 'images'), { maxAge: imagesCacheDuration }));
+    server.on('close', () => {
+        console.log('closed')
+        manager.removeAllListeners()
+    })
+}
 
-  app.use('/scripts', express.static(path.join(appDir, 'scripts')));
-  app.use('/scripts/Handlers', express.static(path.join(appDir, 'scripts', 'Handlers')));
-  app.use('/scripts/Drawings', express.static(path.join(appDir, 'scripts', 'Drawings')));
-  app.use('/scripts/Utils', express.static(path.join(appDir, 'scripts', 'Utils')));
-  app.use('/scripts/Utils/languages', express.static(path.join(appDir, 'scripts', 'Utils', 'languages')));
-  app.use('/scripts/styles', express.static(path.join(appDir, 'scripts', 'styles')));
-  app.use('/sounds', express.static(path.join(appDir, 'sounds')));
-  app.use('/config', express.static(path.join(appDir, 'config')));
-  app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
-  app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
-
-
-
-  const port = 5001;
-
-
-  app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-  });
-
-
-  var c = new Cap();
-
-  let adapterIp;
-  // In build mode (pkg): ip.txt next to executable
-  // In dev mode: ip.txt in server-scripts/
-  const ipFilePath = isPkg ? path.join(appDir, 'ip.txt') : path.join(appDir, 'server-scripts', 'ip.txt');
-
-  if (fs.existsSync(ipFilePath))
-    adapterIp = fs.readFileSync(ipFilePath, { encoding: 'utf-8', flag: 'r' }).trim();
-
-
-  if (!adapterIp)
-  {
-    adapterIp = getAdapterIp(appDir);
-  }
-  else
-  {
-    console.log();
-    console.log(`Using last adapter selected - ${adapterIp}`);
-    console.log('If you want to change adapter, delete the  "ip.txt"  file.');
-    console.log();
-  }
-
-  let device = Cap.findDevice(adapterIp);
-
-  if (device == undefined)
-  {
-    console.log();
-    console.log(`Last adapter is not working, please choose a new one.`);
-    console.log();
-
-    adapterIp = getAdapterIp(appDir);
-    device = Cap.findDevice(adapterIp);
-  }
-
-  const filter = 'udp and (dst port 5056 or src port 5056)';
-  var bufSize =  4096;
-  var buffer = Buffer.alloc(4096);
-  // Logger already initialized at top of file (global.loggerServer available)
-
-  const manager = new PhotonParser();
-  c.open(device, filter, bufSize, buffer);
-
-
-  c.setMinBytes && c.setMinBytes(0);
-
-
-  async function handlePayloadAsync(payload) {
+async function handlePayloadAsync(manager, payload) {
     try {
-      manager.handle(payload);
+        manager.handle(payload);
     } catch (error) {
-      console.error('Error processing the payload:', error);
+        console.error('Error processing the payload:', error);
     }
-  }
-
-  // setup Cap event listener on global level
-  c.on('packet', function (nbytes) {
-    const ret = decoders.Ethernet(buffer);
-    const ipRet = decoders.IPV4(buffer, ret.offset);
-    const udpRet = decoders.UDP(buffer, ipRet.offset);
-
-    // Slice the buffer to get the actual payload from the offset where the UDP packet data starts
-    const payload = buffer.slice(udpRet.offset, nbytes);
-
-    // Call the asynchronous handler
-    handlePayloadAsync(payload);
-  });
-
-  const server = new WebSocketServer({ port: 5002, host: 'localhost'});
-  server.on('listening', () => {
-    manager.on('event', (dictonary) =>
-    {
-      const eventCode = dictonary["parameters"][252];
-
-      switch (eventCode) {
-        case EventCodes.CharacterEquipmentChanged:
-          server.clients.forEach(function(client) {
-            client.send(JSON.stringify({ code : "items", dictionary: JSON.stringify(dictonary) }));
-          });
-          break;
-
-        default:
-          server.clients.forEach(function(client) {
-            client.send(JSON.stringify({ code : "event", dictionary: JSON.stringify(dictonary) }));
-          });
-          break;
-      }
-
-      /*const dictionaryDataJSON = JSON.stringify(dictonary);
-      server.clients.forEach(function(client) {
-        client.send(JSON.stringify({ code : "event", dictionary: dictionaryDataJSON }))
-      });*/
-    });
-
-    manager.on('request', (dictonary) =>
-    {
-      const dictionaryDataJSON = JSON.stringify(dictonary);
-      server.clients.forEach(function(client) {
-        client.send(JSON.stringify({ code : "request", dictionary: dictionaryDataJSON }))
-      });
-    });
-
-    manager.on('response', (dictonary) =>
-    {
-      const dictionaryDataJSON = JSON.stringify(dictonary);
-      server.clients.forEach(function(client) {
-        client.send(JSON.stringify({ code : "response", dictionary: dictionaryDataJSON }))
-      });
-    });
-  });
-
-  // 📊 WebSocket connection handler for client logs
-  server.on('connection', (ws) => {
-    console.log('📡 [App] Client connected to WebSocket');
-
-    ws.on('message', (message) => {
-      try {
-        const data = JSON.parse(message);
-
-        // Handle logs from client
-        if (data.type === 'logs' && Array.isArray(data.logs)) {
-          logger.writeLogs(data.logs);
-        }
-      } catch (error) {
-        console.error('❌ [App] Error processing WebSocket message:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('📡 [App] Client disconnected from WebSocket');
-    });
-  });
-  // 📊 WebSocket connection handler for client logs
-  server.on('connection', (ws) => {
-    console.log('📡 [App] Client connected to WebSocket');
-
-    ws.on('message', (message) => {
-      try {
-        const data = JSON.parse(message);
-
-        // Handle logs from client
-        if (data.type === 'logs' && Array.isArray(data.logs)) {
-          logger.writeLogs(data.logs);
-        }
-      } catch (error) {
-        console.error('❌ [App] Error processing WebSocket message:', error);
-      }
-    });
-
-    ws.on('close', () => {
-      console.log('📡 [App] Client disconnected from WebSocket');
-    });
-  });
-
-
-  server.on('close', () => {
-    console.log('closed')
-    manager.removeAllListeners()
-  })
 }
