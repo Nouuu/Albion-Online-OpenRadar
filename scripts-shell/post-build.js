@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
 
-const DIST_DIR = 'dist'
+const DIST_DIR = 'dist';
 const ES_BUILD_FILE = 'app.cjs';
 const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'server-scripts', 'public'];
 
