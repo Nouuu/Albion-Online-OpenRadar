@@ -28,10 +28,10 @@ console.log('📊 [App] Logger initialized FIRST and exposed as global.loggerSer
       if (!ok && isPkg) {
           console.error('Startup runtime check failed: Npcap >= 1.84 required. Aborting.');
           process.exit(1);
-      } else if (!ok) {
+      } else if (!ok && !isPkg) {
           console.warn('Runtime check reported issues; continuing in development mode.');
       } else {
-      console.warn('Runtime check reported issues; continuing in development mode.');
+      console.log('✅ Runtime check passed.');
     }
   } catch (e) {
       console.warn('Runtime check module not available:', e?.message ?? e);
