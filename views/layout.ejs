@@ -10,9 +10,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="/scripts/styles/tooltips.css" />
 
-    <!-- 📊 Global Logger -->
+    <!-- Custom Scripts -->
     <script type="module" src="/scripts/constants/LoggerConstants.js"></script>
     <script type="module" src="/scripts/LoggerClient.js"></script>
+    <script type="module">
+        // ⚠️ Note: Settings synchronization is handled by Utils.js
+        // This script only initializes SettingsSync for non-Utils pages
+        import settingsSync from '/scripts/Utils/SettingsSync.js';
+        import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
+
+        window.logger?.info(CATEGORIES.SETTINGS, 'InitializingSettingsSync' ,'SettingsSync initialized for all pages', settingsSync);
+    </script>
 
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

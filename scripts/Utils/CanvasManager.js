@@ -2,15 +2,16 @@
  * CanvasManager.js
  *
  * Unified canvas initialization and management for both main and overlay radar.
- * Handles setup of all 6 canvas layers used by the radar display.
+ * Handles setup of all 7 canvas layers used by the radar display.
  *
  * Canvas Layers (z-index order):
- * 1. mapCanvas - Background map image
- * 2. gridCanvas - Static grid overlay
- * 3. drawCanvas - Main entity rendering (resources, mobs, players, chests)
- * 4. flashCanvas - Red border flash effect (player detection)
- * 5. ourPlayerCanvas - Local player blue dot (static)
- * 6. thirdCanvas - Hidden/legacy items display
+ * 1. mapCanvas (z-index: 1) - Background map image
+ * 2. gridCanvas (z-index: 2) - Static grid overlay
+ * 3. drawCanvas (z-index: 3) - Main entity rendering (resources, mobs, players, chests)
+ * 4. flashCanvas (z-index: 4) - Red border flash effect (player detection)
+ * 5. ourPlayerCanvas (z-index: 5) - Local player blue dot (static)
+ * 6. uiCanvas (z-index: 10) - UI overlay (player counter, stats, FPS, etc.)
+ * 7. thirdCanvas (z-index: 1) - Hidden/legacy items display
  */
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 
@@ -32,6 +33,7 @@ export class CanvasManager {
             'drawCanvas',
             'flashCanvas',
             'ourPlayerCanvas',
+            'uiCanvas',
             'thirdCanvas'
         ];
 
@@ -143,7 +145,7 @@ export class CanvasManager {
      * Clear all dynamic layers (called every frame)
      */
     clearDynamicLayers() {
-        this.clearLayers(['mapCanvas', 'drawCanvas', 'flashCanvas']);
+        this.clearLayers(['mapCanvas', 'drawCanvas', 'flashCanvas', 'uiCanvas']);
     }
 
     /**

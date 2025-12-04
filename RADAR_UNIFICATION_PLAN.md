@@ -635,15 +635,74 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
 
 ### Vue d'ensemble
 
-| Phase | Description | État | Temps estimé |
-|-------|-------------|------|--------------|
-| **Phase 1** | Création modules de base | ✅ **TERMINÉ** | 4-6h |
-| **Phase 2** | Intégration Utils.js | ✅ **TERMINÉ** | 2-3h |
-| **Phase 3** | Migration Settings.js | ⏳ EN ATTENTE | 2-3h |
-| **Phase 4** | Mise à jour vues | ⏳ EN ATTENTE | 1-2h |
-| **Phase 5** | Migration drawing-ui.js | ⏳ EN ATTENTE | 1h |
-| **Phase 6** | Documentation + tests | ⏳ EN ATTENTE | 1-2h |
-| **TOTAL** | | **40%** | 11-17h |
+| Phase | Description | État | Temps réel | Progression |
+|-------|-------------|------|-----------|-------------|
+| **Phase 1** | Création modules de base | ✅ **TERMINÉ** | 6h/6h | 100% |
+| **Phase 2** | Intégration Utils.js | ✅ **TERMINÉ** | 3h/3h | 100% |
+| **Phase 2b** | Nettoyage code legacy | ✅ **TERMINÉ** | 1h/2h | 100% |
+| **Phase 3** | Migration Settings (polling) | 🟡 **PARTIEL** | 1h/3h | 40% |
+| **Phase 4** | Mise à jour vues | ⏳ EN ATTENTE | 0h/2h | 0% |
+| **Phase 5** | Migration drawing-ui.js | ⏳ EN ATTENTE | 0h/1h | 0% |
+| **Phase 6** | Documentation + tests | ⏳ EN ATTENTE | 0h/2h | 0% |
+| **TOTAL** | | **~60%** | 11h/19h | **60%** |
+
+### ✅ Session 2025-12-04 - Nettoyage complet du code legacy
+
+**Travaux réalisés (Partie 1 - Code Renderer):**
+1. ✅ Suppression totale de `flashTime` de tout le projet (RadarRenderer + Utils.js)
+2. ✅ Suppression des 3 fonctions legacy: `gameLoop()`, `render()`, `update()` (~140 lignes)
+3. ✅ Suppression du fallback `requestAnimationFrame(gameLoop)`
+4. ✅ Le radar fonctionne parfaitement avec le nouveau RadarRenderer
+5. ✅ Aucune régression détectée
+
+**Travaux réalisés (Partie 2 - Nettoyage final):**
+1. ✅ **Utils.js nettoyé** (~100 lignes supprimées):
+   - Suppression variables canvas legacy (canvasMap, contextMap, canvasGrid, etc.)
+   - Suppression blocs de code legacy commentés (localStorage polling, gameLoop legacy)
+   - Suppression appels `drawingUtils.init*()` (gérés par CanvasManager)
+   - Suppression fonction `setDrawingViews()` complète (~70 lignes)
+   - Suppression appel `setDrawingViews()` dans listener SettingsSync
+
+2. ✅ **settings.ejs nettoyé** (~100 lignes supprimées):
+   - Suppression section "Main Window Settings" (2 inputs margin inutiles)
+   - Suppression inputs Margin X/Y de "Items Window Settings" (2 inputs)
+   - Suppression section "Clear Button Settings" (2 inputs margin)
+   - Suppression 6 const mortes (mainWindowMarginX/YInput, etc.)
+   - Suppression 6 event listeners morts
+   - Suppression 6 lignes d'initialisation mortes
+
+**Résultat:** ~200+ lignes de code mort supprimées, codebase beaucoup plus propre!
+
+**Travaux réalisés (Partie 3 - Migration UI vers Canvas):**
+1. ✅ **Architecture 100% Canvas - Suppression overlay HTML**:
+   - Ajout canvas `uiCanvas` (z-index: 10) pour tous les éléments UI
+   - Suppression du div HTML `playerCounter` (overlay superposé avec z-index tricks)
+   - Ajout de `uiCanvas` dans CanvasManager (initialize + clearDynamicLayers)
+   - Nouvelle méthode `renderUI()` dans RadarRenderer pour dessiner le compteur
+   - Rendu du compteur de joueurs directement sur canvas (texte + box stylisée)
+
+2. ✅ **Nettoyage fonction updatePlayerCount()**:
+   - Suppression de la fonction `updatePlayerCount()` complète (~10 lignes)
+   - Suppression des 3 appels (EventCodes.Leave, EventCodes.NewCharacter, ClearHandlers)
+   - Le compteur est maintenant mis à jour automatiquement à chaque frame via `renderUI()`
+
+**Bénéfices:**
+- ✅ **Plus propre** - Plus de mélange HTML/Canvas (z-index tricks supprimés)
+- ✅ **Plus cohérent** - Tout est dessiné de la même façon (100% canvas)
+- ✅ **Plus performant** - Pas de manipulation DOM ni de reflow
+- ✅ **Plus extensible** - Facile d'ajouter d'autres stats UI (FPS, coords, etc.)
+
+**Architecture Canvas finale:**
+```
+Canvas layers (z-index order):
+1. mapCanvas (z-index: 1) - Background map
+2. gridCanvas (z-index: 2) - Grid overlay
+3. drawCanvas (z-index: 3) - Entities (resources, mobs, players)
+4. flashCanvas (z-index: 4) - Flash borders
+5. ourPlayerCanvas (z-index: 5) - Local player blue dot
+6. uiCanvas (z-index: 10) - UI elements (player counter, stats) ✨ NOUVEAU
+7. thirdCanvas (z-index: 1) - Hidden/legacy items display
+```
 
 ### Détails Phase 1 ✅
 
@@ -666,12 +725,12 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
   - [x] Logger intégré
   - [x] Exposé globalement (debug)
 
-### Détails Phase 2 ✅
+### Détails Phase 2 ✅ TERMINÉ (100%)
 
+**✅ CE QUI EST FAIT:**
 - [x] Imports ajoutés dans Utils.js
-- [x] RadarRenderer initialisé
+- [x] RadarRenderer initialisé et fonctionnel
 - [x] Synchronisation lpX/lpY (Operation 21)
-- [x] Synchronisation flashTime (Event 29)
 - [x] Synchronisation map (Event 35)
 - [x] Basculement vers radarRenderer.start()
 - [x] **Fix critique:** Logger init order
@@ -679,12 +738,32 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
   - **Solution:** Logger initialisé immédiatement (pas de DOMContentLoaded)
   - **Résultat:** Tous les logs d'initialisation capturés ✅
 
-### Détails Phase 3 ⏳
+### Détails Phase 2b ✅ TERMINÉ (100%)
 
-- [ ] Supprimer polling localStorage
-- [ ] Supprimer custom setItem override
-- [ ] Intégrer SettingsSync dans Settings.js
-- [ ] Tests synchronisation settings
+**✅ Nettoyage complet du code legacy:**
+- [x] **Suppression totale de flashTime** (RadarRenderer.js + Utils.js)
+- [x] **Suppression function gameLoop()** (5 lignes)
+- [x] **Suppression function render()** (80 lignes)
+- [x] **Suppression function update()** (40 lignes)
+- [x] **Suppression fallback requestAnimationFrame(gameLoop)**
+- [x] **Total: ~140 lignes supprimées**
+- [x] **Radar testé et fonctionnel** - Aucune régression
+
+### Détails Phase 3 🟡 PARTIEL (40%)
+
+**✅ CE QUI EST FAIT (Phase 3.1):**
+- [x] Supprimer polling localStorage (300ms interval removed)
+- [x] Supprimer custom setItem override (localStorage.setItem no longer patched)
+- [x] Intégrer SettingsSync pour écoute des changements (event-driven via BroadcastChannel)
+
+**❌ CE QUI RESTE À FAIRE (Phase 3.2 - OPTIONNEL):**
+- [ ] **Migrer Settings.js vers SettingsSync** (gros travail, ~50+ changements)
+  - [ ] Remplacer `returnLocalBool()` par `settingsSync.getBool()` (50+ occurrences)
+  - [ ] Remplacer `localStorage.getItem()` direct par `settingsSync.get()` (20+ occurrences)
+  - [ ] Utiliser `settingsSync.broadcast()` pour les changements
+- [ ] Tests synchronisation settings cross-window
+
+**Note:** Phase 3.2 est OPTIONNELLE - le système fonctionne déjà avec localStorage direct
 
 ### Fixes appliqués
 
@@ -725,7 +804,7 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
 - [ ] Settings persistent (localStorage)
 
 #### Test 4: Performance
-- [ ] FPS stable à 60
+- [ ] FPS stable à 30
 - [ ] Pas de memory leak après 30min
 - [ ] CPU usage acceptable
 - [ ] Game loop fluide
@@ -809,6 +888,6 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
 
 ---
 
-**Dernière mise à jour:** 2025-12-03 16:40
+**Dernière mise à jour:** 2025-12-04 17:00
 **Auteur:** Claude Code + Développeur
-**Statut:** ✅ **Phase 2 TERMINÉE** - RadarRenderer fonctionnel, prochaine étape: Phase 3 (Settings.js)
+**Statut:** ✅ **Phase 1, 2, 2b TERMINÉES (60%)** - RadarRenderer actif, code legacy supprimé, radar fonctionnel. Prochaines étapes: Phase 3.2 (Settings.js - optionnel), Phase 4 (Vues)

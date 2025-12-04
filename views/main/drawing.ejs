@@ -14,16 +14,12 @@
             <div class="w-full">
                 <div id="canvasContainer" style="position: relative; width: 520px; height: 520px;">
                     <canvas class="ttcan" id="mapCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="gridCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1; border: 2px solid #4a5568;"></canvas>
-                    <canvas class="ttcan" id="drawCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="flashCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
+                    <canvas class="ttcan" id="gridCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 2; border: 2px solid #4a5568;"></canvas>
+                    <canvas class="ttcan" id="drawCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 3;"></canvas>
+                    <canvas class="ttcan" id="flashCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 4;"></canvas>
+                    <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 5;"></canvas>
+                    <canvas class="ttcan" id="uiCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 10;"></canvas>
                     <canvas id="thirdCanvas" width="500" height="500" style="position: absolute; top: 520px; margin: 10px; left: 0; z-index: 1; display: none;"></canvas>
-
-                    <!-- Player Counter Overlay -->
-                    <div id="playerCounter" style="position: absolute; top: 15px; right: 15px; z-index: 10; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 14px; font-weight: bold;">
-                        Players: <span id="playerCount">0</span> 👥
-                    </div>
                 </div>
             </div>
         </div>

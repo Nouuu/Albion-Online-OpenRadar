@@ -38,7 +38,6 @@ export class RadarRenderer {
         // Game state
         this.lpX = 0; // Local player X position
         this.lpY = 0; // Local player Y position
-        this.flashTime = -1; // Flash border timer
         this.map = null; // Current map
 
         // Frame timing
@@ -82,13 +81,6 @@ export class RadarRenderer {
         this.map = mapData;
     }
 
-    /**
-     * Set flash border timer (player detection)
-     * @param {number} time - Flash duration
-     */
-    setFlashTime(time) {
-        this.flashTime = time;
-    }
 
     /**
      * Start the game loop
@@ -224,11 +216,6 @@ export class RadarRenderer {
                 this.lpY,
                 t
             );
-        }
-
-        // Update flash timer
-        if (this.flashTime >= 0) {
-            this.flashTime -= t;
         }
 
         this.previousTime = currentTime;
@@ -369,14 +356,42 @@ export class RadarRenderer {
                 }
             }
         }
+
+        // Draw UI elements (player counter, stats, etc.)
+        this.renderUI();
     }
 
     /**
-     * Get flash time value
-     * @returns {number}
+     * Render UI overlay elements (player counter, stats, FPS, etc.)
      */
-    getFlashTime() {
-        return this.flashTime;
+    renderUI() {
+        const contextUI = this.contexts.uiCanvas;
+        if (!contextUI) return;
+
+        // Player counter (top-right corner)
+        const playerCount = this.handlers.playersHandler?.playersList?.length || 0;
+
+        // Background box
+        const padding = 12;
+        const boxX = 500 - 140; // Right side
+        const boxY = 15;
+        const boxWidth = 130;
+        const boxHeight = 28;
+
+        contextUI.fillStyle = 'rgba(0, 0, 0, 0.75)';
+        contextUI.fillRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Border
+        contextUI.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        contextUI.lineWidth = 1;
+        contextUI.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Text
+        contextUI.font = 'bold 14px monospace';
+        contextUI.fillStyle = '#ffffff';
+        contextUI.textAlign = 'left';
+        contextUI.textBaseline = 'middle';
+        contextUI.fillText(`Players: ${playerCount} 👥`, boxX + padding, boxY + boxHeight / 2);
     }
 }
 
