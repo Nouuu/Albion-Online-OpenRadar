@@ -1,3 +1,5 @@
+import settingsSync from "./SettingsSync.js";
+
 export class Settings
 {
     constructor()
@@ -144,17 +146,18 @@ export class Settings
         };
 
         this.livingResourcesID = false;
+        this.livingResourcesHealthBar = false;
         // logFormat: 'json' | 'human' — controls how logs are pretty-printed in console
-        this.logFormat = localStorage.getItem('logFormat') || 'human';
+        this.logFormat = settingsSync.get('logFormat', 'human');
         //#endregion
         this.resourceSize = false;
 
-        // 📊 Resource Overlay Settings (loaded in update() from localStorage)
-        this.overlayEnchantment = true; // Default: show enchantment for static resources
-        this.overlayEnchantmentLiving = true; // Default: show enchantment for living resources
-        this.overlayResourceCount = true; // Default: show resource count
+        // 📊 Resource Overlay Settings
+        this.overlayEnchantment = false; // Default: hide enchantment for static resources
+        this.overlayEnchantmentLiving = false; // Default: show enchantment for living resources
+        this.overlayResourceCount = false; // Default: hide resource count
         this.overlayDistance = false; // Default: distance indicator off
-        this.overlayDistanceLivingOnly = true; // Default: only show distance for living resources
+        this.overlayDistanceLivingOnly = false; // Default : distance indicator for living resources only off
         this.overlayCluster = false; // Default: cluster indicator off
         this.overlayClusterRadius = 30; // Default cluster radius in meters
         this.overlayClusterMinSize = 2; // Default minimum resources to form a cluster
@@ -196,7 +199,7 @@ export class Settings
         this.debugHarvestables = false;
 
         // 🐛 Debug & Logging settings
-        this.logToConsole = true; // Default: enabled
+        this.logToConsole = false; // Default: disbled
         this.logToServer = false; // Default: disabled (requires WebSocket)
         this.debugRawPacketsConsole = false; // Default: disabled (très verbeux)
         this.debugRawPacketsServer = false; // Default: disabled (très verbeux)
@@ -455,191 +458,163 @@ export class Settings
         }
     }
 
-    returnLocalBool(item, defaultValue = false)
-    {
-        const value = localStorage.getItem(item);
-        if (value === null) {
-            return defaultValue; // Retourner la valeur par défaut si non défini
-        }
-        return value == "true";
-    }
-
     update()
     {
-        this.showMapBackground = this.returnLocalBool("settingShowMap");
+        this.showMapBackground = settingsSync.getBool("settingShowMap", false);
 
         //#region Players
-        this.settingShowPlayers = this.returnLocalBool("settingShowPlayers");
-        this.settingNickname = this.returnLocalBool("settingNickname");
-        this.settingHealth = this.returnLocalBool("settingHealth");
-        this.settingMounted = this.returnLocalBool("settingMounted");
-        this.settingItems = this.returnLocalBool("settingItems");
-        this.settingItemsDev = this.returnLocalBool("settingItemsDev");
-        this.settingDistance = this.returnLocalBool("settingDistance");
-        this.settingGuild = this.returnLocalBool("settingGuild");
-        this.settingSound = this.returnLocalBool("settingSound");
-        this.settingFlash = this.returnLocalBool("settingFlash");
+        this.settingShowPlayers = settingsSync.getBool("settingShowPlayers", false);
+        this.settingNickname = settingsSync.getBool("settingNickname", false);
+        this.settingHealth = settingsSync.getBool("settingHealth", false);
+        this.settingMounted = settingsSync.getBool("settingMounted", false);
+        this.settingItems = settingsSync.getBool("settingItems", false);
+        this.settingItemsDev = settingsSync.getBool("settingItemsDev", false);
+        this.settingDistance = settingsSync.getBool("settingDistance", false);
+        this.settingGuild = settingsSync.getBool("settingGuild", false);
+        this.settingSound = settingsSync.getBool("settingSound", false);
+        this.settingFlash = settingsSync.getBool("settingFlash", false);
 
-        this.settingPassivePlayers = this.returnLocalBool("settingPassivePlayers");
-        this.settingFactionPlayers = this.returnLocalBool("settingFactionPlayers");
-        this.settingDangerousPlayers = this.returnLocalBool("settingDangerousPlayers");
         //#endregion
 
         //#region Resources
         //#region Static Harvestables
 
-        this.harvestingStaticFiber = localStorage.getItem("settingStaticFiberEnchants") || this.harvestingStaticFiber;
+        this.harvestingStaticFiber = settingsSync.get("settingStaticFiberEnchants", this.harvestingStaticFiber);
         if (typeof this.harvestingStaticFiber !== 'object')
             this.harvestingStaticFiber = JSON.parse(this.harvestingStaticFiber);
 
-        this.harvestingStaticHide = localStorage.getItem("settingStaticHideEnchants") || this.harvestingStaticHide;
+        this.harvestingStaticHide = settingsSync.get("settingStaticHideEnchants", this.harvestingStaticHide);
         if (typeof this.harvestingStaticHide !== 'object')
             this.harvestingStaticHide = JSON.parse(this.harvestingStaticHide);
         
-        this.harvestingStaticOre = localStorage.getItem("settingStaticOreEnchants") || this.harvestingStaticOre;
+        this.harvestingStaticOre = settingsSync.get("settingStaticOreEnchants", this.harvestingStaticOre);
         if (typeof this.harvestingStaticOre !== 'object')
             this.harvestingStaticOre = JSON.parse(this.harvestingStaticOre);
 
-        this.harvestingStaticWood = localStorage.getItem("settingStaticWoodEnchants") || this.harvestingStaticWood;
+        this.harvestingStaticWood = settingsSync.get("settingStaticWoodEnchants", this.harvestingStaticWood);
         if (typeof this.harvestingStaticWood !== 'object')
             this.harvestingStaticWood = JSON.parse(this.harvestingStaticWood);
 
-        this.harvestingStaticRock = localStorage.getItem("settingStaticRockEnchants") || this.harvestingStaticRock;
+        this.harvestingStaticRock = settingsSync.get("settingStaticRockEnchants", this.harvestingStaticRock);
         if (typeof this.harvestingStaticRock !== 'object')
             this.harvestingStaticRock = JSON.parse(this.harvestingStaticRock);
-
         //#endregion
 
-
         //#region Living Harvestables
-
-        this.harvestingLivingFiber = localStorage.getItem("settingLivingFiberEnchants") || this.harvestingLivingFiber;
+        this.harvestingLivingFiber = settingsSync.get("settingLivingFiberEnchants", this.harvestingLivingFiber);
         if (typeof this.harvestingLivingFiber !== 'object')
             this.harvestingLivingFiber = JSON.parse(this.harvestingLivingFiber);
 
-        this.harvestingLivingHide = localStorage.getItem("settingLivingHideEnchants") || this.harvestingLivingHide;
+        this.harvestingLivingHide = settingsSync.get("settingLivingHideEnchants", this.harvestingLivingHide);
         if (typeof this.harvestingLivingHide !== 'object')
             this.harvestingLivingHide = JSON.parse(this.harvestingLivingHide);
         
-        this.harvestingLivingOre = localStorage.getItem("settingLivingOreEnchants") || this.harvestingLivingOre;
+        this.harvestingLivingOre = settingsSync.get("settingLivingOreEnchants", this.harvestingLivingOre);
         if (typeof this.harvestingLivingOre !== 'object')
             this.harvestingLivingOre = JSON.parse(this.harvestingLivingOre);
 
-        this.harvestingLivingWood = localStorage.getItem("settingLivingWoodEnchants") || this.harvestingLivingWood;
+        this.harvestingLivingWood = settingsSync.get("settingLivingWoodEnchants", this.harvestingLivingWood);
         if (typeof this.harvestingLivingWood !== 'object')
             this.harvestingLivingWood = JSON.parse(this.harvestingLivingWood);
 
-        this.harvestingLivingRock = localStorage.getItem("settingLivingRockEnchants") || this.harvestingLivingRock;
+        this.harvestingLivingRock = settingsSync.get("settingLivingRockEnchants", this.harvestingLivingRock);
         if (typeof this.harvestingLivingRock !== 'object')
             this.harvestingLivingRock = JSON.parse(this.harvestingLivingRock);
 
         //#endregion
 
-        this.livingResourcesHealthBar = this.returnLocalBool("settingLivingResourcesHealthBar");
-        this.livingResourcesID = this.returnLocalBool("settingLivingResourcesID");
-        this.resourceSize = this.returnLocalBool("settingRawSize");
+        this.livingResourcesHealthBar = settingsSync.getBool("settingLivingResourcesHealthBar", false);
+        this.livingResourcesID = settingsSync.getBool("settingLivingResourcesID", false);
+        this.resourceSize = settingsSync.getBool("settingRawSize", false);
 
-        // 📊 Load overlay settings from localStorage (matching UI setting names)
-        const enchantOverlaySetting = localStorage.getItem("settingResourceEnchantOverlay");
-        this.overlayEnchantment = enchantOverlaySetting !== null ? enchantOverlaySetting === 'true' : true;
 
-        const livingEnchantOverlaySetting = localStorage.getItem("settingLivingResourceEnchantOverlay");
-        this.overlayEnchantmentLiving = livingEnchantOverlaySetting !== null ? livingEnchantOverlaySetting === 'true' : true;
+        // 📊 Load overlay settings (matching UI setting names)
+        this.overlayEnchantment = settingsSync.getBool("settingResourceEnchantOverlay", false);
+        this.overlayEnchantmentLiving = settingsSync.getBool("settingLivingResourceEnchantOverlay", false);
+        this.overlayResourceCount = settingsSync.getBool("settingResourceCount", false);
+        this.overlayDistance = settingsSync.getBool("settingResourceDistance", false);
+        this.overlayDistanceLivingOnly = settingsSync.getBool("settingResourceDistanceLivingOnly", false);
+        this.overlayCluster = settingsSync.getBool("settingResourceClusters", false);
+        this.overlayClusterRadius = parseInt(settingsSync.get("settingClusterRadius", this.overlayClusterRadius));
+        this.overlayClusterMinSize = parseInt(settingsSync.get("settingClusterMinSize", this.overlayClusterMinSize));
 
-        const resourceCountSetting = localStorage.getItem("settingResourceCount");
-        this.overlayResourceCount = resourceCountSetting !== null ? resourceCountSetting === 'true' : true;
-
-        this.overlayDistance = this.returnLocalBool("settingResourceDistance");
-        this.overlayDistanceLivingOnly = this.returnLocalBool("settingResourceDistanceLivingOnly");
-        this.overlayCluster = this.returnLocalBool("settingResourceClusters");
-
-        const clusterRadiusSetting = localStorage.getItem("settingClusterRadius");
-        this.overlayClusterRadius = clusterRadiusSetting ? parseInt(clusterRadiusSetting) : 30;
-
-        const clusterMinSizeSetting = localStorage.getItem("settingClusterMinSize");
-        this.overlayClusterMinSize = clusterMinSizeSetting ? parseInt(clusterMinSizeSetting) : 2;
-
-        this.showFish = this.returnLocalBool("settingFishing");
+        this.showFish = settingsSync.getBool("settingFishing", false);
         //#endregion
 
         //#region Enemies
-        this.enemyLevels[0] = this.returnLocalBool("settingNormalEnemy");
-        this.enemyLevels[1] = this.returnLocalBool("settingMediumEnemy");
-        this.enemyLevels[2] = this.returnLocalBool("settingEnchantedEnemy");
-        this.enemyLevels[3] = this.returnLocalBool("settingMiniBossEnemy");
-        this.enemyLevels[4] = this.returnLocalBool("settingBossEnemy");
+        this.enemyLevels[0] = settingsSync.getBool("settingNormalEnemy", false);
+        this.enemyLevels[1] = settingsSync.getBool("settingMediumEnemy", false);
+        this.enemyLevels[2] = settingsSync.getBool("settingEnchantedEnemy", false);
+        this.enemyLevels[3] = settingsSync.getBool("settingMiniBossEnemy", false);
+        this.enemyLevels[4] = settingsSync.getBool("settingBossEnemy", false);
 
 
-        this.showMinimumHealthEnemies = this.returnLocalBool("settingShowMinimumHealthEnemies");
-        this.minimumHealthEnemies = parseInt(localStorage.getItem("settingTextMinimumHealthEnemies"));
+        this.showMinimumHealthEnemies = settingsSync.getBool("settingShowMinimumHealthEnemies", false);
+        this.minimumHealthEnemies = parseInt(settingsSync.get("settingTextMinimumHealthEnemies", this.minimumHealthEnemies));
 
-        this.avaloneDrones = this.returnLocalBool("settingAvaloneDrones");
-        this.showUnmanagedEnemies = this.returnLocalBool("settingShowUnmanagedEnemies");
-        this.showEventEnemies = this.returnLocalBool("settingShowEventEnemies");
+        this.avaloneDrones = settingsSync.getBool("settingAvaloneDrones",false);
+        this.showUnmanagedEnemies = settingsSync.getBool("settingShowUnmanagedEnemies", false);
+        this.showEventEnemies = settingsSync.getBool("settingShowEventEnemies", false);
 
-        this.enemiesHealthBar = this.returnLocalBool("settingEnemiesHealthBar");
-        this.enemiesID = this.returnLocalBool("settingEnemiesID");
-        this.debugEnemies = this.returnLocalBool("settingDebugEnemies");
-        this.debugPlayers = this.returnLocalBool("settingDebugPlayers");
-        this.debugChests = this.returnLocalBool("settingDebugChests");
-        this.debugDungeons = this.returnLocalBool("settingDebugDungeons");
-        this.debugFishing = this.returnLocalBool("settingDebugFishing");
-        this.debugHarvestables = this.returnLocalBool("settingDebugHarvestables");
+        this.enemiesHealthBar = settingsSync.getBool("settingEnemiesHealthBar", false);
+        this.enemiesID = settingsSync.getBool("settingEnemiesID",false);
+        this.debugEnemies = settingsSync.getBool("settingDebugEnemies", false);
+        this.debugPlayers = settingsSync.getBool("settingDebugPlayers", false);
+        this.debugChests = settingsSync.getBool("settingDebugChests",false);
+        this.debugDungeons = settingsSync.getBool("settingDebugDungeons",false);
+        this.debugFishing = settingsSync.getBool("settingDebugFishing", false);
+        this.debugHarvestables = settingsSync.getBool("settingDebugHarvestables",false);
 
         // 🐛 Debug & Logging settings (dynamic update)
-        this.logToConsole = this.returnLocalBool("settingLogToConsole", true); // Default: true
-        this.logToServer = this.returnLocalBool("settingLogToServer"); // Default: false
-        this.debugRawPacketsConsole = this.returnLocalBool("settingDebugRawPacketsConsole"); // Default: false
-        this.debugRawPacketsServer = this.returnLocalBool("settingDebugRawPacketsServer"); // Default: false
+        this.logToConsole = settingsSync.getBool("settingLogToConsole", false);
+        this.logToServer = settingsSync.getBool("settingLogToServer", false); // Default: false
+        this.debugRawPacketsConsole = settingsSync.getBool("settingDebugRawPacketsConsole", false); // Default: false
+        this.debugRawPacketsServer = settingsSync.getBool("settingDebugRawPacketsServer", false); // Default: false
 
         //#region Mists
         // TODO
         // Mists beasts
-        this.bossCrystalSpider = this.returnLocalBool("settingBossCrystalSpider");
-        this.bossFairyDragon = this.returnLocalBool("settingBossFairyDragon");
-        this.bossVeilWeaver = this.returnLocalBool("settingBossVeilWeaver");
-        this.bossGriffin = this.returnLocalBool("settingBossGriffin");
+        this.bossCrystalSpider = settingsSync.getBool("settingBossCrystalSpider", false);
+        this.bossFairyDragon = settingsSync.getBool("settingBossFairyDragon", false);
+        this.bossVeilWeaver = settingsSync.getBool("settingBossVeilWeaver", false);
+        this.bossGriffin = settingsSync.getBool("settingBossGriffin", false);
         //#endregion
         //#endregion
         
         //#region Chests
-        this.chestGreen = this.returnLocalBool("settingChestGreen");
-        this.chestBlue = this.returnLocalBool("settingChestBlue");
-        this.chestPurple = this.returnLocalBool("settingChestPurple");
-        this.chestYellow = this.returnLocalBool("settingChestYellow");
+        this.chestGreen = settingsSync.getBool("settingChestGreen", false);
+        this.chestBlue = settingsSync.getBool("settingChestBlue", false);
+        this.chestPurple = settingsSync.getBool("settingChestPurple", false);
+        this.chestYellow = settingsSync.getBool("settingChestYellow", false);
         //#endregion
 
         //#region Mists
-        this.mistSolo = this.returnLocalBool("settingMistSolo");
-        this.mistDuo = this.returnLocalBool("settingMistDuo");
-        this.wispCage = this.returnLocalBool("settingCage");
+        this.mistSolo = settingsSync.getBool("settingMistSolo", false);
+        this.mistDuo = settingsSync.getBool("settingMistDuo", false);
+        this.wispCage = settingsSync.getBool("settingCage", false);
 
 
-        this.mistEnchants[0] = this.returnLocalBool("settingMistE0");
-        this.mistEnchants[1] = this.returnLocalBool("settingMistE1");
-        this.mistEnchants[2] = this.returnLocalBool("settingMistE2");
-        this.mistEnchants[3] = this.returnLocalBool("settingMistE3");
-        this.mistEnchants[4] = this.returnLocalBool("settingMistE4");
+        this.mistEnchants[0] = settingsSync.getBool("settingMistE0", false);
+        this.mistEnchants[1] = settingsSync.getBool("settingMistE1", false);
+        this.mistEnchants[2] = settingsSync.getBool("settingMistE2", false);
+        this.mistEnchants[3] = settingsSync.getBool("settingMistE3", false);
+        this.mistEnchants[4] = settingsSync.getBool("settingMistE4", false);
         //#endregion
 
         //#region Dungeons
-        this.dungeonEnchants[0] = this.returnLocalBool("settingDungeonE0");
-        this.dungeonEnchants[1] = this.returnLocalBool("settingDungeonE1");
-        this.dungeonEnchants[2] = this.returnLocalBool("settingDungeonE2");
-        this.dungeonEnchants[3] = this.returnLocalBool("settingDungeonE3");
-        this.dungeonEnchants[4] = this.returnLocalBool("settingDungeonE4");
+        this.dungeonEnchants[0] = settingsSync.getBool("settingDungeonE0", false);
+        this.dungeonEnchants[1] = settingsSync.getBool("settingDungeonE1", false);
+        this.dungeonEnchants[2] = settingsSync.getBool("settingDungeonE2", false);
+        this.dungeonEnchants[3] = settingsSync.getBool("settingDungeonE3", false);
+        this.dungeonEnchants[4] = settingsSync.getBool("settingDungeonE4", false);
 
-        this.dungeonSolo = this.returnLocalBool("settingDungeonSolo");
-        this.dungeonGroup = this.returnLocalBool("settingDungeonDuo");
-        this.dungeonCorrupted = this.returnLocalBool("settingDungeonCorrupted");
-        this.dungeonHellgate = this.returnLocalBool("settingDungeonHellgate");
+        this.dungeonSolo = settingsSync.getBool("settingDungeonSolo", false);
+        this.dungeonGroup = settingsSync.getBool("settingDungeonDuo", false);
+        this.dungeonCorrupted = settingsSync.getBool("settingDungeonCorrupted", false);
+        this.dungeonHellgate = settingsSync.getBool("settingDungeonHellgate", false);
         //#endregion
 
-        this.ignoreList = JSON.parse(localStorage.getItem("ignoreList")) || [];
-    }
-
-    isHumanLogFormat() {
-        return this.logFormat === 'human';
+        this.ignoreList = JSON.parse(settingsSync.get("ignoreList", JSON.stringify(this.ignoreList)));
     }
 
     // Central accessor for overlay distance scale (prefer global helper if present)

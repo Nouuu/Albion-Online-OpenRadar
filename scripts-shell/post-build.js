@@ -86,6 +86,7 @@ const createReadme = (platform) => {
         `1. **Install libpcap** (REQUIRED)
    - Ubuntu/Debian: sudo apt-get install libpcap-dev
    - macOS: brew install libpcap (usually pre-installed)
+   - Note: If not running as root, you need to set capabilities like so: sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin.
 
 2. **Make executable**
    chmod +x ${exeName}
