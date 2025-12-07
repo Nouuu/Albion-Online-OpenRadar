@@ -5,6 +5,28 @@
 
 ---
 
+## 🎯 RÉSUMÉ RAPIDE - État au 2025-12-07
+
+**Progression : ~80% ✅**
+
+### Ce qui FONCTIONNE
+- ✅ RadarRenderer actif (remplace gameLoop legacy)
+- ✅ CanvasManager (7 canvas layers)
+- ✅ SettingsSync (BroadcastChannel, plus de polling)
+- ✅ Code legacy supprimé
+
+### Ce qui RESTE (tout optionnel)
+
+| Tâche                       | Fichier             | Effort | Priorité  |
+|-----------------------------|---------------------|--------|-----------|
+| Ajouter uiCanvas            | `radar-overlay.ejs` | 5 min  | Basse     |
+| Migrer returnLocalBool()    | `Settings.js`       | 2h     | Optionnel |
+| Migrer localStorage.setItem | `drawing-ui.js`     | 1h     | Optionnel |
+
+**→ Passer à la migration Go maintenant. Ces tâches peuvent attendre.**
+
+---
+
 ## 📋 Table des Matières
 
 1. [Vue d'ensemble](#vue-densemble)
@@ -640,11 +662,35 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
 | **Phase 1** | Création modules de base | ✅ **TERMINÉ** | 6h/6h | 100% |
 | **Phase 2** | Intégration Utils.js | ✅ **TERMINÉ** | 3h/3h | 100% |
 | **Phase 2b** | Nettoyage code legacy | ✅ **TERMINÉ** | 1h/2h | 100% |
-| **Phase 3** | Migration Settings (polling) | 🟡 **PARTIEL** | 1h/3h | 40% |
-| **Phase 4** | Mise à jour vues | ⏳ EN ATTENTE | 0h/2h | 0% |
-| **Phase 5** | Migration drawing-ui.js | ⏳ EN ATTENTE | 0h/1h | 0% |
+| **Phase 3.1** | Suppression polling localStorage | ✅ **TERMINÉ** | 1h/1h | 100% |
+| **Phase 3.2** | Migration Settings.js → SettingsSync | 🟡 **OPTIONNEL** | 0h/3h | 0% |
+| **Phase 4** | Mise à jour radar-overlay.ejs | 🟡 **PARTIEL** | 0.5h/1h | 50% |
+| **Phase 5** | Migration drawing-ui.js | 🟡 **OPTIONNEL** | 0h/1h | 0% |
 | **Phase 6** | Documentation + tests | ⏳ EN ATTENTE | 0h/2h | 0% |
-| **TOTAL** | | **~60%** | 11h/19h | **60%** |
+| **TOTAL** | | **~80%** | 11.5h/17h | **80%** |
+
+### État vérifié (2025-12-07)
+
+**Modules créés et fonctionnels:**
+- ✅ `scripts/Utils/RadarRenderer.js` (406 lignes) - Rendu unifié actif
+- ✅ `scripts/Utils/CanvasManager.js` (189 lignes) - 7 canvas layers
+- ✅ `scripts/Utils/SettingsSync.js` (240 lignes) - BroadcastChannel actif
+
+**Intégration Utils.js vérifié:**
+- ✅ RadarRenderer initialisé (lignes 904-959)
+- ✅ `radarRenderer.setLocalPlayerPosition()` appelé (lignes 771-795)
+- ✅ `radarRenderer.setMap()` appelé (ligne 815-817)
+- ✅ Code legacy supprimé (gameLoop, render, update)
+- ✅ `window.radarRenderer` exposé pour debug
+
+**Canvas layers (7 au total):**
+- ✅ `drawing.ejs`: 7 canvas incluant `uiCanvas` (z-index: 10)
+- ⚠️ `radar-overlay.ejs`: 6 canvas (manque `uiCanvas`)
+
+**Ce qui reste (OPTIONNEL):**
+- Phase 3.2: ~50 `returnLocalBool()` dans Settings.js → `settingsSync.getBool()` (non bloquant)
+- Phase 4: Ajouter `uiCanvas` à radar-overlay.ejs (mineur)
+- Phase 5: ~30 `localStorage.setItem` dans drawing-ui.js → `settingsSync.setBool()` (non bloquant)
 
 ### ✅ Session 2025-12-04 - Nettoyage complet du code legacy
 
