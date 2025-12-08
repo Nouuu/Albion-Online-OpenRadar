@@ -175,31 +175,6 @@ export class MobsHandler {
         return null;
     }
 
-    printLoggingGuide() {
-        // 🐛 DEBUG (filtered by debugEnemies) - Verbose collection guide
-        window.logger?.debug(CATEGORIES.MOB, EVENTS.CollectionGuide, {
-                title: 'LIVING RESOURCES COLLECTION GUIDE',
-                objective: 'Collect TypeIDs of enchanted creatures',
-                format: 'Structured JSON for automatic parsing',
-                tierCount: this.livingResourcesMetadata ? this.livingResourcesMetadata.filter(m => m.faction).length : 0
-            });
-
-            if (this.livingResourcesMetadata) {
-                const tiers = [3, 4, 5, 6, 7, 8];
-                tiers.forEach(tier => {
-                    const creatures = this.livingResourcesMetadata.filter(m => m.tier === tier && m.faction);
-                    if (creatures.length > 0) {
-                        const uniqueAnimals = [...new Set(creatures.map(c => c.animal))];
-                        const examples = uniqueAnimals.slice(0, 3).map(animal => {
-                            const example = creatures.find(c => c.animal === animal);
-                            return { animal, hp: example.hp };
-                        });
-                        window.logger.debug(CATEGORIES.MOB, `CollectionGuide_T${tier}`, { creatures: examples });
-                    }
-                });
-        }
-    }
-
     loadCachedTypeIDs() {
         try {
             const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs', null);

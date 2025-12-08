@@ -1,6 +1,8 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
-import settings from "./Settings.js";
+import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
+
+const SCALE_FACTOR = 4.0; // Scale factor for overlay distance
 
 export class DrawingUtils {
     constructor() {
@@ -65,7 +67,7 @@ export class DrawingUtils {
 
         const folderR = (!folder) ? "" : folder + "/";
         const src = "/images/" + folderR + imageName + ".png";
-        const preloadedImage = settings.GetPreloadedImage ? settings.GetPreloadedImage(src, folder) : null;
+        const preloadedImage = imageCache.GetPreloadedImage(src, folder);
 
         if (preloadedImage === null) {
             this.drawFilledCircle(ctx, x, y, 10, "#4169E1");
@@ -75,7 +77,7 @@ export class DrawingUtils {
         if (preloadedImage) {
             ctx.drawImage(preloadedImage, x - size / 2, y - size / 2, size, size);
         } else  {
-            settings.preloadImageAndAddToList(src, folder)
+            imageCache.preloadImageAndAddToList(src, folder)
                 .then(() => {
                     window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src: src, folder: folder });
                 })
@@ -203,8 +205,7 @@ export class DrawingUtils {
         ctx.save();
 
         // compute real distance as float (avoid rounding for the threshold check)
-        const scaleFactor = settings.getOverlayDistanceScale();
-        const realDistanceFloat = (distance / 3) * scaleFactor; // baseUnit = 3
+        const realDistanceFloat = (distance / 3) * SCALE_FACTOR; // baseUnit = 3
 
         // Don't show distance labels for very close resources (<= 2 meters)
         if (realDistanceFloat <= 2) {
@@ -469,8 +470,7 @@ export class DrawingUtils {
     // Convert game units distance to meters applying global scale factor.
     convertGameUnitsToMeters(gameUnits) {
         const baseUnit = 3;
-        const scaleFactor = settings.getOverlayDistanceScale();
-        const meters = (gameUnits / baseUnit) * scaleFactor;
+        const meters = (gameUnits / baseUnit) * SCALE_FACTOR;
         return Math.round(meters);
     }
 
@@ -478,10 +478,7 @@ export class DrawingUtils {
     metersToGameUnits(meters) {
         if (!meters || meters <= 0) return 0;
         const baseUnit = 3;
-        const scale = settings.getOverlayDistanceScale();
-        if (typeof scale === 'number' && scale > 0) return Math.ceil((meters / scale) * baseUnit);
-        for (let gu = 0; gu < 10000; gu++) if (this.convertGameUnitsToMeters(gu) >= meters) return gu;
-        return Math.ceil(meters * baseUnit);
+        return Math.ceil((meters / SCALE_FACTOR) * baseUnit);
     }
 
     detectClusters(resources, clusterRadius = 30, minClusterSize = 2) {

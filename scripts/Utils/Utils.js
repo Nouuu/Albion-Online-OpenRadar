@@ -19,7 +19,7 @@ import {ChestsHandler} from '../Handlers/ChestsHandler.js';
 import {HarvestablesHandler} from '../Handlers/HarvestablesHandler.js';
 import {MapH} from '../Handlers/Map.js';
 
-import settings from './Settings.js';
+import imageCache from './ImageCache.js';
 import {DrawingUtils} from './DrawingUtils.js';
 import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
@@ -55,8 +55,8 @@ const spellsDatabase = new SpellsDatabase();
 
 console.log('🔧 [Utils.js] Items & Spells databases initialization started (async)');
 
-const harvestablesDrawing = new HarvestablesDrawing(settings);
-const dungeonsHandler = new DungeonsHandler(settings);
+const harvestablesDrawing = new HarvestablesDrawing();
+const dungeonsHandler = new DungeonsHandler();
 
 var itemsInfo = new ItemsInfo();
 var mobsInfo = new MobsInfo();
@@ -66,7 +66,7 @@ mobsInfo.initMobs();
 
 
 var map = new MapH(-1);
-const mapsDrawing = new MapDrawing(settings);
+const mapsDrawing = new MapDrawing();
 
 // 🔄 Restore map from sessionStorage if available
 (function restoreMapFromSession() {
@@ -105,8 +105,8 @@ const mapsDrawing = new MapDrawing(settings);
     }
 })();
 
-const chestsHandler = new ChestsHandler(settings);
-const mobsHandler = new MobsHandler(settings);
+const chestsHandler = new ChestsHandler();
+const mobsHandler = new MobsHandler();
 mobsHandler.updateMobInfo(mobsInfo.moblist);
 
 // existing logEnemiesList button stays the same
@@ -225,7 +225,7 @@ function updatePlayersList() {
                                 const iconPath = `/images/Items/${baseName}.png`;
 
                                 // 🔄 Check if image is already loaded in cache before displaying
-                                const preloadedImage = settings.GetPreloadedImage(iconPath, "Items");
+                                const preloadedImage = imageCache.GetPreloadedImage(iconPath, "Items");
 
                                 let imgHtml = '';
                                 if (preloadedImage) {
@@ -233,7 +233,7 @@ function updatePlayersList() {
                                     imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain">`;
                                 } else if (preloadedImage === undefined) {
                                     // Not loaded yet - preload in background, show placeholder
-                                    settings.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
+                                    imageCache.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
                                     imgHtml = '<div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>';
                                 }
                                 // else preloadedImage === null (404) -> don't display, don't retry
@@ -270,7 +270,7 @@ function updatePlayersList() {
                                 const tooltipText = spell.uniqueName;
 
                                 // 🔄 Check cache before displaying spell icon
-                                const preloadedSpell = settings.GetPreloadedImage(iconPath, "Items");
+                                const preloadedSpell = imageCache.GetPreloadedImage(iconPath, "Items");
 
                                 let spellImgHtml = '';
                                 if (preloadedSpell) {
@@ -278,7 +278,7 @@ function updatePlayersList() {
                                     spellImgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain">`;
                                 } else if (preloadedSpell === undefined) {
                                     // Not loaded yet - preload in background
-                                    settings.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
+                                    imageCache.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
                                     spellImgHtml = '<div class="w-8 h-8 bg-purple-300 dark:bg-purple-600 rounded animate-pulse"></div>';
                                 }
                                 // else preloadedSpell === null (404) -> don't display
@@ -973,7 +973,7 @@ function ClearHandlers()
     harvestablesHandler.Clear();
     mobsHandler.Clear();
     playersHandler.Clear();
-    wispCageHandler.CLear();
+    wispCageHandler.Clear();
     // 🗑️ Clear session map cache
     try {
         sessionStorage.removeItem('lastMapDisplayed');

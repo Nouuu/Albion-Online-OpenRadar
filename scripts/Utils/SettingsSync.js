@@ -19,6 +19,7 @@ export class SettingsSync {
         this.channel = null;
         this.listeners = new Map();
         this.isInitialized = false;
+        this.cache = new Map(); // 🆕 Cache mémoire pour éviter lectures localStorage répétées
 
         // Check BroadcastChannel support
         if (typeof BroadcastChannel !== 'undefined') {
@@ -65,11 +66,32 @@ export class SettingsSync {
     }
 
     /**
+     * Internal method to read from cache or localStorage
+     * @param {string} key - Setting key
+     * @returns {string|null}
+     */
+    _getCached(key) {
+        if (this.cache.has(key)) {
+            return this.cache.get(key);
+        }
+        const value = localStorage.getItem(key);
+        this.cache.set(key, value);
+        return value;
+    }
+
+    /**
      * Handle incoming messages from BroadcastChannel
      * @param {Object} data - Message data
      */
     handleMessage(data) {
         if (data.type === 'setting-changed' || data.type === 'setting-removed') {
+            // 🆕 Update cache from other tabs
+            if (data.type === 'setting-changed') {
+                this.cache.set(data.key, data.value);
+            } else {
+                this.cache.delete(data.key);
+            }
+
             // Notify all registered listeners
             const listeners = this.listeners.get(data.key) || [];
             listeners.forEach(callback => {
@@ -159,13 +181,13 @@ export class SettingsSync {
     }
 
     /**
-     * Get a setting value from localStorage
+     * Get a setting value (cached)
      * @param {string} key - Setting key
      * @param {any} defaultValue - Default value if not found
      * @returns {any}
      */
     get(key, defaultValue = null) {
-        const value = localStorage.getItem(key);
+        const value = this._getCached(key);
         return value !== null ? value : defaultValue;
     }
 
@@ -179,13 +201,13 @@ export class SettingsSync {
     }
 
     /**
-     * Get a boolean setting from localStorage
+     * Get a boolean setting (cached)
      * @param {string} key - Setting key
      * @param {boolean} defaultValue - Default value if not found
      * @returns {boolean}
      */
     getBool(key, defaultValue = false) {
-        const value = localStorage.getItem(key);
+        const value = this._getCached(key);
         if (value === null) {
             return defaultValue;
         }
@@ -202,13 +224,13 @@ export class SettingsSync {
     }
 
     /**
-     * Get a numeric setting from localStorage
+     * Get a numeric setting (cached)
      * @param {string} key - Setting key
      * @param {number} defaultValue - Default value if not found or invalid
      * @returns {number}
      */
     getNumber(key, defaultValue = 0) {
-        const value = localStorage.getItem(key);
+        const value = this._getCached(key);
         if (value === null || value === '') {
             return defaultValue;
         }
@@ -226,13 +248,13 @@ export class SettingsSync {
     }
 
     /**
-     * Get a JSON setting from localStorage
+     * Get a JSON setting (cached)
      * @param {string} key - Setting key
      * @param {any} defaultValue - Default value if not found or parse error
      * @returns {any}
      */
     getJSON(key, defaultValue = null) {
-        const value = localStorage.getItem(key);
+        const value = this._getCached(key);
         if (value === null || value === '') {
             return defaultValue;
         }
@@ -296,7 +318,7 @@ export class SettingsSync {
     }
 
     /**
-     * Cleanup - close BroadcastChannel
+     * Cleanup - close BroadcastChannel and clear cache
      */
     destroy() {
         if (this.channel) {
@@ -304,6 +326,7 @@ export class SettingsSync {
             this.channel = null;
         }
         this.listeners.clear();
+        this.cache.clear(); // 🆕 Clear cache on destroy
         this.isInitialized = false;
         window.logger?.info(CATEGORIES.SETTINGS, 'SettingsSyncDestroyed', {});
     }

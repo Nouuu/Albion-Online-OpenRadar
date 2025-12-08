@@ -1,7 +1,7 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
-import settings from "../Utils/Settings.js";
+import imageCache from "../Utils/ImageCache.js";
 
 export class MapDrawing extends DrawingUtils
 {
@@ -36,7 +36,7 @@ export class MapDrawing extends DrawingUtils
 
         const src = "/images/Maps/" + imageName + ".png";
 
-        const preloadedImage = settings.GetPreloadedImage(src, "Maps");
+        const preloadedImage = imageCache.GetPreloadedImage(src, "Maps");
 
         if (preloadedImage === null) return;
 
@@ -46,16 +46,16 @@ export class MapDrawing extends DrawingUtils
 
             ctx.scale(1, -1);
             ctx.translate(250, -250);
-            
+
             ctx.rotate(-0.785398);
             ctx.translate(-x, y);
-             
+
             ctx.drawImage(preloadedImage, -size/2, -size/2, size, size);
             ctx.restore();
         }
         else
         {
-            settings.preloadImageAndAddToList(src, "Maps")
+            imageCache.preloadImageAndAddToList(src, "Maps")
             .then(() => {
                 window.logger?.info(CATEGORIES.MAP, EVENTS.MapLoaded, { src: src });
             })

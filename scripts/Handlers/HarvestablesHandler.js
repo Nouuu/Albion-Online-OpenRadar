@@ -43,15 +43,6 @@ export class HarvestablesHandler
         // 💾 Cache pour ressources
         this.lastHarvestCache = new Map();
 
-        // 🆕 Tracking de l'inventaire via NewSimpleItem (SOLUTION SIMPLIFIÉE)
-        this.lastInventoryQuantities = new Map(); // Map<itemId, lastQuantity>
-        this.pendingHarvestableId = null; // ID de la ressource en cours de récolte
-        this.isHarvesting = false; // Flag pour savoir si on est en train de récolter
-
-        // 📋 Map pour logger les découvertes itemId → resource (pour debug)
-        this.discoveredItemIds = new Map(); // Pas sauvegardé, juste pour logs
-
-
         // 📊 Statistics tracking
         this.stats = {
             totalDetected: 0,
@@ -291,14 +282,6 @@ export class HarvestablesHandler
     harvestFinished(Parameters)
     {
         const id = Parameters[3];
-
-        // ✅ NewSimpleItem s'occupe déjà du tracking des ressources exactes
-        // On ne fait plus rien ici sauf décrémenter et reset les flags
-
-        // Reset du pending harvestable et flag harvesting
-        this.pendingHarvestableId = null;
-        this.isHarvesting = false;
-
         // Décrémenter 1 stack
         this.updateHarvestable(id, 1);
     }
@@ -411,20 +394,7 @@ export class HarvestablesHandler
         this.UpdateHarvestable(id, type, tier, location[0], location[1], enchant, size, mobileTypeId);
     }
 
-    base64ToArrayBuffer(base64)
-    {
-        var binaryString = atob(base64);
-        var bytes = new Uint8Array(binaryString.length);
-
-        for (var i = 0; i < binaryString.length; i++)
-        {
-            bytes[i] = binaryString.charCodeAt(i);
-        }
-        
-        return bytes;
-    }
-
-    // Normally work with everything 
+    // Normally work with everything
     // Good
     newSimpleHarvestableObject(Parameters) // New
     {
