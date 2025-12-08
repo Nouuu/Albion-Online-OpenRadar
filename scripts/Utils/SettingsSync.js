@@ -69,7 +69,7 @@ export class SettingsSync {
      * @param {Object} data - Message data
      */
     handleMessage(data) {
-        if (data.type === 'setting-changed') {
+        if (data.type === 'setting-changed' || data.type === 'setting-removed') {
             // Notify all registered listeners
             const listeners = this.listeners.get(data.key) || [];
             listeners.forEach(callback => {
@@ -199,6 +199,100 @@ export class SettingsSync {
      */
     setBool(key, value) {
         this.broadcast(key, value.toString());
+    }
+
+    /**
+     * Get a numeric setting from localStorage
+     * @param {string} key - Setting key
+     * @param {number} defaultValue - Default value if not found or invalid
+     * @returns {number}
+     */
+    getNumber(key, defaultValue = 0) {
+        const value = localStorage.getItem(key);
+        if (value === null || value === '') {
+            return defaultValue;
+        }
+        const parsed = parseInt(value, 10);
+        return isNaN(parsed) ? defaultValue : parsed;
+    }
+
+    /**
+     * Set a numeric setting and broadcast it
+     * @param {string} key - Setting key
+     * @param {number} value - Numeric value
+     */
+    setNumber(key, value) {
+        this.broadcast(key, value.toString());
+    }
+
+    /**
+     * Get a JSON setting from localStorage
+     * @param {string} key - Setting key
+     * @param {any} defaultValue - Default value if not found or parse error
+     * @returns {any}
+     */
+    getJSON(key, defaultValue = null) {
+        const value = localStorage.getItem(key);
+        if (value === null || value === '') {
+            return defaultValue;
+        }
+        try {
+            return JSON.parse(value);
+        } catch (error) {
+            window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncJSONParseFailed', {
+                key,
+                error: error?.message || error
+            });
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Set a JSON setting and broadcast it
+     * @param {string} key - Setting key
+     * @param {any} value - Value to JSON.stringify
+     */
+    setJSON(key, value) {
+        try {
+            const jsonString = JSON.stringify(value);
+            this.broadcast(key, jsonString);
+        } catch (error) {
+            window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncJSONStringifyFailed', {
+                key,
+                error: error?.message || error
+            });
+        }
+    }
+
+    /**
+     * Remove a setting and broadcast the deletion
+     * @param {string} key - Setting key to remove
+     */
+    remove(key) {
+        localStorage.removeItem(key);
+
+        // Broadcast deletion
+        if (this.channel && this.isInitialized) {
+            try {
+                this.channel.postMessage({
+                    type: 'setting-removed',
+                    key: key,
+                    timestamp: Date.now()
+                });
+            } catch (error) {
+                window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncRemoveFailed', {
+                    key,
+                    error: error?.message || error
+                });
+            }
+        }
+
+        // Trigger local listeners
+        this.handleMessage({
+            type: 'setting-removed',
+            key: key,
+            value: null
+        });
     }
 
     /**

@@ -1,13 +1,10 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
+import settings from "../Utils/Settings.js";
 
 export class MapDrawing extends DrawingUtils
 {
-    constructor(Settings)
-    {
-        super(Settings);
-    }
-    
     interpolate(curr_map, lpX, lpY , t)
     {
         const hX = lpX;
@@ -32,14 +29,14 @@ export class MapDrawing extends DrawingUtils
         ctx.fillStyle = '#1a1c23';
         ctx.fillRect(0, 0, ctx.width, ctx.height);
 
-        if (!this.settings.showMapBackground) return;
+        if (!settingsSync.getBool("settingShowMap")) return;
 
         if (imageName === undefined || imageName == "undefined")
             return;
 
         const src = "/images/Maps/" + imageName + ".png";
 
-        const preloadedImage = this.settings.GetPreloadedImage(src, "Maps");
+        const preloadedImage = settings.GetPreloadedImage(src, "Maps");
 
         if (preloadedImage === null) return;
 
@@ -58,7 +55,7 @@ export class MapDrawing extends DrawingUtils
         }
         else
         {
-            this.settings.preloadImageAndAddToList(src, "Maps")
+            settings.preloadImageAndAddToList(src, "Maps")
             .then(() => {
                 window.logger?.info(CATEGORIES.MAP, EVENTS.MapLoaded, { src: src });
             })

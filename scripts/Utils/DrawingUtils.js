@@ -1,9 +1,9 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import settings from "./Settings.js";
+import settingsSync from "./SettingsSync.js";
 
 export class DrawingUtils {
-    constructor(settings) {
-        this.settings = settings || {};
+    constructor() {
         this.fontSize = "12px";
         this.fontFamily = "Arial";
         this.textColor = "white";
@@ -65,7 +65,7 @@ export class DrawingUtils {
 
         const folderR = (!folder) ? "" : folder + "/";
         const src = "/images/" + folderR + imageName + ".png";
-        const preloadedImage = this.settings.GetPreloadedImage ? this.settings.GetPreloadedImage(src, folder) : null;
+        const preloadedImage = settings.GetPreloadedImage ? settings.GetPreloadedImage(src, folder) : null;
 
         if (preloadedImage === null) {
             this.drawFilledCircle(ctx, x, y, 10, "#4169E1");
@@ -74,8 +74,8 @@ export class DrawingUtils {
 
         if (preloadedImage) {
             ctx.drawImage(preloadedImage, x - size / 2, y - size / 2, size, size);
-        } else if (this.settings && typeof this.settings.preloadImageAndAddToList === 'function') {
-            this.settings.preloadImageAndAddToList(src, folder)
+        } else  {
+            settings.preloadImageAndAddToList(src, folder)
                 .then(() => {
                     window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src: src, folder: folder });
                 })
@@ -433,7 +433,7 @@ export class DrawingUtils {
         const distText = distanceMeters < 1000 ? `${distanceMeters}m` : `${(distanceMeters / 1000).toFixed(1)}km`;
 
         const stacksText = `${totalStacks}`;
-        const clusterRadiusMeters = (this.settings && this.settings.overlayClusterRadius) ? this.settings.overlayClusterRadius : null;
+        const clusterRadiusMeters = settingsSync.getNumber("settingClusterRadius");
 
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
         const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;

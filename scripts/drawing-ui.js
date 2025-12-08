@@ -1,4 +1,3 @@
-import settings from "./Utils/Settings.js";
 import settingsSync from "./Utils/SettingsSync.js";
 
 export function openOverlayWindow() {
@@ -26,9 +25,9 @@ export function initOverlayControls() {
     const enchantmentCheckbox = document.getElementById('overlayEnchantment');
     const resourceCountCheckbox = document.getElementById('overlayResourceCount');
     const distanceCheckbox = document.getElementById('overlayDistance');
-    const clusterCheckbox = document.getElementById('overlayCluster');
-    const clusterRadiusInput = document.getElementById('overlayClusterRadius');
-    const clusterMinSizeInput = document.getElementById('overlayClusterMinSize');
+    const clusterCheckbox = document.getElementById('settingResourceClusters');
+    const clusterRadiusInput = document.getElementById('settingClusterRadius');
+    const clusterMinSizeInput = document.getElementById('settingClusterMinSize');
 
     // Check if overlay elements exist (only on drawing page)
     if (!enchantmentCheckbox) return;
@@ -45,32 +44,26 @@ export function initOverlayControls() {
     // Add event listeners - save to localStorage and update settings
     enchantmentCheckbox.addEventListener('change', (e) => {
         settingsSync.setBool('settingResourceEnchantOverlay', e.target.checked);
-        settings.update();
     });
 
     resourceCountCheckbox.addEventListener('change', (e) => {
         settingsSync.setBool('settingResourceCount', e.target.checked);
-        settings.update();
     });
 
     distanceCheckbox.addEventListener('change', (e) => {
         settingsSync.setBool('settingResourceDistance', e.target.checked);
-        settings.update();
     });
 
     clusterCheckbox.addEventListener('change', (e) => {
         settingsSync.setBool('settingResourceClusters', e.target.checked);
-        settings.update();
     });
 
     clusterRadiusInput.addEventListener('input', (e) => {
         settingsSync.set('settingClusterRadius', parseInt(e.target.value));
-        settings.update();
     });
 
     clusterMinSizeInput.addEventListener('input', (e) => {
         settingsSync.set('settingClusterMinSize', parseInt(e.target.value));
-        settings.update();
     });
 }
 

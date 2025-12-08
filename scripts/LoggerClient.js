@@ -2,6 +2,7 @@
 // This file is loaded as ES module in layout.ejs to make logger available everywhere
 
 import {CATEGORY_SETTINGS_MAP} from './constants/LoggerConstants.js';
+import settingsSync from './Utils/SettingsSync.js';
 
 console.log('🔧 [LoggerClient] Script loaded, initializing logger immediately...');
 
@@ -52,14 +53,14 @@ class Logger {
 
         // Special handling for RAW packets
         if (settingKey === 'debugRawPackets') {
-            const consoleEnabled = localStorage.getItem('settingDebugRawPacketsConsole') === 'true';
-            const serverEnabled = localStorage.getItem('settingDebugRawPacketsServer') === 'true';
+            const consoleEnabled = settingsSync.getBool('settingDebugRawPacketsConsole');
+            const serverEnabled = settingsSync.getBool('settingDebugRawPacketsServer');
             return consoleEnabled || serverEnabled;
         }
 
         // Check the corresponding debug setting
         const localStorageKey = 'setting' + settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
-        return localStorage.getItem(localStorageKey) === 'true';
+        return settingsSync.getBool(localStorageKey);
     }
 
     log(level, category, event, data, context = {}) {
@@ -81,14 +82,14 @@ class Logger {
         };
 
         // 📺 Always log to console if enabled in settings
-        const logToConsole = localStorage.getItem('settingLogToConsole') !== 'false'; // Default: true
+        const logToConsole = settingsSync.getBool('settingLogToConsole');
         if (logToConsole) {
             this.logToConsole(logEntry);
         }
 
         // 📤 Buffer for server if enabled in settings AND connected
-        const logToServer = localStorage.getItem('settingLogToServer') === 'true'; // Default: false
-        const debugRawPacketsServer = localStorage.getItem('settingDebugRawPacketsServer') === 'true'; // Default: false
+        const logToServer = settingsSync.getBool('settingLogToServer');
+        const debugRawPacketsServer = settingsSync.getBool('settingDebugRawPacketsServer');
 
         // Skip RAW packets for server if disabled
         if (logEntry.category === '[CLIENT] PACKET_RAW' && !debugRawPacketsServer) {
@@ -106,7 +107,7 @@ class Logger {
 
     logToConsole(entry) {
         // Skip RAW packets in console if disabled
-        const showRawPacketsConsole = localStorage.getItem('settingDebugRawPacketsConsole') === 'true';
+        const showRawPacketsConsole = settingsSync.getBool('settingDebugRawPacketsConsole');
         if (entry.category === '[CLIENT] PACKET_RAW' && !showRawPacketsConsole) {
             return; // Skip console display for RAW packets
         }

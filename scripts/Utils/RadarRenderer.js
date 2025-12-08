@@ -1,32 +1,11 @@
-/**
- * RadarRenderer.js
- *
- * Unified rendering orchestrator for both main and overlay radar displays.
- * Eliminates code duplication by providing a single, shared rendering pipeline.
- *
- * Features:
- * - Manages game loop (update/render cycle)
- * - Coordinates entity rendering via Drawing classes
- * - Handles cluster detection and visualization
- * - Flash border rendering (player detection)
- * - Interpolation and position updates
- *
- * Architecture:
- * - CanvasManager: Canvas setup and management
- * - Handlers: Entity data storage and filtering
- * - Drawing classes: Entity-specific rendering logic
- * - DrawingUtils: Shared rendering utilities
- */
-
 import { CanvasManager } from './CanvasManager.js';
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "./SettingsSync.js";
 
 export class RadarRenderer {
     constructor(viewType, dependencies) {
         this.viewType = viewType; // 'main' or 'overlay'
 
-        // Dependencies (injected from Utils.js)
-        this.settings = dependencies.settings;
         this.handlers = dependencies.handlers;
         this.drawings = dependencies.drawings;
         this.drawingUtils = dependencies.drawingUtils;
@@ -142,7 +121,7 @@ export class RadarRenderer {
         }
 
         // Interpolate map position
-        if (this.settings.showMapBackground && this.drawings.mapsDrawing) {
+        if (settingsSync.getBool('settingShowMap') && this.drawings.mapsDrawing) {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
@@ -240,7 +219,7 @@ export class RadarRenderer {
         // Unified cluster detection + drawing (merge static harvestables + living resources)
         // 🎯 OPTIMIZATION: Cache clusters and recalculate only every 2 seconds
         let clustersForInfo = null;
-        if (this.settings.overlayCluster && context) {
+        if (settingsSync.getBool('settingResourceClusters') && context) {
             const currentTime = performance.now();
             const timeSinceLastUpdate = currentTime - this.lastClusterUpdate;
 
@@ -261,8 +240,8 @@ export class RadarRenderer {
 
                     this.cachedClusters = this.drawingUtils.detectClusters(
                         merged,
-                        this.settings.overlayClusterRadius,
-                        this.settings.overlayClusterMinSize
+                        settingsSync.getNumber('settingClusterRadius'),
+                        settingsSync.getNumber('settingClusterMinSize')
                     );
                     this.lastClusterUpdate = currentTime;
                 } catch (e) {

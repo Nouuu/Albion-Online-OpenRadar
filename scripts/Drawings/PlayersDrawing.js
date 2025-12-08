@@ -1,8 +1,8 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
 
 export class PlayersDrawing extends DrawingUtils {
-    constructor(Settings) {
-        super(Settings);
+    constructor() {
+        super();
         this.itemsInfo = {};
     }
 

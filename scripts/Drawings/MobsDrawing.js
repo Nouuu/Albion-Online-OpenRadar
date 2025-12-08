@@ -1,14 +1,10 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
 import {EnemyType} from "../Handlers/MobsHandler.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
 
 export class MobsDrawing extends DrawingUtils
 {
-    constructor(Settings)
-    {
-        super(Settings);
-    }
-
     interpolate(mobs, mists, lpX, lpY, t)
     {
         for (const mobOne of mobs)
@@ -55,8 +51,8 @@ export class MobsDrawing extends DrawingUtils
             let imageFolder = undefined;
 
             /* Set by default to enemy, since there are more, so we don't add at each case */
-            let drawHealthBar = this.settings.enemiesHealthBar;
-            let drawId = this.settings.enemiesID;
+            let drawHealthBar = settingsSync.getBool("settingEnemiesHealthBar");
+            let drawId = settingsSync.getBool("settingEnemiesID");
             let isLivingResource = false;
 
             if (mobOne.type == EnemyType.LivingSkinnable || mobOne.type == EnemyType.LivingHarvestable)
@@ -69,8 +65,8 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources"; // Change folder to living harvestables
                 }
 
-                drawHealthBar = this.settings.livingResourcesHealthBar;
-                drawId = this.settings.livingResourcesID;
+                drawHealthBar = settingsSync.getBool("settingLivingResourcesHealthBar");
+                drawId = settingsSync.getBool("settingLivingResourcesID");
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
@@ -81,7 +77,7 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources"; // Change folder to enemies
                 }
 
-                drawId = this.settings.enemiesID;
+                drawId = settingsSync.getBool("settingEnemiesID");
             }
             else if (mobOne.type == EnemyType.Drone)
             {
@@ -92,7 +88,7 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources"; // Change folder to enemies
                 }
 
-                drawId = this.settings.enemiesID;
+                drawId = settingsSync.getBool("settingEnemiesID");
             }
             else if (mobOne.type == EnemyType.MistBoss)
             {
@@ -103,7 +99,7 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources"; // Change folder to enemies
                 }
 
-                drawId = this.settings.enemiesID;
+                drawId = settingsSync.getBool("settingEnemiesID");
             }
             else if (mobOne.type == EnemyType.Events)
             {
@@ -114,7 +110,7 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources";
                 }
 
-                drawId = this.settings.enemiesID;
+                drawId = settingsSync.getBool("settingEnemiesID");
             }
 
             if (imageName !== undefined && imageFolder !== undefined)
@@ -138,12 +134,13 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // 📊 Enchantment indicator for living resources (if enabled)
-            if (isLivingResource && this.settings.overlayEnchantment && mobOne.enchantmentLevel > 0) {
+            if (isLivingResource && settingsSync.getBool("settingLivingResourceEnchantOverlay") && mobOne.enchantmentLevel > 0) {
                 this.drawEnchantmentIndicator(ctx, point.x, point.y, mobOne.enchantmentLevel);
             }
 
             // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)
-            if (isLivingResource && this.settings.overlayDistance) {
+            if (isLivingResource && settingsSync.getBool("settingResourceDistance"))
+            {
                 const distanceGameUnits = this.calculateDistance(mobOne.hX, mobOne.hY, 0, 0);
                 this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
             }
@@ -171,12 +168,12 @@ export class MobsDrawing extends DrawingUtils
         /* Mist portals */
         for (const mistsOne of mists)
         {
-            if (!this.settings.mistEnchants[mistsOne.enchant])
+            if (settingsSync.getBool("settingMistE"+mistsOne.enchant))
             {
                 continue;
             }
 
-            if ((this.settings.mistSolo && mistsOne.type == 0) || (this.settings.mistDuo && mistsOne.type == 1))
+            if (settingsSync.getBool("settingMistSolo") && mistsOne.type == 0 || settingsSync.getBool("settingMistDuo") && mistsOne.type == 1)
             {
                 // Change image folder
                 const point = this.transformPoint(mistsOne.hX, mistsOne.hY);

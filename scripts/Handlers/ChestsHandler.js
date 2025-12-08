@@ -13,8 +13,7 @@ class Chest {
 }
 
 export class ChestsHandler {
-    constructor(settings) {
-        this.settings = settings;
+    constructor() {
         this.chestsList = [];
     }
 

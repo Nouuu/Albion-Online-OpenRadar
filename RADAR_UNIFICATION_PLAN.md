@@ -474,11 +474,21 @@ settingsSync.on('*', (key, value) => {
 });
 ```
 
-#### 3.2 Mettre à jour Settings.js
+#### 3.2 Migration complète vers SettingsSync
 
-- Remplacer `returnLocalBool()` par `settingsSync.getBool()`
-- Utiliser `settingsSync.broadcast()` pour les changements
-- Supprimer le custom override de `localStorage.setItem`
+**⚠️ GROS TRAVAIL - Voir le plan détaillé:** [`PHASE_3.2_SETTINGS_MIGRATION.md`](./PHASE_3.2_SETTINGS_MIGRATION.md)
+
+**Résumé:**
+- Enrichir SettingsSync avec méthodes manquantes (getNumber, getJSON, remove)
+- Migrer Settings.js: ~58 appels localStorage → SettingsSync
+- Migrer drawing-ui.js: 6 appels → SettingsSync
+- Migrer LoggerClient.js: 8 appels → SettingsSync
+- Migrer fichiers support: ResourcesHelper, MobsHandler, PlayersHandler, init-alpine.js
+- Migrer 10 templates EJS: ~70+ appels → SettingsSync
+
+**Objectif:** Centraliser TOUS les accès localStorage via SettingsSync (API propre et unifiée)
+
+**Durée estimée:** 6-7 heures
 
 **État:** ⏳ **EN ATTENTE**
 

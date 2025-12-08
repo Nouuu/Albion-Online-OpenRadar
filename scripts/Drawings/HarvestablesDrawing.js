@@ -1,14 +1,7 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
+import settingsSync from "../Utils/SettingsSync.js";
 
 export class HarvestablesDrawing extends DrawingUtils  {
-
-
-    constructor(Settings) {
-
-        super(Settings);
-    
-    }
-    
     interpolate(harvestables, lpX, lpY ,t ) {
 
         for (const harvestableOne of harvestables) {
@@ -73,22 +66,22 @@ export class HarvestablesDrawing extends DrawingUtils  {
             this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 50);
 
             // Debug: TypeID display
-            if (this.settings.livingResourcesID)
+            if (settingsSync.getBool('livingResourcesID'))
                 this.drawText(point.x, point.y + 20, type.toString(), ctx);
 
             // 📊 Enchantment indicator (if enabled)
-            if (this.settings.overlayEnchantment && harvestableOne.charges > 0) {
+            if (settingsSync.getBool('settingLivingResourceEnchantOverlay') && harvestableOne.charges > 0){
                 this.drawEnchantmentIndicator(ctx, point.x, point.y, harvestableOne.charges);
             }
 
             // 📍 Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
-            if (this.settings.overlayDistance) {
+            if (settingsSync.getBool('settingResourceDistance')) {
                 const distanceGameUnits = this.calculateDistance(harvestableOne.hX, harvestableOne.hY, 0, 0);
                 this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
             }
 
             // 📊 Resource count badge (if enabled)
-            if (this.settings.overlayResourceCount)
+            if (settingsSync.getBool('settingResourceCount'))
             {
                 const realResources = this.calculateRealResources(
                     parseInt(harvestableOne.size),

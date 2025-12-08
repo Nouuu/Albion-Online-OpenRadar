@@ -176,12 +176,10 @@
 </div>
 
 
-<script>
-  function returnLocalBool(item) {
-    return localStorage.getItem(item) === "true";
-  }
-
+<script type="module">
   // Get elements
+  import settingsSync from "../../scripts/Utils/SettingsSync.js";
+
   const settingShowPlayers = document.getElementById("settingShowPlayers");
   const settingItems = document.getElementById("settingItems");
   const settingItemsDev = document.getElementById("settingItemsDev");
@@ -193,53 +191,52 @@
   const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
 
   // Load saved settings
-  settingShowPlayers.checked = returnLocalBool("settingShowPlayers");
-  settingItems.checked = returnLocalBool("settingItems");
-  settingItemsDev.checked = returnLocalBool("settingItemsDev");
-  settingSound.checked = returnLocalBool("settingSound");
-  settingFlash.checked = returnLocalBool("settingFlash");
-  settingPassivePlayers.checked = returnLocalBool("settingPassivePlayers");
-  settingFactionPlayers.checked = returnLocalBool("settingFactionPlayers");
-  settingDangerousPlayers.checked = returnLocalBool("settingDangerousPlayers");
-  settingMaxPlayersDisplay.value = localStorage.getItem("settingMaxPlayersDisplay") || "50";
+  settingShowPlayers.checked = settingsSync.getBool("settingShowPlayers");
+  settingItems.checked = settingsSync.getBool("settingItems");
+  settingItemsDev.checked = settingsSync.getBool("settingItemsDev");
+  settingSound.checked = settingsSync.getBool("settingSound");
+  settingFlash.checked = settingsSync.getBool("settingFlash");
+  settingPassivePlayers.checked = settingsSync.getBool("settingPassivePlayers");
+  settingFactionPlayers.checked = settingsSync.getBool("settingFactionPlayers");
+  settingDangerousPlayers.checked = settingsSync.getBool("settingDangerousPlayers");
+  settingMaxPlayersDisplay.value = settingsSync.getNumber("settingMaxPlayersDisplay", 50);
 
   // Save on change
   settingShowPlayers.addEventListener("click", () => {
-    localStorage.setItem("settingShowPlayers", settingShowPlayers.checked);
+    settingsSync.setBool("settingShowPlayers", settingShowPlayers.checked);
   });
 
   settingItems.addEventListener("click", () => {
-    localStorage.setItem("settingItems", settingItems.checked);
+    settingsSync.setBool("settingItems", settingItems.checked);
   });
 
   settingItemsDev.addEventListener("click", () => {
-    localStorage.setItem("settingItemsDev", settingItemsDev.checked);
+    settingsSync.setBool("settingItemsDev", settingItemsDev.checked);
   });
 
   settingSound.addEventListener("click", () => {
-    localStorage.setItem("settingSound", settingSound.checked);
+    settingsSync.setBool("settingSound", settingSound.checked);
   });
 
   settingFlash.addEventListener("click", () => {
-    localStorage.setItem("settingFlash", settingFlash.checked);
+    settingsSync.setBool("settingFlash", settingFlash.checked);
   });
 
   settingPassivePlayers.addEventListener("click", () => {
-    localStorage.setItem("settingPassivePlayers", settingPassivePlayers.checked);
+    settingsSync.setBool("settingPassivePlayers", settingPassivePlayers.checked);
   });
 
   settingFactionPlayers.addEventListener("click", () => {
-    localStorage.setItem("settingFactionPlayers", settingFactionPlayers.checked);
+    settingsSync.setBool("settingFactionPlayers", settingFactionPlayers.checked);
   });
 
   settingDangerousPlayers.addEventListener("click", () => {
-    localStorage.setItem("settingDangerousPlayers", settingDangerousPlayers.checked);
+    settingsSync.setBool("settingDangerousPlayers", settingDangerousPlayers.checked);
   });
 
   settingMaxPlayersDisplay.addEventListener("input", () => {
-    const value = parseInt(settingMaxPlayersDisplay.value);
     if (value >= 1 && value <= 100) {
-      localStorage.setItem("settingMaxPlayersDisplay", value);
+      settingsSync.setNumber("settingMaxPlayersDisplay", Number(settingMaxPlayersDisplay.value));
     }
   });
 </script>

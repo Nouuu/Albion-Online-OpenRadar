@@ -155,12 +155,13 @@
     document.addEventListener('alpine:initialized', () => {
       lucide.createIcons();
     });
-
+  </script>
+  <script type="module">
+    import settingsSync from '/scripts/Utils/SettingsSync.js';
     // 🖥️ Send server logs state to backend on app startup
     (async () => {
       try {
-        const enabled = localStorage.getItem("settingServerLogsEnabled");
-        const serverLogsEnabled = enabled === null ? false : enabled === "true";
+        const serverLogsEnabled = settingsSync.getBool("settingServerLogsEnabled");
 
         const response = await fetch('/api/settings/server-logs', {
           method: 'POST',

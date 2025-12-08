@@ -3,21 +3,6 @@
  * Utility functions for the Resources settings page
  */
 
-import { CATEGORIES, EVENTS } from '../constants/LoggerConstants.js';
-
-/**
- * Return boolean from localStorage
- * @param {string} item - localStorage key
- * @returns {boolean}
- */
-export function returnLocalBool(item) {
-	if (localStorage.getItem(item) == "true") {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 /**
  * Toggle all enchantments for a specific Tier (column)
  * @param {string} resourcePrefix - Resource prefix (e.g., 'fsp', 'flp')
@@ -241,47 +226,10 @@ export function generateResourceGrid(config) {
 \t</div>`;
 }
 
-/**
- * Function to clear TypeID cache
- */
-export function clearTypeIDCache() {
-	try {
-		// Debug: Show what's in cache BEFORE clearing
-		const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
-		if (cached) {
-			const entries = JSON.parse(cached);
-			window.logger?.info(CATEGORIES.CACHE, EVENTS.ClearTypeIDCache, {
-				entriesCount: entries.length,
-				entries: entries.map(([typeId, info]) => ({
-					typeId: typeId,
-					type: info.type,
-					tier: info.tier
-				}))
-			});
-		} else {
-			window.logger?.info(CATEGORIES.CACHE, EVENTS.CacheAlreadyEmpty, {});
-		}
-
-		// Clear localStorage
-		localStorage.removeItem('cachedStaticResourceTypeIDs');
-		window.logger?.info(CATEGORIES.CACHE, EVENTS.TypeIDCacheCleared, {});
-
-		// Confirm and reload to clear in-memory cache too
-		const shouldReload = confirm('✅ TypeID Cache cleared!\n\n⚠️ The radar page needs to reload to clear the in-memory cache.\n\nReload now?');
-		if (shouldReload) {
-			// Find and reload the radar window if open
-			if (window.opener && !window.opener.closed) {
-				window.logger?.info(CATEGORIES.CACHE, EVENTS.ReloadingOpenerWindow, {});
-				window.opener.location.reload();
-			}
-			// Also reload this settings page
-			window.logger?.info(CATEGORIES.CACHE, EVENTS.ReloadingSettingsPage, {});
-			window.location.reload();
-		} else {
-			alert('⚠️ Cache cleared from localStorage, but you need to reload the radar page manually for full effect.');
-		}
-	} catch (e) {
-		window.logger?.error(CATEGORIES.CACHE, EVENTS.ClearCacheFailed, { error: e.message });
-		alert('❌ Failed to clear cache: ' + e.message);
-	}
+export function getResourceStorageKey(prefix, type){
+	const resourceName = {
+		'fsp': 'Fiber', 'hsp': 'Hide', 'wsp': 'Wood', 'osp': 'Ore', 'rsp': 'Rock',
+		'flp': 'Fiber', 'hlp': 'Hide', 'wlp': 'Wood', 'olp': 'Ore', 'rlp': 'Rock'
+	}[prefix];
+	return `setting${type}${resourceName}Enchants`;
 }

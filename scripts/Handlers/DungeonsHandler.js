@@ -1,4 +1,5 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
 
 const DungeonType =
 {
@@ -53,11 +54,10 @@ class Dungeon
 
 export class DungeonsHandler
 {
-    constructor(Settings)
+    constructor()
     {
         // Import constants once in constructor
         this.dungeonList = [];
-        this.settings = Settings;
     }
 
     dungeonEvent(parameters)
@@ -99,29 +99,28 @@ export class DungeonsHandler
         if (lowerCaseName.includes("corrupted")) // corrupt
         {
             // Test if corrupt checkbox
-            if (!this.settings.dungeonCorrupted) return;
+            if (!settingsSync.getBool("settingDungeonCorrupted")) return;
 
             dungeonType = DungeonType.Corrupted;
         }
         else if (lowerCaseName.includes("solo")) // solo
         {
             // Test if solo checkbox
-            if (!this.settings.dungeonSolo || !this.settings.dungeonEnchants[enchant]) return;
+            if (!settingsSync.getBool("settingDungeonSolo") || !settingsSync.getBool('settingDungeonE'+enchant)) return;
 
             dungeonType = DungeonType.Solo;
         }
         // "HELLGATE_2V2_NON_LETHAL"
         else if (lowerCaseName.includes("hellgate")) // hellgate
         {
-            if (!this.settings.dungeonHellgate) return;
+            if (!settingsSync.getBool('settingDungeonHellgate')) return;
 
             dungeonType = DungeonType.Hellgate
 
         }
         else // group
         {
-            if (!this.settings.dungeonGroup || !this.settings.dungeonEnchants[enchant]) return;
-
+            if (!settingsSync.getBool('settingDungeonDuo') || !settingsSync.getBool('settingDungeonE'+enchant)) return;
             dungeonType = DungeonType.Group;
         }
 

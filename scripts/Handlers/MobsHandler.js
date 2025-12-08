@@ -1,4 +1,6 @@
 import { CATEGORIES, EVENTS } from '../constants/LoggerConstants.js';
+import settingsSync from '../Utils/SettingsSync.js';
+import {getResourceStorageKey} from "../Utils/ResourcesHelper.js";
 
 export const EnemyType =
     {
@@ -68,8 +70,7 @@ class Mist {
 }
 
 export class MobsHandler {
-    constructor(settings) {
-        this.settings = settings;
+    constructor() {
         this.mobsList = [];
         this.mistList = [];
         this.mobinfo = {};
@@ -201,9 +202,8 @@ export class MobsHandler {
 
     loadCachedTypeIDs() {
         try {
-            const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
-            if (cached) {
-                const entries = JSON.parse(cached);
+            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs', null);
+            if (entries) {
                 let loadedCount = 0;
                 let skippedCount = 0;
                 for (const [typeId, info] of entries) {
@@ -345,12 +345,11 @@ export class MobsHandler {
         });
     }
 
-    // 💾 Save cached TypeID mappings to localStorage
     saveCachedTypeIDs() {
         try {
             const entries = Array.from(this.staticResourceTypeIDs.entries())
                 .filter(([typeId]) => typeId !== 65535); // Skip unstable TypeID only
-            localStorage.setItem('cachedStaticResourceTypeIDs', JSON.stringify(entries));
+            settingsSync.setJSON('cachedStaticResourceTypeIDs', entries);
         } catch (e) {
             // ❌ ERROR (toujours loggé) - Échec critique de sauvegarde
             if (window.logger) {
@@ -362,7 +361,7 @@ export class MobsHandler {
     clearCachedTypeIDs() {
         try {
             const count = this.staticResourceTypeIDs.size;
-            localStorage.removeItem('cachedStaticResourceTypeIDs');
+            settingsSync.remove('cachedStaticResourceTypeIDs');
             this.staticResourceTypeIDs.clear();
             this._registrationLogState.clear();
             // ℹ️ INFO (toujours loggé) - Action utilisateur importante
@@ -608,21 +607,16 @@ export class MobsHandler {
         if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
             if (mob.tier > 0 && mob.name) {
                 const resourceType = mob.name;
-                let settingKey = null;
+                let prefix;
+                if (resourceType === 'Fiber' || resourceType === 'fiber') prefix = 'fsp';
+                else if (resourceType === 'Hide' || resourceType === 'hide') prefix = 'hsp';
+                else if (resourceType === 'Wood' || resourceType === 'Logs') prefix = 'wsp';
+                else if (resourceType === 'Ore' || resourceType === 'ore') prefix = 'osp';
+                else if (resourceType === 'Rock' || resourceType === 'rock') prefix = 'rsp';
+                const settingKey = getResourceStorageKey(prefix, 'Living');
 
-                if (resourceType === 'Fiber' || resourceType === 'fiber') settingKey = 'harvestingLivingFiber';
-                else if (resourceType === 'Hide' || resourceType === 'hide') settingKey = 'harvestingLivingHide';
-                else if (resourceType === 'Wood' || resourceType === 'Logs') settingKey = 'harvestingLivingWood';
-                else if (resourceType === 'Ore' || resourceType === 'ore') settingKey = 'harvestingLivingOre';
-                else if (resourceType === 'Rock' || resourceType === 'rock') settingKey = 'harvestingLivingRock';
-
-                if (settingKey && this.settings[settingKey]) {
-                    const enchantKey = `e${mob.enchantmentLevel}`;
-                    const tierIndex = mob.tier - 1;
-
-                    if (this.settings[settingKey][enchantKey] && this.settings[settingKey][enchantKey][tierIndex] === false) {
-                        return;
-                    }
+                if (!settingsSync.getJSON(settingKey)?.[`e${mob.enchantmentLevel}`][mob.tier - 1]) {
+                    return;
                 }
             }
         }
@@ -631,14 +625,16 @@ export class MobsHandler {
         if (mob.type >= EnemyType.Enemy && mob.type <= EnemyType.Boss) {
             // If enemy is not identified (no name from mobinfo), check "Show Unmanaged Enemies" setting
             if (!mob.name || !hasKnownInfo) {
-                if (!this.settings.showUnmanagedEnemies) {
+                if (settingsSync.getBool('settingShowUnmanagedEnemies') === false) {
                     return; // Skip unidentified enemies if setting is disabled
                 }
             } else {
                 // For identified enemies, filter by their specific level (Normal, Medium, Enchanted, MiniBoss, Boss)
                 const enemyLevelIndex = mob.type - EnemyType.Enemy; // 0-4 for Enemy through Boss
-                if (enemyLevelIndex >= 0 && enemyLevelIndex < this.settings.enemyLevels.length) {
-                    if (!this.settings.enemyLevels[enemyLevelIndex]) {
+                const settingsEnemyIndexNames = ['settingNormalEnemy', 'settingMediumEnemy', 'settingEnchantedEnemy', 'settingMiniBossEnemy', 'settingBossEnemy'];
+                if (enemyLevelIndex >= 0 && enemyLevelIndex < settingsEnemyIndexNames.length) {
+                    const settingName = settingsEnemyIndexNames[enemyLevelIndex];
+                    if (settingsSync.getBool(settingName) === false) {
                         return; // Skip if this enemy level is disabled
                     }
                 }
@@ -647,7 +643,7 @@ export class MobsHandler {
 
         // Filter drones based on user settings
         if (mob.type === EnemyType.Drone) {
-            if (!this.settings.avaloneDrones) {
+            if (!settingsSync.getBool('settingAvaloneDrones')) {
                 return;
             }
         }
@@ -660,22 +656,12 @@ export class MobsHandler {
 
         // Filter event enemies based on user settings
         if (mob.type === EnemyType.Events) {
-            if (!this.settings.showEventEnemies) {
+            if (!settingsSync.getBool('settingShowEventEnemies')) {
                 return;
             }
         }
 
         this.mobsList.push(mob);
-
-        // 📊 Track statistics for living resources (Fiber, Hide, Wood, Ore, Rock)
-        if ((mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) &&
-            mob.tier > 0 && mob.name) {
-            // Call harvestablesHandler to update stats if available
-            if (typeof window !== 'undefined' && window.harvestablesHandler) {
-                // Send resource name directly (GetStringType will normalize it)
-                window.harvestablesHandler.updateStats(mob.name, mob.tier, mob.enchantmentLevel, false);
-            }
-        }
 
         // 📊 Enhanced logging for living creatures
         if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {

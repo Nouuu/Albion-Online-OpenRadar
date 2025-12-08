@@ -107,6 +107,11 @@ function startServer(appDir, port) {
         res.render('layout', {mainContent: viewName});
     });
 
+    app.get('/map', (req, res) => {
+        const viewName = 'main/map';
+        res.render('layout', {mainContent: viewName});
+    });
+
     app.get('/radar-overlay', (req, res) => {
         res.render('main/radar-overlay');
     });
@@ -128,17 +133,11 @@ function startServer(appDir, port) {
     });
 
     app.use('/images', express.static(path.join(appDir, 'images'), {maxAge: imagesCacheDuration}));
+    app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
 
     app.use('/scripts', express.static(path.join(appDir, 'scripts')));
-    app.use('/scripts/Handlers', express.static(path.join(appDir, 'scripts', 'Handlers')));
-    app.use('/scripts/Drawings', express.static(path.join(appDir, 'scripts', 'Drawings')));
-    app.use('/scripts/Utils', express.static(path.join(appDir, 'scripts', 'Utils')));
-    app.use('/scripts/Utils/languages', express.static(path.join(appDir, 'scripts', 'Utils', 'languages')));
-    app.use('/scripts/styles', express.static(path.join(appDir, 'scripts', 'styles')));
     app.use('/sounds', express.static(path.join(appDir, 'sounds')));
-    app.use('/config', express.static(path.join(appDir, 'config')));
     app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
-    app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
 
     app.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);

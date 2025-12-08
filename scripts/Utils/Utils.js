@@ -124,9 +124,8 @@ window.addEventListener('load', () => {
     if (clearTypeIDCache) clearTypeIDCache.addEventListener('click', () => {
         try {
             // Show what's in cache BEFORE clearing
-            const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
-            if (cached) {
-                const entries = JSON.parse(cached);
+            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs');
+            if (!entries) {
                 window.logger?.info(CATEGORIES.CACHE, EVENTS.ClearingTypeIDCache, {
                     entriesCount: entries.length,
                     entries: entries.map(([typeId, info]) => ({
@@ -161,24 +160,24 @@ window.addEventListener('load', () => {
 });
 
 
-const harvestablesHandler = new HarvestablesHandler(settings, mobsHandler); // 🔗 Pass MobsHandler reference
-const playersHandler = new PlayersHandler(settings);
+const harvestablesHandler = new HarvestablesHandler(mobsHandler); // 🔗 Pass MobsHandler reference
+const playersHandler = new PlayersHandler();
 
 
 // 📊 Expose handlers globally for statistics and debug access
 window.harvestablesHandler = harvestablesHandler;
 window.mobsHandler = mobsHandler;
 
-const wispCageHandler = new WispCageHandler(settings);
-const wispCageDrawing = new WispCageDrawing(settings);
+const wispCageHandler = new WispCageHandler();
+const wispCageDrawing = new WispCageDrawing();
 
-const fishingHandler = new FishingHandler(settings);
-const fishingDrawing = new FishingDrawing(settings);
+const fishingHandler = new FishingHandler();
+const fishingDrawing = new FishingDrawing();
 
-const chestsDrawing = new ChestsDrawing(settings);
-const mobsDrawing = new MobsDrawing(settings);
-const playersDrawing = new PlayersDrawing(settings);
-const dungeonsDrawing = new DungeonsDrawing(settings);
+const chestsDrawing = new ChestsDrawing();
+const mobsDrawing = new MobsDrawing();
+const playersDrawing = new PlayersDrawing();
+const dungeonsDrawing = new DungeonsDrawing();
 playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
 // 👥 Full player list UI update (called periodically to refresh timestamps)
@@ -914,7 +913,6 @@ window.logger?.info(CATEGORIES.MAP, 'CanvasCheck', {
 // Only initialize RadarRenderer if canvas elements exist (drawing page)
 if (canvas && context) {
     radarRenderer = createRadarRenderer('main', {
-        settings,
         handlers: {
             harvestablesHandler,
             mobsHandler,
@@ -957,14 +955,6 @@ if (canvas && context) {
         hasContext: !!context
     });
 }
-
-// ✅ Settings synchronization via SettingsSync (event-driven, no polling)
-settingsSync.on('*', async (key) => {
-    if (key.startsWith('setting')) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // next tick delay
-        settings.update()
-    }
-});
 
 // 👥 Update player list UI every 5 seconds (for timestamp refresh)
 setInterval(updatePlayersList, 5000);

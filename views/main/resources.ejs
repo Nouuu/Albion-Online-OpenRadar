@@ -164,10 +164,11 @@
         attachCheckboxListeners,
         generateResourceGrid,
         initializeTierButtonStates,
-        returnLocalBool,
         updateTierButtonState,
         selectAllTierEnchants
     } from '/scripts/Utils/ResourcesHelper.js';
+	import settingsSync from "../../scripts/Utils/SettingsSync.js";
+	import {getResourceStorageKey} from "../../scripts/Utils/ResourcesHelper.js";
 
     // Make selectAllTierEnchants available globally for inline onclick handlers
     window.selectAllTierEnchants = selectAllTierEnchants;
@@ -197,15 +198,6 @@
 		'e4': [false, false, false, false, false, false, false, false],
 	};
 
-	// Helper to generate storage key from prefix and type
-	const getStorageKey = (prefix, type) => {
-		const resourceName = {
-			'fsp': 'Fiber', 'hsp': 'Hide', 'wsp': 'Wood', 'osp': 'Ore', 'rsp': 'Rock',
-			'flp': 'Fiber', 'hlp': 'Hide', 'wlp': 'Wood', 'olp': 'Ore', 'rlp': 'Rock'
-		}[prefix];
-		return `setting${type}${resourceName}Enchants`;
-	};
-
 	// STEP 1: Generate all resource grids
 	resources.forEach(resource => {
 		const container = document.getElementById(resource.containerId);
@@ -218,14 +210,9 @@
 		}
 	});
 
-	// STEP 2: Initialize all resource checkboxes from localStorage
 	resources.forEach(config => {
-		const storageKey = getStorageKey(config.prefix, config.type);
-		let enchants = localStorage.getItem(storageKey) || defaultEnchants;
-
-		if (typeof enchants !== 'object') {
-			enchants = JSON.parse(enchants);
-		}
+		const storageKey = getResourceStorageKey(config.prefix, config.type);
+		let enchants = settingsSync.getJSON(storageKey,defaultEnchants)
 
 		enchantLevels.forEach(enchantLevel => {
 			const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
@@ -241,7 +228,7 @@
 
 				element.addEventListener("change", () => {
 					enchants[enchantLevel][tierIndex] = element.checked;
-					localStorage.setItem(storageKey, JSON.stringify(enchants));
+					settingsSync.setJSON(storageKey, enchants);
 					updateTierButtonState(config.prefix, tierIndex);
 				});
 			}
@@ -250,53 +237,56 @@
 		
 	//#region Other
 	let settingFishing = document.getElementById("settingFishing");
-	settingFishing.checked = returnLocalBool("settingFishing");
+	settingFishing.checked = settingsSync.getBool("settingFishing");
 	settingFishing.addEventListener("click", () => {
-		localStorage.setItem("settingFishing", settingFishing.checked);
+		settingsSync.setBool("settingFishing", settingFishing.checked);
 	});
 	//#endregion
 
 	//#region Debug
 	let settingRawSize = document.getElementById("settingRawSize");
-	settingRawSize.checked = returnLocalBool("settingRawSize");
-	settingRawSize.addEventListener("click", () => {localStorage.setItem("settingRawSize", settingRawSize.checked);});
+	settingRawSize.checked = settingsSync.getBool("settingRawSize");
+	settingRawSize.addEventListener("click", () => {
+		settingsSync.setBool("settingRawSize", settingRawSize.checked);
+	});
 
 	// 📍 P0: New overlay features
 	let settingResourceDistance = document.getElementById("settingResourceDistance");
-	settingResourceDistance.checked = returnLocalBool("settingResourceDistance");
+	settingResourceDistance.checked = settingsSync.getBool("settingResourceDistance");
 	settingResourceDistance.addEventListener("click", () => {
-		localStorage.setItem("settingResourceDistance", settingResourceDistance.checked);
+		settingsSync.setBool("settingResourceDistance", settingResourceDistance.checked);
 	});
 
 	let settingResourceClusters = document.getElementById("settingResourceClusters");
-	settingResourceClusters.checked = returnLocalBool("settingResourceClusters");
+	settingResourceClusters.checked = settingsSync.getBool("settingResourceClusters");
 	settingResourceClusters.addEventListener("click", () => {
-		localStorage.setItem("settingResourceClusters", settingResourceClusters.checked);
+		settingsSync.setBool("settingResourceClusters", settingResourceClusters.checked);
 	});
 
 	let settingClusterRadius = document.getElementById("settingClusterRadius");
-	settingClusterRadius.value = localStorage.getItem("settingClusterRadius") || "30";
+	settingClusterRadius.value = settingsSync.getNumber("settingClusterRadius", 30);
+
 	settingClusterRadius.addEventListener("input", () => {
-		localStorage.setItem("settingClusterRadius", settingClusterRadius.value);
+		settingsSync.setNumber("settingClusterRadius",settingClusterRadius.value);
 	});
 
 	let settingClusterMinSize = document.getElementById("settingClusterMinSize");
-	settingClusterMinSize.value = localStorage.getItem("settingClusterMinSize") || "2";
+	settingClusterMinSize.value = settingsSync.getNumber("settingClusterMinSize", 2);
 	settingClusterMinSize.addEventListener("input", () => {
-		localStorage.setItem("settingClusterMinSize", settingClusterMinSize.value);
+		settingsSync.setNumber("settingClusterMinSize",settingClusterMinSize.value);
 	});
 
 	// ✨ P1: Enchantment overlays
 	let settingResourceEnchantOverlay = document.getElementById("settingResourceEnchantOverlay");
-	settingResourceEnchantOverlay.checked = returnLocalBool("settingResourceEnchantOverlay");
+	settingResourceEnchantOverlay.checked = settingsSync.getBool("settingResourceEnchantOverlay");
 	settingResourceEnchantOverlay.addEventListener("click", () => {
-		localStorage.setItem("settingResourceEnchantOverlay", settingResourceEnchantOverlay.checked);
+		settingsSync.setBool("settingResourceEnchantOverlay", settingResourceEnchantOverlay.checked);
 	});
 
 	let settingLivingResourceEnchantOverlay = document.getElementById("settingLivingResourceEnchantOverlay");
-	settingLivingResourceEnchantOverlay.checked = returnLocalBool("settingLivingResourceEnchantOverlay");
+	settingLivingResourceEnchantOverlay.checked = settingsSync.getBool("settingLivingResourceEnchantOverlay");
 	settingLivingResourceEnchantOverlay.addEventListener("click", () => {
-		localStorage.setItem("settingLivingResourceEnchantOverlay", settingLivingResourceEnchantOverlay.checked);
+		settingsSync.setBool("settingLivingResourceEnchantOverlay", settingLivingResourceEnchantOverlay.checked);
 	});
 
 	// View TypeID Cache button
@@ -306,7 +296,7 @@
 			if (window.mobsHandler && typeof window.mobsHandler.showCachedTypeIDs === 'function') {
 				window.mobsHandler.showCachedTypeIDs();
 			} else {
-				const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
+				const cached = settingsSync.getJSON('cachedStaticResourceTypeIDs', null);
 				if (cached) {
 					console.log('📦 Cached TypeIDs:', JSON.parse(cached));
 				} else {
@@ -323,7 +313,7 @@
 			if (window.mobsHandler && typeof window.mobsHandler.clearCachedTypeIDs === 'function') {
 				window.mobsHandler.clearCachedTypeIDs();
 			} else {
-				localStorage.removeItem('cachedStaticResourceTypeIDs');
+				settingsSync.remove('cachedStaticResourceTypeIDs');
 				console.log('✅ TypeID cache cleared');
 			}
 			if (confirm('✅ Cache cleared! Reload page?')) {
@@ -334,12 +324,16 @@
 
 
 	let settingLivingResourcesHealthBar = document.getElementById("settingLivingResourcesHealthBar");
-	settingLivingResourcesHealthBar.checked = returnLocalBool("settingLivingResourcesHealthBar");
-	settingLivingResourcesHealthBar.addEventListener("click", () => {localStorage.setItem("settingLivingResourcesHealthBar", settingLivingResourcesHealthBar.checked);});
+	settingLivingResourcesHealthBar.checked = settingsSync.getBool("settingLivingResourcesHealthBar");
+	settingLivingResourcesHealthBar.addEventListener("click", () => {
+		settingsSync.setBool("settingLivingResourcesHealthBar", settingLivingResourcesHealthBar.checked);
+	});
 
 	let settingLivingResourcesID = document.getElementById("settingLivingResourcesID");
-	settingLivingResourcesID.checked = returnLocalBool("settingLivingResourcesID");
-	settingLivingResourcesID.addEventListener("click", () => {localStorage.setItem("settingLivingResourcesID", settingLivingResourcesID.checked);});
+	settingLivingResourcesID.checked = settingsSync.getBool("settingLivingResourcesID");
+	settingLivingResourcesID.addEventListener("click", () => {
+		settingsSync.setBool("settingLivingResourcesID", settingLivingResourcesID.checked);
+	});
 	//#endregion
 
 	// Initialize tier button states and attach checkbox listeners after a small delay

@@ -1,4 +1,5 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
 
 class Player {
     constructor(posX, posY, id, nickname, guildName1, flagId, allianceName, factionName, equipments, spells) {
@@ -67,10 +68,9 @@ class Player {
 }
 
 export class PlayersHandler {
-    constructor(settings) {
+    constructor() {
         this.playersList = [];
         this.localPlayer = new Player();
-        this.settings = settings;
         this.audio = new Audio('/sounds/player.mp3');
     }
 
@@ -93,7 +93,7 @@ export class PlayersHandler {
 
     handleNewPlayerEvent(id, Parameters) {
         // 🔍 Check if player detection is enabled
-        if (!this.settings.settingShowPlayers) {
+        if (!settingsSync.getBool('settingShowPlayers')) {
             return 2; // Skip detection if disabled
         }
 
@@ -109,8 +109,8 @@ export class PlayersHandler {
         // Just add to list for counting and info display
         const existingPlayer = this.playersList.find(player => player.id === id);
         // 👥 Limit playersList to max players
-        const parsedMaxPlayers = parseInt(localStorage.getItem('settingMaxPlayersDisplay'));
-        const maxPlayers = Math.min(100, Number.isNaN(parsedMaxPlayers) ? 50 : parsedMaxPlayers);
+        const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
+        const maxPlayers = Math.min(100, parsedMaxPlayers);
 
         if (!existingPlayer && this.playersList.length < maxPlayers) {
             const player = new Player(0, 0, id, nickname, guildName, flagId, allianceName, factionName, equipments, spells);
