@@ -7,15 +7,15 @@
 This document describes the **architecture and stable behavior** of the player detection & display system.
 
 For up‑to‑date investigation status and protocol details, see:
-- `docs/work/PLAYER_DETECTION_STATUS.md` → **current status & timeline of investigations** (detection & movement)
-- `docs/PLAYER_POSITIONS_MITM.md` → **protocol & encryption limits** (Photon AES + XOR, MITM, why precise positions are out of scope)
-- `docs/ANALYSIS_DEATHEYE_VS_CURRENT.md` → detailed **technical comparison with DEATHEYE** (equipment, XML DB, etc.)
+- `docs/project/PLAYER_DETECTION_STATUS.md` → **current status & timeline of investigations** (detection & movement)
+- `./PLAYER_POSITIONS_MITM.md` → **protocol & encryption limits** (Photon AES + XOR, MITM, why precise positions are out of scope)
+- `./DEATHEYE_ANALYSIS.md` → detailed **technical comparison with DEATHEYE** (equipment, XML DB, etc.)
 
 ---
 
 ## ⚠️ Historical Issues & Known Limitations
 
-> This section summarizes past issues and the **current constraints**. For the full, dated timeline, always refer to `docs/work/PLAYER_DETECTION_STATUS.md`.
+> This section summarizes past issues and the **current constraints**. For the full, dated timeline, always refer to `docs/project/PLAYER_DETECTION_STATUS.md`.
 
 ### Historical state (before 2025‑11‑10)
 
@@ -187,7 +187,7 @@ See the existing sections below for full details of each change and file.
 - Edge cases where players appear frozen or jumpy
 
 > **Do not rely on this file alone for the latest investigation status.**
-> Always cross‑check with `docs/work/PLAYER_DETECTION_STATUS.md`.
+> Always cross‑check with `docs/project/PLAYER_DETECTION_STATUS.md`.
 
 ### ❌ Not Implemented Yet
 
@@ -366,7 +366,7 @@ At high level, future work on the player system splits into two tracks:
    - Any change to server‑side deserialization must be documented and validated there
    - No attempt to bypass encryption or reimplement MITM in this project
 
-Always document protocol experiments in `docs/work/PLAYER_DETECTION_STATUS.md`, not here.
+Always document protocol experiments in `docs/project/PLAYER_DETECTION_STATUS.md`, not here.
 
 ---
 
@@ -436,5 +436,4 @@ When adding new player features:
 
 *For more information, see:*
 - [LOGGING.md](./LOGGING.md) - Logging system details
-- [SETTINGS.md](./SETTINGS.md) - Settings system overview
 - [DEV_GUIDE.md](../dev/DEV_GUIDE.md) - Development guidelines

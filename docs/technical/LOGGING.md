@@ -533,8 +533,6 @@ If the WebSocket server is not available:
 
 ## 📚 See Also
 
-- `work/DEBUG_LOGGING_GUIDE.md` – Complete debug & logging guide (developer oriented)
-- `docs/ai/AI_AGENT_GUIDE.md` – Guide for AI agents
 - `docs/dev/DEV_GUIDE.md` – Project architecture & dev workflow
 
 ---

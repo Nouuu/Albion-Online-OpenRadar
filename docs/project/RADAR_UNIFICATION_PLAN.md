@@ -932,9 +932,8 @@ Canvas layers (z-index order):
 - [Storage Event - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event)
 
 ### Documentation projet
-- `docs/work/IMPROVEMENTS.md` - Historique des améliorations
+- `docs/project/IMPROVEMENTS.md` - Historique des améliorations
 - `docs/dev/DEV_GUIDE.md` - Guide développeur
-- `docs/work/COLLECTION_GUIDE.md` - Guide collection TypeIDs
 
 ### Fichiers clés
 - `scripts/Utils/Utils.js` - Orchestrateur principal
