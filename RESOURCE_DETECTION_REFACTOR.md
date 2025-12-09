@@ -2,7 +2,7 @@
 
 **Date de création:** 2025-12-02  
 **Dernière mise à jour:** 2025-12-09  
-**Statut:** Phase 4 ✅ **COMPLÉTÉE ET VALIDÉE** | Phase 5 ⏸️ EN ATTENTE
+**Statut:** Phase 4 ✅ **COMPLÉTÉE ET VALIDÉE** | Phase 5 🔄 **EN COURS**
 
 ---
 
@@ -15,7 +15,7 @@
 | 3 | Fix Bug T6+ (override typeNumber) | ✅ | - |
 | 3B | Fix Bugs Living Resources (params[33]) | ✅ | - |
 | 4 | Utilisation Database + Fix isLiving | ✅ | - |
-| 5 | MobsDatabase | ⏸️ | - |
+| 5 | MobsDatabase | 🔄 | - |
 
 ---
 
@@ -108,7 +108,17 @@ const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
 ---
 
-## ⏸️ Phase 5 - MobsDatabase (EN ATTENTE)
+## 🔄 Phase 5 - MobsDatabase (EN COURS)
+
+### Progrès Actuel
+
+| Étape | Statut | Notes |
+|-------|--------|-------|
+| Créer `MobsDatabase.js` | ✅ | `scripts/Data/MobsDatabase.js` |
+| Ajouter import/init dans Utils.js | ✅ | Chargement async au démarrage |
+| Tester chargement database | ⏳ | À valider in-game |
+| Modifier MobsHandler | ⏳ | Utiliser MobsDatabase au lieu de mobinfo |
+| Supprimer MobsInfo.js | ⏳ | Après validation complète |
 
 ### Objectif
 

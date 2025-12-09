@@ -8,6 +8,7 @@ import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
 import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
 import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
+import {MobsDatabase} from '../Data/MobsDatabase.js';
 import {EventCodes} from './EventCodes.js';
 import {ItemsDatabase} from '../Data/ItemsDatabase.js';
 import {SpellsDatabase} from '../Data/SpellsDatabase.js';
@@ -74,7 +75,27 @@ const harvestablesDatabase = new HarvestablesDatabase();
     }
 })();
 
-console.log('🔧 [Utils.js] Items, Spells & Harvestables databases initialization started (async)');
+// 📊 Initialize Mobs Database (Phase 5)
+const mobsDatabase = new MobsDatabase();
+(async () => {
+    try {
+        await mobsDatabase.load('/ao-bin-dumps/mobs.json');
+        window.mobsDatabase = mobsDatabase; // Expose globally for handlers
+        console.log('🐾 [Utils.js] Mobs database loaded and ready');
+    } catch (error) {
+        window.logger?.error(
+            window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+            'MobsDatabaseInitFailed',
+            {
+                error: error.message,
+                fallback: 'Using MobsInfo.js fallback'
+            }
+        );
+        console.error('❌ [Utils.js] Failed to load Mobs database:', error);
+    }
+})();
+
+console.log('🔧 [Utils.js] Items, Spells, Harvestables & Mobs databases initialization started (async)');
 
 const harvestablesDrawing = new HarvestablesDrawing();
 const dungeonsHandler = new DungeonsHandler();
