@@ -142,8 +142,8 @@ Full documentation available in [docs/README.md](docs/README.md).
 | Plan | Status |
 |------|--------|
 | [Go Migration](docs/project/GO_MIGRATION_PLAN.md) | Backend rewrite in Go |
-| [Radar Unification](docs/project/RADAR_UNIFICATION_PLAN.md) | ~80% complete |
-| [Settings Migration](docs/project/SETTINGS_MIGRATION_PLAN.md) | ~50% complete |
+| [Radar Unification](docs/project/RADAR_UNIFICATION_PLAN.md) | ✅ 100% complete |
+| [Settings Migration](docs/project/SETTINGS_MIGRATION_PLAN.md) | ✅ 95% complete |
 
 ---
 

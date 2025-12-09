@@ -42,8 +42,8 @@ Documentation index for OpenRadar.
 | Plan | Status |
 |------|--------|
 | [GO_MIGRATION_PLAN.md](./project/GO_MIGRATION_PLAN.md) | Backend rewrite in Go |
-| [RADAR_UNIFICATION_PLAN.md](./project/RADAR_UNIFICATION_PLAN.md) | ~80% complete |
-| [SETTINGS_MIGRATION_PLAN.md](./project/SETTINGS_MIGRATION_PLAN.md) | ~50% complete |
+| [RADAR_UNIFICATION_PLAN.md](./project/RADAR_UNIFICATION_PLAN.md) | ✅ 100% complete |
+| [SETTINGS_MIGRATION_PLAN.md](./project/SETTINGS_MIGRATION_PLAN.md) | ✅ 95% complete |
 
 ---
 

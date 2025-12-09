@@ -945,5 +945,4 @@ Canvas layers (z-index order):
 ---
 
 **Last updated:** 2025-12-09
-**Author:** Claude Code + Developer
 **Status:** ✅ **ALL PHASES COMPLETED (100%)** - RadarRenderer active, SettingsSync migrated, legacy code removed. Ready for Go migration!
