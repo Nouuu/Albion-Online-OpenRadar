@@ -21,10 +21,10 @@ export class MobsInfo{
 
     initMobs()
     {
-        //#region Living Resources - FUSIONNÉ (235 TypeID)
-        // Source: MobsInfo.js original + MobsInfo_Enriched.js (corrections terrain)
-        // Généré automatiquement le 2025-11-01T19:34:45.532Z
-        
+        //#region Living Resources - MERGED (235 TypeID)
+        // Source: MobsInfo.js original + MobsInfo_Enriched.js (field corrections)
+        // Automatically generated on 2025-11-01T19:34:45.532Z
+
         //#region Hide (LivingSkinnable)
                 this.addItem(322, 1, 1, "Hide");
         this.addItem(323, 3, 1, "Hide");
@@ -278,6 +278,3 @@ export class MobsInfo{
         //#endregion Living Resources
     }
 }
-
-
-
