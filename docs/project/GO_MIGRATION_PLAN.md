@@ -1,21 +1,21 @@
-# Plan de Migration Backend : Node.js → Go
+# Backend Migration Plan: Node.js → Go
 
 **Date:** 2025-12-07
-**Objectif:** Remplacer le backend Node.js par Go pour un exécutable unique sans dépendances
+**Goal:** Replace Node.js backend with Go for a single executable without dependencies
 
 ---
 
-## Vue d'ensemble
+## Overview
 
-### Pourquoi Go ?
+### Why Go?
 
-- Exécutable unique (pas de node_modules)
-- Cross-compilation native (Linux/Windows/macOS)
-- gopacket/pcap mature et bien documenté
-- Performance native, pas de runtime JS
-- //go:embed pour inclure assets statiques
+- Single executable (no node_modules)
+- Native cross-compilation (Linux/Windows/macOS)
+- gopacket/pcap mature and well documented
+- Native performance, no JS runtime
+- //go:embed to include static assets
 
-### Architecture cible
+### Target Architecture
 
 ```
 Albion-Online-ZQRadar/
@@ -40,7 +40,7 @@ Albion-Online-ZQRadar/
 └── go.sum
 ```
 
-### Dépendances Go
+### Go Dependencies
 
 ```go
 // go.mod
@@ -54,7 +54,7 @@ github.com/gorilla/websocket v1.5.1
 )
 ```
 
-### Mapping Node.js → Go
+### Node.js → Go Mapping
 
 | Node.js                     | Go                                                                | Notes           |
 |-----------------------------|-------------------------------------------------------------------|-----------------|
@@ -67,29 +67,29 @@ github.com/gorilla/websocket v1.5.1
 | `LoggerServer.js`           | `internal/logger`                                                 | JSONL logs      |
 | `Protocol16Deserializer.js` | `internal/photon/protocol16.go`                                   | 15+ types       |
 
-### Phases d'implémentation
+### Implementation Phases
 
-#### Phase 1 : Setup Go (1h)
+#### Phase 1: Go Setup (1h)
 
-- [ ] Créer structure `cmd/server/`
-- [ ] Initialiser `go.mod`
-- [ ] Configurer `//go:embed` pour assets
+- [ ] Create `cmd/server/` structure
+- [ ] Initialize `go.mod`
+- [ ] Configure `//go:embed` for assets
 
-#### Phase 2 : HTTP Server (2h)
+#### Phase 2: HTTP Server (2h)
 
-- [ ] Routes statiques (`/scripts/`, `/images/`, `/sounds/`)
+- [ ] Static routes (`/scripts/`, `/images/`, `/sounds/`)
 - [ ] Template rendering (`html/template`)
 - [ ] API endpoint `/api/settings/server-logs`
 
-#### Phase 3 : WebSocket Server (2h)
+#### Phase 3: WebSocket Server (2h)
 
-- [ ] Server sur port 5002
-- [ ] Broadcast events aux clients
-- [ ] Recevoir logs du client
+- [ ] Server on port 5002
+- [ ] Broadcast events to clients
+- [ ] Receive logs from client
 
-#### Phase 4 : Protocol16Deserializer (4h) - CRITIQUE
+#### Phase 4: Protocol16Deserializer (4h) - CRITICAL
 
-Types à implémenter :
+Types to implement:
 
 - [ ] Null, Byte, Boolean, Short, Integer
 - [ ] Long, Float, Double, String
@@ -97,30 +97,30 @@ Types à implémenter :
 - [ ] Array, ObjectArray, Hashtable, Dictionary
 - [ ] EventData, OperationRequest, OperationResponse
 
-#### Phase 5 : Photon Packet Parser (2h)
+#### Phase 5: Photon Packet Parser (2h)
 
 - [ ] PhotonPacket (header 12 bytes)
 - [ ] PhotonCommand (types 4, 6, 7)
 - [ ] Reliable command parsing
 
-#### Phase 6 : Packet Capture (2h)
+#### Phase 6: Packet Capture (2h)
 
 - [ ] gopacket/pcap integration
 - [ ] Filter UDP port 5056
 - [ ] Decode Ethernet → IPv4 → UDP → Photon
 
-#### Phase 7 : Templates EJS → Go (3h)
+#### Phase 7: EJS Templates → Go (3h)
 
-- [ ] Convertir `layout.ejs` → `layout.html`
-- [ ] Convertir `views/main/*.ejs` → `templates/main/*.html`
-- [ ] Adapter syntaxe `<% %>` → `{{ }}`
+- [ ] Convert `layout.ejs` → `layout.html`
+- [ ] Convert `views/main/*.ejs` → `templates/main/*.html`
+- [ ] Adapt syntax `<% %>` → `{{ }}`
 
-#### Phase 8 : Tests & Validation (2h)
+#### Phase 8: Tests & Validation (2h)
 
-- [ ] Tester capture paquets
-- [ ] Tester WebSocket broadcast
-- [ ] Comparer output JSON avec Node.js
-- [ ] Build cross-platform
+- [ ] Test packet capture
+- [ ] Test WebSocket broadcast
+- [ ] Compare JSON output with Node.js
+- [ ] Cross-platform build
 
 ### Build Commands
 
@@ -128,12 +128,12 @@ Types à implémenter :
 # Linux
 CGO_ENABLED=1 go build -o dist/OpenRadar-linux ./cmd/server
 
-# Windows (cross-compile depuis Linux)
+# Windows (cross-compile from Linux)
 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 \
     go build -o dist/OpenRadar.exe ./cmd/server
 ```
 
-**Note Windows** : gopacket nécessite WinPcap/Npcap installé.
+**Windows Note**: gopacket requires WinPcap/Npcap installed.
 
 ---
 
