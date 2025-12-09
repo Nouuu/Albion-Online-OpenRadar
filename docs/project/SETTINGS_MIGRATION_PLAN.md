@@ -1,33 +1,44 @@
 # 📋 Phase 3.2 - Migration from Settings.js to SettingsSync
 
 **Creation date:** 2025-12-04
-**Last update:** 2025-12-04 (Ongoing session)
+**Last update:** 2025-12-09
 **Goal:** Centralize all localStorage access via SettingsSync to eliminate legacy code and simplify settings access
 **Estimated duration:** 6-7 hours
-**Actual duration:** ~2h (ongoing)
-**Status:** 🟢 **IN PROGRESS** (~50% completed)
+**Actual duration:** ~4h
+**Status:** ✅ **COMPLETED** (~95% - only minor items remain)
 
 ## 🎯 Progress Summary (Quick Resume)
 
-### ✅ Already Completed (~80 localStorage calls migrated)
+### ✅ Completed
 
 1. ✅ **Sub-phase 0:** SettingsSync enhanced with `getNumber()`, `setNumber()`, `getJSON()`, `setJSON()`, `remove()`
-2. ✅ **Sub-phase 1:** Settings.js migrated (~60 calls)
+2. ✅ **Sub-phase 1:** Settings.js **REMOVED** from source (legacy code only in dist/)
 3. ✅ **Sub-phase 2:** drawing-ui.js migrated (12 calls)
 4. ✅ **Sub-phase 3:** LoggerClient.js migrated (8 calls)
+5. ✅ **Sub-phase 4:** Support files migrated (MobsHandler.js, Utils.js)
+6. ✅ **Sub-phase 5:** EJS Templates - All 9 files now import settingsSync
 
-### ⏳ Remaining Tasks (~70 localStorage calls)
+### ⏳ Minor Remaining Items (optional)
 
-5. ⏳ **Sub-phase 4 (IN PROGRESS):** Support files (ResourcesHelper, MobsHandler, PlayersHandler, init-alpine.js, LoggerClient) - ~10 calls
-6. ⏳ **Sub-phase 5:** EJS Templates (10 files) - ~70+ calls
-7. ⏳ **Final validation tests**
+- `scripts/init-alpine.js` - 3 calls for `sidebarCollapsed` (Alpine.js sidebar state)
+- `views/main/settings.ejs:449` - Debug export function (acceptable - reads all settings for export)
 
-### 📂 Files Modified So Far
+### 📂 Files Using SettingsSync
 
-- `scripts/Utils/SettingsSync.js` (methods added)
-- `scripts/Utils/Settings.js` (fully migrated ✅)
-- `scripts/drawing-ui.js` (fully migrated ✅)
-- `scripts/LoggerClient.js` (fully migrated ✅)
+- `scripts/Utils/SettingsSync.js` (core module)
+- `scripts/drawing-ui.js` ✅
+- `scripts/LoggerClient.js` ✅
+- `scripts/Handlers/MobsHandler.js` ✅
+- `scripts/Utils/Utils.js` ✅
+- `views/main/settings.ejs` ✅
+- `views/main/resources.ejs` ✅
+- `views/main/players.ejs` ✅
+- `views/main/enemies.ejs` ✅
+- `views/main/chests.ejs` ✅
+- `views/main/map.ejs` ✅
+- `views/main/ignorelist.ejs` ✅
+- `views/main/drawing.ejs` ✅
+- `views/layout.ejs` ✅
 
 ---
 

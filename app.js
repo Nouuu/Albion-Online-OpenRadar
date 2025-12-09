@@ -11,7 +11,7 @@ import {EventCodes} from './scripts/Utils/EventCodes.js';
 import {runRuntimeChecks} from "./server-scripts/Utils/runtime-check.js";
 import protocol16Deserializer from "./server-scripts/classes/Protocol16Deserializer.js";
 import pkg from 'cap';
-const {Cap, decoders} = pkg
+const {Cap, decoders} = pkg;
 
 const port = 5001;
 const wsPort = 5002;

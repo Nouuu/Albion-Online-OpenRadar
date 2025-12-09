@@ -36,7 +36,7 @@ export class RadarRenderer {
      * Initialize the renderer (setup canvases)
      */
     initialize() {
-        const { canvases, contexts } = this.canvasManager.initialize();
+        const { contexts } = this.canvasManager.initialize();
         this.contexts = contexts;
 
         window.logger?.info(CATEGORIES.MAP, 'RadarRendererInitialized', { viewType: this.viewType });
@@ -209,7 +209,6 @@ export class RadarRenderer {
 
         const contextMap = this.contexts.mapCanvas;
         const context = this.contexts.drawCanvas;
-        const contextFlash = this.contexts.flashCanvas;
 
         // Draw map background
         if (this.drawings.mapsDrawing && contextMap) {
