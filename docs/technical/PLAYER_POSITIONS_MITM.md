@@ -128,7 +128,7 @@ The real KeySync is AES-encrypted → invisible without MITM.
 
 ## 📁 Phase 3: Player Equipment & Item Power
 
-**Reference**: `ANALYSIS_DEATHEYE_VS_CURRENT.md` (docs/)
+**Reference**: `./DEATHEYE_ANALYSIS.md`
 
 Instead of positions, focus on:
 

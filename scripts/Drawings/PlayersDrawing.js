@@ -1,10 +1,8 @@
-export class PlayersDrawing extends DrawingUtils {
-    constructor(Settings) {
-        super(Settings);
-        const {CATEGORIES, EVENTS} = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
+import {DrawingUtils} from "../Utils/DrawingUtils.js";
 
+export class PlayersDrawing extends DrawingUtils {
+    constructor() {
+        super();
         this.itemsInfo = {};
     }
 

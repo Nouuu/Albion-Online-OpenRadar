@@ -1,4 +1,4 @@
-class ItemsInfo{
+export class ItemsInfo{
     constructor()
     {
         this.iteminfo = {};

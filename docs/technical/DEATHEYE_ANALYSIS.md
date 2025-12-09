@@ -3,7 +3,7 @@
 > **Reference:** `work/data/albion-radar-deatheye-2pc/`  
 > **Focus:** Events, offsets, XML bases (items/harvestables/mobs), PvE strategy (T6+, living resources, dungeons, equipment/IP).
 
-> This analysis **does not** cover player positions via Photon MITM. For encryption, XorCode, and the decision not to implement MITM, see `PLAYER_POSITIONS_MITM.md`.
+> This analysis **does not** cover player positions via Photon MITM. For encryption, XorCode, and the decision not to implement MITM, see `./PLAYER_POSITIONS_MITM.md`.
 
 ---
 

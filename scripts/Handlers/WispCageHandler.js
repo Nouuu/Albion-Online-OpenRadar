@@ -1,3 +1,5 @@
+import settingsSync from "../Utils/SettingsSync.js";
+
 class Cage
 {
     constructor(id, posX, posY, name)
@@ -13,15 +15,14 @@ class Cage
 
 export class WispCageHandler
 {
-    constructor(settings)
+    constructor()
     {
-        this.settings = settings;
         this.cages = [];
     }
 
     NewCageEvent(Parameters)
     {
-        if (!this.settings.wispCage || Parameters[4] != undefined) return;
+        if (settingsSync.getBool('settingCage') || Parameters[4] != undefined) return;
 
         const id = Parameters[0];
 
@@ -33,7 +34,7 @@ export class WispCageHandler
 
     CageOpenedEvent(Parameters)
     {
-        if (!this.settings.wispCage) return;
+        if (settingsSync.getBool('settingCage')) return;
 
         const id = Parameters[0];
 
@@ -48,7 +49,7 @@ export class WispCageHandler
         this.cages = this.cages.filter(cage => cage.id !== id);
     }
 
-    CLear()
+    Clear()
     {
         this.cages = [];
     }

@@ -1,14 +1,11 @@
-#!/usr/bin/env node
-/**
- * post-build.js
- * Script executed after pkg build to copy necessary assets
- * Cross-platform support for Windows, Linux, macOS
- */
+import fs from 'fs';
+import path from 'path';
+import archiver from 'archiver';
 
-const fs = require('fs');
-const path = require('path');
+const DIST_DIR = 'dist';
+const ES_BUILD_FILE = 'app.cjs';
+const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'server-scripts', 'public'];
 
-const DIST_DIR = path.join(__dirname, '../dist');
 
 console.log('\n📦 Post-build: Checking assets...\n');
 
@@ -73,21 +70,23 @@ if (builtPlatforms.length === 0) {
     process.exit(1);
 }
 
+
 // Create README file for dist (platform-aware)
 const createReadme = (platform) => {
     const exeName = platform === 'win64' ? 'OpenRadar.exe' :
-                    platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
+        platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
 
     const installInstructions = platform === 'win64' ?
-`1. **Install Npcap** (REQUIRED - version 1.84 or newer)
+        `1. **Install Npcap** (REQUIRED - version 1.84 or newer)
    Download: https://npcap.com/
    Direct link (v1.84): https://npcap.com/dist/npcap-1.84.exe
 
 2. **Launch ${exeName}**
    Double-click on ${exeName}` :
-`1. **Install libpcap** (REQUIRED)
+        `1. **Install libpcap** (REQUIRED)
    - Ubuntu/Debian: sudo apt-get install libpcap-dev
    - macOS: brew install libpcap (usually pre-installed)
+   - Note: If not running as root, you need to set capabilities like so: sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin.
 
 2. **Make executable**
    chmod +x ${exeName}
@@ -126,7 +125,7 @@ Native modules (cap.node) are integrated into the executable.
 ## Platform
 
 Built for: ${platform}
-Node.js: v18.18.2
+Node.js: v24.11.1
 `;
 };
 
@@ -144,10 +143,6 @@ if (builtPlatforms.includes('win')) {
     console.log('✓ README.txt created (Windows)');
 }
 
-// Copy all assets next to the exe
-// This approach makes the executable lighter and facilitates updates
-const assetsToCopy = ['views', 'scripts', 'server-scripts', 'images', 'sounds', 'config', 'public'];
-
 function copyRecursiveSync(src, dest) {
     if (!fs.existsSync(src)) {
         console.warn(`⚠ Source folder not found: ${src}`);
@@ -155,10 +150,10 @@ function copyRecursiveSync(src, dest) {
     }
 
     if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
+        fs.mkdirSync(dest, {recursive: true});
     }
 
-    const entries = fs.readdirSync(src, { withFileTypes: true });
+    const entries = fs.readdirSync(src, {withFileTypes: true});
 
     for (let entry of entries) {
         const srcPath = path.join(src, entry.name);
@@ -175,7 +170,7 @@ function copyRecursiveSync(src, dest) {
 console.log('\n📁 Copying assets next to executable...\n');
 
 for (const asset of assetsToCopy) {
-    const srcPath = path.join(__dirname, '..', asset);
+    const srcPath = path.join(asset);
     const destPath = path.join(DIST_DIR, asset);
 
     try {
@@ -190,13 +185,9 @@ console.log('\n✓ Assets copied!\n');
 console.log('Files in dist/:');
 console.log('  - Executables');
 console.log('  - README files');
-console.log('  - views/');
-console.log('  - scripts/');
-console.log('  - server-scripts/');
-console.log('  - images/');
-console.log('  - public/');
-console.log('  - sounds/');
-console.log('  - config/');
+for (const asset of assetsToCopy) {
+    console.log(`  - ${asset}/`);
+}
 
 console.log('✓ Post-build completed!\n');
 console.log('Note: This approach makes the exe lighter and facilitates updates\n');
@@ -204,15 +195,15 @@ console.log('Note: This approach makes the exe lighter and facilitates updates\n
 // Create compressed archives (multiple formats per platform)
 console.log('\n📦 Creating compressed archives...\n');
 
-const archiver = require('archiver');
 const version = getVersion();
 
 // Helper function to get version from package.json
 function getVersion() {
     try {
-        const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
         return packageJson.version || '1.0.0';
     } catch (err) {
+        console.warn('⚠ Could not read version from package.json:', err.message);
         return '1.0.0';
     }
 }
@@ -227,21 +218,21 @@ const createArchive = (platform, format) => {
 
         let archive;
         if (format.type === 'zip') {
-            archive = archiver('zip', { zlib: { level: format.level } });
+            archive = archiver('zip', {zlib: {level: format.level}});
         } else if (format.type === 'tar') {
             archive = archiver('tar', {
                 gzip: format.gzip,
-                gzipOptions: { level: format.level }
+                gzipOptions: {level: format.level}
             });
         }
 
-        output.on('close', function() {
+        output.on('close', function () {
             const sizeMB = (archive.pointer() / (1024 * 1024)).toFixed(2);
             console.log(`✓ ${archiveName} (${sizeMB} MB)`);
             resolve();
         });
 
-        archive.on('error', function(err) {
+        archive.on('error', function (err) {
             console.error(`✗ ${archiveName} creation failed:`, err.message);
             reject(err);
         });
@@ -249,31 +240,29 @@ const createArchive = (platform, format) => {
         archive.pipe(output);
 
         // Add platform-specific executable
-        archive.file(exe.path, { name: exe.name });
+        archive.file(exe.path, {name: exe.name});
 
         // Add README
         const readmeName = platform === 'win' ? 'README.txt' : `README-${platform}.txt`;
         if (fs.existsSync(path.join(DIST_DIR, readmeName))) {
-            archive.file(path.join(DIST_DIR, readmeName), { name: 'README.txt' });
+            archive.file(path.join(DIST_DIR, readmeName), {name: 'README.txt'});
         }
 
-        // Add shared assets
-        archive.directory(path.join(DIST_DIR, 'views'), 'views');
-        archive.directory(path.join(DIST_DIR, 'scripts'), 'scripts');
-        archive.directory(path.join(DIST_DIR, 'images'), 'images');
-        archive.directory(path.join(DIST_DIR, 'sounds'), 'sounds');
-        if (fs.existsSync(path.join(DIST_DIR, 'config'))) {
-            archive.directory(path.join(DIST_DIR, 'config'), 'config');
+        // Add shared assets (directories)
+        for (const asset of assetsToCopy) {
+            const assetPath = path.join(DIST_DIR, asset);
+            if (fs.existsSync(assetPath)) {
+                archive.directory(assetPath, asset);
+            }
         }
-
-        archive.finalize();
+        archive.finalize().then(() => resolve()).catch(err => reject(err));
     });
 };
 
 // Archive formats (ZIP only for all platforms)
-const getFormats = (platform) => {
+const getFormats = () => {
     return [
-        { ext: 'zip', type: 'zip', level: 9 }
+        {ext: 'zip', type: 'zip', level: 9}
     ];
 };
 
@@ -281,8 +270,7 @@ const getFormats = (platform) => {
 (async () => {
     try {
         for (const platform of builtPlatforms) {
-            const formats = getFormats(platform);
-            for (const format of formats) {
+            for (const format of getFormats()) {
                 await createArchive(platform, format);
             }
         }
@@ -292,4 +280,8 @@ const getFormats = (platform) => {
         console.error('✗ Archive creation failed:', err.message);
         process.exit(1);
     }
-})();
+})().finally(() => {
+    console.log('📦 Post-build archiving process finished.');
+    console.log('Moving app.cjs to dist/ folder.');
+    fs.renameSync(ES_BUILD_FILE, path.join(DIST_DIR, ES_BUILD_FILE));
+});

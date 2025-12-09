@@ -1,10 +1,11 @@
-class DrawingUtils {
-    constructor(settings) {
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
-        this.settings = settings || {};
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import imageCache from "./ImageCache.js";
+import settingsSync from "./SettingsSync.js";
+
+const SCALE_FACTOR = 4.0; // Scale factor for overlay distance
+
+export class DrawingUtils {
+    constructor() {
         this.fontSize = "12px";
         this.fontFamily = "Arial";
         this.textColor = "white";
@@ -28,6 +29,7 @@ class DrawingUtils {
     }
 
     initCanvas(canvas, context) {
+        window.logger?.debug(CATEGORIES.MAP, 'InitCanva', { width: canvas.width, height: canvas.height, ctx: context });
     }
 
     fillCtx(canvasBottom, contextBottom) {
@@ -65,7 +67,7 @@ class DrawingUtils {
 
         const folderR = (!folder) ? "" : folder + "/";
         const src = "/images/" + folderR + imageName + ".png";
-        const preloadedImage = this.settings.GetPreloadedImage ? this.settings.GetPreloadedImage(src, folder) : null;
+        const preloadedImage = imageCache.GetPreloadedImage(src, folder);
 
         if (preloadedImage === null) {
             this.drawFilledCircle(ctx, x, y, 10, "#4169E1");
@@ -74,13 +76,13 @@ class DrawingUtils {
 
         if (preloadedImage) {
             ctx.drawImage(preloadedImage, x - size / 2, y - size / 2, size, size);
-        } else if (this.settings && typeof this.settings.preloadImageAndAddToList === 'function') {
-            this.settings.preloadImageAndAddToList(src, folder)
+        } else  {
+            imageCache.preloadImageAndAddToList(src, folder)
                 .then(() => {
-                    window.logger?.info(this.CATEGORIES.ITEM, this.EVENTS.ItemLoaded, { src: src, folder: folder });
+                    window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src: src, folder: folder });
                 })
                 .catch((error) => {
-                    window.logger?.warn(this.CATEGORIES.ITEM, this.EVENTS.ItemLoadFailed, { src: src, folder: folder, error: error?.message });
+                    window.logger?.warn(CATEGORIES.ITEM, EVENTS.ItemLoadFailed, { src: src, folder: folder, error: error?.message });
                 });
         }
     }
@@ -203,8 +205,7 @@ class DrawingUtils {
         ctx.save();
 
         // compute real distance as float (avoid rounding for the threshold check)
-        const scaleFactor = this.getOverlayDistanceScale();
-        const realDistanceFloat = (distance / 3) * scaleFactor; // baseUnit = 3
+        const realDistanceFloat = (distance / 3) * SCALE_FACTOR; // baseUnit = 3
 
         // Don't show distance labels for very close resources (<= 2 meters)
         if (realDistanceFloat <= 2) {
@@ -406,8 +407,8 @@ class DrawingUtils {
             ctx.beginPath(); ctx.arc(cx, cy, (visualRadius - 6) * pulse, 0, 2 * Math.PI); ctx.stroke();
             ctx.restore();
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Erreur critique de fallback de rendu
-            window.logger?.error(this.CATEGORIES.CLUSTER, this.EVENTS.DrawRingsFallbackFailed, e);
+            // ❌ ERROR (always logged) - Critical fallback rendering error
+            window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawRingsFallbackFailed, e);
         }
     }
 
@@ -433,7 +434,7 @@ class DrawingUtils {
         const distText = distanceMeters < 1000 ? `${distanceMeters}m` : `${(distanceMeters / 1000).toFixed(1)}km`;
 
         const stacksText = `${totalStacks}`;
-        const clusterRadiusMeters = (this.settings && this.settings.overlayClusterRadius) ? this.settings.overlayClusterRadius : null;
+        const clusterRadiusMeters = settingsSync.getNumber("settingClusterRadius");
 
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
         const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
@@ -469,29 +470,15 @@ class DrawingUtils {
     // Convert game units distance to meters applying global scale factor.
     convertGameUnitsToMeters(gameUnits) {
         const baseUnit = 3;
-        const scaleFactor = this.getOverlayDistanceScale();
-        const meters = (gameUnits / baseUnit) * scaleFactor;
+        const meters = (gameUnits / baseUnit) * SCALE_FACTOR;
         return Math.round(meters);
-    }
-
-    // Central accessor for overlay distance scale (prefer global helper if present)
-    getOverlayDistanceScale() {
-        if (typeof window !== 'undefined' && typeof window.getOverlayDistanceScale === 'function') {
-            try { return window.getOverlayDistanceScale(); } catch (e) { }
-        }
-        if (this.settings && typeof this.settings.overlayDistanceScale === 'number') return this.settings.overlayDistanceScale;
-        if (typeof window !== 'undefined' && typeof window.overlayDistanceScale === 'number') return window.overlayDistanceScale;
-        return 1.0;
     }
 
     // Inverse conversion: meters -> game units
     metersToGameUnits(meters) {
         if (!meters || meters <= 0) return 0;
         const baseUnit = 3;
-        const scale = this.getOverlayDistanceScale();
-        if (typeof scale === 'number' && scale > 0) return Math.ceil((meters / scale) * baseUnit);
-        for (let gu = 0; gu < 10000; gu++) if (this.convertGameUnitsToMeters(gu) >= meters) return gu;
-        return Math.ceil(meters * baseUnit);
+        return Math.ceil((meters / SCALE_FACTOR) * baseUnit);
     }
 
     detectClusters(resources, clusterRadius = 30, minClusterSize = 2) {
@@ -499,10 +486,10 @@ class DrawingUtils {
         const gameUnitsRadius = this.metersToGameUnits(clusterRadius);
         const clusters = [];
         const processed = new Set();
-
         const getTypeName = (res) => {
             if (!res) return 'Resource';
-            if (typeof this.getClusterCategory === 'function') return this.getClusterCategory(res);
+
+            // Check res.name first (most reliable)
             if (res.name && typeof res.name === 'string') {
                 const n = res.name.toLowerCase();
                 if (n.includes('fiber')) return 'Fiber';
@@ -511,8 +498,9 @@ class DrawingUtils {
                 if (n.includes('ore')) return 'Ore';
                 if (n.includes('rock')) return 'Rock';
             }
-            if (typeof res.type === 'number' && typeof this.getResourceTypeName === 'function') return this.getResourceTypeName(res.type);
-            if (typeof res.type === 'string') {
+
+            // Fallback to res.type if it's a string
+            if (res.type && typeof res.type === 'string') {
                 const t = res.type.toLowerCase();
                 if (t.includes('fiber')) return 'Fiber';
                 if (t.includes('hide')) return 'Hide';
@@ -520,6 +508,7 @@ class DrawingUtils {
                 if (t.includes('ore')) return 'Ore';
                 if (t.includes('rock')) return 'Rock';
             }
+
             return 'Resource';
         };
 

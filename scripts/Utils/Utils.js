@@ -1,46 +1,39 @@
-import { PlayersDrawing } from '../Drawings/PlayersDrawing.js';
-import { HarvestablesDrawing } from '../Drawings/HarvestablesDrawing.js';
-import { MobsDrawing } from '../Drawings/MobsDrawing.js';
-import { ChestsDrawing } from '../Drawings/ChestsDrawing.js';
-import { DungeonsDrawing } from '../Drawings/DungeonsDrawing.js';
-import { MapDrawing } from '../Drawings/MapsDrawing.js';
-import { WispCageDrawing } from '../Drawings/WispCageDrawing.js';
-import { FishingDrawing } from '../Drawings/FishingDrawing.js';
+import {PlayersDrawing} from '../Drawings/PlayersDrawing.js';
+import {HarvestablesDrawing} from '../Drawings/HarvestablesDrawing.js';
+import {MobsDrawing} from '../Drawings/MobsDrawing.js';
+import {ChestsDrawing} from '../Drawings/ChestsDrawing.js';
+import {DungeonsDrawing} from '../Drawings/DungeonsDrawing.js';
+import {MapDrawing} from '../Drawings/MapsDrawing.js';
+import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
+import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
-import { EventCodes } from './EventCodes.js';
-import { ItemsDatabase } from '../Data/ItemsDatabase.js';
-import { SpellsDatabase } from '../Data/SpellsDatabase.js';
+import {EventCodes} from './EventCodes.js';
+import {ItemsDatabase} from '../Data/ItemsDatabase.js';
+import {SpellsDatabase} from '../Data/SpellsDatabase.js';
 
-import { PlayersHandler } from '../Handlers/PlayersHandler.js';
-import { WispCageHandler } from '../Handlers/WispCageHandler.js';
-import { FishingHandler } from '../Handlers/FishingHandler.js';
+import {PlayersHandler} from '../Handlers/PlayersHandler.js';
+import {WispCageHandler} from '../Handlers/WispCageHandler.js';
+import {FishingHandler} from '../Handlers/FishingHandler.js';
+import {MobsHandler} from '../Handlers/MobsHandler.js';
+import {ChestsHandler} from '../Handlers/ChestsHandler.js';
+import {HarvestablesHandler} from '../Handlers/HarvestablesHandler.js';
+import {MapH} from '../Handlers/Map.js';
 
-// Check if canvas elements exist (only on drawing page)
-var canvasMap = document.getElementById("mapCanvas");
-var contextMap = canvasMap ? canvasMap.getContext("2d") : null;
+import imageCache from './ImageCache.js';
+import {DrawingUtils} from './DrawingUtils.js';
+import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
+import {ItemsInfo} from "../Handlers/ItemsInfo.js";
+import {MobsInfo} from "../Handlers/MobsInfo.js";
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {createRadarRenderer} from './RadarRenderer.js';
+import settingsSync from './SettingsSync.js';
 
-var canvasGrid = document.getElementById("gridCanvas");
-var contextGrid = canvasGrid ? canvasGrid.getContext("2d") : null;
-
-var canvas = document.getElementById("drawCanvas");
-var context = canvas ? canvas.getContext("2d") : null;
-
-var canvasFlash = document.getElementById("flashCanvas");
-var contextFlash = canvasFlash ? canvasFlash.getContext("2d") : null;
-
-var canvasOurPlayer = document.getElementById("ourPlayerCanvas");
-var contextOurPlayer = canvasOurPlayer ? canvasOurPlayer.getContext("2d") : null;
-
-var canvasItems = document.getElementById("thirdCanvas");
-var contextItems = canvasItems ? canvasItems.getContext("2d") : null;
-
-import { Settings } from './Settings.js';
+// ✅ Canvas check for RadarRenderer initialization
+const canvas = document.getElementById("drawCanvas");
+const context = canvas ? canvas.getContext("2d") : null;
 
 console.log('🔧 [Utils.js] Module loaded');
 
-const settings = new Settings();
-
-const { CATEGORIES, EVENTS } = window;
 
 console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');
 
@@ -61,34 +54,9 @@ const spellsDatabase = new SpellsDatabase();
 })();
 
 console.log('🔧 [Utils.js] Items & Spells databases initialization started (async)');
-// 🔄 Dynamic Settings Update: Listen for localStorage changes
-// This allows settings to update in real-time without page reload
-window.addEventListener('storage', (event) => {
-    if (event.key && event.key.startsWith('setting')) {
-        window.logger?.info(CATEGORIES.SETTINGS, EVENTS.DynamicUpdate, { key: event.key, value: event.newValue });
-        settings.update();
-    }
-});
 
-// 🔄 Custom event for same-page localStorage changes
-// (storage event doesn't fire on the same page that made the change)
-const originalSetItem = localStorage.setItem;
-localStorage.setItem = function(key, value) {
-    const event = new Event('localStorageChange');
-    event.key = key;
-    event.newValue = value;
-    originalSetItem.apply(this, arguments);
-
-    if (key.startsWith('setting')) {
-        window.logger?.info(CATEGORIES.SETTINGS, EVENTS.SamePageUpdate, { key: key, value: value });
-        settings.update();
-    }
-};
-
-
-
-const harvestablesDrawing = new HarvestablesDrawing(settings);
-const dungeonsHandler = new DungeonsHandler(settings);
+const harvestablesDrawing = new HarvestablesDrawing();
+const dungeonsHandler = new DungeonsHandler();
 
 var itemsInfo = new ItemsInfo();
 var mobsInfo = new MobsInfo();
@@ -98,7 +66,7 @@ mobsInfo.initMobs();
 
 
 var map = new MapH(-1);
-const mapsDrawing = new MapDrawing(settings);
+const mapsDrawing = new MapDrawing();
 
 // 🔄 Restore map from sessionStorage if available
 (function restoreMapFromSession() {
@@ -137,8 +105,8 @@ const mapsDrawing = new MapDrawing(settings);
     }
 })();
 
-const chestsHandler = new ChestsHandler(settings);
-const mobsHandler = new MobsHandler(settings);
+const chestsHandler = new ChestsHandler();
+const mobsHandler = new MobsHandler();
 mobsHandler.updateMobInfo(mobsInfo.moblist);
 
 // existing logEnemiesList button stays the same
@@ -156,9 +124,8 @@ window.addEventListener('load', () => {
     if (clearTypeIDCache) clearTypeIDCache.addEventListener('click', () => {
         try {
             // Show what's in cache BEFORE clearing
-            const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
-            if (cached) {
-                const entries = JSON.parse(cached);
+            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs');
+            if (!entries) {
                 window.logger?.info(CATEGORIES.CACHE, EVENTS.ClearingTypeIDCache, {
                     entriesCount: entries.length,
                     entries: entries.map(([typeId, info]) => ({
@@ -193,34 +160,29 @@ window.addEventListener('load', () => {
 });
 
 
-const harvestablesHandler = new HarvestablesHandler(settings, mobsHandler); // 🔗 Pass MobsHandler reference
-const playersHandler = new PlayersHandler(settings);
+const harvestablesHandler = new HarvestablesHandler(mobsHandler); // 🔗 Pass MobsHandler reference
+const playersHandler = new PlayersHandler();
 
 
 // 📊 Expose handlers globally for statistics and debug access
 window.harvestablesHandler = harvestablesHandler;
 window.mobsHandler = mobsHandler;
 
-const wispCageHandler = new WispCageHandler(settings);
-const wispCageDrawing = new WispCageDrawing(settings);
+const wispCageHandler = new WispCageHandler();
+const wispCageDrawing = new WispCageDrawing();
 
-const fishingHandler = new FishingHandler(settings);
-const fishingDrawing = new FishingDrawing(settings);
+const fishingHandler = new FishingHandler();
+const fishingDrawing = new FishingDrawing();
 
-const chestsDrawing = new ChestsDrawing(settings);
-const mobsDrawing = new MobsDrawing(settings);
-const playersDrawing = new PlayersDrawing(settings);
-const dungeonsDrawing = new DungeonsDrawing(settings);
+const chestsDrawing = new ChestsDrawing();
+const mobsDrawing = new MobsDrawing();
+const playersDrawing = new PlayersDrawing();
+const dungeonsDrawing = new DungeonsDrawing();
 playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
-// 👥 Player Counter & List Update Function
-function updatePlayerCounter() {
-    const playerCountElement = document.getElementById('playerCount');
+// 👥 Full player list UI update (called periodically to refresh timestamps)
+function updatePlayersList() {
     const playersListElement = document.getElementById('playersList');
-
-    if (playerCountElement) {
-        playerCountElement.textContent = playersHandler.playersList.length;
-    }
 
     if (playersListElement) {
         const players = playersHandler.playersList;
@@ -229,16 +191,14 @@ function updatePlayerCounter() {
             playersListElement.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 italic">No players detected yet...</p>';
         } else {
             // Sort by detection time (newest first) - already limited in PlayersHandler
-            const sortedPlayers = [...players].sort((a, b) => b.detectedAt - a.detectedAt);
-
-            playersListElement.innerHTML = sortedPlayers.map(player => {
+            playersListElement.innerHTML = players.map(player => {
                 const elapsedMs = Date.now() - player.detectedAt;
                 const elapsedSec = Math.floor(elapsedMs / 1000);
                 const timeStr = elapsedSec < 60
                     ? `${elapsedSec}s ago`
                     : `${Math.floor(elapsedSec / 60)}m ago`;
 
-                // Guild & Alliance (couleurs plus claires pour lisibilité)
+                // Guild & Alliance (lighter colors for readability)
                 const guildStr = player.guildName ? `<span class="text-yellow-700t dark:text-yellow-200 font-semibold">[${player.guildName}]</span>` : '<span class="text-gray-500 dark:text-gray-400 text-xs italic">No Guild</span>';
                 const allianceStr = player.allianceName ? `<span class="text-purple-700 dark:text-purple-200 font-semibold">&lt;${player.allianceName}&gt;</span>` : '';
 
@@ -264,10 +224,24 @@ function updatePlayerCounter() {
                                 const baseName = item.name.split('@')[0];
                                 const iconPath = `/images/Items/${baseName}.png`;
 
+                                // 🔄 Check if image is already loaded in cache before displaying
+                                const preloadedImage = imageCache.GetPreloadedImage(iconPath, "Items");
+
+                                let imgHtml = '';
+                                if (preloadedImage) {
+                                    // Image loaded successfully - display it
+                                    imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain">`;
+                                } else if (preloadedImage === undefined) {
+                                    // Not loaded yet - preload in background, show placeholder
+                                    imageCache.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
+                                    imgHtml = '<div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>';
+                                }
+                                // else preloadedImage === null (404) -> don't display, don't retry
+
                                 const tooltipText = `${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}`;
                                 return `
                                     <div class="inline-flex items-center gap-2 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600" title="${tooltipText}">
-                                        <img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain" onerror="this.style.display='none'">
+                                        ${imgHtml}
                                         <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">${tierStr}${enchantStr}</span>
                                         <span class="text-xs text-orange-700 dark:text-orange-300 font-bold">IP ${ipStr}</span>
                                     </div>
@@ -295,9 +269,23 @@ function updatePlayerCounter() {
                                 const iconPath = `/images/Spells/${iconName}.png`;
                                 const tooltipText = spell.uniqueName;
 
+                                // 🔄 Check cache before displaying spell icon
+                                const preloadedSpell = imageCache.GetPreloadedImage(iconPath, "Items");
+
+                                let spellImgHtml = '';
+                                if (preloadedSpell) {
+                                    // Spell icon loaded successfully
+                                    spellImgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain">`;
+                                } else if (preloadedSpell === undefined) {
+                                    // Not loaded yet - preload in background
+                                    imageCache.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
+                                    spellImgHtml = '<div class="w-8 h-8 bg-purple-300 dark:bg-purple-600 rounded animate-pulse"></div>';
+                                }
+                                // else preloadedSpell === null (404) -> don't display
+
                                 return `
                                     <div class="inline-flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 p-1 rounded-md border border-purple-200 dark:border-purple-700" title="${tooltipText}">
-                                        <img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain" onerror="this.src='/images/Spells/SPELL_GENERIC.png'">
+                                        ${spellImgHtml}
                                     </div>
                                 `;
                             }
@@ -308,7 +296,7 @@ function updatePlayerCounter() {
                     }
                 }
 
-                // Health bar (inline styles pour garantir couleurs)
+                // Health bar (inline styles to guarantee colors)
                 let healthStr = '';
                 if (player.currentHealth > 0 && player.initialHealth > 0) {
                     const healthPercent = Math.round((player.currentHealth / player.initialHealth) * 100);
@@ -326,10 +314,10 @@ function updatePlayerCounter() {
                     `;
                 }
 
-                // Mounted status (icône plus visible)
+                // Mounted status (icon more visible)
                 const mountedIcon = player.mounted ? '<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded font-medium">🐴 Mounted</span>' : '';
 
-                // Average Item Power (ilvl) - plus visible
+                // Average Item Power (ilvl) - more visible
                 const avgItemPower = player.getAverageItemPower();
                 const itemPowerStr = avgItemPower ? `<span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded font-bold">⚔️ ${avgItemPower}</span>` : '';
 
@@ -345,13 +333,13 @@ function updatePlayerCounter() {
                                     ${mountedIcon}
                                 </div>
 
-                                <!-- Guild & Alliance (ligne séparée) -->
+                                <!-- Guild & Alliance (separate line) -->
                                 <div class="flex flex-wrap gap-2 mb-2">
                                     ${guildStr}
                                     ${allianceStr}
                                 </div>
 
-                                <!-- Faction & IP (ligne séparée avec espacement) -->
+                                <!-- Faction & IP (separate line with spacing) -->
                                 <div class="flex flex-wrap gap-2 items-center mb-2">
                                     ${factionStr}
                                     ${itemPowerStr}
@@ -385,13 +373,7 @@ let lpY = 0.0;
 window.lpX = lpX;
 window.lpY = lpY;
 
-var flashTime = -1;
-
 const drawingUtils = new DrawingUtils();
-drawingUtils.initCanvas(canvas, context);
-drawingUtils.initGridCanvas(canvasGrid, contextGrid);
-drawingUtils.InitOurPlayerCanvas(canvasOurPlayer, contextOurPlayer);
-
 
 const socket = new WebSocket('ws://localhost:5002');
 
@@ -454,7 +436,6 @@ socket.addEventListener('message', (event) => {
                 note: 'Full extractedDictionary to find Photon Event Code'
             });
         }
-
         // 🔍 DEBUG: Log Photon Event Codes 2 and 3 to identify player vs entity moves
         const photonCode = extractedDictionary["code"];
         if (photonCode === 2 || photonCode === 3) {
@@ -502,13 +483,13 @@ function getEventName(eventCode) {
     const eventNames = {
         1: 'Leave',
         2: 'JoinFinished',
-        3: 'Move',  // ✅ CORRIGÉ - Move = 3 selon EventCodes.js
+        3: 'Move',  // ✅ CORRECTED - Move = 3 according to EventCodes.js
         4: 'Teleport',
         5: 'ChangeEquipment',
         6: 'HealthUpdate',
         7: 'HealthUpdates',
         15: 'Damage',
-        21: 'Request_Move',  // ⚠️ Probablement une requête (onRequest), pas un événement
+        21: 'Request_Move',  // ⚠️ Probably a request (onRequest), not an event
         29: 'NewCharacter',
         35: 'ClusterChange',
         38: 'NewSimpleHarvestableObject',
@@ -526,7 +507,7 @@ function getEventName(eventCode) {
         137: 'GetCharacterStats',
         201: 'NewSimpleItem',
         202: 'NewEquipmentItem',
-        // Ajoutez d'autres au fur et à mesure de la découverte
+        // Add others as you discover them
     };
     return eventNames[eventCode] || `Unknown_${eventCode}`;
 }
@@ -546,10 +527,10 @@ function onEvent(Parameters)
 
     // 🔍 DEBUG ALL EVENTS: Log event with details if debug enabled
     // Allows identifying patterns and parameter <-> event correspondence
-    if (eventCode !== 91) { // Skip RegenerationHealthChanged car trop verbeux
+    if (eventCode !== 91) { // Skip RegenerationHealthChanged as it's too verbose
         const paramDetails = {};
         for (let key in Parameters) {
-            if (Parameters.hasOwnProperty(key) && key !== '252' && key !== '0') { // Skip eventCode et id déjà loggés
+            if (Parameters.hasOwnProperty(key) && key !== '252' && key !== '0') { // Skip eventCode and id already logged
                 paramDetails[`param[${key}]`] = Parameters[key];
             }
         }
@@ -586,7 +567,6 @@ function onEvent(Parameters)
 
         case EventCodes.Leave:
             playersHandler.removePlayer(id);
-            updatePlayerCounter(); // 👥 Update player count
             mobsHandler.removeMist(id);
             mobsHandler.removeMob(id);
             dungeonsHandler.RemoveDungeon(id);
@@ -604,9 +584,7 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.NewCharacter:
-            const ttt = playersHandler.handleNewPlayerEvent(id, Parameters);
-            flashTime = ttt < 0 ? flashTime : ttt;
-            updatePlayerCounter(); // 👥 Update player count
+            playersHandler.handleNewPlayerEvent(id, Parameters);
             break;
 
         case EventCodes.NewSimpleHarvestableObjectList:
@@ -788,6 +766,11 @@ function onRequest(Parameters)
             window.lpY = lpY;
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
 
+            // Sync with RadarRenderer
+            if (radarRenderer) {
+                radarRenderer.setLocalPlayerPosition(lpX, lpY);
+            }
+
             // 📊 LOG: Local player position updated
             window.logger?.debug(CATEGORIES.PLAYER, 'Operation21_LocalPlayer', {
                 lpX: lpX,
@@ -804,6 +787,11 @@ function onRequest(Parameters)
             window.lpX = lpX;
             window.lpY = lpY;
             playersHandler.updateLocalPlayerPosition(lpX, lpY);
+
+            // Sync with RadarRenderer
+            if (radarRenderer) {
+                radarRenderer.setLocalPlayerPosition(lpX, lpY);
+            }
         }
         else {
             window.logger?.error(CATEGORIES.PLAYER, 'OnRequest_Move_UnknownFormat', {
@@ -821,6 +809,11 @@ function onResponse(Parameters)
     if (Parameters[253] == 35)
     {
         map.id = Parameters[0];
+
+        // Sync with RadarRenderer
+        if (radarRenderer) {
+            radarRenderer.setMap(map);
+        }
 
         // 💾 Save to sessionStorage
         try {
@@ -840,8 +833,8 @@ function onResponse(Parameters)
     else if (Parameters[253] == 2)
     {
         // 🔍 CRITICAL: Verify Parameters[9] format (Array vs Buffer)
-        const param9Type = Array.isArray(Parameters[9]) ? 'array' :
-                          (Parameters[9]?.type === 'Buffer' ? 'buffer' : typeof Parameters[9]);
+        // const param9Type = Array.isArray(Parameters[9]) ? 'array' :
+        //                   (Parameters[9]?.type === 'Buffer' ? 'buffer' : typeof Parameters[9]);
 
         // If Buffer, decode it (browser-compatible)
         if (Parameters[9] && Parameters[9].type === 'Buffer') {
@@ -906,155 +899,69 @@ function onResponse(Parameters)
     }
 };
 
-requestAnimationFrame(gameLoop);
+// 🎨 Initialize RadarRenderer (unified rendering system)
+let radarRenderer = null;
 
-function render()
-{
+// Debug: Check canvas availability
+window.logger?.info(CATEGORIES.MAP, 'CanvasCheck', {
+    hasCanvas: !!canvas,
+    hasContext: !!context,
+    canvasId: canvas?.id || 'none',
+    note: 'Checking canvas availability for RadarRenderer'
+});
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    contextMap.clearRect(0, 0, canvasMap.width, canvasMap.height);
-    contextFlash.clearRect(0, 0, canvasFlash.width, canvasFlash.height);
+// Only initialize RadarRenderer if canvas elements exist (drawing page)
+if (canvas && context) {
+    radarRenderer = createRadarRenderer('main', {
+        handlers: {
+            harvestablesHandler,
+            mobsHandler,
+            playersHandler,
+            chestsHandler,
+            dungeonsHandler,
+            wispCageHandler,
+            fishingHandler
+        },
+        drawings: {
+            mapsDrawing,
+            harvestablesDrawing,
+            mobsDrawing,
+            playersDrawing,
+            chestsDrawing,
+            dungeonsDrawing,
+            wispCageDrawing,
+            fishingDrawing
+        },
+        drawingUtils
+    });
 
-    mapsDrawing.Draw(contextMap, map);
+    radarRenderer.initialize();
+    radarRenderer.setMap(map);
 
-    // Unified cluster detection + drawing (merge static harvestables + living resources)
-    let __clustersForInfo = null;
-    if (settings.overlayCluster) {
-        try {
-            // Prepare merged list: static harvestables + living resources from mobs
-            const staticList = harvestablesHandler.harvestableList || [];
-            const livingList = (mobsHandler && mobsHandler.mobsList) ?
-                mobsHandler.mobsList.filter(mob => mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable)
-                : [];
+    // Expose globally for debugging
+    window.radarRenderer = radarRenderer;
 
-            // Merge arrays (no deep copy needed) - detectClusters expects objects with hX/hY/tier/name/type/size
-            const merged = staticList.concat(livingList);
+    // ✨ START THE NEW UNIFIED RENDERING SYSTEM
+    radarRenderer.start();
 
-            const clusters = drawingUtils.detectClusters(merged, settings.overlayClusterRadius, settings.overlayClusterMinSize);
-
-            // Draw only rings now (behind resources)
-            for (const cluster of clusters) {
-                if (drawingUtils && typeof drawingUtils.drawClusterRingsFromCluster === 'function') {
-                    drawingUtils.drawClusterRingsFromCluster(context, cluster);
-                } else if (drawingUtils && typeof drawingUtils.drawClusterIndicatorFromCluster === 'function') {
-                    // fallback to legacy method
-                    drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
-                }
-            }
-
-            // keep clusters for later to draw info boxes above everything
-            __clustersForInfo = clusters;
-        } catch (e) {
-            // ❌ ERROR (toujours loggé) - Erreur critique de calcul de clusters
-            window.logger?.error(CATEGORIES.CLUSTER, EVENTS.ComputeFailed, e);
-        }
-    }
-
-    harvestablesDrawing.invalidate(context, harvestablesHandler.harvestableList);
-    mobsDrawing.invalidate(context, mobsHandler.mobsList, mobsHandler.mistList);
-    chestsDrawing.invalidate(context, chestsHandler.chestsList);
-    playersDrawing.invalidate(context, playersHandler.playersList);
-    wispCageDrawing.Draw(context, wispCageHandler.cages);
-    fishingDrawing.Draw(context, fishingHandler.fishes);
-    dungeonsDrawing.Draw(context, dungeonsHandler.dungeonList);
-
-    // Draw cluster info boxes on top of all elements if any
-    if (__clustersForInfo && __clustersForInfo.length) {
-        for (const cluster of __clustersForInfo) {
-            try {
-                if (drawingUtils && typeof drawingUtils.drawClusterInfoBox === 'function') {
-                    drawingUtils.drawClusterInfoBox(context, cluster);
-                } else if (drawingUtils && typeof drawingUtils.drawClusterIndicatorFromCluster === 'function') {
-                    // fallback: draw both (legacy)
-                    drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
-                }
-            } catch (e) {
-                // ❌ ERROR (toujours loggé) - Erreur critique de rendu de cluster
-                window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawInfoBoxFailed, e);
-            }
-        }
-    }
-
-    // Flash
-    if (settings.settingFlash && flashTime >= 0)
-    {
-        contextFlash.rect(0, 0, 500, 500);
-        contextFlash.rect(20, 20, 460, 460);
-
-        contextFlash.fillStyle = 'red';
-        contextFlash.fill('evenodd');
-    }
+    window.logger?.info(CATEGORIES.MAP, 'RadarRendererStarted', {
+        note: '✅ New unified RadarRenderer is now active!'
+    });
+} else {
+    // ❌ NO CANVAS - Cannot initialize radar (should only happen on non-radar pages)
+    window.logger?.error(CATEGORIES.MAP, 'NoCanvasFound', {
+        note: 'Canvas elements not found - radar cannot be initialized',
+        hasCanvas: !!canvas,
+        hasContext: !!context
+    });
 }
 
-
-var previousTime = performance.now();
-
-function gameLoop() {
-    update();
-    render();
-    requestAnimationFrame(gameLoop);
-}
+// 👥 Update player list UI every 5 seconds (for timestamp refresh)
+setInterval(updatePlayersList, 5000);
 
 
 
-function update() {
-
-    const currentTime = performance.now();
-    const deltaTime = currentTime - previousTime;
-    const t = Math.min(1, deltaTime / 100);
-
-    // 🐛 DEBUG: Log local player position every 5 seconds
-    if (!window.__lastLpXLogTime || (currentTime - window.__lastLpXLogTime) > 5000) {
-        window.logger?.info(CATEGORIES.PLAYER, 'LocalPlayerPosition', {
-            lpX,
-            lpY,
-            localPlayerId: window.__localPlayerId,
-            isInitialized: window.__lpXInitialized || false,
-            note: 'Current lpX/lpY values'
-        });
-        window.__lastLpXLogTime = currentTime;
-    }
-
-    if (settings.showMapBackground)
-        mapsDrawing.interpolate(map, lpX, lpY, t);
-
-    harvestablesHandler.removeNotInRange(lpX, lpY);
-    harvestablesDrawing.interpolate(harvestablesHandler.harvestableList, lpX, lpY, t);
-
-
-    mobsDrawing.interpolate(mobsHandler.mobsList, mobsHandler.mistList, lpX, lpY, t);
-    playersDrawing.interpolate(playersHandler.playersList, lpX, lpY, t);
-
-
-    chestsDrawing.interpolate(chestsHandler.chestsList, lpX, lpY, t);
-    wispCageDrawing.Interpolate(wispCageHandler.cages, lpX, lpY, t);
-    fishingDrawing.Interpolate(fishingHandler.fishes, lpX, lpY, t);
-    dungeonsDrawing.interpolate(dungeonsHandler.dungeonList, lpX, lpY, t);
-
-    // Flash
-    if (flashTime >= 0)
-    {
-        flashTime -= t;
-    }
-
-    previousTime = currentTime;
-}
-
-function checkLocalStorage()
-{
-    settings.update(settings);
-    setDrawingViews();
-}
-
-const interval = 300;
-setInterval(checkLocalStorage, interval)
-
-// 👥 Update player list timestamps every 5 seconds
-setInterval(updatePlayerCounter, 5000);
-
-
-
-document.getElementById("button").addEventListener("click", function () {
+document.getElementById("button")?.addEventListener("click", function () {
     ClearHandlers();
 });
 
@@ -1066,78 +973,12 @@ function ClearHandlers()
     harvestablesHandler.Clear();
     mobsHandler.Clear();
     playersHandler.Clear();
-    wispCageHandler.CLear();
-    updatePlayerCounter(); // 👥 Reset counter to 0
-
+    wispCageHandler.Clear();
     // 🗑️ Clear session map cache
     try {
         sessionStorage.removeItem('lastMapDisplayed');
         window.logger?.debug(CATEGORIES.MAP, 'SessionMapCleared');
     } catch (e) {
-        // Silent fail
+        window.logger?.warn(CATEGORIES.MAP, 'SessionStorageClearFailed', { error: e?.message });
     }
-}
-
-setDrawingViews();
-
-function setDrawingViews() {
-    const mainWindowMarginXValue = localStorage.getItem("mainWindowMarginX");
-    const mainWindowMarginYValue = localStorage.getItem("mainWindowMarginY");
-    const itemsWindowMarginXValue = localStorage.getItem("itemsWindowMarginX");
-    const itemsWindowMarginYValue = localStorage.getItem("itemsWindowMarginY");
-    const settingItemsBorderValue = localStorage.getItem("settingItemsBorder");
-    const buttonMarginXValue = localStorage.getItem("buttonMarginX");
-    const buttonMarginYValue = localStorage.getItem("buttonMarginY");
-
-    const itemsWidthValue = localStorage.getItem("itemsWidth");
-    const itemsHeightValue = localStorage.getItem("itemsHeight");
-
-    // Check if the values exist in local storage and handle them
-    if (mainWindowMarginXValue !== null) {
-        document.getElementById('bottomCanvas').style.left = mainWindowMarginXValue + "px";
-        document.getElementById('drawCanvas').style.left = mainWindowMarginYValue + "px";
-    }
-
-    if (mainWindowMarginYValue !== null) {
-        document.getElementById('drawCanvas').style.top = mainWindowMarginYValue + "px";
-        document.getElementById('bottomCanvas').style.top = mainWindowMarginYValue + "px";
-    }
-
-    if (itemsWindowMarginXValue !== null) {
-        document.getElementById('thirdCanvas').style.left = itemsWindowMarginXValue + "px";
-    }
-
-    if (itemsWindowMarginYValue !== null) {
-        document.getElementById('thirdCanvas').style.top = itemsWindowMarginYValue + "px";
-    }
-
-    if (itemsWidthValue !== null) {
-        document.getElementById('thirdCanvas').style.width = itemsWidthValue + "px";
-    }
-
-    if (itemsHeightValue !== null) {
-        document.getElementById('thirdCanvas').style.height = itemsHeightValue + "px";
-    }
-
-    if (settingItemsBorderValue !== null) {
-        // Apply border based on the settingItemsBorderValue
-        if (settingItemsBorderValue === "true") {
-
-            document.getElementById('thirdCanvas').style.border = "2px solid grey";
-        } else {
-
-            document.getElementById('thirdCanvas').style.border = "none";
-        }
-    }
-
-    if (buttonMarginXValue !== null) {
-        document.getElementById('button').style.left = buttonMarginXValue + "px";
-    }
-
-    if (buttonMarginYValue !== null) {
-        document.getElementById('button').style.top = buttonMarginYValue + "px";
-    }
-
-
-
 }

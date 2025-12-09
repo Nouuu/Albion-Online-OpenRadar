@@ -1,5 +1,5 @@
-const PhotonPacket = require('./PhotonPacket');
-const EventEmitter = require('events');
+import PhotonPacket from './PhotonPacket.js';
+import { EventEmitter } from 'events';
 
 class PhotonPacketParser extends EventEmitter {
 	constructor() {
@@ -11,4 +11,4 @@ class PhotonPacketParser extends EventEmitter {
 	}
 }
 
-module.exports = PhotonPacketParser;
+export default PhotonPacketParser;

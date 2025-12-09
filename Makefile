@@ -2,13 +2,13 @@
 # OpenRadar - Makefile
 # ============================================
 # Usage: make [target]
-# Requires: Node.js v18.18.2, npm, Npcap 1.84
+# Requires: Node.js v24.11.1, npm, Npcap 1.84
 # ============================================
 
 .PHONY: help install start dev check build build-linux build-macos build-all release clean rebuild package all-in-one clean-all update-ao-data download-assets update-assets
 
 # Variables
-NODE_VERSION = v18.18.2
+NODE_VERSION = v24.11.1
 NPCAP_VERSION = 1.84
 DIST_DIR = dist
 BUILD_DIR = build
@@ -32,8 +32,8 @@ install: ## Install all dependencies
 	@echo "$(GREEN)[1/2] Installing npm dependencies...$(NC)"
 	npm install
 	@echo ""
-	@echo "$(GREEN)[2/2] Rebuilding native modules (cap, node-sass)...$(NC)"
-	npm rebuild cap node-sass
+	@echo "$(GREEN)[2/2] Rebuilding native modules (cap)...$(NC)"
+	npm rebuild cap
 	@echo ""
 	@echo "$(GREEN)✓ Installation complete!$(NC)"
 
@@ -59,7 +59,7 @@ check: ## Check system requirements
 # Build targets
 build: ## Build Windows executable
 	@echo "$(GREEN)Installing build dependencies...$(NC)"
-	npm install -D pkg archiver
+	npm install -D @yao-pkg/pkg archiver
 	@echo ""
 	@echo "$(GREEN)Building Windows executable...$(NC)"
 	@echo "$(YELLOW)This may take a few minutes...$(NC)"
@@ -111,16 +111,16 @@ all-in-one: ## Complete build process (install + build all platforms + package)
 	@npm install
 	@echo ""
 	@echo "$(YELLOW)Step 2/6: Rebuilding native modules...$(NC)"
-	@npm rebuild cap node-sass
+	@npm rebuild cap
 	@echo ""
 	@echo "$(YELLOW)Step 3/6: Installing build tools...$(NC)"
-	@npm install -D pkg archiver sharp
+	@npm install -D @yao-pkg/pkg archiver sharp
 	@echo ""
-	@echo "$(YELLOW)Step 4/6: Building all platforms...$(NC)"
-	@npm run build:all
-	@echo ""
-	@echo "$(YELLOW)Step 5/6: Updating ao-data files...$(NC)"
+	@echo "$(YELLOW)Step 4/6: Updating ao-data files...$(NC)"
 	@$(MAKE) update-ao-data
+	@echo ""
+	@echo "$(YELLOW)Step 5/6: Building all platforms...$(NC)"
+	@npm run build:all
 	@echo ""
 	@echo "$(YELLOW)Step 6/6: Creating release packages...$(NC)"
 	@node scripts-shell/post-build.js
@@ -136,7 +136,7 @@ rebuild: ## Clean and rebuild from scratch
 	@npm install
 	@echo ""
 	@echo "$(YELLOW)Rebuilding native modules...$(NC)"
-	@npm rebuild cap node-sass
+	@npm rebuild cap
 	@echo ""
 	@echo "$(YELLOW)Building Windows executable...$(NC)"
 	@npm run build:win
@@ -157,11 +157,13 @@ release: ## Build and create release (Windows only)
 clean: ## Clean build artifacts
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
 	@rm -rf $(DIST_DIR);
+	@rm app.cjs
 	@echo "$(GREEN)✓ Clean complete!$(NC)"
 
 clean-all: ## Complete cleanup (including optimized images + node_modules)
 	@echo "$(RED)Complete cleanup (including node_modules)...$(NC)"
 	@rm -rf $(DIST_DIR)
+	@rm app.cjs
 	@rm -rf node_modules package-lock.json
 	@rm -rf logs/
 	@echo "$(GREEN)✓ Complete cleanup done!$(NC)"

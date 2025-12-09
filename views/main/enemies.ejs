@@ -245,75 +245,67 @@
 		</div>
     </div>
 </div>
-<script>
-    function returnLocalBool(item)
-    {
-        if (localStorage.getItem(item) == "true")
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
+<script type="module">
     //#region Classic enemies
-    const settingNormalEnemy = document.getElementById("settingNormalEnemy");
-    const settingMediumEnemy = document.getElementById("settingMediumEnemy");
-    const settingEnchantedEnemy = document.getElementById("settingEnchantedEnemy");
-    const settingMiniBossEnemy = document.getElementById("settingMiniBossEnemy");
-    const settingBossEnemy = document.getElementById("settingBossEnemy");
+    import settingsSync from "../../scripts/Utils/SettingsSync.js";
 
-    settingNormalEnemy.checked = returnLocalBool("settingNormalEnemy");
-    settingMediumEnemy.checked = returnLocalBool("settingMediumEnemy");
-    settingEnchantedEnemy.checked = returnLocalBool("settingEnchantedEnemy");
-    settingMiniBossEnemy.checked = returnLocalBool("settingMiniBossEnemy");
-    settingBossEnemy.checked = returnLocalBool("settingBossEnemy");
+    let settingNormalEnemy = document.getElementById("settingNormalEnemy");
+    let settingMediumEnemy = document.getElementById("settingMediumEnemy");
+    let settingEnchantedEnemy = document.getElementById("settingEnchantedEnemy");
+    let settingMiniBossEnemy = document.getElementById("settingMiniBossEnemy");
+    let settingBossEnemy = document.getElementById("settingBossEnemy");
+
+    settingNormalEnemy.checked = settingsSync.getBool("settingNormalEnemy");
+    settingMediumEnemy.checked = settingsSync.getBool("settingMediumEnemy");
+    settingEnchantedEnemy.checked = settingsSync.getBool("settingEnchantedEnemy");
+    settingMiniBossEnemy.checked = settingsSync.getBool("settingMiniBossEnemy");
+    settingBossEnemy.checked = settingsSync.getBool("settingBossEnemy");
 
     settingNormalEnemy.addEventListener("click", () =>
     {
-        localStorage.setItem("settingNormalEnemy", settingNormalEnemy.checked);
+        settingsSync.setBool("settingNormalEnemy", settingNormalEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingMediumEnemy.addEventListener("click", () => 
+    settingMediumEnemy.addEventListener("click", () =>
     {
-        localStorage.setItem("settingMediumEnemy", settingMediumEnemy.checked);
+        settingsSync.setBool("settingMediumEnemy", settingMediumEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingEnchantedEnemy.addEventListener("click", () => 
+    settingEnchantedEnemy.addEventListener("click", () =>
     {
-        localStorage.setItem("settingEnchantedEnemy", settingEnchantedEnemy.checked);
+        settingsSync.setBool("settingEnchantedEnemy", settingEnchantedEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingMiniBossEnemy.addEventListener("click", () => 
+    settingMiniBossEnemy.addEventListener("click", () =>
     {
-        localStorage.setItem("settingMiniBossEnemy", settingMiniBossEnemy.checked);
+        settingsSync.setBool("settingMiniBossEnemy", settingMiniBossEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    settingBossEnemy.addEventListener("click", () => 
+    settingBossEnemy.addEventListener("click", () =>
     {
-        localStorage.setItem("settingBossEnemy", settingBossEnemy.checked);
+        settingsSync.setBool("settingBossEnemy", settingBossEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
-    
+
 
     const settingShowUnmanagedEnemies = document.getElementById("settingShowUnmanagedEnemies");
-    settingShowUnmanagedEnemies.checked = returnLocalBool("settingShowUnmanagedEnemies");
-    settingShowUnmanagedEnemies.addEventListener("click", () => {localStorage.setItem("settingShowUnmanagedEnemies", settingShowUnmanagedEnemies.checked);});
+    settingShowUnmanagedEnemies.checked = settingsSync.getBool("settingShowUnmanagedEnemies");
+    settingShowUnmanagedEnemies.addEventListener("click", () => {
+        settingsSync.setBool("settingShowUnmanagedEnemies", settingShowUnmanagedEnemies.checked);
+    });
 
     const settingShowMinimumHealthEnemies = document.getElementById("settingShowMinimumHealthEnemies");
     const settingTextMinimumHealthEnemies = document.getElementById("settingTextMinimumHealthEnemies");
 
-    settingShowMinimumHealthEnemies.checked = returnLocalBool('settingShowMinimumHealthEnemies');
-    settingTextMinimumHealthEnemies.value = localStorage.getItem("settingTextMinimumHealthEnemies") || "2100";
+    settingShowMinimumHealthEnemies.checked = settingsSync.getBool('settingShowMinimumHealthEnemies');
+    settingTextMinimumHealthEnemies.value = settingsSync.getNumber("settingTextMinimumHealthEnemies", 2100);
 
     if (!settingShowMinimumHealthEnemies.checked)
         settingTextMinimumHealthEnemies.setAttribute("disabled", "");
 
-    settingShowMinimumHealthEnemies.addEventListener("click", () => 
+    settingShowMinimumHealthEnemies.addEventListener("click", () =>
     {
-        localStorage.setItem("settingShowMinimumHealthEnemies", settingShowMinimumHealthEnemies.checked);
+        settingsSync.setBool("settingShowMinimumHealthEnemies", settingShowMinimumHealthEnemies.checked);
 
         if (settingShowMinimumHealthEnemies.checked)
         {
@@ -326,9 +318,9 @@
             settingTextMinimumHealthEnemies.setAttribute("disabled", "");
     });
 
-    settingTextMinimumHealthEnemies.addEventListener("input", () => 
+    settingTextMinimumHealthEnemies.addEventListener("input", () =>
     {
-        localStorage.setItem("settingTextMinimumHealthEnemies", settingTextMinimumHealthEnemies.value);
+        settingsSync.setNumber("settingTextMinimumHealthEnemies", settingTextMinimumHealthEnemies.value);
     });
 
 
@@ -336,22 +328,22 @@
 
     let updatingAllEnemies = false;
     const settingAllEnemies = document.getElementById("settingAllEnemies");
-    settingAllEnemies.checked = returnLocalBool("settingAllEnemies");
+    settingAllEnemies.checked = settingsSync.getBool("settingAllEnemies");
     settingAllEnemies.addEventListener("click", () =>
     {
         updatingAllEnemies = true;
 
-        localStorage.setItem("settingAllEnemies", settingAllEnemies.checked);
+        settingsSync.setBool("settingAllEnemies", settingAllEnemies.checked);
 
-        if (settingNormalEnemy.checked != settingAllEnemies.checked)
+        if (settingNormalEnemy.checked !== settingAllEnemies.checked)
             settingNormalEnemy.click(true);
-        if (settingMediumEnemy.checked != settingAllEnemies.checked)
+        if (settingMediumEnemy.checked !== settingAllEnemies.checked)
             settingMediumEnemy.click(true);
-        if (settingEnchantedEnemy.checked != settingAllEnemies.checked)
+        if (settingEnchantedEnemy.checked !== settingAllEnemies.checked)
             settingEnchantedEnemy.click(true);
-        if (settingMiniBossEnemy.checked != settingAllEnemies.checked)
+        if (settingMiniBossEnemy.checked !== settingAllEnemies.checked)
             settingMiniBossEnemy.click(true);
-        if (settingBossEnemy.checked != settingAllEnemies.checked)
+        if (settingBossEnemy.checked !== settingAllEnemies.checked)
             settingBossEnemy.click(true);
 
         updatingAllEnemies = false;
@@ -370,20 +362,24 @@
         if (!hasToCheck) return;
 
         settingAllEnemies.checked = !settingAllEnemies.checked;
-        localStorage.setItem("settingAllEnemies", settingAllEnemies.checked);
+        settingsSync.setBool("settingAllEnemies", settingAllEnemies.checked);
     }
     //#endregion
 
     //#region Other
     const settingAvaloneDrones = document.getElementById("settingAvaloneDrones");
-    settingAvaloneDrones.checked = returnLocalBool("settingAvaloneDrones");
-    settingAvaloneDrones.addEventListener("click", () => {localStorage.setItem("settingAvaloneDrones", settingAvaloneDrones.checked);});
+    settingAvaloneDrones.checked = settingsSync.getBool("settingAvaloneDrones");
+    settingAvaloneDrones.addEventListener("click", () => {
+        settingsSync.setBool("settingAvaloneDrones", settingAvaloneDrones.checked);
+    });
 
-    
+
 
     const settingShowEventEnemies = document.getElementById("settingShowEventEnemies");
-    settingShowEventEnemies.checked = returnLocalBool("settingShowEventEnemies");
-    settingShowEventEnemies.addEventListener("click", () => {localStorage.setItem("settingShowEventEnemies", settingShowEventEnemies.checked);});
+    settingShowEventEnemies.checked = settingsSync.getBool("settingShowEventEnemies");
+    settingShowEventEnemies.addEventListener("click", () => {
+        settingsSync.setBool("settingShowEventEnemies", settingShowEventEnemies.checked);
+    });
 
     //#endregion
 
@@ -393,25 +389,25 @@
     const settingBossVeilWeaver = document.getElementById("settingBossVeilWeaver");
     const settingBossGriffin = document.getElementById("settingBossGriffin");
 
-    settingBossCrystalSpider.checked = returnLocalBool("settingBossCrystalSpider");
-    settingBossFairyDragon.checked = returnLocalBool("settingBossFairyDragon");
-    settingBossVeilWeaver.checked = returnLocalBool("settingBossVeilWeaver");
-    settingBossGriffin.checked = returnLocalBool("settingBossGriffin");
+    settingBossCrystalSpider.checked = settingsSync.getBool("settingBossCrystalSpider");
+    settingBossFairyDragon.checked = settingsSync.getBool("settingBossFairyDragon");
+    settingBossVeilWeaver.checked = settingsSync.getBool("settingBossVeilWeaver");
+    settingBossGriffin.checked = settingsSync.getBool("settingBossGriffin");
 
-    settingBossCrystalSpider.addEventListener("click", () => {localStorage.setItem("settingBossCrystalSpider", settingBossCrystalSpider.checked);});
-    settingBossFairyDragon.addEventListener("click", () => {localStorage.setItem("settingBossFairyDragon", settingBossFairyDragon.checked);});
-    settingBossVeilWeaver.addEventListener("click", () => {localStorage.setItem("settingBossVeilWeaver", settingBossVeilWeaver.checked);});
-    settingBossGriffin.addEventListener("click", () => {localStorage.setItem("settingBossGriffin", settingBossGriffin.checked);});
+    settingBossCrystalSpider.addEventListener("click", () => {settingsSync.setBool("settingBossCrystalSpider", settingBossCrystalSpider.checked);});
+    settingBossFairyDragon.addEventListener("click", () => {settingsSync.setBool("settingBossFairyDragon", settingBossFairyDragon.checked);});
+    settingBossVeilWeaver.addEventListener("click", () => {settingsSync.setBool("settingBossVeilWeaver", settingBossVeilWeaver.checked);});
+    settingBossGriffin.addEventListener("click", () => {settingsSync.setBool("settingBossGriffin", settingBossGriffin.checked);});
     //#endregion
 
     //#region Debug
     const settingEnemiesHealthBar = document.getElementById("settingEnemiesHealthBar");
-    settingEnemiesHealthBar.checked = returnLocalBool("settingEnemiesHealthBar");
-    settingEnemiesHealthBar.addEventListener("click", () => {localStorage.setItem("settingEnemiesHealthBar", settingEnemiesHealthBar.checked);});
+    settingEnemiesHealthBar.checked = settingsSync.getBool("settingEnemiesHealthBar");
+    settingEnemiesHealthBar.addEventListener("click", () => {settingsSync.setBool("settingEnemiesHealthBar", settingEnemiesHealthBar.checked);});
 
     const settingEnemiesID = document.getElementById("settingEnemiesID");
-    settingEnemiesID.checked = returnLocalBool("settingEnemiesID");
-    settingEnemiesID.addEventListener("click", () => {localStorage.setItem("settingEnemiesID", settingEnemiesID.checked);});
+    settingEnemiesID.checked = settingsSync.getBool("settingEnemiesID");
+    settingEnemiesID.addEventListener("click", () => {settingsSync.setBool("settingEnemiesID", settingEnemiesID.checked);});
     //#endregion
 
 </script>

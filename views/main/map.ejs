@@ -1,4 +1,3 @@
-
 <div class="container px-6 mx-auto grid">
     <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
         <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
@@ -28,18 +27,14 @@
         </div>
     </div>
 </div>
-<script>
-    function returnLocalBool(item)
-    {
-        return localStorage.getItem(item) == "true";
-    }
+<script type="module">
+    import settingsSync from "../../scripts/Utils/SettingsSync.js";
 
     let settingShowMap = document.getElementById("settingShowMap");
 
-    settingShowMap.checked = returnLocalBool("settingShowMap");
+    settingShowMap.checked = settingsSync.getBool("settingShowMap");
 
     settingShowMap.addEventListener("click", () => {
-        localStorage.setItem("settingShowMap", settingShowMap.checked);
+        settingsSync.setBool("settingShowMap", settingShowMap.checked);
     });
-
 </script>

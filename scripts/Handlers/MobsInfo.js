@@ -1,4 +1,4 @@
-class MobsInfo{
+export class MobsInfo{
 
 
     constructor()
@@ -21,10 +21,10 @@ class MobsInfo{
 
     initMobs()
     {
-        //#region Living Resources - FUSIONNÉ (235 TypeID)
-        // Source: MobsInfo.js original + MobsInfo_Enriched.js (corrections terrain)
-        // Généré automatiquement le 2025-11-01T19:34:45.532Z
-        
+        //#region Living Resources - MERGED (235 TypeID)
+        // Source: MobsInfo.js original + MobsInfo_Enriched.js (field corrections)
+        // Automatically generated on 2025-11-01T19:34:45.532Z
+
         //#region Hide (LivingSkinnable)
                 this.addItem(322, 1, 1, "Hide");
         this.addItem(323, 3, 1, "Hide");
@@ -91,8 +91,8 @@ class MobsInfo{
         this.addItem(400, 8, 1, "Hide");  // Skinnable (animal)
         this.addItem(421, 1, 1, "Hide");  // Skinnable T1 e0
         this.addItem(423, 3, 1, "Hide");  // Skinnable T3 e0
-        this.addItem(425, 4, 1, "Hide");  // Skinnable T4 e0 ⚠️ Le jeu envoie rarity=137 (e1 calculé), mais c'est e0 !
-        this.addItem(427, 5, 1, "Hide");  // Skinnable T5 e0 ⚠️ Le jeu envoie rarity=257 (e3 calculé), mais c'est e0 !
+        this.addItem(425, 4, 1, "Hide");  // Skinnable T4 e0 ⚠️ Game sends rarity=137 (e1 calculated), but it's e0!
+        this.addItem(427, 5, 1, "Hide");  // Skinnable T5 e0 ⚠️ Game sends rarity=257 (e3 calculated), but it's e0!
         this.addItem(475, 3, 1, "Hide");  // Skinnable (animal)
         this.addItem(476, 5, 1, "Hide");  // Skinnable (animal)
         this.addItem(477, 7, 1, "Hide");  // Skinnable (animal)
@@ -278,6 +278,3 @@ class MobsInfo{
         //#endregion Living Resources
     }
 }
-
-
-

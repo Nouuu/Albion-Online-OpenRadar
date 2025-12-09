@@ -1,4 +1,8 @@
-const EnemyType =
+import { CATEGORIES, EVENTS } from '../constants/LoggerConstants.js';
+import settingsSync from '../Utils/SettingsSync.js';
+import {getResourceStorageKey} from "../Utils/ResourcesHelper.js";
+
+export const EnemyType =
     {
         LivingHarvestable: 0,
         LivingSkinnable: 1,
@@ -65,14 +69,8 @@ class Mist {
     }
 }
 
-class MobsHandler {
-    constructor(settings) {
-        // Import constants once in constructor
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
-        this.settings = settings;
+export class MobsHandler {
+    constructor() {
         this.mobsList = [];
         this.mistList = [];
         this.mobinfo = {};
@@ -109,23 +107,23 @@ class MobsHandler {
                 }
 
                 this.livingResourcesMetadata = allResources;
-                // ℹ️ INFO (toujours loggé) - Chargement de metadata
+                // ℹ️ INFO (always logged) - Loading metadata
                 if (window.logger) {
-                    window.logger.info(this.CATEGORIES.MOB, this.EVENTS.LoadMetadata, {
+                    window.logger.info(CATEGORIES.MOB, EVENTS.LoadMetadata, {
                         count: this.livingResourcesMetadata.length
                     });
                 }
             } else {
-                // ⚠️ WARNING - Fichier non trouvé
+                // ⚠️ WARNING - File not found
                 if (window.logger) {
-                    window.logger.warn(this.CATEGORIES.MOB, this.EVENTS.LoadMetadataNotFound, {
+                    window.logger.warn(CATEGORIES.MOB, EVENTS.LoadMetadataNotFound, {
                         status: response.status,
                         statusText: response.statusText,
                         url: response.url
                     });
                 } else {
                     if (window.logger) {
-                        window.logger.warn(this.CATEGORIES.MOB, this.EVENTS.EnhancedJSONLoadFailed, {
+                        window.logger.warn(CATEGORIES.MOB, EVENTS.EnhancedJSONLoadFailed, {
                             status: response.status,
                             statusText: response.statusText
                         });
@@ -133,12 +131,12 @@ class MobsHandler {
                 }
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique
+            // ❌ ERROR (always logged) - Critical failure
             if (window.logger) {
-                window.logger.error(this.CATEGORIES.MOB, this.EVENTS.LoadMetadataFailed, e);
+                window.logger.error(CATEGORIES.MOB, EVENTS.LoadMetadataFailed, e);
             } else {
                 if (window.logger) {
-                    window.logger.error(this.CATEGORIES.MOB, this.EVENTS.EnhancedJSONLoadError, e);
+                    window.logger.error(CATEGORIES.MOB, EVENTS.EnhancedJSONLoadError, e);
                 }
             }
         }
@@ -177,36 +175,10 @@ class MobsHandler {
         return null;
     }
 
-    printLoggingGuide() {
-        // 🐛 DEBUG (filtered by debugEnemies) - Verbose collection guide
-        window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.CollectionGuide, {
-                title: 'LIVING RESOURCES COLLECTION GUIDE',
-                objective: 'Collect TypeIDs of enchanted creatures',
-                format: 'Structured JSON for automatic parsing',
-                tierCount: this.livingResourcesMetadata ? this.livingResourcesMetadata.filter(m => m.faction).length : 0
-            });
-
-            if (this.livingResourcesMetadata) {
-                const tiers = [3, 4, 5, 6, 7, 8];
-                tiers.forEach(tier => {
-                    const creatures = this.livingResourcesMetadata.filter(m => m.tier === tier && m.faction);
-                    if (creatures.length > 0) {
-                        const uniqueAnimals = [...new Set(creatures.map(c => c.animal))];
-                        const examples = uniqueAnimals.slice(0, 3).map(animal => {
-                            const example = creatures.find(c => c.animal === animal);
-                            return { animal, hp: example.hp };
-                        });
-                        window.logger.debug(this.CATEGORIES.MOB, `CollectionGuide_T${tier}`, { creatures: examples });
-                    }
-                });
-        }
-    }
-
     loadCachedTypeIDs() {
         try {
-            const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
-            if (cached) {
-                const entries = JSON.parse(cached);
+            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs', null);
+            if (entries) {
                 let loadedCount = 0;
                 let skippedCount = 0;
                 for (const [typeId, info] of entries) {
@@ -218,18 +190,18 @@ class MobsHandler {
                     this.staticResourceTypeIDs.set(numericTypeId, info);
                     loadedCount++;
                 }
-                // ℹ️ INFO (toujours loggé) - Chargement du cache
+                // ℹ️ INFO (always logged) - Loading cache
                 if (window.logger) {
-                    window.logger.info(this.CATEGORIES.MOB, this.EVENTS.LoadCachedTypeIDs, {
+                    window.logger.info(CATEGORIES.MOB, EVENTS.LoadCachedTypeIDs, {
                         loaded: loadedCount,
                         skipped: skippedCount
                     });
                 }
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique
+            // ❌ ERROR (always logged) - Critical failure
             if (window.logger) {
-                window.logger.error(this.CATEGORIES.MOB, this.EVENTS.LoadCacheFailed, e);
+                window.logger.error(CATEGORIES.MOB, EVENTS.LoadCacheFailed, e);
             }
         }
     }
@@ -327,7 +299,7 @@ class MobsHandler {
         }
 
         // JSON for parsing
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.NewLivingCreature, logData);
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.NewLivingCreature, logData);
 
         // Human-readable format
         const stateIcon = isAlive ? '🟢' : '🔴';
@@ -335,7 +307,7 @@ class MobsHandler {
         const animalInfo = metadata ? ` → ${metadata.animal}` : '';
         const hpValidation = metadata ? ` (expected ~${metadata.validation.expectedHP}, diff: ${metadata.validation.hpDiff})` : '';
 
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.LivingCreatureCSV, {
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.LivingCreatureCSV, {
             typeId: typeId,
             name: name,
             tier: tier,
@@ -348,16 +320,15 @@ class MobsHandler {
         });
     }
 
-    // 💾 Save cached TypeID mappings to localStorage
     saveCachedTypeIDs() {
         try {
             const entries = Array.from(this.staticResourceTypeIDs.entries())
                 .filter(([typeId]) => typeId !== 65535); // Skip unstable TypeID only
-            localStorage.setItem('cachedStaticResourceTypeIDs', JSON.stringify(entries));
+            settingsSync.setJSON('cachedStaticResourceTypeIDs', entries);
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique de sauvegarde
+            // ❌ ERROR (always logged) - Critical save failure
             if (window.logger) {
-                window.logger.error(this.CATEGORIES.MOB, this.EVENTS.SaveCacheFailed, e);
+                window.logger.error(CATEGORIES.MOB, EVENTS.SaveCacheFailed, e);
             }
         }
     }
@@ -365,17 +336,17 @@ class MobsHandler {
     clearCachedTypeIDs() {
         try {
             const count = this.staticResourceTypeIDs.size;
-            localStorage.removeItem('cachedStaticResourceTypeIDs');
+            settingsSync.remove('cachedStaticResourceTypeIDs');
             this.staticResourceTypeIDs.clear();
             this._registrationLogState.clear();
-            // ℹ️ INFO (toujours loggé) - Action utilisateur importante
+            // ℹ️ INFO (always logged) - Important user action
             if (window.logger) {
-                window.logger.info(this.CATEGORIES.MOB, this.EVENTS.CacheCleared, { count });
+                window.logger.info(CATEGORIES.MOB, EVENTS.CacheCleared, { count });
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique
+            // ❌ ERROR (always logged) - Critical failure
             if (window.logger) {
-                window.logger.error(this.CATEGORIES.MOB, this.EVENTS.ClearCacheFailed, e);
+                window.logger.error(CATEGORIES.MOB, EVENTS.ClearCacheFailed, e);
             }
             throw e;
         }
@@ -393,7 +364,7 @@ class MobsHandler {
                 tier: info.tier
             }));
 
-            window.logger.info(this.CATEGORIES.MOB, this.EVENTS.DisplayCachedTypeIDs, {
+            window.logger.info(CATEGORIES.MOB, EVENTS.DisplayCachedTypeIDs, {
                 total: this.staticResourceTypeIDs.size,
                 entries
             });
@@ -417,7 +388,7 @@ class MobsHandler {
         if (knownInfo && knownInfo[2]) {
             // Use mobinfo name (Fiber, Hide, Wood, Ore, Rock)
             resourceType = knownInfo[2];
-            window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.UsingMobInfo, {
+            window.logger?.debug(CATEGORIES.MOB, EVENTS.UsingMobInfo, {
                     typeId,
                     resourceType,
                     tier,
@@ -437,8 +408,8 @@ class MobsHandler {
             const isUpdate = !!existing;
             const changed = existing && (existing.type !== resourceType || existing.tier !== tier);
 
-            // ℹ️ INFO (toujours loggé) - Enregistrement de TypeID statique (important pour collection)
-            window.logger.info(this.CATEGORIES.MOB, isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER', {
+            // ℹ️ INFO (always logged) - Static TypeID registration (important for collection)
+            window.logger.info(CATEGORIES.MOB, isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER', {
                 typeId,
                 typeNumber,
                 resourceType,
@@ -471,6 +442,7 @@ class MobsHandler {
         try {
             this.mobinfo = Object.assign({}, newData);
         } catch (e) {
+            window.logger?.error(CATEGORIES.MOB, 'UpdateMobInfoError', e);
             this.mobinfo = {};
         }
     }
@@ -480,7 +452,7 @@ class MobsHandler {
             const mobId = parseInt(parameters[0]);
             const typeId = parseInt(parameters[1]);
 
-            // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
+            // 🐛 DEBUG ULTRA-DETAILED: Log ALL parameters to identify patterns
             const allParams = {};
             for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
@@ -488,7 +460,7 @@ class MobsHandler {
                 }
             }
 
-            window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent_ALL_PARAMS, {
+            window.logger?.debug(CATEGORIES.MOB, EVENTS.NewMobEvent_ALL_PARAMS, {
                 mobId,
                 typeId,
                 posX: parameters[8],
@@ -509,11 +481,12 @@ class MobsHandler {
             try {
                 name = parameters[32] || parameters[31] || null;
             } catch (e) {
+                window.logger?.error(CATEGORIES.MOB, EVENTS.NewMobEvent_NameError, e);
                 name = null;
             }
 
             // 🐛 DEBUG: Log raw parameters from server
-            window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobEvent_RAW, {
+            window.logger?.debug(CATEGORIES.MOB, EVENTS.NewMobEvent_RAW, {
                 mobId, typeId,
                 params: {
                     health_normalized: parameters[2],
@@ -527,7 +500,7 @@ class MobsHandler {
             // 🔍 DEBUG: Log ALL parameters for living resources to find enchantment
             const knownInfo = this.mobinfo[typeId];
             if (knownInfo && (knownInfo[1] === 0 || knownInfo[1] === 1)) { // Living resources
-                window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewLivingCreature, {
+                window.logger?.debug(CATEGORIES.MOB, EVENTS.NewLivingCreature, {
                     typeId,
                     allParams: {
                         p19_rarity: parameters[19],
@@ -545,9 +518,9 @@ class MobsHandler {
                 this.AddEnemy(mobId, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity);
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Erreur critique lors de NewMobEvent
+            // ❌ ERROR (always logged) - Critical error in NewMobEvent
             if (window.logger) {
-                window.logger.error(this.CATEGORIES.MOB, this.EVENTS.NewMobEventError, e);
+                window.logger.error(CATEGORIES.MOB, EVENTS.NewMobEventError, e);
             }
         }
     }
@@ -575,7 +548,7 @@ class MobsHandler {
         }
 
         // 🐛 DEBUG: Log enemy creation with type info
-        window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.NewMobDebug, {
+        window.logger?.debug(CATEGORIES.MOB, EVENTS.NewMobDebug, {
             id: id,
             typeId: typeId,
             health: `${mob.getCurrentHP()}/${maxHealth}`,
@@ -609,21 +582,16 @@ class MobsHandler {
         if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
             if (mob.tier > 0 && mob.name) {
                 const resourceType = mob.name;
-                let settingKey = null;
+                let prefix;
+                if (resourceType === 'Fiber' || resourceType === 'fiber') prefix = 'fsp';
+                else if (resourceType === 'Hide' || resourceType === 'hide') prefix = 'hsp';
+                else if (resourceType === 'Wood' || resourceType === 'Logs') prefix = 'wsp';
+                else if (resourceType === 'Ore' || resourceType === 'ore') prefix = 'osp';
+                else if (resourceType === 'Rock' || resourceType === 'rock') prefix = 'rsp';
+                const settingKey = getResourceStorageKey(prefix, 'Living');
 
-                if (resourceType === 'Fiber' || resourceType === 'fiber') settingKey = 'harvestingLivingFiber';
-                else if (resourceType === 'Hide' || resourceType === 'hide') settingKey = 'harvestingLivingHide';
-                else if (resourceType === 'Wood' || resourceType === 'Logs') settingKey = 'harvestingLivingWood';
-                else if (resourceType === 'Ore' || resourceType === 'ore') settingKey = 'harvestingLivingOre';
-                else if (resourceType === 'Rock' || resourceType === 'rock') settingKey = 'harvestingLivingRock';
-
-                if (settingKey && this.settings[settingKey]) {
-                    const enchantKey = `e${mob.enchantmentLevel}`;
-                    const tierIndex = mob.tier - 1;
-
-                    if (this.settings[settingKey][enchantKey] && this.settings[settingKey][enchantKey][tierIndex] === false) {
-                        return;
-                    }
+                if (!settingsSync.getJSON(settingKey)?.[`e${mob.enchantmentLevel}`][mob.tier - 1]) {
+                    return;
                 }
             }
         }
@@ -632,14 +600,16 @@ class MobsHandler {
         if (mob.type >= EnemyType.Enemy && mob.type <= EnemyType.Boss) {
             // If enemy is not identified (no name from mobinfo), check "Show Unmanaged Enemies" setting
             if (!mob.name || !hasKnownInfo) {
-                if (!this.settings.showUnmanagedEnemies) {
+                if (settingsSync.getBool('settingShowUnmanagedEnemies') === false) {
                     return; // Skip unidentified enemies if setting is disabled
                 }
             } else {
                 // For identified enemies, filter by their specific level (Normal, Medium, Enchanted, MiniBoss, Boss)
                 const enemyLevelIndex = mob.type - EnemyType.Enemy; // 0-4 for Enemy through Boss
-                if (enemyLevelIndex >= 0 && enemyLevelIndex < this.settings.enemyLevels.length) {
-                    if (!this.settings.enemyLevels[enemyLevelIndex]) {
+                const settingsEnemyIndexNames = ['settingNormalEnemy', 'settingMediumEnemy', 'settingEnchantedEnemy', 'settingMiniBossEnemy', 'settingBossEnemy'];
+                if (enemyLevelIndex >= 0 && enemyLevelIndex < settingsEnemyIndexNames.length) {
+                    const settingName = settingsEnemyIndexNames[enemyLevelIndex];
+                    if (settingsSync.getBool(settingName) === false) {
                         return; // Skip if this enemy level is disabled
                     }
                 }
@@ -648,7 +618,7 @@ class MobsHandler {
 
         // Filter drones based on user settings
         if (mob.type === EnemyType.Drone) {
-            if (!this.settings.avaloneDrones) {
+            if (!settingsSync.getBool('settingAvaloneDrones')) {
                 return;
             }
         }
@@ -661,26 +631,16 @@ class MobsHandler {
 
         // Filter event enemies based on user settings
         if (mob.type === EnemyType.Events) {
-            if (!this.settings.showEventEnemies) {
+            if (!settingsSync.getBool('settingShowEventEnemies')) {
                 return;
             }
         }
 
         this.mobsList.push(mob);
 
-        // 📊 Track statistics for living resources (Fiber, Hide, Wood, Ore, Rock)
-        if ((mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) &&
-            mob.tier > 0 && mob.name) {
-            // Call harvestablesHandler to update stats if available
-            if (typeof window !== 'undefined' && window.harvestablesHandler) {
-                // Send resource name directly (GetStringType will normalize it)
-                window.harvestablesHandler.updateStats(mob.name, mob.tier, mob.enchantmentLevel, false);
-            }
-        }
-
         // 📊 Enhanced logging for living creatures
         if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
-            this.logLivingCreatureEnhanced(id, typeId, health, enchant, rarity, mob.tier, mob.type, mob.name);
+            this.logLivingCreatureEnhanced(id, typeId, healthNormalized, enchant, rarity, mob.tier, mob.type, mob.name);
         }
     }
 
@@ -690,9 +650,9 @@ class MobsHandler {
         this.harvestablesNotGood = this.harvestablesNotGood.filter(x => x.id !== id);
         const after = this.mobsList.length;
 
-        // 🐛 DEBUG (filtré par debugEnemies) - Suppression de mob détaillée
+        // 🐛 DEBUG (filtered by debugEnemies) - Detailed mob removal
         if (before !== after) {
-            window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.MobRemoved, {
+            window.logger?.debug(CATEGORIES.MOB, EVENTS.MobRemoved, {
                 id: id,
                 livingResourcesBefore: before,
                 livingResourcesAfter: after
@@ -746,7 +706,7 @@ class MobsHandler {
 
         // 🐛 DEBUG: Log health update
         const oldHP = mob.getCurrentHP();
-        window.logger?.debug(this.CATEGORIES.MOB_HEALTH, this.EVENTS.HealthUpdate, {
+        window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.HealthUpdate, {
             mobId: mobId,
             oldHP: oldHP,
             newHP: currentHP,
@@ -757,7 +717,7 @@ class MobsHandler {
 
         // Handle death (currentHP is undefined when entity dies)
         if (currentHP === undefined || currentHP <= 0) {
-            window.logger?.debug(this.CATEGORIES.MOB, this.EVENTS.MobDied, {
+            window.logger?.debug(CATEGORIES.MOB, EVENTS.MobDied, {
                 mobId: mobId,
                 typeId: mob.typeId
             });
@@ -790,7 +750,7 @@ class MobsHandler {
             }
         }
 
-        window.logger?.debug(this.CATEGORIES.MOB_HEALTH, this.EVENTS.RegenerationHealthChanged_DETAIL, {
+        window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.RegenerationHealthChanged_DETAIL, {
             mobId,
             eventCode: 91,
             mobFound: !!mob,
@@ -835,7 +795,7 @@ class MobsHandler {
             };
 
             // 🐛 DEBUG: Log bulk processing
-            window.logger?.debug(this.CATEGORIES.MOB_HEALTH, this.EVENTS.BulkHPUpdate, {
+            window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.BulkHPUpdate, {
                 index: i,
                 total: currentHPs.length,
                 delta: hpDeltas[i],
@@ -908,8 +868,4 @@ class MobsHandler {
         };
         return names[type] || `Unknown(${type})`;
     }
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = MobsHandler;
 }

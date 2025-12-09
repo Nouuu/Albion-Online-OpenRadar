@@ -4,7 +4,7 @@
 
 ---
 
-## ✅ Allowed Files at the Root (9 only)
+## ✅ Allowed Files at the Root
 
 **Essential files:**
 
@@ -12,11 +12,7 @@
 2. **`package.json`** ⭐ – npm configuration
 3. **`package-lock.json`** – Dependency lockfile
 4. **`.gitignore`** – Git ignore rules
-5. **`README.md`** ⭐ – Main user guide
-6. **`BUILD.md`** – Build instructions
-7. **`SETUP.md`** – Developer setup guide
-8. **`zqradar.ico`** – Application icon (kept for compatibility)
-9. **`build-helper.bat`** – Wrapper for build scripts (Windows)
+5. **`README.md`** ⭐ – Main user guide (includes build instructions)
 
 ---
 
@@ -95,7 +91,7 @@ CHANGELOG_ORGANIZATION.md
 
 ## 🎯 Strict Rule
 
-**ONLY 9 files at the root.**
+**Keep root files minimal.**
 
 Everything else → organized folders inside the repo.
 

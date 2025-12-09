@@ -5,110 +5,12 @@
     <!-- Main Settings Card -->
     <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
       <div class="w-full">
-        <!-- Main Window Settings -->
-        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
-          🖥️ Main Window Settings
-        </h2>
-        <div class="flex flex-wrap -m-2 mb-8">
-          <div class="p-2 w-full md:w-1/2">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Margin X (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Horizontal offset of the main radar window
-                  </span>
-                </span>
-              </span>
-              <input
-                id="mainWindowMarginX"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="0"
-              />
-            </label>
-          </div>
-
-          <div class="p-2 w-full md:w-1/2">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Margin Y (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Vertical offset of the main radar window
-                  </span>
-                </span>
-              </span>
-              <input
-                id="mainWindowMarginY"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="0"
-              />
-            </label>
-          </div>
-        </div>
-
         <!-- Items Window Settings -->
         <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
           📦 Items Window Settings
         </h2>
         <div class="flex flex-wrap -m-2 mb-4">
-          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Margin X (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Horizontal position of the items overlay
-                  </span>
-                </span>
-              </span>
-              <input
-                id="itemsWindowMarginX"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="0"
-              />
-            </label>
-          </div>
-
-          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Margin Y (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Vertical position of the items overlay
-                  </span>
-                </span>
-              </span>
-              <input
-                id="itemsWindowMarginY"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="0"
-              />
-            </label>
-          </div>
-
-          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
+          <div class="p-2 w-full md:w-1/2">
             <label class="block text-sm">
               <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
                 Width (px)
@@ -131,7 +33,7 @@
             </label>
           </div>
 
-          <div class="p-2 w-full md:w-1/2 lg:w-1/4">
+          <div class="p-2 w-full md:w-1/2">
             <label class="block text-sm">
               <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
                 Height (px)
@@ -169,58 +71,6 @@
               </span>
             </span>
           </label>
-        </div>
-
-        <!-- Clear Button Settings -->
-        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
-          🔘 Clear Button Settings
-        </h2>
-        <div class="flex flex-wrap -m-2 mb-8">
-          <div class="p-2 w-full md:w-1/2">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Margin X (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Horizontal position of the clear button
-                  </span>
-                </span>
-              </span>
-              <input
-                id="buttonMarginX"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="0"
-              />
-            </label>
-          </div>
-
-          <div class="p-2 w-full md:w-1/2">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Margin Y (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Vertical position of the clear button
-                  </span>
-                </span>
-              </span>
-              <input
-                id="buttonMarginY"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="0"
-              />
-            </label>
-          </div>
         </div>
 
         <!-- Resource Overlay Settings -->
@@ -500,69 +350,15 @@
         </div>
       </div>
     </div>
-
-    <!-- Action Buttons Card -->
-    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
-      <div class="w-full">
-        <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">💾 Settings Actions</h4>
-
-        <div class="flex flex-wrap -m-2">
-          <div class="p-2 w-full md:w-1/2">
-            <button
-              class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              onclick="LoadSettings();"
-              disabled
-            >
-              📂 Load Settings
-            </button>
-          </div>
-
-          <div class="p-2 w-full md:w-1/2">
-            <button
-              class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              onclick="SaveSettings();"
-              disabled
-            >
-              💾 Save Settings File
-            </button>
-          </div>
-        </div>
-
-        <p class="text-xs text-gray-500 dark:text-gray-300 mt-3">
-          Note: Load/Save functionality is currently disabled. Settings are auto-saved to browser storage.
-        </p>
-      </div>
-    </div>
   </div>
 </div>
 
 
-  <script>
-    // TODO: Implement load/save functionality
-    function LoadSettings()
-    {
-      fetch('/config/tests.json')
-      .then(response => response.json())
-      .then(jsonResponse => {
-        console.log(jsonResponse);
-      });
-    }
-
-    function SaveSettings()
-    {
-      // Future implementation
-    }
-
+  <script type="module">
     // Get references to all input fields and checkboxes
-    const mainWindowMarginXInput = document.getElementById("mainWindowMarginX");
-    const mainWindowMarginYInput = document.getElementById("mainWindowMarginY");
-    const itemsWindowMarginXInput = document.getElementById("itemsWindowMarginX");
-    const itemsWindowMarginYInput = document.getElementById("itemsWindowMarginY");
+    import settingsSync from "../../scripts/Utils/SettingsSync.js";
+
     const settingItemsBorderCheckbox = document.getElementById("settingItemsBorder");
-
-    const buttonMarginXInput = document.getElementById("buttonMarginX");
-    const buttonMarginYInput = document.getElementById("buttonMarginY");
-
     const itemsWidthInput = document.getElementById("itemsWidth");
     const itemsHeightInput = document.getElementById("itemsHeight");
 
@@ -576,94 +372,51 @@
     const settingClusterRadiusInput = document.getElementById("settingClusterRadius");
     const settingClusterMinSizeInput = document.getElementById("settingClusterMinSize");
 
-    // Save value to local storage
-    function saveToLocalStorage(key, value) {
-      localStorage.setItem(key, value);
-    }
-
-    // Retrieve value from local storage
-    function getFromLocalStorage(key) {
-      return localStorage.getItem(key);
-    }
-
     // Add event listeners to all input fields
     itemsWidthInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("itemsWidth", value);
+      settingsSync.setNumber("itemsWidth", event.target.value);
     });
 
     itemsHeightInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("itemsHeight", value);
-    });
-
-    buttonMarginXInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("buttonMarginX", value);
-    });
-
-    buttonMarginYInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("buttonMarginY", value);
-    });
-
-    mainWindowMarginXInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("mainWindowMarginX", value);
-    });
-
-    mainWindowMarginYInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("mainWindowMarginY", value);
-    });
-
-    itemsWindowMarginXInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("itemsWindowMarginX", value);
-    });
-
-    itemsWindowMarginYInput.addEventListener("input", function (event) {
-      const value = event.target.value;
-      saveToLocalStorage("itemsWindowMarginY", value);
+      settingsSync.setNumber("itemsHeight", event.target.value);
     });
 
     // Add event listener to checkboxes
     settingItemsBorderCheckbox.addEventListener("change", function (event) {
-      const isChecked = event.target.checked;
-      saveToLocalStorage("settingItemsBorder", isChecked);
+      settingsSync.setBool("settingItemsBorder", event.target.checked);
     });
 
     // Resource overlay event listeners
     settingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingResourceEnchantOverlay", event.target.checked);
+      settingsSync.setBool("settingResourceEnchantOverlay", event.target.checked);
     });
 
     settingLivingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingLivingResourceEnchantOverlay", event.target.checked);
+      settingsSync.setBool("settingLivingResourceEnchantOverlay", event.target.checked);
     });
 
     settingResourceCountCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingResourceCount", event.target.checked);
+      settingsSync.setBool("settingResourceCount", event.target.checked);
     });
 
     settingResourceDistanceCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingResourceDistance", event.target.checked);
+      settingsSync.setBool("settingResourceDistance", event.target.checked);
     });
 
     settingResourceDistanceLivingOnlyCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingResourceDistanceLivingOnly", event.target.checked);
+      settingsSync.setBool("settingResourceDistanceLivingOnly", event.target.checked);
     });
 
     settingResourceClustersCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingResourceClusters", event.target.checked);
+      settingsSync.setBool("settingResourceClusters", event.target.checked);
     });
 
     settingClusterRadiusInput.addEventListener("input", function (event) {
-      saveToLocalStorage("settingClusterRadius", event.target.value);
+      settingsSync.setNumber("settingClusterRadius", event.target.value);
     });
 
     settingClusterMinSizeInput.addEventListener("input", function (event) {
-      saveToLocalStorage("settingClusterMinSize", event.target.value);
+      settingsSync.setNumber("settingClusterMinSize", event.target.value);
     });
 
     // Debug settings
@@ -691,9 +444,6 @@
           screenResolution: `${window.screen.width}x${window.screen.height}`,
           language: navigator.language
         },
-        settings: {
-          debugEnemies: localStorage.getItem("settingDebugEnemies") === "true"
-        },
         localStorage: Object.keys(localStorage).reduce((acc, key) => {
           if (key.startsWith('setting')) {
             acc[key] = localStorage.getItem(key);
@@ -716,7 +466,7 @@
     }
 
     settingDebugEnemiesCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugEnemies", event.target.checked);
+      settingsSync.setBool("settingDebugEnemies", event.target.checked);
       if (event.target.checked) {
         console.log("🐛 Debug Enemies ENABLED");
       } else {
@@ -725,7 +475,7 @@
     });
 
     settingDebugPlayersCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugPlayers", event.target.checked);
+      settingsSync.setBool("settingDebugPlayers", event.target.checked);
       if (event.target.checked) {
         console.log("👥 Debug Players ENABLED");
       } else {
@@ -734,7 +484,7 @@
     });
 
     settingDebugChestsCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugChests", event.target.checked);
+      settingsSync.setBool("settingDebugChests", event.target.checked);
       if (event.target.checked) {
         console.log("📦 Debug Chests ENABLED");
       } else {
@@ -743,7 +493,7 @@
     });
 
     settingDebugDungeonsCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugDungeons", event.target.checked);
+      settingsSync.setBool("settingDebugDungeons", event.target.checked);
       if (event.target.checked) {
         console.log("🏰 Debug Dungeons ENABLED");
       } else {
@@ -752,7 +502,7 @@
     });
 
     settingDebugFishingCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugFishing", event.target.checked);
+      settingsSync.setBool("settingDebugFishing", event.target.checked);
       if (event.target.checked) {
         console.log("🎣 Debug Fishing ENABLED");
       } else {
@@ -761,7 +511,7 @@
     });
 
     settingDebugHarvestablesCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugHarvestables", event.target.checked);
+      settingsSync.setBool("settingDebugHarvestables", event.target.checked);
       if (event.target.checked) {
         console.log("🌱 Debug Harvestables ENABLED");
       } else {
@@ -771,7 +521,7 @@
 
     // 📺 Log to Console
     settingLogToConsoleCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingLogToConsole", event.target.checked);
+      settingsSync.setBool("settingLogToConsole", event.target.checked);
       if (event.target.checked) {
         console.log("📺 Console Logging ENABLED");
       } else {
@@ -781,7 +531,7 @@
 
     // 📤 Log to Server
     settingLogToServerCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingLogToServer", event.target.checked);
+      settingsSync.setBool("settingLogToServer", event.target.checked);
       if (event.target.checked) {
         console.log("📤 Server Logging ENABLED (JSONL files)");
       } else {
@@ -792,9 +542,7 @@
     // 🖥️ Server-side Logs (Backend)
     settingServerLogsEnabledCheckbox.addEventListener("change", async function (event) {
       const enabled = event.target.checked;
-
-      // Save to localStorage (source of truth)
-      saveToLocalStorage("settingServerLogsEnabled", enabled);
+      settingsSync.setBool("settingServerLogsEnabled", enabled);
 
       try {
         const response = await fetch('/api/settings/server-logs', {
@@ -817,7 +565,7 @@
 
     // 📦 Debug RAW Packets Console
     settingDebugRawPacketsConsoleCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugRawPacketsConsole", event.target.checked);
+      settingsSync.setBool("settingDebugRawPacketsConsole", event.target.checked);
       if (event.target.checked) {
         console.log("📦 RAW Packets Console ENABLED - ⚠️ VERY VERBOSE!");
       } else {
@@ -826,7 +574,7 @@
     });
     // 📦 Debug RAW Packets Server
     settingDebugRawPacketsServerCheckbox.addEventListener("change", function (event) {
-      saveToLocalStorage("settingDebugRawPacketsServer", event.target.checked);
+      settingsSync.setBool("settingDebugRawPacketsServer", event.target.checked);
       if (event.target.checked) {
         console.log("📦 RAW Packets Server ENABLED - ⚠️ VERY VERBOSE!");
       } else {
@@ -843,51 +591,44 @@
       });
     }
 
-    settingDebugPlayersCheckbox.checked = getFromLocalStorage("settingDebugPlayers") === "true";
-    settingDebugChestsCheckbox.checked = getFromLocalStorage("settingDebugChests") === "true";
-    settingDebugDungeonsCheckbox.checked = getFromLocalStorage("settingDebugDungeons") === "true";
+    settingDebugPlayersCheckbox.checked = settingsSync.getBool("settingDebugPlayers");
+    settingDebugChestsCheckbox.checked = settingsSync.getBool("settingDebugChests");
+    settingDebugDungeonsCheckbox.checked = settingsSync.getBool("settingDebugDungeons");
     // Initialize all input fields and checkboxes with values from local storage (if available)
 
     // Initialize console & server settings (defaults)
-    settingLogToConsoleCheckbox.checked = getFromLocalStorage("settingLogToConsole") === null ? true : getFromLocalStorage("settingLogToConsole") === "true";
-    settingLogToServerCheckbox.checked = getFromLocalStorage("settingLogToServer") === "true"; // Default: false
+    settingLogToConsoleCheckbox.checked = settingsSync.getBool("settingLogToConsole");
+    settingLogToServerCheckbox.checked = settingsSync.getBool("settingLogToServer");
 
-    // 🖥️ Load server-side logs state from localStorage (frontend is source of truth)
-    settingServerLogsEnabledCheckbox.checked = getFromLocalStorage("settingServerLogsEnabled") === null ? false : getFromLocalStorage("settingServerLogsEnabled") === "true";
+    settingServerLogsEnabledCheckbox.checked = settingsSync.getBool("settingServerLogsEnabled");
 
-    settingDebugRawPacketsConsoleCheckbox.checked = getFromLocalStorage("settingDebugRawPacketsConsole") === "true"; // Default: false
-    mainWindowMarginYInput.value = getFromLocalStorage("mainWindowMarginY") || "";
-    itemsWindowMarginXInput.value = getFromLocalStorage("itemsWindowMarginX") || "";
-    itemsWindowMarginYInput.value = getFromLocalStorage("itemsWindowMarginY") || "";
+    settingDebugRawPacketsConsoleCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsConsole");
 
-    itemsWidth.value = getFromLocalStorage("itemsWidth") || "";
-    itemsHeight.value = getFromLocalStorage("itemsHeight") || "";
-
-    buttonMarginXInput.value = getFromLocalStorage("buttonMarginX") || "";
-    buttonMarginYInput.value = getFromLocalStorage("buttonMarginY") || "";
-    settingItemsBorderCheckbox.checked = getFromLocalStorage("settingItemsBorder") === "true";
+    itemsWidthInput.value = settingsSync.getNumber("itemsWidth", 500);
+    itemsHeightInput.value = settingsSync.getNumber("itemsHeight", 500);
+    settingItemsBorderCheckbox.checked = settingsSync.getBool("settingItemsBorder");
 
     // Initialize resource overlay settings (defaults to enabled for better UX)
-    settingResourceEnchantOverlayCheckbox.checked = getFromLocalStorage("settingResourceEnchantOverlay") === null ? true : getFromLocalStorage("settingResourceEnchantOverlay") === "true";
-    settingLivingResourceEnchantOverlayCheckbox.checked = getFromLocalStorage("settingLivingResourceEnchantOverlay") === null ? true : getFromLocalStorage("settingLivingResourceEnchantOverlay") === "true";
-    settingResourceCountCheckbox.checked = getFromLocalStorage("settingResourceCount") === null ? true : getFromLocalStorage("settingResourceCount") === "true";
-    settingResourceDistanceCheckbox.checked = getFromLocalStorage("settingResourceDistance") === null ? false : getFromLocalStorage("settingResourceDistance") === "true";
-    settingResourceDistanceLivingOnlyCheckbox.checked = getFromLocalStorage("settingResourceDistanceLivingOnly") === null ? true : getFromLocalStorage("settingResourceDistanceLivingOnly") === "true";
-    settingResourceClustersCheckbox.checked = getFromLocalStorage("settingResourceClusters") === null ? false : getFromLocalStorage("settingResourceClusters") === "true";
-    settingClusterRadiusInput.value = getFromLocalStorage("settingClusterRadius") || "30";
-    settingClusterMinSizeInput.value = getFromLocalStorage("settingClusterMinSize") || "2";
+    settingResourceEnchantOverlayCheckbox.checked = settingsSync.getBool("settingResourceEnchantOverlay");
+    settingLivingResourceEnchantOverlayCheckbox.checked = settingsSync.getBool("settingLivingResourceEnchantOverlay");
+    settingResourceCountCheckbox.checked = settingsSync.getBool("settingResourceCount");
+    settingResourceDistanceCheckbox.checked = settingsSync.getBool("settingResourceDistance");
+    settingResourceDistanceLivingOnlyCheckbox.checked = settingsSync.getBool("settingResourceDistanceLivingOnly");
+    settingResourceClustersCheckbox.checked = settingsSync.getBool("settingResourceClusters");
+    settingClusterRadiusInput.value = settingsSync.getNumber("settingClusterRadius", 30);
+    settingClusterMinSizeInput.value = settingsSync.getNumber("settingClusterMinSize", 2);
 
     // Initialize debug settings
-    settingDebugEnemiesCheckbox.checked = getFromLocalStorage("settingDebugEnemies") === "true";
-    settingDebugPlayersCheckbox.checked = getFromLocalStorage("settingDebugPlayers") === "true";
-    settingDebugChestsCheckbox.checked = getFromLocalStorage("settingDebugChests") === "true";
-    settingDebugDungeonsCheckbox.checked = getFromLocalStorage("settingDebugDungeons") === "true";
-    settingDebugFishingCheckbox.checked = getFromLocalStorage("settingDebugFishing") === "true";
-    settingDebugHarvestablesCheckbox.checked = getFromLocalStorage("settingDebugHarvestables") === "true";
+    settingDebugEnemiesCheckbox.checked = settingsSync.getBool("settingDebugEnemies");
+    settingDebugPlayersCheckbox.checked = settingsSync.getBool("settingDebugPlayers");
+    settingDebugChestsCheckbox.checked = settingsSync.getBool("settingDebugChests");
+    settingDebugDungeonsCheckbox.checked = settingsSync.getBool("settingDebugDungeons");
+    settingDebugFishingCheckbox.checked = settingsSync.getBool("settingDebugFishing");
+    settingDebugHarvestablesCheckbox.checked = settingsSync.getBool("settingDebugHarvestables");
 
     // Initialize console & server settings (defaults)
-    settingLogToConsoleCheckbox.checked = getFromLocalStorage("settingLogToConsole") === null ? true : getFromLocalStorage("settingLogToConsole") === "true";
-    settingLogToServerCheckbox.checked = getFromLocalStorage("settingLogToServer") === "true"; // Default: false
-    settingDebugRawPacketsConsoleCheckbox.checked = getFromLocalStorage("settingDebugRawPacketsConsole") === "true"; // Default: false
-    settingDebugRawPacketsServerCheckbox.checked = getFromLocalStorage("settingDebugRawPacketsServer") === "true"; // Default: false
+    settingLogToConsoleCheckbox.checked = settingsSync.getBool("settingLogToConsole");
+    settingLogToServerCheckbox.checked = settingsSync.getBool("settingLogToServer");
+    settingDebugRawPacketsConsoleCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsConsole");
+    settingDebugRawPacketsServerCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsServer");
   </script>

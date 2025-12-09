@@ -4,11 +4,10 @@
  * Checks that all system dependencies are installed
  */
 
-const {execSync} = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import {execSync} from "child_process";
+import fs from 'fs';
 
-const REQUIRED_NODE_VERSION = '18.18.2';
+const REQUIRED_NODE_VERSION = '24.11.1';
 const REQUIRED_NPCAP_VERSION = '1.84';
 
 // Helper: compare semantic versions (returns -1 if a<b, 0 if equal, 1 if a>b)
@@ -45,7 +44,7 @@ try {
     if (nodeVersion !== REQUIRED_NODE_VERSION) {
         console.warn(`⚠️  Recommended version: v${REQUIRED_NODE_VERSION}`);
     }
-} catch (error) {
+} catch {
     console.error('✗ Node.js not found!');
     hasErrors = true;
 }
@@ -54,7 +53,7 @@ try {
 try {
     const npmVersion = execSync('npm --version', {encoding: 'utf8'}).trim();
     console.log(`✓ npm: v${npmVersion}`);
-} catch (error) {
+} catch {
     console.error('✗ npm not found!');
     hasErrors = true;
 }
@@ -65,13 +64,8 @@ console.log('\n📦 Checking native modules...\n');
 const nativeModules = [
     {
         name: 'cap',
-        path: path.join(__dirname, '../node_modules/cap/build/Release/cap.node'),
-        description: 'Network capture module (essential)'
-    },
-    {
-        name: 'node-sass',
-        path: path.join(__dirname, '../node_modules/node-sass/vendor'),
-        description: 'SASS compilation'
+        path: 'node_modules/cap/build/Release/cap.node',
+        description: 'Network capture module (essential'
     }
 ];
 
@@ -135,7 +129,7 @@ if (process.platform === 'win32') {
                     // Registry key exists, so assume it's OK
                     break;
                 }
-            } catch (error) {
+            } catch {
                 // Registry path not found, try next one
                 continue;
             }
@@ -172,13 +166,13 @@ console.log('\n🛠️  Checking build tools...\n');
 try {
     const pythonVersion = execSync('python --version', {encoding: 'utf8', stdio: 'pipe'}).trim();
     console.log(`✓ Python: ${pythonVersion}`);
-} catch (error) {
+} catch {
     console.warn('⚠️  Python not found (required to compile native modules)');
     console.warn('  → Recommended: Python 3.10.2');
 }
 
 // Check pkg for build
-const pkgInstalled = fs.existsSync(path.join(__dirname, '../node_modules/pkg'));
+const pkgInstalled = fs.existsSync('node_modules/@yao-pkg');
 if (pkgInstalled) {
     console.log(`✓ pkg: Installed (packaging tool)`);
 } else {
@@ -191,20 +185,20 @@ if (hasErrors) {
     if (!strictMode) {
         console.log('⚠️  Some dependencies are missing, but you\'re in development mode — script won\'t block here.');
         console.log('Recommended actions:');
-        console.log('  1. Check Node.js v18.18.2');
+        console.log('  1. Check Node.js v24.11.1');
         console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows) if you plan to run the executable)`);
         console.log('  3. Run: npm install');
-        console.log('  4. Run: npm rebuild cap node-sass');
+        console.log('  4. Run: npm rebuild cap');
         console.log('='.repeat(50) + '\n');
         process.exit(0);
     }
 
     console.log('✗ Some dependencies are missing!');
     console.log('\nRecommended actions:');
-    console.log('  1. Check Node.js v18.18.2');
+    console.log('  1. Check Node.js v24.11.1');
     console.log(`  2. Install Npcap ${REQUIRED_NPCAP_VERSION} (Windows)`);
     console.log('  3. Run: npm install');
-    console.log('  4. Run: npm rebuild cap node-sass');
+    console.log('  4. Run: npm rebuild cap');
     console.log('='.repeat(50) + '\n');
     process.exit(1);
 } else {

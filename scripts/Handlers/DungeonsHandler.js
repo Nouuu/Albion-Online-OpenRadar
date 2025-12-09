@@ -1,4 +1,7 @@
-const DungeonType = 
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
+
+const DungeonType =
 {
     Solo: 0,
     Group: 1,
@@ -49,22 +52,17 @@ class Dungeon
     }
 }
 
-class DungeonsHandler
+export class DungeonsHandler
 {
-    constructor(Settings)
+    constructor()
     {
         // Import constants once in constructor
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
         this.dungeonList = [];
-        this.settings = Settings;
     }
 
     dungeonEvent(parameters)
     {
-        // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
+        // Ultra-detailed debug: Log ALL parameters to identify patterns
         const allParams = {};
         for (let key in parameters) {
             if (parameters.hasOwnProperty(key)) {
@@ -72,7 +70,7 @@ class DungeonsHandler
             }
         }
 
-        window.logger?.debug(this.CATEGORIES.DUNGEON, this.EVENTS.NewDungeonEvent_ALL_PARAMS, {
+        window.logger?.debug(CATEGORIES.DUNGEON, EVENTS.NewDungeonEvent_ALL_PARAMS, {
             dungeonId: parameters[0],
             position: parameters[7],
             allParameters: allParams,
@@ -101,29 +99,28 @@ class DungeonsHandler
         if (lowerCaseName.includes("corrupted")) // corrupt
         {
             // Test if corrupt checkbox
-            if (!this.settings.dungeonCorrupted) return;
+            if (!settingsSync.getBool("settingDungeonCorrupted")) return;
 
             dungeonType = DungeonType.Corrupted;
         }
         else if (lowerCaseName.includes("solo")) // solo
         {
             // Test if solo checkbox
-            if (!this.settings.dungeonSolo || !this.settings.dungeonEnchants[enchant]) return;
+            if (!settingsSync.getBool("settingDungeonSolo") || !settingsSync.getBool('settingDungeonE'+enchant)) return;
 
             dungeonType = DungeonType.Solo;
         }
         // "HELLGATE_2V2_NON_LETHAL"
         else if (lowerCaseName.includes("hellgate")) // hellgate
         {
-            if (!this.settings.dungeonHellgate) return;
+            if (!settingsSync.getBool('settingDungeonHellgate')) return;
 
             dungeonType = DungeonType.Hellgate
 
         }
         else // group
         {
-            if (!this.settings.dungeonGroup || !this.settings.dungeonEnchants[enchant]) return;
-
+            if (!settingsSync.getBool('settingDungeonDuo') || !settingsSync.getBool('settingDungeonE'+enchant)) return;
             dungeonType = DungeonType.Group;
         }
 

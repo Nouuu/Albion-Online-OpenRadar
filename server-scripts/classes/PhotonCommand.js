@@ -1,4 +1,4 @@
-const Protocol16Deserializer = require('./Protocol16Deserializer');
+import Protocol16Deserializer from './Protocol16Deserializer.js';
 
 class PhotonCommand {
 	// Get logger instance - ALWAYS use global.loggerServer (no fallback)
@@ -40,7 +40,7 @@ class PhotonCommand {
 			this.sequenceNumber = this.payload.readUInt32BE();
 
 			this.payload = this.payload.slice(this.commandLength - 12);
-		} catch (err) {
+		} catch {
 			return;
 		}
 	}
@@ -54,6 +54,7 @@ class PhotonCommand {
 				// Remove 4 first bytes to be reliable ¯\_(ツ)_/¯
 				this.payload.seek(this.payload.tell() + 4);
 				this.payload = this.payload.slice(this.payload.length - 4);
+                break;
 			// Reliable Command
 			case 6:
 				this.parseReliableCommand();
@@ -84,7 +85,7 @@ class PhotonCommand {
 		  case 4:
 			this.data = Protocol16Deserializer.deserializeEventData(this.payload);
 
-			// 🔍 TRACE: Log après désérialisation pour Event 29
+			// 🔍 TRACE: Log after deserialization for Event 29
 			if (this.data.code === 29) {
 				const logger = PhotonCommand.getLogger();
 				if (logger) {
@@ -109,4 +110,4 @@ class PhotonCommand {
 	}
 }
 
-module.exports = PhotonCommand;
+export default PhotonCommand;

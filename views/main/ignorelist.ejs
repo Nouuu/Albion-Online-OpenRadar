@@ -47,10 +47,11 @@
   </div>
 </div>
 
-<script>
-  // Load and display ignore list
+<script type="module">
+  import settingsSync from "../../scripts/Utils/SettingsSync.js";
+
   function loadIgnoreList() {
-    const ignoreList = JSON.parse(localStorage.getItem('ignoreList')) || [];
+    const ignoreList = settingsSync.getJSON('ignoreList', []);
     const container = document.getElementById('ignoreListContainer');
     const emptyMessage = document.getElementById('emptyMessage');
     const countSpan = document.getElementById('ignoreCount');
@@ -84,11 +85,11 @@
 
     if (!playerName) return;
 
-    const ignoreList = JSON.parse(localStorage.getItem('ignoreList')) || [];
+    const ignoreList = settingsSync.getJSON('ignoreList', []);
 
     if (!ignoreList.includes(playerName)) {
       ignoreList.push(playerName);
-      localStorage.setItem('ignoreList', JSON.stringify(ignoreList));
+        settingsSync.setJSON('ignoreList', ignoreList);
       input.value = '';
       loadIgnoreList();
     }
@@ -96,9 +97,9 @@
 
   // Remove player from ignore list
   function removePlayer(playerName) {
-    const ignoreList = JSON.parse(localStorage.getItem('ignoreList')) || [];
+    const ignoreList = settingsSync.getJSON('ignoreList', []);
     const filtered = ignoreList.filter(p => p !== playerName);
-    localStorage.setItem('ignoreList', JSON.stringify(filtered));
+    settingsSync.setJSON('ignoreList', filtered);
     loadIgnoreList();
   }
 

@@ -4,24 +4,11 @@
  */
 
 /**
- * Return boolean from localStorage
- * @param {string} item - localStorage key
- * @returns {boolean}
- */
-function returnLocalBool(item) {
-	if (localStorage.getItem(item) == "true") {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-/**
  * Toggle all enchantments for a specific Tier (column)
  * @param {string} resourcePrefix - Resource prefix (e.g., 'fsp', 'flp')
  * @param {number} tierIndex - Tier index (0-7 for T1-T8)
  */
-function selectAllTierEnchants(resourcePrefix, tierIndex) {
+export function selectAllTierEnchants(resourcePrefix, tierIndex) {
 	// Get all checkboxes for this tier (column)
 	const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
 	const checkboxes = [];
@@ -60,7 +47,7 @@ function selectAllTierEnchants(resourcePrefix, tierIndex) {
  * @param {string} resourcePrefix - Resource prefix (e.g., 'fsp', 'flp')
  * @param {number} tierIndex - Tier index (0-7 for T1-T8)
  */
-function updateTierButtonState(resourcePrefix, tierIndex) {
+export function updateTierButtonState(resourcePrefix, tierIndex) {
 	const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
 	const checkboxes = [];
 
@@ -109,7 +96,7 @@ function updateTierButtonState(resourcePrefix, tierIndex) {
 /**
  * Initialize button states on page load
  */
-function initializeTierButtonStates() {
+export function initializeTierButtonStates() {
 	const resources = [
 		'fsp', 'hsp', 'wsp', 'osp', 'rsp', // Static
 		'flp', 'hlp', 'wlp', 'olp', 'rlp'  // Living
@@ -125,7 +112,7 @@ function initializeTierButtonStates() {
 /**
  * Add event listeners to all checkboxes to update button states when changed manually
  */
-function attachCheckboxListeners() {
+export function attachCheckboxListeners() {
 	const resources = [
 		{ prefix: 'fsp', enchants: null }, // Will be set dynamically
 		{ prefix: 'hsp', enchants: null },
@@ -175,7 +162,7 @@ function attachCheckboxListeners() {
  * @param {string} config.emoji - Emoji icon (e.g., '🌿', '🦌')
  * @returns {string} HTML string for the resource grid
  */
-function generateResourceGrid(config) {
+export function generateResourceGrid(config) {
 	const { prefix, name, emoji } = config;
 
 	// Generate quick select buttons (T1-T8)
@@ -239,47 +226,10 @@ function generateResourceGrid(config) {
 \t</div>`;
 }
 
-/**
- * Function to clear TypeID cache
- */
-function clearTypeIDCache() {
-	try {
-		// Debug: Show what's in cache BEFORE clearing
-		const cached = localStorage.getItem('cachedStaticResourceTypeIDs');
-		if (cached) {
-			const entries = JSON.parse(cached);
-			window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.ClearTypeIDCache, {
-				entriesCount: entries.length,
-				entries: entries.map(([typeId, info]) => ({
-					typeId: typeId,
-					type: info.type,
-					tier: info.tier
-				}))
-			});
-		} else {
-			window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.CacheAlreadyEmpty, {});
-		}
-
-		// Clear localStorage
-		localStorage.removeItem('cachedStaticResourceTypeIDs');
-		window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.TypeIDCacheCleared, {});
-
-		// Confirm and reload to clear in-memory cache too
-		const shouldReload = confirm('✅ TypeID Cache cleared!\n\n⚠️ The radar page needs to reload to clear the in-memory cache.\n\nReload now?');
-		if (shouldReload) {
-			// Find and reload the radar window if open
-			if (window.opener && !window.opener.closed) {
-				window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.ReloadingOpenerWindow, {});
-				window.opener.location.reload();
-			}
-			// Also reload this settings page
-			window.logger?.info(window.CATEGORIES.CACHE, window.EVENTS.ReloadingSettingsPage, {});
-			window.location.reload();
-		} else {
-			alert('⚠️ Cache cleared from localStorage, but you need to reload the radar page manually for full effect.');
-		}
-	} catch (e) {
-		window.logger?.error(window.CATEGORIES.CACHE, window.EVENTS.ClearCacheFailed, { error: e.message });
-		alert('❌ Failed to clear cache: ' + e.message);
-	}
+export function getResourceStorageKey(prefix, type){
+	const resourceName = {
+		'fsp': 'Fiber', 'hsp': 'Hide', 'wsp': 'Wood', 'osp': 'Ore', 'rsp': 'Rock',
+		'flp': 'Fiber', 'hlp': 'Hide', 'wlp': 'Wood', 'olp': 'Ore', 'rlp': 'Rock'
+	}[prefix];
+	return `setting${type}${resourceName}Enchants`;
 }

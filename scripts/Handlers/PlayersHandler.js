@@ -1,3 +1,6 @@
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
+
 class Player {
     constructor(posX, posY, id, nickname, guildName1, flagId, allianceName, factionName, equipments, spells) {
         this.posX = posX;
@@ -18,7 +21,7 @@ class Player {
         this.items = null; // Legacy field (Event 90 CharacterEquipmentChanged)
         this.flagId = flagId;
         this.mounted = false;
-        this.detectedAt = Date.now(); // 👥 Timestamp de détection
+        this.detectedAt = Date.now(); // 👥 Detection timestamp
     }
 
     setMounted(mounted) {
@@ -65,15 +68,10 @@ class Player {
 }
 
 export class PlayersHandler {
-    constructor(settings) {
-        // Import constants once in constructor
-        const {CATEGORIES, EVENTS} = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-
+    constructor() {
         this.playersList = [];
         this.localPlayer = new Player();
-        this.settings = settings;
+        this.audio = new Audio('/sounds/player.mp3');
     }
 
     updateItems(id, Parameters) {
@@ -94,6 +92,11 @@ export class PlayersHandler {
     }
 
     handleNewPlayerEvent(id, Parameters) {
+        // 🔍 Check if player detection is enabled
+        if (!settingsSync.getBool('settingShowPlayers')) {
+            return 2; // Skip detection if disabled
+        }
+
         const nickname = Parameters[1];
         const guildName = Parameters[8];
         const flagId = Parameters[11] || 0;
@@ -105,55 +108,42 @@ export class PlayersHandler {
         // MVP: Track players WITHOUT positions (positions are encrypted)
         // Just add to list for counting and info display
         const existingPlayer = this.playersList.find(player => player.id === id);
+        // 👥 Limit playersList to max players
+        const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
+        const maxPlayers = Math.min(100, parsedMaxPlayers);
 
-        if (!existingPlayer) {
+        if (!existingPlayer && this.playersList.length < maxPlayers) {
             const player = new Player(0, 0, id, nickname, guildName, flagId, allianceName, factionName, equipments, spells);
             this.playersList.push(player);
 
-            // 👥 Limit playersList to max players (keep most recent)
-            const parsedMaxPlayers = parseInt(localStorage.getItem('settingMaxPlayersDisplay'));
-            const maxPlayers = Math.min(100, Number.isNaN(parsedMaxPlayers) ? 50 : parsedMaxPlayers);
-            if (this.playersList.length > maxPlayers) {
-                // Sort by detectedAt (newest first) and keep only maxPlayers
-                this.playersList.sort((a, b) => b.detectedAt - a.detectedAt);
-                const removed = this.playersList.splice(maxPlayers);
-
-                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.PlayerDebugInfo, {
-                    totalDetected: this.playersList.length + removed.length,
-                    keptPlayers: this.playersList.length,
-                    removedPlayers: removed.length,
-                    removedOldest: removed.map(p => p.nickname)
-                });
-            }
-
-            // 🐛 DEBUG: Log player equipment on detection
-            window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
-                id: id,
-                nickname: nickname,
-                guild: guildName,
-                alliance: allianceName,
-                faction: factionName,
-                equipments: equipments,
-                spells: spells,
-                playersCount: this.playersList.length
-            });
-
-            window.logger?.info(this.CATEGORIES.PLAYER, 'PlayerDetected', {
-                id: id,
-                nickname: nickname,
-                guild: guildName,
-                playersCount: this.playersList.length
-            });
-
-            // Play audio notification
-            const audio = new Audio('/sounds/player.mp3');
-            audio.play().catch(err => {
-                window.logger?.debug(this.CATEGORIES.PLAYER, this.EVENTS.AudioPlayBlocked, {
-                    error: err.message,
-                    player: nickname
-                });
-            });
         }
+
+        // 🐛 DEBUG: Log player equipment on detection
+        window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
+            id: id,
+            nickname: nickname,
+            guild: guildName,
+            alliance: allianceName,
+            faction: factionName,
+            equipments: equipments,
+            spells: spells,
+            playersCount: this.playersList.length
+        });
+
+        window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected', {
+            id: id,
+            nickname: nickname,
+            guild: guildName,
+            playersCount: this.playersList.length
+        });
+
+        // Play audio notification
+        this.audio.play().catch(err => {
+            window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
+                error: err.message,
+                player: nickname
+            });
+        });
 
         return 2; // Return flashTime value
     }
@@ -204,7 +194,7 @@ export class PlayersHandler {
             }
         }
 
-        window.logger?.debug(this.CATEGORIES.PLAYER_HEALTH, this.EVENTS.PlayerHealthUpdate_DETAIL, {
+        window.logger?.debug(CATEGORIES.PLAYER_HEALTH, EVENTS.PlayerHealthUpdate_DETAIL, {
             playerId: Parameters[0],
             params2_currentHP: Parameters[2],
             params3_maxHP: Parameters[3],

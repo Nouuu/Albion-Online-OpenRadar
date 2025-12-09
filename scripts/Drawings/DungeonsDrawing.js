@@ -1,9 +1,7 @@
+import {DrawingUtils} from "../Utils/DrawingUtils.js";
+
 export class DungeonsDrawing extends DrawingUtils
 {
-    constructor(Settings)
-    {
-        super(Settings);
-    }
 
     interpolate(dungeons, lpX, lpY, t)
     {

@@ -14,16 +14,12 @@
             <div class="w-full">
                 <div id="canvasContainer" style="position: relative; width: 520px; height: 520px;">
                     <canvas class="ttcan" id="mapCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="gridCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1; border: 2px solid #4a5568;"></canvas>
-                    <canvas class="ttcan" id="drawCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="flashCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
+                    <canvas class="ttcan" id="gridCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 2; border: 2px solid #4a5568;"></canvas>
+                    <canvas class="ttcan" id="drawCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 3;"></canvas>
+                    <canvas class="ttcan" id="flashCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 4;"></canvas>
+                    <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 5;"></canvas>
+                    <canvas class="ttcan" id="uiCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 10;"></canvas>
                     <canvas id="thirdCanvas" width="500" height="500" style="position: absolute; top: 520px; margin: 10px; left: 0; z-index: 1; display: none;"></canvas>
-
-                    <!-- Player Counter Overlay -->
-                    <div id="playerCounter" style="position: absolute; top: 15px; right: 15px; z-index: 10; background-color: rgba(0, 0, 0, 0.7); color: white; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 14px; font-weight: bold;">
-                        Players: <span id="playerCount">0</span> 👥
-                    </div>
                 </div>
             </div>
         </div>
@@ -92,7 +88,7 @@
                     </label>
 
                     <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="overlayCluster" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="checkbox" id="settingResourceClusters" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                         <span class="dark:text-white">🗂️ Clusters</span>
                         <span class="relative group">
                             <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -109,8 +105,8 @@
                 <!-- Cluster Settings -->
                 <div class="mt-6 space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
                     <div class="flex items-center space-x-3">
-                        <label for="overlayClusterRadius" class="dark:text-white text-sm font-medium w-40">Cluster Radius:</label>
-                        <input type="number" id="overlayClusterRadius" class="px-3 py-2 w-24 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white" min="10" max="100" step="5" value="30">
+                        <label for="settingClusterRadius" class="dark:text-white text-sm font-medium w-40">Cluster Radius:</label>
+                        <input type="number" id="settingClusterRadius" class="px-3 py-2 w-24 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white" min="10" max="100" step="5" value="30">
                         <span class="relative group">
                             <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
@@ -123,8 +119,8 @@
                     </div>
 
                     <div class="flex items-center space-x-3">
-                        <label for="overlayClusterMinSize" class="dark:text-white text-sm font-medium w-40">Min Cluster Size:</label>
-                        <input type="number" id="overlayClusterMinSize" class="px-3 py-2 w-24 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white" min="1" max="20" step="1" value="2">
+                        <label for="settingClusterMinSize" class="dark:text-white text-sm font-medium w-40">Min Cluster Size:</label>
+                        <input type="number" id="settingClusterMinSize" class="px-3 py-2 w-24 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white" min="1" max="20" step="1" value="2">
                         <span class="relative group">
                             <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
@@ -178,31 +174,20 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.10/signalr.min.js"></script>
-<script src="/scripts/Handlers/HarvestablesHandler.js"></script>
-<script src="/scripts/Handlers/MobsHandler.js"></script>
-<script src="/scripts/Handlers/ChestsHandler.js"></script>
-<script src="/scripts/Handlers/DungeonsHandler.js"></script>
-<script src="/scripts/Handlers/Map.js"></script>
-<script src="/scripts/Handlers/MobsInfo.js"></script>
-<script src="/scripts/Handlers/ItemsInfo.js"></script>
-<script src="/scripts/Handlers/FactionFlagInfo.js"></script>
-<script src="/scripts/Utils/DrawingUtils.js"></script>
-
+<script type="module" src="/scripts/Handlers/HarvestablesHandler.js"></script>
+<script type="module" src="/scripts/Handlers/MobsHandler.js"></script>
+<script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
+<script type="module" src="/scripts/Handlers/DungeonsHandler.js"></script>
+<script type="module" src="/scripts/Handlers/Map.js"></script>
+<script type="module" src="/scripts/Handlers/MobsInfo.js"></script>
+<script type="module" src="/scripts/Handlers/ItemsInfo.js"></script>
+<script type="module" src="/scripts/Handlers/FactionFlagInfo.js"></script>
+<script type="module" src="/scripts/Utils/DrawingUtils.js"></script>
 <script type="module" src="/scripts/Utils/Utils.js"></script>
-<script src="/scripts/drawing-ui.js"></script>
+<script type="module" src="/scripts/drawing-ui.js"></script>
 
-<script>
-    // Initialize overlay settings
-    function returnLocalBool(item) {
-        return localStorage.getItem(item) === "true";
-    }
-
-    function getLocalValue(item, defaultValue) {
-        const value = localStorage.getItem(item);
-        return value !== null ? value : defaultValue;
-    }
+<script type="module">
+    import settingsSync from '/scripts/Utils/SettingsSync.js';
 
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -210,16 +195,16 @@
         const overlayEnchantment = document.getElementById("overlayEnchantment");
         const overlayResourceCount = document.getElementById("overlayResourceCount");
         const overlayDistance = document.getElementById("overlayDistance");
-        const overlayCluster = document.getElementById("overlayCluster");
-        const overlayClusterRadius = document.getElementById("overlayClusterRadius");
-        const overlayClusterMinSize = document.getElementById("overlayClusterMinSize");
+        const overlayCluster = document.getElementById("settingResourceClusters");
+        const overlayClusterRadius = document.getElementById("settingClusterRadius");
+        const overlayClusterMinSize = document.getElementById("settingClusterMinSize");
 
-        // Players section (👥 controlled by settingShowPlayers from home.ejs)
+        // Players section (👥 controlled by settingShowPlayers from players.ejs)
         const playersSection = document.getElementById("playersSection");
 
         // Function to update players section visibility
         function updatePlayersSectionVisibility() {
-            const showPlayers = returnLocalBool("settingShowPlayers");
+            const showPlayers = settingsSync.getBool("settingShowPlayers");
             if (playersSection) {
                 playersSection.style.display = showPlayers ? "flex" : "none";
             }
@@ -235,51 +220,51 @@
             }
         });
 
-        // Poll every 500ms to check for changes (in case changed from home.ejs in same tab)
+        // Poll every 500ms to check for changes (in case changed from players.ejs in same tab)
         setInterval(updatePlayersSectionVisibility, 500);
 
         // Load saved settings
-        if (overlayEnchantment) overlayEnchantment.checked = returnLocalBool("overlayEnchantment");
-        if (overlayResourceCount) overlayResourceCount.checked = returnLocalBool("overlayResourceCount");
-        if (overlayDistance) overlayDistance.checked = returnLocalBool("overlayDistance");
-        if (overlayCluster) overlayCluster.checked = returnLocalBool("overlayCluster");
-        if (overlayClusterRadius) overlayClusterRadius.value = getLocalValue("overlayClusterRadius", "30");
-        if (overlayClusterMinSize) overlayClusterMinSize.value = getLocalValue("overlayClusterMinSize", "2");
+        if (overlayEnchantment) overlayEnchantment.checked = settingsSync.getBool("overlayEnchantment");
+        if (overlayResourceCount) overlayResourceCount.checked = settingsSync.getBool("overlayResourceCount");
+        if (overlayDistance) overlayDistance.checked = settingsSync.getBool("overlayDistance");
+        if (overlayCluster) overlayCluster.checked = settingsSync.getBool("settingResourceClusters");
+        if (overlayClusterRadius) overlayClusterRadius.value = settingsSync.getNumber("settingClusterRadius", 30);
+        if (overlayClusterMinSize) overlayClusterMinSize.value = settingsSync.getNumber("settingClusterMinSize", 2);
 
         // Save on change
         if (overlayEnchantment) {
             overlayEnchantment.addEventListener("click", () => {
-                localStorage.setItem("overlayEnchantment", overlayEnchantment.checked);
+                settingsSync.setBool("overlayEnchantment", overlayEnchantment.checked);
             });
         }
 
         if (overlayResourceCount) {
             overlayResourceCount.addEventListener("click", () => {
-                localStorage.setItem("overlayResourceCount", overlayResourceCount.checked);
+                settingsSync.setBool("overlayResourceCount", overlayResourceCount.checked);
             });
         }
 
         if (overlayDistance) {
             overlayDistance.addEventListener("click", () => {
-                localStorage.setItem("overlayDistance", overlayDistance.checked);
+                settingsSync.setBool("overlayDistance", overlayDistance.checked);
             });
         }
 
         if (overlayCluster) {
             overlayCluster.addEventListener("click", () => {
-                localStorage.setItem("overlayCluster", overlayCluster.checked);
+                settingsSync.setBool("settingResourceClusters", overlayCluster.checked);
             });
         }
 
         if (overlayClusterRadius) {
             overlayClusterRadius.addEventListener("input", () => {
-                localStorage.setItem("overlayClusterRadius", overlayClusterRadius.value);
+                settingsSync.setNumber("settingClusterRadius", overlayClusterRadius.value);
             });
         }
 
         if (overlayClusterMinSize) {
             overlayClusterMinSize.addEventListener("input", () => {
-                localStorage.setItem("overlayClusterMinSize", overlayClusterMinSize.value);
+                settingsSync.setNumber("settingClusterMinSize", overlayClusterMinSize.value);
             });
         }
     });

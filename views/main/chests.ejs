@@ -256,35 +256,33 @@
 	</div>
 </div>
 
-<script>
-	function returnLocalBool(item) {
-		return localStorage.getItem(item) === "true";
-	}
+<script type="module">
+	import settingsSync from "../../scripts/Utils/SettingsSync.js";
 
 	const settingChestGreen = document.getElementById("settingChestGreen");
 	const settingChestBlue = document.getElementById("settingChestBlue");
 	const settingChestPurple = document.getElementById("settingChestPurple");
 	const settingChestYellow = document.getElementById("settingChestYellow");
 
-	settingChestGreen.checked = returnLocalBool("settingChestGreen");
-	settingChestBlue.checked = returnLocalBool("settingChestBlue");
-	settingChestPurple.checked = returnLocalBool("settingChestPurple");
-	settingChestYellow.checked = returnLocalBool("settingChestYellow");
+	settingChestGreen.checked = settingsSync.getBool("settingChestGreen");
+	settingChestBlue.checked = settingsSync.getBool("settingChestBlue");
+	settingChestPurple.checked = settingsSync.getBool("settingChestPurple");
+	settingChestYellow.checked = settingsSync.getBool("settingChestYellow");
 
 	settingChestGreen.addEventListener("click", () => {
-		localStorage.setItem("settingChestGreen", settingChestGreen.checked);
+		settingsSync.setBool("settingChestGreen", settingChestGreen.checked);
 	});
 
 	settingChestBlue.addEventListener("click", () => {
-		localStorage.setItem("settingChestBlue", settingChestBlue.checked);
+		settingsSync.setBool("settingChestBlue", settingChestBlue.checked);
 	});
 
 	settingChestPurple.addEventListener("click", () => {
-		localStorage.setItem("settingChestPurple", settingChestPurple.checked);
+		settingsSync.setBool("settingChestPurple", settingChestPurple.checked);
 	});
 
 	settingChestYellow.addEventListener("click", () => {
-		localStorage.setItem("settingChestYellow", settingChestYellow.checked);
+		settingsSync.setBool("settingChestYellow", settingChestYellow.checked);
 	});
 
 	const settingMistSolo = document.getElementById("settingMistSolo");
@@ -296,45 +294,45 @@
 	const settingMistE4 = document.getElementById("settingMistE4");
 	const settingCage = document.getElementById("settingCage");
 
-	settingMistSolo.checked = returnLocalBool("settingMistSolo");
-	settingMistDuo.checked = returnLocalBool("settingMistDuo");
-	settingMistE0.checked = returnLocalBool("settingMistE0");
-	settingMistE1.checked = returnLocalBool("settingMistE1");
-	settingMistE2.checked = returnLocalBool("settingMistE2");
-	settingMistE3.checked = returnLocalBool("settingMistE3");
-	settingMistE4.checked = returnLocalBool("settingMistE4");
-	settingCage.checked = returnLocalBool("settingCage");
+	settingMistSolo.checked = settingsSync.getBool("settingMistSolo");
+	settingMistDuo.checked = settingsSync.getBool("settingMistDuo");
+	settingMistE0.checked = settingsSync.getBool("settingMistE0");
+	settingMistE1.checked = settingsSync.getBool("settingMistE1");
+	settingMistE2.checked = settingsSync.getBool("settingMistE2");
+	settingMistE3.checked = settingsSync.getBool("settingMistE3");
+	settingMistE4.checked = settingsSync.getBool("settingMistE4");
+	settingCage.checked = settingsSync.getBool("settingCage");
 
 	settingMistSolo.addEventListener("click", () => {
-		localStorage.setItem("settingMistSolo", settingMistSolo.checked);
+		settingsSync.setBool("settingMistSolo", settingMistSolo.checked);
 	});
 
 	settingMistDuo.addEventListener("click", () => {
-		localStorage.setItem("settingMistDuo", settingMistDuo.checked);
+		settingsSync.setBool("settingMistDuo", settingMistDuo.checked);
 	});
 
 	settingMistE0.addEventListener("click", () => {
-		localStorage.setItem("settingMistE0", settingMistE0.checked);
+		settingsSync.setBool("settingMistE0", settingMistE0.checked);
 	});
 
 	settingMistE1.addEventListener("click", () => {
-		localStorage.setItem("settingMistE1", settingMistE1.checked);
+		settingsSync.setBool("settingMistE1", settingMistE1.checked);
 	});
 
 	settingMistE2.addEventListener("click", () => {
-		localStorage.setItem("settingMistE2", settingMistE2.checked);
+		settingsSync.setBool("settingMistE2", settingMistE2.checked);
 	});
 
 	settingMistE3.addEventListener("click", () => {
-		localStorage.setItem("settingMistE3", settingMistE3.checked);
+		settingsSync.setBool("settingMistE3", settingMistE3.checked);
 	});
 
 	settingMistE4.addEventListener("click", () => {
-		localStorage.setItem("settingMistE4", settingMistE4.checked);
+		settingsSync.setBool("settingMistE4", settingMistE4.checked);
 	});
 
 	settingCage.addEventListener("click", () => {
-		localStorage.setItem("settingCage", settingCage.checked);
+		settingsSync.setBool("settingCage", settingCage.checked);
 	});
 
 	const settingDungeonSolo = document.getElementById("settingDungeonSolo");
@@ -347,50 +345,50 @@
 	const settingDungeonCorrupted = document.getElementById("settingDungeonCorrupted");
 	const settingDungeonHellgate = document.getElementById("settingDungeonHellgate");
 
-	settingDungeonSolo.checked = returnLocalBool("settingDungeonSolo");
-	settingDungeonDuo.checked = returnLocalBool("settingDungeonDuo");
-	settingDungeonE0.checked = returnLocalBool("settingDungeonE0");
-	settingDungeonE1.checked = returnLocalBool("settingDungeonE1");
-	settingDungeonE2.checked = returnLocalBool("settingDungeonE2");
-	settingDungeonE3.checked = returnLocalBool("settingDungeonE3");
-	settingDungeonE4.checked = returnLocalBool("settingDungeonE4");
-	settingDungeonCorrupted.checked = returnLocalBool("settingDungeonCorrupted");
-	settingDungeonHellgate.checked = returnLocalBool("settingDungeonHellgate");
+	settingDungeonSolo.checked = settingsSync.getBool("settingDungeonSolo");
+	settingDungeonDuo.checked = settingsSync.getBool("settingDungeonDuo");
+	settingDungeonE0.checked = settingsSync.getBool("settingDungeonE0");
+	settingDungeonE1.checked = settingsSync.getBool("settingDungeonE1");
+	settingDungeonE2.checked = settingsSync.getBool("settingDungeonE2");
+	settingDungeonE3.checked = settingsSync.getBool("settingDungeonE3");
+	settingDungeonE4.checked = settingsSync.getBool("settingDungeonE4");
+	settingDungeonCorrupted.checked = settingsSync.getBool("settingDungeonCorrupted");
+	settingDungeonHellgate.checked = settingsSync.getBool("settingDungeonHellgate");
 
 	settingDungeonSolo.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonSolo", settingDungeonSolo.checked);
+		settingsSync.setBool("settingDungeonSolo", settingDungeonSolo.checked);
 	});
 
 	settingDungeonDuo.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonDuo", settingDungeonDuo.checked);
+		settingsSync.setBool("settingDungeonDuo", settingDungeonDuo.checked);
 	});
 
 	settingDungeonE0.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonE0", settingDungeonE0.checked);
+		settingsSync.setBool("settingDungeonE0", settingDungeonE0.checked);
 	});
 
 	settingDungeonE1.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonE1", settingDungeonE1.checked);
+		settingsSync.setBool("settingDungeonE1", settingDungeonE1.checked);
 	});
 
 	settingDungeonE2.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonE2", settingDungeonE2.checked);
+		settingsSync.setBool("settingDungeonE2", settingDungeonE2.checked);
 	});
 
 	settingDungeonE3.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonE3", settingDungeonE3.checked);
+		settingsSync.setBool("settingDungeonE3", settingDungeonE3.checked);
 	});
 
 	settingDungeonE4.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonE4", settingDungeonE4.checked);
+		settingsSync.setBool("settingDungeonE4", settingDungeonE4.checked);
 	});
 
 	settingDungeonCorrupted.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonCorrupted", settingDungeonCorrupted.checked);
+		settingsSync.setBool("settingDungeonCorrupted", settingDungeonCorrupted.checked);
 	});
 
 	settingDungeonHellgate.addEventListener("click", () => {
-		localStorage.setItem("settingDungeonHellgate", settingDungeonHellgate.checked);
+		settingsSync.setBool("settingDungeonHellgate", settingDungeonHellgate.checked);
 	});
 </script>
 

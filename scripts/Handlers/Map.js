@@ -1,4 +1,4 @@
-class MapH
+export class MapH
 {
     constructor(id)
     {

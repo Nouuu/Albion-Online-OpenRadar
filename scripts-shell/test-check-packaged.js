@@ -1,11 +1,11 @@
-// Script de test: simule le mode packagé en définissant process.pkg et en appelant runRuntimeChecks()
-(function(){
-  console.log('Simulate packaged environment for runtime-check');
-  // Simuler process.pkg
-  process.pkg = {};
-  const { runRuntimeChecks } = require('../scripts/Utils/runtime-check');
-  const ok = runRuntimeChecks();
-  console.log('runRuntimeChecks returned:', ok);
-  process.exit(ok ? 0 : 1);
-})();
+// Test script: simulates packaged mode by setting process.pkg and calling runRuntimeChecks()
+import {runRuntimeChecks} from '../server-scripts/Utils/runtime-check.js';
 
+(function () {
+    console.log('Simulate packaged environment for runtime-check');
+    // Simulate process.pkg
+    process.pkg = {};
+    const result = runRuntimeChecks();
+    console.log('runRuntimeChecks returned:', result);
+    process.exit(result.ok ? 0 : 1);
+})();

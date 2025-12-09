@@ -1,3 +1,6 @@
+import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import settingsSync from "../Utils/SettingsSync.js";
+
 class Fish
 {
     constructor(id, posX, posY, type, sizeSpawned = 0, sizeLeftToSpawn = 0)
@@ -16,19 +19,14 @@ class Fish
 
 export class FishingHandler
 {
-    constructor(settings)
+    constructor()
     {
-        const { CATEGORIES, EVENTS } = window;
-        this.CATEGORIES = CATEGORIES;
-        this.EVENTS = EVENTS;
-        
-        this.settings = settings;
         this.fishes = [];
     }
 
     NewFishEvent(Parameters)
     {
-        if (!this.settings.showFish) return;
+        if (settingsSync.getBool("settingShowFish") === false) return;
 
         const id = Parameters[0];
         const type = Parameters[4];
@@ -69,10 +67,10 @@ export class FishingHandler
     // TODO
     FishingEnd(Parameters)
     {
-        if (!this.settings.showFish) return;
+        if (settingsSync.getBool("settingShowFish") === false) return;
 
         // 🐛 DEBUG: Log fishing end event
-        window.logger?.debug(this.CATEGORIES.FISHING, this.EVENTS.FishingEnd, {
+        window.logger?.debug(CATEGORIES.FISHING, EVENTS.FishingEnd, {
             parameters: Parameters
         });
 

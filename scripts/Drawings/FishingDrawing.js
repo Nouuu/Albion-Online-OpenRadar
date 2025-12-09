@@ -1,10 +1,7 @@
+import {DrawingUtils} from "../Utils/DrawingUtils.js";
+
 export class FishingDrawing extends DrawingUtils
 {
-    constructor(settings)
-    {
-        super(settings);
-    }
-
     Interpolate(fishes, lpX, lpY, t)
     {
         for (const fish of fishes)

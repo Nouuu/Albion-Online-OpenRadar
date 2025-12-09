@@ -1,96 +1,67 @@
 function data() {
-  function getThemeFromLocalStorage() {
-    // if user already changed the theme, use it
-    if (window.localStorage.getItem('dark')) {
-      return JSON.parse(window.localStorage.getItem('dark'))
+    function getSidebarCollapsedFromLocalStorage() {
+        if (window.localStorage.getItem('sidebarCollapsed')) {
+            return JSON.parse(window.localStorage.getItem('sidebarCollapsed'))
+        }
+        return false
     }
 
-    // else return their preferences
-    return (
-      !!window.matchMedia &&
-      window.matchMedia('(prefers-color-scheme: dark)').matches
-    )
-  }
-
-  function setThemeToLocalStorage(value) {
-    window.localStorage.setItem('dark', value)
-  }
-
-  function getSidebarCollapsedFromLocalStorage() {
-    if (window.localStorage.getItem('sidebarCollapsed')) {
-      return JSON.parse(window.localStorage.getItem('sidebarCollapsed'))
+    function setSidebarCollapsedToLocalStorage(value) {
+        window.localStorage.setItem('sidebarCollapsed', value)
     }
-    return false
-  }
 
-  function setSidebarCollapsedToLocalStorage(value) {
-    window.localStorage.setItem('sidebarCollapsed', value)
-  }
+    return {
+        // Dark mode is always enabled
+        dark: true,
 
-  return {
-    dark: getThemeFromLocalStorage(),
-    toggleTheme() {
-      this.dark = !this.dark
-      setThemeToLocalStorage(this.dark)
-    },
-    sidebarCollapsed: getSidebarCollapsedFromLocalStorage(),
-    sidebarHoverExpanded: false,
-    sidebarHoverTimeout: null,
-    toggleSidebar() {
-      this.sidebarCollapsed = !this.sidebarCollapsed
-      setSidebarCollapsedToLocalStorage(this.sidebarCollapsed)
-    },
-    onSidebarMouseEnter() {
-      if (this.sidebarCollapsed) {
-        this.sidebarHoverTimeout = setTimeout(() => {
-          this.sidebarHoverExpanded = true
-        }, 500) // 500ms delay
-      }
-    },
-    onSidebarMouseLeave() {
-      if (this.sidebarHoverTimeout) {
-        clearTimeout(this.sidebarHoverTimeout)
-        this.sidebarHoverTimeout = null
-      }
-      this.sidebarHoverExpanded = false
-    },
-    isSideMenuOpen: false,
-    toggleSideMenu() {
-      this.isSideMenuOpen = !this.isSideMenuOpen
-    },
-    closeSideMenu() {
-      this.isSideMenuOpen = false
-    },
-    // ...existing code...
-    isNotificationsMenuOpen: false,
-    toggleNotificationsMenu() {
-      this.isNotificationsMenuOpen = !this.isNotificationsMenuOpen
-    },
-    closeNotificationsMenu() {
-      this.isNotificationsMenuOpen = false
-    },
-    isProfileMenuOpen: false,
-    toggleProfileMenu() {
-      this.isProfileMenuOpen = !this.isProfileMenuOpen
-    },
-    closeProfileMenu() {
-      this.isProfileMenuOpen = false
-    },
-    isPagesMenuOpen: false,
-    togglePagesMenu() {
-      this.isPagesMenuOpen = !this.isPagesMenuOpen
-    },
-    // Modal
-    isModalOpen: false,
-    trapCleanup: null,
-    openModal() {
-      this.isModalOpen = true
-      this.trapCleanup = focusTrap(document.querySelector('#modal'))
-    },
-    closeModal() {
-      this.isModalOpen = false
-      this.trapCleanup()
-    },
-    currentPath: window.location.pathname,
-  }
+        // Sidebar state
+        sidebarCollapsed: getSidebarCollapsedFromLocalStorage(),
+        sidebarHoverExpanded: false,
+        sidebarHoverTimeout: null,
+
+        toggleSidebar() {
+            this.sidebarCollapsed = !this.sidebarCollapsed
+            setSidebarCollapsedToLocalStorage(this.sidebarCollapsed)
+        },
+
+        onSidebarMouseEnter() {
+            if (this.sidebarCollapsed) {
+                this.sidebarHoverTimeout = setTimeout(() => {
+                    this.sidebarHoverExpanded = true
+                }, 1500)
+            }
+        },
+
+        onSidebarMouseLeave() {
+            if (this.sidebarHoverTimeout) {
+                clearTimeout(this.sidebarHoverTimeout)
+                this.sidebarHoverTimeout = null
+            }
+            this.sidebarHoverExpanded = false
+        },
+
+        // Mobile menu
+        isSideMenuOpen: false,
+        toggleSideMenu() {
+            this.isSideMenuOpen = !this.isSideMenuOpen
+        },
+        closeSideMenu() {
+            this.isSideMenuOpen = false
+        },
+
+        // Current path for active menu item
+        currentPath: window.location.pathname,
+
+        // Menu items configuration with Lucide icons
+        menuItems: [
+            {path: '/home', label: 'Radar', icon: 'radar'},
+            {path: '/players', label: 'PvP & Players', icon: 'home'},
+            {path: '/resources', label: 'Resources', icon: 'gem'},
+            {path: '/enemies', label: 'Enemies', icon: 'flame'},
+            {path: '/chests', label: 'Other', icon: 'package'},
+            {path: '/map', label: 'Map', icon: 'map-pin'},
+            {path: '/ignorelist', label: 'Ignore List', icon: 'eye-off'},
+            {path: '/settings', label: 'Settings', icon: 'settings'}
+        ]
+    }
 }
