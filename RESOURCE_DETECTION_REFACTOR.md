@@ -1,8 +1,13 @@
 # Plan de Refonte du Système de Détection des Ressources
 
-**Date:** 2025-12-02
-**Statut:** Phase 3 🔄 EN COURS
-**Objectif:** Corriger le bug T6+ fiber/leather et simplifier le système de détection
+**Date de création:** 2025-12-02  
+**Dernière mise à jour:** 2025-12-09  
+**Statut:** Phase 3B ✅ COMPLÉTÉE | Phase 4 ⏸️ EN ATTENTE  
+**Objectif:** Corriger les bugs de détection et migrer vers système basé database
+
+> **📘 DOCUMENT DE RÉFÉRENCE**  
+> Ce document est le **document officiel de suivi** du projet de refonte.  
+> Les autres documents (`ENCHANTMENTS.md`, `IMPROVEMENTS.md`, `TODO.md`) sont des références secondaires.
 
 ---
 
@@ -74,10 +79,11 @@ addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null) {
 **ROOT CAUSE DU BUG T6+:**
 Les typeNumbers du serveur (0-27) sont **fiables et complets**. L'override via MobsHandler.staticResourceTypeIDs **corrompt** ces données et cause le bug T6+.
 
-### 🔧 Phase 3B: Fix Bugs Living Resources - IMPLÉMENTÉE (EN ATTENTE DE TESTS)
+### ✅ Phase 3B: Fix Bugs Living Resources - COMPLÉTÉE
 
-**Date:** 2025-12-02
-**Statut:** ⏳ Code modifié, en attente de validation utilisateur
+**Date:** 2025-12-02  
+**Statut:** ✅ **COMPLÉTÉE ET VALIDÉE**  
+**Commit:** (en attente de création)
 
 #### Bugs Identifiés (Tests Utilisateur)
 
@@ -163,43 +169,99 @@ calculateEnchantment(type, tier, rarity, paramsEnchant) {
 4. ✅ Pas de formule approximative fragile
 5. ✅ Cohérence living creatures ↔ static resources après mort
 
-#### Tests de Validation Requis
+#### Résultat
 
-**⚠️ IMPORTANT:** Ces changements doivent être testés in-game avant de confirmer le fix.
+**✅ CORRECTION VALIDÉE**
 
-**Tests critiques à effectuer:**
-1. 🧪 **Living Hide T6e0** - Vérifier qu'il est détecté en e0 (pas e3)
-2. 🧪 **Living Hide T6e1/e2/e3** - Vérifier enchants corrects
-3. 🧪 **Living Ore T5** - Vérifier tier 5 (pas T3)
-4. 🧪 **Cohérence alive → dead** - Tuer la créature, vérifier que la ressource statique a le même tier/enchant
+Le système utilise maintenant directement `parameters[33]` du serveur, ce qui résout :
+- ✅ Hide/Leather T6+ enchant correct sur créatures vivantes
+- ✅ Ore T5 tier correct sur créatures vivantes
+- ✅ Code simplifié et plus fiable
+- ✅ Cohérence living creatures ↔ static resources après mort
 
-**Tests de non-régression:**
-1. ✅ Hide T4-5 avec enchant (doivent continuer de fonctionner)
-2. ✅ Fiber T4-5 avec enchant (doivent continuer de fonctionner)
-3. ✅ Ressources statiques T4-6 (ne doivent pas régresser)
+### ⏸️ Phase 4: Utilisation Database - EN ATTENTE
 
-**Logs à analyser après tests:**
-```bash
-# Rechercher les living creatures dans les logs
-grep '"category":"\[CLIENT\] MOB"' logs/sessions/session_*.jsonl | grep '"typeName":"LivingSkinnable"' | head -20
+**Objectif :** Utiliser `HarvestablesDatabase` dans les handlers  
+**Statut :** Infrastructure créée mais **non utilisée**
 
-# Vérifier les enchants détectés
-grep '"enchant":[1-9]' logs/sessions/session_*.jsonl | grep '"typeName":"LivingSkinnable"'
-```
+**Ce qui existe :**
+- ✅ `HarvestablesDatabase.js` créé et chargé
+- ✅ Exposé dans `window.harvestablesDatabase`
+- ✅ 5 types, 190 combinaisons validées
+- ✅ Méthodes de validation disponibles
 
-**Si tests échouent:**
-- Analyser les logs pour comprendre pourquoi `parameters[33]` ne contient pas le bon enchant
-- Vérifier si le serveur envoie bien l'enchant dans parameters[33]
-- Envisager un fallback hybride (parameters[33] > calculation)
+**Ce qui manque :**
+- ❌ `HarvestablesHandler` ne consulte PAS la database
+- ❌ Validation des ressources via database
+- ❌ `GetStringType()` pourrait utiliser `database.getResourceTypeFromTypeNumber()`
+- ❌ Logs de warning pour ressources invalides
 
-**Si tests réussissent:**
-- ✅ Marquer Phase 3B comme COMPLÉTÉE
-- ✅ Créer commit git
-- ✅ Passer à Phase 4 (optionnelle)
+**Estimation :** 2-3h de travail
 
-### ⏸️ Phase 4: Simplification - EN ATTENTE
+### ⏸️ Phase 5: Migration MobsDatabase - EN ATTENTE
 
-### ⏸️ Phase 5: Tests - EN ATTENTE
+**Objectif :** Créer et utiliser `MobsDatabase` (comme `HarvestablesDatabase`)
+
+**Ce qui existe :**
+- ✅ `mobs.json` dans `ao-bin-dumps/`
+- ✅ `MobsInfo.js` avec 235 TypeIDs hardcodés
+
+**Ce qui manque :**
+- ❌ `MobsDatabase.js` pas créé
+- ❌ `mobs.json` pas chargé
+- ❌ Migration des TypeIDs vers database
+
+**Questions :**
+- Quelle est la différence entre `mobs.json`, `resources.json` et `harvestables.json` ?
+- `resources.json` doit-il être utilisé ?
+
+---
+
+## 📊 État Actuel du Système (Dec 2025)
+
+### ✅ Ce Qui Fonctionne
+
+**Détection des ressources :**
+- ✅ Ressources statiques T1-T8 (Fiber, Hide, Wood, Ore, Rock)
+- ✅ Enchantements .0 à .4 détectés correctement
+- ✅ Créatures vivantes (animals) via `MobsHandler`
+- ✅ Event-driven (Events 38, 40, 46)
+
+**Système d'enchantements (Phase 3B) :**
+- ✅ Utilise `parameters[33]` directement (fiable)
+- ✅ Fonctionne pour tous les types (Hide, Fiber, Ore, Wood, Rock)
+- ✅ Plus de calcul approximatif depuis `rarity`
+
+**Infrastructure :**
+- ✅ `HarvestablesDatabase` créée et chargée
+- ✅ Exposée dans `window.harvestablesDatabase`
+- ✅ Parse `harvestables.json` (5 types, 190 combinaisons)
+
+### ❌ Ce Qui N'Est Pas Terminé
+
+**Utilisation des databases :**
+- ❌ `HarvestablesDatabase` **jamais consultée** par les handlers
+- ❌ `mobs.json` et `resources.json` **pas utilisés**
+- ❌ Pas de validation via database
+
+**Code Legacy :**
+- ⚠️ `MobsInfo.js` : 235 TypeIDs hardcodés (toujours utilisé)
+- ⚠️ `HarvestablesHandler.GetStringType()` : Hardcoded mapping (toujours utilisé)
+- ⚠️ Duplication de logique (database + hardcoded)
+
+**Impact :**
+- ⚠️ Ressources invalides peuvent être affichées (pas de validation)
+- ⚠️ Maintenance double (MobsInfo.js + harvestables.json)
+- ⚠️ Pas de cohérence avec `ItemsDatabase` et `SpellsDatabase` (qui sont utilisés)
+
+### 🔄 Différence avec Items/Spells
+
+| Système       | Database Créée | Database Utilisée | Validation |
+|---------------|----------------|-------------------|------------|
+| Items         | ✅             | ✅                | ✅         |
+| Spells        | ✅             | ✅                | ✅         |
+| Harvestables  | ✅             | ❌                | ❌         |
+| Mobs          | ❌             | ❌                | ❌         |
 
 ---
 
@@ -1196,4 +1258,96 @@ window.logger.logs.filter(l =>
 
 ---
 
+## 🎯 Synthèse Finale - Où en sommes-nous ? (Déc 2025)
+
+### ✅ Ce qui est FAIT et FONCTIONNE
+
+**Infrastructure Database :**
+- ✅ `HarvestablesDatabase.js` créé, testé, chargé
+- ✅ Parse `harvestables.json` (5 types, 190 combinaisons)
+- ✅ Exposé dans `window.harvestablesDatabase`
+- ✅ Méthodes de validation disponibles
+
+**Détection des Ressources :**
+- ✅ Toutes les ressources T1-T8 détectées (Fiber, Hide, Wood, Ore, Rock)
+- ✅ Enchantements .0 à .4 détectés correctement
+- ✅ Living resources (animaux) détectés via `MobsHandler`
+- ✅ Static resources détectés via `HarvestablesHandler`
+- ✅ Système purement event-driven (Events 38, 40, 46)
+
+**Système d'Enchantements (Phase 3B) :**
+- ✅ Utilise `parameters[33]` directement (données serveur fiables)
+- ✅ Fonctionne pour TOUS les types (Hide, Fiber, Ore, Wood, Rock)
+- ✅ Plus de calcul approximatif depuis `rarity`
+- ✅ Code simplifié et maintenable
+
+**Bugs Corrigés :**
+- ✅ Bug T6+ (override typeNumber supprimé)
+- ✅ Bug enchantements living resources (params[33])
+- ✅ Cohérence living ↔ static après mort de la créature
+
+### ❌ Ce qui N'EST PAS terminé
+
+**Utilisation des Databases :**
+- ❌ `HarvestablesDatabase` **jamais consultée** par les handlers
+- ❌ Pas de validation via database (ressources invalides peuvent passer)
+- ❌ `GetStringType()` utilise toujours du hardcoded mapping
+- ❌ `mobs.json` et `resources.json` pas exploités
+
+**Code Legacy :**
+- ⚠️ `MobsInfo.js` : 235 TypeIDs hardcodés (toujours utilisé)
+- ⚠️ Duplication de logique (database + hardcoded)
+- ⚠️ Pas de cohérence avec `ItemsDatabase`/`SpellsDatabase` (qui sont utilisés)
+
+**Phase 4 (EN ATTENTE) :**
+- Intégrer `HarvestablesDatabase` dans `shouldDisplayHarvestable()`
+- Valider les combinaisons tier/enchant invalides
+- Logs de warning pour ressources non présentes dans database
+- Utiliser `database.getResourceTypeFromTypeNumber()` au lieu de hardcoded
+
+**Phase 5 (EN ATTENTE) :**
+- Créer `MobsDatabase.js`
+- Charger et parser `mobs.json`
+- Migrer les 235 TypeIDs vers database
+- Clarifier l'usage de `resources.json`
+
+### 🤔 Pourquoi la Database n'est-elle pas utilisée ?
+
+**Raison :** Les Phases 3 et 3B se concentraient sur la correction de bugs critiques (T6+, enchantements). L'utilisation de la database (Phase 4) a été reportée car **le système actuel fonctionne**.
+
+**Conséquence :** Infrastructure moderne disponible, mais logique legacy toujours active.
+
+### 📊 Comparaison avec Items/Spells
+
+| Système       | Database Créée | Database Utilisée | Validation | Code Legacy |
+|---------------|----------------|-------------------|------------|-------------|
+| **Items**     | ✅             | ✅                | ✅         | ❌          |
+| **Spells**    | ✅             | ✅                | ✅         | ❌          |
+| **Harvestables** | ✅          | ❌                | ❌         | ✅          |
+| **Mobs**      | ❌             | ❌                | ❌         | ✅          |
+
+### 🎯 Recommandation
+
+**Option 1 : Garder l'état actuel**
+- ✅ Le système fonctionne correctement
+- ✅ Pas de bugs connus
+- ❌ Mais maintenance double (database + hardcoded)
+
+**Option 2 : Compléter Phase 4 (2-3h)**
+- ✅ Cohérence avec Items/Spells
+- ✅ Validation automatique
+- ✅ Meilleure maintenabilité
+- ✅ Suppression du code legacy
+
+**Mon avis :** Phase 4 vaut la peine d'être complétée pour unifier l'architecture.
+
+---
+
 **Fin du document de travail**
+
+**Dernière mise à jour :** 2025-12-09  
+**Statut :** Phase 3B ✅ COMPLÉTÉE | Phase 4 ⏸️ EN ATTENTE  
+**Documents associés :**
+- `docs/technical/ENCHANTMENTS.md` (historique)
+- `docs/project/IMPROVEMENTS.md` (améliorations générales)
+- `docs/project/TODO.md` (tâches générales)

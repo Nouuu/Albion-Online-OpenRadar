@@ -2,6 +2,9 @@
 
 This document summarizes the main improvements made to OpenRadar.
 
+> **📘 Pour la détection des ressources :** Voir `/RESOURCE_DETECTION_REFACTOR.md`  
+> Ce document contient l'état complet du système de détection des ressources.
+
 ---
 
 ## Implemented Features
@@ -23,10 +26,18 @@ This document summarizes the main improvements made to OpenRadar.
 - Faction
 - Animal (human-readable name)
 
-### 3. Rarity-Based Enchantment Detection
+### 3. Enchantment Detection System (Phase 3B - Dec 2025)
 
-- Enchantment computed from `rarity` field, not `params[33]`
-- See `docs/technical/ENCHANTMENTS.md` for formula
+**System actuel (Déc 2025) :**
+- ✅ Utilise `parameters[33]` directement du serveur
+- ✅ Fonctionne pour tous les types (Hide, Fiber, Ore, Wood, Rock)
+- ✅ Plus de calcul approximatif depuis `rarity`
+
+**Système obsolète (Nov 2025) :**
+- ❌ Calcul depuis le champ `rarity` (unreliable)
+- Voir `docs/technical/ENCHANTMENTS.md` pour l'historique
+
+**Voir :** `/RESOURCE_DETECTION_REFACTOR.md` pour les détails
 
 ### 4. Player Detection System
 

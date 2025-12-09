@@ -1,7 +1,10 @@
 # 📋 TODO
 
-**Last Update**: 2025-11-07
-**Status**: ✅ Player detection system implemented
+**Last Update**: 2025-12-09
+**Status**: Phase 3B ✅ Complétée | Phase 4 ⏸️ En attente
+
+> **📘 DÉTECTION DES RESSOURCES :** `/RESOURCE_DETECTION_REFACTOR.md`  
+> Ce document contient l'état complet et à jour du système de détection.
 
 > 📖 **Technical Details**: [DEV_NOTES.md](DEV_NOTES.md) | **Tools**: [tools/](tools/)  
 > 🎯 **New**: [Overlay Mode](OVERLAY_MODE.md) - Popup window for radar  
@@ -29,24 +32,24 @@
     - ✅ TypeID 530 = Fiber T4 for all enchantments
     - ⚠️ **BUT : Harvestable ≠ Skinnable !**
 
-  **Harvestable (Fiber/Wood/Ore/Rock) :**
-    - ✅ `rarity` is **VARIABLE** and allows enchantment calculation
-    - ✅ Validated formula : `enchant = floor((rarity - base) / 45)`
-    - ✅ Base rarity : T3=78, T4=92, T5=112, T6=132...
-    - ✅ Fiber T4.0 : rarity=92 → enchant=0 ✓
-    - ✅ Fiber T5.0 : rarity=112 → enchant=0 ✓
+  **⚠️ SYSTÈME OBSOLÈTE (Nov 2025) - Conservé pour historique**
 
-  **Skinnable (Hide) :**
-    - ❌ `rarity` is **CONSTANT** per TypeID (false value!)
-    - ❌ Hide T5 : **ALWAYS** rarity=257 (regardless of .0/.1/.2/.3)
-    - ❌ Impossible to calculate enchant from rarity for Hide
-    - ✅ Real enchantment comes from **corpse** (HarvestablesHandler)
-    - ✅ Solution : Leave enchant=0 at spawn, will be corrected at kill
+  **Système Actuel (Phase 3B - Déc 2025) :**
+    - ✅ Utilise `parameters[33]` directement du serveur
+    - ✅ Fonctionne pour TOUS les types (Hide, Fiber, Ore, Wood, Rock)
+    - ✅ Plus de calcul approximatif depuis `rarity`
+    - ✅ Code simplifié et fiable
+    - 📘 **Voir :** `/RESOURCE_DETECTION_REFACTOR.md`
 
-  **Refactored Code :**
-    - ✅ Centralized method `calculateEnchantment(type, tier, rarity)`
-    - ✅ Different treatment Harvestable vs Skinnable
-    - ✅ Logging displays calculated enchant (Fiber) or 0 (Hide awaiting corpse)
+  **Ancien système (Nov 2025 - OBSOLÈTE) :**
+
+  Harvestable (Fiber/Wood/Ore/Rock) :
+    - ❌ Calcul depuis `rarity` (unreliable)
+    - ❌ Formule : `enchant = floor((rarity - base) / 45)`
+
+  Skinnable (Hide) :
+    - ❌ `rarity` constant par TypeID (faux)
+    - ❌ Impossible de calculer l'enchant depuis rarity
 - **localStorage Cache** : Functional (cross-reference HarvestablesHandler)
 - **Settings Filtering** : By Tier + Enchant operational
 - **🆕 Overlay Mode** : Popup window with opacity control ✅
