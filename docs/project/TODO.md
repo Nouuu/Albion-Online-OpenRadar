@@ -1,7 +1,7 @@
 # 📋 TODO
 
 **Last Update**: 2025-12-09
-**Status**: Phase 3B ✅ Complétée | Phase 4 ⏸️ En attente
+**Status**: Phase 3B ✅ Complétée | Phase 4 🔄 Implémentée (EN ATTENTE TESTS)
 
 > **📘 DÉTECTION DES RESSOURCES :** `/RESOURCE_DETECTION_REFACTOR.md`  
 > Ce document contient l'état complet et à jour du système de détection.

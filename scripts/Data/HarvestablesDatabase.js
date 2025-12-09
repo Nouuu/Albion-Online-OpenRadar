@@ -66,6 +66,17 @@ export class HarvestablesDatabase {
             this.stats.loadTimeMs = Math.round(performance.now() - startTime);
             this.isLoaded = true;
 
+            // 🔍 Debug: Log sample combinations for each resource type
+            const sampleCombinations = {};
+            for (const [resourceType, data] of this.harvestableTypes.entries()) {
+                sampleCombinations[resourceType] = {
+                    tiers: Array.from(data.tiers),
+                    sampleKeys: Array.from(this.validCombinations)
+                        .filter(k => k.startsWith(resourceType))
+                        .slice(0, 10) // First 10 combinations
+                };
+            }
+
             window.logger?.info(
                 CATEGORIES.ITEM_DATABASE,
                 'HarvestablesLoaded',
@@ -74,6 +85,7 @@ export class HarvestablesDatabase {
                     combinationsLoaded: this.stats.combinationsLoaded,
                     loadTimeMs: this.stats.loadTimeMs,
                     resources: Array.from(this.harvestableTypes.keys()),
+                    sampleCombinations
                 }
             );
 
