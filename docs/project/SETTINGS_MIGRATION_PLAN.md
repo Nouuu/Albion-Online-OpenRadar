@@ -1,96 +1,94 @@
-# 📋 Phase 3.2 - Migration Settings.js vers SettingsSync
+# 📋 Phase 3.2 - Migration from Settings.js to SettingsSync
 
-**Date de création:** 2025-12-04
-**Dernière mise à jour:** 2025-12-04 (Session en cours)
-**Objectif:** Centraliser tout l'accès localStorage via SettingsSync pour éliminer le code legacy et faciliter l'accès
-aux settings
-**Durée estimée:** 6-7 heures
-**Durée réelle:** ~2h (en cours)
-**Statut:** 🟢 **EN COURS** (~50% complété)
+**Creation date:** 2025-12-04
+**Last update:** 2025-12-04 (Ongoing session)
+**Goal:** Centralize all localStorage access via SettingsSync to eliminate legacy code and simplify settings access
+**Estimated duration:** 6-7 hours
+**Actual duration:** ~2h (ongoing)
+**Status:** 🟢 **IN PROGRESS** (~50% completed)
 
-## 🎯 Résumé de Progression (Pour Reprendre Facilement)
+## 🎯 Progress Summary (Quick Resume)
 
-### ✅ Déjà Terminé (~80 appels localStorage migrés)
+### ✅ Already Completed (~80 localStorage calls migrated)
 
-1. ✅ **Sous-phase 0:** SettingsSync enrichi avec `getNumber()`, `setNumber()`, `getJSON()`, `setJSON()`, `remove()`
-2. ✅ **Sous-phase 1:** Settings.js migré (~60 appels)
-3. ✅ **Sous-phase 2:** drawing-ui.js migré (12 appels)
-4. ✅ **Sous-phase 3:** LoggerClient.js migré (8 appels)
+1. ✅ **Sub-phase 0:** SettingsSync enhanced with `getNumber()`, `setNumber()`, `getJSON()`, `setJSON()`, `remove()`
+2. ✅ **Sub-phase 1:** Settings.js migrated (~60 calls)
+3. ✅ **Sub-phase 2:** drawing-ui.js migrated (12 calls)
+4. ✅ **Sub-phase 3:** LoggerClient.js migrated (8 calls)
 
-### ⏳ Ce Qui Reste À Faire (~70 appels localStorage)
+### ⏳ Remaining Tasks (~70 localStorage calls)
 
-5. ⏳ **Sous-phase 4 (EN COURS):** Fichiers support (ResourcesHelper, MobsHandler, PlayersHandler, init-alpine.js,
-   LoggerClient) - ~10 appels
-6. ⏳ **Sous-phase 5:** Templates EJS (10 fichiers) - ~70+ appels
-7. ⏳ **Tests de validation finale**
+5. ⏳ **Sub-phase 4 (IN PROGRESS):** Support files (ResourcesHelper, MobsHandler, PlayersHandler, init-alpine.js, LoggerClient) - ~10 calls
+6. ⏳ **Sub-phase 5:** EJS Templates (10 files) - ~70+ calls
+7. ⏳ **Final validation tests**
 
-### 📂 Fichiers Modifiés Jusqu'ici
+### 📂 Files Modified So Far
 
-- `scripts/Utils/SettingsSync.js` (méthodes ajoutées)
-- `scripts/Utils/Settings.js` (migration complète ✅)
-- `scripts/drawing-ui.js` (migration complète ✅)
-- `scripts/LoggerClient.js` (migration complète ✅)
+- `scripts/Utils/SettingsSync.js` (methods added)
+- `scripts/Utils/Settings.js` (fully migrated ✅)
+- `scripts/drawing-ui.js` (fully migrated ✅)
+- `scripts/LoggerClient.js` (fully migrated ✅)
 
 ---
 
-## 📊 Vue d'ensemble
+## 📊 Overview
 
-### Problème actuel
+### Current Problem
 
-- **~150+ appels localStorage directs** éparpillés dans **19 fichiers**
-- Code dupliqué: helpers `returnLocalBool()`, `getBool()`, `getNumber()` dans plusieurs fichiers
-- Pas d'abstraction unifiée pour l'accès aux settings
-- Logique de lecture/écriture non centralisée
+- **~150+ direct localStorage calls** scattered across **19 files**
+- Duplicated code: helpers `returnLocalBool()`, `getBool()`, `getNumber()` in multiple files
+- No unified abstraction for settings access
+- Read/write logic not centralized
 
-### Solution proposée
+### Proposed Solution
 
-- **Une seule API:** SettingsSync pour TOUS les accès localStorage
-- **Méthodes typées:** `.getBool()`, `.getNumber()`, `.getJSON()`, `.get()`
-- **Broadcast automatique:** Synchronisation cross-window instantanée
-- **Code propre:** Plus de duplication, une seule source de vérité
+- **Single API:** SettingsSync for ALL localStorage access
+- **Typed methods:** `.getBool()`, `.getNumber()`, `.getJSON()`, `.get()`
+- **Automatic broadcast:** Instant cross-window synchronization
+- **Clean code:** No more duplication, single source of truth
 
-### Bénéfices attendus
+### Expected Benefits
 
-- ✅ Code maintenable et évolutif
-- ✅ API claire et documentée
-- ✅ Synchronisation cross-window garantie
-- ✅ Facilite l'ajout de nouveaux settings
-- ✅ Debugging simplifié
+- ✅ Maintainable and scalable code
+- ✅ Clear and documented API
+- ✅ Guaranteed cross-window synchronization
+- ✅ Easier addition of new settings
+- ✅ Simplified debugging
 
 ---
 
-## 📈 Analyse d'impact
+## 📈 Impact Analysis
 
-### Fichiers affectés (19 fichiers)
+### Affected Files (19 files)
 
-| Catégorie         | Fichiers                                     | localStorage calls    | Priorité    |
+| Category           | Files                                         | localStorage calls    | Priority    |
 |-------------------|----------------------------------------------|-----------------------|-------------|
-| **Core**          | Settings.js                                  | 58+                   | 🔴 CRITIQUE |
-| **UI Scripts**    | drawing-ui.js                                | 6                     | 🟡 HAUTE    |
-| **Logging**       | LoggerClient.js                              | 8                     | 🟢 MOYENNE  |
-| **Handlers**      | PlayersHandler.js, MobsHandler.js            | 4                     | 🟢 MOYENNE  |
-| **Utils**         | ResourcesHelper.js, Utils.js, init-alpine.js | 5                     | 🟢 MOYENNE  |
-| **EJS Templates** | 10 fichiers                                  | 70+                   | 🟡 HAUTE    |
-| **Sync**          | SettingsSync.js                              | N/A (déjà implémenté) | ✅ OK        |
+| **Core**          | Settings.js                                  | 58+                   | 🔴 CRITICAL |
+| **UI Scripts**    | drawing-ui.js                                | 6                     | 🟡 HIGH     |
+| **Logging**       | LoggerClient.js                              | 8                     | 🟢 MEDIUM   |
+| **Handlers**      | PlayersHandler.js, MobsHandler.js            | 4                     | 🟢 MEDIUM   |
+| **Utils**         | ResourcesHelper.js, Utils.js, init-alpine.js | 5                     | 🟢 MEDIUM   |
+| **EJS Templates** | 10 files                                      | 70+                   | 🟡 HIGH     |
+| **Sync**          | SettingsSync.js                              | N/A (already implemented) | ✅ OK        |
 
-**Total:** 150+ appels à migrer
+**Total:** 150+ calls to migrate
 
 ---
 
-## 🛠️ Plan d'exécution
+## 🛠️ Execution Plan
 
-### ✅ Sous-phase 0: Enrichir SettingsSync.js
+### ✅ Sub-phase 0: Enhance SettingsSync.js
 
-**Durée:** 30min
-**Statut:** ✅ **TERMINÉ**
+**Duration:** 30min
+**Status:** ✅ **COMPLETED**
 
-#### Objectif
+#### Objective
 
-Ajouter les méthodes manquantes pour tous les types de données utilisés dans le projet.
+Add missing methods for all data types used in the project.
 
-#### Tâches
+#### Tasks
 
-- [ ] **Ajouter `getNumber(key, defaultValue)`**
+- [ ] **Add `getNumber(key, defaultValue)`**
   ```javascript
   /**
    * Get a numeric setting from localStorage
@@ -108,7 +106,7 @@ Ajouter les méthodes manquantes pour tous les types de données utilisés dans 
   }
   ```
 
-- [ ] **Ajouter `setNumber(key, value)`**
+- [ ] **Add `setNumber(key, value)`**
   ```javascript
   /**
    * Set a numeric setting and broadcast it
@@ -120,7 +118,7 @@ Ajouter les méthodes manquantes pour tous les types de données utilisés dans 
   }
   ```
 
-- [ ] **Ajouter `getJSON(key, defaultValue)`**
+- [ ] **Add `getJSON(key, defaultValue)`**
   ```javascript
   /**
    * Get a JSON setting from localStorage
@@ -145,7 +143,7 @@ Ajouter les méthodes manquantes pour tous les types de données utilisés dans 
   }
   ```
 
-- [ ] **Ajouter `setJSON(key, value)`**
+- [ ] **Add `setJSON(key, value)`**
   ```javascript
   /**
    * Set a JSON setting and broadcast it
@@ -165,7 +163,7 @@ Ajouter les méthodes manquantes pour tous les types de données utilisés dans 
   }
   ```
 
-- [ ] **Ajouter `remove(key)`**
+- [ ] **Add `remove(key)`**
   ```javascript
   /**
    * Remove a setting and broadcast the deletion
@@ -199,7 +197,7 @@ Ajouter les méthodes manquantes pour tous les types de données utilisés dans 
   }
   ```
 
-- [ ] **Mettre à jour `handleMessage()` pour gérer 'setting-removed'**
+- [ ] **Update `handleMessage()` to handle 'setting-removed'**
   ```javascript
   handleMessage(data) {
       if (data.type === 'setting-changed' || data.type === 'setting-removed') {
@@ -210,39 +208,39 @@ Ajouter les méthodes manquantes pour tous les types de données utilisés dans 
 
 #### Tests
 
-- [ ] `getNumber('settingClusterRadius', 30)` retourne 30 si vide
-- [ ] `setNumber('settingClusterRadius', 50)` écrit '50' dans localStorage
-- [ ] `getJSON('ignoreList', [])` retourne [] si vide ou parse error
-- [ ] `setJSON('ignoreList', ['test'])` écrit '["test"]' dans localStorage
-- [ ] `remove('test')` supprime la clé de localStorage
-- [ ] Tous les broadcasts fonctionnent (vérifier dans autre onglet)
+- [ ] `getNumber('settingClusterRadius', 30)` returns 30 if empty
+- [ ] `setNumber('settingClusterRadius', 50)` writes '50' to localStorage
+- [ ] `getJSON('ignoreList', [])` returns [] if empty or parse error
+- [ ] `setJSON('ignoreList', ['test'])` writes '["test"]' to localStorage
+- [ ] `remove('test')` removes the key from localStorage
+- [ ] All broadcasts work (check in another tab)
 
 **Commit:** `feat(SettingsSync): add getNumber, setNumber, getJSON, setJSON, remove methods`
 
 ---
 
-### ✅ Sous-phase 1: Migrer Settings.js (CRITIQUE)
+### ✅ Sub-phase 1: Migrate Settings.js (CRITICAL)
 
-**Durée:** 1h30
-**Statut:** ✅ **TERMINÉ**
-**Fichiers modifiés:** `scripts/Utils/Settings.js` (~60 appels migrés)
+**Duration:** 1h30
+**Status:** ✅ **COMPLETED**
+**Modified files:** `scripts/Utils/Settings.js` (~60 calls migrated)
 
-#### Objectif
+#### Objective
 
-Remplacer tous les accès localStorage directs dans Settings.js par SettingsSync.
+Replace all direct localStorage access in Settings.js with SettingsSync.
 
 #### 1.1 Import SettingsSync
 
-- [ ] Ajouter l'import en haut de Settings.js
+- [ ] Add the import at the top of Settings.js
   ```javascript
   import settingsSync from './SettingsSync.js';
   ```
 
-#### 1.2 Supprimer returnLocalBool() et utiliser settingsSync.getBool()
+#### 1.2 Remove returnLocalBool() and use settingsSync.getBool()
 
-**Occurrences à migrer (~50):**
+**Occurrences to migrate (~50):**
 
-**Players section (lignes 469-486):**
+**Players section (lines 469-486):**
 
 - [ ] `this.showMapBackground = settingsSync.getBool("settingShowMap", false);`
 - [ ] `this.settingShowPlayers = settingsSync.getBool("settingShowPlayers", false);`
@@ -259,7 +257,7 @@ Remplacer tous les accès localStorage directs dans Settings.js par SettingsSync
 - [ ] `this.settingFactionPlayers = settingsSync.getBool("settingFactionPlayers", false);`
 - [ ] `this.settingDangerousPlayers = settingsSync.getBool("settingDangerousPlayers", false);`
 
-**Resources section (lignes 538-562):**
+**Resources section (lines 538-562):**
 
 - [ ] `this.livingResourcesHealthBar = settingsSync.getBool("settingLivingResourcesHealthBar", false);`
 - [ ] `this.livingResourcesID = settingsSync.getBool("settingLivingResourcesID", false);`
@@ -272,7 +270,7 @@ Remplacer tous les accès localStorage directs dans Settings.js par SettingsSync
 - [ ] `this.overlayCluster = settingsSync.getBool("settingResourceClusters", false);`
 - [ ] `this.showFish = settingsSync.getBool("settingFishing", false);`
 
-**Enemies section (lignes 566-593):**
+**Enemies section (lines 566-593):**
 
 - [ ] `this.enemyLevels[0] = settingsSync.getBool("settingNormalEnemy", false);`
 - [ ] `this.enemyLevels[1] = settingsSync.getBool("settingMediumEnemy", false);`
@@ -296,21 +294,21 @@ Remplacer tous les accès localStorage directs dans Settings.js par SettingsSync
 - [ ] `this.debugRawPacketsConsole = settingsSync.getBool("settingDebugRawPacketsConsole", false);`
 - [ ] `this.debugRawPacketsServer = settingsSync.getBool("settingDebugRawPacketsServer", false);`
 
-**Mists Bosses (lignes 596-602):**
+**Mists Bosses (lines 596-602):**
 
 - [ ] `this.bossCrystalSpider = settingsSync.getBool("settingBossCrystalSpider", false);`
 - [ ] `this.bossFairyDragon = settingsSync.getBool("settingBossFairyDragon", false);`
 - [ ] `this.bossVeilWeaver = settingsSync.getBool("settingBossVeilWeaver", false);`
 - [ ] `this.bossGriffin = settingsSync.getBool("settingBossGriffin", false);`
 
-**Chests (lignes 606-610):**
+**Chests (lines 606-610):**
 
 - [ ] `this.chestGreen = settingsSync.getBool("settingChestGreen", false);`
 - [ ] `this.chestBlue = settingsSync.getBool("settingChestBlue", false);`
 - [ ] `this.chestPurple = settingsSync.getBool("settingChestPurple", false);`
 - [ ] `this.chestYellow = settingsSync.getBool("settingChestYellow", false);`
 
-**Mists (lignes 613-623):**
+**Mists (lines 613-623):**
 
 - [ ] `this.mistSolo = settingsSync.getBool("settingMistSolo", false);`
 - [ ] `this.mistDuo = settingsSync.getBool("settingMistDuo", false);`
@@ -321,7 +319,7 @@ Remplacer tous les accès localStorage directs dans Settings.js par SettingsSync
 - [ ] `this.mistEnchants[3] = settingsSync.getBool("settingMistE3", false);`
 - [ ] `this.mistEnchants[4] = settingsSync.getBool("settingMistE4", false);`
 
-**Dungeons (lignes 626-636):**
+**Dungeons (lines 626-636):**
 
 - [ ] `this.dungeonEnchants[0] = settingsSync.getBool("settingDungeonE0", false);`
 - [ ] `this.dungeonEnchants[1] = settingsSync.getBool("settingDungeonE1", false);`
@@ -333,86 +331,86 @@ Remplacer tous les accès localStorage directs dans Settings.js par SettingsSync
 - [ ] `this.dungeonCorrupted = settingsSync.getBool("settingDungeonCorrupted", false);`
 - [ ] `this.dungeonHellgate = settingsSync.getBool("settingDungeonHellgate", false);`
 
-#### 1.3 Remplacer parseInt() par settingsSync.getNumber()
+#### 1.3 Replace parseInt() with settingsSync.getNumber()
 
-- [ ] Ligne 557: `this.overlayClusterRadius = settingsSync.getNumber("settingClusterRadius", 30);`
-- [ ] Ligne 560: `this.overlayClusterMinSize = settingsSync.getNumber("settingClusterMinSize", 2);`
-- [ ] Ligne 574: `this.minimumHealthEnemies = settingsSync.getNumber("settingTextMinimumHealthEnemies", 2100);`
+- [ ] Line 557: `this.overlayClusterRadius = settingsSync.getNumber("settingClusterRadius", 30);`
+- [ ] Line 560: `this.overlayClusterMinSize = settingsSync.getNumber("settingClusterMinSize", 2);`
+- [ ] Line 574: `this.minimumHealthEnemies = settingsSync.getNumber("settingTextMinimumHealthEnemies", 2100);`
 
-#### 1.4 Remplacer JSON.parse() par settingsSync.getJSON()
+#### 1.4 Replace JSON.parse() with settingsSync.getJSON()
 
-**Enchantment matrices (lignes 491-534):**
+**Enchantment matrices (lines 491-534):**
 
-- [ ] Ligne 491-493:
+- [ ] Line 491-493:
   `this.harvestingStaticFiber = settingsSync.getJSON("settingStaticFiberEnchants", this.harvestingStaticFiber);`
-- [ ] Ligne 495-497:
+- [ ] Line 495-497:
   `this.harvestingStaticHide = settingsSync.getJSON("settingStaticHideEnchants", this.harvestingStaticHide);`
-- [ ] Ligne 499-501:
+- [ ] Line 499-501:
   `this.harvestingStaticOre = settingsSync.getJSON("settingStaticOreEnchants", this.harvestingStaticOre);`
-- [ ] Ligne 503-505:
+- [ ] Line 503-505:
   `this.harvestingStaticWood = settingsSync.getJSON("settingStaticWoodEnchants", this.harvestingStaticWood);`
-- [ ] Ligne 507-509:
+- [ ] Line 507-509:
   `this.harvestingStaticRock = settingsSync.getJSON("settingStaticRockEnchants", this.harvestingStaticRock);`
-- [ ] Ligne 516-518:
+- [ ] Line 516-518:
   `this.harvestingLivingFiber = settingsSync.getJSON("settingLivingFiberEnchants", this.harvestingLivingFiber);`
-- [ ] Ligne 520-522:
+- [ ] Line 520-522:
   `this.harvestingLivingHide = settingsSync.getJSON("settingLivingHideEnchants", this.harvestingLivingHide);`
-- [ ] Ligne 524-526:
+- [ ] Line 524-526:
   `this.harvestingLivingOre = settingsSync.getJSON("settingLivingOreEnchants", this.harvestingLivingOre);`
-- [ ] Ligne 528-530:
+- [ ] Line 528-530:
   `this.harvestingLivingWood = settingsSync.getJSON("settingLivingWoodEnchants", this.harvestingLivingWood);`
-- [ ] Ligne 532-534:
+- [ ] Line 532-534:
   `this.harvestingLivingRock = settingsSync.getJSON("settingLivingRockEnchants", this.harvestingLivingRock);`
 
 **Ignore list:**
 
-- [ ] Ligne 638: `this.ignoreList = settingsSync.getJSON("ignoreList", []);`
+- [ ] Line 638: `this.ignoreList = settingsSync.getJSON("ignoreList", []);`
 
-#### 1.5 Remplacer localStorage.getItem() direct par settingsSync.get()
+#### 1.5 Replace localStorage.getItem() direct with settingsSync.get()
 
-- [ ] Ligne 148: `this.logFormat = settingsSync.get('logFormat', 'human');`
+- [ ] Line 148: `this.logFormat = settingsSync.get('logFormat', 'human');`
 
-#### 1.6 Supprimer la méthode returnLocalBool()
+#### 1.6 Remove the returnLocalBool() method
 
-- [ ] Supprimer les lignes 458-465 (méthode `returnLocalBool()`)
+- [ ] Remove lines 458-465 (method `returnLocalBool()`)
 
 #### Tests
 
-- [ ] Radar charge sans erreur
-- [ ] Tous les settings sont correctement lus au démarrage
-- [ ] Settings.update() fonctionne correctement
-- [ ] Aucune régression visuelle
-- [ ] Ouvrir la console → aucune erreur
-- [ ] Changer un setting dans l'UI → settings.update() voit le changement
+- [ ] Radar loads without error
+- [ ] All settings are correctly read at startup
+- [ ] Settings.update() works correctly
+- [ ] No visual regression
+- [ ] Open the console → no error
+- [ ] Change a setting in the UI → settings.update() sees the change
 
 **Commit:** `refactor(Settings): migrate all localStorage access to SettingsSync`
 
 ---
 
-### ✅ Sous-phase 2: Migrer drawing-ui.js
+### ✅ Sub-phase 2: Migrate drawing-ui.js
 
-**Durée:** 30min
-**Statut:** ✅ **TERMINÉ**
-**Fichiers modifiés:** `scripts/drawing-ui.js` (12 appels migrés - 6 lectures + 6 écritures)
+**Duration:** 30min
+**Status:** ✅ **COMPLETED**
+**Modified files:** `scripts/drawing-ui.js` (12 calls migrated - 6 reads + 6 writes)
 
-#### Objectif
+#### Objective
 
-Remplacer les helpers locaux et accès localStorage directs par SettingsSync.
+Replace local helpers and direct localStorage access with SettingsSync.
 
 #### 2.1 Import SettingsSync
 
-- [ ] Ajouter l'import en haut du fichier
+- [ ] Add the import at the top of the file
   ```javascript
   import settingsSync from './Utils/SettingsSync.js';
   ```
 
-#### 2.2 Supprimer les helpers locaux
+#### 2.2 Remove local helpers
 
-- [ ] Supprimer la fonction `getBool()`
-- [ ] Supprimer la fonction `setBool()`
-- [ ] Supprimer la fonction `getNumber()` (si elle existe)
+- [ ] Remove the `getBool()` function
+- [ ] Remove the `setBool()` function
+- [ ] Remove the `getNumber()` function (if it exists)
 
-#### 2.3 Migrer les 6 changements
+#### 2.3 Migrate the 6 changes
 
 **Overlay controls:**
 
@@ -423,41 +421,41 @@ Remplacer les helpers locaux et accès localStorage directs par SettingsSync.
 - [ ] `clusterRadius` input → `settingsSync.setNumber('settingClusterRadius', value)`
 - [ ] `clusterMinSize` input → `settingsSync.setNumber('settingClusterMinSize', value)`
 
-#### 2.4 Initialisation des valeurs (lecture)
+#### 2.4 Initialize values (read)
 
-- [ ] Remplacer tous les `getBool()` par `settingsSync.getBool()`
-- [ ] Remplacer tous les `getNumber()` par `settingsSync.getNumber()`
+- [ ] Replace all `getBool()` with `settingsSync.getBool()`
+- [ ] Replace all `getNumber()` with `settingsSync.getNumber()`
 
 #### Tests
 
-- [ ] Overlay controls fonctionnent (checkboxes + inputs)
-- [ ] Settings se synchronisent instantanément entre main/overlay
-- [ ] Valeurs persistées dans localStorage
-- [ ] Changer un setting dans overlay → visible dans main instantanément
-- [ ] Changer un setting dans main → visible dans overlay instantanément
+- [ ] Overlay controls work (checkboxes + inputs)
+- [ ] Settings synchronize instantly between main/overlay
+- [ ] Values persisted in localStorage
+- [ ] Change a setting in overlay → visible in main instantly
+- [ ] Change a setting in main → visible in overlay instantly
 
 **Commit:** `refactor(drawing-ui): migrate to SettingsSync API`
 
 ---
 
-### ✅ Sous-phase 3: Migrer LoggerClient.js
+### ✅ Sub-phase 3: Migrate LoggerClient.js
 
-**Durée:** 15min
-**Statut:** ✅ **TERMINÉ**
-**Fichiers modifiés:** `scripts/LoggerClient.js` (8 appels migrés)
+**Duration:** 15min
+**Status:** ✅ **COMPLETED**
+**Modified files:** `scripts/LoggerClient.js` (8 calls migrated)
 
-#### Objectif
+#### Objective
 
-Remplacer les 8 accès localStorage directs par SettingsSync.
+Replace the 8 direct localStorage accesses with SettingsSync.
 
 #### 3.1 Import SettingsSync
 
-- [ ] Ajouter l'import
+- [ ] Add the import
   ```javascript
   import settingsSync from './Utils/SettingsSync.js';
   ```
 
-#### 3.2 Migrer les 8 appels
+#### 3.2 Migrate the 8 calls
 
 **Debug & Logging settings:**
 
@@ -466,81 +464,81 @@ Remplacer les 8 accès localStorage directs par SettingsSync.
 - [ ] `settingLogToConsole` → `settingsSync.getBool('settingLogToConsole', true)`
 - [ ] `settingLogToServer` → `settingsSync.getBool('settingLogToServer', false)`
 
-**Identifier tous les endroits où ces settings sont lus:**
+**Identify all places where these settings are read:**
 
-- [ ] Méthode `log()` ou équivalent
-- [ ] Méthode `logRawPacket()` ou équivalent
-- [ ] Initialisation du logger
+- [ ] `log()` method or equivalent
+- [ ] `logRawPacket()` method or equivalent
+- [ ] Logger initialization
 
 #### Tests
 
-- [ ] Logs console fonctionnent (si activé)
-- [ ] Logs server fonctionnent (si activé)
-- [ ] Debug raw packets console fonctionne (si activé)
-- [ ] Debug raw packets server fonctionne (si activé)
-- [ ] Changer les settings dans l'UI → logger réagit immédiatement
+- [ ] Console logs work (if enabled)
+- [ ] Server logs work (if enabled)
+- [ ] Debug raw packets console works (if enabled)
+- [ ] Debug raw packets server works (if enabled)
+- [ ] Change the settings in the UI → logger reacts immediately
 
 **Commit:** `refactor(LoggerClient): migrate to SettingsSync for debug settings`
 
 ---
 
-### ✅ Sous-phase 4: Migrer les fichiers support
+### ✅ Sub-phase 4: Migrate support files
 
-**Durée:** 45min
-**Statut:** ⏳ À FAIRE
+**Duration:** 45min
+**Status:** ⏳ TO DO
 
 #### 4.1 ResourcesHelper.js
 
 - [ ] Import SettingsSync
-- [ ] Remplacer `returnLocalBool()` par `settingsSync.getBool()`
-- [ ] Remplacer `localStorage.removeItem('cachedStaticResourceTypeIDs')` par
+- [ ] Replace `returnLocalBool()` with `settingsSync.getBool()`
+- [ ] Replace `localStorage.removeItem('cachedStaticResourceTypeIDs')` with
   `settingsSync.remove('cachedStaticResourceTypeIDs')`
 
 #### 4.2 MobsHandler.js
 
 - [ ] Import SettingsSync
-- [ ] Ligne de lecture cache: `settingsSync.getJSON('cachedStaticResourceTypeIDs', null)`
-- [ ] Ligne d'écriture cache: `settingsSync.setJSON('cachedStaticResourceTypeIDs', cache)`
-- [ ] Ligne de suppression cache: `settingsSync.remove('cachedStaticResourceTypeIDs')`
+- [ ] Cache read line: `settingsSync.getJSON('cachedStaticResourceTypeIDs', null)`
+- [ ] Cache write line: `settingsSync.setJSON('cachedStaticResourceTypeIDs', cache)`
+- [ ] Cache delete line: `settingsSync.remove('cachedStaticResourceTypeIDs')`
 
 #### 4.3 PlayersHandler.js
 
 - [ ] Import SettingsSync
-- [ ] Remplacer `parseInt(localStorage.getItem('settingMaxPlayersDisplay'))` par
+- [ ] Replace `parseInt(localStorage.getItem('settingMaxPlayersDisplay'))` with
   `settingsSync.getNumber('settingMaxPlayersDisplay', 50)`
 
-#### 4.4 Utils.js (si nécessaire)
+#### 4.4 Utils.js (if necessary)
 
-- [ ] Vérifier s'il y a des accès localStorage directs (probablement dans le cache)
-- [ ] Si oui, migrer vers SettingsSync
+- [ ] Check for direct localStorage accesses (probably in the cache)
+- [ ] If yes, migrate to SettingsSync
 
 #### 4.5 init-alpine.js
 
 - [ ] Import SettingsSync
-- [ ] Remplacer `JSON.parse(localStorage.getItem('sidebarCollapsed'))` par
+- [ ] Replace `JSON.parse(localStorage.getItem('sidebarCollapsed'))` with
   `settingsSync.getJSON('sidebarCollapsed', {})`
-- [ ] Remplacer `localStorage.setItem('sidebarCollapsed', JSON.stringify(...))` par
+- [ ] Replace `localStorage.setItem('sidebarCollapsed', JSON.stringify(...))` with
   `settingsSync.setJSON('sidebarCollapsed', ...)`
 
 #### Tests
 
-- [ ] Cache resources fonctionne (se charge/s'enregistre)
-- [ ] Player list display limit fonctionne
-- [ ] Sidebar collapse state persiste après reload
-- [ ] Pas d'erreur console
+- [ ] Cache resources work (loads/saves)
+- [ ] Player list display limit works
+- [ ] Sidebar collapse state persists after reload
+- [ ] No console error
 
 **Commit:** `refactor(handlers,utils): migrate support files to SettingsSync`
 
 ---
 
-### ✅ Sous-phase 5: Migrer les EJS templates (70+ calls)
+### ✅ Sub-phase 5: Migrate EJS templates (70+ calls)
 
-**Durée:** 2h
-**Statut:** ⏳ À FAIRE
+**Duration:** 2h
+**Status:** ⏳ TO DO
 
-#### 5.1 Créer un partial helper
+#### 5.1 Create a partial helper
 
-- [ ] Créer `views/partials/settings-helpers.ejs`
+- [ ] Create `views/partials/settings-helpers.ejs`
   ```html
   <script type="module">
   import settingsSync from '/scripts/Utils/SettingsSync.js';
@@ -552,38 +550,38 @@ Remplacer les 8 accès localStorage directs par SettingsSync.
   </script>
   ```
 
-- [ ] Inclure ce partial dans `views/layout.ejs` (avant tous les autres scripts)
+- [ ] Include this partial in `views/layout.ejs` (before all other scripts)
   ```html
   <%- include('partials/settings-helpers') %>
   ```
 
-#### 5.2 Migrer drawing.ejs (9 calls)
+#### 5.2 Migrate drawing.ejs (9 calls)
 
-**Helpers inline à supprimer:**
+**Inline helpers to remove:**
 
-- [ ] Supprimer `const getBool = (item) => localStorage.getItem(item) === "true";`
-- [ ] Supprimer `const getNum = (item) => parseInt(localStorage.getItem(item));`
+- [ ] Remove `const getBool = (item) => localStorage.getItem(item) === "true";`
+- [ ] Remove `const getNum = (item) => parseInt(localStorage.getItem(item));`
 
-**Remplacer par settingsSync:**
+**Replace with settingsSync:**
 
-- [ ] `overlayEnchantment` lecture → `window.settingsSync.getBool('overlayEnchantment', true)`
-- [ ] `overlayEnchantment` écriture → `window.settingsSync.setBool('overlayEnchantment', value)`
-- [ ] `overlayResourceCount` lecture → `window.settingsSync.getBool('overlayResourceCount', true)`
-- [ ] `overlayResourceCount` écriture → `window.settingsSync.setBool('overlayResourceCount', value)`
-- [ ] `overlayClusterRadius` lecture → `window.settingsSync.getNumber('overlayClusterRadius', 30)`
-- [ ] `overlayClusterRadius` écriture → `window.settingsSync.setNumber('overlayClusterRadius', value)`
+- [ ] `overlayEnchantment` read → `window.settingsSync.getBool('overlayEnchantment', true)`
+- [ ] `overlayEnchantment` write → `window.settingsSync.setBool('overlayEnchantment', value)`
+- [ ] `overlayResourceCount` read → `window.settingsSync.getBool('overlayResourceCount', true)`
+- [ ] `overlayResourceCount` write → `window.settingsSync.setBool('overlayResourceCount', value)`
+- [ ] `overlayClusterRadius` read → `window.settingsSync.getNumber('overlayClusterRadius', 30)`
+- [ ] `overlayClusterRadius` write → `window.settingsSync.setNumber('overlayClusterRadius', value)`
 
 **Tests:**
 
-- [ ] Overlay controls fonctionnent
-- [ ] Settings persistées après reload
+- [ ] Overlay controls work
+- [ ] Settings persisted after reload
 
-#### 5.3 Migrer resources.ejs (13 calls)
+#### 5.3 Migrate resources.ejs (13 calls)
 
 **Enchant matrices:**
 
-- [ ] Ligne de lecture: `settingsSync.getJSON(storageKey, defaultEnchants)`
-- [ ] Ligne d'écriture: `settingsSync.setJSON(storageKey, enchants)`
+- [ ] Read line: `settingsSync.getJSON(storageKey, defaultEnchants)`
+- [ ] Write line: `settingsSync.setJSON(storageKey, enchants)`
 
 **Boolean toggles:**
 
@@ -601,13 +599,13 @@ Remplacer les 8 accès localStorage directs par SettingsSync.
 
 **Tests:**
 
-- [ ] Enchant filters fonctionnent
-- [ ] Matrix sauvegardée correctement
-- [ ] Cache cleanup fonctionne
+- [ ] Enchant filters work
+- [ ] Matrix saved correctly
+- [ ] Cache cleanup works
 
-#### 5.4 Migrer chests.ejs (19 calls)
+#### 5.4 Migrate chests.ejs (19 calls)
 
-**Tous les settings sont boolean:**
+**All settings are boolean:**
 
 - [ ] `settingChestGreen` → `settingsSync.getBool()` / `setBool()`
 - [ ] `settingChestBlue` → `settingsSync.getBool()` / `setBool()`
@@ -625,10 +623,10 @@ Remplacer les 8 accès localStorage directs par SettingsSync.
 
 **Tests:**
 
-- [ ] Tous les checkboxes fonctionnent
-- [ ] Settings persistées
+- [ ] All checkboxes work
+- [ ] Settings persisted
 
-#### 5.5 Migrer players.ejs (11 calls)
+#### 5.5 Migrate players.ejs (11 calls)
 
 **Boolean + Numeric:**
 
@@ -646,10 +644,10 @@ Remplacer les 8 accès localStorage directs par SettingsSync.
 
 **Tests:**
 
-- [ ] Tous les player settings fonctionnent
-- [ ] Max players display fonctionne
+- [ ] All player settings work
+- [ ] Max players display works
 
-#### 5.6 Migrer enemies.ejs (20 calls)
+#### 5.6 Migrate enemies.ejs (20 calls)
 
 **Boolean toggles:**
 
@@ -672,231 +670,231 @@ Remplacer les 8 accès localStorage directs par SettingsSync.
 
 **Tests:**
 
-- [ ] Enemy filters fonctionnent
-- [ ] Health threshold fonctionne
+- [ ] Enemy filters work
+- [ ] Health threshold works
 
-#### 5.7 Migrer map.ejs (2 calls)
+#### 5.7 Migrate map.ejs (2 calls)
 
 - [ ] `settingShowMap` → `settingsSync.getBool()` / `setBool()`
 
 **Tests:**
 
-- [ ] Map toggle fonctionne
+- [ ] Map toggle works
 
-#### 5.8 Migrer ignorelist.ejs (4 calls)
+#### 5.8 Migrate ignorelist.ejs (4 calls)
 
 **JSON array:**
 
-- [ ] Lecture: `settingsSync.getJSON('ignoreList', [])`
-- [ ] Écriture: `settingsSync.setJSON('ignoreList', array)`
+- [ ] Read: `settingsSync.getJSON('ignoreList', [])`
+- [ ] Write: `settingsSync.setJSON('ignoreList', array)`
 
 **Tests:**
 
-- [ ] Ignore list se charge
-- [ ] Ajout/suppression fonctionne
-- [ ] Persiste après reload
+- [ ] Ignore list loads
+- [ ] Add/remove works
+- [ ] Persists after reload
 
-#### 5.9 Migrer layout.ejs (1 call)
+#### 5.9 Migrate layout.ejs (1 call)
 
 - [ ] `settingServerLogsEnabled` → `settingsSync.getBool('settingServerLogsEnabled', false)`
 
 **Tests:**
 
-- [ ] Server logs toggle fonctionne
+- [ ] Server logs toggle works
 
-#### 5.10 Vérifier settings.ejs
+#### 5.10 Check settings.ejs
 
-- [ ] Vérifier si des changements sont nécessaires (probablement juste affichage)
-- [ ] Pas de migration nécessaire si c'est juste du debug display
+- [ ] Check if any changes are needed (probably just display)
+- [ ] No migration needed if it's just debug display
 
 **Commit:** `refactor(views): migrate all EJS templates to SettingsSync`
 
 ---
 
-## ✅ Tests de validation finale
+## ✅ Final validation tests
 
-### Tests fonctionnels
+### Functional tests
 
-- [ ] **Radar principal**
-    - [ ] Le radar charge sans erreur
-    - [ ] Tous les settings sont correctement lus
-    - [ ] Aucune régression visuelle
+- [ ] **Main radar**
+    - [ ] Radar loads without error
+    - [ ] All settings are correctly read
+    - [ ] No visual regression
 
 - [ ] **Overlay radar**
-    - [ ] L'overlay charge sans erreur
-    - [ ] Settings se synchronisent instantanément avec le main
-    - [ ] Aucune régression visuelle
+    - [ ] Overlay loads without error
+    - [ ] Settings synchronize instantly with the main
+    - [ ] No visual regression
 
 - [ ] **Settings UI**
-    - [ ] Tous les checkboxes fonctionnent
-    - [ ] Tous les inputs numériques fonctionnent
-    - [ ] Enchant matrices fonctionnent
-    - [ ] Ignore list fonctionne
+    - [ ] All checkboxes work
+    - [ ] All numeric inputs work
+    - [ ] Enchant matrices work
+    - [ ] Ignore list works
 
-- [ ] **Synchronisation cross-window**
-    - [ ] Ouvrir main + overlay dans 2 fenêtres
-    - [ ] Changer un setting dans main → visible dans overlay instantanément
-    - [ ] Changer un setting dans overlay → visible dans main instantanément
-    - [ ] Pas de délai de 300ms
+- [ ] **Cross-window synchronization**
+    - [ ] Open main + overlay in 2 windows
+    - [ ] Change a setting in main → visible in overlay instantly
+    - [ ] Change a setting in overlay → visible in main instantly
+    - [ ] No 300ms polling delay
 
 - [ ] **Persistence**
-    - [ ] Tous les settings persistent après reload
-    - [ ] Cache resources fonctionne
-    - [ ] Sidebar state persiste
+    - [ ] All settings persist after reload
+    - [ ] Cache resources work
+    - [ ] Sidebar state persists
 
-### Tests techniques
+### Technical tests
 
 - [ ] **Console**
-    - [ ] Aucune erreur console
-    - [ ] Aucun warning console
-    - [ ] Logs via `window.logger` fonctionnent
+    - [ ] No console error
+    - [ ] No console warning
+    - [ ] Logs via `window.logger` work
 
 - [ ] **Performance**
-    - [ ] Pas de ralentissement du game loop
-    - [ ] FPS stable à 30
-    - [ ] Pas de memory leak
+    - [ ] No slowdown of the game loop
+    - [ ] Stable FPS at 30
+    - [ ] No memory leak
 
-- [ ] **Compatibilité**
-    - [ ] BroadcastChannel fonctionne (Chrome/Firefox/Edge)
-    - [ ] Fallback storage events fonctionne (si BroadcastChannel absent)
+- [ ] **Compatibility**
+    - [ ] BroadcastChannel works (Chrome/Firefox/Edge)
+    - [ ] Fallback storage events work (if BroadcastChannel absent)
 
 - [ ] **Code quality**
-    - [ ] Aucun appel `localStorage` direct restant (sauf dans SettingsSync.js)
-    - [ ] Tous les imports corrects
-    - [ ] Pas de code mort
+    - [ ] No direct `localStorage` call remaining (except in SettingsSync.js)
+    - [ ] All imports correct
+    - [ ] No dead code
 
-### Tests de régression
+### Regression tests
 
-- [ ] **Features existantes**
-    - [ ] Players display fonctionne
-    - [ ] Resources display fonctionne
-    - [ ] Mobs display fonctionne
-    - [ ] Chests display fonctionne
-    - [ ] Dungeons display fonctionne
-    - [ ] Map background fonctionne
-    - [ ] Flash border fonctionne
-    - [ ] Sound notifications fonctionnent
+- [ ] **Existing features**
+    - [ ] Players display works
+    - [ ] Resources display works
+    - [ ] Mobs display works
+    - [ ] Chests display works
+    - [ ] Dungeons display works
+    - [ ] Map background works
+    - [ ] Flash border works
+    - [ ] Sound notifications work
 
 - [ ] **Debug features**
-    - [ ] Debug enemies fonctionne
-    - [ ] Debug players fonctionne
-    - [ ] Debug raw packets fonctionne
-    - [ ] Logger fonctionne
+    - [ ] Debug enemies work
+    - [ ] Debug players work
+    - [ ] Debug raw packets work
+    - [ ] Logger works
 
 ---
 
-## 📊 Métriques de succès
+## 📊 Success metrics
 
-### Avant migration
+### Before migration
 
-- **~150+ appels** localStorage directs
-- **19 fichiers** avec accès localStorage
-- **Code dupliqué:** helpers `returnLocalBool()`, `getBool()`, `getNumber()` dans plusieurs fichiers
-- **Pas d'abstraction unifiée**
+- **~150+ calls** direct localStorage
+- **19 files** with localStorage access
+- **Duplicated code:** helpers `returnLocalBool()`, `getBool()`, `getNumber()` in multiple files
+- **No unified abstraction**
 
-### Après migration
+### After migration
 
-- **0 appel** localStorage direct (sauf dans SettingsSync.js)
-- **19 fichiers** migrés vers SettingsSync
-- **Code centralisé:** Une seule API pour tous les accès
-- **Abstraction propre:** SettingsSync.js
+- **0 call** localStorage direct (except in SettingsSync.js)
+- **19 files** migrated to SettingsSync
+- **Centralized code:** A single API for all accesses
+- **Clean abstraction:** SettingsSync.js
 
-### Amélioration
+### Improvement
 
-- ✅ **Maintenabilité:** +100%
-- ✅ **Lisibilité:** +80%
-- ✅ **Synchronisation:** Instantanée (pas de polling 300ms)
-- ✅ **Debugging:** Simplifié (logs centralisés)
-- ✅ **Évolutivité:** Facile d'ajouter de nouveaux settings
+- ✅ **Maintainability:** +100%
+- ✅ **Readability:** +80%
+- ✅ **Synchronization:** Instant (no 300ms polling)
+- ✅ **Debugging:** Simplified (centralized logs)
+- ✅ **Scalability:** Easy to add new settings
 
 ---
 
 ## 🚨 Rollback plan
 
-Si un problème critique est détecté:
+If a critical problem is detected:
 
-### Plan de rollback immédiat
+### Immediate rollback plan
 
-1. **Git revert** des commits de la Phase 3.2
+1. **Git revert** the commits of Phase 3.2
    ```bash
-   git log --oneline  # Identifier les commits à revert
+   git log --oneline  # Identify the commits to revert
    git revert <commit-hash> --no-edit
    ```
 
-2. **Vérifier que le radar fonctionne** après le revert
+2. **Check that the radar works** after the revert
 
-3. **Analyser le problème** avant de re-tenter
+3. **Analyze the problem** before re-attempting
 
-### Problèmes possibles et solutions
+### Possible problems and solutions
 
-**Problème:** Settings ne se chargent plus
+**Problem:** Settings no longer load
 
-- **Cause probable:** Mauvaise migration d'un `getJSON()` ou `getNumber()`
-- **Solution:** Vérifier les defaultValues et les fallbacks
+- **Probable cause:** Incorrect migration of a `getJSON()` or `getNumber()`
+- **Solution:** Check the defaultValues and fallbacks
 
-**Problème:** Synchronisation cross-window ne fonctionne plus
+**Problem:** Cross-window synchronization no longer works
 
-- **Cause probable:** BroadcastChannel non initialisé ou erreur dans handleMessage()
-- **Solution:** Vérifier les logs `window.logger` et le fallback storage events
+- **Probable cause:** BroadcastChannel not initialized or error in handleMessage()
+- **Solution:** Check `window.logger` logs and fallback storage events
 
-**Problème:** Performance dégradée
+**Problem:** Performance degraded
 
-- **Cause probable:** Trop de broadcasts ou listeners mal nettoyés
-- **Solution:** Vérifier les event listeners et le cleanup
+- **Probable cause:** Too many broadcasts or improperly cleaned up listeners
+- **Solution:** Check event listeners and cleanup
 
 ---
 
-## 📝 Notes de développement
+## 📝 Development notes
 
-### Décisions architecturales
+### Architectural decisions
 
-**Pourquoi exposer settingsSync globalement dans les EJS templates?**
+**Why expose settingsSync globally in EJS templates?**
 
-- Les EJS templates utilisent des `<script>` inline (pas de modules ES)
-- Difficile d'importer proprement dans chaque template
-- `window.settingsSync` permet un accès facile et centralisé
-- Alternative: réécrire tous les templates en modules ES (hors scope)
+- EJS templates use inline `<script>` (no ES modules)
+- Hard to import properly in each template
+- `window.settingsSync` allows easy and centralized access
+- Alternative: rewrite all templates as ES modules (out of scope)
 
-**Pourquoi garder localStorage en backend de SettingsSync?**
+**Why keep localStorage as backend for SettingsSync?**
 
-- Backward compatible avec tout le code existant
-- Pas besoin de migrer la persistence (déjà fonctionnelle)
-- SettingsSync ajoute juste la synchronisation cross-window
+- Backward compatible with all existing code
+- No need to migrate persistence (already functional)
+- SettingsSync just adds cross-window synchronization
 
-**Pourquoi ne pas utiliser un store centralisé (Redux, Zustand, etc.)?**
+**Why not use a central store (Redux, Zustand, etc.)?**
 
-- Overhead inutile pour ce projet
-- SettingsSync est simple, léger, et suffit largement
-- Pas de dépendance externe
+- Unnecessary overhead for this project
+- SettingsSync is simple, lightweight, and十分
+- No external dependency
 
-### Améliorations futures (hors scope)
+### Future improvements (out of scope)
 
-1. **TypeScript types** pour SettingsSync
-2. **Validation des settings** (min/max pour les nombres, etc.)
-3. **Settings categories** (grouper par fonctionnalité)
-4. **Settings UI refactor** (composants réutilisables)
+1. **TypeScript types** for SettingsSync
+2. **Settings validation** (min/max for numbers, etc.)
+3. **Settings categories** (group by feature)
+4. **Settings UI refactor** (reusable components)
 5. **Import/Export settings** (backup/restore)
 
 ---
 
-## 🔗 Références
+## 🔗 References
 
-### Documentation projet
+### Project documentation
 
-- `RADAR_UNIFICATION_PLAN.md` - Plan principal de l'unification
-- `scripts/Utils/SettingsSync.js` - API SettingsSync
-- `scripts/Utils/Settings.js` - Classe Settings (à migrer)
+- `RADAR_UNIFICATION_PLAN.md` - Main unification plan
+- `scripts/Utils/SettingsSync.js` - SettingsSync API
+- `scripts/Utils/Settings.js` - Settings class (to migrate)
 
-### Fichiers clés à modifier
+### Key files to modify
 
 - **Core:** Settings.js (58 calls)
 - **UI:** drawing-ui.js (6 calls)
 - **Logging:** LoggerClient.js (8 calls)
 - **Support:** ResourcesHelper.js, MobsHandler.js, PlayersHandler.js, init-alpine.js
-- **Templates:** 10 fichiers EJS (70+ calls)
+- **Templates:** 10 EJS files (70+ calls)
 
 ---
 
-**Dernière mise à jour:** 2025-12-04
-**Auteur:** Claude Code + Développeur
-**Statut:** ⏳ **EN ATTENTE** - Prêt à démarrer la migration
+**Last update:** 2025-12-04
+**Author:** Claude Code + Developer
+**Status:** ⏳ **AWAITING** - Ready to start migration

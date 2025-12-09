@@ -19,7 +19,7 @@ export class SettingsSync {
         this.channel = null;
         this.listeners = new Map();
         this.isInitialized = false;
-        this.cache = new Map(); // 🆕 Cache mémoire pour éviter lectures localStorage répétées
+        this.cache = new Map(); // Memory cache to avoid repeated localStorage reads
 
         // Check BroadcastChannel support
         if (typeof BroadcastChannel !== 'undefined') {
@@ -85,7 +85,7 @@ export class SettingsSync {
      */
     handleMessage(data) {
         if (data.type === 'setting-changed' || data.type === 'setting-removed') {
-            // 🆕 Update cache from other tabs
+            // Update cache from other tabs
             if (data.type === 'setting-changed') {
                 this.cache.set(data.key, data.value);
             } else {
@@ -326,7 +326,7 @@ export class SettingsSync {
             this.channel = null;
         }
         this.listeners.clear();
-        this.cache.clear(); // 🆕 Clear cache on destroy
+        this.cache.clear(); // Clear cache on destroy
         this.isInitialized = false;
         window.logger?.info(CATEGORIES.SETTINGS, 'SettingsSyncDestroyed', {});
     }

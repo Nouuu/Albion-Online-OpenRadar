@@ -31,7 +31,7 @@ export class ChestsHandler {
 
     addChestEvent(Parameters)
     {
-        // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
+        // Ultra-detailed debug: Log ALL parameters to identify patterns
         const allParams = {};
         for (let key in Parameters) {
             if (Parameters.hasOwnProperty(key)) {

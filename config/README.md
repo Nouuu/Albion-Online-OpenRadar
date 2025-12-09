@@ -15,9 +15,9 @@ Configuration for nodemon (auto-reload in development).
 }
 ```
 
-**Usage :**
+**Usage:**
 ```bash
-npm run dev  # Utilise automatiquement cette config
+npm run dev  # Automatically uses this config
 ```
 
 ---
@@ -25,6 +25,7 @@ npm run dev  # Utilise automatiquement cette config
 ## 📝 Notes
 
 This directory contains configuration files that don't need to be at the project root.
+
 # scripts-shell/
 
 Windows batch scripts to facilitate OpenRadar usage.
@@ -60,10 +61,9 @@ _RUN.bat
 
 ## 📝 Notes
 
-These scripts are wrappers to simplify usage on Windows.
+This directory contains Windows batch scripts for project setup and running. All instructions and comments are now in English for consistency.
 
 **For development, prefer:**
 ```bash
-npm run dev  # Auto-reload avec nodemon
+npm run dev  # Auto-reload with nodemon
 ```
-

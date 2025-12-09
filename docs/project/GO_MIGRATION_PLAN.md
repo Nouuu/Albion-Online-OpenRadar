@@ -137,26 +137,26 @@ CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc GOOS=windows GOARCH=amd64 \
 
 ---
 
-## ETAPES DETAILLEES
+## DETAILED STEPS
 
 ---
 
-## Etape 1 : Setup projet Go
+## Step 1: Go Project Setup
 
-### 1.1 Créer la structure
+### 1.1 Create the structure
 
 ```bash
 mkdir -p cmd/server/internal/{server,capture,photon,logger}
 ```
 
-### 1.2 Initialiser go.mod
+### 1.2 Initialize go.mod
 
 ```bash
-cd /chemin/vers/Albion-Online-ZQRadar
+cd /path/to/Albion-Online-ZQRadar
 go mod init github.com/nospy/albion-openradar
 ```
 
-### 1.3 Créer cmd/server/main.go
+### 1.3 Create cmd/server/main.go
 
 ```go
 package main
@@ -177,9 +177,9 @@ const (
 func main() {
 	fmt.Println("OpenRadar Go Server Starting...")
 
-	// TODO: Ajouter les composants au fur et à mesure
+	// TODO: Add components as you go
 
-	// Attendre signal d'arrêt
+	// Wait for shutdown signal
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -188,18 +188,18 @@ func main() {
 }
 ```
 
-### 1.4 Tester
+### 1.4 Test
 
 ```bash
 go run ./cmd/server
-# Doit afficher "OpenRadar Go Server Starting..."
+# Should display "OpenRadar Go Server Starting..."
 ```
 
 ---
 
-## Etape 2 : HTTP Server
+## Step 2: HTTP Server
 
-### 2.1 Créer cmd/server/internal/server/http.go
+### 2.1 Create cmd/server/internal/server/http.go
 
 ```go
 package server
@@ -227,13 +227,13 @@ func NewHTTPServer(staticFS embed.FS) *HTTPServer {
 func (s *HTTPServer) Start(port int) error {
 	mux := http.NewServeMux()
 
-	// Routes statiques
+	// Static routes
 	mux.Handle("/scripts/", http.FileServer(http.FS(s.staticFS)))
 	mux.Handle("/images/", http.FileServer(http.FS(s.staticFS)))
 	mux.Handle("/sounds/", http.FileServer(http.FS(s.staticFS)))
 	mux.Handle("/config/", http.FileServer(http.FS(s.staticFS)))
 
-	// Routes pages
+	// Page routes
 	mux.HandleFunc("/", s.handleHome)
 	mux.HandleFunc("/home", s.handleHome)
 	mux.HandleFunc("/radar-overlay", s.handleOverlay)
@@ -247,7 +247,7 @@ func (s *HTTPServer) Start(port int) error {
 }
 
 func (s *HTTPServer) handleHome(w http.ResponseWriter, r *http.Request) {
-	// TODO: Rendre template
+	// TODO: Render template
 	w.Write([]byte("Home page - TODO"))
 }
 
@@ -261,7 +261,7 @@ func (s *HTTPServer) handleLogsAPI(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### 2.2 Créer cmd/server/embed.go
+### 2.2 Create cmd/server/embed.go
 
 ```go
 package main
@@ -272,7 +272,7 @@ import "embed"
 var staticFS embed.FS
 ```
 
-### 2.3 Mettre à jour main.go
+### 2.3 Update main.go
 
 ```go
 package main
@@ -298,7 +298,7 @@ func main() {
 		}
 	}()
 
-	// Attendre signal
+	// Wait for signal
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -307,15 +307,15 @@ func main() {
 
 ---
 
-## Etape 3 : WebSocket Server
+## Step 3: WebSocket Server
 
-### 3.1 Installer gorilla/websocket
+### 3.1 Install gorilla/websocket
 
 ```bash
 go get github.com/gorilla/websocket
 ```
 
-### 3.2 Créer cmd/server/internal/server/websocket.go
+### 3.2 Create cmd/server/internal/server/websocket.go
 
 ```go
 package server
@@ -367,13 +367,13 @@ func (ws *WSServer) handleConnection(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Client connected")
 
-	// Lire messages du client
+	// Read messages from client
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			break
 		}
-		// Traiter logs du client si besoin
+		// Process client logs if needed
 		log.Printf("Received: %s", message)
 	}
 
@@ -383,7 +383,7 @@ func (ws *WSServer) handleConnection(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client disconnected")
 }
 
-// Broadcast envoie à tous les clients
+// Broadcast sends to all clients
 func (ws *WSServer) Broadcast(code string, data interface{}) {
 	msg := map[string]interface{}{
 		"code":       code,
@@ -406,9 +406,9 @@ func (ws *WSServer) Broadcast(code string, data interface{}) {
 
 ---
 
-## Etape 4 : Protocol16 Deserializer (CRITIQUE)
+## Step 4: Protocol16 Deserializer (CRITICAL)
 
-### 4.1 Créer cmd/server/internal/photon/types.go
+### 4.1 Create cmd/server/internal/photon/types.go
 
 ```go
 package photon
@@ -438,7 +438,7 @@ const (
 )
 ```
 
-### 4.2 Créer cmd/server/internal/photon/protocol16.go
+### 4.2 Create cmd/server/internal/photon/protocol16.go
 
 ```go
 package photon
@@ -530,7 +530,7 @@ func (r *Protocol16Reader) Remaining() []byte {
 	return r.data[r.pos:]
 }
 
-// Deserialize lit une valeur selon le typeCode
+// Deserialize reads a value according to the typeCode
 func (r *Protocol16Reader) Deserialize(typeCode byte) (interface{}, error) {
 	switch typeCode {
 	case TypeUnknown, TypeNull:
@@ -827,9 +827,9 @@ func (r *Protocol16Reader) ReadParameterTable() (map[interface{}]interface{}, er
 
 ---
 
-## Etape 5 : Photon Packet Parser
+## Step 5: Photon Packet Parser
 
-### 5.1 Créer cmd/server/internal/photon/packet.go
+### 5.1 Create cmd/server/internal/photon/packet.go
 
 ```go
 package photon
@@ -839,7 +839,7 @@ import (
 	"fmt"
 )
 
-// PhotonPacket représente un paquet Photon (header 12 bytes)
+// PhotonPacket represents a Photon packet (header 12 bytes)
 type PhotonPacket struct {
 	PeerID       uint16
 	Flags        byte
@@ -862,7 +862,7 @@ func ParsePhotonPacket(data []byte) (*PhotonPacket, error) {
 		Challenge:    binary.BigEndian.Uint32(data[8:12]),
 	}
 
-	// Parser les commandes
+	// Parse commands
 	offset := 12
 	for i := byte(0); i < p.CommandCount && offset < len(data); i++ {
 		cmd, cmdLen, err := ParsePhotonCommand(data[offset:])
@@ -877,7 +877,7 @@ func ParsePhotonPacket(data []byte) (*PhotonPacket, error) {
 }
 ```
 
-### 5.2 Créer cmd/server/internal/photon/command.go
+### 5.2 Create cmd/server/internal/photon/command.go
 
 ```go
 package photon
@@ -947,7 +947,7 @@ func ParsePhotonCommand(data []byte) (*PhotonCommand, int, error) {
 		}
 
 	case CommandUnreliable:
-		// Skip 4 bytes pour être comme reliable
+		// Skip 4 bytes to match reliable
 		if payloadEnd > len(data) {
 			return nil, 0, fmt.Errorf("payload too short")
 		}
@@ -967,7 +967,7 @@ func ParsePhotonCommand(data []byte) (*PhotonCommand, int, error) {
 		}
 
 	case CommandDisconnect:
-		// Rien à faire
+		// Nothing to do
 	}
 
 	return cmd, int(cmd.CommandLength), nil
@@ -976,16 +976,16 @@ func ParsePhotonCommand(data []byte) (*PhotonCommand, int, error) {
 
 ---
 
-## Etape 6 : Packet Capture avec gopacket
+## Step 6: Packet Capture with gopacket
 
-### 6.1 Installer gopacket
+### 6.1 Install gopacket
 
 ```bash
 go get github.com/google/gopacket
 go get github.com/google/gopacket/pcap
 ```
 
-### 6.2 Créer cmd/server/internal/capture/pcap.go
+### 6.2 Create cmd/server/internal/capture/pcap.go
 
 ```go
 package capture
@@ -1007,7 +1007,7 @@ type Capturer struct {
 }
 
 func NewCapturer(deviceIP string, callback PacketCallback) (*Capturer, error) {
-	// Trouver l'interface
+	// Find the interface
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
 		return nil, err
@@ -1027,13 +1027,13 @@ func NewCapturer(deviceIP string, callback PacketCallback) (*Capturer, error) {
 		return nil, fmt.Errorf("device with IP %s not found", deviceIP)
 	}
 
-	// Ouvrir la capture
+	// Open capture
 	handle, err := pcap.OpenLive(deviceName, 4096, false, pcap.BlockForever)
 	if err != nil {
 		return nil, err
 	}
 
-	// Filtre UDP port 5056
+	// Filter UDP port 5056
 	if err := handle.SetBPFFilter("udp and (dst port 5056 or src port 5056)"); err != nil {
 		handle.Close()
 		return nil, err
@@ -1046,7 +1046,7 @@ func (c *Capturer) Start() {
 	packetSource := gopacket.NewPacketSource(c.handle, c.handle.LinkType())
 
 	for packet := range packetSource.Packets() {
-		// Extraire le payload UDP
+		// Extract UDP payload
 		if udpLayer := packet.Layer(layers.LayerTypeUDP); udpLayer != nil {
 			udp, _ := udpLayer.(*layers.UDP)
 			if len(udp.Payload) > 0 {
@@ -1062,7 +1062,7 @@ func (c *Capturer) Stop() {
 	}
 }
 
-// ListDevices liste les interfaces disponibles
+// ListDevices lists available interfaces
 func ListDevices() {
 	devices, err := pcap.FindAllDevs()
 	if err != nil {
@@ -1081,9 +1081,9 @@ func ListDevices() {
 
 ---
 
-## Etape 7 : Templates EJS → html/template
+## Step 7: EJS Templates → html/template
 
-### Conversion syntaxe
+### Syntax conversion
 
 | EJS                          | Go html/template          |
 |------------------------------|---------------------------|
@@ -1093,7 +1093,7 @@ func ListDevices() {
 | `<% } %>`                    | `{{ end }}`               |
 | `<% for (var x of arr) { %>` | `{{ range .Arr }}`        |
 
-### Exemple : layout.html
+### Example: layout.html
 
 ```html
 <!DOCTYPE html>
@@ -1113,7 +1113,7 @@ func ListDevices() {
 
 ---
 
-## Etape 8 : Build final
+## Step 8: Final build
 
 ### 8.1 Build Linux
 
@@ -1124,7 +1124,7 @@ CGO_ENABLED=1 go build -o dist/OpenRadar-linux ./cmd/server
 ### 8.2 Build Windows (cross-compile)
 
 ```bash
-# Installer mingw-w64
+# Install mingw-w64
 sudo apt install mingw-w64
 
 # Build
@@ -1133,31 +1133,31 @@ CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc \
     go build -o dist/OpenRadar.exe ./cmd/server
 ```
 
-### 8.3 Prérequis Windows
+### 8.3 Windows prerequisites
 
-- Npcap installé (https://npcap.com/)
-- Ou WinPcap
-
----
-
-## Checklist validation
-
-- [ ] `go run ./cmd/server` démarre sans erreur
-- [ ] HTTP server répond sur http://localhost:5001
-- [ ] WebSocket accepte connexions sur ws://localhost:5002
-- [ ] Capture paquets UDP 5056
-- [ ] Parse Photon packets correctement
-- [ ] JSON output identique à Node.js
-- [ ] Build Linux fonctionne
-- [ ] Build Windows fonctionne
+- Npcap installed (https://npcap.com/)
+- Or WinPcap
 
 ---
 
-## Estimation totale
+## Validation checklist
 
-| Phase          | Durée    |
+- [ ] `go run ./cmd/server` starts without error
+- [ ] HTTP server responds on http://localhost:5001
+- [ ] WebSocket accepts connections on ws://localhost:5002
+- [ ] Captures UDP packets on port 5056
+- [ ] Parses Photon packets correctly
+- [ ] JSON output identical to Node.js
+- [ ] Linux build works
+- [ ] Windows build works
+
+---
+
+## Total estimation
+
+| Phase          | Duration |
 |----------------|----------|
-| Setup Go       | 1h       |
+| Go setup       | 1h       |
 | HTTP Server    | 2h       |
 | WebSocket      | 2h       |
 | Protocol16     | 4h       |

@@ -68,9 +68,9 @@ export class HarvestablesHandler
         }
     }
 
-    // 🧠 Get resource info from itemId (for static harvestables)
+    // Get resource info from itemId (for static harvestables)
     getResourceInfoFromItemId(itemId) {
-        // 📚 Mapping théorique itemId → resource info
+        // Theoretical mapping itemId → resource info
         const theoreticalMap = {
             // === FIBER (T2-T8) ===
             412: { type: 'Fiber', tier: 2, charges: 0 },
@@ -99,7 +99,7 @@ export class HarvestablesHandler
             362: { type: 'Ore', tier: 7, charges: 0 }, 367: { type: 'Ore', tier: 7, charges: 1 }, 372: { type: 'Ore', tier: 7, charges: 2 }, 377: { type: 'Ore', tier: 7, charges: 3 }, 382: { type: 'Ore', tier: 7, charges: 4 },
             363: { type: 'Ore', tier: 8, charges: 0 }, 368: { type: 'Ore', tier: 8, charges: 1 }, 373: { type: 'Ore', tier: 8, charges: 2 }, 378: { type: 'Ore', tier: 8, charges: 3 }, 383: { type: 'Ore', tier: 8, charges: 4 },
 
-            // === ROCK (T2-T8) - Seulement .0-.3 (pas de .4) ===
+            // === ROCK (T2-T8) - Only .0-.3 (no .4) ===
             335: { type: 'Rock', tier: 2, charges: 0 },
             336: { type: 'Rock', tier: 3, charges: 0 },
             337: { type: 'Rock', tier: 4, charges: 0 }, 342: { type: 'Rock', tier: 4, charges: 1 }, 347: { type: 'Rock', tier: 4, charges: 2 }, 352: { type: 'Rock', tier: 4, charges: 3 },
@@ -182,10 +182,10 @@ export class HarvestablesHandler
             }
         }
 
-        // 🐛 DEBUG: Log ALL harvestable detections (living + static)
+        // DEBUG: Log ALL harvestable detections (living + static)
         const stringType = this.GetStringType(type);
 
-        // 🔍 Déterminer si living ou static resource
+        // Determine if living or static resource
         const isLiving = mobileTypeId === 65535;
 
 
@@ -220,12 +220,12 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // 🔗 Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
+        // Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
         if (this.mobsHandler && mobileTypeId !== null) {
             this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
 
 
-            // 🔧 OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
+            // OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
             const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
             if (staticInfo && staticInfo.type) {
                 // Convert our type name (Fiber/Hide/Log/Ore/Rock) to typeNumber
@@ -244,10 +244,10 @@ export class HarvestablesHandler
             }
         }
 
-        // 🐛 DEBUG: Log ALL harvestable updates (living + static)
+        // DEBUG: Log ALL harvestable updates (living + static)
         const stringType = this.GetStringType(type);
 
-        // 🔍 Déterminer si living ou static resource
+        // Determine if living or static resource
         const isLiving = mobileTypeId === 65535;
 
 
@@ -282,13 +282,13 @@ export class HarvestablesHandler
     harvestFinished(Parameters)
     {
         const id = Parameters[3];
-        // Décrémenter 1 stack
+        // Decrement 1 stack
         this.updateHarvestable(id, 1);
     }
 
     HarvestUpdateEvent(Parameters)
     {
-        // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
+        // Ultra-detailed debug: Log ALL parameters to identify patterns
         const allParams = {};
         for (let key in Parameters) {
             if (Parameters.hasOwnProperty(key)) {
@@ -309,25 +309,25 @@ export class HarvestablesHandler
 
         if (Parameters[1] === undefined)
         {
-            // 🔥 DERNIER STACK - Appelé AVANT harvestFinished!
+            // LAST STACK - Called BEFORE harvestFinished!
             const cacheEntry = this.lastHarvestCache.get(id);
 
             if (cacheEntry) {
                 const resources = cacheEntry.resources;
 
-                // CAS 1: trackedByNewSimpleItem = true → Déjà tracké par NewSimpleItem (living resources)
+                // CASE 1: trackedByNewSimpleItem = true → Already tracked by NewSimpleItem (living resources)
                 if (cacheEntry.trackedByNewSimpleItem) {
                     window.logger?.debug(CATEGORIES.HARVEST, EVENTS.AlreadyTracked, {
                         note: 'Already tracked by NewSimpleItem - SKIP'
                     });
                 }
-                // CAS 2: trackedByNewSimpleItem = false → Static harvestable, on doit tracker ici
+                // CASE 2: trackedByNewSimpleItem = false → Static harvestable, must track here
                 else {
-                    // 🎯 Déduire type/tier depuis itemId
+                    // Deduce type/tier from itemId
                     const resourceInfo = this.getResourceInfoFromItemId(cacheEntry.itemId);
 
                     if (resourceInfo) {
-                        // ℹ️ INFO (toujours loggé) - Tracking des ressources statiques
+                        // INFO (always logged) - Tracking static resources
                         window.logger?.info(CATEGORIES.HARVEST, EVENTS.TrackingStaticResources, {
                             resources,
                             type: resourceInfo.type,
@@ -335,8 +335,8 @@ export class HarvestablesHandler
                             charges: resourceInfo.charges
                         });
                     } else {
-                        // Fallback: juste incrémenter le total si on ne peut pas mapper l'itemId
-                        // ⚠️ WARN (toujours loggé) - ItemId inconnu
+                        // Fallback: just increment total if we can't map itemId
+                        // WARN (always logged) - Unknown itemId
                         window.logger?.warn(CATEGORIES.HARVEST, EVENTS.UnknownItemId, {
                             itemId: cacheEntry.itemId,
                             note: 'Tracking total only'
@@ -348,15 +348,15 @@ export class HarvestablesHandler
                 // Nettoyer le cache
                 this.lastHarvestCache.delete(id);
             } else {
-                // Pas de cache du tout
-                // ⚠️ WARN (toujours loggé) - Pas de cache disponible
+                // No cache at all
+                // WARN (always logged) - No cache available
                 window.logger?.warn(CATEGORIES.HARVEST, EVENTS.NoCacheWarning, {
                     note: 'NO CACHE! Resource tracking may be incomplete'
                 });
             }
 
-            // ⚠️ NE PAS supprimer ici! NewSimpleItem arrive APRÈS et a besoin du harvestable
-            // La suppression sera faite par harvestFinished
+            // DO NOT delete here! NewSimpleItem arrives AFTER and needs the harvestable
+            // Deletion will be done by harvestFinished
             return;
         }
 
@@ -365,8 +365,8 @@ export class HarvestablesHandler
             return;
         }
 
-        // ⚠️ Ne pas mettre à jour si la valeur a diminué (harvestFinished s'en charge)
-        // On met à jour uniquement si la valeur a augmenté (régénération)
+        // Do not update if value decreased (harvestFinished handles this)
+        // Only update if value increased (regeneration)
         const newSize = Parameters[1];
         if (newSize > harvestable.size) {
             window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Regeneration, {
@@ -383,7 +383,7 @@ export class HarvestablesHandler
     {
 
         const type = Parameters[5];  // typeNumber (0-27)
-        const mobileTypeId = Parameters[6];  // 🔗 Mobile TypeID (421, 422, 527, etc.)
+        const mobileTypeId = Parameters[6];  // Mobile TypeID (421, 422, 527, etc.)
         const tier = Parameters[7];
         const location = Parameters[8];
 
@@ -458,7 +458,7 @@ export class HarvestablesHandler
         {
             harvestable.size = harvestable.size - count;
 
-            // 🔥 Remove harvestable when last stack is harvested
+            // Remove harvestable when last stack is harvested
             if (harvestable.size <= 0) {
                 this.removeHarvestable(harvestableId);
             }
@@ -467,16 +467,16 @@ export class HarvestablesHandler
 
     GetStringType(typeNumber)
     {
-        // Si c'est déjà une string (depuis MobsHandler), retourner directement
+        // If already a string (from MobsHandler), return directly
         if (typeof typeNumber === 'string') {
-            // Normaliser le nom
+            // Normalize the name
             const normalized = typeNumber.toLowerCase();
             if (normalized === 'fiber') return HarvestableType.Fiber;
             if (normalized === 'hide') return HarvestableType.Hide;
             if (normalized === 'wood' || normalized === 'log' || normalized === 'logs') return HarvestableType.Log;
             if (normalized === 'ore') return HarvestableType.Ore;
             if (normalized === 'rock') return HarvestableType.Rock;
-            return typeNumber; // Retourner tel quel si inconnu
+            return typeNumber; // Return as-is if unknown
         }
 
         // Mapping typeNumber (0-27) → Resource Type
@@ -501,7 +501,7 @@ export class HarvestablesHandler
             return HarvestableType.Ore;
         }
         else {
-            // ⚠️ WARN (toujours loggé) - Type de ressource inconnu
+            // WARN (always logged) - Unknown resource type
             window.logger?.warn(CATEGORIES.HARVEST, EVENTS.UnknownTypeNumber, {
                 typeNumber,
                 note: 'Unknown typeNumber in GetStringType'

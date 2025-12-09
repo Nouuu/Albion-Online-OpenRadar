@@ -85,7 +85,7 @@ class PhotonCommand {
 		  case 4:
 			this.data = Protocol16Deserializer.deserializeEventData(this.payload);
 
-			// 🔍 TRACE: Log après désérialisation pour Event 29
+			// 🔍 TRACE: Log after deserialization for Event 29
 			if (this.data.code === 29) {
 				const logger = PhotonCommand.getLogger();
 				if (logger) {

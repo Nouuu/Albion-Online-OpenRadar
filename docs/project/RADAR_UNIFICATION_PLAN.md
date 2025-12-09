@@ -1,92 +1,92 @@
-# 🎨 Plan de Développement - Unification du Système Radar
+# 🎨 Development Plan - Radar System Unification
 
-**Date de début:** 2025-12-03
-**Objectif:** Unifier le code de rendu du radar principal et de l'overlay pour éliminer la duplication
+**Start date:** 2025-12-03
+**Goal:** Unify the main radar and overlay rendering code to eliminate duplication
 
 ---
 
-## 🎯 RÉSUMÉ RAPIDE - État au 2025-12-07
+## 🎯 QUICK SUMMARY - Status as of 2025-12-07
 
-**Progression : ~80% ✅**
+**Progress: ~80% ✅**
 
-### Ce qui FONCTIONNE
-- ✅ RadarRenderer actif (remplace gameLoop legacy)
+### What WORKS
+- ✅ RadarRenderer active (replaces legacy gameLoop)
 - ✅ CanvasManager (7 canvas layers)
-- ✅ SettingsSync (BroadcastChannel, plus de polling)
-- ✅ Code legacy supprimé
+- ✅ SettingsSync (BroadcastChannel, no more polling)
+- ✅ Legacy code removed
 
-### Ce qui RESTE (tout optionnel)
+### What REMAINS (all optional)
 
-| Tâche                       | Fichier             | Effort | Priorité  |
+| Task                        | File                | Effort | Priority  |
 |-----------------------------|---------------------|--------|-----------|
-| Ajouter uiCanvas            | `radar-overlay.ejs` | 5 min  | Basse     |
-| Migrer returnLocalBool()    | `Settings.js`       | 2h     | Optionnel |
-| Migrer localStorage.setItem | `drawing-ui.js`     | 1h     | Optionnel |
+| Add uiCanvas                | `radar-overlay.ejs` | 5 min  | Low       |
+| Migrate returnLocalBool()   | `Settings.js`       | 2h     | Optional  |
+| Migrate localStorage.setItem| `drawing-ui.js`     | 1h     | Optional  |
 
-**→ Passer à la migration Go maintenant. Ces tâches peuvent attendre.**
-
----
-
-## 📋 Table des Matières
-
-1. [Vue d'ensemble](#vue-densemble)
-2. [Architecture actuelle](#architecture-actuelle)
-3. [Architecture cible](#architecture-cible)
-4. [Étapes de migration](#étapes-de-migration)
-5. [Contraintes et règles](#contraintes-et-règles)
-6. [Progression](#progression)
-7. [Tests et validation](#tests-et-validation)
+**→ Move to Go migration now. These tasks can wait.**
 
 ---
 
-## 🎯 Vue d'ensemble
+## 📋 Table of Contents
 
-### Problème identifié
-
-- **Duplication de code massive** entre le radar principal (`/home`) et l'overlay (`/radar-overlay`)
-- Deux vues distinctes qui importent les mêmes handlers/drawings
-- Logique de rendu identique mais dupliquée dans deux fichiers EJS
-- Synchronisation settings via polling localStorage (300ms) - inefficace
-- Maintenance difficile - tout changement doit être fait 2 fois
-
-### Solution proposée
-
-1. **Créer un système de rendu unifié** (`RadarRenderer`)
-2. **Partager la logique canvas** (`CanvasManager`)
-3. **Synchronisation instantanée** via `BroadcastChannel` API
-4. **Une seule source de vérité** pour le rendu
-
-### Bénéfices attendus
-
-- ✅ **Zéro duplication** de code entre main et overlay
-- ✅ **Synchronisation instantanée** des paramètres (pas de délai 300ms)
-- ✅ **Maintenance simplifiée** - un seul endroit à modifier
-- ✅ **Architecture propre** et évolutive
-- ✅ **Pas de régression** - comportement identique
+1. [Overview](#overview)
+2. [Current Architecture](#current-architecture)
+3. [Target Architecture](#target-architecture)
+4. [Migration Steps](#migration-steps)
+5. [Constraints and Rules](#constraints-and-rules)
+6. [Progress](#progress)
+7. [Tests and Validation](#tests-and-validation)
 
 ---
 
-## 🏗️ Architecture actuelle
+## 🎯 Overview
 
-### Structure des fichiers
+### Identified Problem
+
+- **Massive code duplication** between the main radar (`/home`) and overlay (`/radar-overlay`)
+- Two distinct views that import the same handlers/drawings
+- Identical rendering logic but duplicated in two EJS files
+- Settings synchronization via localStorage polling (300ms) - inefficient
+- Maintenance difficult - any change must be made in 2 files
+
+### Proposed Solution
+
+1. **Create a unified rendering system** (`RadarRenderer`)
+2. **Share canvas logic** (`CanvasManager`)
+3. **Instant synchronization** via `BroadcastChannel` API
+4. **Single source of truth** for rendering
+
+### Expected Benefits
+
+- ✅ **Zero duplication** of code between main and overlay
+- ✅ **Instant synchronization** of parameters (no 300ms delay)
+- ✅ **Simplified maintenance** - single place to modify
+- ✅ **Clean** and scalable architecture
+- ✅ **No regression** - identical behavior
+
+---
+
+## 🏗️ Current Architecture
+
+### File Structure
 
 ```
 scripts/
 ├── Utils/
-│   ├── Utils.js                  # Orchestrateur principal (1143 lignes)
+│   ├── Utils.js                  # Main orchestrator (1143 lines)
 │   │                             # - gameLoop() / update() / render()
 │   │                             # - WebSocket handling
 │   │                             # - Canvas initialization
 │   │
-│   ├── Settings.js               # Gestion settings (573 lignes)
-│   │                             # - Polling localStorage (300ms)
+│   ├── Settings.js               # Settings management (573 lines)
+│   │                             # - localStorage polling (300ms)
 │   │                             # - Custom setItem override
 │   │
-│   └── DrawingUtils.js           # Base class (548 lignes)
-│                                 # - Utilities partagées
+│   └── DrawingUtils.js           # Base class (548 lines)
+│                                 # - Shared utilities
 │                                 # - transformPoint(), drawCircle(), etc.
 │
-├── Handlers/                     # Gestion des entités (7 fichiers)
+├── Handlers/                     # Entity management (7 files)
 │   ├── PlayersHandler.js
 │   ├── HarvestablesHandler.js
 │   ├── MobsHandler.js
@@ -95,7 +95,7 @@ scripts/
 │   ├── WispCageHandler.js
 │   └── FishingHandler.js
 │
-└── Drawings/                     # Rendu des entités (8 fichiers)
+└── Drawings/                     # Entity rendering (8 files)
     ├── PlayersDrawing.js
     ├── HarvestablesDrawing.js
     ├── MobsDrawing.js
@@ -106,26 +106,26 @@ scripts/
     └── FishingDrawing.js
 
 views/main/
-├── drawing.ejs                   # Vue radar principal (287 lignes)
+├── drawing.ejs                   # Main radar view (287 lines)
 │                                 # - Sidebar, settings, player list
 │                                 # - 6 canvas layers
 │
-└── radar-overlay.ejs             # Vue overlay (162 lignes)
-                                  # - Interface minimale
-                                  # - 6 canvas layers (IDENTIQUES)
+└── radar-overlay.ejs             # Overlay view (162 lines)
+                                  # - Minimal interface
+                                  # - 6 canvas layers (IDENTICAL)
 ```
 
-### Flux de données actuel
+### Current Data Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ WebSocket (port 5002) - Données du jeu                      │
+│ WebSocket (port 5002) - Game data                           │
 └──────────────────────┬──────────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Utils.js - Orchestrateur                                     │
+│ Utils.js - Orchestrator                                      │
 │  • socket.on('message') → onEvent/onRequest/onResponse      │
-│  • Mise à jour handlers (playersList, harvestableList, etc)│
+│  • Update handlers (playersList, harvestableList, etc)      │
 │  • gameLoop() → update() → render()                         │
 └──────────────────────┬──────────────────────────────────────┘
                        ↓
@@ -137,7 +137,7 @@ views/main/
 │                  │        │                  │
 │ - 6 canvas       │        │ - 6 canvas       │
 │ - Full UI        │        │ - Minimal UI     │
-│ - MÊME LOGIQUE   │        │ - MÊME LOGIQUE   │
+│ - SAME LOGIC     │        │ - SAME LOGIC     │
 └──────────────────┘        └──────────────────┘
         ↑                              ↑
         └──────────────┬───────────────┘
@@ -148,69 +148,69 @@ views/main/
         └────────────────────────────┘
 ```
 
-### Problèmes identifiés
+### Identified Problems
 
-1. **Code dupliqué:**
-   - Canvas setup dans 2 fichiers EJS
-   - Imports des handlers/drawings dans 2 fichiers
-   - Logique d'initialisation dupliquée
+1. **Code duplication:**
+   - Canvas setup in 2 EJS files
+   - Imports of handlers/drawings in 2 files
+   - Initialization logic duplicated
 
-2. **Inefficacité:**
-   - Polling localStorage toutes les 300ms
-   - Custom override de `localStorage.setItem`
-   - Pas d'événements cross-tab natifs
+2. **Inefficiency:**
+   - localStorage polling every 300ms
+   - Custom override of `localStorage.setItem`
+   - No native cross-tab events
 
 3. **Maintenance:**
-   - Tout changement = 2 fichiers à modifier
-   - Risque de désynchronisation
-   - Tests en double
+   - Any change = 2 files to modify
+   - Risk of desynchronization
+   - Duplicate tests
 
 ---
 
-## 🎯 Architecture cible
+## 🎯 Target Architecture
 
-### Nouveaux modules
+### New Modules
 
 ```
 scripts/Utils/
-├── RadarRenderer.js              # NOUVEAU - Orchestrateur unifié
-│   │                             # - Remplace gameLoop/update/render
-│   │                             # - Gère le cycle de vie du radar
-│   │                             # - Utilisé par main ET overlay
+├── RadarRenderer.js              # NEW - Unified orchestrator
+│   │                             # - Replaces gameLoop/update/render
+│   │                             # - Manages radar lifecycle
+│   │                             # - Used by main AND overlay
 │   │
-├── CanvasManager.js              # NOUVEAU - Gestion canvas unifiée
-│   │                             # - Setup des 6 layers
+├── CanvasManager.js              # NEW - Unified canvas management
+│   │                             # - Setup of 6 layers
 │   │                             # - Clear/refresh
-│   │                             # - Grid et local player
+│   │                             # - Grid and local player
 │   │
-└── SettingsSync.js               # NOUVEAU - Sync instantanée
+└── SettingsSync.js               # NEW - Instant sync
     │                             # - BroadcastChannel API
-    │                             # - Event-driven (pas de polling)
+    │                             # - Event-driven (no polling)
     │                             # - Backward compatible
 ```
 
-### Flux de données cible
+### Target Data Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ WebSocket (port 5002) - Données du jeu                      │
+│ WebSocket (port 5002) - Game data                           │
 └──────────────────────┬──────────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ Utils.js - Orchestrateur                                     │
+│ Utils.js - Orchestrator                                      │
 │  • socket.on('message') → onEvent/onRequest/onResponse      │
-│  • Mise à jour handlers                                     │
+│  • Update handlers                                          │
 │  • RadarRenderer.setLocalPlayerPosition(lpX, lpY)           │
 │  • RadarRenderer.setMap(map)                                │
 │  • RadarRenderer.setFlashTime(flashTime)                    │
 └──────────────────────┬──────────────────────────────────────┘
                        ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ RadarRenderer - Rendu unifié                                 │
-│  • start() → gameLoop interne                               │
+│ RadarRenderer - Unified rendering                            │
+│  • start() → internal gameLoop                              │
 │  • update() → interpolation                                 │
 │  • render() → drawing                                       │
-│  • Partagé entre main ET overlay                            │
+│  • Shared between main AND overlay                          │
 └──────────────────────┬──────────────────────────────────────┘
                        ↓
         ┌──────────────┴──────────────┐
@@ -220,36 +220,36 @@ scripts/Utils/
 │ (drawing.ejs)    │        │ (radar-overlay)  │
 │                  │        │                  │
 │ - Full UI        │        │ - Minimal UI     │
-│ - MÊME RENDERER  │        │ - MÊME RENDERER  │
+│ - SAME RENDERER  │        │ - SAME RENDERER  │
 └──────────────────┘        └──────────────────┘
         ↑                              ↑
         └──────────────┬───────────────┘
                        ↓
         ┌────────────────────────────┐
         │ BroadcastChannel API        │
-        │ - Sync instantanée          │
+        │ - Instant sync              │
         │ - Event-driven              │
         └────────────────────────────┘
 ```
 
 ---
 
-## 📝 Étapes de migration
+## 📝 Migration Steps
 
-### ✅ Phase 1: Création des modules de base
+### ✅ Phase 1: Create Base Modules
 
-**Objectif:** Créer les 3 nouveaux modules sans casser l'existant
+**Goal:** Create the 3 new modules without breaking existing code
 
 #### 1.1 CanvasManager.js
 
-**Responsabilités:**
-- Setup des 6 canvas layers (map, grid, draw, flash, ourPlayer, third)
-- Initialisation des contexts 2D
-- Setup du grid statique
-- Setup du local player (point bleu)
-- Clear des layers dynamiques
+**Responsibilities:**
+- Setup of 6 canvas layers (map, grid, draw, flash, ourPlayer, third)
+- Initialization of 2D contexts
+- Static grid setup
+- Local player setup (blue dot)
+- Clear dynamic layers
 
-**API publique:**
+**Public API:**
 ```javascript
 class CanvasManager {
     constructor(viewType: 'main' | 'overlay')
@@ -262,65 +262,65 @@ class CanvasManager {
 }
 ```
 
-**Contraintes:**
-- ✅ Ne pas modifier les canvas IDs existants
-- ✅ Garder les mêmes dimensions (500x500px)
-- ✅ Utiliser le logger du projet (pas console.log)
+**Constraints:**
+- ✅ Do not modify existing canvas IDs
+- ✅ Keep the same dimensions (500x500px)
+- ✅ Use the project logger (never console.log)
 
 #### 1.2 SettingsSync.js
 
-**Responsabilités:**
-- Synchronisation settings via BroadcastChannel
-- Fallback sur localStorage events si BroadcastChannel non supporté
-- Event-driven (pas de polling)
-- Backward compatible avec localStorage
+**Responsibilities:**
+- Settings synchronization via BroadcastChannel
+- Fallback on localStorage events if BroadcastChannel not supported
+- Event-driven (no polling)
+- Backward compatible with localStorage
 
-**API publique:**
+**Public API:**
 ```javascript
 class SettingsSync {
     constructor()
-    broadcast(key, value)        // Émettre un changement
-    on(key, callback)            // Écouter un changement
-    off(key, callback)           // Arrêter d'écouter
-    get(key, defaultValue)       // Lire une valeur
-    set(key, value)              // Écrire une valeur
-    getBool(key, defaultValue)   // Lire un boolean
-    setBool(key, value)          // Écrire un boolean
+    broadcast(key, value)        // Emit a change
+    on(key, callback)            // Listen to a change
+    off(key, callback)           // Stop listening
+    get(key, defaultValue)       // Read a value
+    set(key, value)              // Write a value
+    getBool(key, defaultValue)   // Read a boolean
+    setBool(key, value)          // Write a boolean
     destroy()                    // Cleanup
 }
 ```
 
-**Contraintes:**
-- ✅ Utiliser BroadcastChannel API (moderne)
-- ✅ Fallback sur storage events (compatibilité)
-- ✅ Pas de polling
-- ✅ Cleanup automatique (beforeunload)
-- ✅ Utiliser le logger du projet
+**Constraints:**
+- ✅ Use BroadcastChannel API (modern)
+- ✅ Fallback on storage events (compatibility)
+- ✅ No polling
+- ✅ Automatic cleanup (beforeunload)
+- ✅ Use the project logger
 
 #### 1.3 RadarRenderer.js
 
-**Responsabilités:**
-- Game loop unifié (update/render)
-- Coordination des Drawing classes
-- Gestion de l'interpolation
-- Détection et rendu des clusters
-- Flash border (détection joueur)
+**Responsibilities:**
+- Unified game loop (update/render)
+- Coordination of Drawing classes
+- Management of interpolation
+- Detection and rendering of clusters
+- Flash border (player detection)
 
-**API publique:**
+**Public API:**
 ```javascript
 class RadarRenderer {
     constructor(viewType, dependencies)
     initialize()                          // Setup canvas via CanvasManager
-    start()                               // Démarre le game loop
-    stop()                                // Arrête le game loop
-    setLocalPlayerPosition(x, y)          // Sync position joueur
+    start()                               // Start the game loop
+    stop()                                // Stop the game loop
+    setLocalPlayerPosition(x, y)          // Sync player position
     setMap(mapData)                       // Sync map
     setFlashTime(time)                    // Sync flash border
     getFlashTime() → number               // Getter flash time
 }
 ```
 
-**Dependencies injectées:**
+**Injected dependencies:**
 ```javascript
 {
     settings: Settings,
@@ -347,29 +347,29 @@ class RadarRenderer {
 }
 ```
 
-**Contraintes:**
-- ✅ Ne PAS modifier les handlers/drawings existants
-- ✅ Garder le même ordre de rendu
-- ✅ Garder les mêmes calculs d'interpolation
-- ✅ Utiliser le logger du projet
-- ✅ Exposer globalement (`window.radarRenderer`) pour debug
+**Constraints:**
+- ✅ Do NOT modify existing handlers/drawings
+- ✅ Keep the same rendering order
+- ✅ Keep the same interpolation calculations
+- ✅ Use the project logger
+- ✅ Expose globally (`window.radarRenderer`) for debug
 
-**État:** ✅ **TERMINÉ**
+**Status:** ✅ **COMPLETED**
 
 ---
 
-### ✅ Phase 2: Intégration dans Utils.js
+### ✅ Phase 2: Integration into Utils.js
 
-**Objectif:** Intégrer le RadarRenderer sans casser le système legacy
+**Goal:** Integrate RadarRenderer without breaking legacy system
 
-#### 2.1 Import des nouveaux modules
+#### 2.1 Import new modules
 
 ```javascript
 import { createRadarRenderer } from './RadarRenderer.js';
 import settingsSync from './SettingsSync.js';
 ```
 
-#### 2.2 Initialisation du RadarRenderer
+#### 2.2 Initialize RadarRenderer
 
 ```javascript
 let radarRenderer = null;
@@ -388,14 +388,14 @@ if (canvas && context) {
 }
 ```
 
-#### 2.3 Synchronisation des états
+#### 2.3 Synchronize states
 
-**Dans onRequest (Operation 21 - mouvement joueur):**
+**In onRequest (Operation 21 - player movement):**
 ```javascript
 lpX = location[0];
 lpY = location[1];
 
-// Sync legacy
+// Legacy sync
 window.lpX = lpX;
 window.lpY = lpY;
 playersHandler.updateLocalPlayerPosition(lpX, lpY);
@@ -406,7 +406,7 @@ if (radarRenderer) {
 }
 ```
 
-**Dans onEvent (Event 29 - nouveau joueur):**
+**In onEvent (Event 29 - new player):**
 ```javascript
 flashTime = playersHandler.handleNewPlayerEvent(...);
 
@@ -416,7 +416,7 @@ if (radarRenderer && flashTime >= 0) {
 }
 ```
 
-**Dans onResponse (Event 35 - changement de cluster):**
+**In onResponse (Event 35 - cluster change):**
 ```javascript
 map.id = Parameters[0];
 
@@ -426,17 +426,17 @@ if (radarRenderer) {
 }
 ```
 
-#### 2.4 Basculement vers le nouveau système
+#### 2.4 Switch to new system
 
-**AVANT (legacy):**
+**BEFORE (legacy):**
 ```javascript
 requestAnimationFrame(gameLoop);
 ```
 
-**APRÈS (nouveau système):**
+**AFTER (new system):**
 ```javascript
 if (canvas && context) {
-    radarRenderer.start();  // ✨ Nouveau
+    radarRenderer.start();  // ✨ New
     window.logger?.info('RadarRendererStarted', { ... });
 } else {
     requestAnimationFrame(gameLoop);  // Fallback
@@ -444,17 +444,17 @@ if (canvas && context) {
 }
 ```
 
-**État:** ✅ **TERMINÉ** - RadarRenderer intégré et fonctionnel
+**Status:** ✅ **COMPLETED** - RadarRenderer integrated and functional
 
 ---
 
-### ⏳ Phase 3: Migration de Settings.js
+### ⏳ Phase 3: Migrate Settings.js
 
-**Objectif:** Remplacer le polling localStorage par BroadcastChannel
+**Goal:** Replace localStorage polling with BroadcastChannel
 
-#### 3.1 Supprimer le polling
+#### 3.1 Remove polling
 
-**AVANT:**
+**BEFORE:**
 ```javascript
 // Utils.js
 const interval = 300;
@@ -464,9 +464,9 @@ setInterval(checkLocalStorage, interval);
 localStorage.setItem = function(key, value) { ... };
 ```
 
-**APRÈS:**
+**AFTER:**
 ```javascript
-// Utiliser SettingsSync
+// Use SettingsSync
 settingsSync.on('*', (key, value) => {
     if (key.startsWith('setting')) {
         settings.update();
@@ -474,33 +474,33 @@ settingsSync.on('*', (key, value) => {
 });
 ```
 
-#### 3.2 Migration complète vers SettingsSync
+#### 3.2 Complete migration to SettingsSync
 
-**⚠️ GROS TRAVAIL - Voir le plan détaillé:** [`PHASE_3.2_SETTINGS_MIGRATION.md`](./PHASE_3.2_SETTINGS_MIGRATION.md)
+**⚠️ BIG WORK - See detailed plan:** [`PHASE_3.2_SETTINGS_MIGRATION.md`](./PHASE_3.2_SETTINGS_MIGRATION.md)
 
-**Résumé:**
-- Enrichir SettingsSync avec méthodes manquantes (getNumber, getJSON, remove)
-- Migrer Settings.js: ~58 appels localStorage → SettingsSync
-- Migrer drawing-ui.js: 6 appels → SettingsSync
-- Migrer LoggerClient.js: 8 appels → SettingsSync
-- Migrer fichiers support: ResourcesHelper, MobsHandler, PlayersHandler, init-alpine.js
-- Migrer 10 templates EJS: ~70+ appels → SettingsSync
+**Summary:**
+- Enrich SettingsSync with missing methods (getNumber, getJSON, remove)
+- Migrate Settings.js: ~58 localStorage calls → SettingsSync
+- Migrate drawing-ui.js: 6 calls → SettingsSync
+- Migrate LoggerClient.js: 8 calls → SettingsSync
+- Migrate support files: ResourcesHelper, MobsHandler, PlayersHandler, init-alpine.js
+- Migrate 10 EJS templates: ~70+ calls → SettingsSync
 
-**Objectif:** Centraliser TOUS les accès localStorage via SettingsSync (API propre et unifiée)
+**Goal:** Centralize ALL localStorage access via SettingsSync (clean and unified API)
 
-**Durée estimée:** 6-7 heures
+**Estimated duration:** 6-7 hours
 
-**État:** ⏳ **EN ATTENTE**
+**Status:** ⏳ **AWAITING**
 
 ---
 
-### ⏳ Phase 4: Mise à jour des vues
+### ⏳ Phase 4: Update Views
 
-**Objectif:** Simplifier drawing.ejs et radar-overlay.ejs
+**Goal:** Simplify drawing.ejs and radar-overlay.ejs
 
-#### 4.1 Extraire la logique commune
+#### 4.1 Extract common logic
 
-Créer un fichier `views/partials/radar-canvas.ejs`:
+Create a file `views/partials/radar-canvas.ejs`:
 
 ```html
 <!-- 6 canvas layers -->
@@ -512,7 +512,7 @@ Créer un fichier `views/partials/radar-canvas.ejs`:
 <canvas id="thirdCanvas" width="500" height="500"></canvas>
 ```
 
-#### 4.2 Simplifier drawing.ejs
+#### 4.2 Simplify drawing.ejs
 
 ```html
 <!-- Sidebar + UI -->
@@ -525,7 +525,7 @@ Créer un fichier `views/partials/radar-canvas.ejs`:
 <script type="module" src="/scripts/Utils/Utils.js"></script>
 ```
 
-#### 4.3 Simplifier radar-overlay.ejs
+#### 4.3 Simplify radar-overlay.ejs
 
 ```html
 <!-- Minimal UI -->
@@ -538,31 +538,31 @@ Créer un fichier `views/partials/radar-canvas.ejs`:
 <script type="module" src="/scripts/Utils/Utils.js"></script>
 ```
 
-**État:** ⏳ **EN ATTENTE**
+**Status:** ⏳ **AWAITING**
 
 ---
 
-### ⏳ Phase 5: Migration de drawing-ui.js
+### ⏳ Phase 5: Migrate drawing-ui.js
 
-**Objectif:** Utiliser SettingsSync dans l'UI
+**Goal:** Use SettingsSync in the UI
 
-#### 5.1 Remplacer localStorage direct
+#### 5.1 Replace direct localStorage
 
-**AVANT:**
+**BEFORE:**
 ```javascript
 checkbox.addEventListener('change', (e) => {
     localStorage.setItem('settingResourceEnchantOverlay', e.target.checked);
 });
 ```
 
-**APRÈS:**
+**AFTER:**
 ```javascript
 checkbox.addEventListener('change', (e) => {
     settingsSync.setBool('settingResourceEnchantOverlay', e.target.checked);
 });
 ```
 
-#### 5.2 Écouter les changements
+#### 5.2 Listen for changes
 
 ```javascript
 settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
@@ -570,185 +570,185 @@ settingsSync.on('settingResourceEnchantOverlay', (key, value) => {
 });
 ```
 
-**État:** ⏳ **EN ATTENTE**
+**Status:** ⏳ **AWAITING**
 
 ---
 
-### ⏳ Phase 6: Documentation et tests
+### ⏳ Phase 6: Documentation and tests
 
-#### 6.1 Mettre à jour IMPROVEMENTS.md
+#### 6.1 Update IMPROVEMENTS.md
 
-- Marquer "Radar Display Unification" comme ✅ complete
-- Documenter la nouvelle architecture
-- Ajouter "Always-On-Top Overlay" comme future improvement
+- Mark "Radar Display Unification" as ✅ complete
+- Document the new architecture
+- Add "Always-On-Top Overlay" as future improvement
 
-#### 6.2 Mettre à jour DEV_GUIDE.md
+#### 6.2 Update DEV_GUIDE.md
 
-- Expliquer RadarRenderer
-- Expliquer BroadcastChannel
-- Diagrammes d'architecture
+- Explain RadarRenderer
+- Explain BroadcastChannel
+- Architecture diagrams
 
 #### 6.3 Tests
 
-- Main radar fonctionne normalement ✅
-- Overlay radar fonctionne normalement ✅
-- Settings sync instantanément entre windows ✅
-- Pas de régression fonctionnelle ✅
+- Main radar works normally ✅
+- Overlay radar works normally ✅
+- Settings sync instantly between windows ✅
+- No functional regression ✅
 
-**État:** ⏳ **EN ATTENTE**
+**Status:** ⏳ **PENDING**
 
 ---
 
-## ⚠️ Contraintes et règles
+## ⚠️ Constraints and rules
 
-### Règles de développement
+### Development rules
 
-1. **Pas de breaking changes**
-   - Le radar doit continuer de fonctionner à chaque étape
-   - Tests manuels après chaque commit
+1. **No breaking changes**
+   - The radar must continue to work at each step
+   - Manual tests after each commit
 
-2. **Logging obligatoire**
-   - Utiliser `window.logger` (jamais `console.log`)
-   - Catégories: `CATEGORIES.MAP`, `CATEGORIES.SETTINGS`, etc.
+2. **Logging mandatory**
+   - Use `window.logger` (never `console.log`)
+   - Categories: `CATEGORIES.MAP`, `CATEGORIES.SETTINGS`, etc.
    - Format: `window.logger?.info(CATEGORY, 'EventName', { data })`
 
-3. **Pas de modifications des handlers/drawings**
-   - Ne pas toucher à la logique métier existante
-   - Seulement orchestration et coordination
+3. **No modifications of handlers/drawings**
+   - Do not touch existing business logic
+   - Only orchestration and coordination
 
 4. **Backward compatibility**
-   - Fallback sur legacy gameLoop si RadarRenderer échoue
-   - Fallback sur storage events si BroadcastChannel n'existe pas
+   - Fallback on legacy gameLoop if RadarRenderer fails
+   - Fallback on storage events if BroadcastChannel does not exist
 
 5. **Git workflow**
-   - Commits atomiques par phase
-   - Messages clairs: `feat: add RadarRenderer`, `refactor: use BroadcastChannel`
-   - Tests manuels avant chaque push
+   - Atomic commits by phase
+   - Clear messages: `feat: add RadarRenderer`, `refactor: use BroadcastChannel`
+   - Manual tests before each push
 
-### Contraintes techniques
+### Technical constraints
 
 1. **Performance**
-   - Garder 60 FPS minimum
-   - Pas de ralentissement du game loop
-   - Clusters détectés une seule fois par frame
+   - Keep 60 FPS minimum
+   - No slowdown of the game loop
+   - Clusters detected only once per frame
 
-2. **Compatibilité navigateurs**
+2. **Browser compatibility**
    - BroadcastChannel: Chrome 54+, Firefox 38+, Edge 79+
-   - Fallback obligatoire pour IE11 (storage events)
+   - Fallback mandatory for IE11 (storage events)
 
-3. **Mémoire**
-   - Cleanup correct (removeEventListener, destroy())
-   - Pas de memory leaks (window.beforeunload)
+3. **Memory**
+   - Correct cleanup (removeEventListener, destroy())
+   - No memory leaks (window.beforeunload)
 
-4. **Sécurité**
-   - Pas d'`eval()` ou code dangereux
-   - Validation des données WebSocket
+4. **Security**
+   - No `eval()` or dangerous code
+   - Validation of WebSocket data
 
-### Standards de code
+### Code standards
 
-1. **Nommage**
+1. **Naming**
    - Classes: `PascalCase` (RadarRenderer, CanvasManager)
-   - Fonctions: `camelCase` (initialize, setLocalPlayerPosition)
-   - Constantes: `UPPER_SNAKE_CASE` (CATEGORIES, EVENTS)
+   - Functions: `camelCase` (initialize, setLocalPlayerPosition)
+   - Constants: `UPPER_SNAKE_CASE` (CATEGORIES, EVENTS)
 
 2. **Documentation**
-   - JSDoc pour les méthodes publiques
-   - Commentaires explicatifs pour la logique complexe
-   - README pour chaque module
+   - JSDoc for public methods
+   - Explanatory comments for complex logic
+   - README for each module
 
 3. **Structure**
-   - Imports en haut
-   - Exports en bas
-   - Pas de side-effects dans les modules
+   - Imports at the top
+   - Exports at the bottom
+   - No side-effects in modules
 
 ---
 
-## 📊 Progression
+## 📊 Progress
 
-### Vue d'ensemble
+### Overview
 
-| Phase | Description | État | Temps réel | Progression |
-|-------|-------------|------|-----------|-------------|
-| **Phase 1** | Création modules de base | ✅ **TERMINÉ** | 6h/6h | 100% |
-| **Phase 2** | Intégration Utils.js | ✅ **TERMINÉ** | 3h/3h | 100% |
-| **Phase 2b** | Nettoyage code legacy | ✅ **TERMINÉ** | 1h/2h | 100% |
-| **Phase 3.1** | Suppression polling localStorage | ✅ **TERMINÉ** | 1h/1h | 100% |
-| **Phase 3.2** | Migration Settings.js → SettingsSync | 🟡 **OPTIONNEL** | 0h/3h | 0% |
-| **Phase 4** | Mise à jour radar-overlay.ejs | 🟡 **PARTIEL** | 0.5h/1h | 50% |
-| **Phase 5** | Migration drawing-ui.js | 🟡 **OPTIONNEL** | 0h/1h | 0% |
-| **Phase 6** | Documentation + tests | ⏳ EN ATTENTE | 0h/2h | 0% |
+| Phase | Description | Status | Real time | Progress |
+|-------|-------------|--------|-----------|----------|
+| **Phase 1** | Create base modules | ✅ **COMPLETED** | 6h/6h | 100% |
+| **Phase 2** | Integrate Utils.js | ✅ **COMPLETED** | 3h/3h | 100% |
+| **Phase 2b** | Clean up legacy code | ✅ **COMPLETED** | 1h/2h | 100% |
+| **Phase 3.1** | Remove localStorage polling | ✅ **COMPLETED** | 1h/1h | 100% |
+| **Phase 3.2** | Migrate Settings.js → SettingsSync | 🟡 **OPTIONAL** | 0h/3h | 0% |
+| **Phase 4** | Update radar-overlay.ejs | 🟡 **PARTIAL** | 0.5h/1h | 50% |
+| **Phase 5** | Migrate drawing-ui.js | 🟡 **OPTIONAL** | 0h/1h | 0% |
+| **Phase 6** | Documentation + tests | ⏳ PENDING | 0h/2h | 0% |
 | **TOTAL** | | **~80%** | 11.5h/17h | **80%** |
 
-### État vérifié (2025-12-07)
+### Verified status (2025-12-07)
 
-**Modules créés et fonctionnels:**
-- ✅ `scripts/Utils/RadarRenderer.js` (406 lignes) - Rendu unifié actif
-- ✅ `scripts/Utils/CanvasManager.js` (189 lignes) - 7 canvas layers
-- ✅ `scripts/Utils/SettingsSync.js` (240 lignes) - BroadcastChannel actif
+**Modules created and functional:**
+- ✅ `scripts/Utils/RadarRenderer.js` (406 lines) - Unified rendering active
+- ✅ `scripts/Utils/CanvasManager.js` (189 lines) - 7 canvas layers
+- ✅ `scripts/Utils/SettingsSync.js` (240 lines) - BroadcastChannel active
 
-**Intégration Utils.js vérifié:**
-- ✅ RadarRenderer initialisé (lignes 904-959)
-- ✅ `radarRenderer.setLocalPlayerPosition()` appelé (lignes 771-795)
-- ✅ `radarRenderer.setMap()` appelé (ligne 815-817)
-- ✅ Code legacy supprimé (gameLoop, render, update)
-- ✅ `window.radarRenderer` exposé pour debug
+**Utils.js integration verified:**
+- ✅ RadarRenderer initialized (lines 904-959)
+- ✅ `radarRenderer.setLocalPlayerPosition()` called (lines 771-795)
+- ✅ `radarRenderer.setMap()` called (line 815-817)
+- ✅ Legacy code removed (gameLoop, render, update)
+- ✅ `window.radarRenderer` exposed for debug
 
-**Canvas layers (7 au total):**
-- ✅ `drawing.ejs`: 7 canvas incluant `uiCanvas` (z-index: 10)
-- ⚠️ `radar-overlay.ejs`: 6 canvas (manque `uiCanvas`)
+**Canvas layers (7 total):**
+- ✅ `drawing.ejs`: 7 canvas including `uiCanvas` (z-index: 10)
+- ⚠️ `radar-overlay.ejs`: 6 canvas (missing `uiCanvas`)
 
-**Ce qui reste (OPTIONNEL):**
-- Phase 3.2: ~50 `returnLocalBool()` dans Settings.js → `settingsSync.getBool()` (non bloquant)
-- Phase 4: Ajouter `uiCanvas` à radar-overlay.ejs (mineur)
-- Phase 5: ~30 `localStorage.setItem` dans drawing-ui.js → `settingsSync.setBool()` (non bloquant)
+**What remains (OPTIONAL):**
+- Phase 3.2: ~50 `returnLocalBool()` in Settings.js → `settingsSync.getBool()` (non-blocking)
+- Phase 4: Add `uiCanvas` to radar-overlay.ejs (minor)
+- Phase 5: ~30 `localStorage.setItem` in drawing-ui.js → `settingsSync.setBool()` (non-blocking)
 
-### ✅ Session 2025-12-04 - Nettoyage complet du code legacy
+### ✅ Session 2025-12-04 - Complete cleanup of legacy code
 
-**Travaux réalisés (Partie 1 - Code Renderer):**
-1. ✅ Suppression totale de `flashTime` de tout le projet (RadarRenderer + Utils.js)
-2. ✅ Suppression des 3 fonctions legacy: `gameLoop()`, `render()`, `update()` (~140 lignes)
-3. ✅ Suppression du fallback `requestAnimationFrame(gameLoop)`
-4. ✅ Le radar fonctionne parfaitement avec le nouveau RadarRenderer
-5. ✅ Aucune régression détectée
+**Work done (Part 1 - Renderer code):**
+1. ✅ Total removal of `flashTime` from the entire project (RadarRenderer + Utils.js)
+2. ✅ Complete removal of the 3 legacy functions: `gameLoop()`, `render()`, `update()` (~140 lines)
+3. ✅ Removal of the fallback `requestAnimationFrame(gameLoop)`
+4. ✅ The radar works perfectly with the new RadarRenderer
+5. ✅ No regression detected
 
-**Travaux réalisés (Partie 2 - Nettoyage final):**
-1. ✅ **Utils.js nettoyé** (~100 lignes supprimées):
-   - Suppression variables canvas legacy (canvasMap, contextMap, canvasGrid, etc.)
-   - Suppression blocs de code legacy commentés (localStorage polling, gameLoop legacy)
-   - Suppression appels `drawingUtils.init*()` (gérés par CanvasManager)
-   - Suppression fonction `setDrawingViews()` complète (~70 lignes)
-   - Suppression appel `setDrawingViews()` dans listener SettingsSync
+**Work done (Part 2 - Final cleanup):**
+1. ✅ **Utils.js cleaned** (~100 lines removed):
+   - Removal of legacy canvas variables (canvasMap, contextMap, canvasGrid, etc.)
+   - Removal of commented legacy code blocks (localStorage polling, gameLoop legacy)
+   - Removal of `drawingUtils.init*()` calls (handled by CanvasManager)
+   - Removal of complete `setDrawingViews()` function (~70 lines)
+   - Removal of `setDrawingViews()` call in SettingsSync listener
 
-2. ✅ **settings.ejs nettoyé** (~100 lignes supprimées):
-   - Suppression section "Main Window Settings" (2 inputs margin inutiles)
-   - Suppression inputs Margin X/Y de "Items Window Settings" (2 inputs)
-   - Suppression section "Clear Button Settings" (2 inputs margin)
-   - Suppression 6 const mortes (mainWindowMarginX/YInput, etc.)
-   - Suppression 6 event listeners morts
-   - Suppression 6 lignes d'initialisation mortes
+2. ✅ **settings.ejs cleaned** (~100 lines removed):
+   - Removal of "Main Window Settings" section (2 unused margin inputs)
+   - Removal of Margin X/Y inputs from "Items Window Settings" (2 inputs)
+   - Removal of "Clear Button Settings" section (2 margin inputs)
+   - Removal of 6 dead consts (mainWindowMarginX/YInput, etc.)
+   - Removal of 6 dead event listeners
+   - Removal of 6 lines of dead initialization
 
-**Résultat:** ~200+ lignes de code mort supprimées, codebase beaucoup plus propre!
+**Result:** ~200+ lines of dead code removed, codebase much cleaner!
 
-**Travaux réalisés (Partie 3 - Migration UI vers Canvas):**
-1. ✅ **Architecture 100% Canvas - Suppression overlay HTML**:
-   - Ajout canvas `uiCanvas` (z-index: 10) pour tous les éléments UI
-   - Suppression du div HTML `playerCounter` (overlay superposé avec z-index tricks)
-   - Ajout de `uiCanvas` dans CanvasManager (initialize + clearDynamicLayers)
-   - Nouvelle méthode `renderUI()` dans RadarRenderer pour dessiner le compteur
-   - Rendu du compteur de joueurs directement sur canvas (texte + box stylisée)
+**Work done (Part 3 - UI Migration to Canvas):**
+1. ✅ **100% Canvas Architecture - Removal of HTML overlay**:
+   - Added `uiCanvas` (z-index: 10) for all UI elements
+   - Removed HTML div `playerCounter` (overlay superposed with z-index tricks)
+   - Added `uiCanvas` in CanvasManager (initialize + clearDynamicLayers)
+   - New `renderUI()` method in RadarRenderer to draw the player counter
+   - Rendering of player counter directly on canvas (styled text + box)
 
-2. ✅ **Nettoyage fonction updatePlayerCount()**:
-   - Suppression de la fonction `updatePlayerCount()` complète (~10 lignes)
-   - Suppression des 3 appels (EventCodes.Leave, EventCodes.NewCharacter, ClearHandlers)
-   - Le compteur est maintenant mis à jour automatiquement à chaque frame via `renderUI()`
+2. ✅ **Cleanup of `updatePlayerCount()` function**:
+   - Removal of complete `updatePlayerCount()` function (~10 lines)
+   - Removal of 3 calls (EventCodes.Leave, EventCodes.NewCharacter, ClearHandlers)
+   - Player counter is now updated automatically on each frame via `renderUI()`
 
-**Bénéfices:**
-- ✅ **Plus propre** - Plus de mélange HTML/Canvas (z-index tricks supprimés)
-- ✅ **Plus cohérent** - Tout est dessiné de la même façon (100% canvas)
-- ✅ **Plus performant** - Pas de manipulation DOM ni de reflow
-- ✅ **Plus extensible** - Facile d'ajouter d'autres stats UI (FPS, coords, etc.)
+**Benefits:**
+- ✅ **Cleaner** - No more HTML/Canvas mixing (z-index tricks removed)
+- ✅ **More consistent** - Everything is drawn the same way (100% canvas)
+- ✅ **More performant** - No DOM manipulation or reflow
+- ✅ **More extensible** - Easy to add other UI stats (FPS, coords, etc.)
 
-**Architecture Canvas finale:**
+**Final Canvas architecture:**
 ```
 Canvas layers (z-index order):
 1. mapCanvas (z-index: 1) - Background map
@@ -756,193 +756,193 @@ Canvas layers (z-index order):
 3. drawCanvas (z-index: 3) - Entities (resources, mobs, players)
 4. flashCanvas (z-index: 4) - Flash borders
 5. ourPlayerCanvas (z-index: 5) - Local player blue dot
-6. uiCanvas (z-index: 10) - UI elements (player counter, stats) ✨ NOUVEAU
+6. uiCanvas (z-index: 10) - UI elements (player counter, stats) ✨ NEW
 7. thirdCanvas (z-index: 1) - Hidden/legacy items display
 ```
 
-### Détails Phase 1 ✅
+### Phase 1 details ✅
 
-- [x] CanvasManager.js créé
+- [x] CanvasManager.js created
   - [x] Setup 6 canvas layers
-  - [x] Grid statique
-  - [x] Local player (point bleu)
-  - [x] Logger intégré
+  - [x] Static grid
+  - [x] Local player (blue dot)
+  - [x] Logger integrated
 
-- [x] SettingsSync.js créé
+- [x] SettingsSync.js created
   - [x] BroadcastChannel API
   - [x] Fallback storage events
-  - [x] Event-driven (pas de polling)
-  - [x] Logger intégré
+  - [x] Event-driven (no polling)
+  - [x] Logger integrated
 
-- [x] RadarRenderer.js créé
-  - [x] Game loop interne
-  - [x] Méthodes update/render
-  - [x] Synchronisation lpX/lpY/map/flashTime
-  - [x] Logger intégré
-  - [x] Exposé globalement (debug)
+- [x] RadarRenderer.js created
+  - [x] Internal game loop
+  - [x] Update/render methods
+  - [x] Synchronization lpX/lpY/map/flashTime
+  - [x] Logger integrated
+  - [x] Exposed globally (debug)
 
-### Détails Phase 2 ✅ TERMINÉ (100%)
+### Phase 2 details ✅ COMPLETED (100%)
 
-**✅ CE QUI EST FAIT:**
-- [x] Imports ajoutés dans Utils.js
-- [x] RadarRenderer initialisé et fonctionnel
-- [x] Synchronisation lpX/lpY (Operation 21)
-- [x] Synchronisation map (Event 35)
-- [x] Basculement vers radarRenderer.start()
-- [x] **Fix critique:** Logger init order
-  - **Problème:** Logger initialisé après Utils.js, logs perdus
-  - **Solution:** Logger initialisé immédiatement (pas de DOMContentLoaded)
-  - **Résultat:** Tous les logs d'initialisation capturés ✅
+**✅ WHAT IS DONE:**
+- [x] Imports added in Utils.js
+- [x] RadarRenderer initialized and functional
+- [x] lpX/lpY synchronization (Operation 21)
+- [x] Map synchronization (Event 35)
+- [x] Switch to `radarRenderer.start()`
+- [x] **Critical fix:** Logger init order
+  - **Problem:** Logger initialized after Utils.js, lost logs
+  - **Solution:** Logger initialized immediately (no DOMContentLoaded)
+  - **Result:** All init logs captured ✅
 
-### Détails Phase 2b ✅ TERMINÉ (100%)
+### Phase 2b details ✅ COMPLETED (100%)
 
-**✅ Nettoyage complet du code legacy:**
-- [x] **Suppression totale de flashTime** (RadarRenderer.js + Utils.js)
-- [x] **Suppression function gameLoop()** (5 lignes)
-- [x] **Suppression function render()** (80 lignes)
-- [x] **Suppression function update()** (40 lignes)
-- [x] **Suppression fallback requestAnimationFrame(gameLoop)**
-- [x] **Total: ~140 lignes supprimées**
-- [x] **Radar testé et fonctionnel** - Aucune régression
+**✅ Complete removal of legacy game loop:**
+- [x] **Total removal of flashTime** (RadarRenderer.js + Utils.js)
+- [x] **Removal of gameLoop() function** (5 lines)
+- [x] **Removal of render() function** (80 lines)
+- [x] **Removal of update() function** (40 lines)
+- [x] **Removal of fallback requestAnimationFrame(gameLoop)**
+- [x] **Total: ~140 lines removed**
+- [x] **Radar tested and functional** - No regression
 
-### Détails Phase 3 🟡 PARTIEL (40%)
+### Phase 3 details 🟡 PARTIAL (40%)
 
-**✅ CE QUI EST FAIT (Phase 3.1):**
-- [x] Supprimer polling localStorage (300ms interval removed)
-- [x] Supprimer custom setItem override (localStorage.setItem no longer patched)
-- [x] Intégrer SettingsSync pour écoute des changements (event-driven via BroadcastChannel)
+**✅ WHAT IS DONE (Phase 3.1):**
+- [x] Remove localStorage polling (300ms interval removed)
+- [x] Remove custom setItem override (localStorage.setItem no longer patched)
+- [x] Integrate SettingsSync for change listening (event-driven via BroadcastChannel)
 
-**❌ CE QUI RESTE À FAIRE (Phase 3.2 - OPTIONNEL):**
-- [ ] **Migrer Settings.js vers SettingsSync** (gros travail, ~50+ changements)
-  - [ ] Remplacer `returnLocalBool()` par `settingsSync.getBool()` (50+ occurrences)
-  - [ ] Remplacer `localStorage.getItem()` direct par `settingsSync.get()` (20+ occurrences)
-  - [ ] Utiliser `settingsSync.broadcast()` pour les changements
-- [ ] Tests synchronisation settings cross-window
+**❌ WHAT REMAINS TO BE DONE (Phase 3.2 - OPTIONAL):**
+- [ ] **Migrate Settings.js to SettingsSync** (big task, ~50+ changes)
+  - [ ] Replace `returnLocalBool()` with `settingsSync.getBool()` (50+ occurrences)
+  - [ ] Replace direct `localStorage.getItem()` with `settingsSync.get()` (20+ occurrences)
+  - [ ] Use `settingsSync.broadcast()` for changes
+- [ ] Test cross-window settings synchronization
 
-**Note:** Phase 3.2 est OPTIONNELLE - le système fonctionne déjà avec localStorage direct
+**Note:** Phase 3.2 is OPTIONAL - the system already works with direct localStorage
 
-### Fixes appliqués
+### Fixes applied
 
 **✅ Fix #1: Logger initialization order**
-- **Problème:** `LoggerClient.js` attendait `DOMContentLoaded` → logs d'init perdus
-- **Cause:** Modules ES s'exécutent avant que le DOM soit prêt
+- **Problem:** `LoggerClient.js` waited for `DOMContentLoaded` → lost init logs
+- **Cause:** ES modules run before DOM is ready
 - **Solution:**
-  - Logger créé immédiatement (top-level)
-  - WebSocket connection différée (dans DOMContentLoaded)
-- **Impact:** Capture maintenant TOUS les logs d'initialisation
-- **Logs capturés:** `RadarRendererInitialized`, `RadarRendererGameLoopStarted`, etc.
+  - Logger created immediately (top-level)
+  - WebSocket connection deferred (in DOMContentLoaded)
+- **Impact:** Now captures ALL initialization logs
+- **Captured logs:** `RadarRendererInitialized`, `RadarRendererGameLoopStarted`, etc.
 
 ---
 
-## ✅ Tests et validation
+## ✅ Tests and validation
 
-### Tests fonctionnels
+### Functional tests
 
-#### Test 1: Radar principal
-- [ ] Le radar charge sans erreur
-- [ ] Les ressources s'affichent
-- [ ] Les mobs s'affichent
-- [ ] Les joueurs s'affichent
-- [ ] La carte s'affiche
-- [ ] Le flash fonctionne (détection joueur)
-- [ ] Les clusters fonctionnent
+#### Test 1: Main radar
+- [ ] The radar loads without errors
+- [ ] Resources are displayed
+- [ ] Mobs are displayed
+- [ ] Players are displayed
+- [ ] The map is displayed
+- [ ] The flash works (player detection)
+- [ ] Clusters work
 
 #### Test 2: Overlay radar
-- [ ] L'overlay s'ouvre via le bouton
-- [ ] Les entités s'affichent identiquement au main
-- [ ] La synchronisation fonctionne
-- [ ] L'overlay se ferme correctement
+- [ ] The overlay opens via the button
+- [ ] Entities display identically to main
+- [ ] Synchronization works
+- [ ] The overlay closes correctly
 
-#### Test 3: Synchronisation settings
-- [ ] Changement dans main → visible dans overlay instantanément
-- [ ] Changement dans overlay → visible dans main instantanément
-- [ ] Pas de délai de 300ms
+#### Test 3: Settings synchronization
+- [ ] Change in main → visible in overlay instantly
+- [ ] Change in overlay → visible in main instantly
+- [ ] No 300ms delay
 - [ ] Settings persistent (localStorage)
 
 #### Test 4: Performance
-- [ ] FPS stable à 30
-- [ ] Pas de memory leak après 30min
-- [ ] CPU usage acceptable
-- [ ] Game loop fluide
+- [ ] Stable FPS at 30
+- [ ] No memory leak after 30min
+- [ ] Acceptable CPU usage
+- [ ] Smooth game loop
 
-### Tests techniques
+### Technical tests
 
 #### Test 5: Fallbacks
-- [ ] Legacy gameLoop fonctionne si canvas manquant
-- [ ] Storage events fonctionnent si BroadcastChannel absent
-- [ ] Pas de crash si handlers manquants
+- [ ] Legacy gameLoop works if canvas missing
+- [ ] Storage events work if BroadcastChannel absent
+- [ ] No crash if handlers missing
 
 #### Test 6: Logger
-- [ ] Tous les logs utilisent `window.logger`
-- [ ] Pas de `console.log` dans le code de prod
-- [ ] Catégories correctes (MAP, SETTINGS, etc.)
+- [ ] All logs use `window.logger`
+- [ ] No `console.log` in prod code
+- [ ] Correct categories (MAP, SETTINGS, etc.)
 
 #### Test 7: Cleanup
-- [ ] `radarRenderer.stop()` arrête le game loop
-- [ ] `settingsSync.destroy()` ferme le channel
-- [ ] Pas de listeners orphelins
+- [ ] `radarRenderer.stop()` stops the game loop
+- [ ] `settingsSync.destroy()` closes the channel
+- [ ] No orphan listeners
 
 ---
 
-## 📝 Notes de développement
+## 📝 Development notes
 
-### Décisions architecturales
+### Architectural decisions
 
-**Pourquoi BroadcastChannel et pas autre chose?**
-- Native browser API (pas de lib externe)
-- Event-driven (pas de polling)
-- Support multi-onglets
-- Fallback simple sur storage events
+**Why BroadcastChannel and not something else?**
+- Native browser API (no external lib)
+- Event-driven (no polling)
+- Multi-tab support
+- Simple fallback on storage events
 
-**Pourquoi ne pas migrer vers Electron?**
-- Testé et abandonné (voir `docs/dev/DEV_GUIDE.md`)
-- Module `cap` (packet capture) incompatible avec Electron
-- Dépendance critique pour le radar
+**Why not migrate to Electron?**
+- Tested and abandoned (see `docs/dev/DEV_GUIDE.md`)
+- `cap` module (packet capture) incompatible with Electron
+- Critical dependency for the radar
 
-**Pourquoi garder les handlers/drawings intacts?**
-- Logique métier complexe et testée
-- Risque de régression trop élevé
-- Refactoring incrémental plus sûr
+**Why keep handlers/drawings intact?**
+- Complex and tested business logic
+- Too high regression risk
+- Safer incremental refactoring
 
-### Améliorations futures (hors scope)
+### Future improvements (out of scope)
 
 1. **Always-On-Top Overlay** (Phase 7)
    - Windows native integration via `ffi-napi`
    - SetWindowPos API (HWND_TOPMOST)
    - Transparency control
-   - **Note:** Reporté après unification
+   - **Note:** Postponed after unification
 
-2. **Optimisations de rendu**
+2. **Rendering optimizations**
    - Dirty checking (render only when changed)
    - Canvas layer optimization
    - Cluster caching
 
 3. **Mob detection system refactor**
-   - Database-based approach (comme resources)
+   - Database-based approach (like resources)
    - Detailed mob information
    - Visual differentiation
 
 ---
 
-## 🔗 Références
+## 🔗 References
 
-### Documentation externe
+### External documentation
 - [BroadcastChannel API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel)
 - [Canvas API - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API)
 - [Storage Event - MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event)
 
-### Documentation projet
-- `docs/project/IMPROVEMENTS.md` - Historique des améliorations
-- `docs/dev/DEV_GUIDE.md` - Guide développeur
+### Project documentation
+- `docs/project/IMPROVEMENTS.md` - Improvement history
+- `docs/dev/DEV_GUIDE.md` - Developer guide
 
-### Fichiers clés
-- `scripts/Utils/Utils.js` - Orchestrateur principal
-- `scripts/Utils/Settings.js` - Gestion settings
-- `scripts/Utils/DrawingUtils.js` - Utilities de rendu
-- `scripts/constants/LoggerConstants.js` - Catégories de logs
+### Key files
+- `scripts/Utils/Utils.js` - Main orchestrator
+- `scripts/Utils/Settings.js` - Settings management
+- `scripts/Utils/DrawingUtils.js` - Rendering utilities
+- `scripts/constants/LoggerConstants.js` - Logger categories
 
 ---
 
-**Dernière mise à jour:** 2025-12-04 17:00
-**Auteur:** Claude Code + Développeur
-**Statut:** ✅ **Phase 1, 2, 2b TERMINÉES (60%)** - RadarRenderer actif, code legacy supprimé, radar fonctionnel. Prochaines étapes: Phase 3.2 (Settings.js - optionnel), Phase 4 (Vues)
+**Last updated:** 2025-12-09
+**Author:** Claude Code + Developer
+**Status:** ✅ **Phase 1, 2, 2b COMPLETED (60%)** - RadarRenderer active, legacy code removed, radar functional. Next steps: Phase 3.2 (Settings.js - optional), Phase 4 (Views)

@@ -62,7 +62,7 @@ export class DungeonsHandler
 
     dungeonEvent(parameters)
     {
-        // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
+        // Ultra-detailed debug: Log ALL parameters to identify patterns
         const allParams = {};
         for (let key in parameters) {
             if (parameters.hasOwnProperty(key)) {

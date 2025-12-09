@@ -241,7 +241,7 @@ Example UI addition in `resources.ejs`:
 - T5: Bear (8 variants), Direwolf, Terrorbird
 - T6: Direbear, Terrorbird
 - T7: Moabird, Swamp Dragon
-- T8: Mammoth, Rhinocéros
+- T8: Mammoth, Rhinoceros
 
 #### 4.2.5 Improved Logging
 

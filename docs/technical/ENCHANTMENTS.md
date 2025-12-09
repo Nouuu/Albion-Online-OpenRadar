@@ -244,7 +244,7 @@ This fix ensures solo dungeon enchantments are read from the proper parameter.
    - Adjust thresholds if necessary.
 
 2. **Medium term:**
-   - Integrate XML-based databases (see `ANALYSIS_DEATHEYE_VS_CURRENT.md`).
+   - Integrate XML-based databases (see `./DEATHEYE_ANALYSIS.md`).
    - Centralise tier/enchant logic through those databases.
 
 ---

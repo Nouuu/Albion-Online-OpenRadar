@@ -4,7 +4,7 @@ import path from 'path';
 import readlineSync from 'readline-sync';
 
 function printAdapters(adapters) {
-    console.log('\nVeuillez sélectionner l\'adaptateur utilisé pour vous connecter à Internet :');
+    console.log('\nPlease select the adapter used to connect to the Internet:');
     adapters.forEach((adapter, idx) => {
         console.log(`  ${idx + 1}. ${adapter.name}\t ip address: ${adapter.address}`);
     });
@@ -23,21 +23,21 @@ const getAdapterIp = (appDir) => {
     let selectedIdx;
     while (true) {
         printAdapters(adapters);
-        const input = readlineSync.question('Entrez le numéro de l\'adaptateur : ');
+        const input = readlineSync.question('Enter the adapter number: ');
         selectedIdx = parseInt(input, 10) - 1;
         if (adapters[selectedIdx]) break;
         console.clear();
-        console.log('Entrée invalide, réessayez.\n');
+        console.log('Invalid input, please try again.\n');
     }
 
     const selected = adapters[selectedIdx];
-    console.log(`\nVous avez sélectionné "${selected.name} - ${selected.address}"\n`);
+    console.log(`\nYou have selected "${selected.name} - ${selected.address}"\n`);
 
     const ipFilePath = path.join(appDir, 'ip.txt');
     try {
         fs.writeFileSync(ipFilePath, selected.address);
     } catch {
-        console.log('Erreur lors de la sauvegarde de l\'IP.');
+        console.log('Error while saving the IP address.');
     }
 
     return selected.address;

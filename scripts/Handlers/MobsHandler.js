@@ -225,17 +225,30 @@ export class MobsHandler {
 
     // 🔍 Calculate enchantment level from game parameters
     // Harvestable (Fiber/Wood/Ore/Rock): Calculate from rarity (params[19])
-    // 🔧 Phase 3B: Simplified enchant calculation using server data (parameters[33])
-    // Old system calculated from rarity (unreliable), new system trusts server data
+    // Skinnable (Hide): Cannot be calculated from rarity (game sends constant values)
     calculateEnchantment(type, tier, rarity, paramsEnchant) {
-        // ✅ Use parameters[33] directly (server data is reliable)
-        // This fixes Hide/Leather T6+ enchant detection bugs
-        if (paramsEnchant !== null && paramsEnchant !== undefined) {
-            return Math.max(0, Math.min(4, paramsEnchant));
+        // For Harvestable resources (Fiber/Wood/Ore/Rock): rarity is accurate
+        if (type === EnemyType.LivingHarvestable) {
+            if (rarity === null || rarity === undefined) return 0;
+
+            const baseRarity = this.getBaseRarity(tier);
+            if (baseRarity === 0) return 0;
+
+            // Formula validated: enchant increases rarity by ~45 per level
+            const diff = rarity - baseRarity;
+            const enchant = Math.floor(diff / 45);
+            return Math.max(0, Math.min(4, enchant));
         }
 
-        // ⚠️ Fallback: If parameters[33] not available, return 0
-        // (Better to show e0 than wrong enchant)
+        // For Skinnable resources (Hide): rarity is CONSTANT per TypeID (unreliable)
+        // Game sends same rarity value regardless of actual enchantment
+        // Cannot calculate from rarity - must use TypeID database or harvestable event
+        if (type === EnemyType.LivingSkinnable) {
+            // TODO: Use MobsInfo enchantment data when available
+            // For now, return 0 (will be corrected when harvestable is created)
+            return 0;
+        }
+
         return 0;
     }
 

@@ -1,4 +1,4 @@
-// Script de test: simule le mode packagé en définissant process.pkg et en appelant runRuntimeChecks()
+// Test script: simulates packaged mode by setting process.pkg and calling runRuntimeChecks()
 import {runRuntimeChecks} from '../server-scripts/Utils/runtime-check';
 
 (function () {
@@ -9,4 +9,3 @@ import {runRuntimeChecks} from '../server-scripts/Utils/runtime-check';
     console.log('runRuntimeChecks returned:', ok);
     process.exit(ok ? 0 : 1);
 })();
-

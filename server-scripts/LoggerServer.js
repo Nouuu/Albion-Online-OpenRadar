@@ -1,4 +1,4 @@
-// LoggerServer.js - Server-side logger avec persistance JSONL
+// LoggerServer.js - Server-side logger with JSONL persistence
 import fs from 'fs';
 import path from 'path';
 
@@ -147,4 +147,3 @@ class LoggerServer {
 }
 
 export default LoggerServer;
-

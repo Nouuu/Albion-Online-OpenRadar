@@ -198,7 +198,7 @@ function updatePlayersList() {
                     ? `${elapsedSec}s ago`
                     : `${Math.floor(elapsedSec / 60)}m ago`;
 
-                // Guild & Alliance (couleurs plus claires pour lisibilité)
+                // Guild & Alliance (lighter colors for readability)
                 const guildStr = player.guildName ? `<span class="text-yellow-700t dark:text-yellow-200 font-semibold">[${player.guildName}]</span>` : '<span class="text-gray-500 dark:text-gray-400 text-xs italic">No Guild</span>';
                 const allianceStr = player.allianceName ? `<span class="text-purple-700 dark:text-purple-200 font-semibold">&lt;${player.allianceName}&gt;</span>` : '';
 
@@ -296,7 +296,7 @@ function updatePlayersList() {
                     }
                 }
 
-                // Health bar (inline styles pour garantir couleurs)
+                // Health bar (inline styles to guarantee colors)
                 let healthStr = '';
                 if (player.currentHealth > 0 && player.initialHealth > 0) {
                     const healthPercent = Math.round((player.currentHealth / player.initialHealth) * 100);
@@ -314,10 +314,10 @@ function updatePlayersList() {
                     `;
                 }
 
-                // Mounted status (icône plus visible)
+                // Mounted status (icon more visible)
                 const mountedIcon = player.mounted ? '<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded font-medium">🐴 Mounted</span>' : '';
 
-                // Average Item Power (ilvl) - plus visible
+                // Average Item Power (ilvl) - more visible
                 const avgItemPower = player.getAverageItemPower();
                 const itemPowerStr = avgItemPower ? `<span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded font-bold">⚔️ ${avgItemPower}</span>` : '';
 
@@ -333,13 +333,13 @@ function updatePlayersList() {
                                     ${mountedIcon}
                                 </div>
 
-                                <!-- Guild & Alliance (ligne séparée) -->
+                                <!-- Guild & Alliance (separate line) -->
                                 <div class="flex flex-wrap gap-2 mb-2">
                                     ${guildStr}
                                     ${allianceStr}
                                 </div>
 
-                                <!-- Faction & IP (ligne séparée avec espacement) -->
+                                <!-- Faction & IP (separate line with spacing) -->
                                 <div class="flex flex-wrap gap-2 items-center mb-2">
                                     ${factionStr}
                                     ${itemPowerStr}
@@ -483,13 +483,13 @@ function getEventName(eventCode) {
     const eventNames = {
         1: 'Leave',
         2: 'JoinFinished',
-        3: 'Move',  // ✅ CORRIGÉ - Move = 3 selon EventCodes.js
+        3: 'Move',  // ✅ CORRECTED - Move = 3 according to EventCodes.js
         4: 'Teleport',
         5: 'ChangeEquipment',
         6: 'HealthUpdate',
         7: 'HealthUpdates',
         15: 'Damage',
-        21: 'Request_Move',  // ⚠️ Probablement une requête (onRequest), pas un événement
+        21: 'Request_Move',  // ⚠️ Probably a request (onRequest), not an event
         29: 'NewCharacter',
         35: 'ClusterChange',
         38: 'NewSimpleHarvestableObject',
@@ -507,7 +507,7 @@ function getEventName(eventCode) {
         137: 'GetCharacterStats',
         201: 'NewSimpleItem',
         202: 'NewEquipmentItem',
-        // Ajoutez d'autres au fur et à mesure de la découverte
+        // Add others as you discover them
     };
     return eventNames[eventCode] || `Unknown_${eventCode}`;
 }
@@ -527,10 +527,10 @@ function onEvent(Parameters)
 
     // 🔍 DEBUG ALL EVENTS: Log event with details if debug enabled
     // Allows identifying patterns and parameter <-> event correspondence
-    if (eventCode !== 91) { // Skip RegenerationHealthChanged car trop verbeux
+    if (eventCode !== 91) { // Skip RegenerationHealthChanged as it's too verbose
         const paramDetails = {};
         for (let key in Parameters) {
-            if (Parameters.hasOwnProperty(key) && key !== '252' && key !== '0') { // Skip eventCode et id déjà loggés
+            if (Parameters.hasOwnProperty(key) && key !== '252' && key !== '0') { // Skip eventCode and id already logged
                 paramDetails[`param[${key}]`] = Parameters[key];
             }
         }
