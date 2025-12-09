@@ -190,7 +190,7 @@ export class MobsHandler {
                     this.staticResourceTypeIDs.set(numericTypeId, info);
                     loadedCount++;
                 }
-                // ℹ️ INFO (toujours loggé) - Chargement du cache
+                // ℹ️ INFO (always logged) - Loading cache
                 if (window.logger) {
                     window.logger.info(CATEGORIES.MOB, EVENTS.LoadCachedTypeIDs, {
                         loaded: loadedCount,
@@ -199,7 +199,7 @@ export class MobsHandler {
                 }
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique
+            // ❌ ERROR (always logged) - Critical failure
             if (window.logger) {
                 window.logger.error(CATEGORIES.MOB, EVENTS.LoadCacheFailed, e);
             }
@@ -313,7 +313,7 @@ export class MobsHandler {
                 .filter(([typeId]) => typeId !== 65535); // Skip unstable TypeID only
             settingsSync.setJSON('cachedStaticResourceTypeIDs', entries);
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique de sauvegarde
+            // ❌ ERROR (always logged) - Critical save failure
             if (window.logger) {
                 window.logger.error(CATEGORIES.MOB, EVENTS.SaveCacheFailed, e);
             }
@@ -326,12 +326,12 @@ export class MobsHandler {
             settingsSync.remove('cachedStaticResourceTypeIDs');
             this.staticResourceTypeIDs.clear();
             this._registrationLogState.clear();
-            // ℹ️ INFO (toujours loggé) - Action utilisateur importante
+            // ℹ️ INFO (always logged) - Important user action
             if (window.logger) {
                 window.logger.info(CATEGORIES.MOB, EVENTS.CacheCleared, { count });
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique
+            // ❌ ERROR (always logged) - Critical failure
             if (window.logger) {
                 window.logger.error(CATEGORIES.MOB, EVENTS.ClearCacheFailed, e);
             }
@@ -395,7 +395,7 @@ export class MobsHandler {
             const isUpdate = !!existing;
             const changed = existing && (existing.type !== resourceType || existing.tier !== tier);
 
-            // ℹ️ INFO (toujours loggé) - Enregistrement de TypeID statique (important pour collection)
+            // ℹ️ INFO (always logged) - Static TypeID registration (important for collection)
             window.logger.info(CATEGORIES.MOB, isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER', {
                 typeId,
                 typeNumber,
@@ -439,7 +439,7 @@ export class MobsHandler {
             const mobId = parseInt(parameters[0]);
             const typeId = parseInt(parameters[1]);
 
-            // 🐛 DEBUG ULTRA-DÉTAILLÉ: Log ALL parameters pour identifier patterns
+            // 🐛 DEBUG ULTRA-DETAILED: Log ALL parameters to identify patterns
             const allParams = {};
             for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
@@ -505,7 +505,7 @@ export class MobsHandler {
                 this.AddEnemy(mobId, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity);
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Erreur critique lors de NewMobEvent
+            // ❌ ERROR (always logged) - Critical error in NewMobEvent
             if (window.logger) {
                 window.logger.error(CATEGORIES.MOB, EVENTS.NewMobEventError, e);
             }
@@ -637,7 +637,7 @@ export class MobsHandler {
         this.harvestablesNotGood = this.harvestablesNotGood.filter(x => x.id !== id);
         const after = this.mobsList.length;
 
-        // 🐛 DEBUG (filtré par debugEnemies) - Suppression de mob détaillée
+        // 🐛 DEBUG (filtered by debugEnemies) - Detailed mob removal
         if (before !== after) {
             window.logger?.debug(CATEGORIES.MOB, EVENTS.MobRemoved, {
                 id: id,
