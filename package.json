@@ -22,7 +22,9 @@
     "rebuild:native": "npm rebuild cap",
     "package": "node scripts-shell/create-release.js",
     "release": "npm run build:win && npm run package",
-    "install:deps": "npm install && npm run rebuild:native"
+    "install:deps": "npm install && npm run rebuild:native",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "bin": "app.cjs",
   "pkg": {

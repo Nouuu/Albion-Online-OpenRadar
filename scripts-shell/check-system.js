@@ -7,7 +7,7 @@
 import {execSync} from "child_process";
 import fs from 'fs';
 
-const REQUIRED_NODE_VERSION = '18.18.2';
+const REQUIRED_NODE_VERSION = '24.11.1';
 const REQUIRED_NPCAP_VERSION = '1.84';
 
 // Helper: compare semantic versions (returns -1 if a<b, 0 if equal, 1 if a>b)

@@ -155,7 +155,7 @@ Full documentation available in [docs/README.md](docs/README.md).
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-**Standards**: CommonJS modules, 2-space indentation, JSDoc comments, English only.
+**Standards**: ES modules (ESM), 2-space indentation, JSDoc comments, English only.
 
 ---
 
