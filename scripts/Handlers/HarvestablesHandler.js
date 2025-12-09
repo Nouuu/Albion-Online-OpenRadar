@@ -117,7 +117,7 @@ export class HarvestablesHandler
         // 🎨 Get resource type string from typeNumber (0-27)
         const stringType = this.GetStringType(type);
 
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Detection, {
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Detection, {
             id,
             mobileTypeId,
             type,
@@ -159,7 +159,7 @@ export class HarvestablesHandler
         // 🎨 Get resource type string from typeNumber (0-27)
         const stringType = this.GetStringType(type);
 
-        window.logger?.debug(this.CATEGORIES.HARVEST, this.EVENTS.Update, {
+        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Update, {
             id,
             mobileTypeId,
             type,

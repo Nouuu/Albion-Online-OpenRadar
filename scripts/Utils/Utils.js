@@ -8,10 +8,9 @@ import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
 import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
 import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
-import { EventCodes } from './EventCodes.js';
-import { ItemsDatabase } from '../Data/ItemsDatabase.js';
-import { SpellsDatabase } from '../Data/SpellsDatabase.js';
-import { HarvestablesDatabase } from '../Data/HarvestablesDatabase.js';
+import {EventCodes} from './EventCodes.js';
+import {ItemsDatabase} from '../Data/ItemsDatabase.js';
+import {SpellsDatabase} from '../Data/SpellsDatabase.js';
 
 import {PlayersHandler} from '../Handlers/PlayersHandler.js';
 import {WispCageHandler} from '../Handlers/WispCageHandler.js';
@@ -623,12 +622,11 @@ function onEvent(Parameters)
 
         case EventCodes.HarvestStart:
             if (Parameters[3]) {
-                harvestablesHandler.onHarvestStart(Parameters[3]);
+                // Removed handling
             }
             break;
 
         case EventCodes.HarvestCancel:
-            harvestablesHandler.onHarvestCancel();
             break;
 
         case EventCodes.HarvestFinished:
@@ -649,9 +647,6 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.NewSimpleItem:
-            if (Parameters[1] && Parameters[2]) {
-                harvestablesHandler.onNewSimpleItem(Parameters[1], Parameters[2]);
-            }
             break;
 
         case EventCodes.NewEquipmentItem:
