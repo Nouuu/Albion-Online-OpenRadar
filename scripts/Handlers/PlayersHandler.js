@@ -21,7 +21,7 @@ class Player {
         this.items = null; // Legacy field (Event 90 CharacterEquipmentChanged)
         this.flagId = flagId;
         this.mounted = false;
-        this.detectedAt = Date.now(); // 👥 Timestamp de détection
+        this.detectedAt = Date.now(); // 👥 Detection timestamp
     }
 
     setMounted(mounted) {

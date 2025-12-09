@@ -107,14 +107,14 @@ export class MobsHandler {
                 }
 
                 this.livingResourcesMetadata = allResources;
-                // ℹ️ INFO (toujours loggé) - Chargement de metadata
+                // ℹ️ INFO (always logged) - Loading metadata
                 if (window.logger) {
                     window.logger.info(CATEGORIES.MOB, EVENTS.LoadMetadata, {
                         count: this.livingResourcesMetadata.length
                     });
                 }
             } else {
-                // ⚠️ WARNING - Fichier non trouvé
+                // ⚠️ WARNING - File not found
                 if (window.logger) {
                     window.logger.warn(CATEGORIES.MOB, EVENTS.LoadMetadataNotFound, {
                         status: response.status,
@@ -131,7 +131,7 @@ export class MobsHandler {
                 }
             }
         } catch (e) {
-            // ❌ ERROR (toujours loggé) - Échec critique
+            // ❌ ERROR (always logged) - Critical failure
             if (window.logger) {
                 window.logger.error(CATEGORIES.MOB, EVENTS.LoadMetadataFailed, e);
             } else {

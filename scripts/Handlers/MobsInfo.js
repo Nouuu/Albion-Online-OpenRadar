@@ -91,8 +91,8 @@ export class MobsInfo{
         this.addItem(400, 8, 1, "Hide");  // Skinnable (animal)
         this.addItem(421, 1, 1, "Hide");  // Skinnable T1 e0
         this.addItem(423, 3, 1, "Hide");  // Skinnable T3 e0
-        this.addItem(425, 4, 1, "Hide");  // Skinnable T4 e0 ⚠️ Le jeu envoie rarity=137 (e1 calculé), mais c'est e0 !
-        this.addItem(427, 5, 1, "Hide");  // Skinnable T5 e0 ⚠️ Le jeu envoie rarity=257 (e3 calculé), mais c'est e0 !
+        this.addItem(425, 4, 1, "Hide");  // Skinnable T4 e0 ⚠️ Game sends rarity=137 (e1 calculated), but it's e0!
+        this.addItem(427, 5, 1, "Hide");  // Skinnable T5 e0 ⚠️ Game sends rarity=257 (e3 calculated), but it's e0!
         this.addItem(475, 3, 1, "Hide");  // Skinnable (animal)
         this.addItem(476, 5, 1, "Hide");  // Skinnable (animal)
         this.addItem(477, 7, 1, "Hide");  // Skinnable (animal)
