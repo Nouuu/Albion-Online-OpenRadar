@@ -1,10 +1,10 @@
 # 📋 TODO
 
-**Last Update**: 2025-12-09
-**Status**: Phase 3B ✅ Complétée | Phase 4 🔄 Implémentée (EN ATTENTE TESTS)
+**Last Update**: 2025-12-11
+**Status**: Phase 5 ✅ COMPLETED | Next: Field Validation
 
-> **📘 DÉTECTION DES RESSOURCES :** `/RESOURCE_DETECTION_REFACTOR.md`  
-> Ce document contient l'état complet et à jour du système de détection.
+> **📘 RESOURCE DETECTION:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
+> This document contains the complete and up-to-date state of the detection system.
 
 > 📖 **Technical Details**: [DEV_NOTES.md](DEV_NOTES.md) | **Tools**: [tools/](tools/)  
 > 🎯 **New**: [Overlay Mode](OVERLAY_MODE.md) - Popup window for radar  
@@ -32,24 +32,24 @@
     - ✅ TypeID 530 = Fiber T4 for all enchantments
     - ⚠️ **BUT : Harvestable ≠ Skinnable !**
 
-  **⚠️ SYSTÈME OBSOLÈTE (Nov 2025) - Conservé pour historique**
+  **⚠️ OBSOLETE SYSTEM (Nov 2025) - Kept for history**
 
-  **Système Actuel (Phase 3B - Déc 2025) :**
-    - ✅ Utilise `parameters[33]` directement du serveur
-    - ✅ Fonctionne pour TOUS les types (Hide, Fiber, Ore, Wood, Rock)
-    - ✅ Plus de calcul approximatif depuis `rarity`
-    - ✅ Code simplifié et fiable
-    - 📘 **Voir :** `/RESOURCE_DETECTION_REFACTOR.md`
+  **Current System (Phase 3B - Dec 2025):**
+    - ✅ Uses `parameters[33]` directly from server
+    - ✅ Works for ALL types (Hide, Fiber, Ore, Wood, Rock)
+    - ✅ No more approximate calculation from `rarity`
+    - ✅ Simplified and reliable code
+    - 📘 **See:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
 
-  **Ancien système (Nov 2025 - OBSOLÈTE) :**
+  **Old system (Nov 2025 - OBSOLETE):**
 
-  Harvestable (Fiber/Wood/Ore/Rock) :
-    - ❌ Calcul depuis `rarity` (unreliable)
-    - ❌ Formule : `enchant = floor((rarity - base) / 45)`
+  Harvestable (Fiber/Wood/Ore/Rock):
+    - ❌ Calculation from `rarity` (unreliable)
+    - ❌ Formula: `enchant = floor((rarity - base) / 45)`
 
-  Skinnable (Hide) :
-    - ❌ `rarity` constant par TypeID (faux)
-    - ❌ Impossible de calculer l'enchant depuis rarity
+  Skinnable (Hide):
+    - ❌ `rarity` constant per TypeID (false)
+    - ❌ Impossible to calculate enchant from rarity
 - **localStorage Cache** : Functional (cross-reference HarvestablesHandler)
 - **Settings Filtering** : By Tier + Enchant operational
 - **🆕 Overlay Mode** : Popup window with opacity control ✅
@@ -127,15 +127,25 @@
 
 ### Medium term
 
-#### Resources
-- [ ] Long field session (2h+) with complete validation
-    - Different biomes and tiers
-    - Analyze stability and performance
-    - Verify remaining charges vs harvest bonus
+#### Resources (Phase 5 Validation)
+- [ ] **Field validation session (1-2h)** - Test Phase 5 detection system
+    - Validate enchantments .2, .3, .4 (all types)
+    - Test different tiers (T4, T6, T7, T8)
+    - Verify all biomes and spawn locations
+    - Test T6+ living resources
+    - Collect detection accuracy statistics
 
-- [ ] Analyze EventNormalizer necessity
-    - Evaluate if current corrections are sufficient
-    - Decision based on long session results
+- [ ] **Long field session (2h+)** - Extended validation
+    - Extended gameplay session
+    - Analyze stability and performance
+    - Monitor false positives/negatives
+    - Test high density resource areas
+    - Verify localStorage cache stability
+
+- [ ] **EventNormalizer decision** (Optional)
+    - Evaluate if needed after Phase 5 improvements
+    - Decision based on field testing results
+    - See "EventNormalizer EVALUATION" section below
 
 #### Players (Priority 1 - Quick Wins)
 - [ ] **Nickname display** (~30 min)
@@ -175,41 +185,39 @@
 
 ---
 
-## 📊 EventNormalizer EVALUATION
+## 📊 EventNormalizer EVALUATION (Optional)
 
-**Goal**: Determine if EventNormalizer is still necessary with recent changes
+**Context**: EventNormalizer is a component that was designed to fix/normalize incorrect events from the server.
 
-### ✅ Already Applied Corrections
+**Goal**: Determine if EventNormalizer is still necessary with Phase 5 improvements
 
-1. **Server TypeID bugs override** (528/530/531) via mobinfo priority
+### ✅ Already Applied Corrections (Phase 5)
+
+1. **Server TypeID bugs override** (528/530/531) via MobsDatabase
 2. **localStorage cache** of TypeID mappings
-3. **Structured logging** (JSON + CSV) for analysis
-4. **Complete database** (235 TypeIDs)
+3. **Complete database** (2800+ TypeIDs auto-parsed from mobs.json)
+4. **OFFSET=15 formula** for TypeID mapping
 
-### ❓ Questions to Resolve via Long Session
+### ❓ Questions to Resolve via Field Testing
 
-1. **False positives**: How many TypeIDs still misclassified?
-2. **Performance**: Slowdowns with cache enabled?
-3. **Stability**: Race conditions in what % of cases?
-4. **"Overlap"**: Annoying or acceptable (different objects)?
+1. **False positives**: Are there still TypeIDs being misclassified?
+2. **Performance**: Any slowdowns with current system?
+3. **Stability**: Are there race conditions in spawn detection?
+4. **"Overlap"**: Is the grouped resource behavior acceptable?
 
-### 🎯 Decision Criteria
+### 🎯 Decision After Field Testing
 
-**EventNormalizer NECESSARY if** :
+**EventNormalizer NEEDED if**:
+- [ ] > 5% of resources are misclassified
+- [ ] Frequent detection issues (> 5% of spawns)
+- [ ] System instability
 
-- [ ] > 10% of TypeIDs still misclassified after session
-- [ ] Frequent race conditions (> 5% of spawns)
-- [ ] Overlap annoying for gameplay
-- [ ] localStorage cache unstable
-
-**EventNormalizer NOT NECESSARY if** :
-
-- [ ] < 5% problematic TypeIDs
-- [ ] Rare race conditions (< 2%)
-- [ ] Acceptable overlap
+**EventNormalizer NOT NEEDED if**:
+- [ ] < 2% problematic cases
+- [ ] Rare issues
 - [ ] Current system stable
 
-> **Decision after 2h+ session with complete CSV logging**
+> **Decision**: After field validation session (1-2h) with complete logging
 
 ---
 
@@ -222,15 +230,9 @@
     - Normal game behavior (not a bug)
 
 3. **Fiber TypeID**: Server sends incorrect typeNumber (16 instead of 14)
-    - Fix: mobinfo override ✅
+    - Fix: MobsDatabase override ✅
 
-4. **ENCHANTED Hide/Fiber (.1+)**
-    - Cause: Unique TypeIDs per enchantment (unknown)
-    - Example: Hide T4.0 (TypeID 425) ✅, T4.1/T4.2 (TypeID ???) ❌
-    - Impact: T4.2+ and T5.1+ filters non-functional
-    - Solution: Manual collection needed (field session with logs)
-
-5. **Missing Blackzone maps**
+4. **Missing Blackzone maps**
     - Symptom: Black background on radar in blackzone (T6+ zones)
     - Cause: Incomplete Maps pack - blackzone tiles not included
     - Current pack: 103 tiles (mainly blue/yellow/red zones)

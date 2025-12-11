@@ -2,8 +2,8 @@
 
 This document summarizes the main improvements made to OpenRadar.
 
-> **📘 Pour la détection des ressources :** Voir `/RESOURCE_DETECTION_REFACTOR.md`  
-> Ce document contient l'état complet du système de détection des ressources.
+> **📘 For resource detection:** See `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
+> This document contains the complete state of the resource detection system.
 
 ---
 
@@ -28,16 +28,16 @@ This document summarizes the main improvements made to OpenRadar.
 
 ### 3. Enchantment Detection System (Phase 3B - Dec 2025)
 
-**System actuel (Déc 2025) :**
-- ✅ Utilise `parameters[33]` directement du serveur
-- ✅ Fonctionne pour tous les types (Hide, Fiber, Ore, Wood, Rock)
-- ✅ Plus de calcul approximatif depuis `rarity`
+**Current system (Dec 2025):**
+- ✅ Uses `parameters[33]` directly from server
+- ✅ Works for all types (Hide, Fiber, Ore, Wood, Rock)
+- ✅ No more approximate calculation from `rarity`
 
-**Système obsolète (Nov 2025) :**
-- ❌ Calcul depuis le champ `rarity` (unreliable)
-- Voir `docs/technical/ENCHANTMENTS.md` pour l'historique
+**Obsolete system (Nov 2025):**
+- ❌ Calculation from `rarity` field (unreliable)
+- See `docs/technical/ENCHANTMENTS.md` for history
 
-**Voir :** `/RESOURCE_DETECTION_REFACTOR.md` pour les détails
+**See:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md` for details
 
 ### 4. Player Detection System
 
@@ -57,19 +57,22 @@ This document summarizes the main improvements made to OpenRadar.
 
 ## Planned Improvements
 
-### 1. Mob Detection System Refactor
+### 1. Mob Detection UI Enhancement
 
-**Goal:** Database-based system similar to resources.
+**Goal:** Improve visual representation of mobs on radar
 
 **Current State:**
 - Mobs displayed as simple green dots
 - No detailed information about mob types
+- MobsDatabase provides complete mob data (4528 mobs, ~2800 harvestables)
 
-**Planned:**
-- Create static database file for mobs
-- Display detailed mob information on radar
-- Add visual differentiation based on mob types
+**Planned Enhancements:**
+- Display mob tier/enchantment information
+- Show mob type (hostile vs passive)
+- Visual differentiation based on mob categories
 - Enable filtering for specific mob types
+- Color-coding by threat level
+- Optional mob name display
 
 ### 2. Map Tile Size Normalization
 
@@ -97,4 +100,4 @@ This document summarizes the main improvements made to OpenRadar.
 
 ---
 
-*Last update: 2025-12-09*
+*Last update: 2025-12-11*
