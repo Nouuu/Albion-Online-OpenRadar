@@ -27,7 +27,7 @@ function humanFileSize(size: number): string {
 
 export async function downloadFile(url: string): Promise<DownloadResult> {
 
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 200 + 50)); // Throttle requests
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 50 + 50)); // Throttle requests
     return new Promise((resolve) => {
         console.log(`📥 Downloading: ${url}`);
         https.get(url, (response) => {

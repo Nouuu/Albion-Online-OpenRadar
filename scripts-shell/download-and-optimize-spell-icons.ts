@@ -10,7 +10,7 @@ const CDN_BASE_URL = 'https://render.albiononline.com/v1/spell/';
 
 // Image optimization settings
 const MAX_IMAGE_SIZE = 128; // Max width/height in pixels
-const IMAGE_QUALITY = 85;   // PNG quality (1-100)
+const IMAGE_QUALITY = 85;   // WEBP quality (1-100)
 
 let optimize = true;
 let replaceExisting = false;

@@ -144,8 +144,12 @@ if (builtPlatforms.includes('win')) {
 }
 
 function copyRecursiveSync(src, dest) {
-    if (!fs.existsSync(src)) {
+    if (!fs.existsSync(src)){
         console.warn(`⚠ Source folder not found: ${src}`);
+        return;
+    }
+    if (dest.startsWith("localization")) {
+        console.warn("⚠ Skipping localization fille");
         return;
     }
 

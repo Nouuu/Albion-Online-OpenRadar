@@ -11,7 +11,7 @@ const CDN_BASE_URL = 'https://cdn.albiononline2d.com/game-images/'
 
 // Image optimization settings
 const MAX_IMAGE_SIZE = 1024; // Max width or height in pixels
-const IMAGE_QUALITY = 90; // PNG quality (1-100)
+const IMAGE_QUALITY = 90; // WEBP quality (1-100)
 
 let optimize = true;
 let replaceExisting = false
