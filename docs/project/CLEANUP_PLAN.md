@@ -1,7 +1,8 @@
 # 🧹 CLEANUP PLAN - Remove Obsolete Features
 
 **Date**: 2025-12-11
-**Status**: 📋 Planned
+**Status**: ✅ Complete (2/2 features removed)
+**Last Updated**: 2025-12-12
 
 ---
 
@@ -13,78 +14,102 @@ Remove non-essential features that clutter the UI and don't provide real value.
 
 ## 📋 Features to Remove
 
-### 1. Resource Overlay Enhancements ❌
+### 1. Resource Overlay Enhancements ✅ COMPLETED
 
 **Reason**: Resource images already have different colors for enchantments. Overlays are redundant.
 
-#### Settings to Remove:
-- `settingLivingResourceEnchantOverlay` - Enchantment halo overlay on living resources
+#### Settings Removed:
+- ✅ `settingResourceEnchantOverlay` - Enchantment overlay on static resources
+- ✅ `settingLivingResourceEnchantOverlay` - Enchantment halo overlay on living resources
 
-#### Files to Clean:
-- **scripts/Drawings/MobsDrawing.js**
-  - Remove `drawEnchantmentIndicator()` calls (line ~130)
+#### Files Cleaned:
+- ✅ **scripts/Drawings/MobsDrawing.js**
+  - Removed `drawEnchantmentIndicator()` calls (line ~130)
 
-- **scripts/Drawings/HarvestablesDrawing.js**
-  - Remove enchantment overlay code
+- ✅ **scripts/Drawings/HarvestablesDrawing.js**
+  - Removed enchantment overlay code
 
-- **scripts/Utils/DrawingUtils.js**
-  - Remove `drawEnchantmentIndicator()` method
+- ✅ **scripts/Utils/DrawingUtils.js**
+  - Removed `drawEnchantmentIndicator()` method
 
-- **views/main/resources.ejs**
-  - Remove enchantment overlay checkbox
-  - Remove associated event listeners
+- ✅ **views/main/resources.ejs**
+  - Removed enchantment overlay checkboxes
+  - Removed associated event listeners
 
-- **views/main/settings.ejs**
-  - Remove any references to these settings
+- ✅ **views/main/settings.ejs**
+  - Removed enchantment indicator section
+  - Removed all references and event listeners
+
+- ✅ **views/main/drawing.ejs**
+  - Removed `overlayEnchantment` checkbox
+  - Removed associated JavaScript code
+
+- ✅ **scripts/drawing-ui.js**
+  - Removed enchantment overlay logic
+
+**Completion Date**: 2025-12-12
 
 ---
 
-### 2. Grid Overlay ❌
+### 2. Grid Overlay ✅ COMPLETED
 
 **Reason**: Grid doesn't provide useful information, clutters the display.
 
-#### Settings to Remove:
-- `settingShowGrid` (or similar grid toggle)
+#### Settings Removed:
+- ✅ No UI toggle existed (grid was always shown)
 
-#### Files to Clean:
-- **scripts/Drawings/*** (check all drawing files)
-  - Remove grid rendering code
+#### Files Cleaned:
+- ✅ **scripts/Utils/CanvasManager.js**
+  - Removed `gridCanvas` from canvasIds array
+  - Deleted `setupGridCanvas()` method entirely
+  - Updated header documentation (6 layers → 5 layers)
 
-- **views/main/settings.ejs** (or wherever grid toggle is)
-  - Remove grid checkbox
-  - Remove associated event listeners
+- ✅ **scripts/Utils/DrawingUtils.js**
+  - Removed `initGridCanvas()` method
+  - Removed `drawBoard()` method (grid line rendering)
+  - Removed `fillCtx()` method (unused)
 
-- **Canvas layers**
-  - Check if dedicated grid canvas layer exists
-  - Remove if present
+- ✅ **views/main/drawing.ejs**
+  - Removed `<canvas id="gridCanvas">` HTML element
+  - Moved border CSS styling to mapCanvas
+
+- ✅ **views/main/radar-overlay.ejs**
+  - Removed `<canvas id="gridCanvas">` HTML element
+  - Moved border CSS styling to mapCanvas
+
+**Completion Date**: 2025-12-12
 
 ---
 
 ## 📝 Step-by-Step Cleanup
 
-### Phase 1: Identify All References
+### Phase 1: Identify All References ✅ COMPLETED
 - [x] Search for `settingLivingResourceEnchantOverlay`
+- [x] Search for `settingResourceEnchantOverlay`
 - [x] Search for grid-related settings
-- [ ] Document exact line numbers for each removal
+- [x] Document exact line numbers for each removal
 
-### Phase 2: Remove UI Elements
-- [ ] Remove checkboxes from resources.ejs
-- [ ] Remove checkboxes from settings.ejs
-- [ ] Remove event listeners
-- [ ] Test UI still loads correctly
+### Phase 2: Remove UI Elements ✅ COMPLETED (Enchantment Overlay)
+- [x] Remove checkboxes from resources.ejs
+- [x] Remove checkboxes from settings.ejs
+- [x] Remove checkbox from drawing.ejs
+- [x] Remove event listeners
+- [x] Test UI still loads correctly
 
-### Phase 3: Remove Code Logic
-- [ ] Remove drawing methods
-- [ ] Remove settings checks
-- [ ] Remove overlay rendering code
-- [ ] Test radar still works correctly
+### Phase 3: Remove Code Logic ✅ COMPLETED (Enchantment Overlay)
+- [x] Remove drawing methods (drawEnchantmentIndicator)
+- [x] Remove settings checks
+- [x] Remove overlay rendering code
+- [x] Test radar still works correctly
 
-### Phase 4: Remove Settings Storage
-- [ ] Clean up SettingsSync references
-- [ ] Update default settings
-- [ ] Test settings save/load
+### Phase 4: Remove Settings Storage ✅ COMPLETED (Enchantment Overlay)
+- [x] Clean up SettingsSync references
+- [x] Update default settings
+- [x] Test settings save/load
 
-### Phase 5: Update Documentation
+### Phase 5: Update Documentation ⏳ IN PROGRESS
+- [x] Update CLEANUP_PLAN.md
+- [x] Update PLAN.md
 - [ ] Update MOB_UI_ENHANCEMENT.md
 - [ ] Update TODO.md
 - [ ] Mark features as removed
@@ -123,4 +148,24 @@ After cleanup:
 
 ---
 
-**Last Updated**: 2025-12-11
+---
+
+## 📊 Cleanup Progress
+
+### ✅ Completed (2/2)
+- **Resource Overlay Enhancements** (Enchantment indicators)
+  - All UI elements removed
+  - All code logic removed
+  - All settings references removed
+  - Tested and working correctly
+
+- **Grid Overlay**
+  - Removed gridCanvas from canvas layer stack
+  - Deleted all grid rendering methods
+  - Updated canvas documentation
+  - Moved border styling to mapCanvas
+  - Canvas count reduced from 6 to 5 layers
+
+---
+
+**Last Updated**: 2025-12-12

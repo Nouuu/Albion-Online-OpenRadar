@@ -8,6 +8,9 @@ console.log('🔧 [LoggerClient] Script loaded, initializing logger immediately.
 
 let socket = null;
 let socketConnected = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
+const INITIAL_RECONNECT_DELAY = 1000; // 1 second initial delay
 
 // Create Logger class (works with or without WebSocket)
 class Logger {
@@ -184,31 +187,60 @@ const globalLogger = new Logger();
 window.logger = globalLogger;
 console.log('✅ [LoggerClient] Logger initialized and exposed as window.logger');
 
-// ✨ DEFERRED WebSocket connection - After DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 [LoggerClient] DOM ready, connecting WebSocket...');
+// 🔄 WebSocket connection with auto-reconnect
+function connectLoggerWebSocket() {
+    // Close existing socket if any
+    if (socket) {
+        socket.close();
+    }
 
-    // Try to connect to WebSocket (optional, can work offline)
+    console.log('🔌 [LoggerClient] Connecting to WebSocket...');
+
     try {
         socket = new WebSocket('ws://localhost:5002');
 
         socket.addEventListener('open', () => {
-            console.log('📡 [LoggerClient] WebSocket connected');
+            reconnectAttempts = 0; // Reset counter on successful connection
+            console.log('✅ [LoggerClient] WebSocket connected successfully');
             socketConnected = true;
             globalLogger.wsClient = socket; // Attach socket to logger
         });
 
         socket.addEventListener('close', () => {
-            console.log('📡 [LoggerClient] WebSocket disconnected - logs will be console-only');
+            console.warn('⚠️ [LoggerClient] WebSocket disconnected, will attempt to reconnect...');
             socketConnected = false;
+            globalLogger.wsClient = null;
+            scheduleLoggerReconnect();
         });
 
-        socket.addEventListener('error', () => {
-            console.warn('📡 [LoggerClient] WebSocket error - logs will be console-only');
+        socket.addEventListener('error', (error) => {
+            console.error('❌ [LoggerClient] WebSocket error:', error);
             socketConnected = false;
         });
     } catch (e) {
-        console.warn('📡 [LoggerClient] Failed to connect WebSocket - logs will be console-only');
+        console.warn('📡 [LoggerClient] Failed to connect WebSocket - will retry');
         console.warn(e);
+        scheduleLoggerReconnect();
     }
+}
+
+function scheduleLoggerReconnect() {
+    reconnectAttempts++;
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
+    const delay = Math.min(
+        INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
+        MAX_RECONNECT_DELAY
+    );
+
+    console.log(`🔄 [LoggerClient] Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
+
+    setTimeout(() => {
+        connectLoggerWebSocket();
+    }, delay);
+}
+
+// ✨ DEFERRED WebSocket connection - After DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔧 [LoggerClient] DOM ready, connecting WebSocket...');
+    connectLoggerWebSocket();
 });

@@ -392,14 +392,63 @@ window.lpY = lpY;
 
 const drawingUtils = new DrawingUtils();
 
-const socket = new WebSocket('ws://localhost:5002');
+// 🔄 WebSocket with auto-reconnect
+let socket = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
+const INITIAL_RECONNECT_DELAY = 1000; // 1 second initial delay
 
+function connectWebSocket() {
+  // Close existing socket if any
+  if (socket) {
+    socket.close();
+  }
 
-socket.addEventListener('open', () => {
-  window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, { page: 'Utils' });
-});
+  console.log('🔌 [Utils.js] Connecting to WebSocket...');
+  socket = new WebSocket('ws://localhost:5002');
 
-socket.addEventListener('message', (event) => {
+  socket.addEventListener('open', () => {
+    reconnectAttempts = 0; // Reset counter on successful connection
+    window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, {
+      page: 'Utils',
+      reconnected: reconnectAttempts > 0
+    });
+    console.log('✅ [Utils.js] WebSocket connected successfully');
+  });
+
+  socket.addEventListener('close', () => {
+    window.logger?.warn(CATEGORIES.WEBSOCKET, 'Disconnected', { page: 'Utils' });
+    console.warn('⚠️ [Utils.js] WebSocket disconnected, will attempt to reconnect...');
+    scheduleReconnect();
+  });
+
+  socket.addEventListener('error', (error) => {
+    window.logger?.error(CATEGORIES.WEBSOCKET, 'ConnectionError', {
+      page: 'Utils',
+      error: error.message
+    });
+    console.error('❌ [Utils.js] WebSocket error:', error);
+  });
+
+  socket.addEventListener('message', handleWebSocketMessage);
+}
+
+function scheduleReconnect() {
+  reconnectAttempts++;
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
+  const delay = Math.min(
+    INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
+    MAX_RECONNECT_DELAY
+  );
+
+  console.log(`🔄 [Utils.js] Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
+
+  setTimeout(() => {
+    connectWebSocket();
+  }, delay);
+}
+
+function handleWebSocketMessage(event) {
   var data = JSON.parse(event.data);
 
   // Extract the string and dictionary from the object
@@ -493,7 +542,10 @@ socket.addEventListener('message', (event) => {
         onResponse(extractedDictionary["parameters"]);
         break;
   }
-});
+}
+
+// 🚀 Start WebSocket connection
+connectWebSocket();
 
 // Helper function to get event name (for debugging)
 function getEventName(eventCode) {

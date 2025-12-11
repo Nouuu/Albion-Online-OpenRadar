@@ -107,17 +107,6 @@
 						</label>
 					</div>
 
-					<!-- Enchantment Overlays -->
-					<label class="flex items-center space-x-2">
-						<input type="checkbox" id="settingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span id="enchant-static-text" class="text-gray-600 dark:text-gray-300">✨ Enchant Overlay (Static)</span>
-					</label>
-
-					<label class="flex items-center space-x-2">
-						<input type="checkbox" id="settingLivingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-						<span id="enchant-living-text" class="text-gray-600 dark:text-gray-300">✨ Enchant Overlay (Living)</span>
-					</label>
-
 					<!-- Living Resources Display Options -->
 					<label class="flex items-center space-x-2">
 						<input type="checkbox" id="settingLivingResourcesHealthBar" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
@@ -256,19 +245,6 @@
 	settingClusterMinSize.value = settingsSync.getNumber("settingClusterMinSize", 2);
 	settingClusterMinSize.addEventListener("input", () => {
 		settingsSync.setNumber("settingClusterMinSize",settingClusterMinSize.value);
-	});
-
-	// ✨ P1: Enchantment overlays
-	let settingResourceEnchantOverlay = document.getElementById("settingResourceEnchantOverlay");
-	settingResourceEnchantOverlay.checked = settingsSync.getBool("settingResourceEnchantOverlay");
-	settingResourceEnchantOverlay.addEventListener("click", () => {
-		settingsSync.setBool("settingResourceEnchantOverlay", settingResourceEnchantOverlay.checked);
-	});
-
-	let settingLivingResourceEnchantOverlay = document.getElementById("settingLivingResourceEnchantOverlay");
-	settingLivingResourceEnchantOverlay.checked = settingsSync.getBool("settingLivingResourceEnchantOverlay");
-	settingLivingResourceEnchantOverlay.addEventListener("click", () => {
-		settingsSync.setBool("settingLivingResourceEnchantOverlay", settingLivingResourceEnchantOverlay.checked);
 	});
 
 	let settingLivingResourcesHealthBar = document.getElementById("settingLivingResourcesHealthBar");

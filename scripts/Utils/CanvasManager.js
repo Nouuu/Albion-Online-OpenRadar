@@ -2,16 +2,13 @@
  * CanvasManager.js
  *
  * Unified canvas initialization and management for both main and overlay radar.
- * Handles setup of all 7 canvas layers used by the radar display.
+ * Handles setup of all 5 canvas layers used by the radar display.
  *
  * Canvas Layers (z-index order):
  * 1. mapCanvas (z-index: 1) - Background map image
- * 2. gridCanvas (z-index: 2) - Static grid overlay
- * 3. drawCanvas (z-index: 3) - Main entity rendering (resources, mobs, players, chests)
- * 4. flashCanvas (z-index: 4) - Red border flash effect (player detection)
- * 5. ourPlayerCanvas (z-index: 5) - Local player blue dot (static)
- * 6. uiCanvas (z-index: 10) - UI overlay (player counter, stats, FPS, etc.)
- * 7. thirdCanvas (z-index: 1) - Hidden/legacy items display
+ * 2. drawCanvas (z-index: 3) - Main entity rendering (resources, mobs, players, chests)
+ * 3. ourPlayerCanvas (z-index: 5) - Local player blue dot (static)
+ * 4. uiCanvas (z-index: 6) - UI overlay (player counter, stats, FPS, etc.)
  */
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 
@@ -29,12 +26,9 @@ export class CanvasManager {
     initialize() {
         const canvasIds = [
             'mapCanvas',
-            'gridCanvas',
             'drawCanvas',
-            'flashCanvas',
             'ourPlayerCanvas',
-            'uiCanvas',
-            'thirdCanvas'
+            'uiCanvas'
         ];
 
         canvasIds.forEach(id => {
@@ -52,9 +46,6 @@ export class CanvasManager {
             canvas.height = 500;
         });
 
-        // Setup grid canvas (static, only needs to be drawn once)
-        this.setupGridCanvas();
-
         // Setup local player canvas (static blue dot)
         this.setupOurPlayerCanvas();
 
@@ -62,51 +53,6 @@ export class CanvasManager {
             canvases: this.canvases,
             contexts: this.contexts
         };
-    }
-
-    /**
-     * Setup the grid canvas with static grid overlay
-     */
-    setupGridCanvas() {
-        const gridCanvas = this.canvases.gridCanvas;
-        const contextGrid = this.contexts.gridCanvas;
-
-        if (!gridCanvas || !contextGrid) return;
-
-        contextGrid.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
-        contextGrid.strokeStyle = '#1e1e1e';
-        contextGrid.lineWidth = 1;
-
-        // Draw grid lines
-        for (let i = 0; i <= 500; i += 50) {
-            // Vertical lines
-            contextGrid.beginPath();
-            contextGrid.moveTo(i, 0);
-            contextGrid.lineTo(i, 500);
-            contextGrid.stroke();
-
-            // Horizontal lines
-            contextGrid.beginPath();
-            contextGrid.moveTo(0, i);
-            contextGrid.lineTo(500, i);
-            contextGrid.stroke();
-        }
-
-        // Draw center crosshair
-        contextGrid.strokeStyle = '#3e3e3e';
-        contextGrid.lineWidth = 2;
-
-        // Vertical center line
-        contextGrid.beginPath();
-        contextGrid.moveTo(250, 0);
-        contextGrid.lineTo(250, 500);
-        contextGrid.stroke();
-
-        // Horizontal center line
-        contextGrid.beginPath();
-        contextGrid.moveTo(0, 250);
-        contextGrid.lineTo(500, 250);
-        contextGrid.stroke();
     }
 
     /**
@@ -145,7 +91,7 @@ export class CanvasManager {
      * Clear all dynamic layers (called every frame)
      */
     clearDynamicLayers() {
-        this.clearLayers(['mapCanvas', 'drawCanvas', 'flashCanvas', 'uiCanvas']);
+        this.clearLayers(['mapCanvas', 'drawCanvas', 'uiCanvas']);
     }
 
     /**

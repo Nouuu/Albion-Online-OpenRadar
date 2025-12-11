@@ -69,11 +69,6 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (settingsSync.getBool('livingResourcesID'))
                 this.drawText(point.x, point.y + 20, type.toString(), ctx);
 
-            // 📊 Enchantment indicator (if enabled)
-            if (settingsSync.getBool('settingLivingResourceEnchantOverlay') && harvestableOne.charges > 0){
-                this.drawEnchantmentIndicator(ctx, point.x, point.y, harvestableOne.charges);
-            }
-
             // 📍 Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
             if (settingsSync.getBool('settingResourceDistance')) {
                 const distanceGameUnits = this.calculateDistance(harvestableOne.hX, harvestableOne.hY, 0, 0);

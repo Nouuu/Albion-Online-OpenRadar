@@ -16,11 +16,6 @@ export class DrawingUtils {
         this.drawFilledCircle(context, ourPlayerCanvas.width / 2, ourPlayerCanvas.height / 2, 10, "blue");
     }
 
-    initGridCanvas(canvasBottom, contextBottom) {
-        //this.fillCtx(canvasBottom, contextBottom);
-        this.drawBoard(canvasBottom, contextBottom);
-    }
-
     drawFilledCircle(context, x, y, radius, color) {
         context.beginPath();
         context.arc(x, y, radius, 0, 2 * Math.PI);
@@ -30,31 +25,6 @@ export class DrawingUtils {
 
     initCanvas(canvas, context) {
         window.logger?.debug(CATEGORIES.MAP, 'InitCanva', { width: canvas.width, height: canvas.height, ctx: context });
-    }
-
-    fillCtx(canvasBottom, contextBottom) {
-        contextBottom.fillStyle = '#1a1c23';
-        contextBottom.fillRect(0, 0, canvasBottom.width, canvasBottom.height);
-    }
-
-    drawBoard(canvasBottom, contextBottom) {
-        const bw = canvasBottom.width;
-        const bh = canvasBottom.height;
-
-        const totalSpace = canvasBottom.height / 10;
-
-        for (let gx = 0; gx <= bw; gx += totalSpace) {
-            contextBottom.moveTo(0.5 + gx, 0);
-            contextBottom.lineTo(0.5 + gx, bh);
-        }
-
-        for (let gy = 0; gy <= bh; gy += 50) {
-            contextBottom.moveTo(0, 0.5 + gy);
-            contextBottom.lineTo(bw, 0.5 + gy);
-        }
-
-        contextBottom.strokeStyle = "grey";
-        contextBottom.stroke();
     }
 
     lerp(a, b, t) {
@@ -110,40 +80,6 @@ export class DrawingUtils {
         ctx.font = size + " " + this.fontFamily;
         ctx.fillStyle = color;
         ctx.fillText(text, xTemp, yTemp);
-    }
-
-    drawEnchantmentIndicator(ctx, x, y, enchantmentLevel) {
-        if (!enchantmentLevel || enchantmentLevel <= 0 || enchantmentLevel > 4) return;
-        const enchantColors = { 1: "#90FF90", 2: "#60D0FF", 3: "#FF90FF", 4: "#FFD060" };
-        const enchantColor = enchantColors[enchantmentLevel] || "#FFFFFF";
-
-        ctx.save();
-        ctx.fillStyle = "rgba(0,0,0,0.8)";
-        ctx.beginPath();
-        ctx.arc(x + 18, y - 12, 7, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.shadowColor = enchantColor;
-        ctx.shadowBlur = 10;
-        ctx.fillStyle = enchantColor;
-        ctx.beginPath();
-        ctx.arc(x + 18, y - 12, 5, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.strokeStyle = enchantColor;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(x + 18, y - 12, 7, 0, 2 * Math.PI);
-        ctx.stroke();
-        ctx.restore();
-
-        ctx.save();
-        ctx.font = "bold 9px monospace";
-        ctx.shadowColor = "rgba(0,0,0,0.9)";
-        ctx.shadowBlur = 3;
-        ctx.fillStyle = enchantColor;
-        ctx.fillText(`.${enchantmentLevel}`, x + 14, y - 20);
-        ctx.restore();
     }
 
     drawResourceCountBadge(ctx, x, y, count, position = 'bottom-right') {

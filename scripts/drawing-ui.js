@@ -22,30 +22,20 @@ export function openOverlayWindow() {
 // ========== Overlay Controls ==========
 export function initOverlayControls() {
     // Get checkbox elements
-    const enchantmentCheckbox = document.getElementById('overlayEnchantment');
     const resourceCountCheckbox = document.getElementById('overlayResourceCount');
     const distanceCheckbox = document.getElementById('overlayDistance');
     const clusterCheckbox = document.getElementById('settingResourceClusters');
-    const clusterRadiusInput = document.getElementById('settingClusterRadius');
-    const clusterMinSizeInput = document.getElementById('settingClusterMinSize');
 
     // Check if overlay elements exist (only on drawing page)
-    if (!enchantmentCheckbox) return;
+    if (!resourceCountCheckbox) return;
 
     // Load initial values
-    enchantmentCheckbox.checked = settingsSync.get('settingResourceEnchantOverlay', false);
     resourceCountCheckbox.checked = settingsSync.get('settingResourceCount', false);
     distanceCheckbox.checked = settingsSync.get('settingResourceDistance', false);
     clusterCheckbox.checked = settingsSync.get('settingResourceClusters', false);
-    clusterRadiusInput.value = settingsSync.get('settingClusterRadius', 30);
-    clusterMinSizeInput.value = settingsSync.get('settingClusterMinSize', 2);
 
     // Update settings object in real-time when checkboxes change
     // Add event listeners - save to localStorage and update settings
-    enchantmentCheckbox.addEventListener('change', (e) => {
-        settingsSync.setBool('settingResourceEnchantOverlay', e.target.checked);
-    });
-
     resourceCountCheckbox.addEventListener('change', (e) => {
         settingsSync.setBool('settingResourceCount', e.target.checked);
     });
@@ -56,14 +46,6 @@ export function initOverlayControls() {
 
     clusterCheckbox.addEventListener('change', (e) => {
         settingsSync.setBool('settingResourceClusters', e.target.checked);
-    });
-
-    clusterRadiusInput.addEventListener('input', (e) => {
-        settingsSync.set('settingClusterRadius', parseInt(e.target.value));
-    });
-
-    clusterMinSizeInput.addEventListener('input', (e) => {
-        settingsSync.set('settingClusterMinSize', parseInt(e.target.value));
     });
 }
 

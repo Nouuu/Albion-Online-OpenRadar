@@ -126,11 +126,6 @@ export class MobsDrawing extends DrawingUtils
                 this.drawFilledCircle(ctx, point.x, point.y, 10, color);
             }
 
-            // 📊 Enchantment indicator for living resources (if enabled)
-            if (isLivingResource && settingsSync.getBool("settingLivingResourceEnchantOverlay") && mobOne.enchantmentLevel > 0) {
-                this.drawEnchantmentIndicator(ctx, point.x, point.y, mobOne.enchantmentLevel);
-            }
-
             // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)
             if (isLivingResource && settingsSync.getBool("settingResourceDistance"))
             {
