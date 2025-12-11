@@ -220,9 +220,24 @@
                     <span class="text-gray-600 dark:text-gray-300">📊 Show Health Bar</span>
                 </label>
 
-                <label class="flex items-center space-x-2 mb-4">
+                <label class="flex items-center space-x-2 mb-3">
                     <input type="checkbox" id="settingEnemiesID" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span class="text-gray-600 dark:text-gray-300">🔖 Show ID</span>
+                </label>
+
+                <label class="flex items-center space-x-2 mb-3">
+                    <input type="checkbox" id="settingEnemiesTier" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span class="text-gray-600 dark:text-gray-300">🎯 Show Tier</span>
+                </label>
+
+                <label class="flex items-center space-x-2 mb-3">
+                    <input type="checkbox" id="settingEnemiesName" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span class="text-gray-600 dark:text-gray-300">📝 Show Name</span>
+                </label>
+
+                <label class="flex items-center space-x-2 mb-4">
+                    <input type="checkbox" id="settingEnemiesCategoryBadge" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                    <span class="text-gray-600 dark:text-gray-300">🏷️ Show Category Badge</span>
                 </label>
 
                 <p class="text-xs text-gray-500 dark:text-gray-300">
@@ -386,6 +401,18 @@
     const settingEnemiesID = document.getElementById("settingEnemiesID");
     settingEnemiesID.checked = settingsSync.getBool("settingEnemiesID");
     settingEnemiesID.addEventListener("click", () => {settingsSync.setBool("settingEnemiesID", settingEnemiesID.checked);});
+
+    const settingEnemiesTier = document.getElementById("settingEnemiesTier");
+    settingEnemiesTier.checked = settingsSync.getBool("settingEnemiesTier");
+    settingEnemiesTier.addEventListener("click", () => {settingsSync.setBool("settingEnemiesTier", settingEnemiesTier.checked);});
+
+    const settingEnemiesName = document.getElementById("settingEnemiesName");
+    settingEnemiesName.checked = settingsSync.getBool("settingEnemiesName");
+    settingEnemiesName.addEventListener("click", () => {settingsSync.setBool("settingEnemiesName", settingEnemiesName.checked);});
+
+    const settingEnemiesCategoryBadge = document.getElementById("settingEnemiesCategoryBadge");
+    settingEnemiesCategoryBadge.checked = settingsSync.getBool("settingEnemiesCategoryBadge");
+    settingEnemiesCategoryBadge.addEventListener("click", () => {settingsSync.setBool("settingEnemiesCategoryBadge", settingEnemiesCategoryBadge.checked);});
     //#endregion
 
 </script>

@@ -8,6 +8,7 @@
     "dev": "nodemon --config config/nodemon.json app.js",
     "check": "node scripts-shell/check-system.js",
     "check:runtime": "node server-scripts/Utils/runtime-check.js",
+    "compress:data": "node scripts-shell/compress-game-data.js",
     "prebuild": "npm run check",
     "esbuild": "node scripts-shell/build-esbuild.js",
     "build": "npm run esbuild && pkg . --compress GZip --no-bytecode --public-packages \"*\" --public",
@@ -43,6 +44,7 @@
   "dependencies": {
     "buffercursor": "^0.0.12",
     "cap": "^0.2.1",
+    "compression": "^1.8.1",
     "ejs": "^3.1.10",
     "express": "^5.2.1",
     "nan": "^2.23.0",

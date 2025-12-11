@@ -9,6 +9,7 @@ import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
 import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
 import {MobsDatabase} from '../Data/MobsDatabase.js';
+import {LocalizationDatabase} from '../Data/LocalizationDatabase.js';
 import {EventCodes} from './EventCodes.js';
 import {ItemsDatabase} from '../Data/ItemsDatabase.js';
 import {SpellsDatabase} from '../Data/SpellsDatabase.js';
@@ -93,7 +94,27 @@ const mobsDatabase = new MobsDatabase();
     }
 })();
 
-console.log('🔧 [Utils.js] Items, Spells, Harvestables & Mobs databases initialization started (async)');
+// 🌐 Initialize Localization Database
+const localizationDatabase = new LocalizationDatabase();
+(async () => {
+    try {
+        await localizationDatabase.load('/ao-bin-dumps/localization.json', 'EN-US');
+        window.localizationDatabase = localizationDatabase; // Expose globally for display
+        console.log('🌐 [Utils.js] Localization database loaded and ready');
+    } catch (error) {
+        window.logger?.error(
+            window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+            'LocalizationDatabaseInitFailed',
+            {
+                error: error.message,
+                fallback: 'Localized names disabled'
+            }
+        );
+        console.error('❌ [Utils.js] Failed to load Localization database:', error);
+    }
+})();
+
+console.log('🔧 [Utils.js] Items, Spells, Harvestables, Mobs & Localization databases initialization started (async)');
 
 const harvestablesDrawing = new HarvestablesDrawing();
 const dungeonsHandler = new DungeonsHandler();

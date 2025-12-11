@@ -144,6 +144,7 @@ export class MobsDatabase {
             const uniqueName = mob['@uniquename'] || '';
             const tier = parseInt(mob['@tier']) || 0;
             const category = mob['@mobtypecategory'] || mob['@category'] || '';
+            const namelocatag = mob['@namelocatag'] || '';
 
             // Vérifier si c'est une ressource (a Loot.Harvestable)
             const loot = mob['Loot'];
@@ -169,6 +170,7 @@ export class MobsDatabase {
                 tier: resourceTier,
                 uniqueName,
                 category,
+                namelocatag,                  // Tag for localized name lookup
                 isHarvestable: !!resourceType
             });
 

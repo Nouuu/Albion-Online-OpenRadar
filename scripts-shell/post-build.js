@@ -1,11 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import archiver from 'archiver';
+import {execSync} from 'child_process';
 
 const DIST_DIR = 'dist';
 const ES_BUILD_FILE = 'app.cjs';
 const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'server-scripts', 'public'];
-
 
 console.log('\n📦 Post-build: Checking assets...\n');
 
@@ -148,10 +148,6 @@ function copyRecursiveSync(src, dest) {
         console.warn(`⚠ Source folder not found: ${src}`);
         return;
     }
-    if (dest.startsWith("localization")) {
-        console.warn("⚠ Skipping localization fille");
-        return;
-    }
 
     if (!fs.existsSync(dest)) {
         fs.mkdirSync(dest, {recursive: true});
@@ -185,7 +181,53 @@ for (const asset of assetsToCopy) {
     }
 }
 
-console.log('\n✓ Assets copied!\n');
+// 🗜️ Compress game data files in dist/ for production
+console.log('\n🗜️  Compressing game data files in dist/...\n');
+const aoBinDumpsPath = path.join(DIST_DIR, 'public', 'ao-bin-dumps');
+if (fs.existsSync(aoBinDumpsPath)) {
+    try {
+        // Run compression script targeting dist/public/ao-bin-dumps/
+        execSync(`node scripts-shell/compress-game-data.js "${aoBinDumpsPath}"`, {stdio: 'inherit'});
+        console.log('✅ Game data compression complete!\n');
+    } catch (error) {
+        console.warn('⚠️  Warning: Game data compression failed');
+        console.warn('   Continuing without pre-compressed files\n');
+    }
+}
+
+// 🧹 Clean up: Remove original JSON/XML files that have .gz equivalents
+console.log('\n🧹 Optimizing distribution size...\n');
+if (fs.existsSync(aoBinDumpsPath)) {
+    const files = fs.readdirSync(aoBinDumpsPath);
+    let removedSize = 0;
+    let removedCount = 0;
+
+    for (const file of files) {
+        const ext = path.extname(file).toLowerCase();
+        if (ext === '.json' || ext === '.xml') {
+            const gzFile = `${file}.gz`;
+            const filePath = path.join(aoBinDumpsPath, file);
+            const gzPath = path.join(aoBinDumpsPath, gzFile);
+
+            // If .gz exists, remove the original file
+            if (fs.existsSync(gzPath)) {
+                const stats = fs.statSync(filePath);
+                removedSize += stats.size;
+                fs.unlinkSync(filePath);
+                removedCount++;
+                console.log(`  ✓ Removed ${file} (${(stats.size / 1024 / 1024).toFixed(1)} MB - .gz version exists)`);
+            }
+        }
+    }
+
+    if (removedCount > 0) {
+        console.log(`\n✅ Removed ${removedCount} original file(s), saved ${(removedSize / 1024 / 1024).toFixed(1)} MB in distribution!`);
+    } else {
+        console.log('  ℹ️  No files to remove (no .gz versions found)');
+    }
+}
+
+console.log('\n✓ Assets copied and optimized!\n');
 console.log('Files in dist/:');
 console.log('  - Executables');
 console.log('  - README files');

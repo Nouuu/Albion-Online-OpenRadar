@@ -1,11 +1,11 @@
 # 🎨 MOB UI ENHANCEMENT
 
 **Date**: 2025-12-11
-**Status**: ✅ COMPLETED - Classification System Implemented
+**Status**: ✅ COMPLETED - Classification & Display Enhancements Implemented
 
 ## 📋 Overview
 
-This document tracks the implementation of mob classification and filtering system to improve visual representation of enemies on the radar.
+This document tracks the implementation of mob classification and filtering system to improve visual representation of enemies on the radar, including tier display, optional name labels, and category badges.
 
 ---
 
@@ -90,20 +90,29 @@ All hostile mobs are classified using data from `mobs.xml`:
 ### Files Modified
 
 1. **scripts/Handlers/MobsHandler.js**
-   - Added `_getEnemyTypeFromCategory(category, uniqueName)` with heuristics
-   - Added `_getSettingNameForEnemyType(type)` for clean mapping
-   - Modified mob classification at spawn (line 192)
+   - Extended `Mob` class with `tier` and `category` fields (line 19-36)
+   - Added `_getEnemyTypeFromCategory(category, uniqueName)` with heuristics (line 509-584)
+   - Added `_getSettingNameForEnemyType(type)` for clean mapping (line 592-604)
+   - Modified mob classification at spawn to store tier and category (line 190-195)
    - Implemented filter logic (line 251-266)
 
 2. **scripts/Drawings/MobsDrawing.js**
    - Removed image loading for hostile mobs (now use colored circles)
    - Circles colored by `getEnemyColor(mob.type)`
-   - Simplified drawing logic
+   - Implemented dynamic Y-offset stacking for multiple info displays (line 151-206)
+   - Added tier display with gold color (line 163-170)
+   - Added simplified name display with truncation (line 172-184)
+   - Added category badge with emoji support (line 186-206)
 
 3. **views/main/enemies.ejs**
    - Removed `settingMediumEnemy` checkbox
    - Removed all Medium Enemy event listeners
    - Updated "All" toggle to work with 4 types only
+   - Added 3 new debug toggles (line 228-241):
+     - `settingEnemiesTier` - Show Tier
+     - `settingEnemiesName` - Show Name
+     - `settingEnemiesCategoryBadge` - Show Category Badge
+   - Added event listeners for new settings (line 405-415)
 
 ---
 
@@ -124,16 +133,60 @@ Successfully detected and classified:
 
 ---
 
-## ⏳ Future Enhancements (Not Implemented)
+### 5. Enhanced Mob Display Options
 
-These features were considered but **not** implemented:
+**Implementation**: `scripts/Drawings/MobsDrawing.js:151-206`
 
-- ❌ Display mob tier/enchantment on radar
-- ❌ Optional mob name display
-- ❌ Category badge overlay
+New optional display features for hostile mobs added to the radar:
 
-**Reason**: Core classification system is sufficient for gameplay needs.
+#### 🎯 Tier Display
+- **Setting**: `settingEnemiesTier`
+- **Location**: `views/main/enemies.ejs` (Debug section)
+- Shows mob tier as "T4", "T6", "T8", etc.
+- Gold color (#FFD700) for visibility
+- Extracted from mob database (`dbInfo.tier`)
+- Only displays for hostile mobs (not living resources)
 
+#### 📝 Name Display
+- **Setting**: `settingEnemiesName`
+- **Location**: `views/main/enemies.ejs` (Debug section)
+- Shows simplified mob name
+- Automatically removes tier prefix (e.g., "T6_MOB_")
+- Replaces underscores with spaces for readability
+- Truncates to 20 characters max (adds "..." for longer names)
+- White color (#FFFFFF) for clarity
+- Example: "T6_MOB_MORGANA_CROSSBOWMAN" → "MORGANA CROSSBOWMAN"
+
+#### 🏷️ Category Badge Overlay
+- **Setting**: `settingEnemiesCategoryBadge`
+- **Location**: `views/main/enemies.ejs` (Debug section)
+- Shows visual badge indicating mob category
+- Special emojis for common categories:
+  - 👑 BOSS
+  - ⭐ MINIBOSS
+  - 💎 CHAMPION
+- Abbreviated text for other categories (VET, ELI, STD, etc.)
+- Pink color (#FF69B4) for distinction
+- Extracted from mob database (`dbInfo.category`)
+
+**Display Stacking**:
+All displays stack vertically below the mob (and health bar if enabled):
+1. TypeID (if enabled)
+2. Tier (if enabled)
+3. Name (if enabled)
+4. Category Badge (if enabled)
+
+---
+
+### 6. Data Storage Enhancements
+
+**Implementation**: `scripts/Handlers/MobsHandler.js:19-36, 190-195`
+
+Extended `Mob` class to store additional data:
+- **`mob.tier`**: Tier level (0-8) for both living resources and hostile mobs
+- **`mob.category`**: Category string from mobs.xml (boss, miniboss, champion, standard, etc.)
+
+Both fields populated from `MobsDatabase` during mob spawning.
 
 ---
 

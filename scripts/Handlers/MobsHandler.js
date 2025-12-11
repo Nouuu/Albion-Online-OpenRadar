@@ -29,6 +29,8 @@ class Mob {
         this.tier = 0;
         this.type = EnemyType.Enemy;
         this.name = null;
+        this.category = null;           // Mob category from database (boss, miniboss, champion, etc.)
+        this.namelocatag = null;        // Localization tag for translated name
         this.exp = 0;
         this.hX = 0;
         this.hY = 0;
@@ -190,6 +192,9 @@ export class MobsHandler {
             // Hostile mob from MobsDatabase
             mob.type = this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
             mob.name = dbInfo.uniqueName;  // For Mist Boss filtering
+            mob.tier = dbInfo.tier || 0;   // Store tier for hostile mobs
+            mob.category = dbInfo.category || null;  // Store category for badge display
+            mob.namelocatag = dbInfo.namelocatag || null;  // Store localization tag for translated name
             hasKnownInfo = true;
 
             window.logger?.debug(CATEGORIES.MOB, 'HostileMobMatch', {
