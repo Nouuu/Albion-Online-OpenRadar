@@ -7,25 +7,15 @@ export class WispCageDrawing extends DrawingUtils
         super(Settings);
     }
 
-    Interpolate(cages, lpX, lpY, t)
+    interpolate(cages, lpX, lpY, t)
     {
         for (const cage of cages)
         {
-            const hX = -1 * cage.posX + lpX;
-            const hY = cage.posY - lpY;
-
-            if (cage.hY == 0 && cage.hX == 0)
-            {
-                cage.hX = hX;
-                cage.hY = hY;
-            }
-
-            cage.hX = this.lerp(cage.hX, hX, t);
-            cage.hY = this.lerp(cage.hY, hY, t);
+            this.interpolateEntity(cage, lpX, lpY, t);
         }
     }
 
-    Draw(ctx, cages)
+    draw(ctx, cages)
     {
         for (const cage of cages)
         {

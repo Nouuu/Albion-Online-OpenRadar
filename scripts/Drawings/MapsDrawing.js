@@ -9,12 +9,12 @@ export class MapDrawing extends DrawingUtils
     {
         const hX = lpX;
         const hY = -lpY;
-        
+
         curr_map.hX = this.lerp(curr_map.hX, hX, t);
         curr_map.hY = this.lerp(curr_map.hY, hY, t);
     }
 
-    Draw(ctx, curr_map)
+    draw(ctx, curr_map)
     {
         //const point = this.transformPoint(curr_map.hX, curr_map.hY);
 

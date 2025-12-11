@@ -2,25 +2,10 @@ import {DrawingUtils} from "../Utils/DrawingUtils.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
 export class HarvestablesDrawing extends DrawingUtils  {
-    interpolate(harvestables, lpX, lpY ,t ) {
-
+    interpolate(harvestables, lpX, lpY, t) {
         for (const harvestableOne of harvestables) {
- 
-            const hX = -1 * harvestableOne.posX + lpX;
-            const hY = harvestableOne.posY - lpY;
-
-       
-            if (harvestableOne.hY === 0 && harvestableOne.hX === 0) {
-                harvestableOne.hX = hX;
-                harvestableOne.hY = hY;
-
-            }
-            
-            harvestableOne.hX = this.lerp(harvestableOne.hX, hX, t);
-            harvestableOne.hY = this.lerp(harvestableOne.hY, hY, t);
-            
+            this.interpolateEntity(harvestableOne, lpX, lpY, t);
         }
-
     }
 
     invalidate(ctx, harvestables)

@@ -9,33 +9,12 @@ export class MobsDrawing extends DrawingUtils
     {
         for (const mobOne of mobs)
         {
-            const hX = -1 * mobOne.posX + lpX;
-            const hY = mobOne.posY - lpY;
-
-            if (mobOne.hY == 0 && mobOne.hX == 0)
-            {
-                mobOne.hX = hX;
-                mobOne.hY = hY;
-            }
-
-            mobOne.hX = this.lerp(mobOne.hX, hX, t);
-            mobOne.hY = this.lerp(mobOne.hY, hY, t);
+            this.interpolateEntity(mobOne, lpX, lpY, t);
         }
 
         for (const mistOne of mists)
         {
-            const hX = -1 * mistOne.posX + lpX;
-            const hY = mistOne.posY - lpY;
-
-            if (mistOne.hY == 0 && mistOne.hX == 0)
-            {
-                mistOne.hX = hX;
-                mistOne.hY = hY;
-
-            }
-
-            mistOne.hX = this.lerp(mistOne.hX, hX, t);
-            mistOne.hY = this.lerp(mistOne.hY, hY, t);
+            this.interpolateEntity(mistOne, lpX, lpY, t);
         }
     }
 

@@ -31,6 +31,26 @@ export class DrawingUtils {
         return a + (b - a) * t;
     }
 
+    /**
+     * Interpolate entity position based on local player position
+     * This method centralizes the interpolation logic used across all drawing classes
+     * @param {Object} entity - Entity object with posX, posY, hX, hY properties
+     * @param {number} lpX - Local player X coordinate
+     * @param {number} lpY - Local player Y coordinate
+     * @param {number} t - Interpolation factor (0-1)
+     */
+    interpolateEntity(entity, lpX, lpY, t) {
+        const hX = -1 * entity.posX + lpX;
+        const hY = entity.posY - lpY;
+
+        if (entity.hY === 0 && entity.hX === 0) {
+            entity.hX = hX;
+            entity.hY = hY;
+        }
+
+        entity.hX = this.lerp(entity.hX, hX, t);
+        entity.hY = this.lerp(entity.hY, hY, t);
+    }
 
     DrawCustomImage(ctx, x, y, imageName, folder, size) {
         if (!imageName) return;

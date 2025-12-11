@@ -7,21 +7,11 @@ export class DungeonsDrawing extends DrawingUtils
     {
         for (const dungoenOne of dungeons)
         {
-            const hX = -1 * dungoenOne.posX + lpX;
-            const hY = dungoenOne.posY - lpY;
-
-            if (dungoenOne.hY == 0 && dungoenOne.hX == 0)
-            {
-                dungoenOne.hX = hX;
-                dungoenOne.hY = hY;
-            }
-
-            dungoenOne.hX = this.lerp(dungoenOne.hX, hX, t);
-            dungoenOne.hY = this.lerp(dungoenOne.hY, hY, t);
+            this.interpolateEntity(dungoenOne, lpX, lpY, t);
         }
     }
 
-    Draw(ctx, dungeons)
+    draw(ctx, dungeons)
     {
         for (const dungeonOne of dungeons)
         {
