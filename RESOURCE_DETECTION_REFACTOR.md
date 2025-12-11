@@ -1,399 +1,262 @@
-# Plan de Refonte du Système de Détection des Ressources
+# Plan de Refonte du Systeme de Detection des Ressources
 
-**Date de création:** 2025-12-02  
-**Dernière mise à jour:** 2025-12-09  
-**Statut:** Phase 4 ✅ **COMPLÉTÉE ET VALIDÉE** | Phase 5 🔄 **EN COURS**
+**Date de creation:** 2025-12-02
+**Derniere mise a jour:** 2025-12-11
+**Statut:** Phase 5 COMPLETEE
 
 ---
 
-## 📊 Résumé des Phases
+## Resume des Phases
 
 | Phase | Description | Statut | Commit |
 |-------|-------------|--------|--------|
-| 1 | HarvestablesDatabase | ✅ | `c34023e1` |
-| 2 | Suppression Cache Legacy | ✅ | `b1498a0a` |
-| 3 | Fix Bug T6+ (override typeNumber) | ✅ | - |
-| 3B | Fix Bugs Living Resources (params[33]) | ✅ | - |
-| 4 | Utilisation Database + Fix isLiving | ✅ | - |
-| 5 | MobsDatabase | 🔄 | - |
+| 1 | HarvestablesDatabase | Done | `c34023e1` |
+| 2 | Suppression Cache Legacy | Done | `b1498a0a` |
+| 3 | Fix Bug T6+ (override typeNumber) | Done | - |
+| 3B | Fix Bugs Living Resources (params[33]) | Done | - |
+| 4 | Utilisation Database + Fix isLiving | Done | - |
+| 5 | MobsDatabase (OFFSET=15) | Done | - |
 
 ---
 
-## ✅ Architecture Actuelle (Post-Phase 4)
+## Architecture Finale (Post-Phase 5)
 
-### Flux de Détection des Ressources
+### Flux de Detection - Ressources Statiques
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    EVENTS RÉSEAU (Photon)                       │
-├─────────────────────────────────────────────────────────────────┤
-│  Event 38: NewSimpleHarvestableObjectList (batch spawn)         │
-│  Event 40: NewHarvestableObject (individual spawn)              │
-│  Event 46: HarvestableChangeState (update)                      │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                   HarvestablesHandler.js                        │
-├─────────────────────────────────────────────────────────────────┤
-│  • Parse les paramètres (type, tier, enchant, mobileTypeId)     │
-│  • Détermine isLiving basé sur mobileTypeId                     │
-│  • Valide via HarvestablesDatabase                              │
-│  • Filtre via settings (Static/Living × Type × Tier × Enchant)  │
-└─────────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────────┐
-│                   HarvestablesDatabase.js                       │
-├─────────────────────────────────────────────────────────────────┤
-│  • Charge harvestables.json (5 types, 190 combinaisons)         │
-│  • Valide les combinaisons type/tier/enchant                    │
-│  • Fournit getResourceTypeFromTypeNumber()                      │
-└─────────────────────────────────────────────────────────────────┘
+Events Reseau (Photon)
+  Event 38: NewSimpleHarvestableObjectList (batch spawn)
+  Event 40: NewHarvestableObject (individual spawn)
+  Event 46: HarvestableChangeState (update)
+                    |
+                    v
+HarvestablesHandler.js
+  - Parse les parametres (type, tier, enchant, mobileTypeId)
+  - Determine isLiving base sur mobileTypeId
+  - Valide via HarvestablesDatabase
+  - Filtre via settings (Static/Living x Type x Tier x Enchant)
+                    |
+                    v
+HarvestablesDatabase.js
+  - Charge harvestables.json (5 types, 190 combinaisons)
+  - Valide les combinaisons type/tier/enchant
+  - Fournit getResourceTypeFromTypeNumber()
 ```
 
-### Fichiers Clés
+### Flux de Detection - Ressources Vivantes (Living)
 
-| Fichier | Rôle |
+```
+Events Reseau (Photon)
+  Event 1: NewMobEvent (animal/creature spawn)
+                    |
+                    v
+MobsHandler.js
+  - Parse TypeID depuis parameters[1]
+  - Lookup dans MobsDatabase via getMobInfo(typeId)
+  - Determine type (Hide/Fiber/etc) et tier depuis mobs.json
+  - Filtre via settings
+                    |
+                    v
+MobsDatabase.js
+  - Charge mobs.json au demarrage (4528 mobs)
+  - OFFSET = 15 (TypeID_serveur = Index + 15)
+  - Parse Loot.Harvestable pour identifier les ressources
+  - ~2800 harvestables identifies automatiquement
+```
+
+### Fichiers du Systeme
+
+| Fichier | Role |
 |---------|------|
-| `scripts/Data/HarvestablesDatabase.js` | Parse harvestables.json, validation |
-| `scripts/Handlers/HarvestablesHandler.js` | Détection, filtrage, affichage |
-| `public/ao-bin-dumps/harvestables.json` | Source de données |
-
-### Logique isLiving - CORRIGÉE (2025-12-09)
-
-```javascript
-// ✅ LOGIQUE CORRECTE
-const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
-```
-
-| mobileTypeId | Source | isLiving | Catégorie |
-|--------------|--------|----------|-----------|
-| `null` | Event 38 (batch) | `false` | Static |
-| `65535` | Event 40 | `false` | **Static enchanté** |
-| `425, 530, etc.` | Event 40 | `true` | **Living (animal)** |
+| `scripts/Data/HarvestablesDatabase.js` | Parse harvestables.json, validation ressources statiques |
+| `scripts/Data/MobsDatabase.js` | Parse mobs.json avec OFFSET=15, identification ressources vivantes |
+| `scripts/Handlers/HarvestablesHandler.js` | Detection ressources statiques |
+| `scripts/Handlers/MobsHandler.js` | Detection ressources vivantes (animaux, critters) |
+| `public/ao-bin-dumps/harvestables.json` | Source de donnees statiques |
+| `public/ao-bin-dumps/mobs.json` | Source de donnees mobs |
 
 ---
 
-## ✅ Phase 4 - Détails (COMPLÉTÉE 2025-12-09)
+## Phase 5 - MobsDatabase (COMPLETEE)
 
-### Bug Critique Corrigé
+### Decouverte Cle
 
-**Problème :** La logique `isLiving` était **INVERSÉE** !
+**`TypeID_serveur = Index_mobs.json + 15`**
 
-```javascript
-// ❌ AVANT (FAUX)
-const isLiving = mobileTypeId === 65535;
-// Résultat: Bois enchanté → Living, Animal → Static (INVERSÉ!)
+Cette formule est utilisee par tous les radars de reference (DeathEye, AO-Radar).
 
-// ✅ APRÈS (CORRECT)
-const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
-// Résultat: Bois enchanté → Static, Animal → Living (CORRECT!)
-```
+| TypeID serveur | Index (-15) | Mob trouve | Tier |
+|---------------|-------------|------------|------|
+| 421 | 406 | T1_MOB_HIDE_SWAMP_TOAD | T1 Hide |
+| 425 | 410 | T4_MOB_HIDE_SWAMP_MONITORLIZARD | T4 Hide |
+| 429 | 414 | T5_MOB_HIDE_STEPPE_TERRORBIRD | T5 Hide |
 
-### Tests Validés (session_2025-12-09T17-51-07.jsonl)
+**Reference DeathEye C#** : `TypeId = Convert.ToInt32(parameters[1]) - 15;`
 
-| Type | mobileTypeId | isLiving | Status |
-|------|--------------|----------|--------|
-| Fiber T5 .1 (enchanté) | 65535 | false | ✅ Static |
-| Hide T4 .0 (animal) | 425 | true | ✅ Living |
-| Log T4 .0 (batch) | null | false | ✅ Static |
-
-### Modifications Appliquées
-
-**`scripts/Handlers/HarvestablesHandler.js` :**
-- ✅ `addHarvestable()` : Logique isLiving corrigée (ligne ~157)
-- ✅ `UpdateHarvestable()` : Logique isLiving corrigée (ligne ~217)
-- ✅ `newHarvestableObject()` : Log isLiving corrigé (ligne ~374)
-- ✅ Validation via `HarvestablesDatabase.isValidResource()`
-- ✅ Logs détaillés pour debug
-
----
-
-## 🔄 Phase 5 - MobsDatabase (EN COURS)
-
-### Progrès Actuel
-
-| Étape | Statut | Notes |
-|-------|--------|-------|
-| Créer `MobsDatabase.js` | ✅ | `scripts/Data/MobsDatabase.js` |
-| Ajouter import/init dans Utils.js | ✅ | Chargement async au démarrage |
-| Tester chargement database | ⏳ | À valider in-game |
-| Modifier MobsHandler | ⏳ | Utiliser MobsDatabase au lieu de mobinfo |
-| Supprimer MobsInfo.js | ⏳ | Après validation complète |
-
-### Objectif
-
-Remplacer `MobsInfo.js` (235 TypeIDs hardcodés) par `MobsDatabase.js` basé sur `mobs.json`.
-
-### Fichiers Concernés
-
-| Fichier | Action |
-|---------|--------|
-| `scripts/Handlers/MobsInfo.js` | **À SUPPRIMER** après migration |
-| `scripts/Handlers/MobsHandler.js` | Utiliser MobsDatabase au lieu de mobinfo |
-| `scripts/Data/MobsDatabase.js` | **À CRÉER** |
-| `public/ao-bin-dumps/mobs.json` | Source de données |
-
-### Plan d'Implémentation
-
-1. **Créer `MobsDatabase.js`**
-   - Parser `mobs.json`
-   - Méthodes : `getMobInfo(typeId)`, `isValidMob()`, `getResourceFromMob()`
-   
-2. **Modifier `MobsHandler.js`**
-   - Remplacer `this.mobinfo` par `window.mobsDatabase`
-   - Adapter `calculateResourceInfo()`
-   
-3. **Tests Critiques**
-   - Tester Living resources (Hide, Fiber vivants)
-   - Tester Mobs/Ennemis normaux
-   - Vérifier cohérence avec HarvestablesHandler
-
-4. **Supprimer `MobsInfo.js`**
-   - Seulement APRÈS validation complète
-
----
-
-## ⚠️ LEÇONS APPRISES - Phase 5 Guidelines
-
-### 1. Vérifier la Logique des Conditions Booléennes
+### Implementation
 
 ```javascript
-// ❌ PIÈGE Phase 4 : "65535 = special" ne signifie PAS "65535 = living"
+// MobsDatabase.js
+class MobsDatabase {
+    static OFFSET = 15;
 
-// Toujours se poser la question :
-// - Que signifie CHAQUE valeur possible ?
-// - Quelle est la valeur par DÉFAUT ?
-// - Y a-t-il des cas EDGE (null, undefined, 0) ?
-
-// Exemple de vérification :
-const testCases = [
-    { mobileTypeId: null, expected: false },      // batch spawn
-    { mobileTypeId: 65535, expected: false },     // static enchanté
-    { mobileTypeId: 425, expected: true },        // animal Hide
-    { mobileTypeId: 530, expected: true },        // creature Fiber
-];
-
-testCases.forEach(tc => {
-    const actual = tc.mobileTypeId !== null && tc.mobileTypeId !== 65535;
-    console.assert(actual === tc.expected, `Failed for ${tc.mobileTypeId}`);
-});
-```
-
-### 2. Analyser les Logs AVANT de Conclure
-
-```javascript
-// Dans les logs Phase 4, on voyait :
-// Hide T4 (animal) : mobileTypeId = 425, isLiving = false ❌
-// Wood T4.1 (enchanté) : mobileTypeId = 65535, isLiving = true ❌
-
-// C'était L'INVERSE de la réalité !
-// → Toujours comparer logs avec comportement ATTENDU in-game
-```
-
-### 3. Ne Pas Faire Confiance aux Commentaires Existants
-
-```javascript
-// Le commentaire disait :
-// "mobileTypeId === 65535 → Living resources (animals: Hide)"
-// MAIS c'était FAUX !
-
-// → Vérifier les hypothèses en testant, pas juste en lisant
-```
-
-### 4. Tester les DEUX Branches d'une Condition
-
-```javascript
-// Phase 4 a d'abord testé uniquement les ressources enchantées (Wood .1)
-// Le bug sur Hide (living) n'a été découvert que plus tard
-
-// Pour Phase 5, tester SYSTÉMATIQUEMENT :
-// - Cas "true" de la condition
-// - Cas "false" de la condition
-// - Cas edge (null, undefined, valeurs limites)
-```
-
-### 5. Garder les Logs de Debug Pendant le Développement
-
-```javascript
-// Les logs Event40_IndividualSpawn_FULL ont permis de voir le bug :
-// { mobileTypeId: 425, isLiving: false } // ← VISIBLE dans les logs !
-
-// Ne pas supprimer les logs détaillés trop tôt
-// Utiliser window.logger.setLevel('DEBUG') pendant les tests
-```
-
-### 6. Créer des Tests de Validation Explicites
-
-```javascript
-// Pour Phase 5, créer des fonctions de test :
-function validateMobsDatabase() {
-    const testMobs = [
-        { typeId: 425, expectedType: 'Hide', expectedTier: 4 },
-        { typeId: 530, expectedType: 'Fiber', expectedTier: 4 },
-        // ... autres cas
-    ];
-    
-    testMobs.forEach(test => {
-        const info = window.mobsDatabase.getMobInfo(test.typeId);
-        console.assert(info?.type === test.expectedType, 
-            `TypeId ${test.typeId}: expected ${test.expectedType}, got ${info?.type}`);
-    });
-}
-```
-
----
-
-## 📊 État du Système (Déc 2025)
-
-### Ce Qui Fonctionne
-
-| Fonctionnalité | Status | Notes |
-|----------------|--------|-------|
-| Ressources T1-T8 | ✅ | Tous types (Wood, Rock, Fiber, Hide, Ore) |
-| Enchantements .0-.4 | ✅ | Via params[33] directement |
-| Living resources | ✅ | Via mobileTypeId (!=null && !=65535) |
-| Static resources | ✅ | Via Event 38 ou mobileTypeId=65535 |
-| HarvestablesDatabase | ✅ | 5 types, 190 combinaisons |
-| Validation database | ✅ | isValidResource() utilisé |
-
-### Ce Qui Reste à Faire
-
-| Tâche | Phase | Priorité |
-|-------|-------|----------|
-| Créer MobsDatabase.js | 5 | Moyenne |
-| Migrer MobsInfo.js vers database | 5 | Moyenne |
-| Supprimer MobsInfo.js | 5 | Basse |
-
-### Comparaison avec Items/Spells
-
-| Système | Database | Utilisée | Legacy Code |
-|---------|----------|----------|-------------|
-| Items | ✅ | ✅ | ❌ |
-| Spells | ✅ | ✅ | ❌ |
-| Harvestables | ✅ | ✅ | ❌ |
-| Mobs | ❌ | ❌ | ✅ (MobsInfo.js) |
-
----
-
-## 📁 Code Legacy Supprimé (Phases 1-4)
-
-### HarvestablesHandler.js - Supprimé
-
-```javascript
-// ❌ Cache/Apprentissage (Phase 2)
-this.lastHarvestCache = new Map();
-this.lastInventoryQuantities = new Map();
-this.pendingHarvestableId = null;
-this.isHarvesting = false;
-this.discoveredItemIds = new Map();
-
-// ❌ Méthodes supprimées
-onHarvestStart()
-onHarvestCancel()
-onNewSimpleItem()
-getResourceInfoFromItemId()  // 50+ mappings hardcodés
-
-// ❌ Events supprimés
-Event 32 (NewSimpleItem)
-Event 59 (HarvestStart)
-Event 60 (HarvestCancel)
-Event 61 (HarvestFinished)
-```
-
-### MobsHandler.js - Supprimé (Phase 3B)
-
-```javascript
-// ❌ Calcul approximatif depuis rarity
-calculateEnchantment(type, tier, rarity, paramsEnchant) {
-    if (type === EnemyType.LivingHarvestable) {
-        const diff = rarity - baseRarity;
-        return Math.floor(diff / 45);  // ❌ Unreliable
+    _parseMobs(mobsArray) {
+        mobsArray.forEach((mob, index) => {
+            const typeId = index + MobsDatabase.OFFSET;
+            // ...
+        });
     }
-    return 0;  // ❌ Toujours 0 pour Hide !
-}
 
-// ✅ Remplacé par :
-calculateEnchantment(type, tier, rarity, paramsEnchant) {
-    if (paramsEnchant !== null && paramsEnchant !== undefined) {
-        return Math.max(0, Math.min(4, paramsEnchant));
+    getMobInfo(typeId) {
+        return this.mobsById.get(typeId) || null;
     }
-    return 0;
 }
+```
+
+### Detection du Type de Ressource
+
+La methode `_normalizeResourceType()` analyse le UniqueName pour identifier le type:
+
+```javascript
+_normalizeResourceType(uniqueName) {
+    const name = uniqueName.toUpperCase();
+
+    // Hide: animals (HIDE, WOLF, BEAR, etc.) + hide guardians
+    if (name.includes('_HIDE_') || name.startsWith('HIDE_GUARDIAN'))
+        return 'Hide';
+
+    // Fiber: fiber critters + fiber guardians
+    if (name.startsWith('FIBER_CRITTER') || name.startsWith('FIBER_GUARDIAN'))
+        return 'Fiber';
+
+    // Wood: wood critters + wood guardians
+    if (name.startsWith('WOOD_CRITTER') || name.startsWith('WOOD_GUARDIAN'))
+        return 'Log';
+
+    // etc.
+}
+```
+
+### Statistiques
+
+- **Total mobs dans mobs.json**: ~4528
+- **Harvestables identifies**: ~2800+
+- **Types supportes**: Hide, Fiber, Log, Rock, Ore
+
+### Tests Valides (2025-12-11)
+
+| Observe | Type | Tier | Status |
+|---------|------|------|--------|
+| Living Hide | T4e0, T4e1, T5e1, T5e2, T5e3, T6e0 | OK |
+| Living Fiber | T4e0, T5e0, T5e1, T6e0 | OK |
+
+---
+
+## Code Legacy Supprime
+
+### MobsInfo.js - SUPPRIME
+
+Fichier entierement supprime. Les 235 TypeIDs hardcodes sont remplaces par le parsing automatique de mobs.json (2800+ mobs).
+
+### MobsHandler.js - Nettoye
+
+```javascript
+// SUPPRIME:
+this.mobinfo = {};
+updateMobInfo(newData) { ... }
+updateMobInfoEntry(typeId, entry) { ... }
+getMobInfo(typeId) { ... }
+
+// Fallback legacy supprime dans:
+registerStaticResourceTypeID()
+AddEnemy()
+```
+
+### Utils.js - Nettoye
+
+```javascript
+// SUPPRIME:
+import {MobsInfo} from "../Handlers/MobsInfo.js";
+var mobsInfo = new MobsInfo();
+mobsInfo.initMobs();
+mobsHandler.updateMobInfo(mobsInfo.moblist);
 ```
 
 ---
 
-## 🔧 Debugging Guide
+## Debugging Guide
 
-### Vérifier la Database
+### Verifier MobsDatabase
 
 ```javascript
 // Console browser
-console.log(window.harvestablesDatabase);
-// Attendu: { isLoaded: true, stats: { typesLoaded: 5, combinationsLoaded: 190 } }
+window.mobsDatabase.stats
+// { totalMobs: 4528, harvestables: 2800+, ... }
 
-// Vérifier une combinaison
-window.harvestablesDatabase.isValidResource('WOOD', 4, 1);
-// Attendu: true (Wood T4 .1 existe)
+// Test un TypeID specifique
+window.mobsDatabase.getMobInfo(425)
+// { typeId: 425, uniqueName: "T4_MOB_HIDE_SWAMP_...", type: "Hide", tier: 4, ... }
 ```
 
-### Analyser les Détections
+### Verifier HarvestablesDatabase
 
 ```javascript
-// Toutes les détections récentes
-window.logger.logs.filter(l => 
-    l.category === '[CLIENT] HARVEST' && 
-    l.event === 'Detection'
-).slice(-20);
+window.harvestablesDatabase
+// { isLoaded: true, stats: { typesLoaded: 5, combinationsLoaded: 190 } }
 
-// Détections avec isLiving=true (animaux)
-window.logger.logs.filter(l => 
-    l.event === 'Detection' && 
-    l.data.isLiving === true
-);
-
-// Ressources enchantées
-window.logger.logs.filter(l => 
-    l.event === 'Detection' && 
-    l.data.enchant > 0
-);
+window.harvestablesDatabase.isValidResource('WOOD', 4, 1)
+// true
 ```
 
-### Vérifier les Filtres
+### Analyser les Detections
 
 ```javascript
-// Ressources filtrées par settings
-window.logger.logs.filter(l => 
-    l.event === 'FilteredBySettings' || 
-    l.event === 'FilteredByUpdate'
+// Living resources detectees
+window.logger.logs.filter(l =>
+    l.event === 'MobsDatabaseMatch'
 );
 
-// Ressources invalides selon database
-window.logger.logs.filter(l => 
-    l.event === 'InvalidResourceCombination'
+// TypeIDs inconnus (pas dans mobs.json)
+window.logger.logs.filter(l =>
+    l.event === 'UnknownMob_NoFallback'
 );
 ```
 
 ---
 
-## 📚 Références
+## Comparaison Avant/Apres
 
-### Fichiers du Projet
-
-- `scripts/Data/HarvestablesDatabase.js` - Database des ressources
-- `scripts/Handlers/HarvestablesHandler.js` - Handler principal
-- `scripts/Handlers/MobsHandler.js` - Handler des mobs (Phase 5)
-- `scripts/Handlers/MobsInfo.js` - Legacy à supprimer (Phase 5)
-- `public/ao-bin-dumps/harvestables.json` - Source de données
-
-### Projet de Référence
-
-- `work/data/albion-radar-deatheye-2pc/` - Implémentation C# (event-driven simple)
-
-### Sessions de Test
-
-- `logs/sessions/session_2025-12-09T17-51-07.jsonl` - Validation Phase 4
+| Aspect | Avant (MobsInfo.js) | Apres (MobsDatabase) |
+|--------|---------------------|----------------------|
+| TypeIDs supportes | 235 hardcodes | 2800+ auto-parses |
+| Maintenance | Manuelle | Automatique via `update-ao-data.ts` |
+| T6+ resources | Partiellement manquants | Tous supportes |
+| Source de verite | Code legacy | mobs.json officiel |
 
 ---
 
-**Fin du document de travail**
+## Etat du Systeme (Dec 2025)
+
+### Ce Qui Fonctionne
+
+| Fonctionnalite | Status |
+|----------------|--------|
+| Ressources T1-T8 statiques | OK |
+| Ressources T1-T8 vivantes | OK |
+| Enchantements .0-.4 | OK |
+| HarvestablesDatabase | OK |
+| MobsDatabase | OK |
+| Tous les types (Wood, Rock, Fiber, Hide, Ore) | OK |
+
+### Databases Utilisees
+
+| Systeme | Database | Legacy Code |
+|---------|----------|-------------|
+| Items | OK | Aucun |
+| Spells | OK | Aucun |
+| Harvestables | OK | Aucun |
+| Mobs | OK | Aucun (MobsInfo.js supprime) |
+
+---
+
+**Fin du document**

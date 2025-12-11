@@ -175,9 +175,9 @@ update-ao-data: ## Update AO data files
 
 download-assets: ## Download required assets
 	@echo "$(YELLOW)Downloading required assets...$(NC)"
-	@tsx scripts-shell/download-and-optimize-spell-icons.ts --replace-existing --only-upgrade
-	@tsx scripts-shell/download-and-optimize-item-icons.ts --replace-existing --only-upgrade
-	@tsx scripts-shell/download-and-optimize-map.ts --replace-existing --only-upgrade
+	@tsx scripts-shell/download-and-optimize-spell-icons.ts
+	@tsx scripts-shell/download-and-optimize-item-icons.ts
+	@tsx scripts-shell/download-and-optimize-map.ts
 
 update-assets: ## Update all assets
 	@echo "$(YELLOW)Updating all assets...$(NC)"
