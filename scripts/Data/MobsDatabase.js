@@ -24,10 +24,18 @@
 import { CATEGORIES } from '../constants/LoggerConstants.js';
 
 export class MobsDatabase {
+    /**
+     * OFFSET between mobs.json array index and server TypeID
+     * Discovery: Index in mobs.json = server TypeID - 15
+     * Reference: DeathEye C# code: TypeId = Convert.ToInt32(parameters[1]) - 15;
+     * Verified: T4_MOB_HIDE_SWAMP_MONITORLIZARD at index 410 = TypeID 425
+     */
+    static OFFSET = 15;
+
     constructor() {
         /**
          * Map<typeId, {type: string, tier: number, uniqueName: string, category: string}>
-         * typeId = index dans le tableau des mobs (comme DeathEye)
+         * typeId = server TypeID (index + OFFSET)
          */
         this.mobsById = new Map();
 
@@ -129,9 +137,10 @@ export class MobsDatabase {
      * @param {Array} mobs - Array of mob objects from mobs.json
      */
     _parseMobs(mobs) {
-        // Comme DeathEye: typeId = index dans le tableau
+        // Server TypeID = index + OFFSET
+        // Reference: DeathEye C# code reads from array at (TypeId - 15)
         mobs.forEach((mob, index) => {
-            const typeId = index;
+            const typeId = index + MobsDatabase.OFFSET;
             const uniqueName = mob['@uniquename'] || '';
             const tier = parseInt(mob['@tier']) || 0;
             const category = mob['@mobtypecategory'] || mob['@category'] || '';
@@ -146,8 +155,12 @@ export class MobsDatabase {
             if (harvestable) {
                 resourceType = this._normalizeResourceType(harvestable['@type']);
                 resourceTier = parseInt(harvestable['@tier']) || tier;
-                this.harvestableTypeIds.add(typeId);
-                this.stats.harvestables++;
+
+                // Only count as harvestable if it's a valid resource type
+                if (resourceType) {
+                    this.harvestableTypeIds.add(typeId);
+                    this.stats.harvestables++;
+                }
             }
 
             // Stocker les infos du mob
@@ -167,26 +180,46 @@ export class MobsDatabase {
     /**
      * Normalize resource type from mobs.json to match our naming
      * @private
-     * @param {string} type - Type from Loot.Harvestable (HIDE, WOOD, etc.)
-     * @returns {string|null} Normalized type (Hide, Log, Fiber, etc.)
+     * @param {string} type - Type from Loot.Harvestable (HIDE, HIDE_CRITTER, FIBER_GUARDIAN, etc.)
+     * @returns {string|null} Normalized type (Hide, Log, Fiber, Rock, Ore) or null if not a resource
+     *
+     * Types in mobs.json:
+     * - HIDE, HIDE_CRITTER, HIDE_GUARDIAN, HIDE_MINIGUARDIAN, HIDE_TREASURE, etc.
+     * - FIBER_CRITTER, FIBER_GUARDIAN, FIBER_MINIGUARDIAN, FIBER_TREASURE, etc.
+     * - WOOD_CRITTER, WOOD_GUARDIAN, WOOD_MINIGUARDIAN, WOOD_TREASURE, etc.
+     * - ROCK_CRITTER, ROCK_GUARDIAN, ROCK_MINIGUARDIAN, etc.
+     * - ORE_CRITTER, ORE_GUARDIAN, ORE_MINIGUARDIAN, ORE_TREASURE, etc.
+     * - SILVERCOINS_* (NOT resources, ignored)
      */
     _normalizeResourceType(type) {
         if (!type) return null;
 
         const normalized = type.toUpperCase();
 
-        // Mapping to match HarvestablesHandler stringType
-        const typeMap = {
-            'HIDE': 'Hide',
-            'LEATHER': 'Hide',  // Alias
-            'WOOD': 'Log',
-            'FIBER': 'Fiber',
-            'ROCK': 'Rock',
-            'STONE': 'Rock',    // Alias
-            'ORE': 'Ore'
-        };
+        // Ignore non-resource types (silver coins, etc.)
+        if (normalized.startsWith('SILVERCOINS') || normalized.startsWith('DEADRAT')) {
+            return null;
+        }
 
-        return typeMap[normalized] || null;
+        // Check for resource type prefix
+        // Order matters: check longer prefixes first to avoid false matches
+        if (normalized.startsWith('HIDE') || normalized.startsWith('LEATHER')) {
+            return 'Hide';
+        }
+        if (normalized.startsWith('FIBER')) {
+            return 'Fiber';
+        }
+        if (normalized.startsWith('WOOD')) {
+            return 'Log';
+        }
+        if (normalized.startsWith('ROCK') || normalized.startsWith('STONE')) {
+            return 'Rock';
+        }
+        if (normalized.startsWith('ORE')) {
+            return 'Ore';
+        }
+
+        return null;
     }
 
     /**

@@ -145,11 +145,6 @@ export class HarvestablesHandler
 
     addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // 🔗 Register static TypeIDs in MobsHandler for analytics (no override)
-        if (this.mobsHandler && mobileTypeId !== null && mobileTypeId !== 65535) {
-            this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
-        }
-
         // 🔍 Determine resource type: living (animals/creatures) vs static
         // CORRECTED LOGIC (2025-12-09):
         // - mobileTypeId === 65535 → STATIC enchanted resource (no creature, just a node)
@@ -206,11 +201,6 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // 🔗 Register static TypeIDs in MobsHandler for analytics (no override)
-        if (this.mobsHandler && mobileTypeId !== null && mobileTypeId !== 65535) {
-            this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
-        }
-
         // 🔍 Determine resource type: living (animals/creatures) vs static
         // CORRECTED LOGIC (2025-12-09):
         // - mobileTypeId === 65535 → STATIC enchanted resource (no creature, just a node)

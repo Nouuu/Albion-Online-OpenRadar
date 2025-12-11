@@ -131,24 +131,6 @@
 
 					<hr class="my-4 border-gray-300 dark:border-gray-600">
 
-					<!-- Action Buttons -->
-					<h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">🔧 Cache Actions</h3>
-					<div class="space-y-2">
-						<button
-							id="showTypeIDCacheBtn"
-							class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none transition-colors duration-200"
-						>
-							👁️ View TypeID Cache
-						</button>
-
-						<button
-							id="clearTypeIDCacheBtn"
-							class="w-full px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none transition-colors duration-200"
-						>
-							🗑️ Clear TypeID Cache
-						</button>
-					</div>
-
 					<p class="text-xs text-gray-500 dark:text-gray-300 mt-4">
 						💡 <strong>Tip:</strong> Logging options in <a href="/settings" class="text-purple-600 dark:text-purple-300 hover:underline">Settings > Debug & Logging</a>
 					</p>
@@ -288,40 +270,6 @@
 	settingLivingResourceEnchantOverlay.addEventListener("click", () => {
 		settingsSync.setBool("settingLivingResourceEnchantOverlay", settingLivingResourceEnchantOverlay.checked);
 	});
-
-	// View TypeID Cache button
-	const showCacheBtn = document.getElementById('showTypeIDCacheBtn');
-	if (showCacheBtn) {
-		showCacheBtn.addEventListener('click', function() {
-			if (window.mobsHandler && typeof window.mobsHandler.showCachedTypeIDs === 'function') {
-				window.mobsHandler.showCachedTypeIDs();
-			} else {
-				const cached = settingsSync.getJSON('cachedStaticResourceTypeIDs', null);
-				if (cached) {
-					console.log('📦 Cached TypeIDs:', JSON.parse(cached));
-				} else {
-					console.log('ℹ️ No TypeID cache found');
-				}
-			}
-		});
-	}
-
-	// Clear TypeID Cache button
-	const clearCacheBtn = document.getElementById('clearTypeIDCacheBtn');
-	if (clearCacheBtn) {
-		clearCacheBtn.addEventListener('click', function() {
-			if (window.mobsHandler && typeof window.mobsHandler.clearCachedTypeIDs === 'function') {
-				window.mobsHandler.clearCachedTypeIDs();
-			} else {
-				settingsSync.remove('cachedStaticResourceTypeIDs');
-				console.log('✅ TypeID cache cleared');
-			}
-			if (confirm('✅ Cache cleared! Reload page?')) {
-				window.location.reload();
-			}
-		});
-	}
-
 
 	let settingLivingResourcesHealthBar = document.getElementById("settingLivingResourcesHealthBar");
 	settingLivingResourcesHealthBar.checked = settingsSync.getBool("settingLivingResourcesHealthBar");

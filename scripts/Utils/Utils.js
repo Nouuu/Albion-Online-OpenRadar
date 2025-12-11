@@ -25,10 +25,8 @@ import imageCache from './ImageCache.js';
 import {DrawingUtils} from './DrawingUtils.js';
 import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
-import {MobsInfo} from "../Handlers/MobsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
-import settingsSync from './SettingsSync.js';
 
 // ✅ Canvas check for RadarRenderer initialization
 const canvas = document.getElementById("drawCanvas");
@@ -88,7 +86,7 @@ const mobsDatabase = new MobsDatabase();
             'MobsDatabaseInitFailed',
             {
                 error: error.message,
-                fallback: 'Using MobsInfo.js fallback'
+                fallback: 'Living resources detection disabled'
             }
         );
         console.error('❌ [Utils.js] Failed to load Mobs database:', error);
@@ -101,11 +99,7 @@ const harvestablesDrawing = new HarvestablesDrawing();
 const dungeonsHandler = new DungeonsHandler();
 
 var itemsInfo = new ItemsInfo();
-var mobsInfo = new MobsInfo();
-
 itemsInfo.initItems();
-mobsInfo.initMobs();
-
 
 var map = new MapH(-1);
 const mapsDrawing = new MapDrawing();
@@ -149,7 +143,6 @@ const mapsDrawing = new MapDrawing();
 
 const chestsHandler = new ChestsHandler();
 const mobsHandler = new MobsHandler();
-mobsHandler.updateMobInfo(mobsInfo.moblist);
 
 // existing logEnemiesList button stays the same
 window.addEventListener('load', () => {
@@ -160,45 +153,6 @@ window.addEventListener('load', () => {
             window.logger?.debug(CATEGORIES.DEBUG, EVENTS.EnemiesList, { mobList: mobList });
         });
     }
-
-    // Clear TypeID Cache button
-    const clearTypeIDCache = document.getElementById('clearTypeIDCache');
-    if (clearTypeIDCache) clearTypeIDCache.addEventListener('click', () => {
-        try {
-            // Show what's in cache BEFORE clearing
-            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs');
-            if (!entries) {
-                window.logger?.info(CATEGORIES.CACHE, EVENTS.ClearingTypeIDCache, {
-                    entriesCount: entries.length,
-                    entries: entries.map(([typeId, info]) => ({
-                        typeId: typeId,
-                        type: info.type,
-                        tier: info.tier
-                    }))
-                });
-            } else {
-                window.logger?.info(CATEGORIES.CACHE, EVENTS.CacheAlreadyEmpty, {});
-            }
-
-            // Clear in-memory cache in MobsHandler
-            mobsHandler.clearCachedTypeIDs();
-
-            // Confirm
-            const shouldReload = confirm('✅ TypeID Cache cleared (in-memory + localStorage)!\n\n🔄 Reload the page to start fresh?\n\n(Recommended: Yes)');
-            if (shouldReload) {
-                window.location.reload();
-            }
-        } catch (e) {
-            window.logger?.error(CATEGORIES.CACHE, EVENTS.ClearCacheFailed, { error: e.message });
-            alert('❌ Failed to clear cache: ' + e.message);
-        }
-    });
-
-    // Show TypeID Cache button (debug)
-    const showTypeIDCache = document.getElementById('showTypeIDCache');
-    if (showTypeIDCache) showTypeIDCache.addEventListener('click', () => {
-        mobsHandler.showCachedTypeIDs();
-    });
 });
 
 

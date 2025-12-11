@@ -137,7 +137,6 @@ function startServer(appDir, port) {
 
     app.use('/scripts', express.static(path.join(appDir, 'scripts')));
     app.use('/sounds', express.static(path.join(appDir, 'sounds')));
-    app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
 
     app.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);
