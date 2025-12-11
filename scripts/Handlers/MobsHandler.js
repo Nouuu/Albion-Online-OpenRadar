@@ -166,8 +166,7 @@ export class MobsHandler {
         const actualHealth = healthNormalized < 10 ? 255 : healthNormalized;
 
         const mob = new Mob(id, typeId, posX, posY, actualHealth, maxHealth, enchant, rarity);
-        const normHealth = Number(actualHealth) || 0;
-
+        Number(actualHealth) || 0;
         // Phase 5: MobsDatabase ONLY (no fallback to test new system)
         const dbInfo = window.mobsDatabase?.getMobInfo(typeId);
         let hasKnownInfo = false;
@@ -187,15 +186,27 @@ export class MobsHandler {
                 uniqueName: dbInfo.uniqueName,
                 assignedEnemyType: this.getEnemyTypeName(mob.type)
             });
-        } else {
-            // NO FALLBACK: Log unknown TypeID for debugging
-            window.logger?.debug(CATEGORIES.MOB, 'UnknownMob_NoFallback', {
+        } else if (dbInfo) {
+            // Hostile mob from MobsDatabase
+            mob.type = this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
+            mob.name = dbInfo.uniqueName;  // For Mist Boss filtering
+            hasKnownInfo = true;
+
+            window.logger?.debug(CATEGORIES.MOB, 'HostileMobMatch', {
                 typeId,
-                dbInfo: dbInfo || null,
+                category: dbInfo.category,
+                uniqueName: dbInfo.uniqueName,
+                tier: dbInfo.tier,
+                assignedEnemyType: this.getEnemyTypeName(mob.type)
+            });
+        } else {
+            // Unknown mob (no database entry)
+            // Mob stays as EnemyType.Enemy (default)
+            window.logger?.debug(CATEGORIES.MOB, 'UnknownMob_NoDatabase', {
+                typeId,
                 health: healthNormalized,
                 maxHealth
             });
-            // Mob stays as EnemyType.Enemy (default)
         }
 
         // 🐛 DEBUG: Log enemy creation with type info
@@ -244,14 +255,11 @@ export class MobsHandler {
                     return; // Skip unidentified enemies if setting is disabled
                 }
             } else {
-                // For identified enemies, filter by their specific level (Normal, Medium, Enchanted, MiniBoss, Boss)
-                const enemyLevelIndex = mob.type - EnemyType.Enemy; // 0-4 for Enemy through Boss
-                const settingsEnemyIndexNames = ['settingNormalEnemy', 'settingMediumEnemy', 'settingEnchantedEnemy', 'settingMiniBossEnemy', 'settingBossEnemy'];
-                if (enemyLevelIndex >= 0 && enemyLevelIndex < settingsEnemyIndexNames.length) {
-                    const settingName = settingsEnemyIndexNames[enemyLevelIndex];
-                    if (settingsSync.getBool(settingName) === false) {
-                        return; // Skip if this enemy level is disabled
-                    }
+                // For identified enemies, filter by their specific level (Normal, Enchanted, MiniBoss, Boss)
+                // Note: MediumEnemy completely removed - not aligned with game data categories
+                const settingName = this._getSettingNameForEnemyType(mob.type);
+                if (settingName && settingsSync.getBool(settingName) === false) {
+                    return; // Skip if this enemy level is disabled
                 }
             }
         }
@@ -473,6 +481,124 @@ export class MobsHandler {
         this.mobsList = [];
         this.mistList = [];
         this.harvestablesNotGood = [];
+    }
+
+    /**
+     * Map category/mobtypecategory from mobs.xml to EnemyType enum
+     *
+     * mobs.xml has TWO category attributes:
+     * 1. mobtypecategory - Primary type (boss, miniboss, champion, standard, trash, critter, summon, etc.)
+     * 2. category - Secondary type (roaming, factionwarfare, rd_solo, camp, static, etc.)
+     *
+     * MobsDatabase.js reads: mob['@mobtypecategory'] || mob['@category'] || ''
+     * So this method must handle values from BOTH attributes.
+     *
+     * Additionally, uses name-based heuristics to detect elite mobs:
+     * - "_VETERAN" (not "_VETERAN_CHAMPION") → MiniBoss
+     * - "_ELITE" → MiniBoss
+     * - "_BOSS" → Boss
+     *
+     * @param {string} category - Category from mobs.xml
+     * @param {string} uniqueName - Unique name of the mob (for heuristics)
+     * @returns {number} EnemyType enum value
+     * @private
+     */
+    _getEnemyTypeFromCategory(category, uniqueName = '') {
+        const cat = (category || '').toLowerCase();
+        const name = (uniqueName || '').toUpperCase();
+
+        // 🔍 Name-based heuristics (checked FIRST, before category)
+        // These override category-based classification
+
+        // VETERAN mobs (elite versions) - MiniBoss tier
+        // Example: T6_MOB_MORGANA_CROSSBOWMAN_VETERAN (has category="static" but is elite)
+        // Exclude VETERAN_CHAMPION (already handled by category="champion")
+        if (name.includes('_VETERAN') && !name.includes('_VETERAN_CHAMPION')) {
+            return EnemyType.MiniBoss;
+        }
+
+        // ELITE mobs - MiniBoss tier
+        if (name.includes('_ELITE')) {
+            return EnemyType.MiniBoss;
+        }
+
+        // BOSS in name (explicit boss indicators)
+        if (name.includes('_BOSS') && !name.includes('MINIBOSS')) {
+            return EnemyType.Boss;
+        }
+
+        // 📋 Category-based classification (fallback if no name heuristic matched)
+        switch(cat) {
+            // Boss tier (mobtypecategory="boss" OR category="boss")
+            case 'boss':
+                return EnemyType.Boss;
+
+            // Mini-boss tier (mobtypecategory="miniboss" OR category="miniboss")
+            case 'miniboss':
+                return EnemyType.MiniBoss;
+
+            // Enchanted/Champion tier (mobtypecategory="champion" OR category="champion")
+            case 'champion':
+                return EnemyType.EnchantedEnemy;
+
+            // Random Dungeon elites - treat as bosses/mini-bosses
+            case 'rd_elite':      // Random Dungeon elite mobs
+            case 'rd_veteran':    // Random Dungeon veteran mobs
+                return EnemyType.MiniBoss;
+
+            case 'rd_solo':       // Random Dungeon solo mobs (weaker)
+                return EnemyType.EnchantedEnemy;
+
+            // Normal enemy tier - all standard/weak hostile mobs
+            case 'standard':      // mobtypecategory="standard"
+            case 'trash':         // mobtypecategory="trash"
+            case 'summon':        // mobtypecategory="summon"
+            case 'roaming':       // category="roaming"
+            case 'factionwarfare': // category="factionwarfare"
+            case 'camp':          // category="camp"
+            case 'static':        // category="static" (WARNING: includes VETERAN mobs, handled by heuristic above)
+            case 'avalon':        // category="avalon" (Avalonian mobs)
+            case 'homebase':      // category="homebase"
+            case 'hidemob':       // category="hidemob"
+            case 'territoryguards': // category="territoryguards"
+            case 'territoryinvaders': // category="territoryinvaders"
+            case 'smugglerguards': // category="smugglerguards"
+            case 'crowdcontrol':  // category="crowdcontrol"
+            case 'castle':        // category="castle"
+            case 'tracking':      // category="tracking"
+            default:
+                return EnemyType.Enemy;
+
+            // Categories ignored (non-hostile or special):
+            // - environment: Non-hostile objects
+            // - chest: Treasure chests
+            // - harmless: Non-hostile NPCs
+            // - vanity: Cosmetic entities
+            // - critter: Living resources (handled separately via isHarvestable)
+            // - hiddentreasures, crystalcreatures, treasuredrones: Non-mob entities
+            // These shouldn't reach this point as they have isHarvestable=false or shouldn't be spawned
+        }
+    }
+
+    /**
+     * Get setting name for enemy type
+     * @param {number} type - EnemyType enum value
+     * @returns {string|null} Setting name or null if no setting exists
+     * @private
+     */
+    _getSettingNameForEnemyType(type) {
+        switch(type) {
+            case EnemyType.Enemy:
+                return 'settingNormalEnemy';
+            case EnemyType.EnchantedEnemy:
+                return 'settingEnchantedEnemy';
+            case EnemyType.MiniBoss:
+                return 'settingMiniBossEnemy';
+            case EnemyType.Boss:
+                return 'settingBossEnemy';
+            default:
+                return null;
+        }
     }
 
     /**

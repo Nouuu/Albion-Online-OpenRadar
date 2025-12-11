@@ -70,23 +70,16 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
-                // Only set imageName if mob has been identified (has name from mobinfo)
-                // Otherwise leave undefined and fallback blue circle will be drawn
-                if (mobOne.name) {
-                    imageName = mobOne.name;
-                    imageFolder = "Resources"; // Change folder to enemies
-                }
+                // Use color-coded circles for hostile mobs (not images)
+                // imageName stays undefined to trigger the colored circle rendering below
+                // The color is determined by mob.type (Enemy=green, EnchantedEnemy=purple, MiniBoss=orange, Boss=red)
 
                 drawId = settingsSync.getBool("settingEnemiesID");
             }
             else if (mobOne.type == EnemyType.Drone)
             {
-                // Only set imageName if mob has been identified (has name from mobinfo)
-                // Otherwise leave undefined and fallback blue circle will be drawn
-                if (mobOne.name) {
-                    imageName = mobOne.name;
-                    imageFolder = "Resources"; // Change folder to enemies
-                }
+                // Use color-coded circles for drones (not images)
+                // imageName stays undefined to trigger the colored circle rendering below
 
                 drawId = settingsSync.getBool("settingEnemiesID");
             }

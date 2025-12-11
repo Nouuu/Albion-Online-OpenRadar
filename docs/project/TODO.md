@@ -1,7 +1,7 @@
 # 📋 TODO
 
 **Last Update**: 2025-12-11
-**Status**: Phase 5 ✅ COMPLETED | Next: Field Validation
+**Status**: Phase 5 ✅ VALIDATED (100% success) | Next: Mob UI Enhancement
 
 > **📘 RESOURCE DETECTION:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
 > This document contains the complete and up-to-date state of the detection system.
@@ -83,6 +83,14 @@
 - ✅ localStorage cache + Clear button
 - ✅ Analysis tools (tools/)
 - ✅ Organized documentation
+- ✅ **Field Validation (2025-12-11)** - Phase 5 VALIDATED
+    - ✅ 100% success rate (3698 valid detections, 0 invalid)
+    - ✅ Enchantments .0 to .3 working correctly
+    - ✅ All tiers T1-T6 validated
+    - ✅ All types validated (Wood, Fiber, Hide, Rock)
+    - ✅ Living resources via MobsDatabase (468 detections)
+    - ✅ Static resources via HarvestablesDatabase (3230+ detections)
+    - ❌ **EventNormalizer NOT needed** (0% error rate)
 
 ### Player Detection (2025-11-07)
 - ✅ Basic player radar display (red dots, 10px)
@@ -127,25 +135,18 @@
 
 ### Medium term
 
-#### Resources (Phase 5 Validation)
-- [ ] **Field validation session (1-2h)** - Test Phase 5 detection system
-    - Validate enchantments .2, .3, .4 (all types)
-    - Test different tiers (T4, T6, T7, T8)
-    - Verify all biomes and spawn locations
-    - Test T6+ living resources
-    - Collect detection accuracy statistics
+#### Mobs (Priority 1 - Current Focus)
+- [x] **Mob UI Enhancement - Classification System** ✅ (2025-12-11)
+    - ✅ Color-coded mobs by threat level (Green/Purple/Orange/Red)
+    - ✅ Functional filters (Normal/Enchanted/MiniBoss/Boss)
+    - ✅ Name-based heuristics for VETERAN/ELITE detection
+    - ✅ Removed Medium Enemy (not aligned with game data)
+    - See MOB_UI_ENHANCEMENT.md for details
 
-- [ ] **Long field session (2h+)** - Extended validation
-    - Extended gameplay session
-    - Analyze stability and performance
-    - Monitor false positives/negatives
-    - Test high density resource areas
-    - Verify localStorage cache stability
-
-- [ ] **EventNormalizer decision** (Optional)
-    - Evaluate if needed after Phase 5 improvements
-    - Decision based on field testing results
-    - See "EventNormalizer EVALUATION" section below
+- [ ] **Code Cleanup** - Remove obsolete features
+    - Remove resource overlay enhancements (redundant)
+    - Remove grid overlay (not useful)
+    - See CLEANUP_PLAN.md for details
 
 #### Players (Priority 1 - Quick Wins)
 - [ ] **Nickname display** (~30 min)
@@ -179,45 +180,8 @@
 
 ### Medium/Long term
 
-- [ ] EventNormalizer decision (after long session analysis)
 - [ ] Quality metrics
 - [ ] Feature flags
-
----
-
-## 📊 EventNormalizer EVALUATION (Optional)
-
-**Context**: EventNormalizer is a component that was designed to fix/normalize incorrect events from the server.
-
-**Goal**: Determine if EventNormalizer is still necessary with Phase 5 improvements
-
-### ✅ Already Applied Corrections (Phase 5)
-
-1. **Server TypeID bugs override** (528/530/531) via MobsDatabase
-2. **localStorage cache** of TypeID mappings
-3. **Complete database** (2800+ TypeIDs auto-parsed from mobs.json)
-4. **OFFSET=15 formula** for TypeID mapping
-
-### ❓ Questions to Resolve via Field Testing
-
-1. **False positives**: Are there still TypeIDs being misclassified?
-2. **Performance**: Any slowdowns with current system?
-3. **Stability**: Are there race conditions in spawn detection?
-4. **"Overlap"**: Is the grouped resource behavior acceptable?
-
-### 🎯 Decision After Field Testing
-
-**EventNormalizer NEEDED if**:
-- [ ] > 5% of resources are misclassified
-- [ ] Frequent detection issues (> 5% of spawns)
-- [ ] System instability
-
-**EventNormalizer NOT NEEDED if**:
-- [ ] < 2% problematic cases
-- [ ] Rare issues
-- [ ] Current system stable
-
-> **Decision**: After field validation session (1-2h) with complete logging
 
 ---
 

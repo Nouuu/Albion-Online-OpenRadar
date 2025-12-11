@@ -39,19 +39,6 @@
                     </span>
                 </label>
                 <label class="flex items-center space-x-2">
-                    <input type="checkbox" id="settingMediumEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                    <span class="dark:text-white">Medium 🟡</span>
-                    <span class="relative group">
-                        <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                            <circle cx="12" cy="12" r="10"></circle>
-                        </svg>
-                        <span class="tooltip-base tooltip-right">
-                            Show medium difficulty enemies (moderate threat).
-                        </span>
-                    </span>
-                </label>
-                <label class="flex items-center space-x-2">
                     <input type="checkbox" id="settingEnchantedEnemy" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                     <span class="dark:text-white">Enchanted 🟣</span>
                     <span class="relative group">
@@ -250,13 +237,11 @@
     import settingsSync from "../../scripts/Utils/SettingsSync.js";
 
     let settingNormalEnemy = document.getElementById("settingNormalEnemy");
-    let settingMediumEnemy = document.getElementById("settingMediumEnemy");
     let settingEnchantedEnemy = document.getElementById("settingEnchantedEnemy");
     let settingMiniBossEnemy = document.getElementById("settingMiniBossEnemy");
     let settingBossEnemy = document.getElementById("settingBossEnemy");
 
     settingNormalEnemy.checked = settingsSync.getBool("settingNormalEnemy");
-    settingMediumEnemy.checked = settingsSync.getBool("settingMediumEnemy");
     settingEnchantedEnemy.checked = settingsSync.getBool("settingEnchantedEnemy");
     settingMiniBossEnemy.checked = settingsSync.getBool("settingMiniBossEnemy");
     settingBossEnemy.checked = settingsSync.getBool("settingBossEnemy");
@@ -264,11 +249,6 @@
     settingNormalEnemy.addEventListener("click", () =>
     {
         settingsSync.setBool("settingNormalEnemy", settingNormalEnemy.checked);
-        HasToCheckCheckAllEnemies();
-    });
-    settingMediumEnemy.addEventListener("click", () =>
-    {
-        settingsSync.setBool("settingMediumEnemy", settingMediumEnemy.checked);
         HasToCheckCheckAllEnemies();
     });
     settingEnchantedEnemy.addEventListener("click", () =>
@@ -337,8 +317,6 @@
 
         if (settingNormalEnemy.checked !== settingAllEnemies.checked)
             settingNormalEnemy.click(true);
-        if (settingMediumEnemy.checked !== settingAllEnemies.checked)
-            settingMediumEnemy.click(true);
         if (settingEnchantedEnemy.checked !== settingAllEnemies.checked)
             settingEnchantedEnemy.click(true);
         if (settingMiniBossEnemy.checked !== settingAllEnemies.checked)
@@ -355,8 +333,8 @@
 
         let hasToCheck = false;
 
-        if (((settingNormalEnemy.checked && settingMediumEnemy.checked && settingEnchantedEnemy.checked && settingMiniBossEnemy.checked && settingBossEnemy.checked) && !settingAllEnemies.checked) ||
-            ((!settingNormalEnemy.checked || !settingMediumEnemy.checked || !settingEnchantedEnemy.checked || !settingMiniBossEnemy.checked || !settingBossEnemy.checked) && settingAllEnemies.checked))
+        if (((settingNormalEnemy.checked && settingEnchantedEnemy.checked && settingMiniBossEnemy.checked && settingBossEnemy.checked) && !settingAllEnemies.checked) ||
+            ((!settingNormalEnemy.checked || !settingEnchantedEnemy.checked || !settingMiniBossEnemy.checked || !settingBossEnemy.checked) && settingAllEnemies.checked))
             hasToCheck = true;
 
         if (!hasToCheck) return;
