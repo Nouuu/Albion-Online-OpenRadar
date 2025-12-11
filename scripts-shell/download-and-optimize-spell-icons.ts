@@ -159,8 +159,8 @@ async function processUiSprite(
     didSkip: boolean,
     didOptimize: boolean
 }> {
-    const filename = `${sprite}.png`;
-    const localizedFilename = `${uiSpriteToLocalizedName.get(sprite)}.png`;
+    const filename = `${sprite}.webp`;
+    const localizedFilename = `${uiSpriteToLocalizedName.get(sprite)}.webp`;
     const outputPath = path.join(OUTPUT_DIR, filename);
     console.log();
 
@@ -178,9 +178,9 @@ async function processUiSprite(
         };
     }
 
-    const url = `${CDN_BASE_URL}${filename}`;
+    const url = `${CDN_BASE_URL}${uiSpriteToLocalizedName.get(sprite)}.png`;
     res = await downloadFile(url);
-    if (res.status === DownloadStatus.NOT_FOUND && localizedFilename !== filename && localizedFilename !== 'undefined.png') {
+    if (res.status === DownloadStatus.NOT_FOUND && localizedFilename !== filename && localizedFilename !== 'undefined.webp') {
         const localizedUrl = `${CDN_BASE_URL}${localizedFilename}`;
         console.log(`🔄 404 : Trying localized filename: ${localizedFilename}`);
         res = await downloadFile(localizedUrl);

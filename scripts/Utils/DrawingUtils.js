@@ -66,7 +66,7 @@ export class DrawingUtils {
         if (!imageName) return;
 
         const folderR = (!folder) ? "" : folder + "/";
-        const src = "/images/" + folderR + imageName + ".png";
+        const src = "/images/" + folderR + imageName + ".webp";
         const preloadedImage = imageCache.GetPreloadedImage(src, folder);
 
         if (preloadedImage === null) {

@@ -140,9 +140,8 @@ export async function processBufferWithSharp(buffer: Buffer<ArrayBuffer | ArrayB
                 fit: 'inside',
                 withoutEnlargement: true
             })
-            .png({
+            .webp({
                 quality: IMAGE_QUALITY,
-                compressionLevel: 9
             })
             .toBuffer();
     } catch (error) {

@@ -34,7 +34,7 @@ export class MapDrawing extends DrawingUtils
         if (imageName === undefined || imageName == "undefined")
             return;
 
-        const src = "/images/Maps/" + imageName + ".png";
+        const src = "/images/Maps/" + imageName + ".webp";
 
         const preloadedImage = imageCache.GetPreloadedImage(src, "Maps");
 

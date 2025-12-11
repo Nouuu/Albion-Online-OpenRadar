@@ -94,7 +94,7 @@ async function processMapTile(
     didSkip: boolean
     didOptimize: boolean
 }> {
-    const filename = mapName.split('_')[0] + '.png';
+    const filename = mapName.split('_')[0] + '.webp';
     const outputPath = path.join(OUTPUT_DIR, filename);
     console.log();
 

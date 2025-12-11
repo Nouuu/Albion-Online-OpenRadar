@@ -218,7 +218,7 @@ function updatePlayersList() {
 
                                 // Extract base item name (without @enchant suffix)
                                 const baseName = item.name.split('@')[0];
-                                const iconPath = `/images/Items/${baseName}.png`;
+                                const iconPath = `/images/Items/${baseName}.webp`;
 
                                 // 🔄 Check if image is already loaded in cache before displaying
                                 const preloadedImage = imageCache.GetPreloadedImage(iconPath, "Items");
@@ -262,7 +262,7 @@ function updatePlayersList() {
                             if (spell) {
                                 // Use uisprite for icon, fallback to generic spell icon
                                 const iconName = spell.uiSprite || 'SPELL_GENERIC';
-                                const iconPath = `/images/Spells/${iconName}.png`;
+                                const iconPath = `/images/Spells/${iconName}.webp`;
                                 const tooltipText = spell.uniqueName;
 
                                 // 🔄 Check cache before displaying spell icon
