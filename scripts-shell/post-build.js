@@ -4,8 +4,7 @@ import archiver from 'archiver';
 import {execSync} from 'child_process';
 
 const DIST_DIR = 'dist';
-const ES_BUILD_FILE = 'app.cjs';
-const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'server-scripts', 'public'];
+const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'public'];
 
 console.log('\n📦 Post-build: Checking assets...\n');
 
@@ -125,7 +124,7 @@ Native modules (cap.node) are integrated into the executable.
 ## Platform
 
 Built for: ${platform}
-Node.js: v24.11.1
+Go Backend v2.0
 `;
 };
 
@@ -328,6 +327,4 @@ const getFormats = () => {
     }
 })().finally(() => {
     console.log('📦 Post-build archiving process finished.');
-    console.log('Moving app.cjs to dist/ folder.');
-    fs.renameSync(ES_BUILD_FILE, path.join(DIST_DIR, ES_BUILD_FILE));
 });
