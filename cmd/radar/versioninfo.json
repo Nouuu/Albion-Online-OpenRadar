@@ -1,0 +1,9 @@
+{
+  "StringFileInfo": {
+    "FileDescription": "OpenRadar - Albion Online Radar",
+    "ProductName": "OpenRadar",
+    "LegalCopyright": "MIT License"
+  },
+  "IconPath": "../../web/images/favicon.ico"
+}
+

@@ -69,6 +69,8 @@ build: build-win ## Build for current platform (default: Windows)
 build-win: ## Build for Windows
 	@echo "Building for Windows..."
 	-@mkdir $(BUILD_DIR) 2>nul
+	@echo "Generating Windows resources (icon + version info)..."
+	cd cmd/radar && goversioninfo -64
 	$(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME).exe ./cmd/radar
 	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME).exe"
 
