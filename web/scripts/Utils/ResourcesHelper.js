@@ -114,16 +114,10 @@ export function initializeTierButtonStates() {
  */
 export function attachCheckboxListeners() {
 	const resources = [
-		{ prefix: 'fsp', enchants: null }, // Will be set dynamically
-		{ prefix: 'hsp', enchants: null },
-		{ prefix: 'wsp', enchants: null },
-		{ prefix: 'osp', enchants: null },
-		{ prefix: 'rsp', enchants: null },
-		{ prefix: 'flp', enchants: null },
-		{ prefix: 'hlp', enchants: null },
-		{ prefix: 'wlp', enchants: null },
-		{ prefix: 'olp', enchants: null },
-		{ prefix: 'rlp', enchants: null }
+		{ prefix: 'fsp' }, { prefix: 'hsp' }, { prefix: 'wsp' },
+		{ prefix: 'osp' }, { prefix: 'rsp' }, { prefix: 'flp' },
+		{ prefix: 'hlp' }, { prefix: 'wlp' }, { prefix: 'olp' },
+		{ prefix: 'rlp' }
 	];
 	const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
 
@@ -132,24 +126,19 @@ export function attachCheckboxListeners() {
 			const rowId = `${prefix}-${enchantLevel}`;
 			const row = document.getElementById(rowId);
 
-			if (row) {
-				// Add a single listener on the row instead of each checkbox
-				// This captures all click events on checkboxes via event delegation
-				row.addEventListener('click', (e) => {
-					if (e.target.type === 'checkbox') {
-						// Find the checkbox index
-						const checkboxes = Array.from(row.children).filter(child => child.type === 'checkbox');
-						const index = checkboxes.indexOf(e.target);
+			// Skip if already has listener (prevents duplicates on HTMX swaps)
+			if (!row || row.dataset.listenerAttached) return;
+			row.dataset.listenerAttached = 'true';
 
-						if (index !== -1) {
-							// Small delay to let the localStorage save complete first
-							setTimeout(() => {
-								updateTierButtonState(prefix, index);
-							}, 10);
-						}
+			row.addEventListener('click', (e) => {
+				if (e.target.type === 'checkbox') {
+					const checkboxes = Array.from(row.children).filter(child => child.type === 'checkbox');
+					const index = checkboxes.indexOf(e.target);
+					if (index !== -1) {
+						setTimeout(() => updateTierButtonState(prefix, index), 10);
 					}
-				}, true); // Use capture phase to ensure we catch the event
-			}
+				}
+			}, true);
 		});
 	});
 }

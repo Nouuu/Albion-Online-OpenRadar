@@ -19,41 +19,11 @@ export class SettingsSync {
         this.channel = null;
         this.listeners = new Map();
         this.isInitialized = false;
-        this.cache = new Map(); // Memory cache to avoid repeated localStorage reads
+        this.cache = new Map();
 
-        // Check BroadcastChannel support
-        if (typeof BroadcastChannel !== 'undefined') {
-            this.initialize();
-        } else {
-            window.logger?.warn(CATEGORIES.SETTINGS, 'BroadcastChannelNotSupported', { fallback: 'localStorage storage events' });
-            this.setupFallback();
-        }
-    }
-
-    /**
-     * Initialize BroadcastChannel for cross-tab communication
-     */
-    initialize() {
-        try {
-            this.channel = new BroadcastChannel(CHANNEL_NAME);
-
-            this.channel.addEventListener('message', (event) => {
-                this.handleMessage(event.data);
-            });
-
-            this.isInitialized = true;
-            window.logger?.info(CATEGORIES.SETTINGS, 'SettingsSyncInitialized', { channelName: CHANNEL_NAME });
-        } catch (error) {
-            window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncInitializeFailed', { error: error?.message || error });
-            this.setupFallback();
-        }
-    }
-
-    /**
-     * Fallback to storage events for browsers without BroadcastChannel
-     */
-    setupFallback() {
-        window.addEventListener('storage', (event) => {
+        // Store bound handlers for cleanup
+        this._boundMessageHandler = (event) => this.handleMessage(event.data);
+        this._boundStorageHandler = (event) => {
             if (event.key && event.newValue !== null) {
                 this.handleMessage({
                     type: 'setting-changed',
@@ -61,8 +31,29 @@ export class SettingsSync {
                     value: event.newValue
                 });
             }
-        });
-        window.logger?.info(CATEGORIES.SETTINGS, 'SettingsSyncFallbackEnabled', { method: 'localStorage storage events' });
+        };
+        this._usingFallback = false;
+
+        if (typeof BroadcastChannel !== 'undefined') {
+            this.initialize();
+        } else {
+            this.setupFallback();
+        }
+    }
+
+    initialize() {
+        try {
+            this.channel = new BroadcastChannel(CHANNEL_NAME);
+            this.channel.addEventListener('message', this._boundMessageHandler);
+            this.isInitialized = true;
+        } catch (error) {
+            this.setupFallback();
+        }
+    }
+
+    setupFallback() {
+        window.addEventListener('storage', this._boundStorageHandler);
+        this._usingFallback = true;
     }
 
     /**
@@ -318,17 +309,20 @@ export class SettingsSync {
     }
 
     /**
-     * Cleanup - close BroadcastChannel and clear cache
+     * Cleanup - close BroadcastChannel, remove listeners, clear cache
      */
     destroy() {
         if (this.channel) {
+            this.channel.removeEventListener('message', this._boundMessageHandler);
             this.channel.close();
             this.channel = null;
         }
+        if (this._usingFallback) {
+            window.removeEventListener('storage', this._boundStorageHandler);
+        }
         this.listeners.clear();
-        this.cache.clear(); // Clear cache on destroy
+        this.cache.clear();
         this.isInitialized = false;
-        window.logger?.info(CATEGORIES.SETTINGS, 'SettingsSyncDestroyed', {});
     }
 }
 

@@ -1,29 +1,27 @@
 // LoggerClient.js - Global logger initialization for all pages
-// This file is loaded as ES module in layout.ejs to make logger available everywhere
 
 import {CATEGORY_SETTINGS_MAP} from './constants/LoggerConstants.js';
 import settingsSync from './Utils/SettingsSync.js';
 
-console.log('🔧 [LoggerClient] Script loaded, initializing logger immediately...');
+console.log('🔧 [LoggerClient] Script loaded');
 
 let socket = null;
 let socketConnected = false;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
-const INITIAL_RECONNECT_DELAY = 1000; // 1 second initial delay
+let reconnectTimeoutId = null;
+const MAX_RECONNECT_DELAY = 30000;
+const INITIAL_RECONNECT_DELAY = 1000;
 
-// Create Logger class (works with or without WebSocket)
 class Logger {
     constructor() {
-        this.wsClient = null; // Will be set later when socket connects
+        this.wsClient = null;
         this.buffer = [];
         this.sessionId = this.generateSessionId();
-        // Performance optimization: smaller buffer, faster flush
-        this.maxBufferSize = 200;    // Reduced from 1000 to save memory
-        this.flushInterval = 5000;   // Reduced from 5000ms to 1000ms
+        this.maxBufferSize = 200;
+        this.flushIntervalMs = 5000;
+        this.flushIntervalId = null;
 
         this.startFlushInterval();
-        console.log(`📊 [Logger] Initialized with sessionId: ${this.sessionId}`);
     }
 
     generateSessionId() {
@@ -31,9 +29,15 @@ class Logger {
     }
 
     startFlushInterval() {
-        setInterval(() => {
-            this.flush();
-        }, this.flushInterval);
+        if (this.flushIntervalId) clearInterval(this.flushIntervalId);
+        this.flushIntervalId = setInterval(() => this.flush(), this.flushIntervalMs);
+    }
+
+    stopFlushInterval() {
+        if (this.flushIntervalId) {
+            clearInterval(this.flushIntervalId);
+            this.flushIntervalId = null;
+        }
     }
 
     /**
@@ -188,60 +192,60 @@ const globalLogger = new Logger();
 window.logger = globalLogger;
 console.log('✅ [LoggerClient] Logger initialized and exposed as window.logger');
 
-// 🔄 WebSocket connection with auto-reconnect
-function connectLoggerWebSocket() {
-    // Close existing socket if any
-    if (socket) {
-        socket.close();
-    }
+// Named handlers for cleanup
+function onLoggerSocketOpen() {
+    reconnectAttempts = 0;
+    socketConnected = true;
+    globalLogger.wsClient = socket;
+    console.log('✅ [LoggerClient] WebSocket connected');
+}
 
-    console.log('🔌 [LoggerClient] Connecting to WebSocket...');
+function onLoggerSocketClose() {
+    socketConnected = false;
+    globalLogger.wsClient = null;
+    scheduleLoggerReconnect();
+}
+
+function onLoggerSocketError() {
+    socketConnected = false;
+}
+
+function cleanupLoggerSocket() {
+    if (socket) {
+        socket.removeEventListener('open', onLoggerSocketOpen);
+        socket.removeEventListener('close', onLoggerSocketClose);
+        socket.removeEventListener('error', onLoggerSocketError);
+        socket.close();
+        socket = null;
+    }
+    if (reconnectTimeoutId) {
+        clearTimeout(reconnectTimeoutId);
+        reconnectTimeoutId = null;
+    }
+}
+
+function connectLoggerWebSocket() {
+    cleanupLoggerSocket();
 
     try {
         socket = new WebSocket('ws://localhost:5001/ws');
-
-        socket.addEventListener('open', () => {
-            reconnectAttempts = 0; // Reset counter on successful connection
-            console.log('✅ [LoggerClient] WebSocket connected successfully');
-            socketConnected = true;
-            globalLogger.wsClient = socket; // Attach socket to logger
-        });
-
-        socket.addEventListener('close', () => {
-            console.warn('⚠️ [LoggerClient] WebSocket disconnected, will attempt to reconnect...');
-            socketConnected = false;
-            globalLogger.wsClient = null;
-            scheduleLoggerReconnect();
-        });
-
-        socket.addEventListener('error', (error) => {
-            console.error('❌ [LoggerClient] WebSocket error:', error);
-            socketConnected = false;
-        });
+        socket.addEventListener('open', onLoggerSocketOpen);
+        socket.addEventListener('close', onLoggerSocketClose);
+        socket.addEventListener('error', onLoggerSocketError);
     } catch (e) {
-        console.warn('📡 [LoggerClient] Failed to connect WebSocket - will retry');
-        console.warn(e);
+        console.warn('📡 [LoggerClient] Failed to connect WebSocket');
         scheduleLoggerReconnect();
     }
 }
 
 function scheduleLoggerReconnect() {
     reconnectAttempts++;
-    // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
     const delay = Math.min(
         INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
         MAX_RECONNECT_DELAY
     );
-
-    console.log(`🔄 [LoggerClient] Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
-
-    setTimeout(() => {
-        connectLoggerWebSocket();
-    }, delay);
+    reconnectTimeoutId = setTimeout(connectLoggerWebSocket, delay);
 }
 
-// ✨ DEFERRED WebSocket connection - After DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔧 [LoggerClient] DOM ready, connecting WebSocket...');
-    connectLoggerWebSocket();
-});
+// Connect when DOM is ready
+document.addEventListener('DOMContentLoaded', connectLoggerWebSocket);

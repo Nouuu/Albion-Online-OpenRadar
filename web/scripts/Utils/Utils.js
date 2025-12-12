@@ -523,161 +523,85 @@ const drawingUtils = new DrawingUtils();
 // 🔄 WebSocket with auto-reconnect
 let socket = null;
 let reconnectAttempts = 0;
-const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
-const INITIAL_RECONNECT_DELAY = 1000; // 1 second initial delay
+let reconnectTimeoutId = null;
+const MAX_RECONNECT_DELAY = 30000;
+const INITIAL_RECONNECT_DELAY = 1000;
 
 // Connection status tracking
-window.wsConnectionStatus = 'disconnected'; // 'connected', 'disconnected', 'connecting'
+window.wsConnectionStatus = 'disconnected';
 
 function updateConnectionStatus(status) {
   window.wsConnectionStatus = status;
   document.dispatchEvent(new CustomEvent('wsStatusChange', { detail: { status } }));
 }
 
+// Named handlers for proper cleanup
+function onSocketOpen() {
+  reconnectAttempts = 0;
+  updateConnectionStatus('connected');
+  console.log('✅ [Utils.js] WebSocket connected');
+}
+
+function onSocketClose() {
+  updateConnectionStatus('disconnected');
+  console.warn('⚠️ [Utils.js] WebSocket disconnected');
+  scheduleReconnect();
+}
+
+function onSocketError(error) {
+  console.error('❌ [Utils.js] WebSocket error:', error);
+}
+
+function cleanupSocket() {
+  if (socket) {
+    socket.removeEventListener('open', onSocketOpen);
+    socket.removeEventListener('close', onSocketClose);
+    socket.removeEventListener('error', onSocketError);
+    socket.removeEventListener('message', handleWebSocketMessage);
+    socket.close();
+    socket = null;
+  }
+  if (reconnectTimeoutId) {
+    clearTimeout(reconnectTimeoutId);
+    reconnectTimeoutId = null;
+  }
+}
+
 function connectWebSocket() {
   updateConnectionStatus('connecting');
-  // Close existing socket if any
-  if (socket) {
-    socket.close();
-  }
+  cleanupSocket();
 
   console.log('🔌 [Utils.js] Connecting to WebSocket...');
   socket = new WebSocket('ws://localhost:5001/ws');
-
-  socket.addEventListener('open', () => {
-    reconnectAttempts = 0; // Reset counter on successful connection
-    updateConnectionStatus('connected');
-    window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, {
-      page: 'Utils',
-      reconnected: reconnectAttempts > 0
-    });
-    console.log('✅ [Utils.js] WebSocket connected successfully');
-  });
-
-  socket.addEventListener('close', () => {
-    updateConnectionStatus('disconnected');
-    window.logger?.warn(CATEGORIES.WEBSOCKET, 'Disconnected', { page: 'Utils' });
-    console.warn('⚠️ [Utils.js] WebSocket disconnected, will attempt to reconnect...');
-    scheduleReconnect();
-  });
-
-  socket.addEventListener('error', (error) => {
-    window.logger?.error(CATEGORIES.WEBSOCKET, 'ConnectionError', {
-      page: 'Utils',
-      error: error.message
-    });
-    console.error('❌ [Utils.js] WebSocket error:', error);
-  });
-
+  socket.addEventListener('open', onSocketOpen);
+  socket.addEventListener('close', onSocketClose);
+  socket.addEventListener('error', onSocketError);
   socket.addEventListener('message', handleWebSocketMessage);
 }
 
 function scheduleReconnect() {
   reconnectAttempts++;
-  // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
   const delay = Math.min(
     INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
     MAX_RECONNECT_DELAY
   );
-
   console.log(`🔄 [Utils.js] Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
-
-  setTimeout(() => {
-    connectWebSocket();
-  }, delay);
+  reconnectTimeoutId = setTimeout(connectWebSocket, delay);
 }
 
 function handleWebSocketMessage(event) {
   var data = JSON.parse(event.data);
-
-  // Extract the string and dictionary from the object
   var extractedString = data.code;
-
   var extractedDictionary = JSON.parse(data.dictionary);
 
-  // 🐛 DEBUG: Log ALL network packets to see request/response/event distribution
-  if (!window.__packetTypeCount) window.__packetTypeCount = {};
-  if (!window.__packetTypeCount[extractedString]) window.__packetTypeCount[extractedString] = 0;
-  window.__packetTypeCount[extractedString]++;
-
-  // Log every 50 packets to track what we're receiving
-  const totalPackets = Object.values(window.__packetTypeCount).reduce((a, b) => a + b, 0);
-  if (totalPackets % 100 === 0) {
-    window.logger?.info(CATEGORIES.PACKET_RAW, 'PacketTypeDistribution', {
-      totalPackets,
-      distribution: window.__packetTypeCount,
-      note: 'Tracking all packet types from network'
-    });
-  }
-
-  switch (extractedString)
-  {
+  switch (extractedString) {
     case "request":
-        // 🐛 DEBUG: Log first 5 requests to see their structure
-        if (!window.__requestLogCount) window.__requestLogCount = 0;
-        window.__requestLogCount++;
-
-        if (window.__requestLogCount <= 5) {
-          window.logger?.warn(CATEGORIES.PACKET_RAW, 'Request_Packet_Sample', {
-            requestNumber: window.__requestLogCount,
-            parameters: extractedDictionary["parameters"],
-            note: 'Sample request packet for analysis'
-          });
-        }
-
         onRequest(extractedDictionary["parameters"]);
         break;
-
     case "event":
-        // 🔍 DEBUG: Log full extractedDictionary to find Photon Event Code
-        if (!window.__eventDictLogCount) window.__eventDictLogCount = 0;
-        window.__eventDictLogCount++;
-
-        if (window.__eventDictLogCount <= 3) {
-            window.logger?.warn(CATEGORIES.PACKET_RAW, 'Event_Full_Dictionary', {
-                eventNumber: window.__eventDictLogCount,
-                fullDictionary: extractedDictionary,
-                dictionaryKeys: Object.keys(extractedDictionary),
-                note: 'Full extractedDictionary to find Photon Event Code'
-            });
-        }
-        // 🔍 DEBUG: Log Photon Event Codes 2 and 3 to identify player vs entity moves
-        const photonCode = extractedDictionary["code"];
-        if (photonCode === 2 || photonCode === 3) {
-            if (!window.__photonCodeCount) window.__photonCodeCount = {2: 0, 3: 0};
-            window.__photonCodeCount[photonCode]++;
-
-            if (window.__photonCodeCount[photonCode] <= 5) {
-                const params = extractedDictionary["parameters"];
-                window.logger?.warn(CATEGORIES.PACKET_RAW, `Photon_Event_Code_${photonCode}`, {
-                    count: window.__photonCodeCount[photonCode],
-                    photonCode: photonCode,
-                    id: params[0],
-                    hasBuffer: params[1]?.type === 'Buffer',
-                    bufferLength: params[1]?.data?.length,
-                    param252: params[252],
-                    allParamKeys: Object.keys(params),
-                    note: `Photon Event Code ${photonCode} analysis - first 5 occurrences`
-                });
-            }
-        }
-
         onEvent(extractedDictionary["parameters"]);
         break;
-
     case "response":
-        // 🐛 DEBUG: Log first 5 responses to see their structure
-        if (!window.__responseLogCount) window.__responseLogCount = 0;
-        window.__responseLogCount++;
-
-        if (window.__responseLogCount <= 5) {
-          window.logger?.warn(CATEGORIES.PACKET_RAW, 'Response_Packet_Sample', {
-            responseNumber: window.__responseLogCount,
-            parameters: extractedDictionary["parameters"],
-            note: 'Sample response packet for analysis'
-          });
-        }
-
         onResponse(extractedDictionary["parameters"]);
         break;
   }
