@@ -159,3 +159,4 @@ input[type="checkbox"]:checked {
 [data-tooltip]:hover::after {
     animation: tooltip-appear 0.15s ease-out;
 }
+

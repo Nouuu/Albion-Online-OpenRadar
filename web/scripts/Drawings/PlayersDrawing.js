@@ -17,12 +17,21 @@ export class PlayersDrawing extends DrawingUtils {
     }
 
     invalidate(context, players) {
-        // Players list is already filtered by PlayersHandler.getDisplayedPlayers()
+        // Players list is already filtered by PlayersHandler.getFilteredPlayers()
         for (const playerOne of players) {
             const point = this.transformPoint(playerOne.hX, playerOne.hY);
 
-            // Draw red circle for each player
-            this.drawFilledCircle(context, point.x, point.y, 10, '#FF0000');
+            // Color based on player type (flagId)
+            const flagId = playerOne.flagId || 0;
+            let color = '#FF0000'; // Default: Hostile (red)
+            if (flagId === 0) {
+                color = '#00ff88'; // Passive (green)
+            } else if (flagId >= 1 && flagId <= 6) {
+                color = '#ffa500'; // Faction (orange)
+            }
+
+            // Draw colored circle for each player
+            this.drawFilledCircle(context, point.x, point.y, 10, color);
 
             // Display nickname below the circle
             const nickname = playerOne.nickname || 'Unknown';

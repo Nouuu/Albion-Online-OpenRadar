@@ -147,10 +147,10 @@ export class RadarRenderer {
             );
         }
 
-        // Interpolate players
+        // Interpolate players (filtered by type settings)
         if (this.handlers.playersHandler && this.drawings.playersDrawing) {
             this.drawings.playersDrawing.interpolate(
-                this.handlers.playersHandler.playersList,
+                this.handlers.playersHandler.getFilteredPlayers(),
                 this.lpX,
                 this.lpY,
                 t
@@ -292,7 +292,7 @@ export class RadarRenderer {
             if (this.drawings.playersDrawing && this.handlers.playersHandler) {
                 this.drawings.playersDrawing.invalidate(
                     context,
-                    this.handlers.playersHandler.playersList
+                    this.handlers.playersHandler.getFilteredPlayers()
                 );
             }
 
@@ -340,36 +340,152 @@ export class RadarRenderer {
     }
 
     /**
-     * Render UI overlay elements (player counter, stats, FPS, etc.)
+     * Render UI overlay elements (zone, counters, etc.)
      */
     renderUI() {
-        const contextUI = this.contexts.uiCanvas;
-        if (!contextUI) return;
+        const ctx = this.contexts.uiCanvas;
+        if (!ctx) return;
 
-        // Player counter (top-right corner)
-        const playerCount = this.handlers.playersHandler?.playersList?.length || 0;
+        // Clear UI canvas first
+        ctx.clearRect(0, 0, 500, 500);
 
-        // Background box
-        const padding = 12;
-        const boxX = 500 - 140; // Right side
-        const boxY = 15;
-        const boxWidth = 130;
-        const boxHeight = 28;
+        // 1. Distance rings (background, subtle)
+        this.renderDistanceRings(ctx);
 
-        contextUI.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        contextUI.fillRect(boxX, boxY, boxWidth, boxHeight);
+        // 2. Zone info (top left)
+        this.renderZoneInfo(ctx);
 
-        // Border
-        contextUI.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        contextUI.lineWidth = 1;
-        contextUI.strokeRect(boxX, boxY, boxWidth, boxHeight);
+        // 3. Stats box (top right, conditional)
+        this.renderStatsBox(ctx);
 
-        // Text
-        contextUI.font = 'bold 14px monospace';
-        contextUI.fillStyle = '#ffffff';
-        contextUI.textAlign = 'left';
-        contextUI.textBaseline = 'middle';
-        contextUI.fillText(`Players: ${playerCount} 👥`, boxX + padding, boxY + boxHeight / 2);
+        // 4. Threat border (on top, if hostile detected)
+        this.renderThreatBorder(ctx);
+    }
+
+    /**
+     * Render distance rings centered on player
+     */
+    renderDistanceRings(ctx) {
+        const centerX = 250, centerY = 250;
+        const distances = [10, 20]; // meters
+        const pixelsPerMeter = 500 / 60; // ~8.33px per meter (60m visible radius)
+
+        ctx.save();
+        ctx.setLineDash([4, 6]);
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.lineWidth = 1;
+
+        distances.forEach(dist => {
+            const radius = dist * pixelsPerMeter;
+
+            // Draw circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw label
+            ctx.setLineDash([]);
+            ctx.font = '9px monospace';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${dist}m`, centerX + radius + 4, centerY);
+            ctx.setLineDash([4, 6]);
+        });
+
+        ctx.restore();
+    }
+
+    /**
+     * Render zone info (top left)
+     */
+    renderZoneInfo(ctx) {
+        if (!this.map?.id) return;
+
+        const zoneText = `📍 ${this.map.id}${this.map.isBZ ? ' (BZ)' : ''}`;
+        ctx.font = 'bold 11px monospace';
+        const textWidth = ctx.measureText(zoneText).width;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(10, 10, textWidth + 16, 22);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(10, 10, textWidth + 16, 22);
+
+        ctx.fillStyle = '#00d4ff';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(zoneText, 18, 16);
+    }
+
+    /**
+     * Render stats box (top right, conditional based on settings)
+     */
+    renderStatsBox(ctx) {
+        // Get counts
+        const playerCount = this.handlers.playersHandler?.getFilteredPlayers?.()?.length ||
+                           this.handlers.playersHandler?.playersList?.length || 0;
+        const resourceCount = this.handlers.harvestablesHandler?.harvestableList?.length || 0;
+        const mobCount = this.handlers.mobsHandler?.mobsList?.length || 0;
+
+        // Build stats array (players conditional, resources/mobs always shown)
+        const stats = [];
+        if (settingsSync.getBool('settingShowPlayers')) {
+            stats.push({ emoji: '👥', count: playerCount, label: 'players', color: '#ffffff' });
+        }
+        // Resources and mobs always shown (no global toggle exists)
+        stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
+        stats.push({ emoji: '👾', count: mobCount, label: 'mobs', color: '#ff6b6b' });
+
+        // Calculate box dimensions
+        const boxWidth = 135;
+        const lineHeight = 14;
+        const boxHeight = 8 + stats.length * lineHeight + 8;
+        const boxX = 500 - boxWidth - 10;
+        const boxY = 10;
+
+        // Draw background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        // Draw stats text
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
+        stats.forEach((stat, index) => {
+            ctx.fillStyle = stat.color;
+            ctx.fillText(`${stat.emoji} ${stat.count} ${stat.label}`, boxX + 8, boxY + 8 + index * lineHeight);
+        });
+    }
+
+    /**
+     * Render threat border when hostile players detected
+     */
+    renderThreatBorder(ctx) {
+        // Check if setting is enabled
+        if (!settingsSync.getBool('settingFlashDangerousPlayer')) return;
+
+        // Check for hostile players (flagId === 255)
+        const hostilePlayers = this.handlers.playersHandler?.getFilteredPlayers?.()?.filter(
+            p => p.flagId === 255
+        ) || [];
+
+        if (hostilePlayers.length === 0) return;
+
+        // Pulse animation (~3Hz)
+        const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5; // 0.2 → 0.8
+
+        ctx.save();
+        ctx.shadowColor = `rgba(255, 50, 50, ${pulse})`;
+        ctx.shadowBlur = 12;
+        ctx.strokeStyle = `rgba(255, 50, 50, ${pulse * 0.8})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(2, 2, 496, 496);
+        ctx.restore();
     }
 }
 

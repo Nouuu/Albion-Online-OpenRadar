@@ -154,65 +154,61 @@ export function attachCheckboxListeners() {
 export function generateResourceGrid(config) {
 	const { prefix, name, emoji } = config;
 
-	// Generate quick select buttons (T1-T8)
+	// Determine if Static or Living based on prefix
+	const isLiving = prefix.endsWith('lp');
+	const typeLabel = isLiving ? 'Living' : 'Static';
+	const typeIcon = isLiving ? '🌿' : '⛏️';
+
+	// Generate quick select buttons (T1-T8) - more compact
 	const buttons = Array.from({ length: 8 }, (_, i) => {
 		const tierNum = i + 1;
-		return `<button onclick="selectAllTierEnchants('${prefix}', ${i})" class="text-xs px-1.5 py-0.5 bg-accent/20 text-accent rounded hover:bg-accent hover:text-void transition-colors font-medium" title="Select all T${tierNum}">✓T${tierNum}</button>`;
-	}).join('\n\t\t\t\t\t\t\t');
+		return `<button onclick="selectAllTierEnchants('${prefix}', ${i})" class="text-[10px] w-full py-0.5 bg-accent/20 text-accent rounded hover:bg-accent hover:text-void transition-colors font-medium text-center" title="Select all T${tierNum}">✓T${tierNum}</button>`;
+	}).join('');
 
-	// Generate tier headers (T1-T8)
+	// Generate tier headers (T1-T8) - compact
 	const tierHeaders = Array.from({ length: 8 }, (_, i) => {
 		const tierNum = i + 1;
-		return `<p class="text-gray-400 text-sm" style="width: 20px; height: 20px;">T${tierNum}</p>`;
-	}).join('\n\t\t\t\t\t\t\t');
+		return `<span class="text-gray-400 text-[10px] text-center block">T${tierNum}</span>`;
+	}).join('');
 
-	// Generate enchantment rows (e0-e4)
+	// Generate enchantment rows (e0-e4) - compact, centered
 	const enchantmentRows = ['e0', 'e1', 'e2', 'e3', 'e4'].map(enchantLevel => {
 		const isE0 = enchantLevel === 'e0';
-		const checkboxClass = 'w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer';
+		const checkboxClass = 'w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer';
 
 		// E0 has all 8 tiers, E1-E4 only have T4-T8 (3 empty spans first)
 		const cells = Array.from({ length: 8 }, (_, i) => {
 			if (!isE0 && i < 3) {
-				return '<span></span>';
+				return '<span class="w-4 h-4"></span>';
 			}
 			return `<input type="checkbox" class="${checkboxClass}">`;
-		}).join('\n\t\t\t\t\t\t\t');
+		}).join('');
 
-		return `<div class="grid" id="${prefix}-${enchantLevel}" style="grid-template-columns: repeat(8, 1fr); gap: 10px;">
-\t\t\t\t\t\t\t${cells}
-\t\t\t\t\t\t</div>`;
-	}).join('\n\t\t\t\t\t\t');
+		return `<div class="grid grid-cols-8 gap-1 justify-items-center" id="${prefix}-${enchantLevel}">${cells}</div>`;
+	}).join('');
 
-	return `<div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-\t\t<div class="w-full">
-\t\t\t<h4 class="text-xl mb-4 font-semibold text-white">
-\t\t\t\t${emoji} ${name}
-\t\t\t</h4>
-\t\t\t<div class="grid" style="grid-template-columns: 1fr 90%; gap: 10px;">
-\t\t\t\t<div class="grid" style="gap: 10px;">
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;"></p>
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E/T</p>
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E0</p>
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E1</p>
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E2</p>
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E3</p>
-\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E4</p>
-\t\t\t\t</div>
-\t\t\t\t<div class="grid" style="gap: 10px;">
-\t\t\t\t\t<!-- Quick Select Buttons -->
-\t\t\t\t\t<div class="grid" style="grid-template-columns: repeat(8, 1fr); gap: 10px;">
-\t\t\t\t\t\t${buttons}
-\t\t\t\t\t</div>
-\t\t\t\t\t<!-- Tier Headers -->
-\t\t\t\t\t<div class="matrix-upper-texts grid" style="grid-template-columns: repeat(8, 1fr); gap: 10px;">
-\t\t\t\t\t\t${tierHeaders}
-\t\t\t\t\t</div>
-\t\t\t\t\t${enchantmentRows}
-\t\t\t\t</div>
-\t\t\t</div>
-\t\t</div>
-\t</div>`;
+	return `<div class="bg-surface/50 border border-white/5 rounded-lg p-3">
+		<h4 class="text-sm mb-2 font-medium text-white flex items-center gap-2">
+			<span class="text-xs">${typeIcon}</span>
+			${typeLabel}
+		</h4>
+		<div class="grid" style="grid-template-columns: 24px 1fr; gap: 4px;">
+			<div class="grid gap-1 items-center">
+				<span class="text-[10px] text-gray-500 h-5"></span>
+				<span class="text-[10px] text-gray-500 h-4"></span>
+				<span class="text-[10px] text-gray-400 h-4 flex items-center">E0</span>
+				<span class="text-[10px] text-gray-400 h-4 flex items-center">E1</span>
+				<span class="text-[10px] text-gray-400 h-4 flex items-center">E2</span>
+				<span class="text-[10px] text-gray-400 h-4 flex items-center">E3</span>
+				<span class="text-[10px] text-gray-400 h-4 flex items-center">E4</span>
+			</div>
+			<div class="grid gap-1">
+				<div class="grid grid-cols-8 gap-1 justify-items-center">${buttons}</div>
+				<div class="grid grid-cols-8 gap-1 justify-items-center">${tierHeaders}</div>
+				${enchantmentRows}
+			</div>
+		</div>
+	</div>`;
 }
 
 export function getResourceStorageKey(prefix, type){

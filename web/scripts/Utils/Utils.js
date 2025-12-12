@@ -337,9 +337,23 @@ function renderPlayerCard(player) {
         ? `<span class="text-[9px] font-mono font-semibold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/25 uppercase tracking-wide">Mounted</span>`
         : '';
 
-    // Equipment section - simplified image loading (no blocking)
+    // Player type badge based on flagId
+    const flagId = player.flagId || 0;
+    let playerTypeBadge = '';
+    let playerTypeColor = 'danger'; // Default: Hostile (red)
+    if (flagId === 0) {
+        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded border border-success/25 uppercase tracking-wide">Passive</span>`;
+        playerTypeColor = 'success';
+    } else if (flagId >= 1 && flagId <= 6) {
+        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/25 uppercase tracking-wide">Faction</span>`;
+        playerTypeColor = 'warning';
+    } else {
+        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-danger bg-danger/10 px-1.5 py-0.5 rounded border border-danger/25 uppercase tracking-wide">Hostile</span>`;
+    }
+
+    // Equipment section - controlled by settingItems
     let equipHtml = '';
-    if (Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
+    if (window.settingsSync?.getBool('settingItems') && Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
         const validEquipments = player.equipments
             .map((itemId, index) => ({ itemId, index }))
             .filter(({ itemId, index }) => (index <= 4 || index === 8) && itemId && itemId > 0);
@@ -367,9 +381,9 @@ function renderPlayerCard(player) {
         }
     }
 
-    // Spells section - simplified image loading (no blocking)
+    // Spells section - controlled by settingShowSpells
     let spellsHtml = '';
-    if (Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
+    if (window.settingsSync?.getBool('settingShowSpells') && Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
         const validSpells = player.spells.filter(id => id && id > 0 && id !== 65535);
         if (validSpells.length > 0) {
             const spells = validSpells.map(spellIndex => {
@@ -390,9 +404,9 @@ function renderPlayerCard(player) {
         }
     }
 
-    // Health bar
+    // Health bar - controlled by settingShowPlayerHealthBar
     let healthHtml = '';
-    if (player.currentHealth > 0 && player.initialHealth > 0) {
+    if (window.settingsSync?.getBool('settingShowPlayerHealthBar') && player.currentHealth > 0 && player.initialHealth > 0) {
         const pct = Math.round((player.currentHealth / player.initialHealth) * 100);
         const colorClass = pct > 60 ? 'bg-gradient-to-r from-success to-green-500'
                          : pct > 30 ? 'bg-gradient-to-r from-warning to-amber-500'
@@ -403,11 +417,11 @@ function renderPlayerCard(player) {
     // ID display
     const idStr = `<div class="text-[10px] font-mono text-white/25 mt-3 pt-2 border-t border-white/5">ID: ${player.id}</div>`;
 
-    // Build the card with proper structure
-    const accentBarClass = isMounted ? 'bg-accent' : 'bg-danger';
-    const hoverBorderClass = isMounted ? 'hover:border-accent/25' : 'hover:border-danger/25';
+    // Build the card with proper structure - use player type color for accent bar
+    const accentBarClass = `bg-${playerTypeColor}`;
+    const hoverBorderClass = `hover:border-${playerTypeColor}/25`;
 
-    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-elevated to-surface border border-white/5 rounded-lg transition-all duration-200 ${hoverBorderClass} hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-white truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0"><span data-time class="text-[10px] font-mono text-white/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${factionBadge}${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-elevated to-surface border border-white/5 rounded-lg transition-all duration-200 ${hoverBorderClass} hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-white truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-white/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${factionBadge}${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
 }
 
 /**
@@ -469,7 +483,7 @@ function updatePlayersList() {
     const container = document.getElementById('playersList');
     if (!container) return;
 
-    const players = playersHandler.playersList;
+    const players = playersHandler.getFilteredPlayers();
 
     // Update count badge
     const countBadge = document.getElementById('playersCount');

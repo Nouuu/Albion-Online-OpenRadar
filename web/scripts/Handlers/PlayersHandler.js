@@ -142,13 +142,27 @@ export class PlayersHandler {
             playersCount: this.playersList.length
         });
 
-        // Play audio notification
-        this.audio.play().catch(err => {
-            window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
-                error: err.message,
-                player: nickname
+        // Screen flash alert (Tailwind inline)
+        if (settingsSync.getBool('settingFlash')) {
+            const flash = document.createElement('div');
+            flash.className = 'fixed inset-0 bg-danger/60 pointer-events-none z-[9999] transition-opacity duration-300';
+            document.body.appendChild(flash);
+            // Fade out
+            requestAnimationFrame(() => {
+                flash.style.opacity = '0';
             });
-        });
+            setTimeout(() => flash.remove(), 300);
+        }
+
+        // Sound alert (conditional)
+        if (settingsSync.getBool('settingSound')) {
+            this.audio.play().catch(err => {
+                window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
+                    error: err.message,
+                    player: nickname
+                });
+            });
+        }
 
         return 2; // Return flashTime value
     }
@@ -273,5 +287,26 @@ export class PlayersHandler {
      */
     getSize() {
         return this.playersList.length;
+    }
+
+    /**
+     * Get filtered players based on type settings
+     * @returns {Player[]} - Filtered list of players
+     */
+    getFilteredPlayers() {
+        const showPassive = settingsSync.getBool('settingPassivePlayers') ?? true;
+        const showFaction = settingsSync.getBool('settingFactionPlayers') ?? true;
+        const showDangerous = settingsSync.getBool('settingDangerousPlayers') ?? true;
+
+        return this.playersList.filter(player => {
+            const flagId = player.flagId || 0;
+
+            // Passive: flagId = 0
+            if (flagId === 0) return showPassive;
+            // Faction: flagId 1-6
+            if (flagId >= 1 && flagId <= 6) return showFaction;
+            // Hostile/Dangerous: flagId = 255 or unknown
+            return showDangerous;
+        });
     }
 }

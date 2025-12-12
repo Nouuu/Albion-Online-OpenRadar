@@ -1,71 +1,216 @@
 {{define "pages/resources"}}
-<div class="space-y-6 stagger">
-    <!-- Page Header -->
+<div class="space-y-6 stagger" x-data="resourcesPage()">
+    <!-- Page Header with Presets -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6">
-        <h1 class="text-3xl font-bold text-white">Static Resources</h1>
-        <p class="text-gray-400 mt-2">Configure which static harvestable resources to display.</p>
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Resources</h1>
+                <p class="text-gray-400 mt-2">Configure which resources to display on the radar.</p>
+            </div>
+            <!-- Preset Buttons -->
+            <div class="flex flex-wrap gap-2">
+                <button @click="applyPreset('t5plus')"
+                        class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
+                    All T5+
+                </button>
+                <button @click="applyPreset('t6plus')"
+                        class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
+                    All T6+
+                </button>
+                <button @click="applyPreset('t7plus')"
+                        class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
+                    All T7+
+                </button>
+                <button @click="applyPreset('e2plus')"
+                        class="px-3 py-1.5 text-xs bg-tier-3/20 text-tier-3 rounded-lg hover:bg-tier-3 hover:text-void transition-colors font-medium">
+                    All E2+
+                </button>
+                <button @click="applyPreset('e3plus')"
+                        class="px-3 py-1.5 text-xs bg-tier-4/20 text-tier-4 rounded-lg hover:bg-tier-4 hover:text-void transition-colors font-medium">
+                    All E3+
+                </button>
+                <button @click="applyPreset('clear')"
+                        class="px-3 py-1.5 text-xs bg-danger/20 text-danger rounded-lg hover:bg-danger hover:text-white transition-colors font-medium">
+                    Clear All
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Static Resources Grids (generated dynamically) -->
-    <div id="static-fiber-grid"></div>
-    <div id="static-hide-grid"></div>
-    <div id="static-wood-grid"></div>
-    <div id="static-ore-grid"></div>
-    <div id="static-rock-grid"></div>
-
-    <!-- Living Resources Header -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6">
-        <h2 class="text-2xl font-bold text-white">Living Resources</h2>
-        <p class="text-gray-400 mt-2">Configure which skinnable creatures and living resources to display.</p>
+    <!-- Fiber Section (Static + Living side by side) -->
+    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <button @click="sections.fiber = !sections.fiber"
+                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="flower-2" class="w-5 h-5 text-green-400"></i>
+                Fiber
+            </h2>
+            <i data-lucide="chevron-down"
+               class="w-5 h-5 text-gray-400 transition-transform duration-200"
+               :class="{ 'rotate-180': sections.fiber }"></i>
+        </button>
+        <div x-show="sections.fiber" x-collapse class="border-t border-white/5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                <div id="static-fiber-grid"></div>
+                <div id="living-fiber-grid"></div>
+            </div>
+        </div>
     </div>
 
-    <!-- Living Resources Grids (generated dynamically) -->
-    <div id="living-fiber-grid"></div>
-    <div id="living-hide-grid"></div>
-    <div id="living-wood-grid"></div>
-    <div id="living-ore-grid"></div>
-    <div id="living-rock-grid"></div>
+    <!-- Hide Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <button @click="sections.hide = !sections.hide"
+                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="rabbit" class="w-5 h-5 text-amber-400"></i>
+                Hide
+            </h2>
+            <i data-lucide="chevron-down"
+               class="w-5 h-5 text-gray-400 transition-transform duration-200"
+               :class="{ 'rotate-180': sections.hide }"></i>
+        </button>
+        <div x-show="sections.hide" x-collapse class="border-t border-white/5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                <div id="static-hide-grid"></div>
+                <div id="living-hide-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wood Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <button @click="sections.wood = !sections.wood"
+                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="tree-pine" class="w-5 h-5 text-emerald-400"></i>
+                Wood
+            </h2>
+            <i data-lucide="chevron-down"
+               class="w-5 h-5 text-gray-400 transition-transform duration-200"
+               :class="{ 'rotate-180': sections.wood }"></i>
+        </button>
+        <div x-show="sections.wood" x-collapse class="border-t border-white/5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                <div id="static-wood-grid"></div>
+                <div id="living-wood-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ore Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <button @click="sections.ore = !sections.ore"
+                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="gem" class="w-5 h-5 text-blue-400"></i>
+                Ore
+            </h2>
+            <i data-lucide="chevron-down"
+               class="w-5 h-5 text-gray-400 transition-transform duration-200"
+               :class="{ 'rotate-180': sections.ore }"></i>
+        </button>
+        <div x-show="sections.ore" x-collapse class="border-t border-white/5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                <div id="static-ore-grid"></div>
+                <div id="living-ore-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rock Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <button @click="sections.rock = !sections.rock"
+                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                <i data-lucide="mountain" class="w-5 h-5 text-gray-400"></i>
+                Rock
+            </h2>
+            <i data-lucide="chevron-down"
+               class="w-5 h-5 text-gray-400 transition-transform duration-200"
+               :class="{ 'rotate-180': sections.rock }"></i>
+        </button>
+        <div x-show="sections.rock" x-collapse class="border-t border-white/5">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                <div id="static-rock-grid"></div>
+                <div id="living-rock-grid"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Other Resources -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4">Other</h2>
+        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="fish" class="w-5 h-5 text-accent"></i>
+            Other
+        </h2>
         <label class="flex items-center gap-3 cursor-pointer group">
             <input type="checkbox" id="settingFishing"
                    class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
             <span class="text-gray-300 group-hover:text-white transition-colors">Show Fishing Pools</span>
+            <span class="relative group/tooltip">
+                <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display fishing zones on the radar.</span>
+            </span>
         </label>
     </div>
 
     <!-- Visual & Tools -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4">Visual & Tools</h2>
+        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="settings-2" class="w-5 h-5 text-accent"></i>
+            Visual & Tools
+        </h2>
         <div class="space-y-3">
             <label class="flex items-center gap-3 cursor-pointer group">
                 <input type="checkbox" id="settingResourceCount"
                        class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
                 <span class="text-gray-300 group-hover:text-white transition-colors">Show Resources Count</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display the number of resources available on each node.</span>
+                </span>
             </label>
 
             <label class="flex items-center gap-3 cursor-pointer group">
                 <input type="checkbox" id="settingResourceDistance"
                        class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
                 <span class="text-gray-300 group-hover:text-white transition-colors">Show Distance</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display distance to each resource node in meters.</span>
+                </span>
             </label>
 
             <label class="flex items-center gap-3 cursor-pointer group">
                 <input type="checkbox" id="settingResourceClusters"
                        class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
                 <span class="text-gray-300 group-hover:text-white transition-colors">Show Clusters</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Group nearby resources and display cluster indicators.</span>
+                </span>
             </label>
 
             <div class="ml-8 pl-4 border-l-2 border-white/10 space-y-3">
                 <label class="block">
-                    <span class="text-gray-400 text-xs mb-1 block">Cluster radius (meters)</span>
+                    <span class="flex items-center gap-2 text-gray-400 text-xs mb-1">
+                        Cluster radius (meters)
+                        <span class="relative group/tooltip">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
+                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Maximum distance to group resources together. Default: 30m</span>
+                        </span>
+                    </span>
                     <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
                            class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm">
                 </label>
                 <label class="block">
-                    <span class="text-gray-400 text-xs mb-1 block">Min resources per cluster</span>
+                    <span class="flex items-center gap-2 text-gray-400 text-xs mb-1">
+                        Min resources per cluster
+                        <span class="relative group/tooltip">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
+                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Minimum number of resources to form a cluster. Default: 2</span>
+                        </span>
+                    </span>
                     <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
                            class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm">
                 </label>
@@ -75,12 +220,20 @@
                 <input type="checkbox" id="settingLivingResourcesHealthBar"
                        class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
                 <span class="text-gray-300 group-hover:text-white transition-colors">Show Health Bar</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display health bar on living resources (mobs).</span>
+                </span>
             </label>
 
             <label class="flex items-center gap-3 cursor-pointer group">
                 <input type="checkbox" id="settingLivingResourcesID"
                        class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
                 <span class="text-gray-300 group-hover:text-white transition-colors">Show ID</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display internal ID for living resources (debug).</span>
+                </span>
             </label>
 
             <hr class="border-white/10 my-4">
@@ -95,6 +248,91 @@
 
 {{define "scripts/resources"}}
 <script>
+// Alpine.js component for Resources page
+function resourcesPage() {
+    // Load saved section states from localStorage
+    const savedSections = localStorage.getItem('resourcesSections');
+    const defaultSections = { fiber: true, hide: false, wood: false, ore: false, rock: false };
+
+    return {
+        sections: savedSections ? JSON.parse(savedSections) : defaultSections,
+
+        init() {
+            // Watch for section changes and persist to localStorage
+            this.$watch('sections', (val) => {
+                localStorage.setItem('resourcesSections', JSON.stringify(val));
+            });
+        },
+
+        applyPreset(preset) {
+            const settingsSync = window.settingsSync;
+            const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
+
+            // Resource configurations
+            const resourceConfigs = [
+                { prefix: 'fsp', name: 'Fiber', type: 'Static' },
+                { prefix: 'hsp', name: 'Hide', type: 'Static' },
+                { prefix: 'wsp', name: 'Wood', type: 'Static' },
+                { prefix: 'osp', name: 'Ore', type: 'Static' },
+                { prefix: 'rsp', name: 'Rock', type: 'Static' },
+                { prefix: 'flp', name: 'Fiber', type: 'Living' },
+                { prefix: 'hlp', name: 'Hide', type: 'Living' },
+                { prefix: 'wlp', name: 'Wood', type: 'Living' },
+                { prefix: 'olp', name: 'Ore', type: 'Living' },
+                { prefix: 'rlp', name: 'Rock', type: 'Living' }
+            ];
+
+            resourceConfigs.forEach(config => {
+                const storageKey = `setting${config.type}${config.name}Enchants`;
+
+                // Create enchants object with all false by default
+                let enchants = {};
+                enchantLevels.forEach(e => {
+                    enchants[e] = [false, false, false, false, false, false, false, false];
+                });
+
+                if (preset === 'clear') {
+                    // Keep all false (already set)
+                } else if (preset === 't5plus') {
+                    // Tiers 5-8 (indices 4-7) for all enchants
+                    enchantLevels.forEach(e => {
+                        for (let t = 4; t < 8; t++) enchants[e][t] = true;
+                    });
+                } else if (preset === 't6plus') {
+                    // Tiers 6-8 (indices 5-7) for all enchants
+                    enchantLevels.forEach(e => {
+                        for (let t = 5; t < 8; t++) enchants[e][t] = true;
+                    });
+                } else if (preset === 't7plus') {
+                    // Tiers 7-8 (indices 6-7) for all enchants
+                    enchantLevels.forEach(e => {
+                        for (let t = 6; t < 8; t++) enchants[e][t] = true;
+                    });
+                } else if (preset === 'e2plus') {
+                    // E2, E3, E4 for T4-T8 (indices 3-7)
+                    ['e2', 'e3', 'e4'].forEach(e => {
+                        for (let t = 3; t < 8; t++) enchants[e][t] = true;
+                    });
+                } else if (preset === 'e3plus') {
+                    // E3, E4 for T4-T8 (indices 3-7)
+                    ['e3', 'e4'].forEach(e => {
+                        for (let t = 3; t < 8; t++) enchants[e][t] = true;
+                    });
+                }
+
+                settingsSync.setJSON(storageKey, enchants);
+            });
+
+            // Refresh the page content to update checkboxes
+            if (window.htmx) {
+                htmx.ajax('GET', '/resources', {target: '#page-content', swap: 'innerHTML'});
+            } else {
+                location.reload();
+            }
+        }
+    };
+}
+
 window.onGlobalsReady(function initResourcesPage() {
     const settingsSync = window.settingsSync;
     const {
