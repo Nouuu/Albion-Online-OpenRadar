@@ -1,8 +1,10 @@
+//go:build !dev
+
 package assets
 
 import "embed"
 
-// Embedded static assets for the web server
+// Embedded static assets for the web server (production build)
 // These are compiled into the binary for single-file distribution
 
 //go:embed all:web/images

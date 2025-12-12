@@ -40,8 +40,7 @@ func New(logsDir string) *Logger {
 	l.initializeDirectories()
 	l.createSessionFile()
 
-	fmt.Printf("[Logger] Session file: %s\n", l.currentSessionFile)
-	fmt.Printf("[Logger] Logging enabled: %v\n", l.enabled)
+	PrintInfo("LOG", "Session file: %s", l.currentSessionFile)
 
 	return l
 }
@@ -51,11 +50,11 @@ func (l *Logger) SetEnabled(enabled bool) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.enabled = enabled
-	state := "DISABLED"
 	if enabled {
-		state = "ENABLED"
+		PrintSuccess("LOG", "Logging ENABLED")
+	} else {
+		PrintWarn("LOG", "Logging DISABLED")
 	}
-	fmt.Printf("[Logger] Logging %s\n", state)
 }
 
 // IsEnabled returns current logging state
@@ -74,7 +73,7 @@ func (l *Logger) initializeDirectories() {
 
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			fmt.Printf("[Logger] Failed to create directory %s: %v\n", dir, err)
+			PrintError("LOG", "Failed to create directory %s: %v", dir, err)
 		}
 	}
 }

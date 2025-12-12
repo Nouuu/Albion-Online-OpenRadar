@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -50,28 +49,26 @@ func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // handleConnection handles new WebSocket connections
 func (ws *WebSocketHandler) handleConnection(w http.ResponseWriter, r *http.Request) {
-	// Check connection limit before upgrade
-	ws.clientsMu.RLock()
-	clientCount := len(ws.clients)
-	ws.clientsMu.RUnlock()
-
-	if clientCount >= MaxWebSocketClients {
-		http.Error(w, "Too many connections", http.StatusServiceUnavailable)
-		return
-	}
-
+	// Upgrade connection first (doesn't require lock)
 	conn, err := ws.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Printf("[WS] Upgrade error: %v\n", err)
+		logger.PrintError("WS", "Upgrade error: %v", err)
 		return
 	}
 
-	// Register client
+	// Check limit AND register atomically to fix race condition
 	ws.clientsMu.Lock()
+	if len(ws.clients) >= MaxWebSocketClients {
+		ws.clientsMu.Unlock()
+		_ = conn.Close()
+		logger.PrintWarn("WS", "Connection rejected: max clients reached (%d)", MaxWebSocketClients)
+		return
+	}
 	ws.clients[conn] = true
+	clientCount := len(ws.clients)
 	ws.clientsMu.Unlock()
 
-	fmt.Println("[WS] Client connected")
+	logger.PrintInfo("WS", "Client connected (%d total)", clientCount)
 
 	// Handle incoming messages (for logs from client)
 	go ws.handleMessages(conn)
@@ -82,9 +79,10 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 	defer func() {
 		ws.clientsMu.Lock()
 		delete(ws.clients, conn)
+		clientCount := len(ws.clients)
 		ws.clientsMu.Unlock()
 		_ = conn.Close()
-		fmt.Println("[WS] Client disconnected")
+		logger.PrintInfo("WS", "Client disconnected (%d remaining)", clientCount)
 	}()
 
 	for {
@@ -95,7 +93,7 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 				websocket.CloseGoingAway,
 				websocket.CloseAbnormalClosure,
 			) {
-				fmt.Printf("[WS] Read error: %v\n", err)
+				logger.PrintError("WS", "Read error: %v", err)
 			}
 			break
 		}

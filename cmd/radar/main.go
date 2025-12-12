@@ -39,6 +39,11 @@ type App struct {
 	httpServer *server.HTTPServer
 	wsHandler  *server.WebSocketHandler
 	capturer   *capture.Capturer
+	// Packet statistics
+	packetStats struct {
+		processed uint64
+		errors    uint64
+	}
 }
 
 func main() {
@@ -54,9 +59,20 @@ func main() {
 	if err != nil {
 		exitWithError("Failed to get working directory", err)
 	}
-	fmt.Printf("App directory: %s\n", appDir)
 
-	app := newApp(appDir, cfg)
+	// Initialize capture first (may prompt for interface selection)
+	// This ensures the prompt isn't mixed with server startup messages
+	ctx, cancel := context.WithCancel(context.Background())
+	capturer, err := capture.New(ctx, appDir, cfg.ipAddr)
+	if err != nil {
+		cancel()
+		exitWithError("Failed to create capturer", err)
+	}
+
+	// Now that interface is selected, show all startup messages
+	logger.PrintInfo("APP", "Directory: %s", appDir)
+
+	app := newApp(appDir, cfg, ctx, cancel, capturer)
 	app.start()
 	app.waitForShutdown()
 }
@@ -87,8 +103,7 @@ func exitWithError(msg string, err error) {
 	os.Exit(1)
 }
 
-func newApp(appDir string, cfg Config) *App {
-	ctx, cancel := context.WithCancel(context.Background())
+func newApp(appDir string, cfg Config, ctx context.Context, cancel context.CancelFunc, capturer *capture.Capturer) *App {
 	log := logger.New("./logs")
 
 	// Create WebSocket handler first (shared between HTTP server and packet processor)
@@ -100,14 +115,9 @@ func newApp(appDir string, cfg Config) *App {
 		logger:     log,
 		wsHandler:  wsHandler,
 		httpServer: createHTTPServer(cfg.devMode, appDir, wsHandler, log),
+		capturer:   capturer,
 	}
 
-	capInstance, err := capture.New(ctx, appDir, cfg.ipAddr)
-	if err != nil {
-		cancel()
-		exitWithError("Failed to create capturer", err)
-	}
-	app.capturer = capInstance
 	app.capturer.OnPacket(app.handlePacket)
 
 	return app
@@ -120,10 +130,10 @@ func createHTTPServer(
 	log *logger.Logger,
 ) *server.HTTPServer {
 	if devMode {
-		fmt.Println("Development mode: reading files from disk")
+		logger.PrintInfo("MODE", "Development mode: reading files from disk")
 		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log)
 	}
-	fmt.Println("Production mode: using embedded assets")
+	logger.PrintInfo("MODE", "Production mode: using embedded assets")
 	return server.NewHTTPServer(
 		serverPort,
 		assets.Images,
@@ -139,10 +149,13 @@ func (app *App) start() {
 	app.startServer("HTTP", app.httpServer.Start)
 	app.startServer("Capture", app.capturer.Start)
 
-	fmt.Printf("\nServer: http://localhost:%d\n", serverPort)
-	fmt.Printf("WebSocket: ws://localhost:%d/ws\n", serverPort)
-	fmt.Println("\nListening for Albion packets on UDP port 5056...")
-	fmt.Println("   Press Ctrl+C to stop")
+	fmt.Println()
+	logger.PrintSuccess("HTTP", "Server: http://localhost:%d", serverPort)
+	logger.PrintSuccess("WS", "WebSocket: ws://localhost:%d/ws", serverPort)
+	logger.PrintInfo("PKT", "Listening for Albion packets on UDP port 5056...")
+	fmt.Println()
+	fmt.Println("Press Ctrl+C to stop")
+	fmt.Println("--------------------")
 }
 
 func (app *App) startServer(name string, startFn func() error) {
@@ -151,17 +164,26 @@ func (app *App) startServer(name string, startFn func() error) {
 		defer app.wg.Done()
 		if err := startFn(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
 			app.ctx.Err() == nil {
-			fmt.Printf("%s error: %v\n", name, err)
+			logger.PrintError(name, "Error: %v", err)
 		}
 	}()
 }
 
 func (app *App) handlePacket(payload []byte) {
 	packet, err := photon.ParsePacket(payload)
-	if err != nil || packet == nil {
+	if err != nil {
+		app.packetStats.errors++
+		// Log only every 100 errors to avoid spam
+		if app.packetStats.errors%100 == 1 {
+			logger.PrintWarn("PKT", "Parsing errors: %d (latest: %v)", app.packetStats.errors, err)
+		}
+		return
+	}
+	if packet == nil {
 		return
 	}
 
+	app.packetStats.processed++
 	for _, cmd := range packet.Commands {
 		app.processCommand(cmd)
 	}
@@ -193,7 +215,8 @@ func (app *App) waitForShutdown() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	fmt.Println("\nShutting down gracefully...")
+	fmt.Println()
+	logger.PrintInfo("APP", "Shutting down gracefully...")
 	app.shutdown()
 }
 
@@ -205,7 +228,7 @@ func (app *App) shutdown() {
 	app.capturer.Close()
 
 	if err := app.httpServer.Shutdown(ctx); err != nil {
-		fmt.Printf("Server shutdown error: %v\n", err)
+		logger.PrintError("HTTP", "Shutdown error: %v", err)
 	}
 
 	app.waitWithTimeout(ctx)
@@ -220,8 +243,8 @@ func (app *App) waitWithTimeout(ctx context.Context) {
 
 	select {
 	case <-done:
-		fmt.Println("Shutdown complete")
+		logger.PrintSuccess("APP", "Shutdown complete")
 	case <-ctx.Done():
-		fmt.Println("Shutdown timed out")
+		logger.PrintWarn("APP", "Shutdown timed out")
 	}
 }

@@ -2,13 +2,14 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./tmp/main.exe ./cmd/radar"
+  # Use -tags dev to skip embedding assets (much faster builds)
+  cmd = "go build -tags dev -o ./tmp/main.exe ./cmd/radar"
   bin = "./tmp/main.exe"
   args_bin = ["-dev"]
   delay = 500
   include_ext = ["go", "toml"]
   include_dir = ["cmd", "internal"]
-  exclude_dir = ["tmp"]
+  exclude_dir = ["tmp", "web"]
   stop_on_error = false
 
 [misc]

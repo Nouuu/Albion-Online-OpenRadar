@@ -120,11 +120,13 @@ func (s *HTTPServer) setupRoutes() {
 	})
 
 	// Static file handlers with caching
-	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration))
-	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0))
-	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0))
-	s.mux.Handle("/public/", s.fsHandler("/public/", s.public, 0))
-	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0))
+	// Images: cache 24h | ao-bin-dumps: cache 7 days (handled below)
+	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration, false))
+	// Scripts, pages: NO CACHE (for development)
+	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0, true))
+	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0, false))
+	s.mux.Handle("/public/", s.fsHandler("/public/", s.public, 0, true))
+	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0, true))
 
 	// ao-bin-dumps with gzip support
 	s.mux.Handle(
@@ -143,9 +145,12 @@ func (s *HTTPServer) serveFile(w http.ResponseWriter, _ *http.Request, fsys fs.F
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
-	// Set content type based on extension
+	// Set content type and no-cache for HTML files
 	if strings.HasSuffix(name, ".html") {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
 	}
 	_, _ = w.Write(data) // Error ignored: client disconnect is not recoverable
 }
@@ -154,16 +159,15 @@ func (s *HTTPServer) serveFile(w http.ResponseWriter, _ *http.Request, fsys fs.F
 func setCacheHeaders(
 	w http.ResponseWriter,
 	duration time.Duration,
-	mustRevalidate bool,
+	noCache bool,
 	vary string,
 ) {
-	if duration > 0 {
-		if mustRevalidate {
-			w.Header().
-				Set("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", int(duration.Seconds())))
-		} else {
-			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(duration.Seconds())))
-		}
+	if noCache {
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+	} else if duration > 0 {
+		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(duration.Seconds())))
 	}
 	if vary != "" {
 		w.Header().Set("Vary", vary)
@@ -175,16 +179,14 @@ func (s *HTTPServer) fsHandler(
 	prefix string,
 	fsys fs.FS,
 	cacheDuration time.Duration,
+	noCache bool,
 ) http.Handler {
 	handler := http.StripPrefix(prefix, http.FileServer(http.FS(fsys)))
 
-	if cacheDuration > 0 {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			setCacheHeaders(w, cacheDuration, false, "")
-			handler.ServeHTTP(w, r)
-		})
-	}
-	return handler
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		setCacheHeaders(w, cacheDuration, noCache, "")
+		handler.ServeHTTP(w, r)
+	})
 }
 
 // fsHandlerSub creates a file server handler from a subdirectory of fs.FS
@@ -193,13 +195,14 @@ func (s *HTTPServer) fsHandlerSub(
 	fsys fs.FS,
 	subdir string,
 	cacheDuration time.Duration,
+	noCache bool,
 ) http.Handler {
 	subFS, err := fs.Sub(fsys, subdir)
 	if err != nil {
 		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
 		return http.NotFoundHandler()
 	}
-	return s.fsHandler(prefix, subFS, cacheDuration)
+	return s.fsHandler(prefix, subFS, cacheDuration, noCache)
 }
 
 // gzipFSHandler serves files from fs.FS with gzip support
@@ -226,7 +229,7 @@ func (s *HTTPServer) gzipFSHandler(
 			if data, err := fs.ReadFile(subFS, gzPath); err == nil {
 				w.Header().Set("Content-Encoding", "gzip")
 				setContentType(w, urlPath)
-				setCacheHeaders(w, cacheDuration, true, "Accept-Encoding")
+				setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
 				_, _ = w.Write(data)
 				return
 			}
@@ -240,7 +243,7 @@ func (s *HTTPServer) gzipFSHandler(
 		}
 
 		setContentType(w, urlPath)
-		setCacheHeaders(w, cacheDuration, true, "Accept-Encoding")
+		setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
 
 		// Compress on the fly if large and client accepts gzip
 		if acceptsGzip && len(data) > 1024 {
@@ -305,8 +308,6 @@ func (s *HTTPServer) Start() error {
 		Addr:    addr,
 		Handler: s.mux,
 	}
-	fmt.Printf("Server started on http://localhost%s\n", addr)
-	fmt.Printf("WebSocket available at ws://localhost%s/ws\n", addr)
 	return s.server.ListenAndServe()
 }
 
