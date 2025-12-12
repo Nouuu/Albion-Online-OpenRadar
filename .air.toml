@@ -1,4 +1,3 @@
-# .air.toml - Configuration Air pour hot-reload Go
 root = "."
 tmp_dir = "tmp"
 

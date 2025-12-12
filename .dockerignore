@@ -1,0 +1,14 @@
+node_modules
+dist
+tmp
+.git
+.idea
+.vscode
+.claude
+logs
+work
+*.exe
+*.zip
+*.7z
+*.tar.gz
+*.log

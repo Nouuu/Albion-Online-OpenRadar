@@ -1,0 +1,24 @@
+# Dockerfile for Linux build
+# Usage: docker build -f Dockerfile.build -o dist .
+
+FROM golang:1.25-bookworm AS builder
+
+WORKDIR /app
+
+# Install libpcap (cached layer)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libpcap-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy and cache dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source and build
+COPY . .
+RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o /out/OpenRadar-linux ./cmd/radar
+
+# Export binary only
+FROM scratch
+COPY --from=builder /out/OpenRadar-linux /

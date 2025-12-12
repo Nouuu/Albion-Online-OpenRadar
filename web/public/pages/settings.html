@@ -1,0 +1,499 @@
+<div class="container px-6 mx-auto grid">
+  <div class="mb-4 text-lg font-semibold text-gray-600 dark:text-gray-300">
+  </div>
+  <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
+    <!-- Main Settings Card -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <!-- Resource Overlay Settings -->
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          📊 Resource Overlay Settings
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Enchantment Indicator -->
+          <!-- Resource Count Badge -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
+              📦 Resource Count Badge
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="tooltip-base tooltip-right">
+                  Shows total quantity including gathering bonuses
+                </span>
+              </span>
+            </h3>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingResourceCount" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">Show resource quantity</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-2">
+              Displays harvestable amount per resource node
+            </p>
+          </div>
+
+          <!-- Distance Indicator -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
+              📍 Distance Indicator
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="tooltip-base tooltip-right">
+                  Color-coded: Green (&lt;20m), Yellow (20-40m), Red (&gt;40m)
+                </span>
+              </span>
+            </h3>
+            <label class="flex items-center space-x-2 mb-2">
+              <input type="checkbox" id="settingResourceDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">Show distance from player</span>
+            </label>
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-2">
+              Distance in meters from your current position
+            </p>
+          </div>
+
+          <!-- Cluster Indicator -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
+              🗂️ Cluster Indicator
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="tooltip-base tooltip-right">
+                  Groups nearby resources for efficient harvesting routes
+                </span>
+              </span>
+            </h3>
+            <label class="flex items-center space-x-2 mb-3">
+              <input type="checkbox" id="settingResourceClusters" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">Show resource clusters</span>
+            </label>
+            <div class="ml-7 space-y-3">
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-gray-300 text-xs">Cluster radius (meters)</span>
+                <input
+                  id="settingClusterRadius"
+                  type="number"
+                  min="10"
+                  max="100"
+                  step="5"
+                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                  placeholder="30"
+                />
+              </label>
+              <label class="block text-sm">
+                <span class="text-gray-600 dark:text-gray-300 text-xs">Min resources per cluster</span>
+                <input
+                  id="settingClusterMinSize"
+                  type="number"
+                  min="2"
+                  max="10"
+                  step="1"
+                  class="block w-24 mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
+                  placeholder="2"
+                />
+              </label>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-2">
+              Groups resources of same type/tier within radius
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-blue-200 dark:bg-blue-200 rounded-lg">
+          <p class="text-sm text-blue-800 dark:text-blue-100">
+            💡 <strong class="text-blue-800 dark:text-blue-100">Tip:</strong> Distance and cluster indicators work best for tracking valuable resources.
+            Disable them for better performance when not needed.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Debug & Logging Card -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          🐛 Debug & Logging
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Global Logging Toggles -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
+              📊 Global Logging Toggles
+            </h3>
+            <label class="flex items-center space-x-2 mb-2">
+              <input type="checkbox" id="settingDebugEnemies" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">🐛 Debug Enemies/Mobs (verbose)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingDebugPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">👥 Debug Players (verbose)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingDebugChests" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">📦 Debug Chests (verbose)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingDebugDungeons" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">🏰 Debug Dungeons (verbose)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingDebugFishing" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">🎣 Debug Fishing (verbose)</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" id="settingDebugHarvestables" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <span class="text-gray-600 dark:text-gray-300">🌱 Debug Harvestables (verbose)</span>
+            </label>
+
+            <div class="mt-4 pt-3 border-t border-gray-300 dark:border-gray-600">
+              <h4 class="text-sm font-semibold text-gray-600 dark:text-gray-300 mb-2">Console & Server Output</h4>
+
+              <label class="flex items-center space-x-2 mb-2">
+                <input type="checkbox" id="settingLogToConsole" class="h-5 w-5 text-blue-600 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <span class="text-gray-600 dark:text-gray-300">📺 Display logs in console (F12)</span>
+              </label>
+
+              <label class="flex items-center space-x-2 mb-2">
+                <input type="checkbox" id="settingLogToServer" class="h-5 w-5 text-green-600 border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
+                <span class="text-gray-600 dark:text-gray-300">📤 Send logs to server (JSONL files)</span>
+              </label>
+
+              <label class="flex items-center space-x-2 mb-2">
+                <input type="checkbox" id="settingServerLogsEnabled" class="h-5 w-5 text-blue-600 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                <span class="text-gray-600 dark:text-gray-300">🖥️ Enable server-side logging (backend JSONL)</span>
+                <span class="relative group">
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                  <span class="tooltip-base tooltip-right">
+                    Controls backend server logs written to logs/sessions/ directory. Disable to reduce disk I/O.
+                  </span>
+                </span>
+              </label>
+
+              <div class="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+                <p class="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-2">⚠️ RAW Packet Debug (VERY VERBOSE!)</p>
+
+                <label class="flex items-center space-x-2 ml-6 mb-2">
+                  <input type="checkbox" id="settingDebugRawPacketsConsole" class="h-5 w-5 text-orange-600 border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500">
+                  <span class="text-gray-600 dark:text-gray-300 text-sm">📦 Show RAW packets in console</span>
+                </label>
+
+                <label class="flex items-center space-x-2 ml-6">
+                  <input type="checkbox" id="settingDebugRawPacketsServer" class="h-5 w-5 text-orange-600 border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500">
+                  <span class="text-gray-600 dark:text-gray-300 text-sm">📦 Send RAW packets to server (JSONL)</span>
+                </label>
+
+                <p class="text-xs text-orange-600 dark:text-orange-300 ml-6 mt-1">
+                  ⚠️ Logs EVERY packet! Use only for deep debugging.
+                </p>
+              </div>
+            </div>
+
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-3">
+              Console: Real-time colored logs in browser (F12)
+              <br>
+              Server: Persistent JSONL files in logs/sessions/
+            </p>
+          </div>
+
+          <!-- Visual Overlays Info -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
+              🎨 Visual Overlays
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              Visual debug options are available on their respective pages:
+            </p>
+            <ul class="text-sm text-gray-600 dark:text-gray-300 space-y-2">
+              <li>• <a href="/enemies" class="text-purple-600 dark:text-purple-300 hover:underline font-medium">Enemies Page</a> - Health bars, IDs, enemy list</li>
+              <li>• <a href="/resources" class="text-purple-600 dark:text-purple-300 hover:underline font-medium">Resources Page</a> - Living resource overlays, cache, stats</li>
+            </ul>
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-3">
+              These controls need to be on their pages to access the radar handlers
+            </p>
+          </div>
+
+          <!-- Export Data -->
+          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
+              📥 Export Debug Data
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              Export all settings and debug data for troubleshooting
+            </p>
+            <button
+              id="downloadLogsBtn"
+              class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors duration-200"
+            >
+              💾 Download Debug Logs (JSON)
+            </button>
+            <p class="text-xs text-gray-500 dark:text-gray-300 mt-2">
+              Includes session info, all settings, and localStorage data
+            </p>
+          </div>
+        </div>
+
+        <div class="p-3 bg-yellow-100 dark:bg-yellow-800 rounded-lg">
+          <p class="text-sm text-yellow-800 dark:text-yellow-100">
+            ⚠️ <strong class="text-yellow-800 dark:text-yellow-100">Note:</strong> Debug features may impact performance. Logs are written to browser console (F12).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <script>
+  (function initSettingsPage() {
+    // Get references to all input fields and checkboxes
+    // Use global settingsSync from index.html
+    const settingsSync = window.settingsSync;
+
+    // Resource overlay settings (using setting* prefix for consistency)
+    const settingResourceCountCheckbox = document.getElementById("settingResourceCount");
+    const settingResourceDistanceCheckbox = document.getElementById("settingResourceDistance");
+    const settingResourceClustersCheckbox = document.getElementById("settingResourceClusters");
+    const settingClusterRadiusInput = document.getElementById("settingClusterRadius");
+    const settingClusterMinSizeInput = document.getElementById("settingClusterMinSize");
+
+    // Resource overlay event listeners
+    settingResourceCountCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingResourceCount", event.target.checked);
+    });
+
+    settingResourceDistanceCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingResourceDistance", event.target.checked);
+    });
+
+    settingResourceClustersCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingResourceClusters", event.target.checked);
+    });
+
+    settingClusterRadiusInput.addEventListener("input", function (event) {
+      settingsSync.setNumber("settingClusterRadius", event.target.value);
+    });
+
+    settingClusterMinSizeInput.addEventListener("input", function (event) {
+      settingsSync.setNumber("settingClusterMinSize", event.target.value);
+    });
+
+    // Debug settings
+    const settingDebugEnemiesCheckbox = document.getElementById("settingDebugEnemies");
+    const settingDebugPlayersCheckbox = document.getElementById("settingDebugPlayers");
+    const settingDebugChestsCheckbox = document.getElementById("settingDebugChests");
+    const settingDebugDungeonsCheckbox = document.getElementById("settingDebugDungeons");
+    const settingDebugFishingCheckbox = document.getElementById("settingDebugFishing");
+    const settingDebugHarvestablesCheckbox = document.getElementById("settingDebugHarvestables");
+
+    // 🆕 Console & Server debug settings
+    const settingLogToConsoleCheckbox = document.getElementById("settingLogToConsole");
+    const settingLogToServerCheckbox = document.getElementById("settingLogToServer");
+    const settingServerLogsEnabledCheckbox = document.getElementById("settingServerLogsEnabled");
+    const settingDebugRawPacketsConsoleCheckbox = document.getElementById("settingDebugRawPacketsConsole");
+    const settingDebugRawPacketsServerCheckbox = document.getElementById("settingDebugRawPacketsServer");
+
+    // Function to download debug logs
+    function downloadDebugLogs() {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const debugData = {
+        timestamp: timestamp,
+        session: {
+          userAgent: navigator.userAgent,
+          screenResolution: `${window.screen.width}x${window.screen.height}`,
+          language: navigator.language
+        },
+        localStorage: Object.keys(localStorage).reduce((acc, key) => {
+          if (key.startsWith('setting')) {
+            acc[key] = localStorage.getItem(key);
+          }
+          return acc;
+        }, {})
+      };
+
+      const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `openradar-debug-${timestamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log('📥 Debug logs downloaded:', debugData);
+    }
+
+    settingDebugEnemiesCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugEnemies", event.target.checked);
+      if (event.target.checked) {
+        console.log("🐛 Debug Enemies ENABLED");
+      } else {
+        console.log("🐛 Debug Enemies DISABLED");
+      }
+    });
+
+    settingDebugPlayersCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugPlayers", event.target.checked);
+      if (event.target.checked) {
+        console.log("👥 Debug Players ENABLED");
+      } else {
+        console.log("👥 Debug Players DISABLED");
+      }
+    });
+
+    settingDebugChestsCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugChests", event.target.checked);
+      if (event.target.checked) {
+        console.log("📦 Debug Chests ENABLED");
+      } else {
+        console.log("📦 Debug Chests DISABLED");
+      }
+    });
+
+    settingDebugDungeonsCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugDungeons", event.target.checked);
+      if (event.target.checked) {
+        console.log("🏰 Debug Dungeons ENABLED");
+      } else {
+        console.log("🏰 Debug Dungeons DISABLED");
+      }
+    });
+
+    settingDebugFishingCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugFishing", event.target.checked);
+      if (event.target.checked) {
+        console.log("🎣 Debug Fishing ENABLED");
+      } else {
+        console.log("🎣 Debug Fishing DISABLED");
+      }
+    });
+
+    settingDebugHarvestablesCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugHarvestables", event.target.checked);
+      if (event.target.checked) {
+        console.log("🌱 Debug Harvestables ENABLED");
+      } else {
+        console.log("🌱 Debug Harvestables DISABLED");
+      }
+    });
+
+    // 📺 Log to Console
+    settingLogToConsoleCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingLogToConsole", event.target.checked);
+      if (event.target.checked) {
+        console.log("📺 Console Logging ENABLED");
+      } else {
+        console.log("📺 Console Logging DISABLED");
+      }
+    });
+
+    // 📤 Log to Server
+    settingLogToServerCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingLogToServer", event.target.checked);
+      if (event.target.checked) {
+        console.log("📤 Server Logging ENABLED (JSONL files)");
+      } else {
+        console.log("📤 Server Logging DISABLED");
+      }
+    });
+
+    // 🖥️ Server-side Logs (Backend)
+    settingServerLogsEnabledCheckbox.addEventListener("change", async function (event) {
+      const enabled = event.target.checked;
+      settingsSync.setBool("settingServerLogsEnabled", enabled);
+
+      try {
+        const response = await fetch('/api/settings/server-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log(`🖥️ Server-side Logging ${enabled ? 'ENABLED' : 'DISABLED'}`);
+        } else {
+          console.error('❌ Failed to update server logs setting');
+        }
+      } catch (error) {
+        console.error('❌ Error updating server logs setting:', error);
+      }
+    });
+
+    // 📦 Debug RAW Packets Console
+    settingDebugRawPacketsConsoleCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugRawPacketsConsole", event.target.checked);
+      if (event.target.checked) {
+        console.log("📦 RAW Packets Console ENABLED - ⚠️ VERY VERBOSE!");
+      } else {
+        console.log("📦 RAW Packets Console DISABLED");
+      }
+    });
+    // 📦 Debug RAW Packets Server
+    settingDebugRawPacketsServerCheckbox.addEventListener("change", function (event) {
+      settingsSync.setBool("settingDebugRawPacketsServer", event.target.checked);
+      if (event.target.checked) {
+        console.log("📦 RAW Packets Server ENABLED - ⚠️ VERY VERBOSE!");
+      } else {
+        console.log("📦 RAW Packets Server DISABLED");
+      }
+    });
+
+
+
+    const downloadBtn = document.getElementById('downloadLogsBtn');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function() {
+        downloadDebugLogs();
+      });
+    }
+
+    settingDebugPlayersCheckbox.checked = settingsSync.getBool("settingDebugPlayers");
+    settingDebugChestsCheckbox.checked = settingsSync.getBool("settingDebugChests");
+    settingDebugDungeonsCheckbox.checked = settingsSync.getBool("settingDebugDungeons");
+    // Initialize all input fields and checkboxes with values from local storage (if available)
+
+    // Initialize console & server settings (defaults)
+    settingLogToConsoleCheckbox.checked = settingsSync.getBool("settingLogToConsole");
+    settingLogToServerCheckbox.checked = settingsSync.getBool("settingLogToServer");
+
+    settingServerLogsEnabledCheckbox.checked = settingsSync.getBool("settingServerLogsEnabled");
+
+    settingDebugRawPacketsConsoleCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsConsole");
+
+    // Initialize resource overlay settings (defaults to enabled for better UX)
+    settingResourceCountCheckbox.checked = settingsSync.getBool("settingResourceCount");
+    settingResourceDistanceCheckbox.checked = settingsSync.getBool("settingResourceDistance");
+    settingResourceClustersCheckbox.checked = settingsSync.getBool("settingResourceClusters");
+    settingClusterRadiusInput.value = settingsSync.getNumber("settingClusterRadius", 30);
+    settingClusterMinSizeInput.value = settingsSync.getNumber("settingClusterMinSize", 2);
+
+    // Initialize debug settings
+    settingDebugEnemiesCheckbox.checked = settingsSync.getBool("settingDebugEnemies");
+    settingDebugPlayersCheckbox.checked = settingsSync.getBool("settingDebugPlayers");
+    settingDebugChestsCheckbox.checked = settingsSync.getBool("settingDebugChests");
+    settingDebugDungeonsCheckbox.checked = settingsSync.getBool("settingDebugDungeons");
+    settingDebugFishingCheckbox.checked = settingsSync.getBool("settingDebugFishing");
+    settingDebugHarvestablesCheckbox.checked = settingsSync.getBool("settingDebugHarvestables");
+
+    // Initialize console & server settings (defaults)
+    settingLogToConsoleCheckbox.checked = settingsSync.getBool("settingLogToConsole");
+    settingLogToServerCheckbox.checked = settingsSync.getBool("settingLogToServer");
+    settingDebugRawPacketsConsoleCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsConsole");
+    settingDebugRawPacketsServerCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsServer");
+  })();
+  </script>

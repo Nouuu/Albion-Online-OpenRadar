@@ -81,11 +81,20 @@ func FindDeviceByIP(ip string) (string, error) {
 	return "", fmt.Errorf("no device found with IP: %s", ip)
 }
 
-// GetAdapterIP reads IP from ip.txt or prompts user to select
-func GetAdapterIP(appDir string) (string, error) {
+// GetAdapterIP reads IP from: 1) ipOverride param, 2) ip.txt file, 3) prompts user
+func GetAdapterIP(appDir string, ipOverride string) (string, error) {
 	ipFilePath := filepath.Join(appDir, "ip.txt")
 
-	// Try to read from ip.txt
+	// 1. Use override if provided (e.g., from -ip flag)
+	if ipOverride != "" {
+		if net.ParseIP(ipOverride) != nil {
+			fmt.Printf("⚡ Using IP from command line: %s\n", ipOverride)
+			return ipOverride, nil
+		}
+		return "", fmt.Errorf("invalid IP address provided: %s", ipOverride)
+	}
+
+	// 2. Try to read from ip.txt
 	if data, err := os.ReadFile(ipFilePath); err == nil {
 		ip := strings.TrimSpace(string(data))
 		if net.ParseIP(ip) != nil {
@@ -93,7 +102,7 @@ func GetAdapterIP(appDir string) (string, error) {
 		}
 	}
 
-	// List interfaces and prompt user
+	// 3. List interfaces and prompt user
 	interfaces, err := ListInterfaces()
 	if err != nil {
 		return "", err
@@ -134,17 +143,21 @@ func GetAdapterIP(appDir string) (string, error) {
 }
 
 // New creates a new Capturer for the given IP address
-func New(appDir string) (*Capturer, error) {
-	ip, err := GetAdapterIP(appDir)
+// ipOverride can be empty to use ip.txt or interactive prompt
+func New(appDir string, ipOverride string) (*Capturer, error) {
+	ip, err := GetAdapterIP(appDir, ipOverride)
 	if err != nil {
 		return nil, err
 	}
 
 	device, err := FindDeviceByIP(ip)
 	if err != nil {
-		// IP not found, prompt again
+		// IP not found, prompt again (only if no override was provided)
+		if ipOverride != "" {
+			return nil, fmt.Errorf("adapter with IP %s not found", ip)
+		}
 		fmt.Printf("Adapter with IP %s not found. Please select a new adapter.\n", ip)
-		ip, err = GetAdapterIP(appDir)
+		ip, err = GetAdapterIP(appDir, "")
 		if err != nil {
 			return nil, err
 		}

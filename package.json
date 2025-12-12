@@ -5,21 +5,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "update-data": "tsx scripts-shell/update-ao-data.ts --replace-existing",
-    "download-icons": "tsx scripts-shell/download-and-optimize-item-icons.ts",
-    "download-spells": "tsx scripts-shell/download-and-optimize-spell-icons.ts",
-    "download-map": "tsx scripts-shell/download-and-optimize-map.ts",
+    "update-data": "tsx tools/update-ao-data.ts --replace-existing",
+    "download-icons": "tsx tools/download-and-optimize-item-icons.ts",
+    "download-spells": "tsx tools/download-and-optimize-spell-icons.ts",
+    "download-map": "tsx tools/download-and-optimize-map.ts",
     "download-assets": "npm run download-icons && npm run download-spells && npm run download-map",
     "update-assets": "npm run update-data && npm run download-assets",
-    "compress:data": "node scripts-shell/compress-game-data.js",
-    "postbuild": "node scripts-shell/post-build.js",
-    "lint": "eslint scripts/ public/",
-    "lint:fix": "eslint scripts/ public/ --fix"
+    "compress:data": "node tools/compress-game-data.js",
+    "postbuild": "node tools/post-build.js",
+    "lint": "eslint web/scripts/ web/public/",
+    "lint:fix": "eslint web/scripts/ web/public/ --fix"
   },
   "author": "Nospy",
   "license": "ISC",
   "engines": {
-    "node": ">=24.11.1"
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

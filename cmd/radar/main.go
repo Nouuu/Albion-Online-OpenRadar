@@ -14,6 +14,12 @@ import (
 	"github.com/nospy/albion-openradar/internal/server"
 )
 
+// Version info (injected at build time via ldflags)
+var (
+	Version   = "2.0.0"
+	BuildTime = "unknown"
+)
+
 const (
 	httpPort = 5001
 	wsPort   = 5002
@@ -22,9 +28,16 @@ const (
 func main() {
 	// Parse flags
 	devMode := flag.Bool("dev", false, "Run in development mode (read files from disk)")
+	showVersion := flag.Bool("version", false, "Show version information")
+	ipAddr := flag.String("ip", "", "Network adapter IP address (skip interactive prompt)")
 	flag.Parse()
 
-	fmt.Println("🎯 OpenRadar Go v2.0")
+	if *showVersion {
+		fmt.Printf("OpenRadar v%s (built: %s)\n", Version, BuildTime)
+		os.Exit(0)
+	}
+
+	fmt.Printf("🎯 OpenRadar v%s\n", Version)
 	fmt.Println("====================")
 
 	// Get working directory
@@ -62,7 +75,7 @@ func main() {
 	}()
 
 	// Create capturer
-	cap, err := capture.New(appDir)
+	cap, err := capture.New(appDir, *ipAddr)
 	if err != nil {
 		fmt.Printf("❌ Failed to create capturer: %v\n", err)
 		os.Exit(1)

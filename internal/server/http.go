@@ -28,11 +28,11 @@ type HTTPServer struct {
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
 func NewHTTPServer(port int, images, scripts, public, sounds embed.FS, log *logger.Logger) *HTTPServer {
-	// Extract subdirectories from embed.FS (they include the folder name)
-	imagesFS, _ := fs.Sub(images, "images")
-	scriptsFS, _ := fs.Sub(scripts, "scripts")
-	publicFS, _ := fs.Sub(public, "public")
-	soundsFS, _ := fs.Sub(sounds, "sounds")
+	// Extract subdirectories from embed.FS (they include the folder path)
+	imagesFS, _ := fs.Sub(images, "web/images")
+	scriptsFS, _ := fs.Sub(scripts, "web/scripts")
+	publicFS, _ := fs.Sub(public, "web/public")
+	soundsFS, _ := fs.Sub(sounds, "web/sounds")
 
 	s := &HTTPServer{
 		port:    port,
@@ -53,10 +53,10 @@ func NewHTTPServerDev(port int, appDir string, log *logger.Logger) *HTTPServer {
 		port:    port,
 		mux:     http.NewServeMux(),
 		logger:  log,
-		images:  os.DirFS(appDir + "/images"),
-		scripts: os.DirFS(appDir + "/scripts"),
-		public:  os.DirFS(appDir + "/public"),
-		sounds:  os.DirFS(appDir + "/sounds"),
+		images:  os.DirFS(appDir + "/web/images"),
+		scripts: os.DirFS(appDir + "/web/scripts"),
+		public:  os.DirFS(appDir + "/web/public"),
+		sounds:  os.DirFS(appDir + "/web/sounds"),
 	}
 	s.setupRoutes()
 	return s

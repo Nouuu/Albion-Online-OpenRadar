@@ -12,9 +12,10 @@
 
 **OpenRadar** is a real-time radar tool for **Albion Online** that provides situational awareness without game injection. Track players, resources, enemies, and events with a clean, customizable web interface.
 
-- **No Injection** – Lower risk of detection/banning
-- **Real-time Map** – Live tracking with background map overlay
-- **Overlay Mode** – Popup window for seamless gameplay (use [DeskPins](https://efotinis.neocities.org/deskpins/) to keep it on top)
+- **No Injection** - Lower risk of detection/banning
+- **Real-time Map** - Live tracking with background map overlay
+- **Overlay Mode** - Popup window for seamless gameplay (use [DeskPins](https://efotinis.neocities.org/deskpins/) to keep it on top)
+- **Single-file Distribution** - All assets embedded in one executable (v2.0+)
 
 ---
 
@@ -35,7 +36,7 @@
 
 ### Enemy & Creature Tracking
 - **Color-coded threat classification**:
-  - 🟢 Normal | 🟣 Enchanted | 🟠 Mini-Boss | 🔴 Boss
+  - Normal | Enchanted | Mini-Boss | Boss
 - 4,528 mobs catalogued with metadata
 - Real-time health tracking (spawn, regen, damage)
 - Filter by category: Normal, Enchanted, Mini-Boss, Boss
@@ -71,28 +72,14 @@ Get the latest release from:
 
 1. Extract the ZIP file
 2. Run `OpenRadar.exe`
-3. Select your network adapter:
+3. Select your network adapter (NOT 127.0.0.1)
+4. Open your browser: **http://localhost:5001**
 
+### 4. Check Version
+
+```bash
+OpenRadar.exe -version
 ```
-Please select one of the adapter that you use to connect to the internet:
-  1. Ethernet adapter
-  2. Wi-Fi adapter
-  3. VPN adapter
-
-input the number here:
-```
-
-4. Choose the correct adapter (NOT 127.0.0.1)
-5. Authenticate with Discord (one-time setup)
-6. Click **"Launch Radar"**
-7. Open your browser: **http://localhost:5001**
-
-### 4. Configure Settings
-
-Navigate to the **Settings** page to:
-- Enable debug logging categories
-- Customize visual overlays
-- Configure tier and enchantment filters
 
 ---
 
@@ -100,19 +87,24 @@ Navigate to the **Settings** page to:
 
 ### Prerequisites
 
-| Tool               | Version  | Download                                                                                     |
-|--------------------|----------|----------------------------------------------------------------------------------------------|
-| **Node.js**        | v24.11.1 | [Download](https://nodejs.org/dist/v24.11.1/node-v24.11.1-x64.msi)                           |
-| **Npcap**          | 1.84+    | [Download](https://npcap.com/)                                                               |
-| **VS Build Tools** | 2022     | [Download](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) |
+| Tool       | Version | Notes                          |
+|------------|---------|--------------------------------|
+| **Go**     | 1.24+   | [Download](https://go.dev/dl/) |
+| **Npcap**  | 1.84+   | Windows only                   |
+| **Node.js**| 20+     | For data scripts only          |
+| **Docker** | Latest  | For Linux builds               |
 
 ### Quick Setup
 
 ```bash
-git clone https://github.com/Nouuu/Albion-Online-ZQRadar.git
-cd Albion-Online-ZQRadar
-npm install
-npm run dev
+git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
+cd Albion-Online-OpenRadar
+
+# Install Air for hot-reload (one time)
+make install-tools
+
+# Start development server
+make dev
 ```
 
 Web interface available at **http://localhost:5001**.
@@ -120,14 +112,41 @@ Web interface available at **http://localhost:5001**.
 ### Build
 
 ```bash
-npm run build:win          # Build Windows executable
-npm run build:all          # Build all platforms (Windows, Linux, macOS)
-npm run postbuild          # Copy assets + create release archives
+make build-win        # Build Windows executable
+make build-linux      # Build Linux via Docker
+make build-all        # Build all platforms
+make all-in-one       # Complete release workflow
 ```
 
-**Troubleshooting:**
-- `Cannot find module 'cap'` → Run `npm rebuild cap`
-- The .exe doesn't start → Install Npcap 1.84+, run as administrator
+### Project Structure
+
+```
+OpenRadar/
+├── cmd/radar/        # Go entry point
+├── internal/         # Go packages
+│   ├── capture/      # Packet capture
+│   ├── photon/       # Protocol parsing
+│   ├── server/       # HTTP & WebSocket
+│   └── logger/       # Structured logging
+├── web/              # Frontend assets
+│   ├── images/
+│   ├── public/       # HTML, game data
+│   ├── scripts/      # JavaScript
+│   └── sounds/
+├── tools/            # Build & data scripts
+├── docs/             # Documentation
+├── embed.go          # Asset embedding
+└── Makefile          # Build system
+```
+
+### Useful Commands
+
+```bash
+make help             # Show all commands
+make check            # Verify Go installation
+make update-ao-data   # Update Albion game data
+make clean            # Clean build artifacts
+```
 
 ---
 
@@ -139,17 +158,9 @@ Full documentation available in [docs/README.md](docs/README.md).
 
 | Guide | Description |
 |-------|-------------|
+| [RELEASE_NOTES.md](RELEASE_NOTES.md) | Version 2.0 changes |
 | [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development guide |
-| [LOGGING.md](docs/technical/LOGGING.md) | Logging system v2.2 |
-
-### Active Plans
-
-| Plan | Status |
-|------|--------|
-| [Go Migration](docs/project/GO_MIGRATION_PLAN.md) | Backend rewrite in Go |
-| [Radar Unification](docs/project/RADAR_UNIFICATION_PLAN.md) | ✅ 100% complete |
-| [Settings Migration](docs/project/SETTINGS_MIGRATION_PLAN.md) | ✅ 95% complete |
-| [Resource Detection](docs/project/RESOURCE_DETECTION_REFACTOR.md) | ✅ 100% complete |
+| [LOGGING.md](docs/technical/LOGGING.md) | Logging system |
 
 ---
 
@@ -172,8 +183,6 @@ Full documentation available in [docs/README.md](docs/README.md).
 **Original Project**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
 
 **Based on**: [QRadar](https://github.com/FashionFlora/Albion-Online-Radar-QRadar) by [@FashionFlora](https://github.com/FashionFlora)
-
-**Uses**: [photon-packet-parser](https://github.com/0xN0x/photon-packet-parser)
 
 ---
 

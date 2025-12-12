@@ -5,14 +5,14 @@ import "embed"
 // Embedded static assets for the web server
 // These are compiled into the binary for single-file distribution
 
-//go:embed all:images
+//go:embed all:web/images
 var Images embed.FS
 
-//go:embed all:scripts
+//go:embed all:web/scripts
 var Scripts embed.FS
 
-//go:embed all:public
+//go:embed all:web/public
 var Public embed.FS
 
-//go:embed all:sounds
+//go:embed all:web/sounds
 var Sounds embed.FS

@@ -92,6 +92,12 @@ server-scripts/ip.txt
 .idea/
 .vscode/
 
+# Build artifacts
+tmp/
+ip.txt
+nul
+VERSION
+
 # Packages et helpers
 ZIP PACKAGE/
 HELPER PACKAGE/
