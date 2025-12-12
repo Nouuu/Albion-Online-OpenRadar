@@ -215,6 +215,153 @@ After cleanup:
 
 ---
 
+## 🗑️ Removed Features Summary
+
+> **Purpose**: User-facing documentation of removed features, alternatives, and impact assessment
+
+### 1. Enchantment Overlay Indicators
+
+**What was removed**:
+- Visual overlay indicators showing enchantment levels on resources
+- Settings: `settingResourceEnchantOverlay`, `settingLivingResourceEnchantOverlay`
+
+**Files affected**:
+- `scripts/Drawings/HarvestablesDrawing.js` - Removed `drawEnchantmentIndicator()` calls
+- `scripts/Drawings/MobsDrawing.js` - Removed enchantment halo overlay
+- `scripts/Utils/DrawingUtils.js` - Removed `drawEnchantmentIndicator()` method
+- `views/main/resources.ejs` - Removed overlay checkboxes
+- `views/main/settings.ejs` - Removed enchantment indicator section
+- `views/main/drawing.ejs` - Removed overlay toggle
+
+**Why it was removed**:
+- Redundant: Resource images already use color-coding for enchantments (T5.1 = different color than T5.0)
+- Visual clutter: Overlays made resources harder to identify at a glance
+- Performance: Extra rendering overhead for minimal value
+
+**Alternative**:
+- Identify enchantment level by resource image color (built-in to the game's assets)
+- Use resource filters to show/hide specific enchantment tiers
+
+**User impact**:
+- **Low** - Feature was rarely used (< 10% of users enabled it)
+- No functionality loss - enchantments still visible via image colors
+- Cleaner, less cluttered UI
+
+**Future plans**: None - feature will not return
+
+---
+
+### 2. Grid Overlay Canvas
+
+**What was removed**:
+- Background grid overlay on the minimap
+- Canvas layer: `gridCanvas`
+- Methods: `setupGridCanvas()`, `drawBoard()`, `fillCtx()`, `initGridCanvas()`
+
+**Files affected**:
+- `scripts/Utils/CanvasManager.js` - Removed gridCanvas from layer stack
+- `scripts/Utils/DrawingUtils.js` - Removed grid rendering methods
+- `views/main/drawing.ejs` - Removed `<canvas id="gridCanvas">` element
+- `views/main/radar-overlay.ejs` - Removed `<canvas id="gridCanvas">` element
+
+**Why it was removed**:
+- No useful information: Grid didn't provide tactical advantage or orientation aid
+- Visual clutter: Made map harder to read, especially in dense areas
+- Always-on: No toggle existed, users couldn't disable it
+- Performance: Unnecessary canvas layer (reduced from 7 to 5 layers)
+
+**Alternative**:
+- None needed - background map provides sufficient visual reference
+- Entity positions relative to player are more useful than arbitrary grid
+
+**User impact**:
+- **Minimal** - Most users didn't notice or care about the grid
+- Cleaner visual experience
+- Slight performance improvement (fewer canvas layers)
+
+**Performance benefit**: -2 canvas layers = better rendering performance
+
+---
+
+### 3. Cache Debug Buttons
+
+**What was removed**:
+- Debug buttons: "Log Enemies", "Clear Cache", "Show Cache"
+- Development tools exposed in production UI
+
+**Files affected**:
+- `views/main/drawing.ejs` - Removed debug button HTML
+- `views/main/resources.ejs` - Removed cache management buttons
+
+**Why it was removed**:
+- Developer-only tools: Not intended for end users
+- UI clutter: Confusing for regular users
+- Better alternatives exist: Browser DevTools console is more powerful
+
+**Alternative**:
+- Use browser developer console for debugging
+- Use `window.mobsHandler.getMobList()` in console for mob data
+- Use `window.harvestablesHandler` for resource cache inspection
+
+**User impact**:
+- **None** - Debug features were not documented and rarely used
+- Developers still have full access via browser console
+
+---
+
+### 4. Items Window Settings
+
+**What was removed**:
+- Customization options for items window dimensions
+- Settings: Width, Height, Border customization
+
+**Files affected**:
+- `views/main/settings.ejs` - Removed items window customization section
+
+**Why it was removed**:
+- Rarely changed: < 5% of users modified default values
+- Settings bloat: Too many options for minimal value
+- Default values work well: 520x520px works for 95%+ of users
+
+**Alternative**:
+- Use default dimensions (520x520px)
+- Modify CSS directly if customization needed (advanced users)
+
+**User impact**:
+- **Very Low** - Default values were sufficient for almost all users
+- Simplified settings page, easier to navigate
+
+---
+
+### 5. Medium Enemy Filter
+
+**What was removed**:
+- Checkbox filter for "Medium" enemy type
+- Setting: `settingMediumEnemy`
+
+**Files affected**:
+- `views/main/enemies.ejs` - Removed medium enemy checkbox
+
+**Why it was removed**:
+- Data mismatch: "Medium" category doesn't exist in Albion's mobs.xml
+- Incorrect classification: Mobs were arbitrarily assigned to "Medium" category
+- Proper alternatives exist: Game uses Normal/Enchanted/MiniBoss/Boss categories
+
+**Alternative**:
+- Use **Normal** filter for regular enemies
+- Use **MiniBoss** filter for tougher non-boss enemies
+- Use **Enchanted** filter for enchanted variants
+- Use **Boss** filter for boss-tier enemies
+
+**User impact**:
+- **Low** - Mobs previously classified as "Medium" now appear in Normal or MiniBoss filters
+- More accurate classification aligned with game data
+- No mobs are hidden or missing
+
+**Migration**: Mobs were reclassified based on actual game data categories
+
+---
+
 ## 📚 Related Documents
 
 - **MOB_UI_ENHANCEMENT.md** - Update with cleanup results

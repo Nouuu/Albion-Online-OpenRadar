@@ -38,83 +38,181 @@ console.log('🔧 [Utils.js] Module loaded');
 
 console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');
 
-// 📊 Initialize Items Database
-const itemsDatabase = new ItemsDatabase();
-(async () => {
-    await itemsDatabase.load('/ao-bin-dumps/items.json');
-    window.itemsDatabase = itemsDatabase; // Expose globally for handlers
-    console.log('📊 [Utils.js] Items database loaded and ready');
-})();
+// 📊 Global database state tracking
+window.databasesReady = false;
+window.databaseLoadingProgress = {
+    items: false,
+    spells: false,
+    harvestables: false,
+    mobs: false,
+    localization: false
+};
 
-// 📊 Initialize Spells Database
-const spellsDatabase = new SpellsDatabase();
-(async () => {
-    await spellsDatabase.load('/ao-bin-dumps/spells.json');
-    window.spellsDatabase = spellsDatabase; // Expose globally for handlers
-    console.log('✨ [Utils.js] Spells database loaded and ready');
-})();
+// 🔄 Retry logic with exponential backoff
+async function loadDatabaseWithRetry(database, path, name, ...extraArgs) {
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
 
-// 📊 Initialize Harvestables Database
-const harvestablesDatabase = new HarvestablesDatabase();
-(async () => {
-    try {
-        await harvestablesDatabase.load('/ao-bin-dumps/harvestables.json');
-        window.harvestablesDatabase = harvestablesDatabase; // Expose globally for handlers
-        console.log('🌾 [Utils.js] Harvestables database loaded and ready');
-    } catch (error) {
-        window.logger?.error(
-            window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
-            'HarvestablesDatabaseInitFailed',
-            {
-                error: error.message,
-                fallback: 'Using event-driven detection only'
+    while (retryCount < MAX_RETRIES) {
+        try {
+            await database.load(path, ...extraArgs);
+            console.log(`✅ [Utils.js] ${name} database loaded successfully`);
+            return { success: true, database };
+        } catch (error) {
+            retryCount++;
+            const isLastAttempt = retryCount >= MAX_RETRIES;
+
+            console.error(`❌ [Utils.js] Failed to load ${name} database (attempt ${retryCount}/${MAX_RETRIES})`, error);
+
+            window.logger?.error(
+                window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+                `${name}DatabaseLoadFailed`,
+                {
+                    error: error.message,
+                    attempt: retryCount,
+                    maxRetries: MAX_RETRIES,
+                    isLastAttempt
+                }
+            );
+
+            if (isLastAttempt) {
+                return { success: false, error, name };
             }
-        );
-        console.error('❌ [Utils.js] Failed to load Harvestables database:', error);
-    }
-})();
 
-// 📊 Initialize Mobs Database (Phase 5)
-const mobsDatabase = new MobsDatabase();
-(async () => {
-    try {
-        await mobsDatabase.load('/ao-bin-dumps/mobs.json');
-        window.mobsDatabase = mobsDatabase; // Expose globally for handlers
-        console.log('🐾 [Utils.js] Mobs database loaded and ready');
-    } catch (error) {
-        window.logger?.error(
-            window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
-            'MobsDatabaseInitFailed',
-            {
-                error: error.message,
-                fallback: 'Living resources detection disabled'
-            }
-        );
-        console.error('❌ [Utils.js] Failed to load Mobs database:', error);
+            // Exponential backoff: 1s, 2s, 4s
+            const delay = 1000 * Math.pow(2, retryCount - 1);
+            console.log(`⏳ [Utils.js] Retrying ${name} database in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
-})();
+}
 
-// 🌐 Initialize Localization Database
-const localizationDatabase = new LocalizationDatabase();
-(async () => {
-    try {
-        await localizationDatabase.load('/ao-bin-dumps/localization.json', 'EN-US');
-        window.localizationDatabase = localizationDatabase; // Expose globally for display
-        console.log('🌐 [Utils.js] Localization database loaded and ready');
-    } catch (error) {
-        window.logger?.error(
-            window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
-            'LocalizationDatabaseInitFailed',
-            {
-                error: error.message,
-                fallback: 'Localized names disabled'
-            }
-        );
-        console.error('❌ [Utils.js] Failed to load Localization database:', error);
+// ⚠️ Error notification UI
+function showDatabaseError(databaseName, error) {
+    const notification = document.createElement('div');
+    notification.className = 'error-notification';
+    notification.innerHTML = `
+        <div class="error-content">
+            <h3>⚠️ Database Loading Failed</h3>
+            <p>Unable to load <strong>${databaseName}</strong> database.</p>
+            <p class="error-details">${error.message}</p>
+            <div class="error-actions">
+                <button onclick="location.reload()">Reload Page</button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()">
+                    Continue Anyway
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+}
+
+// 🚀 Coordinated database initialization
+async function initializeDatabases() {
+    console.log('🔧 [Utils.js] Starting coordinated database initialization...');
+
+    const itemsDatabase = new ItemsDatabase();
+    const spellsDatabase = new SpellsDatabase();
+    const harvestablesDatabase = new HarvestablesDatabase();
+    const mobsDatabase = new MobsDatabase();
+    const localizationDatabase = new LocalizationDatabase();
+
+    const promises = [
+        loadDatabaseWithRetry(itemsDatabase, '/ao-bin-dumps/items.json', 'Items')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.items = true;
+                    window.itemsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(spellsDatabase, '/ao-bin-dumps/spells.json', 'Spells')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.spells = true;
+                    window.spellsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(harvestablesDatabase, '/ao-bin-dumps/harvestables.json', 'Harvestables')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.harvestables = true;
+                    window.harvestablesDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(mobsDatabase, '/ao-bin-dumps/mobs.json', 'Mobs')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.mobs = true;
+                    window.mobsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(localizationDatabase, '/ao-bin-dumps/localization.json', 'Localization', 'EN-US')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.localization = true;
+                    window.localizationDatabase = result.database;
+                }
+                return result;
+            })
+    ];
+
+    const results = await Promise.all(promises);
+
+    // Check for failures
+    const failures = results.filter(r => !r.success);
+    if (failures.length > 0) {
+        console.error(`❌ [Utils.js] ${failures.length} database(s) failed to load:`, failures);
+
+        // Show error notification for each failed database
+        failures.forEach(failure => {
+            showDatabaseError(failure.name, failure.error);
+        });
     }
-})();
 
-console.log('🔧 [Utils.js] Items, Spells, Harvestables, Mobs & Localization databases initialization started (async)');
+    // Mark as ready even if some databases failed (graceful degradation)
+    window.databasesReady = true;
+
+    const successCount = results.filter(r => r.success).length;
+    console.log(`✅ [Utils.js] Database initialization complete: ${successCount}/${results.length} loaded successfully`);
+
+    window.logger?.info(
+        window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+        'DatabasesInitComplete',
+        {
+            totalDatabases: results.length,
+            successCount,
+            failureCount: failures.length,
+            progress: window.databaseLoadingProgress
+        }
+    );
+
+    // Dispatch custom event for components that need to wait for databases
+    window.dispatchEvent(new CustomEvent('databasesReady', {
+        detail: {
+            successCount,
+            failures: failures.map(f => f.name)
+        }
+    }));
+}
+
+// 🚀 Start database initialization
+initializeDatabases().catch(error => {
+    console.error('❌ [Utils.js] Critical error during database initialization:', error);
+    window.logger?.error(
+        window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+        'DatabaseInitCriticalError',
+        { error: error.message }
+    );
+    showDatabaseError('System', error);
+});
 
 const harvestablesDrawing = new HarvestablesDrawing();
 const dungeonsHandler = new DungeonsHandler();
@@ -669,12 +767,15 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.HarvestStart:
-            if (Parameters[3]) {
-                // Removed handling
-            }
+            // HarvestStart events are now handled by HarvestablesHandler.js
+            // using database validation instead of event-driven detection.
+            // See docs/project/RESOURCE_DETECTION_REFACTOR.md for details.
             break;
 
         case EventCodes.HarvestCancel:
+            // HarvestCancel events are now handled by HarvestablesHandler.js
+            // using database validation instead of event-driven detection.
+            // See docs/project/RESOURCE_DETECTION_REFACTOR.md for details.
             break;
 
         case EventCodes.HarvestFinished:
@@ -695,6 +796,9 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.NewSimpleItem:
+            // NewSimpleItem events are now handled by HarvestablesHandler.js
+            // using database validation instead of event-driven detection.
+            // See docs/project/RESOURCE_DETECTION_REFACTOR.md for details.
             break;
 
         case EventCodes.NewEquipmentItem:

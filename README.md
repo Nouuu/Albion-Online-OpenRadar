@@ -116,8 +116,9 @@ Web interface available at **http://localhost:5001**.
 ### Build
 
 ```bash
-npm run build:win    # Build Windows executable
-npm run release      # Build + package
+npm run build:win          # Build Windows executable
+npm run build:all          # Build all platforms (Windows, Linux, macOS)
+npm run postbuild          # Copy assets + create release archives
 ```
 
 **Troubleshooting:**
