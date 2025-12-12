@@ -21,7 +21,10 @@ export class MapDrawing extends DrawingUtils
         if (curr_map.id < 0)
             return;
 
-        this.DrawImageMap(ctx, curr_map.hX*4, curr_map.hY*4, curr_map.id.toString(), 825*4, curr_map);
+        // Scale map position and size with zoom (base factor 4 * zoom)
+        const zoom = this.getZoomLevel();
+        const scaleFactor = 4 * zoom;
+        this.DrawImageMap(ctx, curr_map.hX * scaleFactor, curr_map.hY * scaleFactor, curr_map.id.toString(), 825 * scaleFactor, curr_map);
     }
     DrawImageMap(ctx, x, y, imageName, size)
     {

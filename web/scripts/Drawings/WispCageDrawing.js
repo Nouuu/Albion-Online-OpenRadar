@@ -21,7 +21,7 @@ export class WispCageDrawing extends DrawingUtils
         {
             const point = this.transformPoint(cage.hX, cage.hY);
 
-            this.DrawCustomImage(ctx, point.x, point.y, "cage", "Resources", 25);
+            this.DrawCustomImage(ctx, point.x, point.y, "cage", "Resources", 18);
         }
     }
 }

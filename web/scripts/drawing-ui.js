@@ -1,9 +1,13 @@
 import settingsSync from "./Utils/SettingsSync.js";
 
 export function openOverlayWindow() {
+    // Get canvas size from settings (default 500) + padding for window chrome
+    const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+    const windowSize = canvasSize + 20; // Add padding for window chrome
+
     const features = [
-        'width=520',
-        'height=520',
+        `width=${windowSize}`,
+        `height=${windowSize}`,
         'resizable=no',
         'toolbar=no',
         'menubar=no',

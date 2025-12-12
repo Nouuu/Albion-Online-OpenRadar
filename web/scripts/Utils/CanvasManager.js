@@ -11,6 +11,7 @@
  * 4. uiCanvas (z-index: 6) - UI overlay (player counter, stats, FPS, etc.)
  */
 import {CATEGORIES} from "../constants/LoggerConstants.js";
+import settingsSync from "./SettingsSync.js";
 
 export class CanvasManager {
     constructor(viewType = 'main') {
@@ -41,13 +42,28 @@ export class CanvasManager {
             this.canvases[id] = canvas;
             this.contexts[id] = canvas.getContext('2d');
 
-            // Apply default canvas properties
-            canvas.width = 500;
-            canvas.height = 500;
+            // Apply canvas properties (dynamic size from settings)
+            const size = settingsSync.getNumber('settingCanvasSize') || 500;
+            canvas.width = size;
+            canvas.height = size;
         });
 
         // Setup local player canvas (static blue dot)
         this.setupOurPlayerCanvas();
+
+        // Listen for canvas size changes to re-setup player canvas
+        window.addEventListener('canvasSizeChanged', (e) => {
+            const newSize = e.detail?.size || settingsSync.getNumber('settingCanvasSize') || 500;
+            // Update canvas dimensions
+            Object.values(this.canvases).forEach(canvas => {
+                if (canvas) {
+                    canvas.width = newSize;
+                    canvas.height = newSize;
+                }
+            });
+            // Re-draw player dot at new center
+            this.setupOurPlayerCanvas();
+        });
 
         return {
             canvases: this.canvases,
@@ -66,10 +82,12 @@ export class CanvasManager {
 
         contextOurPlayer.clearRect(0, 0, ourPlayerCanvas.width, ourPlayerCanvas.height);
 
-        // Draw blue dot for local player at center (250, 250)
+        // Draw blue dot for local player at dynamic center
+        const size = settingsSync.getNumber('settingCanvasSize') || 500;
+        const center = size / 2;
         contextOurPlayer.fillStyle = 'blue';
         contextOurPlayer.beginPath();
-        contextOurPlayer.arc(250, 250, 5, 0, 2 * Math.PI);
+        contextOurPlayer.arc(center, center, 5, 0, 2 * Math.PI);
         contextOurPlayer.fill();
     }
 

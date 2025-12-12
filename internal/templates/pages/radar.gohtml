@@ -24,6 +24,24 @@
                 <span class="text-gray-400 group-hover:text-white transition-colors">Clusters</span>
             </label>
         </div>
+        <!-- Zoom control -->
+        <div class="flex items-center gap-3 mt-3 mx-2.5">
+            <span class="text-xs text-gray-500">Zoom:</span>
+            <button id="zoomOut" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
+            <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="w-32 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
+            <button id="zoomIn" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
+            <span id="zoomValue" class="text-xs text-gray-400 font-mono w-10">100%</span>
+            <button id="zoomReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+        </div>
+        <!-- Canvas size control -->
+        <div class="flex items-center gap-3 mt-3 mx-2.5">
+            <span class="text-xs text-gray-500">Size:</span>
+            <button id="sizeDown" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
+            <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="w-32 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
+            <button id="sizeUp" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
+            <span id="sizeValue" class="text-xs text-gray-400 font-mono w-12">500px</span>
+            <button id="sizeReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+        </div>
     </div>
 
     <!-- Detected Players Section -->
@@ -72,6 +90,95 @@ window.onGlobalsReady(function() {
             el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
         }
     });
+
+    // Zoom controls
+    const zoomSlider = document.getElementById('settingRadarZoom');
+    const zoomValue = document.getElementById('zoomValue');
+    const zoomIn = document.getElementById('zoomIn');
+    const zoomOut = document.getElementById('zoomOut');
+    const zoomReset = document.getElementById('zoomReset');
+
+    function updateZoomDisplay(value) {
+        if (zoomValue) zoomValue.textContent = `${Math.round(value * 100)}%`;
+        if (zoomSlider) zoomSlider.value = value;
+    }
+
+    function setZoom(value) {
+        value = Math.max(0.5, Math.min(2, value));
+        settingsSync.setFloat('settingRadarZoom', value);
+        updateZoomDisplay(value);
+    }
+
+    // Initialize zoom
+    const initialZoom = settingsSync.getFloat('settingRadarZoom') || 1.0;
+    updateZoomDisplay(initialZoom);
+
+    if (zoomSlider) {
+        zoomSlider.addEventListener('input', () => setZoom(parseFloat(zoomSlider.value)));
+    }
+    if (zoomIn) {
+        zoomIn.addEventListener('click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) + 0.1));
+    }
+    if (zoomOut) {
+        zoomOut.addEventListener('click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) - 0.1));
+    }
+    if (zoomReset) {
+        zoomReset.addEventListener('click', () => setZoom(1.0));
+    }
+
+    // Canvas Size controls
+    const sizeSlider = document.getElementById('settingCanvasSize');
+    const sizeValueEl = document.getElementById('sizeValue');
+    const sizeUp = document.getElementById('sizeUp');
+    const sizeDown = document.getElementById('sizeDown');
+    const sizeReset = document.getElementById('sizeReset');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const canvases = document.querySelectorAll('.ttcan');
+
+    function updateSizeDisplay(size) {
+        if (sizeValueEl) sizeValueEl.textContent = `${size}px`;
+        if (sizeSlider) sizeSlider.value = size;
+    }
+
+    function setCanvasSize(size) {
+        size = Math.max(300, Math.min(800, size));
+        settingsSync.setNumber('settingCanvasSize', size);
+
+        // Update container (size + 20px padding for margin)
+        const containerSize = size + 20;
+        if (canvasContainer) {
+            canvasContainer.style.width = `${containerSize}px`;
+            canvasContainer.style.height = `${containerSize}px`;
+        }
+
+        // Update all canvas elements
+        canvases.forEach(canvas => {
+            canvas.width = size;
+            canvas.height = size;
+        });
+
+        updateSizeDisplay(size);
+
+        // Trigger re-render event for RadarRenderer
+        window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size } }));
+    }
+
+    // Initialize canvas size
+    const initialSize = settingsSync.getNumber('settingCanvasSize') || 500;
+    setCanvasSize(initialSize);
+
+    if (sizeSlider) {
+        sizeSlider.addEventListener('input', () => setCanvasSize(parseInt(sizeSlider.value)));
+    }
+    if (sizeUp) {
+        sizeUp.addEventListener('click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) + 50));
+    }
+    if (sizeDown) {
+        sizeDown.addEventListener('click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) - 50));
+    }
+    if (sizeReset) {
+        sizeReset.addEventListener('click', () => setCanvasSize(500));
+    }
 
     // Show Players toggle + list visibility
     const showPlayersToggle = document.getElementById('settingShowPlayers');

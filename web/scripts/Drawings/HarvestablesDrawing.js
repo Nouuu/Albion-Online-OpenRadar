@@ -47,12 +47,12 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
             const point = this.transformPoint(harvestableOne.hX, harvestableOne.hY);
 
-            // Draw resource icon
-            this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 50);
+            // Draw resource icon (same size as living resources)
+            this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 40);
 
-            // Debug: TypeID display
+            // Debug: TypeID display (offset scaled with zoom)
             if (settingsSync.getBool('livingResourcesID'))
-                this.drawText(point.x, point.y + 20, type.toString(), ctx);
+                this.drawText(point.x, point.y + this.getScaledSize(20), type.toString(), ctx);
 
             // 📍 Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
             if (settingsSync.getBool('settingResourceDistance')) {

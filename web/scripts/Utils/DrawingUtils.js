@@ -3,6 +3,7 @@ import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
 
 const SCALE_FACTOR = 1.0; // Scale factor for overlay distance
+const BASE_ZOOM = 4; // Base pixels per game unit
 
 export class DrawingUtils {
     constructor() {
@@ -10,6 +11,49 @@ export class DrawingUtils {
         this.fontFamily = "Arial";
         this.textColor = "white";
         this.images = [];
+    }
+
+    /**
+     * Get current zoom level from settings
+     * @returns {number} Zoom multiplier (0.5 = zoomed out, 2.0 = zoomed in)
+     */
+    getZoomLevel() {
+        return settingsSync.getFloat('settingRadarZoom') || 1.0;
+    }
+
+    /**
+     * Scale a size value according to current zoom level
+     * @param {number} baseSize - Size at zoom 1.0
+     * @returns {number} Scaled size
+     */
+    getScaledSize(baseSize) {
+        return baseSize * this.getZoomLevel();
+    }
+
+    /**
+     * Scale a font size with zoom, ensuring minimum readability
+     * @param {number} baseFontSize - Font size at zoom 1.0
+     * @param {number} minFontSize - Minimum font size (default: 7)
+     * @returns {number} Scaled font size
+     */
+    getScaledFontSize(baseFontSize, minFontSize = 7) {
+        return Math.max(minFontSize, baseFontSize * this.getZoomLevel());
+    }
+
+    /**
+     * Get current canvas size from settings
+     * @returns {number} Canvas size in pixels (default: 500)
+     */
+    getCanvasSize() {
+        return settingsSync.getNumber('settingCanvasSize') || 500;
+    }
+
+    /**
+     * Get canvas center point (size / 2)
+     * @returns {number} Center coordinate
+     */
+    getCanvasCenter() {
+        return this.getCanvasSize() / 2;
     }
 
     InitOurPlayerCanvas(ourPlayerCanvas, context) {
@@ -59,13 +103,16 @@ export class DrawingUtils {
         const src = "/images/" + folderR + imageName + ".webp";
         const preloadedImage = imageCache.GetPreloadedImage(src, folder);
 
+        // Scale the size with zoom
+        const scaledSize = this.getScaledSize(size);
+
         if (preloadedImage === null) {
-            this.drawFilledCircle(ctx, x, y, 10, "#4169E1");
+            this.drawFilledCircle(ctx, x, y, this.getScaledSize(10), "#4169E1");
             return;
         }
 
         if (preloadedImage) {
-            ctx.drawImage(preloadedImage, x - size / 2, y - size / 2, size, size);
+            ctx.drawImage(preloadedImage, x - scaledSize / 2, y - scaledSize / 2, scaledSize, scaledSize);
         } else  {
             imageCache.preloadImageAndAddToList(src, folder)
                 .then(() => {
@@ -82,15 +129,21 @@ export class DrawingUtils {
         const angle = -0.785398;
         let newX = x * angle - y * angle;
         let newY = x * angle + y * angle;
-        newX *= 4;
-        newY *= 4;
-        newX += 250;
-        newY += 250;
+        // Apply zoom: BASE_ZOOM * zoomLevel
+        const zoom = BASE_ZOOM * this.getZoomLevel();
+        newX *= zoom;
+        newY *= zoom;
+        // Center point is dynamic based on canvas size
+        const center = this.getCanvasCenter();
+        newX += center;
+        newY += center;
         return { x: newX, y: newY };
     }
 
     drawText(xTemp, yTemp, text, ctx) {
-        ctx.font = this.fontSize + " " + this.fontFamily;
+        // Scale font size with zoom (base 12px from this.fontSize)
+        const scaledFontSize = `${this.getScaledFontSize(12, 8)}px`;
+        ctx.font = scaledFontSize + " " + this.fontFamily;
         ctx.fillStyle = this.textColor;
         const textWidth = ctx.measureText(text).width;
         ctx.fillText(text, xTemp - textWidth / 2, yTemp);
@@ -105,17 +158,27 @@ export class DrawingUtils {
     drawResourceCountBadge(ctx, x, y, count, position = 'bottom-right') {
         const text = count.toString();
         ctx.save();
-        ctx.font = "bold 10px monospace";
+
+        // Scale font size with zoom (base 10px, min 7px)
+        const fontSize = this.getScaledFontSize(10, 7);
+        ctx.font = `bold ${fontSize}px monospace`;
         const textWidth = ctx.measureText(text).width;
-        const padding = 4;
+
+        // Scale badge dimensions with zoom
+        const padding = this.getScaledSize(4);
         const rectWidth = textWidth + (padding * 2);
-        const rectHeight = 14;
-        const radius = 4;
+        const rectHeight = this.getScaledSize(14);
+        const radius = this.getScaledSize(4);
+
+        // Scale offsets with zoom
+        const offset8 = this.getScaledSize(8);
+        const offset6 = this.getScaledSize(6);
+        const offset20 = this.getScaledSize(20);
 
         const positions = {
-            'bottom-right': { x: x + 8, y: y + 6 },
-            'top-right': { x: x + 8, y: y - 20 },
-            'bottom-left': { x: x - rectWidth - 8, y: y + 6 }
+            'bottom-right': { x: x + offset8, y: y + offset6 },
+            'top-right': { x: x + offset8, y: y - offset20 },
+            'bottom-left': { x: x - rectWidth - offset8, y: y + offset6 }
         };
         const pos = positions[position] || positions['bottom-right'];
         const rectX = pos.x; const rectY = pos.y;
@@ -146,7 +209,8 @@ export class DrawingUtils {
         ctx.shadowColor = "rgba(0,0,0,0.9)";
         ctx.shadowBlur = 2;
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(text, rectX + padding, rectY + 10);
+        // Text Y position: rectY + fontSize (approximately 70% of rectHeight for vertical centering)
+        ctx.fillText(text, rectX + padding, rectY + fontSize);
         ctx.restore();
     }
 
@@ -172,16 +236,20 @@ export class DrawingUtils {
         // Rounded value for display
         const realDistance = Math.round(realDistanceFloat);
 
-        ctx.font = "bold 9px monospace";
+        // Scale font size with zoom (base 9px, min 6px)
+        const fontSize = this.getScaledFontSize(9, 6);
+        ctx.font = `bold ${fontSize}px monospace`;
         const text = realDistance < 1000 ? `${realDistance}m` : `${(realDistance / 1000).toFixed(1)}km`;
 
         const textWidth = ctx.measureText(text).width;
-        const padding = 3;
+        // Scale badge dimensions with zoom
+        const padding = this.getScaledSize(3);
         const rectWidth = textWidth + (padding * 2);
-        const rectHeight = 12;
-        const radius = 3;
-        const rectX = x - rectWidth - 8;
-        const rectY = y - 20;
+        const rectHeight = this.getScaledSize(12);
+        const radius = this.getScaledSize(3);
+        // Scale offsets with zoom
+        const rectX = x - rectWidth - this.getScaledSize(8);
+        const rectY = y - this.getScaledSize(20);
 
         let color;
         if (realDistance < 10) color = "rgba(0,200,0,0.85)";
@@ -209,7 +277,8 @@ export class DrawingUtils {
         ctx.shadowColor = "rgba(0,0,0,0.9)";
         ctx.shadowBlur = 2;
         ctx.fillStyle = "#FFFFFF";
-        ctx.fillText(text, rectX + padding, rectY + 9);
+        // Text Y position: rectY + fontSize for vertical centering
+        ctx.fillText(text, rectX + padding, rectY + fontSize);
         ctx.restore();
     }
 
@@ -234,7 +303,7 @@ export class DrawingUtils {
 
         // Position (centered horizontally, below the entity)
         const barX = x - width / 2;
-        const barY = y + 16; // 16px below entity
+        const barY = y + this.getScaledSize(16); // 16px below entity (scaled)
 
         // Background (dark with slight transparency)
         ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
@@ -270,8 +339,9 @@ export class DrawingUtils {
         ctx.lineWidth = 1;
         ctx.strokeRect(barX, barY, width, height);
 
-        // HP text inside bar
-        ctx.font = "bold 11px monospace";
+        // HP text inside bar (scaled with zoom)
+        const hpFontSize = this.getScaledFontSize(11, 7);
+        ctx.font = `bold ${hpFontSize}px monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
@@ -303,15 +373,24 @@ export class DrawingUtils {
         ctx.save();
         const time = Date.now() / 1000;
         const pulse = Math.sin(time * 2) * 0.15 + 0.85;
+        // Scale radii with zoom
+        const radius35 = this.getScaledSize(35);
+        const radius30 = this.getScaledSize(30);
         ctx.strokeStyle = `rgba(100,200,255,${0.4 * pulse})`;
         ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(x, y, 35 * pulse, 0, 2 * Math.PI); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, radius35 * pulse, 0, 2 * Math.PI); ctx.stroke();
         ctx.strokeStyle = `rgba(100,200,255,${0.6 * pulse})`;
-        ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 30 * pulse, 0, 2 * Math.PI); ctx.stroke();
+        ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, radius30 * pulse, 0, 2 * Math.PI); ctx.stroke();
 
-        const text = `×${count}`; ctx.font = "bold 11px monospace";
-        const textWidth = ctx.measureText(text).width; const padding = 4; const rectWidth = textWidth + padding * 2; const rectHeight = 14; const radius = 4;
-        const rectX = x - rectWidth / 2; const rectY = y - 35;
+        // Scale font and badge dimensions
+        const fontSize = this.getScaledFontSize(11, 8);
+        const text = `×${count}`; ctx.font = `bold ${fontSize}px monospace`;
+        const textWidth = ctx.measureText(text).width;
+        const padding = this.getScaledSize(4);
+        const rectWidth = textWidth + padding * 2;
+        const rectHeight = this.getScaledSize(14);
+        const radius = this.getScaledSize(4);
+        const rectX = x - rectWidth / 2; const rectY = y - radius35;
         const gradient = ctx.createLinearGradient(rectX, rectY, rectX, rectY + rectHeight);
         gradient.addColorStop(0, "rgba(100,200,255,0.9)"); gradient.addColorStop(1, "rgba(50,150,255,0.8)"); ctx.fillStyle = gradient;
         ctx.beginPath(); ctx.moveTo(rectX + radius, rectY); ctx.lineTo(rectX + rectWidth - radius, rectY);
@@ -320,9 +399,16 @@ export class DrawingUtils {
         ctx.lineTo(rectX + radius, rectY + rectHeight); ctx.quadraticCurveTo(rectX, rectY + rectHeight, rectX, rectY + rectHeight - radius);
         ctx.lineTo(rectX, rectY + radius); ctx.quadraticCurveTo(rectX, rectY, rectX + radius, rectY); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 3; ctx.fillStyle = "#FFFFFF"; ctx.fillText(text, rectX + padding, rectY + 11);
+        ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 3; ctx.fillStyle = "#FFFFFF"; ctx.fillText(text, rectX + padding, rectY + fontSize);
 
-        if (clusterType) { ctx.font = "bold 8px monospace"; const typeWidth = ctx.measureText(clusterType).width; const typeX = x - typeWidth / 2; const typeY = y + 42; ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 2; ctx.fillStyle = "rgba(100,200,255,0.9)"; ctx.fillText(clusterType, typeX, typeY); }
+        if (clusterType) {
+            const typeFontSize = this.getScaledFontSize(8, 6);
+            ctx.font = `bold ${typeFontSize}px monospace`;
+            const typeWidth = ctx.measureText(clusterType).width;
+            const typeX = x - typeWidth / 2;
+            const typeY = y + this.getScaledSize(42);
+            ctx.shadowColor = "rgba(0,0,0,0.8)"; ctx.shadowBlur = 2; ctx.fillStyle = "rgba(100,200,255,0.9)"; ctx.fillText(clusterType, typeX, typeY);
+        }
         ctx.restore();
     }
 
@@ -342,7 +428,8 @@ export class DrawingUtils {
             const cx = sumX / pts.length, cy = sumY / pts.length;
 
             let maxDist = 0; for (const p of pts) { const dx = p.x - cx, dy = p.y - cy; const d = Math.sqrt(dx * dx + dy * dy); if (d > maxDist) maxDist = d; }
-            const minRadius = 24; const padding = 18 + Math.log(Math.max(1, cluster.count)) * 6; const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + padding);
+            // Scale minRadius and padding with zoom
+            const minRadius = this.getScaledSize(24); const padding = this.getScaledSize(18) + Math.log(Math.max(1, cluster.count)) * this.getScaledSize(6); const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + padding);
 
             let totalStacks = 0; for (const r of cluster.resources) { const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
 
@@ -377,7 +464,8 @@ export class DrawingUtils {
         const cx = sumX / pts.length, cy = sumY / pts.length;
 
         let maxDist = 0; for (const p of pts) { const dx = p.x - cx, dy = p.y - cy; const d = Math.sqrt(dx * dx + dy * dy); if (d > maxDist) maxDist = d; }
-        const minRadius = 24; const padding = 18 + Math.log(Math.max(1, cluster.count)) * 6; const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + padding);
+        // Scale minRadius and padding with zoom
+        const minRadius = this.getScaledSize(24); const paddingVal = this.getScaledSize(18) + Math.log(Math.max(1, cluster.count)) * this.getScaledSize(6); const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + paddingVal);
 
         let totalStacks = 0; for (const r of cluster.resources) { const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
 
@@ -395,23 +483,31 @@ export class DrawingUtils {
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
         const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
 
-        ctx.font = 'bold 12px monospace';
+        // Scale font sizes
+        const fontSize1 = this.getScaledFontSize(12, 8);
+        const fontSize2 = this.getScaledFontSize(11, 7);
+        ctx.font = `bold ${fontSize1}px monospace`;
         const w1 = ctx.measureText(line1).width;
-        ctx.font = '11px monospace';
+        ctx.font = `${fontSize2}px monospace`;
         const w2 = ctx.measureText(line2).width;
-        const infoW = Math.ceil(Math.max(w1, w2)) + 16;
-        const infoH = 8 + 14 + 6 + 12;
+
+        // Scale box dimensions
+        const boxPadding = this.getScaledSize(16);
+        const infoW = Math.ceil(Math.max(w1, w2)) + boxPadding;
+        const lineSpacing = this.getScaledSize(6);
+        const infoH = this.getScaledSize(8) + fontSize1 + lineSpacing + fontSize2;
 
         const infoX = cx - infoW / 2;
-        const infoY = cy - visualRadius - infoH - 8;
+        const offset8 = this.getScaledSize(8);
+        const infoY = cy - visualRadius - infoH - offset8;
         let boxY = infoY;
-        if (infoY < 8) boxY = cy + visualRadius + 8;
+        if (infoY < 8) boxY = cy + visualRadius + offset8;
 
         const grad = ctx.createLinearGradient(infoX, boxY, infoX, boxY + infoH);
         grad.addColorStop(0, (cluster.count <= 3 && totalStacks <= 6) ? 'rgba(100,200,255,0.9)' : ((cluster.count <=6 || totalStacks<=18) ? 'rgba(255,210,100,0.95)': 'rgba(255,100,100,0.95)'));
         grad.addColorStop(1, 'rgba(0,0,0,0.6)');
 
-        ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6; ctx.fillStyle = grad; const rbox = 8;
+        ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6; ctx.fillStyle = grad; const rbox = this.getScaledSize(8);
         ctx.beginPath(); ctx.moveTo(infoX + rbox, boxY); ctx.lineTo(infoX + infoW - rbox, boxY); ctx.quadraticCurveTo(infoX + infoW, boxY, infoX + infoW, boxY + rbox);
         ctx.lineTo(infoX + infoW, boxY + infoH - rbox); ctx.quadraticCurveTo(infoX + infoW, boxY + infoH, infoX + infoW - rbox, boxY + infoH);
         ctx.lineTo(infoX + rbox, boxY + infoH); ctx.quadraticCurveTo(infoX, boxY + infoH, infoX, boxY + infoH - rbox); ctx.lineTo(infoX, boxY + rbox);
@@ -419,8 +515,11 @@ export class DrawingUtils {
 
         ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.strokeRect(infoX + 0.5, boxY + 0.5, infoW - 1, infoH - 1);
 
-        ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center'; ctx.font = 'bold 12px monospace'; ctx.fillText(line1, infoX + infoW / 2, boxY + 14);
-        ctx.font = '11px monospace'; ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillText(line2, infoX + infoW / 2, boxY + 14 + 16); ctx.textAlign = 'start';
+        // Draw text with scaled positions
+        ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
+        ctx.font = `bold ${fontSize1}px monospace`; ctx.fillText(line1, infoX + infoW / 2, boxY + this.getScaledSize(8) + fontSize1 - 2);
+        ctx.font = `${fontSize2}px monospace`; ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillText(line2, infoX + infoW / 2, boxY + this.getScaledSize(8) + fontSize1 + lineSpacing + fontSize2 - 2);
+        ctx.textAlign = 'start';
     }
 
     // Convert game units distance to meters applying global scale factor.

@@ -215,7 +215,7 @@ export class SettingsSync {
     }
 
     /**
-     * Get a numeric setting (cached)
+     * Get a numeric setting (cached) - integers only
      * @param {string} key - Setting key
      * @param {number} defaultValue - Default value if not found or invalid
      * @returns {number}
@@ -235,6 +235,30 @@ export class SettingsSync {
      * @param {number} value - Numeric value
      */
     setNumber(key, value) {
+        this.broadcast(key, value.toString());
+    }
+
+    /**
+     * Get a float setting (cached) - supports decimals
+     * @param {string} key - Setting key
+     * @param {number} defaultValue - Default value if not found or invalid
+     * @returns {number}
+     */
+    getFloat(key, defaultValue = 0) {
+        const value = this._getCached(key);
+        if (value === null || value === '') {
+            return defaultValue;
+        }
+        const parsed = parseFloat(value);
+        return isNaN(parsed) ? defaultValue : parsed;
+    }
+
+    /**
+     * Set a float setting and broadcast it
+     * @param {string} key - Setting key
+     * @param {number} value - Float value
+     */
+    setFloat(key, value) {
         this.broadcast(key, value.toString());
     }
 

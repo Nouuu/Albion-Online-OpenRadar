@@ -23,6 +23,7 @@
 
         #overlayContainer {
             position: relative;
+            /* Size will be set dynamically via JS */
             width: 500px;
             height: 500px;
             background-color: rgba(17, 24, 39, 0.5);
@@ -150,6 +151,38 @@
             });
 
             document.title = 'OpenRadar Overlay - ESC:Close';
+
+            // Dynamic canvas size (synced from main page via settingsSync)
+            const overlayContainer = document.getElementById('overlayContainer');
+            const canvases = document.querySelectorAll('.overlay-canvas');
+
+            function applyCanvasSize(size) {
+                size = size || 500;
+                if (overlayContainer) {
+                    overlayContainer.style.width = `${size}px`;
+                    overlayContainer.style.height = `${size}px`;
+                }
+                canvases.forEach(canvas => {
+                    canvas.width = size;
+                    canvas.height = size;
+                });
+                // Resize window to fit
+                window.resizeTo(size + 16, size + 39); // Account for window chrome
+            }
+
+            // Wait for settingsSync to be available
+            const checkSettingsSync = setInterval(() => {
+                if (window.settingsSync) {
+                    clearInterval(checkSettingsSync);
+                    const initialSize = window.settingsSync.getNumber('settingCanvasSize') || 500;
+                    applyCanvasSize(initialSize);
+
+                    // Listen for size changes from main page
+                    window.settingsSync.on('settingCanvasSize', (key, value) => {
+                        applyCanvasSize(parseInt(value) || 500);
+                    });
+                }
+            }, 100);
         });
     </script>
 </body>

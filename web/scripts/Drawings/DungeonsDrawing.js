@@ -18,7 +18,7 @@ export class DungeonsDrawing extends DrawingUtils
             if (dungeonOne.drawName === undefined) continue;
 
             const point = this.transformPoint(dungeonOne.hX, dungeonOne.hY);
-            this.DrawCustomImage(ctx, point.x, point.y, dungeonOne.drawName, "Resources", 40);
+            this.DrawCustomImage(ctx, point.x, point.y, dungeonOne.drawName, "Resources", 28);
         }
     }
 }

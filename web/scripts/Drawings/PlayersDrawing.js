@@ -30,13 +30,15 @@ export class PlayersDrawing extends DrawingUtils {
                 color = '#ffa500'; // Faction (orange)
             }
 
-            // Draw colored circle for each player
-            this.drawFilledCircle(context, point.x, point.y, 10, color);
+            // Draw colored circle for each player (scaled with zoom)
+            this.drawFilledCircle(context, point.x, point.y, this.getScaledSize(10), color);
 
-            // Display nickname below the circle
+            // Display nickname below the circle (font and offset scaled with zoom)
             const nickname = playerOne.nickname || 'Unknown';
+            const fontSize = this.getScaledFontSize(12, 8);
+            context.font = `${fontSize}px ${this.fontFamily}`;
             const nicknameWidth = context.measureText(nickname).width;
-            this.drawTextItems(point.x - nicknameWidth / 2, point.y + 26, nickname, context, "12px", "#FFFFFF");
+            this.drawTextItems(point.x - nicknameWidth / 2, point.y + this.getScaledSize(26), nickname, context, `${fontSize}px`, "#FFFFFF");
         }
     }
 }

@@ -86,7 +86,7 @@ export class MobsDrawing extends DrawingUtils
             }
 
             if (imageName !== undefined && imageFolder !== undefined)
-                this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, 40);
+                this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, 40); // Size scaled in DrawCustomImage
             else {
                 // Color-coded circles by enemy type
                 const color = this.getEnemyColor(mobOne.type);
@@ -102,7 +102,7 @@ export class MobsDrawing extends DrawingUtils
                     mobOne._debugLogged = true;
                 }
 
-                this.drawFilledCircle(ctx, point.x, point.y, 10, color);
+                this.drawFilledCircle(ctx, point.x, point.y, this.getScaledSize(7), color);
             }
 
             // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)
@@ -116,31 +116,40 @@ export class MobsDrawing extends DrawingUtils
 
             if (drawHealthBar)
             {
-                // Draw health bar with gradient colors
+                // Draw health bar with gradient colors (dimensions scaled with zoom)
                 const currentHP = mobOne.getCurrentHP();
                 const maxHP = mobOne.maxHealth;
-                this.drawHealthBar(ctx, point.x, point.y, currentHP, maxHP, 60, 10);
+                this.drawHealthBar(ctx, point.x, point.y, currentHP, maxHP, this.getScaledSize(60), this.getScaledSize(10));
             }
 
-            // 📊 Display enemy information below the mob
-            let currentYOffset = drawHealthBar ? 36 : 26; // Start position based on health bar presence
+            // 📊 Display enemy information below the mob (offsets scaled with zoom)
+            const offset36 = this.getScaledSize(36);
+            const offset26 = this.getScaledSize(26);
+            const offset12 = this.getScaledSize(12);
+            let currentYOffset = drawHealthBar ? offset36 : offset26; // Start position based on health bar presence
+
+            // Scale font sizes for mob info display
+            const fontSize10 = `${this.getScaledFontSize(10, 7)}px`;
+            const fontSize9 = `${this.getScaledFontSize(9, 6)}px`;
 
             if (drawId)
             {
                 // Display TypeID
                 const idText = `${mobOne.typeId}`;
+                ctx.font = `${fontSize10} ${this.fontFamily}`;
                 const idWidth = ctx.measureText(idText).width;
-                this.drawTextItems(point.x - idWidth / 2, point.y + currentYOffset, idText, ctx, "10px", "#CCCCCC");
-                currentYOffset += 12; // Move down for next element
+                this.drawTextItems(point.x - idWidth / 2, point.y + currentYOffset, idText, ctx, fontSize10, "#CCCCCC");
+                currentYOffset += offset12; // Move down for next element
             }
 
             // Display Tier (for hostile mobs only, not living resources)
             if (settingsSync.getBool("settingEnemiesTier") && mobOne.tier > 0 &&
                 mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
                 const tierText = `T${mobOne.tier}`;
+                ctx.font = `${fontSize10} ${this.fontFamily}`;
                 const tierWidth = ctx.measureText(tierText).width;
-                this.drawTextItems(point.x - tierWidth / 2, point.y + currentYOffset, tierText, ctx, "10px", "#FFD700");
-                currentYOffset += 12; // Move down for next element
+                this.drawTextItems(point.x - tierWidth / 2, point.y + currentYOffset, tierText, ctx, fontSize10, "#FFD700");
+                currentYOffset += offset12; // Move down for next element
             }
 
             // Display Name (localized if available, fallback to technical name)
@@ -162,9 +171,10 @@ export class MobsDrawing extends DrawingUtils
                 if (displayName.length > 20) {
                     displayName = displayName.substring(0, 17) + '...';
                 }
+                ctx.font = `${fontSize9} ${this.fontFamily}`;
                 const nameWidth = ctx.measureText(displayName).width;
-                this.drawTextItems(point.x - nameWidth / 2, point.y + currentYOffset, displayName, ctx, "9px", "#FFFFFF");
-                currentYOffset += 12; // Move down for next element
+                this.drawTextItems(point.x - nameWidth / 2, point.y + currentYOffset, displayName, ctx, fontSize9, "#FFFFFF");
+                currentYOffset += offset12; // Move down for next element
             }
 
             // Display Category Badge
@@ -184,9 +194,10 @@ export class MobsDrawing extends DrawingUtils
                 };
                 badgeText = categoryMap[badgeText] || badgeText.substring(0, 3);
 
+                ctx.font = `${fontSize10} ${this.fontFamily}`;
                 const badgeWidth = ctx.measureText(badgeText).width;
                 // Use a distinct color for the badge
-                this.drawTextItems(point.x - badgeWidth / 2, point.y + currentYOffset, badgeText, ctx, "10px", "#FF69B4");
+                this.drawTextItems(point.x - badgeWidth / 2, point.y + currentYOffset, badgeText, ctx, fontSize10, "#FF69B4");
             }
         }
 
@@ -202,7 +213,7 @@ export class MobsDrawing extends DrawingUtils
             {
                 // Change image folder
                 const point = this.transformPoint(mistsOne.hX, mistsOne.hY);
-                this.DrawCustomImage(ctx, point.x, point.y, "mist_" + mistsOne.enchant, "Resources", 30);
+                this.DrawCustomImage(ctx, point.x, point.y, "mist_" + mistsOne.enchant, "Resources", 21);
             }
         }
     }

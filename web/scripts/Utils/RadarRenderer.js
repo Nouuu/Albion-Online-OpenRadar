@@ -346,8 +346,9 @@ export class RadarRenderer {
         const ctx = this.contexts.uiCanvas;
         if (!ctx) return;
 
-        // Clear UI canvas first
-        ctx.clearRect(0, 0, 500, 500);
+        // Clear UI canvas first (dynamic size)
+        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+        ctx.clearRect(0, 0, canvasSize, canvasSize);
 
         // 1. Distance rings (background, subtle)
         this.renderDistanceRings(ctx);
@@ -366,9 +367,15 @@ export class RadarRenderer {
      * Render distance rings centered on player
      */
     renderDistanceRings(ctx) {
-        const centerX = 250, centerY = 250;
+        // Dynamic canvas size and center
+        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+        const center = canvasSize / 2;
+        const centerX = center, centerY = center;
         const distances = [10, 20]; // meters
-        const pixelsPerMeter = 500 / 60; // ~8.33px per meter (60m visible radius)
+        // Base: 60m visible radius at zoom 1.0
+        // pixelsPerMeter scales with zoom level and canvas size
+        const zoomLevel = settingsSync.getFloat('settingRadarZoom') || 1.0;
+        const pixelsPerMeter = (canvasSize / 60) * zoomLevel;
 
         ctx.save();
         ctx.setLineDash([4, 6]);
@@ -377,6 +384,9 @@ export class RadarRenderer {
 
         distances.forEach(dist => {
             const radius = dist * pixelsPerMeter;
+
+            // Only draw if radius fits in canvas
+            if (radius > center - 5) return;
 
             // Draw circle
             ctx.beginPath();
@@ -437,11 +447,12 @@ export class RadarRenderer {
         stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
         stats.push({ emoji: '👾', count: mobCount, label: 'mobs', color: '#ff6b6b' });
 
-        // Calculate box dimensions
+        // Calculate box dimensions (dynamic canvas size)
+        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
         const boxWidth = 135;
         const lineHeight = 14;
         const boxHeight = 8 + stats.length * lineHeight + 8;
-        const boxX = 500 - boxWidth - 10;
+        const boxX = canvasSize - boxWidth - 10;
         const boxY = 10;
 
         // Draw background
@@ -479,12 +490,15 @@ export class RadarRenderer {
         // Pulse animation (~3Hz)
         const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5; // 0.2 → 0.8
 
+        // Dynamic canvas size for border
+        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+
         ctx.save();
         ctx.shadowColor = `rgba(255, 50, 50, ${pulse})`;
         ctx.shadowBlur = 12;
         ctx.strokeStyle = `rgba(255, 50, 50, ${pulse * 0.8})`;
         ctx.lineWidth = 3;
-        ctx.strokeRect(2, 2, 496, 496);
+        ctx.strokeRect(2, 2, canvasSize - 4, canvasSize - 4);
         ctx.restore();
     }
 }
