@@ -12,10 +12,14 @@
 
 **OpenRadar** is a real-time radar tool for **Albion Online** that provides situational awareness without game injection. Track players, resources, enemies, and events with a clean, customizable web interface.
 
+### v2.0 Highlights
+
+- **Native Go Backend** - Single binary (~95 MB) with all assets embedded
+- **No External Dependencies** - Just Npcap (Windows) or libpcap (Linux)
+- **Massive Size Reduction** - From ~500 MB (Node.js) to ~95 MB
+- **Faster Startup** - No runtime extraction needed
 - **No Injection** - Lower risk of detection/banning
 - **Real-time Map** - Live tracking with background map overlay
-- **Overlay Mode** - Popup window for seamless gameplay (use [DeskPins](https://efotinis.neocities.org/deskpins/) to keep it on top)
-- **Single-file Distribution** - All assets embedded in one executable (v2.0+)
 
 ---
 
@@ -32,14 +36,11 @@
 - **Harvestables**: Trees, ores, stone, fiber, hide (T1-T8 + enchantments .0-.3)
 - **Living Resources**: Animals and skinnable creatures (~2,800 types)
 - **Fishing spots**: All tiers with enchantment support
-- **Smart validation** for type, tier, and enchantment combinations
 
 ### Enemy & Creature Tracking
-- **Color-coded threat classification**:
-  - Normal | Enchanted | Mini-Boss | Boss
+- **Color-coded threat classification**: Normal | Enchanted | Mini-Boss | Boss
 - 4,528 mobs catalogued with metadata
-- Real-time health tracking (spawn, regen, damage)
-- Filter by category: Normal, Enchanted, Mini-Boss, Boss
+- Real-time health tracking
 - Mist beasts detection
 
 ### Points of Interest
@@ -47,38 +48,52 @@
 - Dungeons (solo/group, static/random, corrupted)
 - Mist portals with enchantment levels
 
-### Advanced Features
-- Background Maps for visual context
-- Smart Filters by tier, enchantment, and category
-- Settings Persistence saved locally
-- Web Interface at `http://localhost:5001`
-
 ---
 
-## Quick Start (Windows)
+## Quick Start
 
-### 1. Prerequisites
+### Windows
 
-Download and install **Npcap** (version **1.84** or newer):
-- [Official Npcap Download Page](https://npcap.com/)
-- [Direct Link: Npcap 1.84](https://npcap.com/dist/npcap-1.84.exe)
+1. **Install Npcap** (version 1.84+):
+   - [Official Download](https://npcap.com/) | [Direct Link v1.84](https://npcap.com/dist/npcap-1.84.exe)
 
-### 2. Download OpenRadar
+2. **Download & Run**:
+   - Get the latest release from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
+   - Extract and run `OpenRadar.exe`
+   - Select your network adapter (NOT 127.0.0.1)
+   - Open **http://localhost:5001** in your browser
 
-Get the latest release from:
-- [Releases Page](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
+### Linux
 
-### 3. Run the Application
+1. **Install libpcap**:
+   ```bash
+   # Ubuntu/Debian
+   sudo apt-get install libpcap-dev
 
-1. Extract the ZIP file
-2. Run `OpenRadar.exe`
-3. Select your network adapter (NOT 127.0.0.1)
-4. Open your browser: **http://localhost:5001**
+   # Fedora/RHEL
+   sudo dnf install libpcap-devel
+   ```
 
-### 4. Check Version
+2. **Download & Configure**:
+   ```bash
+   chmod +x OpenRadar-linux
+
+   # Option A: Run as root
+   sudo ./OpenRadar-linux
+
+   # Option B: Grant capabilities (recommended)
+   sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
+   ./OpenRadar-linux
+   ```
+
+3. Open **http://localhost:5001** in your browser
+
+### Command-line Options
 
 ```bash
-OpenRadar.exe -version
+OpenRadar -version       # Show version
+OpenRadar -ip X.X.X.X    # Skip adapter selection
+OpenRadar -dev           # Development mode (read files from disk)
 ```
 
 ---
@@ -89,10 +104,11 @@ OpenRadar.exe -version
 
 | Tool       | Version | Notes                          |
 |------------|---------|--------------------------------|
-| **Go**     | 1.25+   | [Download](https://go.dev/dl/) |
+| **Go**     | 1.23+   | [Download](https://go.dev/dl/) |
 | **Npcap**  | 1.84+   | Windows only                   |
-| **Node.js**| 20+     | For data scripts only          |
-| **Docker** | Latest  | For Linux builds               |
+| **libpcap**| Latest  | Linux only                     |
+| **Node.js**| 20+     | For data/build scripts only    |
+| **Docker** | Latest  | For Linux cross-compilation    |
 
 ### Quick Setup
 
@@ -109,7 +125,7 @@ make dev
 
 Web interface available at **http://localhost:5001**.
 
-### Build
+### Build Commands
 
 ```bash
 make build-win        # Build Windows executable
@@ -124,18 +140,19 @@ make all-in-one       # Complete release workflow
 OpenRadar/
 ├── cmd/radar/        # Go entry point
 ├── internal/         # Go packages
-│   ├── capture/      # Packet capture
+│   ├── capture/      # Packet capture (pcap)
 │   ├── photon/       # Protocol parsing
-│   ├── server/       # HTTP & WebSocket
+│   ├── server/       # HTTP & WebSocket servers
 │   └── logger/       # Structured logging
-├── web/              # Frontend assets
+├── web/              # Frontend assets (embedded)
 │   ├── images/
 │   ├── public/       # HTML, game data
 │   ├── scripts/      # JavaScript
 │   └── sounds/
-├── tools/            # Build & data scripts
+├── tools/            # Build & data scripts (Node.js)
 ├── docs/             # Documentation
 ├── embed.go          # Asset embedding
+├── go.mod            # Go modules
 └── Makefile          # Build system
 ```
 
@@ -143,18 +160,44 @@ OpenRadar/
 
 ```bash
 make help             # Show all commands
-make check            # Verify Go installation
+make check            # Verify dependencies
 make update-ao-data   # Update Albion game data
 make clean            # Clean build artifacts
+make lint             # Lint Go code
 ```
+
+---
+
+## Technical Details
+
+### Architecture
+
+- **Backend**: Native Go with embedded assets
+- **Frontend**: Vanilla JavaScript with Alpine.js
+- **Protocol**: Photon Protocol16 deserialization
+- **Capture**: gopacket/pcap for packet capture
+
+### Ports
+
+| Port | Service   |
+|------|-----------|
+| 5001 | HTTP + WebSocket (`/ws`) |
+| 5056 | UDP (Albion traffic - captured) |
+
+### Performance Comparison
+
+| Metric | v1.x (Node.js) | v2.0 (Go) |
+|--------|----------------|-----------|
+| Binary size | ~100 MB | ~95 MB |
+| Assets | ~400 MB (separate) | Embedded |
+| Total | ~500 MB | ~95 MB |
+| Startup | Slower (extraction) | Instant |
 
 ---
 
 ## Documentation
 
 Full documentation available in [docs/README.md](docs/README.md).
-
-### Quick Links
 
 | Guide | Description |
 |-------|-------------|

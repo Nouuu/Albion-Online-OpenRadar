@@ -9,8 +9,8 @@
         package package-win all-in-one clean test lint install-tools check \
         update-ao-data download-assets update-assets restore-data
 
-# Variables
-VERSION := 2.0.0
+# Variables - Read version from package.json (single source of truth)
+VERSION := $(shell node -p "require('./package.json').version" 2>nul || echo "2.0.0")
 # Windows-compatible: use PowerShell for date, fallback to static if not available
 BUILD_TIME := $(shell powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'" 2>nul || echo "unknown")
 BUILD_DIR := dist

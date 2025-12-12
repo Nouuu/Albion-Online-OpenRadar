@@ -197,7 +197,7 @@ function connectLoggerWebSocket() {
     console.log('🔌 [LoggerClient] Connecting to WebSocket...');
 
     try {
-        socket = new WebSocket('ws://localhost:5002');
+        socket = new WebSocket('ws://localhost:5001/ws');
 
         socket.addEventListener('open', () => {
             reconnectAttempts = 0; // Reset counter on successful connection

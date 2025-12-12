@@ -1,7 +1,6 @@
 package server
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,21 +22,18 @@ type WSMessage struct {
 	Dictionary string `json:"dictionary"`
 }
 
-// WebSocketServer manages WebSocket connections and broadcasts
-type WebSocketServer struct {
+// WebSocketHandler manages WebSocket connections and broadcasts
+type WebSocketHandler struct {
 	clients   map[*websocket.Conn]bool
 	clientsMu sync.RWMutex
 	upgrader  websocket.Upgrader
-	port      int
 	logger    *logger.Logger
-	server    *http.Server
 }
 
-// NewWebSocketServer creates a new WebSocket server
-func NewWebSocketServer(port int, log *logger.Logger) *WebSocketServer {
-	return &WebSocketServer{
+// NewWebSocketHandler creates a new WebSocket handler
+func NewWebSocketHandler(log *logger.Logger) *WebSocketHandler {
+	return &WebSocketHandler{
 		clients: make(map[*websocket.Conn]bool),
-		port:    port,
 		logger:  log,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -47,43 +43,13 @@ func NewWebSocketServer(port int, log *logger.Logger) *WebSocketServer {
 	}
 }
 
-// Start starts the WebSocket server
-func (ws *WebSocketServer) Start() error {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", ws.handleConnection)
-
-	addr := fmt.Sprintf("localhost:%d", ws.port)
-	ws.server = &http.Server{
-		Addr:    addr,
-		Handler: mux,
-	}
-
-	fmt.Printf("WebSocket server started on ws://%s\n", addr)
-	return ws.server.ListenAndServe()
-}
-
-// Shutdown gracefully shuts down the WebSocket server
-func (ws *WebSocketServer) Shutdown(ctx context.Context) error {
-	// Close all client connections with a proper close message
-	ws.clientsMu.Lock()
-	for client := range ws.clients {
-		_ = client.WriteMessage(
-			websocket.CloseMessage,
-			websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down"),
-		)
-		_ = client.Close()
-		delete(ws.clients, client)
-	}
-	ws.clientsMu.Unlock()
-
-	if ws.server != nil {
-		return ws.server.Shutdown(ctx)
-	}
-	return nil
+// ServeHTTP implements http.Handler for WebSocket upgrades
+func (ws *WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ws.handleConnection(w, r)
 }
 
 // handleConnection handles new WebSocket connections
-func (ws *WebSocketServer) handleConnection(w http.ResponseWriter, r *http.Request) {
+func (ws *WebSocketHandler) handleConnection(w http.ResponseWriter, r *http.Request) {
 	// Check connection limit before upgrade
 	ws.clientsMu.RLock()
 	clientCount := len(ws.clients)
@@ -112,7 +78,7 @@ func (ws *WebSocketServer) handleConnection(w http.ResponseWriter, r *http.Reque
 }
 
 // handleMessages handles incoming messages from a client
-func (ws *WebSocketServer) handleMessages(conn *websocket.Conn) {
+func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 	defer func() {
 		ws.clientsMu.Lock()
 		delete(ws.clients, conn)
@@ -147,8 +113,22 @@ func (ws *WebSocketServer) handleMessages(conn *websocket.Conn) {
 	}
 }
 
+// CloseAllClients closes all WebSocket connections gracefully
+func (ws *WebSocketHandler) CloseAllClients() {
+	ws.clientsMu.Lock()
+	for client := range ws.clients {
+		_ = client.WriteMessage(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down"),
+		)
+		_ = client.Close()
+		delete(ws.clients, client)
+	}
+	ws.clientsMu.Unlock()
+}
+
 // Broadcast sends a message to all connected clients
-func (ws *WebSocketServer) Broadcast(msg *WSMessage) {
+func (ws *WebSocketHandler) Broadcast(msg *WSMessage) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return
@@ -176,7 +156,7 @@ func (ws *WebSocketServer) Broadcast(msg *WSMessage) {
 }
 
 // broadcastPayload is a helper to broadcast a typed payload
-func (ws *WebSocketServer) broadcastPayload(code string, payload interface{}) {
+func (ws *WebSocketHandler) broadcastPayload(code string, payload interface{}) {
 	dictJSON, err := json.Marshal(payload)
 	if err != nil {
 		return
@@ -188,7 +168,7 @@ func (ws *WebSocketServer) broadcastPayload(code string, payload interface{}) {
 }
 
 // BroadcastEvent broadcasts an event to all clients
-func (ws *WebSocketServer) BroadcastEvent(event *photon.EventData) {
+func (ws *WebSocketHandler) BroadcastEvent(event *photon.EventData) {
 	ws.broadcastPayload("event", map[string]interface{}{
 		"code":       event.Code,
 		"parameters": event.Parameters,
@@ -196,7 +176,7 @@ func (ws *WebSocketServer) BroadcastEvent(event *photon.EventData) {
 }
 
 // BroadcastRequest broadcasts a request to all clients
-func (ws *WebSocketServer) BroadcastRequest(req *photon.OperationRequest) {
+func (ws *WebSocketHandler) BroadcastRequest(req *photon.OperationRequest) {
 	ws.broadcastPayload("request", map[string]interface{}{
 		"operationCode": req.OperationCode,
 		"parameters":    req.Parameters,
@@ -204,7 +184,7 @@ func (ws *WebSocketServer) BroadcastRequest(req *photon.OperationRequest) {
 }
 
 // BroadcastResponse broadcasts a response to all clients
-func (ws *WebSocketServer) BroadcastResponse(resp *photon.OperationResponse) {
+func (ws *WebSocketHandler) BroadcastResponse(resp *photon.OperationResponse) {
 	ws.broadcastPayload("response", map[string]interface{}{
 		"operationCode": resp.OperationCode,
 		"returnCode":    resp.ReturnCode,
@@ -214,7 +194,7 @@ func (ws *WebSocketServer) BroadcastResponse(resp *photon.OperationResponse) {
 }
 
 // ClientCount returns the number of connected clients
-func (ws *WebSocketServer) ClientCount() int {
+func (ws *WebSocketHandler) ClientCount() int {
 	ws.clientsMu.RLock()
 	defer ws.clientsMu.RUnlock()
 	return len(ws.clients)

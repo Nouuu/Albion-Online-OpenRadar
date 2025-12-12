@@ -503,7 +503,7 @@ function connectWebSocket() {
   }
 
   console.log('🔌 [Utils.js] Connecting to WebSocket...');
-  socket = new WebSocket('ws://localhost:5002');
+  socket = new WebSocket('ws://localhost:5001/ws');
 
   socket.addEventListener('open', () => {
     reconnectAttempts = 0; // Reset counter on successful connection

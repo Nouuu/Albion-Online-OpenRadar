@@ -15,12 +15,13 @@ import (
 	"github.com/nospy/albion-openradar/internal/logger"
 )
 
-// HTTPServer serves static files from embedded assets or filesystem
+// HTTPServer serves static files and WebSocket from embedded assets or filesystem
 type HTTPServer struct {
-	port   int
-	mux    *http.ServeMux
-	server *http.Server
-	logger *logger.Logger
+	port      int
+	mux       *http.ServeMux
+	server    *http.Server
+	logger    *logger.Logger
+	wsHandler *WebSocketHandler
 	// Filesystems (can be embed.FS or os.DirFS)
 	images  fs.FS
 	scripts fs.FS
@@ -32,6 +33,7 @@ type HTTPServer struct {
 func NewHTTPServer(
 	port int,
 	images, scripts, public, sounds embed.FS,
+	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 ) *HTTPServer {
 	// Extract subdirectories from embed.FS (they include the folder path)
@@ -53,28 +55,30 @@ func NewHTTPServer(
 	}
 
 	s := &HTTPServer{
-		port:    port,
-		mux:     http.NewServeMux(),
-		logger:  log,
-		images:  imagesFS,
-		scripts: scriptsFS,
-		public:  publicFS,
-		sounds:  soundsFS,
+		port:      port,
+		mux:       http.NewServeMux(),
+		logger:    log,
+		wsHandler: wsHandler,
+		images:    imagesFS,
+		scripts:   scriptsFS,
+		public:    publicFS,
+		sounds:    soundsFS,
 	}
 	s.setupRoutes()
 	return s
 }
 
 // NewHTTPServerDev creates a new HTTP server reading from filesystem (dev mode)
-func NewHTTPServerDev(port int, appDir string, log *logger.Logger) *HTTPServer {
+func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log *logger.Logger) *HTTPServer {
 	s := &HTTPServer{
-		port:    port,
-		mux:     http.NewServeMux(),
-		logger:  log,
-		images:  os.DirFS(appDir + "/web/images"),
-		scripts: os.DirFS(appDir + "/web/scripts"),
-		public:  os.DirFS(appDir + "/web/public"),
-		sounds:  os.DirFS(appDir + "/web/sounds"),
+		port:      port,
+		mux:       http.NewServeMux(),
+		logger:    log,
+		wsHandler: wsHandler,
+		images:    os.DirFS(appDir + "/web/images"),
+		scripts:   os.DirFS(appDir + "/web/scripts"),
+		public:    os.DirFS(appDir + "/web/public"),
+		sounds:    os.DirFS(appDir + "/web/sounds"),
 	}
 	s.setupRoutes()
 	return s
@@ -85,6 +89,11 @@ func (s *HTTPServer) setupRoutes() {
 	// Cache durations
 	imageCacheDuration := 24 * time.Hour
 	dataCacheDuration := 7 * 24 * time.Hour
+
+	// WebSocket endpoint
+	if s.wsHandler != nil {
+		s.mux.Handle("/ws", s.wsHandler)
+	}
 
 	// SPA routes - serve index.html for all SPA paths
 	spaRoutes := []string{
@@ -296,14 +305,25 @@ func (s *HTTPServer) Start() error {
 		Addr:    addr,
 		Handler: s.mux,
 	}
-	fmt.Printf("HTTP server started on http://localhost%s\n", addr)
+	fmt.Printf("Server started on http://localhost%s\n", addr)
+	fmt.Printf("WebSocket available at ws://localhost%s/ws\n", addr)
 	return s.server.ListenAndServe()
 }
 
 // Shutdown gracefully shuts down the HTTP server
 func (s *HTTPServer) Shutdown(ctx context.Context) error {
+	// Close all WebSocket connections first
+	if s.wsHandler != nil {
+		s.wsHandler.CloseAllClients()
+	}
+
 	if s.server != nil {
 		return s.server.Shutdown(ctx)
 	}
 	return nil
+}
+
+// WebSocketHandler returns the WebSocket handler for broadcasting
+func (s *HTTPServer) WebSocketHandler() *WebSocketHandler {
+	return s.wsHandler
 }

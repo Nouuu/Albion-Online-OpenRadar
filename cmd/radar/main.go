@@ -26,8 +26,7 @@ var (
 )
 
 const (
-	httpPort        = 5001
-	wsPort          = 5002
+	serverPort      = 5001
 	shutdownTimeout = 10 * time.Second
 )
 
@@ -37,8 +36,8 @@ type App struct {
 	cancel     context.CancelFunc
 	wg         sync.WaitGroup
 	logger     *logger.Logger
-	wsServer   *server.WebSocketServer
 	httpServer *server.HTTPServer
+	wsHandler  *server.WebSocketHandler
 	capturer   *capture.Capturer
 }
 
@@ -92,12 +91,15 @@ func newApp(appDir string, cfg Config) *App {
 	ctx, cancel := context.WithCancel(context.Background())
 	log := logger.New("./logs")
 
+	// Create WebSocket handler first (shared between HTTP server and packet processor)
+	wsHandler := server.NewWebSocketHandler(log)
+
 	app := &App{
 		ctx:        ctx,
 		cancel:     cancel,
 		logger:     log,
-		wsServer:   server.NewWebSocketServer(wsPort, log),
-		httpServer: createHTTPServer(cfg.devMode, appDir, log),
+		wsHandler:  wsHandler,
+		httpServer: createHTTPServer(cfg.devMode, appDir, wsHandler, log),
 	}
 
 	capInstance, err := capture.New(ctx, appDir, cfg.ipAddr)
@@ -111,29 +113,34 @@ func newApp(appDir string, cfg Config) *App {
 	return app
 }
 
-func createHTTPServer(devMode bool, appDir string, log *logger.Logger) *server.HTTPServer {
+func createHTTPServer(
+	devMode bool,
+	appDir string,
+	wsHandler *server.WebSocketHandler,
+	log *logger.Logger,
+) *server.HTTPServer {
 	if devMode {
 		fmt.Println("Development mode: reading files from disk")
-		return server.NewHTTPServerDev(httpPort, appDir, log)
+		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log)
 	}
 	fmt.Println("Production mode: using embedded assets")
 	return server.NewHTTPServer(
-		httpPort,
+		serverPort,
 		assets.Images,
 		assets.Scripts,
 		assets.Public,
 		assets.Sounds,
+		wsHandler,
 		log,
 	)
 }
 
 func (app *App) start() {
-	app.startServer("WebSocket", app.wsServer.Start)
 	app.startServer("HTTP", app.httpServer.Start)
 	app.startServer("Capture", app.capturer.Start)
 
-	fmt.Printf("\nWeb UI: http://localhost:%d\n", httpPort)
-	fmt.Printf("WebSocket: ws://localhost:%d\n", wsPort)
+	fmt.Printf("\nServer: http://localhost:%d\n", serverPort)
+	fmt.Printf("WebSocket: ws://localhost:%d/ws\n", serverPort)
 	fmt.Println("\nListening for Albion packets on UDP port 5056...")
 	fmt.Println("   Press Ctrl+C to stop")
 }
@@ -144,7 +151,7 @@ func (app *App) startServer(name string, startFn func() error) {
 		defer app.wg.Done()
 		if err := startFn(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
 			app.ctx.Err() == nil {
-			fmt.Printf("%s server error: %v\n", name, err)
+			fmt.Printf("%s error: %v\n", name, err)
 		}
 	}()
 }
@@ -168,15 +175,15 @@ func (app *App) processCommand(cmd *photon.Command) {
 	switch cmd.MessageType {
 	case photon.MessageTypeEvent:
 		if event, err := photon.DeserializeEvent(cmd.Payload); err == nil {
-			app.wsServer.BroadcastEvent(event)
+			app.wsHandler.BroadcastEvent(event)
 		}
 	case photon.MessageTypeRequest:
 		if req, err := photon.DeserializeRequest(cmd.Payload); err == nil {
-			app.wsServer.BroadcastRequest(req)
+			app.wsHandler.BroadcastRequest(req)
 		}
 	case photon.MessageTypeResponse:
 		if resp, err := photon.DeserializeResponse(cmd.Payload); err == nil {
-			app.wsServer.BroadcastResponse(resp)
+			app.wsHandler.BroadcastResponse(resp)
 		}
 	}
 }
@@ -197,11 +204,8 @@ func (app *App) shutdown() {
 	app.cancel()
 	app.capturer.Close()
 
-	if err := app.wsServer.Shutdown(ctx); err != nil {
-		fmt.Printf("WebSocket server shutdown error: %v\n", err)
-	}
 	if err := app.httpServer.Shutdown(ctx); err != nil {
-		fmt.Printf("HTTP server shutdown error: %v\n", err)
+		fmt.Printf("Server shutdown error: %v\n", err)
 	}
 
 	app.waitWithTimeout(ctx)

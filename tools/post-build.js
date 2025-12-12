@@ -1,22 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import archiver from 'archiver';
-import {execSync} from 'child_process';
 
 const DIST_DIR = 'dist';
-// Check if --embed mode (standalone exe with all assets embedded)
-const embedMode = process.argv.includes('--embed');
-const assetsToCopy = embedMode ? [] : ['web/images', 'web/sounds', 'web/scripts', 'web/public'];
 
-console.log('\n📦 Post-build: Checking assets...\n');
-if (embedMode) {
-    console.log('📦 Embed mode: Assets are embedded in the executable\n');
-}
+console.log('\n📦 Post-build: Checking build output...\n');
 
 // Check if build was created
 if (!fs.existsSync(DIST_DIR)) {
     console.error('✗ dist/ folder not found!');
-    console.error('  pkg build may have failed.');
+    console.error('  Build may have failed.');
     process.exit(1);
 }
 
@@ -50,7 +42,6 @@ const executables = {
 
 const builtPlatforms = [];
 for (const [key, exe] of Object.entries(executables)) {
-    // Try both possible paths
     let foundPath = null;
     for (const tryPath of exe.paths) {
         if (fs.existsSync(tryPath)) {
@@ -74,35 +65,39 @@ if (builtPlatforms.length === 0) {
     process.exit(1);
 }
 
+// Helper function to get version from package.json
+function getVersion() {
+    try {
+        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+        return packageJson.version || '2.0.0';
+    } catch {
+        return '2.0.0';
+    }
+}
+
+const version = getVersion();
 
 // Create README file for dist (platform-aware)
 const createReadme = (platform) => {
     const exeName = platform === 'win64' ? 'OpenRadar.exe' :
         platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
 
-    const installInstructions = platform === 'win64' ?
-        `1. **Install Npcap** (REQUIRED - version 1.84 or newer)
+    if (platform === 'win64') {
+        return `# OpenRadar v${version} - Albion Online Radar (Windows)
+
+## About
+
+OpenRadar is a native Go application (~95 MB) with all assets embedded.
+No external dependencies besides Npcap are required.
+
+## Installation
+
+1. **Install Npcap** (REQUIRED - version 1.84 or newer)
    Download: https://npcap.com/
    Direct link (v1.84): https://npcap.com/dist/npcap-1.84.exe
 
 2. **Launch ${exeName}**
-   Double-click on ${exeName}` :
-        `1. **Install libpcap** (REQUIRED)
-   - Ubuntu/Debian: sudo apt-get install libpcap-dev
-   - macOS: brew install libpcap (usually pre-installed)
-   - Note: If not running as root, you need to set capabilities like so: sudo setcap cap_net_raw,cap_net_admin=eip path/to/bin.
-
-2. **Make executable**
-   chmod +x ${exeName}
-
-3. **Launch ${exeName}**
-   ./${exeName}`;
-
-    return `# OpenRadar - Albion Online Radar
-
-## Installation
-
-${installInstructions}
+   Double-click on ${exeName}
 
 3. **Select your network adapter**
    Choose the adapter you use to connect to the Internet
@@ -111,25 +106,158 @@ ${installInstructions}
 4. **Access the radar**
    Open http://localhost:5001 in your browser
 
+## Command-line Options
+
+  ${exeName} -version     Show version information
+  ${exeName} -ip X.X.X.X  Skip adapter selection prompt
+  ${exeName} -dev         Development mode (read files from disk)
+
 ## Prerequisites
 
-- ${platform === 'win64' ? 'Windows 10/11' : platform === 'linux-x64' ? 'Linux (Ubuntu 18.04+, Debian 10+, etc.)' : 'macOS 10.15+'}
-- ${platform === 'win64' ? 'Npcap 1.84 or newer' : 'libpcap'} installed
-- Internet connection to play Albion Online
+- Windows 10/11 (64-bit)
+- Npcap 1.84 or newer installed
 
 ## Support
 
-GitHub: https://github.com/Nouuu/Albion-Online-ZQRadar
+GitHub: https://github.com/Nouuu/Albion-Online-OpenRadar
 
-## Note
+## Technical Details
 
-This build includes all necessary assets (views, scripts, images, sounds).
-Native modules (cap.node) are integrated into the executable.
-
-## Platform
+- Native Go backend (v2.0)
+- Single binary with embedded assets
+- Server on port 5001 (HTTP + WebSocket on /ws)
+- Captures UDP traffic on port 5056
 
 Built for: ${platform}
-Go Backend v2.0
+`;
+    }
+
+    if (platform === 'linux-x64') {
+        return `# OpenRadar v${version} - Albion Online Radar (Linux)
+
+## About
+
+OpenRadar is a native Go application (~95 MB) with all assets embedded.
+No external dependencies besides libpcap are required.
+
+## Installation
+
+1. **Install libpcap** (REQUIRED)
+   Ubuntu/Debian: sudo apt-get install libpcap-dev
+   Fedora/RHEL:   sudo dnf install libpcap-devel
+   Arch Linux:   sudo pacman -S libpcap
+
+2. **Make executable**
+   chmod +x ${exeName}
+
+3. **Grant capture permissions** (choose ONE option)
+
+   Option A - Run as root (simple but not recommended):
+   sudo ./${exeName}
+
+   Option B - Grant capabilities (recommended):
+   sudo setcap cap_net_raw,cap_net_admin=eip ./${exeName}
+
+   After running setcap, you can run the application as a normal user:
+   ./${exeName}
+
+   Note: setcap permissions are removed if the file is modified or moved.
+   You'll need to run the setcap command again in those cases.
+
+4. **Select your network adapter**
+   Choose the adapter you use to connect to the Internet
+   (DO NOT choose 127.0.0.1 or localhost)
+
+5. **Access the radar**
+   Open http://localhost:5001 in your browser
+
+## Command-line Options
+
+  ./${exeName} -version     Show version information
+  ./${exeName} -ip X.X.X.X  Skip adapter selection prompt
+  ./${exeName} -dev         Development mode (read files from disk)
+
+## Prerequisites
+
+- Linux (Ubuntu 18.04+, Debian 10+, Fedora 32+, etc.)
+- libpcap installed
+- Network capture permissions (root or setcap)
+
+## Troubleshooting
+
+If you get "permission denied" or "no suitable device found":
+  sudo setcap cap_net_raw,cap_net_admin=eip ./${exeName}
+
+If setcap doesn't work, run as root:
+  sudo ./${exeName}
+
+## Support
+
+GitHub: https://github.com/Nouuu/Albion-Online-OpenRadar
+
+## Technical Details
+
+- Native Go backend (v2.0)
+- Single binary with embedded assets
+- Server on port 5001 (HTTP + WebSocket on /ws)
+- Captures UDP traffic on port 5056
+
+Built for: ${platform}
+`;
+    }
+
+    // macOS
+    return `# OpenRadar v${version} - Albion Online Radar (macOS)
+
+## About
+
+OpenRadar is a native Go application (~95 MB) with all assets embedded.
+libpcap is usually pre-installed on macOS.
+
+## Installation
+
+1. **Install libpcap** (usually pre-installed)
+   If needed: brew install libpcap
+
+2. **Make executable**
+   chmod +x ${exeName}
+
+3. **Launch with sudo** (required for packet capture)
+   sudo ./${exeName}
+
+   Note: macOS requires root privileges for raw packet capture.
+   There is no setcap equivalent on macOS.
+
+4. **Select your network adapter**
+   Choose the adapter you use to connect to the Internet
+   (DO NOT choose 127.0.0.1 or localhost)
+
+5. **Access the radar**
+   Open http://localhost:5001 in your browser
+
+## Command-line Options
+
+  ./${exeName} -version     Show version information
+  ./${exeName} -ip X.X.X.X  Skip adapter selection prompt
+  ./${exeName} -dev         Development mode (read files from disk)
+
+## Prerequisites
+
+- macOS 10.15+ (Catalina or newer)
+- libpcap (usually pre-installed)
+
+## Support
+
+GitHub: https://github.com/Nouuu/Albion-Online-OpenRadar
+
+## Technical Details
+
+- Native Go backend (v2.0)
+- Single binary with embedded assets
+- Server on port 5001 (HTTP + WebSocket on /ws)
+- Captures UDP traffic on port 5056
+
+Built for: ${platform}
 `;
 };
 
@@ -147,121 +275,10 @@ if (builtPlatforms.includes('win')) {
     console.log('✓ README.txt created (Windows)');
 }
 
-function copyRecursiveSync(src, dest) {
-    if (!fs.existsSync(src)){
-        console.warn(`⚠ Source folder not found: ${src}`);
-        return;
-    }
-
-    if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, {recursive: true});
-    }
-
-    const entries = fs.readdirSync(src, {withFileTypes: true});
-
-    for (let entry of entries) {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
-
-        if (entry.isDirectory()) {
-            copyRecursiveSync(srcPath, destPath);
-        } else {
-            fs.copyFileSync(srcPath, destPath);
-        }
-    }
+console.log('\n✓ Post-build completed!\n');
+console.log('Files in dist/:');
+for (const platform of builtPlatforms) {
+    console.log(`  - ${executables[platform].actualName}`);
 }
-
-// Skip asset copying and compression in embed mode (assets are in the exe)
-if (!embedMode) {
-    console.log('\n📁 Copying assets next to executable...\n');
-
-    for (const asset of assetsToCopy) {
-        const srcPath = path.join(asset);
-        const destPath = path.join(DIST_DIR, asset);
-
-        try {
-            copyRecursiveSync(srcPath, destPath);
-            console.log(`✓ ${asset}/ copied`);
-        } catch (err) {
-            console.error(`✗ Error copying ${asset}/:`, err.message);
-        }
-    }
-
-    // 🗜️ Compress game data files in dist/ for production
-    console.log('\n🗜️  Compressing game data files in dist/...\n');
-    const aoBinDumpsPath = path.join(DIST_DIR, 'web/public', 'ao-bin-dumps');
-    if (fs.existsSync(aoBinDumpsPath)) {
-        try {
-            // Run compression script targeting dist/web/public/ao-bin-dumps/
-            execSync(`node tools/compress-game-data.js "${aoBinDumpsPath}"`, {stdio: 'inherit'});
-            console.log('✅ Game data compression complete!\n');
-        } catch (error) {
-            console.warn('⚠️  Warning: Game data compression failed');
-            console.warn('   Continuing without pre-compressed files\n');
-        }
-    }
-
-    // 🧹 Clean up: Remove original JSON/XML files that have .gz equivalents
-    console.log('\n🧹 Optimizing distribution size...\n');
-    if (fs.existsSync(aoBinDumpsPath)) {
-        const files = fs.readdirSync(aoBinDumpsPath);
-        let removedSize = 0;
-        let removedCount = 0;
-
-        for (const file of files) {
-            const ext = path.extname(file).toLowerCase();
-            if (ext === '.json' || ext === '.xml') {
-                const gzFile = `${file}.gz`;
-                const filePath = path.join(aoBinDumpsPath, file);
-                const gzPath = path.join(aoBinDumpsPath, gzFile);
-
-                // If .gz exists, remove the original file
-                if (fs.existsSync(gzPath)) {
-                    const stats = fs.statSync(filePath);
-                    removedSize += stats.size;
-                    fs.unlinkSync(filePath);
-                    removedCount++;
-                    console.log(`  ✓ Removed ${file} (${(stats.size / 1024 / 1024).toFixed(1)} MB - .gz version exists)`);
-                }
-            }
-        }
-
-        if (removedCount > 0) {
-            console.log(`\n✅ Removed ${removedCount} original file(s), saved ${(removedSize / 1024 / 1024).toFixed(1)} MB in distribution!`);
-        } else {
-            console.log('  ℹ️  No files to remove (no .gz versions found)');
-        }
-    }
-
-    console.log('\n✓ Assets copied and optimized!\n');
-    console.log('Files in dist/:');
-    console.log('  - Executables');
-    console.log('  - README files');
-    for (const asset of assetsToCopy) {
-        console.log(`  - ${asset}/`);
-    }
-} else {
-    console.log('\n✓ Embed mode: Standalone executable ready!\n');
-    console.log('Files in dist/:');
-    console.log('  - Executables (with embedded assets)');
-    console.log('  - README files');
-}
-
-console.log('✓ Post-build completed!\n');
-console.log('Note: This approach makes the exe lighter and facilitates updates\n');
-
-// Create compressed archives (multiple formats per platform)
-console.log('\n📦 Creating compressed archives...\n');
-
-const version = getVersion();
-
-// Helper function to get version from package.json
-function getVersion() {
-    try {
-        const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        return packageJson.version || '1.0.0';
-    } catch (err) {
-        console.warn('⚠ Could not read version from package.json:', err.message);
-        return '1.0.0';
-    }
-}
+console.log('  - README files\n');
+console.log(`Note: Go v2.0 - Single binary with all assets embedded (~95 MB)\n`);
