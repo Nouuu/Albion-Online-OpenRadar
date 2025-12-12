@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/nospy/albion-openradar/internal/capture"
+	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
 	"github.com/nospy/albion-openradar/internal/server"
 )
@@ -28,8 +29,11 @@ func main() {
 	}
 	fmt.Printf("📂 App directory: %s\n", appDir)
 
+	// Create logger
+	log := logger.New("./logs")
+
 	// Create WebSocket server
-	wsServer := server.NewWebSocketServer(wsPort)
+	wsServer := server.NewWebSocketServer(wsPort, log)
 	go func() {
 		if err := wsServer.Start(); err != nil {
 			fmt.Printf("❌ WebSocket server error: %v\n", err)
@@ -37,7 +41,7 @@ func main() {
 	}()
 
 	// Create HTTP server
-	httpServer := server.NewHTTPServer(httpPort, appDir)
+	httpServer := server.NewHTTPServer(httpPort, appDir, log)
 	go func() {
 		if err := httpServer.Start(); err != nil {
 			fmt.Printf("❌ HTTP server error: %v\n", err)

@@ -2,6 +2,7 @@ package server
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/nospy/albion-openradar/internal/logger"
 )
 
 // HTTPServer serves static files
@@ -16,14 +19,16 @@ type HTTPServer struct {
 	port   int
 	appDir string
 	mux    *http.ServeMux
+	logger *logger.Logger
 }
 
 // NewHTTPServer creates a new HTTP server
-func NewHTTPServer(port int, appDir string) *HTTPServer {
+func NewHTTPServer(port int, appDir string, log *logger.Logger) *HTTPServer {
 	s := &HTTPServer{
 		port:   port,
 		appDir: appDir,
 		mux:    http.NewServeMux(),
+		logger: log,
 	}
 	s.setupRoutes()
 	return s
@@ -150,13 +155,27 @@ func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		// Return current server logs status
-		w.Write([]byte(`{"enabled":false}`))
+		enabled := false
+		if s.logger != nil {
+			enabled = s.logger.IsEnabled()
+		}
+		json.NewEncoder(w).Encode(map[string]bool{"enabled": enabled})
 
 	case "POST":
-		// Update server logs status
-		// TODO: Implement when logger is added
-		w.Write([]byte(`{"success":true,"enabled":false}`))
+		var req struct {
+			Enabled bool `json:"enabled"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, `{"error":"Invalid JSON"}`, http.StatusBadRequest)
+			return
+		}
+		if s.logger != nil {
+			s.logger.SetEnabled(req.Enabled)
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"success": true,
+			"enabled": s.logger != nil && s.logger.IsEnabled(),
+		})
 
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

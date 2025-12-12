@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
 )
 
@@ -22,13 +23,15 @@ type WebSocketServer struct {
 	clientsMu sync.RWMutex
 	upgrader  websocket.Upgrader
 	port      int
+	logger    *logger.Logger
 }
 
 // NewWebSocketServer creates a new WebSocket server
-func NewWebSocketServer(port int) *WebSocketServer {
+func NewWebSocketServer(port int, log *logger.Logger) *WebSocketServer {
 	return &WebSocketServer{
 		clients: make(map[*websocket.Conn]bool),
 		port:    port,
+		logger:  log,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true // Allow all origins for local development
@@ -91,8 +94,8 @@ func (ws *WebSocketServer) handleMessages(conn *websocket.Conn) {
 			Logs []interface{} `json:"logs"`
 		}
 		if err := json.Unmarshal(message, &data); err == nil {
-			if data.Type == "logs" && len(data.Logs) > 0 {
-				// TODO: Write logs to logger
+			if data.Type == "logs" && len(data.Logs) > 0 && ws.logger != nil {
+				ws.logger.WriteLogs(data.Logs)
 			}
 		}
 	}
