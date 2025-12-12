@@ -11,3 +11,5 @@ var Images embed.FS
 var Scripts embed.FS
 var Public embed.FS
 var Sounds embed.FS
+var Styles embed.FS
+var Templates embed.FS

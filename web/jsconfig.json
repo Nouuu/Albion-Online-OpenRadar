@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "scripts/*": ["./scripts/*"],
+      "images/*": ["./images/*"],
+      "ao-bin-dumps/*": ["./public/ao-bin-dumps/*"],
+      "pages/*": ["./public/pages/*"]
+    },
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "checkJs": true,
+    "allowJs": true,
+    "strict": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "scripts/**/*",
+    "public/**/*"
+  ],
+  "exclude": [
+    "../node_modules"
+  ]
+}

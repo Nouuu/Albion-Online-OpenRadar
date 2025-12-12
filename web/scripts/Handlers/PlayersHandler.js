@@ -22,6 +22,11 @@ class Player {
         this.flagId = flagId;
         this.mounted = false;
         this.detectedAt = Date.now(); // 👥 Detection timestamp
+        this.lastUpdateTime = Date.now(); // For stale entity cleanup
+    }
+
+    touch() {
+        this.lastUpdateTime = Date.now();
     }
 
     setMounted(mounted) {
@@ -223,5 +228,50 @@ export class PlayersHandler {
     Clear() {
         this.playersList = [];
         this.alreadyIgnoredPlayers = [];
+    }
+
+    /**
+     * Remove players not updated for a given time period
+     * @param {number} maxAgeMs - Maximum age in milliseconds (default: 5 minutes for players)
+     * @returns {number} - Number of players removed
+     */
+    cleanupStaleEntities(maxAgeMs = 300000) {
+        const now = Date.now();
+        const before = this.playersList.length;
+
+        this.playersList = this.playersList.filter(player =>
+            (now - player.lastUpdateTime) < maxAgeMs
+        );
+
+        const removed = before - this.playersList.length;
+        if (removed > 0) {
+            console.log(`[PlayersHandler] Cleaned up ${removed} stale players (>${maxAgeMs/1000}s old)`);
+        }
+        return removed;
+    }
+
+    /**
+     * Enforce maximum list size (already enforced in handleNewPlayerEvent, but this is explicit)
+     * @param {number} maxSize - Maximum players (default: 50)
+     * @returns {number} - Number of players removed
+     */
+    enforceMaxSize(maxSize = 50) {
+        if (this.playersList.length <= maxSize) return 0;
+
+        // Sort by lastUpdateTime (oldest first) and keep newest
+        this.playersList.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime);
+        const removed = this.playersList.length - maxSize;
+        this.playersList = this.playersList.slice(0, maxSize);
+
+        console.log(`[PlayersHandler] Enforced max size: removed ${removed} oldest players`);
+        return removed;
+    }
+
+    /**
+     * Get current list size for monitoring
+     * @returns {number}
+     */
+    getSize() {
+        return this.playersList.length;
     }
 }

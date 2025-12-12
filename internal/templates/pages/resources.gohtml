@@ -1,0 +1,205 @@
+{{define "pages/resources"}}
+<div class="space-y-6 stagger">
+    <!-- Page Header -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <h1 class="text-3xl font-bold text-white">Static Resources</h1>
+        <p class="text-gray-400 mt-2">Configure which static harvestable resources to display.</p>
+    </div>
+
+    <!-- Static Resources Grids (generated dynamically) -->
+    <div id="static-fiber-grid"></div>
+    <div id="static-hide-grid"></div>
+    <div id="static-wood-grid"></div>
+    <div id="static-ore-grid"></div>
+    <div id="static-rock-grid"></div>
+
+    <!-- Living Resources Header -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <h2 class="text-2xl font-bold text-white">Living Resources</h2>
+        <p class="text-gray-400 mt-2">Configure which skinnable creatures and living resources to display.</p>
+    </div>
+
+    <!-- Living Resources Grids (generated dynamically) -->
+    <div id="living-fiber-grid"></div>
+    <div id="living-hide-grid"></div>
+    <div id="living-wood-grid"></div>
+    <div id="living-ore-grid"></div>
+    <div id="living-rock-grid"></div>
+
+    <!-- Other Resources -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Other</h2>
+        <label class="flex items-center gap-3 cursor-pointer group">
+            <input type="checkbox" id="settingFishing"
+                   class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+            <span class="text-gray-300 group-hover:text-white transition-colors">Show Fishing Pools</span>
+        </label>
+    </div>
+
+    <!-- Visual & Tools -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Visual & Tools</h2>
+        <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingResourceCount"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Resources Count</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingResourceDistance"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Distance</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingResourceClusters"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Clusters</span>
+            </label>
+
+            <div class="ml-8 pl-4 border-l-2 border-white/10 space-y-3">
+                <label class="block">
+                    <span class="text-gray-400 text-xs mb-1 block">Cluster radius (meters)</span>
+                    <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
+                           class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm">
+                </label>
+                <label class="block">
+                    <span class="text-gray-400 text-xs mb-1 block">Min resources per cluster</span>
+                    <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
+                           class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm">
+                </label>
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingLivingResourcesHealthBar"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Health Bar</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingLivingResourcesID"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show ID</span>
+            </label>
+
+            <hr class="border-white/10 my-4">
+
+            <p class="text-xs text-gray-500">
+                <strong>Tip:</strong> Logging options in <a href="/settings" class="text-accent hover:underline">Settings > Debug & Logging</a>
+            </p>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/resources"}}
+<script>
+window.onGlobalsReady(function initResourcesPage() {
+    const settingsSync = window.settingsSync;
+    const {
+        attachCheckboxListeners,
+        generateResourceGrid,
+        initializeTierButtonStates,
+        updateTierButtonState,
+        selectAllTierEnchants,
+        getResourceStorageKey
+    } = window.ResourcesHelper;
+
+    window.selectAllTierEnchants = selectAllTierEnchants;
+
+    const resources = [
+        { prefix: 'fsp', name: 'Fiber', emoji: '', type: 'Static', containerId: 'static-fiber-grid' },
+        { prefix: 'hsp', name: 'Hide', emoji: '', type: 'Static', containerId: 'static-hide-grid' },
+        { prefix: 'wsp', name: 'Wood', emoji: '', type: 'Static', containerId: 'static-wood-grid' },
+        { prefix: 'osp', name: 'Ore', emoji: '', type: 'Static', containerId: 'static-ore-grid' },
+        { prefix: 'rsp', name: 'Rock', emoji: '', type: 'Static', containerId: 'static-rock-grid' },
+        { prefix: 'flp', name: 'Dryad (Fiber)', emoji: '', type: 'Living', containerId: 'living-fiber-grid' },
+        { prefix: 'hlp', name: 'Animals (Hide)', emoji: '', type: 'Living', containerId: 'living-hide-grid' },
+        { prefix: 'wlp', name: 'Spirit (Wood)', emoji: '', type: 'Living', containerId: 'living-wood-grid' },
+        { prefix: 'olp', name: 'Elemental (Ore)', emoji: '', type: 'Living', containerId: 'living-ore-grid' },
+        { prefix: 'rlp', name: 'Elemental (Rock)', emoji: '', type: 'Living', containerId: 'living-rock-grid' }
+    ];
+
+    const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
+    const defaultEnchants = {
+        'e0': [false, false, false, false, false, false, false, false],
+        'e1': [false, false, false, false, false, false, false, false],
+        'e2': [false, false, false, false, false, false, false, false],
+        'e3': [false, false, false, false, false, false, false, false],
+        'e4': [false, false, false, false, false, false, false, false],
+    };
+
+    // Generate all resource grids
+    resources.forEach(resource => {
+        const container = document.getElementById(resource.containerId);
+        if (container) {
+            container.innerHTML = generateResourceGrid({
+                prefix: resource.prefix,
+                name: resource.name,
+                emoji: resource.emoji
+            });
+        }
+    });
+
+    // Bind resource grid checkboxes
+    resources.forEach(config => {
+        const storageKey = getResourceStorageKey(config.prefix, config.type);
+        let enchants = settingsSync.getJSON(storageKey, defaultEnchants);
+
+        enchantLevels.forEach(enchantLevel => {
+            const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
+            if (!parent) return;
+
+            for (let i = 0; i < parent.children.length; i++) {
+                const element = parent.children[i];
+                if (element.nodeName !== 'INPUT') continue;
+
+                element.checked = enchants[enchantLevel][i];
+                element.addEventListener("change", () => {
+                    enchants[enchantLevel][i] = element.checked;
+                    settingsSync.setJSON(storageKey, enchants);
+                    updateTierButtonState(config.prefix, i);
+                });
+            }
+        });
+    });
+
+    // Helper to bind checkboxes
+    const bindCheckbox = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = settingsSync.getBool(id);
+            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+        }
+    };
+
+    const bindNumber = (id, defaultVal) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = settingsSync.getNumber(id, defaultVal);
+            el.addEventListener("input", () => settingsSync.setNumber(id, Number(el.value)));
+        }
+    };
+
+    // Other settings
+    bindCheckbox("settingFishing");
+    bindCheckbox("settingResourceCount");
+    bindCheckbox("settingResourceDistance");
+    bindCheckbox("settingResourceClusters");
+    bindCheckbox("settingLivingResourcesHealthBar");
+    bindCheckbox("settingLivingResourcesID");
+
+    bindNumber("settingClusterRadius", 30);
+    bindNumber("settingClusterMinSize", 2);
+
+    // Initialize tier buttons after grids are rendered
+    setTimeout(() => {
+        attachCheckboxListeners();
+        initializeTierButtonStates();
+    }, 50);
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}

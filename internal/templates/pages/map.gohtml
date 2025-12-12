@@ -1,0 +1,55 @@
+{{define "pages/map"}}
+<div class="space-y-6 stagger">
+    <!-- Page Header -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <h1 class="text-3xl font-bold text-white">Map</h1>
+        <p class="text-gray-400 mt-2">Configure map background display settings.</p>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Display Settings</h2>
+
+        <label class="flex items-center gap-3 cursor-pointer group">
+            <input type="checkbox"
+                   id="settingShowMap"
+                   data-setting="settingShowMap"
+                   class="w-5 h-5 rounded border-2 border-white/20 bg-surface
+                          checked:bg-accent checked:border-accent
+                          focus:ring-2 focus:ring-accent/30
+                          transition-colors cursor-pointer">
+            <span class="text-gray-300 group-hover:text-white transition-colors">
+                Show Map Background
+            </span>
+            <span class="relative group/tooltip">
+                <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50
+                             px-3 py-2 rounded-lg bg-overlay border border-white/10
+                             text-xs text-gray-200 whitespace-nowrap
+                             opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible
+                             transition-all duration-200 shadow-lg">
+                    Display the Albion Online map as background on the radar.
+                </span>
+            </span>
+        </label>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/map"}}
+<script>
+window.onGlobalsReady(function initMapPage() {
+    const settingsSync = window.settingsSync;
+
+    const settingShowMap = document.getElementById("settingShowMap");
+    if (settingShowMap) {
+        settingShowMap.checked = settingsSync.getBool("settingShowMap");
+        settingShowMap.addEventListener("change", () => {
+            settingsSync.setBool("settingShowMap", settingShowMap.checked);
+        });
+    }
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}

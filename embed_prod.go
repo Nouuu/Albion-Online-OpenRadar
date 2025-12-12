@@ -18,3 +18,9 @@ var Public embed.FS
 
 //go:embed all:web/sounds
 var Sounds embed.FS
+
+//go:embed all:web/styles
+var Styles embed.FS
+
+//go:embed all:internal/templates
+var Templates embed.FS

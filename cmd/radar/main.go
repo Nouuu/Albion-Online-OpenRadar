@@ -185,7 +185,7 @@ func newApp(
 		cancel:     cancel,
 		logger:     log,
 		wsHandler:  wsHandler,
-		httpServer: createHTTPServer(cfg.devMode, appDir, wsHandler, log),
+		httpServer: createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version),
 		capturer:   capturer,
 	}
 
@@ -199,10 +199,11 @@ func createHTTPServer(
 	appDir string,
 	wsHandler *server.WebSocketHandler,
 	log *logger.Logger,
+	version string,
 ) *server.HTTPServer {
 	if devMode {
 		logger.PrintInfo("MODE", "Development mode: reading files from disk")
-		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log)
+		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version)
 	}
 	logger.PrintInfo("MODE", "Production mode: using embedded assets")
 	return server.NewHTTPServer(
@@ -211,8 +212,11 @@ func createHTTPServer(
 		assets.Scripts,
 		assets.Public,
 		assets.Sounds,
+		assets.Styles,
+		assets.Templates,
 		wsHandler,
 		log,
+		version,
 	)
 }
 

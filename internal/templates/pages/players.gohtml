@@ -1,0 +1,146 @@
+{{define "pages/players"}}
+<div class="space-y-6 stagger">
+    <!-- Page Header -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <h1 class="text-3xl font-bold text-white">Players</h1>
+        <p class="text-gray-400 mt-2">Configure player detection and display settings.</p>
+    </div>
+
+    <!-- Show Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Show</h2>
+        <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingShowPlayers"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Players on Radar</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Master toggle to show players on the radar.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingItems"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Items</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows the equipment the other player is carrying.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingItemsDev"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Items Dev</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows the IDs of the player's items (dev purposes).</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingFlash"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Screen Flash</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows a red flash when a player is detected.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingSound"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Sound</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Plays a sound alert when a player is detected.</span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Types Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Player Types</h2>
+        <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingPassivePlayers"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Passive Players</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show players who are not flagged for PvP.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingFactionPlayers"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Faction Players</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show players flagged for faction warfare.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingDangerousPlayers"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Dangerous Players</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show hostile/dangerous players.</span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Display Settings -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Display Settings</h2>
+        <div class="max-w-xs">
+            <label class="block">
+                <span class="flex items-center gap-2 text-gray-300 mb-2">
+                    Maximum Players Displayed
+                    <span class="relative group/tooltip">
+                        <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Maximum number of players to display (1-100). Default: 50</span>
+                    </span>
+                </span>
+                <input id="settingMaxPlayersDisplay" type="number" min="1" max="100" placeholder="50"
+                       class="w-full px-4 py-2 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors">
+            </label>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/players"}}
+<script>
+window.onGlobalsReady(function initPlayersPage() {
+    const settingsSync = window.settingsSync;
+
+    const bindCheckbox = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = settingsSync.getBool(id);
+            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+        }
+    };
+
+    ["settingShowPlayers", "settingItems", "settingItemsDev", "settingSound",
+     "settingFlash", "settingPassivePlayers", "settingFactionPlayers",
+     "settingDangerousPlayers"].forEach(bindCheckbox);
+
+    const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
+    if (settingMaxPlayersDisplay) {
+        settingMaxPlayersDisplay.value = settingsSync.getNumber("settingMaxPlayersDisplay", 50);
+        settingMaxPlayersDisplay.addEventListener("input", () => {
+            const val = Number(settingMaxPlayersDisplay.value);
+            if (val >= 1 && val <= 100) {
+                settingsSync.setNumber("settingMaxPlayersDisplay", val);
+            }
+        });
+    }
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}

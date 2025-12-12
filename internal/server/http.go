@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/nospy/albion-openradar/internal/logger"
+	"github.com/nospy/albion-openradar/internal/templates"
 )
 
 // HTTPServer serves static files and WebSocket from embedded assets or filesystem
@@ -27,14 +28,19 @@ type HTTPServer struct {
 	scripts fs.FS
 	public  fs.FS
 	sounds  fs.FS
+	styles  fs.FS
+	// Template engine
+	tmpl    *templates.Engine
+	version string
 }
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
 func NewHTTPServer(
 	port int,
-	images, scripts, public, sounds embed.FS,
+	images, scripts, public, sounds, styles, tmplFS embed.FS,
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
+	version string,
 ) *HTTPServer {
 	// Extract subdirectories from embed.FS (they include the folder path)
 	imagesFS, err := fs.Sub(images, "web/images")
@@ -53,6 +59,17 @@ func NewHTTPServer(
 	if err != nil {
 		fmt.Printf("[HTTP] Warning: failed to load sounds: %v\n", err)
 	}
+	stylesFS, err := fs.Sub(styles, "web/styles")
+	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load styles: %v\n", err)
+	}
+
+	// Initialize template engine (required)
+	tmpl, err := templates.NewEngine(tmplFS, "internal/templates")
+	if err != nil {
+		panic(fmt.Sprintf("[HTTP] Failed to load templates: %v", err))
+	}
+	fmt.Println("[HTTP] Template engine initialized (SSR mode)")
 
 	s := &HTTPServer{
 		port:      port,
@@ -63,13 +80,24 @@ func NewHTTPServer(
 		scripts:   scriptsFS,
 		public:    publicFS,
 		sounds:    soundsFS,
+		styles:    stylesFS,
+		tmpl:      tmpl,
+		version:   version,
 	}
 	s.setupRoutes()
 	return s
 }
 
 // NewHTTPServerDev creates a new HTTP server reading from filesystem (dev mode)
-func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log *logger.Logger) *HTTPServer {
+func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log *logger.Logger, version string) *HTTPServer {
+	// Initialize template engine in dev mode (hot reload)
+	tmplDir := appDir + "/internal/templates"
+	tmpl, err := templates.NewEngineDev(tmplDir)
+	if err != nil {
+		panic(fmt.Sprintf("[HTTP] Failed to load templates: %v", err))
+	}
+	fmt.Println("[HTTP] Template engine initialized (dev mode with hot reload)")
+
 	s := &HTTPServer{
 		port:      port,
 		mux:       http.NewServeMux(),
@@ -79,6 +107,9 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 		scripts:   os.DirFS(appDir + "/web/scripts"),
 		public:    os.DirFS(appDir + "/web/public"),
 		sounds:    os.DirFS(appDir + "/web/sounds"),
+		styles:    os.DirFS(appDir + "/web/styles"),
+		tmpl:      tmpl,
+		version:   version,
 	}
 	s.setupRoutes()
 	return s
@@ -95,28 +126,29 @@ func (s *HTTPServer) setupRoutes() {
 		s.mux.Handle("/ws", s.wsHandler)
 	}
 
-	// SPA routes - serve index.html for all SPA paths
-	spaRoutes := []string{
-		"/",
-		"/home",
-		"/players",
-		"/resources",
-		"/enemies",
-		"/chests",
-		"/map",
-		"/ignorelist",
-		"/settings",
-		"/spa",
+	// Page routes - SSR with Go templates
+	pageRoutes := map[string]string{
+		"/":           "radar",
+		"/home":       "radar",
+		"/players":    "players",
+		"/resources":  "resources",
+		"/enemies":    "enemies",
+		"/chests":     "chests",
+		"/map":        "map",
+		"/ignorelist": "ignorelist",
+		"/settings":   "settings",
 	}
-	for _, route := range spaRoutes {
+
+	for route, page := range pageRoutes {
+		pageName := page // Capture for closure
 		s.mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			s.serveFile(w, r, s.public, "index.html")
+			s.renderPage(w, pageName)
 		})
 	}
 
 	// Radar overlay
 	s.mux.HandleFunc("/radar-overlay", func(w http.ResponseWriter, r *http.Request) {
-		s.serveFile(w, r, s.public, "radar-overlay.html")
+		s.renderOverlay(w)
 	})
 
 	// Static file handlers with caching
@@ -127,6 +159,8 @@ func (s *HTTPServer) setupRoutes() {
 	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0, false))
 	s.mux.Handle("/public/", s.fsHandler("/public/", s.public, 0, true))
 	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0, true))
+	// Styles: NO CACHE (for development)
+	s.mux.Handle("/styles/", s.fsHandler("/styles/", s.styles, 0, true))
 
 	// ao-bin-dumps with gzip support
 	s.mux.Handle(
@@ -136,6 +170,48 @@ func (s *HTTPServer) setupRoutes() {
 
 	// API endpoints
 	s.mux.HandleFunc("/api/settings/server-logs", s.handleServerLogs)
+}
+
+// renderPage renders a page template
+func (s *HTTPServer) renderPage(w http.ResponseWriter, page string) {
+	// Get page title
+	titles := map[string]string{
+		"radar":      "Radar",
+		"players":    "Players",
+		"resources":  "Resources",
+		"enemies":    "Enemies",
+		"chests":     "Chests",
+		"map":        "Map",
+		"ignorelist": "Ignore List",
+		"settings":   "Settings",
+	}
+	title := titles[page]
+	if title == "" {
+		title = strings.Title(page)
+	}
+
+	data := templates.NewPageData(page, "OpenRadar - "+title).WithVersion(s.version)
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	if err := s.tmpl.RenderPage(w, page, data); err != nil {
+		s.logger.Error("http", "render", fmt.Sprintf("Failed to render page %s: %v", page, err), nil)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+}
+
+// renderOverlay renders the radar overlay template
+func (s *HTTPServer) renderOverlay(w http.ResponseWriter) {
+	data := templates.NewPageData("overlay", "OpenRadar - Radar Overlay").WithVersion(s.version)
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+
+	if err := s.tmpl.Render(w, "overlay/radar-overlay.gohtml", data); err != nil {
+		s.logger.Error("http", "render", fmt.Sprintf("Failed to render overlay: %v", err), nil)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
 // serveFile serves a single file from fs.FS

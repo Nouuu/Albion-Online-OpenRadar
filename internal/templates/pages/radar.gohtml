@@ -1,0 +1,139 @@
+{{define "pages/radar"}}
+<div class="space-y-6">
+    <!-- Canvas Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <div id="canvasContainer" class="relative mx-auto" style="width: 520px; height: 520px;">
+            <canvas class="ttcan absolute top-0 left-0 m-2.5 border-2 border-white/10 rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
+            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
+            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
+            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
+        </div>
+    </div>
+
+    <!-- Detected Players Section -->
+    <div id="playersSection" class="bg-elevated border border-white/5 rounded-xl p-6" style="display: none;">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-white">Detected Players</h3>
+            <span id="playersCount" class="hidden items-center gap-1.5 text-xs font-mono font-semibold text-danger bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20">
+                <span class="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></span>
+                <span id="playersCountNum">0</span>
+            </span>
+        </div>
+        <div id="playersList" class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin">
+            <div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center">
+                <svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p class="text-sm text-white/40">No players detected yet</p>
+                <p class="text-xs text-white/25 font-mono mt-1">Scanning...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Display Overlays -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h3 class="text-xl font-semibold text-white mb-4">Display Overlays</h3>
+        <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingResourceCount" class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Resource Count</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show number of available charges for harvestable resources.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingResourceDistance" class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Distance</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display distance in meters from your position to each entity.</span>
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingResourceClusters" class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Clusters</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Group nearby resources into clusters with info box (tier, count, distance).</span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h3 class="text-xl font-semibold text-white mb-4">Actions</h3>
+        <div class="flex flex-wrap gap-4">
+            <button id="button" class="px-6 py-3 bg-accent/10 text-accent font-medium rounded-lg hover:bg-accent hover:text-void transition-all">
+                Clear Canvas
+            </button>
+            <button id="openOverlayBtn" class="px-6 py-3 bg-accent text-void font-medium rounded-lg hover:bg-accent/80 transition-all flex items-center gap-2">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                Overlay Mode
+            </button>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/radar"}}
+<script type="module" src="/scripts/Handlers/HarvestablesHandler.js"></script>
+<script type="module" src="/scripts/Handlers/MobsHandler.js"></script>
+<script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
+<script type="module" src="/scripts/Handlers/DungeonsHandler.js"></script>
+<script type="module" src="/scripts/Handlers/Map.js"></script>
+<script type="module" src="/scripts/Handlers/ItemsInfo.js"></script>
+<script type="module" src="/scripts/Handlers/FactionFlagInfo.js"></script>
+<script type="module" src="/scripts/Utils/DrawingUtils.js"></script>
+<script type="module" src="/scripts/Utils/Utils.js"></script>
+<script type="module" src="/scripts/drawing-ui.js"></script>
+
+<script>
+window.onGlobalsReady(function initRadarPage() {
+    const settingsSync = window.settingsSync;
+
+    const bindCheckbox = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = settingsSync.getBool(id);
+            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+        }
+    };
+
+    bindCheckbox("settingResourceCount");
+    bindCheckbox("settingResourceDistance");
+    bindCheckbox("settingResourceClusters");
+
+    // Players section visibility
+    const playersSection = document.getElementById("playersSection");
+
+    function updatePlayersSectionVisibility() {
+        const showPlayers = settingsSync.getBool("settingShowPlayers");
+        if (playersSection) {
+            playersSection.style.display = showPlayers ? "block" : "none";
+        }
+    }
+
+    updatePlayersSectionVisibility();
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'settingShowPlayers') updatePlayersSectionVisibility();
+    });
+
+    window.addEventListener('settingsChange', (e) => {
+        if (e.detail?.key === 'settingShowPlayers') updatePlayersSectionVisibility();
+    });
+
+    // Overlay button - open in popup window
+    const overlayBtn = document.getElementById('openOverlayBtn');
+    if (overlayBtn) {
+        overlayBtn.addEventListener('click', () => {
+            window.open('/radar-overlay', 'OpenRadar Overlay', 'popup=yes,width=520,height=520,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no');
+        });
+    }
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}

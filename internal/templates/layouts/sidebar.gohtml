@@ -1,0 +1,89 @@
+{{define "layouts/sidebar.gohtml"}}
+<!-- Desktop Sidebar -->
+<aside
+    :class="{
+        'w-64': isExpanded,
+        'w-20': !isExpanded
+    }"
+    @mouseenter="onSidebarEnter"
+    @mouseleave="onSidebarLeave"
+    class="hidden md:flex flex-col z-20 flex-shrink-0 overflow-y-auto bg-surface border-r border-white/5 transition-all duration-300">
+
+    <!-- Logo & Toggle -->
+    <div class="flex items-center justify-between p-4 border-b border-white/5">
+        <a href="/" class="flex items-center gap-3" x-show="isExpanded" x-transition>
+            <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
+            <span class="text-xl font-bold text-white">OpenRadar</span>
+        </a>
+        <img x-show="!isExpanded" src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg mx-auto">
+        <button
+            @click="toggleSidebar"
+            x-show="isExpanded"
+            class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors"
+            title="Collapse sidebar">
+            <i data-lucide="panel-left-close" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 p-4 space-y-1">
+        {{range .NavItems}}
+        <a href="{{.Path}}"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                  {{if .Active}}bg-accent/10 text-accent border-l-2 border-accent -ml-0.5 pl-3.5{{else}}text-gray-400 hover:bg-overlay hover:text-white{{end}}">
+            <i data-lucide="{{.Icon}}" class="w-5 h-5 flex-shrink-0"></i>
+            <span x-show="isExpanded" x-transition class="font-medium">{{.Label}}</span>
+        </a>
+        {{end}}
+    </nav>
+
+    <!-- Version -->
+    <div class="p-4 border-t border-white/5" x-show="isExpanded" x-transition>
+        <p class="text-xs text-gray-500 font-mono">v{{.Version}}</p>
+    </div>
+</aside>
+
+<!-- Mobile Sidebar -->
+<aside
+    x-show="mobileMenuOpen"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="-translate-x-full"
+    x-transition:enter-end="translate-x-0"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="translate-x-0"
+    x-transition:leave-end="-translate-x-full"
+    class="fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-white/5 md:hidden"
+    x-cloak>
+
+    <!-- Logo & Close -->
+    <div class="flex items-center justify-between p-4 border-b border-white/5">
+        <a href="/" class="flex items-center gap-3">
+            <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
+            <span class="text-xl font-bold text-white">OpenRadar</span>
+        </a>
+        <button
+            @click="mobileMenuOpen = false"
+            class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="p-4 space-y-1">
+        {{range .NavItems}}
+        <a href="{{.Path}}"
+           @click="mobileMenuOpen = false"
+           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+                  {{if .Active}}bg-accent/10 text-accent border-l-2 border-accent -ml-0.5 pl-3.5{{else}}text-gray-400 hover:bg-overlay hover:text-white{{end}}">
+            <i data-lucide="{{.Icon}}" class="w-5 h-5"></i>
+            <span class="font-medium">{{.Label}}</span>
+        </a>
+        {{end}}
+    </nav>
+
+    <!-- Version -->
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5">
+        <p class="text-xs text-gray-500 font-mono">v{{.Version}}</p>
+    </div>
+</aside>
+{{end}}

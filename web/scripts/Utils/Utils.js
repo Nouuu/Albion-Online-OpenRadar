@@ -9,7 +9,8 @@ import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
 import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
 import {MobsDatabase} from '../Data/MobsDatabase.js';
-import {LocalizationDatabase} from '../Data/LocalizationDatabase.js';
+// LocalizationDatabase removed - 86MB file, only used for mob name translation
+// import {LocalizationDatabase} from '../Data/LocalizationDatabase.js';
 import {EventCodes} from './EventCodes.js';
 import {ItemsDatabase} from '../Data/ItemsDatabase.js';
 import {SpellsDatabase} from '../Data/SpellsDatabase.js';
@@ -28,6 +29,7 @@ import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
+import {VirtualScroll} from './VirtualScroll.js';
 
 // ✅ Canvas check for RadarRenderer initialization
 const canvas = document.getElementById("drawCanvas");
@@ -115,7 +117,8 @@ async function initializeDatabases() {
     const spellsDatabase = new SpellsDatabase();
     const harvestablesDatabase = new HarvestablesDatabase();
     const mobsDatabase = new MobsDatabase();
-    const localizationDatabase = new LocalizationDatabase();
+    // LocalizationDatabase removed - 86MB file, saves ~200-400MB RAM
+    // Mob names will show technical names (namelocatag) instead of translated names
 
     const promises = [
         loadDatabaseWithRetry(itemsDatabase, '/ao-bin-dumps/items.json', 'Items')
@@ -150,15 +153,6 @@ async function initializeDatabases() {
                 if (result.success) {
                     window.databaseLoadingProgress.mobs = true;
                     window.mobsDatabase = result.database;
-                }
-                return result;
-            }),
-
-        loadDatabaseWithRetry(localizationDatabase, '/ao-bin-dumps/localization.json', 'Localization', 'EN-US')
-            .then(result => {
-                if (result.success) {
-                    window.databaseLoadingProgress.localization = true;
-                    window.localizationDatabase = result.database;
                 }
                 return result;
             })
@@ -282,6 +276,12 @@ const playersHandler = new PlayersHandler();
 // 📊 Expose handlers globally for statistics and debug access
 window.harvestablesHandler = harvestablesHandler;
 window.mobsHandler = mobsHandler;
+window.playersHandler = playersHandler;
+
+// ♻️ MEMORY MANAGEMENT: Manual cleanup methods available on handlers
+// Call harvestablesHandler.cleanupStaleEntities() etc. when needed
+// Automatic cleanup disabled for now - needs lastUpdateTime to be updated on entity updates
+console.log('[MemoryManager] Manual cleanup methods available on handlers');
 
 const wispCageHandler = new WispCageHandler();
 const wispCageDrawing = new WispCageDrawing();
@@ -295,190 +295,220 @@ const playersDrawing = new PlayersDrawing();
 const dungeonsDrawing = new DungeonsDrawing();
 playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
-// 👥 Full player list UI update (called periodically to refresh timestamps)
-function updatePlayersList() {
-    const playersListElement = document.getElementById('playersList');
+// 👥 Player list rendering with incremental updates
+// Uses virtual scrolling for large lists (20+ players)
 
-    if (playersListElement) {
-        const players = playersHandler.playersList;
+const VIRTUAL_SCROLL_THRESHOLD = 20;
+let playerListScroller = null;
+let lastRenderedPlayerIds = new Map(); // Track rendered players for incremental updates
 
-        if (players.length === 0) {
-            playersListElement.innerHTML = '<p class="text-sm text-gray-500 dark:text-gray-400 italic">No players detected yet...</p>';
-        } else {
-            // Sort by detection time (newest first) - already limited in PlayersHandler
-            playersListElement.innerHTML = players.map(player => {
-                const elapsedMs = Date.now() - player.detectedAt;
-                const elapsedSec = Math.floor(elapsedMs / 1000);
-                const timeStr = elapsedSec < 60
-                    ? `${elapsedSec}s ago`
-                    : `${Math.floor(elapsedSec / 60)}m ago`;
+/**
+ * Render a single player card HTML (Tailwind-only)
+ */
+function renderPlayerCard(player) {
+    const elapsedMs = Date.now() - player.detectedAt;
+    const elapsedSec = Math.floor(elapsedMs / 1000);
+    const timeStr = elapsedSec < 60 ? `${elapsedSec}s` : `${Math.floor(elapsedSec / 60)}m`;
 
-                // Guild & Alliance (lighter colors for readability)
-                const guildStr = player.guildName ? `<span class="text-yellow-700t dark:text-yellow-200 font-semibold">[${player.guildName}]</span>` : '<span class="text-gray-500 dark:text-gray-400 text-xs italic">No Guild</span>';
-                const allianceStr = player.allianceName ? `<span class="text-purple-700 dark:text-purple-200 font-semibold">&lt;${player.allianceName}&gt;</span>` : '';
+    // Mounted state for styling
+    const isMounted = player.mounted;
 
-                // Faction
-                const factionStr = player.factionName ? `<span class="text-blue-500 dark:text-blue-400 text-xs font-medium">⚔️ ${player.factionName}</span>` : '';
+    // Guild & Alliance badges
+    const guildBadge = player.guildName
+        ? `<span class="text-[11px] font-mono font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20">[${player.guildName}]</span>`
+        : '<span class="text-[10px] text-white/30 italic">No Guild</span>';
+    const allianceBadge = player.allianceName
+        ? `<span class="text-[11px] font-mono font-medium text-purple-400 bg-purple-400/10 px-1.5 py-0.5 rounded border border-purple-400/20">&lt;${player.allianceName}&gt;</span>`
+        : '';
 
-                // Equipment details with item icons and names
-                let equipDetailsStr = '';
-                if (Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
-                    const validEquipments = player.equipments
-                        .map((itemId, index) => ({ itemId, index }))
-                        .filter(({itemId, index}) => (index <= 4 || index === 8) && itemId && itemId > 0);
+    // Faction
+    const factionBadge = player.factionName
+        ? `<span class="text-[10px] font-mono font-medium text-blue-400 uppercase tracking-wide">⚔ ${player.factionName}</span>`
+        : '';
 
-                    if (validEquipments.length > 0) {
-                        const itemsList = validEquipments.map(({itemId}) => {
-                            const item = window.itemsDatabase.getItemById(itemId);
-                            if (item) {
-                                const tierStr = item.tier > 0 ? `T${item.tier}` : '';
-                                const enchantStr = item.enchant > 0 ? `.${item.enchant}` : '';
-                                const ipStr = item.itempower > 0 ? `${item.itempower}` : '';
+    // Average IP badge
+    const avgItemPower = player.getAverageItemPower?.();
+    const ipBadge = avgItemPower
+        ? `<span class="text-[11px] font-mono font-bold text-warning bg-gradient-to-br from-warning/15 to-warning/5 px-2 py-0.5 rounded border border-warning/30">IP ${avgItemPower}</span>`
+        : '';
 
-                                // Extract base item name (without @enchant suffix)
-                                const baseName = item.name.split('@')[0];
-                                const iconPath = `/images/Items/${baseName}.webp`;
+    // Mounted badge
+    const mountedBadge = isMounted
+        ? `<span class="text-[9px] font-mono font-semibold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/25 uppercase tracking-wide">Mounted</span>`
+        : '';
 
-                                // 🔄 Check if image is already loaded in cache before displaying
-                                const preloadedImage = imageCache.GetPreloadedImage(iconPath, "Items");
+    // Equipment section - simplified image loading (no blocking)
+    let equipHtml = '';
+    if (Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
+        const validEquipments = player.equipments
+            .map((itemId, index) => ({ itemId, index }))
+            .filter(({ itemId, index }) => (index <= 4 || index === 8) && itemId && itemId > 0);
 
-                                let imgHtml = '';
-                                if (preloadedImage) {
-                                    // Image loaded successfully - display it
-                                    imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-8 h-8 object-contain">`;
-                                } else if (preloadedImage === undefined) {
-                                    // Not loaded yet - preload in background, show placeholder
-                                    imageCache.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
-                                    imgHtml = '<div class="w-8 h-8 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>';
-                                }
-                                // else preloadedImage === null (404) -> don't display, don't retry
+        if (validEquipments.length > 0) {
+            const items = validEquipments.map(({ itemId }) => {
+                const item = window.itemsDatabase.getItemById(itemId);
+                if (!item) return '';
 
-                                const tooltipText = `${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}`;
-                                return `
-                                    <div class="inline-flex items-center gap-2 bg-gray-50 dark:bg-gray-700 px-2 py-1 rounded-md border border-gray-200 dark:border-gray-600" title="${tooltipText}">
-                                        ${imgHtml}
-                                        <span class="text-xs font-semibold text-gray-900 dark:text-gray-100">${tierStr}${enchantStr}</span>
-                                        <span class="text-xs text-orange-700 dark:text-orange-300 font-bold">IP ${ipStr}</span>
-                                    </div>
-                                `;
-                            }
-                            return '';
-                        }).filter(s => s).join(' ');
+                const tierStr = item.tier > 0 ? `T${item.tier}` : '';
+                const enchantStr = item.enchant > 0 ? `.${item.enchant}` : '';
+                const ipStr = item.itempower > 0 ? item.itempower : '';
+                const baseName = item.name.split('@')[0];
+                const iconPath = `/images/Items/${baseName}.webp`;
 
-                        equipDetailsStr = `<div class="mt-3"><div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">🛡️ Equipment:</div><div class="flex flex-wrap gap-2">${itemsList}</div></div>`;
-                    }
-                }
+                // Direct image with lazy loading - no blocking preload check
+                const imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-surface/50 rounded" loading="lazy" onerror="this.style.display='none'">`;
 
-                // Spells details with icons (passive abilities from equipment)
-                let spellDetailsStr = '';
-                if (Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
-                    // Filter: Remove empty slots (0, 65535) and keep only valid spell indices
-                    const validSpells = player.spells.filter(spellId => spellId && spellId > 0 && spellId !== 65535);
+                return `<div class="inline-flex items-center gap-1.5 bg-void/60 px-2 py-1 rounded border border-white/5 hover:border-white/10 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}">${imgHtml}<span class="text-[10px] font-mono font-semibold text-white/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
+            }).filter(Boolean).join('');
 
-                    if (validSpells.length > 0) {
-                        const spellsList = validSpells.map(spellIndex => {
-                            const spell = window.spellsDatabase.getSpellByIndex(spellIndex);
-                            if (spell) {
-                                // Use uisprite for icon, fallback to generic spell icon
-                                const iconName = spell.uiSprite || 'SPELL_GENERIC';
-                                const iconPath = `/images/Spells/${iconName}.webp`;
-                                const tooltipText = spell.uniqueName;
-
-                                // 🔄 Check cache before displaying spell icon
-                                const preloadedSpell = imageCache.GetPreloadedImage(iconPath, "Items");
-
-                                let spellImgHtml = '';
-                                if (preloadedSpell) {
-                                    // Spell icon loaded successfully
-                                    spellImgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-8 h-8 object-contain">`;
-                                } else if (preloadedSpell === undefined) {
-                                    // Not loaded yet - preload in background
-                                    imageCache.preloadImageAndAddToList(iconPath, "Items").catch(() => {});
-                                    spellImgHtml = '<div class="w-8 h-8 bg-purple-300 dark:bg-purple-600 rounded animate-pulse"></div>';
-                                }
-                                // else preloadedSpell === null (404) -> don't display
-
-                                return `
-                                    <div class="inline-flex items-center justify-center bg-purple-50 dark:bg-purple-900/30 p-1 rounded-md border border-purple-200 dark:border-purple-700" title="${tooltipText}">
-                                        ${spellImgHtml}
-                                    </div>
-                                `;
-                            }
-                            return '';
-                        }).filter(s => s).join(' ');
-
-                        spellDetailsStr = `<div class="mt-3"><div class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-2">✨ Spells:</div><div class="flex flex-wrap gap-2">${spellsList}</div></div>`;
-                    }
-                }
-
-                // Health bar (inline styles to guarantee colors)
-                let healthStr = '';
-                if (player.currentHealth > 0 && player.initialHealth > 0) {
-                    const healthPercent = Math.round((player.currentHealth / player.initialHealth) * 100);
-                    const healthColor = healthPercent > 60 ? '#22c55e' : (healthPercent > 30 ? '#eab308' : '#ef4444');
-                    healthStr = `
-                        <div class="mt-2.5">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs text-gray-700 dark:text-gray-300 font-medium min-w-[25px]">HP:</span>
-                                <div class="flex-1 h-3 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden border border-gray-400 dark:border-gray-500">
-                                    <div class="h-full transition-all" style="width: ${healthPercent}%; background-color: ${healthColor};"></div>
-                                </div>
-                                <span class="text-xs text-gray-700 dark:text-gray-300 font-bold min-w-[40px] text-right">${healthPercent}%</span>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                // Mounted status (icon more visible)
-                const mountedIcon = player.mounted ? '<span class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded font-medium">🐴 Mounted</span>' : '';
-
-                // Average Item Power (ilvl) - more visible
-                const avgItemPower = player.getAverageItemPower();
-                const itemPowerStr = avgItemPower ? `<span class="text-xs bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-2 py-0.5 rounded font-bold">⚔️ ${avgItemPower}</span>` : '';
-
-                return `
-                    <div class="mb-3 p-4 bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex-1 min-w-0">
-                                <!-- Player Name & Mounted Status -->
-                                <div class="flex items-center gap-2 mb-2">
-                                    <p class="text-base font-bold text-gray-900 dark:text-white truncate">
-                                        👤 ${player.nickname}
-                                    </p>
-                                    ${mountedIcon}
-                                </div>
-
-                                <!-- Guild & Alliance (separate line) -->
-                                <div class="flex flex-wrap gap-2 mb-2">
-                                    ${guildStr}
-                                    ${allianceStr}
-                                </div>
-
-                                <!-- Faction & IP (separate line with spacing) -->
-                                <div class="flex flex-wrap gap-2 items-center mb-2">
-                                    ${factionStr}
-                                    ${itemPowerStr}
-                                </div>
-
-                                <!-- Equipment & Spells Details -->
-                                ${equipDetailsStr}
-                                ${spellDetailsStr}
-
-                                <!-- Health Bar -->
-                                ${healthStr}
-                            </div>
-
-                            <!-- Timestamp -->
-                            <div class="flex flex-col items-end gap-1">
-                                <span class="text-xs text-gray-600 dark:text-gray-400 font-medium whitespace-nowrap">${timeStr}</span>
-                                <span class="text-xs text-gray-500 dark:text-gray-500 font-mono">ID: ${player.id}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+            if (items) {
+                equipHtml = `<div class="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-white/5">${items}</div>`;
+            }
         }
     }
+
+    // Spells section - simplified image loading (no blocking)
+    let spellsHtml = '';
+    if (Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
+        const validSpells = player.spells.filter(id => id && id > 0 && id !== 65535);
+        if (validSpells.length > 0) {
+            const spells = validSpells.map(spellIndex => {
+                const spell = window.spellsDatabase.getSpellByIndex(spellIndex);
+                if (!spell) return '';
+
+                const iconPath = `/images/Spells/${spell.uiSprite || 'SPELL_GENERIC'}.webp`;
+
+                // Direct image with lazy loading - no blocking preload check
+                const imgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-surface/50 rounded" loading="lazy" onerror="this.parentElement.style.display='none'">`;
+
+                return `<div class="flex items-center justify-center bg-accent/10 p-1.5 rounded border border-accent/15 hover:bg-accent/15 hover:border-accent/25 transition-all" title="${spell.uniqueName}">${imgHtml}</div>`;
+            }).filter(Boolean).join('');
+
+            if (spells) {
+                spellsHtml = `<div class="flex flex-wrap gap-1.5 mt-3">${spells}</div>`;
+            }
+        }
+    }
+
+    // Health bar
+    let healthHtml = '';
+    if (player.currentHealth > 0 && player.initialHealth > 0) {
+        const pct = Math.round((player.currentHealth / player.initialHealth) * 100);
+        const colorClass = pct > 60 ? 'bg-gradient-to-r from-success to-green-500'
+                         : pct > 30 ? 'bg-gradient-to-r from-warning to-amber-500'
+                         : 'bg-gradient-to-r from-danger to-red-500 animate-pulse';
+        healthHtml = `<div class="flex items-center gap-2 mt-3"><div class="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden"><div data-health-bar class="h-full rounded-full transition-all duration-300 ${colorClass}" style="width: ${pct}%;"></div></div><span class="text-[10px] font-mono text-white/50 min-w-[2.5rem] text-right">${pct}%</span></div>`;
+    }
+
+    // ID display
+    const idStr = `<div class="text-[10px] font-mono text-white/25 mt-3 pt-2 border-t border-white/5">ID: ${player.id}</div>`;
+
+    // Build the card with proper structure
+    const accentBarClass = isMounted ? 'bg-accent' : 'bg-danger';
+    const hoverBorderClass = isMounted ? 'hover:border-accent/25' : 'hover:border-danger/25';
+
+    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-elevated to-surface border border-white/5 rounded-lg transition-all duration-200 ${hoverBorderClass} hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-white truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0"><span data-time class="text-[10px] font-mono text-white/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${factionBadge}${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+}
+
+/**
+ * Update players list with incremental updates for small lists
+ */
+function updatePlayersIncremental(container, players) {
+    // Clear empty state if present
+    const emptyState = container.querySelector('[data-empty-state]');
+    if (emptyState) {
+        emptyState.remove();
+    }
+
+    const currentIds = new Set(players.map(p => p.id));
+
+    // Remove players no longer in list
+    container.querySelectorAll('[data-player-id]').forEach(card => {
+        const id = parseInt(card.dataset.playerId);
+        if (!currentIds.has(id)) {
+            card.remove();
+            lastRenderedPlayerIds.delete(id);
+        }
+    });
+
+    // Update or add players
+    players.forEach(player => {
+        const existingCard = container.querySelector(`[data-player-id="${player.id}"]`);
+        const lastRender = lastRenderedPlayerIds.get(player.id);
+
+        if (existingCard && lastRender) {
+            // Update timestamp
+            const timeEl = existingCard.querySelector('[data-time]');
+            if (timeEl) {
+                const elapsedSec = Math.floor((Date.now() - player.detectedAt) / 1000);
+                timeEl.textContent = elapsedSec < 60 ? `${elapsedSec}s` : `${Math.floor(elapsedSec / 60)}m`;
+            }
+            // Update health bar if changed
+            if (player.currentHealth !== lastRender.health) {
+                const healthBar = existingCard.querySelector('[data-health-bar]');
+                if (healthBar && player.initialHealth > 0) {
+                    const pct = Math.round((player.currentHealth / player.initialHealth) * 100);
+                    healthBar.style.width = `${pct}%`;
+                }
+            }
+        } else {
+            // Create new card
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = renderPlayerCard(player);
+            container.appendChild(tempDiv.firstElementChild);
+        }
+
+        lastRenderedPlayerIds.set(player.id, { health: player.currentHealth });
+    });
+}
+
+/**
+ * Main update function - chooses between incremental and virtual scroll
+ */
+function updatePlayersList() {
+    const container = document.getElementById('playersList');
+    if (!container) return;
+
+    const players = playersHandler.playersList;
+
+    // Update count badge
+    const countBadge = document.getElementById('playersCount');
+    const countNum = document.getElementById('playersCountNum');
+    if (countBadge && countNum) {
+        if (players.length > 0) {
+            countBadge.classList.remove('hidden');
+            countBadge.classList.add('inline-flex');
+            countNum.textContent = players.length;
+        } else {
+            countBadge.classList.add('hidden');
+            countBadge.classList.remove('inline-flex');
+        }
+    }
+
+    if (players.length === 0) {
+        if (playerListScroller) {
+            playerListScroller.destroy();
+            playerListScroller = null;
+        }
+        lastRenderedPlayerIds.clear();
+        container.innerHTML = `<div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center"><svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><p class="text-sm text-white/40">No players detected yet</p><p class="text-xs text-white/25 font-mono mt-1">Scanning...</p></div>`;
+        return;
+    }
+
+    // Disable virtual scroll - it breaks grid layout
+    // Always use incremental updates for proper grid display
+    if (playerListScroller) {
+        playerListScroller.destroy();
+        playerListScroller = null;
+        container.style.height = '';
+    }
+
+    // Reset grid classes if they were removed
+    if (!container.classList.contains('grid')) {
+        container.className = 'grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin';
+    }
+
+    updatePlayersIncremental(container, players);
 }
 
 let lpX = 0.0;
@@ -496,7 +526,16 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
 const INITIAL_RECONNECT_DELAY = 1000; // 1 second initial delay
 
+// Connection status tracking
+window.wsConnectionStatus = 'disconnected'; // 'connected', 'disconnected', 'connecting'
+
+function updateConnectionStatus(status) {
+  window.wsConnectionStatus = status;
+  document.dispatchEvent(new CustomEvent('wsStatusChange', { detail: { status } }));
+}
+
 function connectWebSocket() {
+  updateConnectionStatus('connecting');
   // Close existing socket if any
   if (socket) {
     socket.close();
@@ -507,6 +546,7 @@ function connectWebSocket() {
 
   socket.addEventListener('open', () => {
     reconnectAttempts = 0; // Reset counter on successful connection
+    updateConnectionStatus('connected');
     window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, {
       page: 'Utils',
       reconnected: reconnectAttempts > 0
@@ -515,6 +555,7 @@ function connectWebSocket() {
   });
 
   socket.addEventListener('close', () => {
+    updateConnectionStatus('disconnected');
     window.logger?.warn(CATEGORIES.WEBSOCKET, 'Disconnected', { page: 'Utils' });
     console.warn('⚠️ [Utils.js] WebSocket disconnected, will attempt to reconnect...');
     scheduleReconnect();
@@ -1125,8 +1166,8 @@ if (canvas && context) {
     });
 }
 
-// 👥 Update player list UI every 5 seconds (for timestamp refresh)
-setInterval(updatePlayersList, 5000);
+// 👥 Update player list UI every 1.5 seconds
+setInterval(updatePlayersList, 1500);
 
 
 

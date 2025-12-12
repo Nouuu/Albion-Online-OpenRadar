@@ -34,6 +34,11 @@ class Mob {
         this.exp = 0;
         this.hX = 0;
         this.hY = 0;
+        this.lastUpdateTime = Date.now(); // For stale entity cleanup
+    }
+
+    touch() {
+        this.lastUpdateTime = Date.now();
     }
 
     /**
@@ -62,12 +67,17 @@ class Mist {
         this.enchant = enchant;
         this.hX = 0;
         this.hY = 0;
+        this.lastUpdateTime = Date.now(); // For stale entity cleanup
 
         if (name.toLowerCase().includes("solo")) {
             this.type = 0;
         } else {
             this.type = 1;
         }
+    }
+
+    touch() {
+        this.lastUpdateTime = Date.now();
     }
 }
 
@@ -625,5 +635,71 @@ export class MobsHandler {
             9: "Events"
         };
         return names[type] || `Unknown(${type})`;
+    }
+
+    /**
+     * Remove mobs not updated for a given time period
+     * @param {number} maxAgeMs - Maximum age in milliseconds (default: 2 minutes)
+     * @returns {number} - Number of entities removed
+     */
+    cleanupStaleEntities(maxAgeMs = 120000) {
+        const now = Date.now();
+        const beforeMobs = this.mobsList.length;
+        const beforeMists = this.mistList.length;
+
+        this.mobsList = this.mobsList.filter(entity =>
+            (now - entity.lastUpdateTime) < maxAgeMs
+        );
+        this.mistList = this.mistList.filter(entity =>
+            (now - entity.lastUpdateTime) < maxAgeMs
+        );
+
+        const removedMobs = beforeMobs - this.mobsList.length;
+        const removedMists = beforeMists - this.mistList.length;
+
+        if (removedMobs > 0 || removedMists > 0) {
+            console.log(`[MobsHandler] Cleaned up ${removedMobs} mobs, ${removedMists} mists (>${maxAgeMs/1000}s old)`);
+        }
+        return removedMobs + removedMists;
+    }
+
+    /**
+     * Enforce maximum list sizes by removing oldest entries
+     * @param {number} maxMobs - Maximum mobs (default: 500)
+     * @param {number} maxMists - Maximum mists (default: 50)
+     * @returns {number} - Total entities removed
+     */
+    enforceMaxSize(maxMobs = 500, maxMists = 50) {
+        let totalRemoved = 0;
+
+        if (this.mobsList.length > maxMobs) {
+            this.mobsList.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime);
+            const removed = this.mobsList.length - maxMobs;
+            this.mobsList = this.mobsList.slice(0, maxMobs);
+            totalRemoved += removed;
+            console.log(`[MobsHandler] Enforced max mobs: removed ${removed} oldest`);
+        }
+
+        if (this.mistList.length > maxMists) {
+            this.mistList.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime);
+            const removed = this.mistList.length - maxMists;
+            this.mistList = this.mistList.slice(0, maxMists);
+            totalRemoved += removed;
+            console.log(`[MobsHandler] Enforced max mists: removed ${removed} oldest`);
+        }
+
+        return totalRemoved;
+    }
+
+    /**
+     * Get current list sizes for monitoring
+     * @returns {object}
+     */
+    getSize() {
+        return {
+            mobs: this.mobsList.length,
+            mists: this.mistList.length,
+            total: this.mobsList.length + this.mistList.length
+        };
     }
 }

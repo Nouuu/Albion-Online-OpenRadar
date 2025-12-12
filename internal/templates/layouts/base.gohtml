@@ -1,0 +1,217 @@
+{{define "layouts/base.gohtml"}}
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    <!-- Google Fonts: Space Grotesk + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS v4 (Browser) -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- Custom CSS Variables for Theme -->
+    <style type="text/tailwindcss">
+        @theme {
+            --color-void: #050508;
+            --color-surface: #0a0a0f;
+            --color-elevated: #12121a;
+            --color-overlay: #1a1a24;
+            --color-accent: #00d4ff;
+            --color-success: #00ff88;
+            --color-danger: #ff3366;
+            --color-warning: #ffa500;
+            --color-tier-1: #a0a0a0;
+            --color-tier-2: #22c55e;
+            --color-tier-3: #3b82f6;
+            --color-tier-4: #a855f7;
+            --color-tier-5: #eab308;
+            --color-tier-6: #f97316;
+            --color-tier-7: #ef4444;
+            --color-tier-8: #ec4899;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+    </style>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Styles (minimal - animations only) -->
+    <link rel="stylesheet" href="/styles/app.css">
+    <link rel="stylesheet" href="/scripts/styles/tooltips.css">
+    <link rel="stylesheet" href="/scripts/styles/components.css">
+
+    <!-- jQuery & SignalR (for WebSocket) - must load before modules that use them -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"></script>
+
+    <!-- Helper for page scripts - MUST be defined BEFORE modules (which are deferred) -->
+    <script>
+        window.onGlobalsReady = function(callback) {
+            if (window.__globalsReady) {
+                callback();
+            } else {
+                document.addEventListener('globalsReady', callback, { once: true });
+            }
+        };
+    </script>
+
+    <!-- Global Setup Module -->
+    <script type="module">
+        // Import everything and expose globally
+        import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
+        import settingsSync from '/scripts/Utils/SettingsSync.js';
+        import {
+            attachCheckboxListeners,
+            generateResourceGrid,
+            initializeTierButtonStates,
+            updateTierButtonState,
+            selectAllTierEnchants,
+            getResourceStorageKey
+        } from '/scripts/Utils/ResourcesHelper.js';
+
+        // Expose globally for page scripts
+        window.CATEGORIES = CATEGORIES;
+        window.settingsSync = settingsSync;
+        window.ResourcesHelper = {
+            attachCheckboxListeners,
+            generateResourceGrid,
+            initializeTierButtonStates,
+            updateTierButtonState,
+            selectAllTierEnchants,
+            getResourceStorageKey
+        };
+
+        // Signal that globals are ready
+        window.__globalsReady = true;
+        document.dispatchEvent(new CustomEvent('globalsReady'));
+
+        // Sync server logs setting on page load
+        (async () => {
+            try {
+                const serverLogsEnabled = settingsSync.getBool("settingServerLogsEnabled");
+                await fetch('/api/settings/server-logs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: serverLogsEnabled })
+                });
+            } catch (error) {
+                console.error('[Layout] Error syncing server logs:', error);
+            }
+        })();
+
+        console.log('[Layout] Global modules initialized');
+    </script>
+
+    <!-- Logger Client -->
+    <script type="module" src="/scripts/LoggerClient.js"></script>
+
+    <!-- Alpine.js - defer so it loads after DOM -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-void text-gray-200 font-display" x-data="appData()">
+    <div class="flex h-screen" :class="{ 'overflow-hidden': mobileMenuOpen }">
+
+        <!-- Sidebar -->
+        {{template "layouts/sidebar.gohtml" .}}
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            {{template "layouts/header.gohtml" .}}
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-6 bg-void">
+                <div class="container mx-auto animate-in">
+                    {{if eq .Page "radar"}}{{template "pages/radar" .}}
+                    {{else if eq .Page "players"}}{{template "pages/players" .}}
+                    {{else if eq .Page "resources"}}{{template "pages/resources" .}}
+                    {{else if eq .Page "enemies"}}{{template "pages/enemies" .}}
+                    {{else if eq .Page "chests"}}{{template "pages/chests" .}}
+                    {{else if eq .Page "map"}}{{template "pages/map" .}}
+                    {{else if eq .Page "ignorelist"}}{{template "pages/ignorelist" .}}
+                    {{else if eq .Page "settings"}}{{template "pages/settings" .}}
+                    {{else}}{{template "pages/radar" .}}{{end}}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div x-show="mobileMenuOpen"
+         x-transition:enter="transition-opacity ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition-opacity ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click="mobileMenuOpen = false"
+         class="fixed inset-0 z-30 bg-black/50 md:hidden"
+         x-cloak>
+    </div>
+
+    <!-- Initialize Lucide Icons and Alpine data -->
+    <script>
+        document.addEventListener('alpine:initialized', () => {
+            lucide.createIcons();
+        });
+
+        // Alpine.js app data
+        function appData() {
+            return {
+                sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+                mobileMenuOpen: false,
+                hoverExpanded: false,
+                hoverTimeout: null,
+
+                toggleSidebar() {
+                    this.sidebarCollapsed = !this.sidebarCollapsed;
+                    localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
+                },
+
+                onSidebarEnter() {
+                    if (this.sidebarCollapsed) {
+                        this.hoverTimeout = setTimeout(() => {
+                            this.hoverExpanded = true;
+                        }, 500);
+                    }
+                },
+
+                onSidebarLeave() {
+                    if (this.hoverTimeout) {
+                        clearTimeout(this.hoverTimeout);
+                        this.hoverTimeout = null;
+                    }
+                    this.hoverExpanded = false;
+                },
+
+                get isExpanded() {
+                    return !this.sidebarCollapsed || this.hoverExpanded;
+                }
+            };
+        }
+
+    </script>
+
+    {{if eq .Page "radar"}}{{template "scripts/radar" .}}
+    {{else if eq .Page "players"}}{{template "scripts/players" .}}
+    {{else if eq .Page "resources"}}{{template "scripts/resources" .}}
+    {{else if eq .Page "enemies"}}{{template "scripts/enemies" .}}
+    {{else if eq .Page "chests"}}{{template "scripts/chests" .}}
+    {{else if eq .Page "map"}}{{template "scripts/map" .}}
+    {{else if eq .Page "ignorelist"}}{{template "scripts/ignorelist" .}}
+    {{else if eq .Page "settings"}}{{template "scripts/settings" .}}
+    {{end}}
+</body>
+</html>
+{{end}}

@@ -25,11 +25,17 @@ class Harvestable
 
         this.charges = charges;
         this.size = size;
+        this.lastUpdateTime = Date.now(); // For stale entity cleanup
     }
 
     setCharges(charges)
     {
         this.charges = charges;
+        this.lastUpdateTime = Date.now();
+    }
+
+    touch() {
+        this.lastUpdateTime = Date.now();
     }
 }
 
@@ -533,5 +539,50 @@ export class HarvestablesHandler
     Clear()
     {
         this.harvestableList = [];
+    }
+
+    /**
+     * Remove entities not updated for a given time period
+     * @param {number} maxAgeMs - Maximum age in milliseconds (default: 2 minutes)
+     * @returns {number} - Number of entities removed
+     */
+    cleanupStaleEntities(maxAgeMs = 120000) {
+        const now = Date.now();
+        const before = this.harvestableList.length;
+
+        this.harvestableList = this.harvestableList.filter(entity =>
+            (now - entity.lastUpdateTime) < maxAgeMs
+        );
+
+        const removed = before - this.harvestableList.length;
+        if (removed > 0) {
+            console.log(`[HarvestablesHandler] Cleaned up ${removed} stale entities (>${maxAgeMs/1000}s old)`);
+        }
+        return removed;
+    }
+
+    /**
+     * Enforce maximum list size by removing oldest entries
+     * @param {number} maxSize - Maximum number of entities (default: 1000)
+     * @returns {number} - Number of entities removed
+     */
+    enforceMaxSize(maxSize = 1000) {
+        if (this.harvestableList.length <= maxSize) return 0;
+
+        // Sort by lastUpdateTime (oldest first) and keep newest
+        this.harvestableList.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime);
+        const removed = this.harvestableList.length - maxSize;
+        this.harvestableList = this.harvestableList.slice(0, maxSize);
+
+        console.log(`[HarvestablesHandler] Enforced max size: removed ${removed} oldest entities`);
+        return removed;
+    }
+
+    /**
+     * Get current list size for monitoring
+     * @returns {number}
+     */
+    getSize() {
+        return this.harvestableList.length;
     }
 }

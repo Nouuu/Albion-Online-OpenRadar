@@ -168,26 +168,26 @@ export function generateResourceGrid(config) {
 	// Generate quick select buttons (T1-T8)
 	const buttons = Array.from({ length: 8 }, (_, i) => {
 		const tierNum = i + 1;
-		return `<button onclick="selectAllTierEnchants('${prefix}', ${i})" class="text-xs px-1 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors" title="Select all T${tierNum}">✓T${tierNum}</button>`;
+		return `<button onclick="selectAllTierEnchants('${prefix}', ${i})" class="text-xs px-1.5 py-0.5 bg-accent/20 text-accent rounded hover:bg-accent hover:text-void transition-colors font-medium" title="Select all T${tierNum}">✓T${tierNum}</button>`;
 	}).join('\n\t\t\t\t\t\t\t');
 
 	// Generate tier headers (T1-T8)
 	const tierHeaders = Array.from({ length: 8 }, (_, i) => {
 		const tierNum = i + 1;
-		return `<p class="text-gray-600 dark:text-gray-300" style="width: 20px; height: 20px;">T${tierNum}</p>`;
+		return `<p class="text-gray-400 text-sm" style="width: 20px; height: 20px;">T${tierNum}</p>`;
 	}).join('\n\t\t\t\t\t\t\t');
 
 	// Generate enchantment rows (e0-e4)
 	const enchantmentRows = ['e0', 'e1', 'e2', 'e3', 'e4'].map(enchantLevel => {
 		const isE0 = enchantLevel === 'e0';
-		const checkboxClass = 'h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500';
+		const checkboxClass = 'w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer';
 
 		// E0 has all 8 tiers, E1-E4 only have T4-T8 (3 empty spans first)
 		const cells = Array.from({ length: 8 }, (_, i) => {
 			if (!isE0 && i < 3) {
 				return '<span></span>';
 			}
-			return `<input type="checkbox" id="" class="${checkboxClass}">`;
+			return `<input type="checkbox" class="${checkboxClass}">`;
 		}).join('\n\t\t\t\t\t\t\t');
 
 		return `<div class="grid" id="${prefix}-${enchantLevel}" style="grid-template-columns: repeat(8, 1fr); gap: 10px;">
@@ -195,20 +195,20 @@ export function generateResourceGrid(config) {
 \t\t\t\t\t\t</div>`;
 	}).join('\n\t\t\t\t\t\t');
 
-	return `<div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 ">
+	return `<div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
 \t\t<div class="w-full">
-\t\t\t<h4 class="text-2xl mb-4 font-semibold text-gray-600 dark:text-gray-300">
+\t\t\t<h4 class="text-xl mb-4 font-semibold text-white">
 \t\t\t\t${emoji} ${name}
 \t\t\t</h4>
 \t\t\t<div class="grid" style="grid-template-columns: 1fr 90%; gap: 10px;">
 \t\t\t\t<div class="grid" style="gap: 10px;">
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;"></p>
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;">E/T</p>
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;">E0</p>
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;">E1</p>
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;">E2</p>
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;">E3</p>
-\t\t\t\t\t<p class="text-gray-600 dark:text-gray-300" style="height: 20px;">E4</p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;"></p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E/T</p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E0</p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E1</p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E2</p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E3</p>
+\t\t\t\t\t<p class="text-gray-400 text-sm" style="height: 20px;">E4</p>
 \t\t\t\t</div>
 \t\t\t\t<div class="grid" style="gap: 10px;">
 \t\t\t\t\t<!-- Quick Select Buttons -->

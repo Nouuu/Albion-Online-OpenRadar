@@ -1,0 +1,352 @@
+{{define "pages/enemies"}}
+<div class="space-y-6 stagger">
+    <!-- Page Header -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <h1 class="text-3xl font-bold text-white">Enemies</h1>
+        <p class="text-gray-400 mt-2">Configure enemy and mob detection settings.</p>
+    </div>
+
+    <!-- Classic Enemies -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Classic Enemies</h2>
+        <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingAllEnemies"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-white font-medium group-hover:text-accent transition-colors">All</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Toggle all enemy types at once.</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingNormalEnemy"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Normal</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show basic enemies (low threat, easiest to kill).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingEnchantedEnemy"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Enchanted</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show enchanted enemies (higher tier, better loot).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingMiniBossEnemy"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Mini-Boss</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show mini-bosses (strong enemies, valuable loot).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingBossEnemy"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Boss</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show boss enemies (very high threat, best loot).</span>
+                </span>
+            </label>
+
+            <div class="border-t border-white/10 mt-4 pt-4">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingShowMinimumHealthEnemies"
+                           class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                    <span class="text-gray-300 group-hover:text-white transition-colors">Show enemies with minimum HP</span>
+                    <span class="relative group/tooltip">
+                        <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Only show enemies with HP above the threshold.</span>
+                    </span>
+                </label>
+
+                <div class="ml-8 mt-2">
+                    <label class="flex items-center gap-3">
+                        <input type="number" id="settingTextMinimumHealthEnemies" min="0" placeholder="2100"
+                               class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="text-gray-400 text-sm">Minimum HP</span>
+                    </label>
+                </div>
+            </div>
+
+            <label class="flex items-center gap-3 cursor-pointer group mt-2">
+                <input type="checkbox" id="settingShowUnmanagedEnemies"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show unmanaged IDs</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show enemies with unknown/unmanaged IDs (for debugging).</span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Mists -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Mists</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingBossCrystalSpider"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Crystal Spider</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show Crystal Spider bosses (Mists exclusive).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingBossFairyDragon"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Fairy Dragon</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show Fairy Dragon bosses (Mists exclusive).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingBossVeilWeaver"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Veil Weaver</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show Veil Weaver bosses (Mists exclusive).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingBossGriffin"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Griffin</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show Griffin bosses (Mists exclusive).</span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Other -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Other</h2>
+        <div class="space-y-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingAvaloneDrones"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Avalonian Drones</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show Avalonian drone enemies (found in Avalonian dungeons).</span>
+                </span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingShowEventEnemies"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Event Enemies</span>
+                <span class="relative group/tooltip">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show special event enemies (seasonal/limited time events).</span>
+                </span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Debug -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4">Debug</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingEnemiesHealthBar"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Health Bar</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingEnemiesID"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show ID</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingEnemiesTier"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Tier</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingEnemiesName"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Name</span>
+            </label>
+
+            <label class="flex items-center gap-3 cursor-pointer group md:col-span-2">
+                <input type="checkbox" id="settingEnemiesCategoryBadge"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                <span class="text-gray-300 group-hover:text-white transition-colors">Show Category Badge</span>
+            </label>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-4">
+            Logging options in <a href="/settings" class="text-accent hover:underline">Settings &gt; Debug &amp; Logging</a>
+        </p>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/enemies"}}
+<script>
+window.onGlobalsReady(function initEnemiesPage() {
+    const settingsSync = window.settingsSync;
+
+    // Classic enemies
+    const settingNormalEnemy = document.getElementById("settingNormalEnemy");
+    const settingEnchantedEnemy = document.getElementById("settingEnchantedEnemy");
+    const settingMiniBossEnemy = document.getElementById("settingMiniBossEnemy");
+    const settingBossEnemy = document.getElementById("settingBossEnemy");
+
+    settingNormalEnemy.checked = settingsSync.getBool("settingNormalEnemy");
+    settingEnchantedEnemy.checked = settingsSync.getBool("settingEnchantedEnemy");
+    settingMiniBossEnemy.checked = settingsSync.getBool("settingMiniBossEnemy");
+    settingBossEnemy.checked = settingsSync.getBool("settingBossEnemy");
+
+    settingNormalEnemy.addEventListener("click", () => {
+        settingsSync.setBool("settingNormalEnemy", settingNormalEnemy.checked);
+        HasToCheckCheckAllEnemies();
+    });
+    settingEnchantedEnemy.addEventListener("click", () => {
+        settingsSync.setBool("settingEnchantedEnemy", settingEnchantedEnemy.checked);
+        HasToCheckCheckAllEnemies();
+    });
+    settingMiniBossEnemy.addEventListener("click", () => {
+        settingsSync.setBool("settingMiniBossEnemy", settingMiniBossEnemy.checked);
+        HasToCheckCheckAllEnemies();
+    });
+    settingBossEnemy.addEventListener("click", () => {
+        settingsSync.setBool("settingBossEnemy", settingBossEnemy.checked);
+        HasToCheckCheckAllEnemies();
+    });
+
+    const settingShowUnmanagedEnemies = document.getElementById("settingShowUnmanagedEnemies");
+    settingShowUnmanagedEnemies.checked = settingsSync.getBool("settingShowUnmanagedEnemies");
+    settingShowUnmanagedEnemies.addEventListener("click", () => {
+        settingsSync.setBool("settingShowUnmanagedEnemies", settingShowUnmanagedEnemies.checked);
+    });
+
+    const settingShowMinimumHealthEnemies = document.getElementById("settingShowMinimumHealthEnemies");
+    const settingTextMinimumHealthEnemies = document.getElementById("settingTextMinimumHealthEnemies");
+
+    settingShowMinimumHealthEnemies.checked = settingsSync.getBool('settingShowMinimumHealthEnemies');
+    settingTextMinimumHealthEnemies.value = settingsSync.getNumber("settingTextMinimumHealthEnemies", 2100);
+
+    if (!settingShowMinimumHealthEnemies.checked)
+        settingTextMinimumHealthEnemies.setAttribute("disabled", "");
+
+    settingShowMinimumHealthEnemies.addEventListener("click", () => {
+        settingsSync.setBool("settingShowMinimumHealthEnemies", settingShowMinimumHealthEnemies.checked);
+        if (settingShowMinimumHealthEnemies.checked) {
+            settingTextMinimumHealthEnemies.removeAttribute("disabled");
+            if (!settingShowUnmanagedEnemies.checked)
+                settingShowUnmanagedEnemies.checked = true;
+        } else {
+            settingTextMinimumHealthEnemies.setAttribute("disabled", "");
+        }
+    });
+
+    settingTextMinimumHealthEnemies.addEventListener("input", () => {
+        settingsSync.setNumber("settingTextMinimumHealthEnemies", Number(settingTextMinimumHealthEnemies.value));
+    });
+
+    let updatingAllEnemies = false;
+    const settingAllEnemies = document.getElementById("settingAllEnemies");
+    settingAllEnemies.checked = settingsSync.getBool("settingAllEnemies");
+    settingAllEnemies.addEventListener("click", () => {
+        updatingAllEnemies = true;
+        settingsSync.setBool("settingAllEnemies", settingAllEnemies.checked);
+
+        if (settingNormalEnemy.checked !== settingAllEnemies.checked)
+            settingNormalEnemy.click(true);
+        if (settingEnchantedEnemy.checked !== settingAllEnemies.checked)
+            settingEnchantedEnemy.click(true);
+        if (settingMiniBossEnemy.checked !== settingAllEnemies.checked)
+            settingMiniBossEnemy.click(true);
+        if (settingBossEnemy.checked !== settingAllEnemies.checked)
+            settingBossEnemy.click(true);
+
+        updatingAllEnemies = false;
+    });
+
+    function HasToCheckCheckAllEnemies() {
+        if (updatingAllEnemies) return;
+
+        let hasToCheck = false;
+        if (((settingNormalEnemy.checked && settingEnchantedEnemy.checked && settingMiniBossEnemy.checked && settingBossEnemy.checked) && !settingAllEnemies.checked) ||
+            ((!settingNormalEnemy.checked || !settingEnchantedEnemy.checked || !settingMiniBossEnemy.checked || !settingBossEnemy.checked) && settingAllEnemies.checked))
+            hasToCheck = true;
+
+        if (!hasToCheck) return;
+
+        settingAllEnemies.checked = !settingAllEnemies.checked;
+        settingsSync.setBool("settingAllEnemies", settingAllEnemies.checked);
+    }
+
+    // Other
+    const settingAvaloneDrones = document.getElementById("settingAvaloneDrones");
+    settingAvaloneDrones.checked = settingsSync.getBool("settingAvaloneDrones");
+    settingAvaloneDrones.addEventListener("click", () => {
+        settingsSync.setBool("settingAvaloneDrones", settingAvaloneDrones.checked);
+    });
+
+    const settingShowEventEnemies = document.getElementById("settingShowEventEnemies");
+    settingShowEventEnemies.checked = settingsSync.getBool("settingShowEventEnemies");
+    settingShowEventEnemies.addEventListener("click", () => {
+        settingsSync.setBool("settingShowEventEnemies", settingShowEventEnemies.checked);
+    });
+
+    // Mists
+    const settingBossCrystalSpider = document.getElementById("settingBossCrystalSpider");
+    const settingBossFairyDragon = document.getElementById("settingBossFairyDragon");
+    const settingBossVeilWeaver = document.getElementById("settingBossVeilWeaver");
+    const settingBossGriffin = document.getElementById("settingBossGriffin");
+
+    settingBossCrystalSpider.checked = settingsSync.getBool("settingBossCrystalSpider");
+    settingBossFairyDragon.checked = settingsSync.getBool("settingBossFairyDragon");
+    settingBossVeilWeaver.checked = settingsSync.getBool("settingBossVeilWeaver");
+    settingBossGriffin.checked = settingsSync.getBool("settingBossGriffin");
+
+    settingBossCrystalSpider.addEventListener("click", () => { settingsSync.setBool("settingBossCrystalSpider", settingBossCrystalSpider.checked); });
+    settingBossFairyDragon.addEventListener("click", () => { settingsSync.setBool("settingBossFairyDragon", settingBossFairyDragon.checked); });
+    settingBossVeilWeaver.addEventListener("click", () => { settingsSync.setBool("settingBossVeilWeaver", settingBossVeilWeaver.checked); });
+    settingBossGriffin.addEventListener("click", () => { settingsSync.setBool("settingBossGriffin", settingBossGriffin.checked); });
+
+    // Debug
+    const bindDebugCheckbox = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = settingsSync.getBool(id);
+            el.addEventListener("click", () => settingsSync.setBool(id, el.checked));
+        }
+    };
+
+    bindDebugCheckbox("settingEnemiesHealthBar");
+    bindDebugCheckbox("settingEnemiesID");
+    bindDebugCheckbox("settingEnemiesTier");
+    bindDebugCheckbox("settingEnemiesName");
+    bindDebugCheckbox("settingEnemiesCategoryBadge");
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}
