@@ -140,18 +140,25 @@ if (process.platform === 'win32') {
     } catch {
         console.error('  ✗ libpcap not found!');
         console.error('    → Ubuntu/Debian: sudo apt-get install libpcap-dev');
-        console.error('    → Fedora/RHEL: sudo dnf install libpcap-devel');
+        console.error('    → Fedora/RHEL:   sudo dnf install libpcap-devel');
+        console.error('    → Arch Linux:    sudo pacman -S libpcap');
         hasErrors = true;
     }
 
-    // Check capabilities
-    console.log('\n📋 Note for running without root:');
+    // Check setcap (for running without root)
+    try {
+        execSync('which setcap', { encoding: 'utf8', stdio: 'pipe' });
+        console.log('  ✓ setcap: installed');
+    } catch {
+        console.warn('  ⚠️  setcap not found (needed to run without root)');
+        console.warn('    → Ubuntu/Debian: sudo apt-get install libcap2-bin');
+        console.warn('    → Fedora/RHEL:   sudo dnf install libcap');
+        console.warn('    → Arch Linux:    sudo pacman -S libcap');
+    }
+
+    // Check capabilities note
+    console.log('\n📋 To run without root, grant capabilities:');
     console.log('    sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux');
-} else if (process.platform === 'darwin') {
-    console.log('\n🔌 macOS Dependencies:\n');
-    console.log('  ✓ libpcap: pre-installed on macOS');
-    console.log('\n📋 Note: Run with sudo for packet capture:');
-    console.log('    sudo ./OpenRadar-macos');
 }
 
 // Check project structure

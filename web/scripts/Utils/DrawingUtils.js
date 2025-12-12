@@ -2,7 +2,7 @@ import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
 
-const SCALE_FACTOR = 4.0; // Scale factor for overlay distance
+const SCALE_FACTOR = 1.0; // Scale factor for overlay distance
 
 export class DrawingUtils {
     constructor() {

@@ -18,8 +18,9 @@ class Logger {
         this.wsClient = null; // Will be set later when socket connects
         this.buffer = [];
         this.sessionId = this.generateSessionId();
-        this.maxBufferSize = 1000;
-        this.flushInterval = 5000;
+        // Performance optimization: smaller buffer, faster flush
+        this.maxBufferSize = 200;    // Reduced from 1000 to save memory
+        this.flushInterval = 5000;   // Reduced from 5000ms to 1000ms
 
         this.startFlushInterval();
         console.log(`📊 [Logger] Initialized with sessionId: ${this.sessionId}`);

@@ -76,6 +76,11 @@ async function compressGameData() {
         const filePath = path.join(targetDir, file);
         const stats = fs.statSync(filePath);
 
+        // Ignore localization.json for compression
+        if (file === 'localization.json') {
+            return false;
+        }
+
         // Only compress .json and .xml files larger than MIN_SIZE
         return (ext === '.json' || ext === '.xml') &&
             stats.isFile() &&
@@ -94,9 +99,22 @@ async function compressGameData() {
     let compressedCount = 0;
     let skippedCount = 0;
 
-    for (const file of toCompress) {
+    for (const file of files) {
         const filePath = path.join(targetDir, file);
         const stats = fs.statSync(filePath);
+
+        if (file === 'localization.json') {
+            console.log(`⏭️  Skipping compression for ${file}`);
+            if (deleteOriginals && fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+                console.log(`🗑️  Deleted original file: ${file}`);
+            }
+            continue;
+        }
+
+        if (!toCompress.includes(file)) {
+            continue;
+        }
 
         process.stdout.write(`  Compressing ${file} (${formatSize(stats.size)})... `);
 
@@ -105,8 +123,6 @@ async function compressGameData() {
 
             if (result === null) {
                 console.log('⏭️  (already up to date)');
-                skippedCount++;
-                // Still delete original if option is set
                 if (deleteOriginals && fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
                 }
@@ -115,7 +131,6 @@ async function compressGameData() {
                 totalOriginal += result.original;
                 totalCompressed += result.compressed;
                 compressedCount++;
-                // Delete original after successful compression
                 if (deleteOriginals) {
                     fs.unlinkSync(filePath);
                 }

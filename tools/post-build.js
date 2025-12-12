@@ -29,14 +29,6 @@ const executables = {
         ],
         name: 'OpenRadar-linux',
         platform: 'linux-x64'
-    },
-    macos: {
-        paths: [
-            path.join(DIST_DIR, 'OpenRadar-macos'),
-            path.join(DIST_DIR, 'albion-openradar-macos')
-        ],
-        name: 'OpenRadar-macos',
-        platform: 'macos-x64'
     }
 };
 
@@ -79,8 +71,7 @@ const version = getVersion();
 
 // Create README file for dist (platform-aware)
 const createReadme = (platform) => {
-    const exeName = platform === 'win64' ? 'OpenRadar.exe' :
-        platform === 'linux-x64' ? 'OpenRadar-linux' : 'OpenRadar-macos';
+    const exeName = platform === 'win64' ? 'OpenRadar.exe' : 'OpenRadar-linux';
 
     if (platform === 'win64') {
         return `# OpenRadar v${version} - Albion Online Radar (Windows)
@@ -142,27 +133,37 @@ No external dependencies besides libpcap are required.
 
 ## Installation
 
-1. **Install libpcap** (REQUIRED)
-   Ubuntu/Debian: sudo apt-get install libpcap-dev
-   Fedora/RHEL:   sudo dnf install libpcap-devel
-   Arch Linux:   sudo pacman -S libpcap
+1. **Install dependencies** (REQUIRED)
+
+   Ubuntu/Debian:
+     sudo apt-get install libpcap0.8 libcap2-bin
+
+   Fedora/RHEL:
+     sudo dnf install libpcap libcap
+
+   Arch Linux:
+     sudo pacman -S libpcap libcap
 
 2. **Make executable**
    chmod +x ${exeName}
 
 3. **Grant capture permissions** (choose ONE option)
 
-   Option A - Run as root (simple but not recommended):
-   sudo ./${exeName}
+   Option A - Run as root (simple):
+     sudo ./${exeName}
 
-   Option B - Grant capabilities (recommended):
-   sudo setcap cap_net_raw,cap_net_admin=eip ./${exeName}
+   Option B - Grant capabilities (recommended, run as normal user):
+     # Grant network capture capabilities
+     sudo setcap cap_net_raw,cap_net_admin=eip ./${exeName}
 
-   After running setcap, you can run the application as a normal user:
-   ./${exeName}
+     # Verify capabilities were applied (optional)
+     getcap ./${exeName}
 
-   Note: setcap permissions are removed if the file is modified or moved.
-   You'll need to run the setcap command again in those cases.
+     # Run as normal user
+     ./${exeName}
+
+   Note: Capabilities are removed if the file is modified or moved.
+   Re-run setcap after updates.
 
 4. **Select your network adapter**
    Choose the adapter you use to connect to the Internet
@@ -179,14 +180,20 @@ No external dependencies besides libpcap are required.
 
 ## Prerequisites
 
-- Linux (Ubuntu 18.04+, Debian 10+, Fedora 32+, etc.)
+- Linux (Ubuntu 18.04+, Debian 10+, Fedora 32+, Arch, etc.)
 - libpcap installed
+- libcap installed (for setcap command)
 - Network capture permissions (root or setcap)
 
 ## Troubleshooting
 
 If you get "permission denied" or "no suitable device found":
   sudo setcap cap_net_raw,cap_net_admin=eip ./${exeName}
+
+If setcap is not found, install libcap:
+  Ubuntu/Debian: sudo apt-get install libcap2-bin
+  Fedora/RHEL:   sudo dnf install libcap
+  Arch Linux:    sudo pacman -S libcap
 
 If setcap doesn't work, run as root:
   sudo ./${exeName}
@@ -206,59 +213,8 @@ Built for: ${platform}
 `;
     }
 
-    // macOS
-    return `# OpenRadar v${version} - Albion Online Radar (macOS)
-
-## About
-
-OpenRadar is a native Go application (~95 MB) with all assets embedded.
-libpcap is usually pre-installed on macOS.
-
-## Installation
-
-1. **Install libpcap** (usually pre-installed)
-   If needed: brew install libpcap
-
-2. **Make executable**
-   chmod +x ${exeName}
-
-3. **Launch with sudo** (required for packet capture)
-   sudo ./${exeName}
-
-   Note: macOS requires root privileges for raw packet capture.
-   There is no setcap equivalent on macOS.
-
-4. **Select your network adapter**
-   Choose the adapter you use to connect to the Internet
-   (DO NOT choose 127.0.0.1 or localhost)
-
-5. **Access the radar**
-   Open http://localhost:5001 in your browser
-
-## Command-line Options
-
-  ./${exeName} -version     Show version information
-  ./${exeName} -ip X.X.X.X  Skip adapter selection prompt
-  ./${exeName} -dev         Development mode (read files from disk)
-
-## Prerequisites
-
-- macOS 10.15+ (Catalina or newer)
-- libpcap (usually pre-installed)
-
-## Support
-
-GitHub: https://github.com/Nouuu/Albion-Online-OpenRadar
-
-## Technical Details
-
-- Native Go backend (v2.0)
-- Single binary with embedded assets
-- Server on port 5001 (HTTP + WebSocket on /ws)
-- Captures UDP traffic on port 5056
-
-Built for: ${platform}
-`;
+    // Fallback (should not happen with Windows/Linux only)
+    return '';
 };
 
 // Create README for each built platform
