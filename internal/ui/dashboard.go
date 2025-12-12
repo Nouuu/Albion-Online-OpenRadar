@@ -59,6 +59,8 @@ type StatusMsg struct {
 	CaptureRunning bool
 }
 
+type RestartMsg struct{}
+
 type TickMsg time.Time
 
 // LogEntry stores a log with its metadata
@@ -72,8 +74,9 @@ type LogEntry struct {
 
 // Dashboard is the main Bubble Tea model
 type Dashboard struct {
-	ready    bool
-	quitting bool
+	ready            bool
+	quitting         bool
+	restartRequested bool
 
 	// Static info
 	version   string
@@ -145,6 +148,11 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 	}
 }
 
+// RestartRequested returns true if user requested a restart
+func (d Dashboard) RestartRequested() bool {
+	return d.restartRequested
+}
+
 // Init initializes the dashboard
 func (d Dashboard) Init() tea.Cmd {
 	return tea.Batch(tickCmd(), tea.EnterAltScreen)
@@ -191,30 +199,43 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			d.quitting = true
 			return d, tea.Quit
+		case "r":
+			d.restartRequested = true
+			d.quitting = true
+			return d, tea.Quit
 		case "g":
 			d.viewport.GotoTop()
+			return d, nil
 		case "G":
 			d.viewport.GotoBottom()
+			return d, nil
 		case "p":
 			d.autoScroll = !d.autoScroll
+			return d, nil
 		case "c":
 			d.logs = make([]LogEntry, 0, maxLogs)
 			d.viewport.SetContent(d.renderLogs())
+			return d, nil
 		case "f":
 			d.logFilter = (d.logFilter + 1) % 5
 			d.viewport.SetContent(d.renderLogs())
+			return d, nil
 		case "/":
 			d.searching = true
 			d.searchInput.Focus()
-			cmds = append(cmds, textinput.Blink)
+			return d, textinput.Blink
 		case "1":
 			d.currentTab = TabLogs
+			return d, nil
 		case "2":
 			d.currentTab = TabStats
+			return d, nil
 		case "3":
 			d.currentTab = TabConfig
+			return d, nil
 		case "tab":
 			d.currentTab = (d.currentTab + 1) % 3
+			return d, nil
 		}
 
 	case tea.WindowSizeMsg:
@@ -267,8 +288,20 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, tickCmd())
 	}
 
-	d.viewport, cmd = d.viewport.Update(msg)
-	cmds = append(cmds, cmd)
+	// Only pass non-key messages to viewport (scroll is handled by arrow keys internally)
+	if _, isKey := msg.(tea.KeyMsg); !isKey {
+		d.viewport, cmd = d.viewport.Update(msg)
+		cmds = append(cmds, cmd)
+	} else {
+		// Pass only arrow keys to viewport for scrolling
+		if key, ok := msg.(tea.KeyMsg); ok {
+			switch key.String() {
+			case "up", "down", "pgup", "pgdown":
+				d.viewport, cmd = d.viewport.Update(msg)
+				cmds = append(cmds, cmd)
+			}
+		}
+	}
 
 	return d, tea.Batch(cmds...)
 }
@@ -485,7 +518,7 @@ func (d *Dashboard) renderFooter() string {
 
 	// Help
 	help := HelpStyle.Render(
-		"q:quit  p:pause  c:clear  f:filter  /:search  tab:switch  ↑↓:scroll  g/G:top/bottom",
+		"q:quit  r:restart  p:pause  c:clear  f:filter  /:search  tab:switch  ↑↓:scroll",
 	)
 
 	// Search input if active
@@ -598,6 +631,11 @@ func (d *Dashboard) renderConfigView() string {
 			"  %s  %s",
 			StatValueStyle.Render("q"),
 			StatLabelStyle.Render("Quit application"),
+		),
+		fmt.Sprintf(
+			"  %s  %s",
+			StatValueStyle.Render("r"),
+			StatLabelStyle.Render("Restart application"),
 		),
 		fmt.Sprintf(
 			"  %s  %s",

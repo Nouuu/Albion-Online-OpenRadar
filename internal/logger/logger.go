@@ -40,9 +40,12 @@ func New(logsDir string) *Logger {
 	l.initializeDirectories()
 	l.createSessionFile()
 
-	PrintInfo("LOG", "Session file: %s", l.currentSessionFile)
-
 	return l
+}
+
+// PrintSessionInfo prints the current session file path to console
+func (l *Logger) PrintSessionInfo() {
+	PrintInfo("LOG", "Session file: %s", l.currentSessionFile)
 }
 
 // SetEnabled enables or disables logging
@@ -51,9 +54,9 @@ func (l *Logger) SetEnabled(enabled bool) {
 	defer l.mu.Unlock()
 	l.enabled = enabled
 	if enabled {
-		PrintSuccess("LOG", "Logging ENABLED")
+		PrintSuccess("LOG", "Server Side Logging ENABLED")
 	} else {
-		PrintWarn("LOG", "Logging DISABLED")
+		PrintWarn("LOG", "Server Side Logging DISABLED")
 	}
 }
 
@@ -117,6 +120,8 @@ func (l *Logger) WriteLogs(logs []interface{}) {
 		_, _ = f.Write(line)
 		_, _ = f.WriteString("\n")
 	}
+
+	PrintInfo("LOG", "Wrote %d entries to %s", len(logs), filepath.Base(l.currentSessionFile))
 }
 
 // Log writes a single log entry

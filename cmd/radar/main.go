@@ -62,6 +62,16 @@ func main() {
 
 	printBanner()
 
+	for {
+		shouldRestart := runApp(cfg)
+		if !shouldRestart {
+			break
+		}
+		fmt.Println("Restarting...")
+	}
+}
+
+func runApp(cfg Config) bool {
 	appDir, err := os.Getwd()
 	if err != nil {
 		exitWithError("Failed to get working directory", err)
@@ -84,6 +94,9 @@ func main() {
 	dashboard := ui.NewDashboard(Version, serverPort, cfg.devMode, app.adapterIP)
 	app.program = tea.NewProgram(dashboard, tea.WithAltScreen())
 
+	// Track if restart was requested
+	restartRequested := false
+
 	// Set up log callback to send logs to dashboard
 	logger.SetLogCallback(func(level, tag, message string) {
 		app.program.Send(ui.LogMsg{
@@ -93,21 +106,42 @@ func main() {
 		})
 	})
 
-	// Start servers in background
+	// Start servers in background (will also print session info)
 	go app.startServers()
 
 	// Start stats updater
 	go app.updateStats()
 
+	// Listen for restart messages
+	go func() {
+		for {
+			select {
+			case <-app.ctx.Done():
+				return
+			default:
+				// Check handled in Update via RestartMsg
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
 	// Run dashboard (blocking)
-	if _, err := app.program.Run(); err != nil {
+	model, err := app.program.Run()
+	if err != nil {
 		logger.ClearLogCallback()
 		fmt.Printf("Dashboard error: %v\n", err)
+	}
+
+	// Check if restart was requested
+	if d, ok := model.(ui.Dashboard); ok {
+		restartRequested = d.RestartRequested()
 	}
 
 	// Cleanup
 	logger.ClearLogCallback()
 	app.shutdown()
+
+	return restartRequested
 }
 
 // Config holds command-line configuration
@@ -136,7 +170,13 @@ func exitWithError(msg string, err error) {
 	os.Exit(1)
 }
 
-func newApp(appDir string, cfg Config, ctx context.Context, cancel context.CancelFunc, capturer *capture.Capturer) *App {
+func newApp(
+	appDir string,
+	cfg Config,
+	ctx context.Context,
+	cancel context.CancelFunc,
+	capturer *capture.Capturer,
+) *App {
 	log := logger.New("./logs")
 	wsHandler := server.NewWebSocketHandler(log)
 
@@ -178,6 +218,7 @@ func createHTTPServer(
 
 func (app *App) startServers() {
 	// Log startup messages
+	app.logger.PrintSessionInfo()
 	logger.PrintInfo("APP", "Starting servers...")
 
 	// Start HTTP server
