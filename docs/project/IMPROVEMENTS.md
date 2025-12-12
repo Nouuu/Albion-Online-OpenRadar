@@ -2,6 +2,9 @@
 
 This document summarizes the main improvements made to OpenRadar.
 
+> **📘 For resource detection:** See `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
+> This document contains the complete state of the resource detection system.
+
 ---
 
 ## Implemented Features
@@ -23,10 +26,18 @@ This document summarizes the main improvements made to OpenRadar.
 - Faction
 - Animal (human-readable name)
 
-### 3. Rarity-Based Enchantment Detection
+### 3. Enchantment Detection System (Phase 3B - Dec 2025)
 
-- Enchantment computed from `rarity` field, not `params[33]`
-- See `docs/technical/ENCHANTMENTS.md` for formula
+**Current system (Dec 2025):**
+- ✅ Uses `parameters[33]` directly from server
+- ✅ Works for all types (Hide, Fiber, Ore, Wood, Rock)
+- ✅ No more approximate calculation from `rarity`
+
+**Obsolete system (Nov 2025):**
+- ❌ Calculation from `rarity` field (unreliable)
+- See `docs/technical/ENCHANTMENTS.md` for history
+
+**See:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md` for details
 
 ### 4. Player Detection System
 
@@ -46,19 +57,22 @@ This document summarizes the main improvements made to OpenRadar.
 
 ## Planned Improvements
 
-### 1. Mob Detection System Refactor
+### 1. Mob Detection UI Enhancement
 
-**Goal:** Database-based system similar to resources.
+**Goal:** Improve visual representation of mobs on radar
 
 **Current State:**
 - Mobs displayed as simple green dots
 - No detailed information about mob types
+- MobsDatabase provides complete mob data (4528 mobs, ~2800 harvestables)
 
-**Planned:**
-- Create static database file for mobs
-- Display detailed mob information on radar
-- Add visual differentiation based on mob types
+**Planned Enhancements:**
+- Display mob tier/enchantment information
+- Show mob type (hostile vs passive)
+- Visual differentiation based on mob categories
 - Enable filtering for specific mob types
+- Color-coding by threat level
+- Optional mob name display
 
 ### 2. Map Tile Size Normalization
 
@@ -86,4 +100,4 @@ This document summarizes the main improvements made to OpenRadar.
 
 ---
 
-*Last update: 2025-12-09*
+*Last update: 2025-12-11*

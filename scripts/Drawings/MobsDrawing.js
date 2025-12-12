@@ -9,33 +9,12 @@ export class MobsDrawing extends DrawingUtils
     {
         for (const mobOne of mobs)
         {
-            const hX = -1 * mobOne.posX + lpX;
-            const hY = mobOne.posY - lpY;
-
-            if (mobOne.hY == 0 && mobOne.hX == 0)
-            {
-                mobOne.hX = hX;
-                mobOne.hY = hY;
-            }
-
-            mobOne.hX = this.lerp(mobOne.hX, hX, t);
-            mobOne.hY = this.lerp(mobOne.hY, hY, t);
+            this.interpolateEntity(mobOne, lpX, lpY, t);
         }
 
         for (const mistOne of mists)
         {
-            const hX = -1 * mistOne.posX + lpX;
-            const hY = mistOne.posY - lpY;
-
-            if (mistOne.hY == 0 && mistOne.hX == 0)
-            {
-                mistOne.hX = hX;
-                mistOne.hY = hY;
-
-            }
-
-            mistOne.hX = this.lerp(mistOne.hX, hX, t);
-            mistOne.hY = this.lerp(mistOne.hY, hY, t);
+            this.interpolateEntity(mistOne, lpX, lpY, t);
         }
     }
 
@@ -70,23 +49,16 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
-                // Only set imageName if mob has been identified (has name from mobinfo)
-                // Otherwise leave undefined and fallback blue circle will be drawn
-                if (mobOne.name) {
-                    imageName = mobOne.name;
-                    imageFolder = "Resources"; // Change folder to enemies
-                }
+                // Use color-coded circles for hostile mobs (not images)
+                // imageName stays undefined to trigger the colored circle rendering below
+                // The color is determined by mob.type (Enemy=green, EnchantedEnemy=purple, MiniBoss=orange, Boss=red)
 
                 drawId = settingsSync.getBool("settingEnemiesID");
             }
             else if (mobOne.type == EnemyType.Drone)
             {
-                // Only set imageName if mob has been identified (has name from mobinfo)
-                // Otherwise leave undefined and fallback blue circle will be drawn
-                if (mobOne.name) {
-                    imageName = mobOne.name;
-                    imageFolder = "Resources"; // Change folder to enemies
-                }
+                // Use color-coded circles for drones (not images)
+                // imageName stays undefined to trigger the colored circle rendering below
 
                 drawId = settingsSync.getBool("settingEnemiesID");
             }
@@ -133,11 +105,6 @@ export class MobsDrawing extends DrawingUtils
                 this.drawFilledCircle(ctx, point.x, point.y, 10, color);
             }
 
-            // 📊 Enchantment indicator for living resources (if enabled)
-            if (isLivingResource && settingsSync.getBool("settingLivingResourceEnchantOverlay") && mobOne.enchantmentLevel > 0) {
-                this.drawEnchantmentIndicator(ctx, point.x, point.y, mobOne.enchantmentLevel);
-            }
-
             // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)
             if (isLivingResource && settingsSync.getBool("settingResourceDistance"))
             {
@@ -155,13 +122,71 @@ export class MobsDrawing extends DrawingUtils
                 this.drawHealthBar(ctx, point.x, point.y, currentHP, maxHP, 60, 10);
             }
 
+            // 📊 Display enemy information below the mob
+            let currentYOffset = drawHealthBar ? 36 : 26; // Start position based on health bar presence
+
             if (drawId)
             {
-                // Display TypeID below the health bar (or mob if no health bar)
+                // Display TypeID
                 const idText = `${mobOne.typeId}`;
                 const idWidth = ctx.measureText(idText).width;
-                const yOffset = drawHealthBar ? 34 : 24; // Adjust position based on health bar presence
-                this.drawTextItems(point.x - idWidth / 2, point.y + yOffset, idText, ctx, "10px", "#CCCCCC");
+                this.drawTextItems(point.x - idWidth / 2, point.y + currentYOffset, idText, ctx, "10px", "#CCCCCC");
+                currentYOffset += 12; // Move down for next element
+            }
+
+            // Display Tier (for hostile mobs only, not living resources)
+            if (settingsSync.getBool("settingEnemiesTier") && mobOne.tier > 0 &&
+                mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
+                const tierText = `T${mobOne.tier}`;
+                const tierWidth = ctx.measureText(tierText).width;
+                this.drawTextItems(point.x - tierWidth / 2, point.y + currentYOffset, tierText, ctx, "10px", "#FFD700");
+                currentYOffset += 12; // Move down for next element
+            }
+
+            // Display Name (localized if available, fallback to technical name)
+            if (settingsSync.getBool("settingEnemiesName") && mobOne.name &&
+                mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
+                // Try to get localized name first
+                let displayName = null;
+                if (mobOne.namelocatag && window.localizationDatabase) {
+                    displayName = window.localizationDatabase.getText(mobOne.namelocatag);
+                }
+
+                // Fallback to technical name if no localization available
+                if (!displayName) {
+                    // Simplify the technical name by removing tier prefix
+                    displayName = mobOne.name.replace(/^T\d+_MOB_/, '').replace(/_/g, ' ');
+                }
+
+                // Limit length to prevent overcrowding
+                if (displayName.length > 20) {
+                    displayName = displayName.substring(0, 17) + '...';
+                }
+                const nameWidth = ctx.measureText(displayName).width;
+                this.drawTextItems(point.x - nameWidth / 2, point.y + currentYOffset, displayName, ctx, "9px", "#FFFFFF");
+                currentYOffset += 12; // Move down for next element
+            }
+
+            // Display Category Badge
+            if (settingsSync.getBool("settingEnemiesCategoryBadge") && mobOne.category &&
+                mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
+                // Format category for display (uppercase, short)
+                let badgeText = mobOne.category.toUpperCase();
+                // Use abbreviated versions for common categories
+                const categoryMap = {
+                    'BOSS': '👑',
+                    'MINIBOSS': '⭐',
+                    'CHAMPION': '💎',
+                    'VETERAN': 'VET',
+                    'ELITE': 'ELI',
+                    'STANDARD': 'STD',
+                    'TRASH': 'TRA'
+                };
+                badgeText = categoryMap[badgeText] || badgeText.substring(0, 3);
+
+                const badgeWidth = ctx.measureText(badgeText).width;
+                // Use a distinct color for the badge
+                this.drawTextItems(point.x - badgeWidth / 2, point.y + currentYOffset, badgeText, ctx, "10px", "#FF69B4");
             }
         }
 

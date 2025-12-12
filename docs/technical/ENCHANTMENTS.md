@@ -1,6 +1,16 @@
 # ✨ Enchantments System – Technical Notes
 
-> **Scope:** How enchantments are represented and detected in OpenRadar.  
+> **⚠️ HISTORICAL DOCUMENT (Nov 2025)**
+> This document describes the old enchantment system based on the `rarity` field.
+>
+> **Current system (Dec 2025):** Uses `parameters[33]` directly from server (Phase 3B).
+>
+> **📘 REFERENCE DOCUMENT:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
+> See this document for the complete current state of the detection system.
+
+---
+
+> **Scope (Historical):** How enchantments were represented and detected in OpenRadar (Nov 2025).
 > **Focus:** Living resources (Hide/Fiber), harvestables, and dungeon enchantments.
 
 ---
@@ -220,33 +230,56 @@ This fix ensures solo dungeon enchantments are read from the proper parameter.
 
 ---
 
-## 8. Summary & Next Steps
+## 8. Summary & Next Steps (Historical)
 
 ### 8.1 Summary of Root Causes
 
-1. **Missing TypeID offset (-15)** for some living resources (separate issue handled elsewhere).
-2. **No XML database** → no single source of truth for tier/enchant (Phase 2).
-3. **Using `params[33]` for living resources** → always 0, invalid.
-4. **Dungeon enchantment offset incorrect** → wrong enchant display for some dungeons.
+Problems identified in Nov 2025:
+- Approximate calculation from `rarity`
+- Complex distinction LivingHarvestable vs LivingSkinnable
+- Fragile formula `enchant = floor((rarity - base) / 45)`
 
 ### 8.2 Expected Gains After Fixes
 
-| Metric                    | Before          | After Rarity Fix | Note                      |
+| Metric                    | Before          | After (Phase 3B) | Note                      |
 |---------------------------|-----------------|------------------|---------------------------|
-| T6+ detection             | ~50%            | ↑ (with other fixes) | Depends also on TypeID offset |
-| Living resources enchant  | ~20%            | ~100%            | With rarity-based formula |
+| T6+ detection             | ~50%            | 100%             | Fix override + params[33] |
+| Living resources enchant  | ~20%            | 100%             | Uses params[33]           |
 | Solo dungeon enchantment  | ~80%            | 100%             | After offset correction   |
 
-### 8.3 Next Steps
+### 8.3 Next Steps (Completed in Phase 3B)
 
-1. **Short-term field validation (1–2h):**
-   - Confirm formula for all tiers/enchant levels.
-   - Adjust thresholds if necessary.
-
-2. **Medium term:**
-   - Integrate XML-based databases (see `./DEATHEYE_ANALYSIS.md`).
-   - Centralise tier/enchant logic through those databases.
+1. ✅ **Field validation completed**
+2. ✅ **Simplified system**: Uses `parameters[33]` directly
+3. ⏸️ **Database migration**: Phase 4 pending
 
 ---
 
-_This document is a technical summary of how enchantments are detected and computed in OpenRadar, especially for living resources._
+## 9. Current System (Phase 3B - Dec 2025)
+
+**The system described in this document is OBSOLETE.**
+
+Since Phase 3B (December 2025), OpenRadar uses a simplified approach:
+
+```javascript
+// MobsHandler.js - Phase 3B (Current)
+calculateEnchantment(type, tier, rarity, paramsEnchant) {
+    // ✅ Uses parameters[33] directly (reliable server data)
+    if (paramsEnchant !== null && paramsEnchant !== undefined) {
+        return Math.max(0, Math.min(4, paramsEnchant));
+    }
+    return 0;
+}
+```
+
+**What was abandoned:**
+- ❌ Calculation from `rarity` (unreliable)
+- ❌ Distinction LivingHarvestable vs LivingSkinnable
+- ❌ Formula `enchant = floor((rarity - base) / 45)`
+- ❌ Base rarity tables (78, 92, 112, etc.)
+
+**📘 See:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md` for complete current state.
+
+---
+
+_**Note:** This document is kept for historical reference. The current system (Phase 3B, Dec 2025) no longer uses the rarity-based calculation described here._

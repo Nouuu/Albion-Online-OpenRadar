@@ -6,30 +6,12 @@ const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/
 const OUTPUT_DIR = 'public/ao-bin-dumps';
 
 const FILES_TO_DOWNLOAD = [
-    'formatted/items.txt',
-    'formatted/world.json',
-    'formatted/world.txt',
     'harvestables.json',
-    'harvestables.xml',
     'items.json',
     'items.xml',
     'localization.json',
     'mobs.json',
-    'mobs.xml',
-    'randomdungeons.json',
-    'randomdungeons.xml',
-    'randomspawnbehaviors.json',
-    'randomspawnbehaviors.xml',
-    'rareresourcedistribution.json',
-    'rareresourcedistribution.xml',
-    'resourcedistpresets.json',
-    'resourcedistpresets.xml',
-    'resources.json',
-    'resources.xml',
     'spells.json',
-    'spells.xml',
-    'treasures.json',
-    'treasures.xml'
 ];
 
 let replaceExisting = false;

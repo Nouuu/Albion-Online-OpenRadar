@@ -169,7 +169,7 @@ export class RadarRenderer {
 
         // Interpolate wisp cages
         if (this.handlers.wispCageHandler && this.drawings.wispCageDrawing) {
-            this.drawings.wispCageDrawing.Interpolate(
+            this.drawings.wispCageDrawing.interpolate(
                 this.handlers.wispCageHandler.cages,
                 this.lpX,
                 this.lpY,
@@ -179,7 +179,7 @@ export class RadarRenderer {
 
         // Interpolate fishing
         if (this.handlers.fishingHandler && this.drawings.fishingDrawing) {
-            this.drawings.fishingDrawing.Interpolate(
+            this.drawings.fishingDrawing.interpolate(
                 this.handlers.fishingHandler.fishes,
                 this.lpX,
                 this.lpY,
@@ -212,7 +212,7 @@ export class RadarRenderer {
 
         // Draw map background
         if (this.drawings.mapsDrawing && contextMap) {
-            this.drawings.mapsDrawing.Draw(contextMap, this.map);
+            this.drawings.mapsDrawing.draw(contextMap, this.map);
         }
 
         // Unified cluster detection + drawing (merge static harvestables + living resources)
@@ -297,21 +297,21 @@ export class RadarRenderer {
             }
 
             if (this.drawings.wispCageDrawing && this.handlers.wispCageHandler) {
-                this.drawings.wispCageDrawing.Draw(
+                this.drawings.wispCageDrawing.draw(
                     context,
                     this.handlers.wispCageHandler.cages
                 );
             }
 
             if (this.drawings.fishingDrawing && this.handlers.fishingHandler) {
-                this.drawings.fishingDrawing.Draw(
+                this.drawings.fishingDrawing.draw(
                     context,
                     this.handlers.fishingHandler.fishes
                 );
             }
 
             if (this.drawings.dungeonsDrawing && this.handlers.dungeonsHandler) {
-                this.drawings.dungeonsDrawing.Draw(
+                this.drawings.dungeonsDrawing.draw(
                     context,
                     this.handlers.dungeonsHandler.dungeonList
                 );

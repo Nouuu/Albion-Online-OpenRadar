@@ -29,6 +29,8 @@ class Mob {
         this.tier = 0;
         this.type = EnemyType.Enemy;
         this.name = null;
+        this.category = null;           // Mob category from database (boss, miniboss, champion, etc.)
+        this.namelocatag = null;        // Localization tag for translated name
         this.exp = 0;
         this.hX = 0;
         this.hY = 0;
@@ -73,378 +75,24 @@ export class MobsHandler {
     constructor() {
         this.mobsList = [];
         this.mistList = [];
-        this.mobinfo = {};
         this.harvestablesNotGood = [];
-
-        // Cross-reference with HarvestablesHandler
-        this.staticResourceTypeIDs = new Map();
-        this._registrationLogState = new Map();
-        this._lastHumanLog = new Map();
-
-        // Load living resources metadata for enhanced logging
-        this.livingResourcesMetadata = null;
-        this.loadLivingResourcesMetadata();
-
-        this.loadCachedTypeIDs();
     }
 
-    async loadLivingResourcesMetadata() {
-        try {
-            const response = await fetch('/server-scripts/living-resources-enhanced.json');
-            if (response.ok) {
-                const data = await response.json();
-
-                // Merge animals and all guardian types
-                let allResources = data.animals || [];
-
-                if (data.guardians) {
-                    // Merge all guardian categories (fiber, hide, etc.)
-                    for (const category in data.guardians) {
-                        if (Array.isArray(data.guardians[category])) {
-                            allResources = allResources.concat(data.guardians[category]);
-                        }
-                    }
-                }
-
-                this.livingResourcesMetadata = allResources;
-                // ℹ️ INFO (always logged) - Loading metadata
-                if (window.logger) {
-                    window.logger.info(CATEGORIES.MOB, EVENTS.LoadMetadata, {
-                        count: this.livingResourcesMetadata.length
-                    });
-                }
-            } else {
-                // ⚠️ WARNING - File not found
-                if (window.logger) {
-                    window.logger.warn(CATEGORIES.MOB, EVENTS.LoadMetadataNotFound, {
-                        status: response.status,
-                        statusText: response.statusText,
-                        url: response.url
-                    });
-                } else {
-                    if (window.logger) {
-                        window.logger.warn(CATEGORIES.MOB, EVENTS.EnhancedJSONLoadFailed, {
-                            status: response.status,
-                            statusText: response.statusText
-                        });
-                    }
-                }
-            }
-        } catch (e) {
-            // ❌ ERROR (always logged) - Critical failure
-            if (window.logger) {
-                window.logger.error(CATEGORIES.MOB, EVENTS.LoadMetadataFailed, e);
-            } else {
-                if (window.logger) {
-                    window.logger.error(CATEGORIES.MOB, EVENTS.EnhancedJSONLoadError, e);
-                }
-            }
+    /**
+     * Calculate enchantment level from game parameters
+     * Uses parameters[33] directly (server data is reliable)
+     */
+    calculateEnchantment(paramsEnchant) {
+        if (paramsEnchant !== null && paramsEnchant !== undefined) {
+            return Math.max(0, Math.min(4, paramsEnchant));
         }
-    }
-
-    findCreatureMetadata(tier, resourceType, hp) {
-        if (!this.livingResourcesMetadata) return null;
-
-        // Filter by tier and type
-        const candidates = this.livingResourcesMetadata.filter(m =>
-            m.tier === tier &&
-            (resourceType === 'hide' ? m.faction?.includes('HIDE') || m.faction?.includes('COUGAR') || m.faction?.includes('WOLF') || m.faction?.includes('BOAR') || m.faction?.includes('BEAR') || m.faction?.includes('FOX') :
-                resourceType === 'fiber' ? m.faction?.includes('BEEKEEPER') :
-                    false)
-        );
-
-        // Find best match by HP (closest match)
-        if (candidates.length === 0) return null;
-
-        let bestMatch = null;
-        let smallestDiff = Infinity;
-
-        for (const candidate of candidates) {
-            const diff = Math.abs(candidate.hp - hp);
-            if (diff < smallestDiff) {
-                smallestDiff = diff;
-                bestMatch = candidate;
-            }
-        }
-
-        // Only return if HP is reasonably close (within 20%)
-        if (bestMatch && smallestDiff <= bestMatch.hp * 0.2) {
-            return bestMatch;
-        }
-
-        return null;
-    }
-
-    loadCachedTypeIDs() {
-        try {
-            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs', null);
-            if (entries) {
-                let loadedCount = 0;
-                let skippedCount = 0;
-                for (const [typeId, info] of entries) {
-                    const numericTypeId = Number(typeId);
-                    if (numericTypeId === 65535) {
-                        skippedCount++;
-                        continue;
-                    }
-                    this.staticResourceTypeIDs.set(numericTypeId, info);
-                    loadedCount++;
-                }
-                // ℹ️ INFO (always logged) - Loading cache
-                if (window.logger) {
-                    window.logger.info(CATEGORIES.MOB, EVENTS.LoadCachedTypeIDs, {
-                        loaded: loadedCount,
-                        skipped: skippedCount
-                    });
-                }
-            }
-        } catch (e) {
-            // ❌ ERROR (always logged) - Critical failure
-            if (window.logger) {
-                window.logger.error(CATEGORIES.MOB, EVENTS.LoadCacheFailed, e);
-            }
-        }
-    }
-
-    // 🔍 Get base rarity for a given tier (used for enchantment calculation)
-    // Note: Only accurate for Harvestable (Fiber/Wood/Ore/Rock), NOT for Skinnable (Hide)
-    getBaseRarity(tier) {
-        // Base rarity values observed in-game for HARVESTABLE resources
-        const baseRarities = {
-            1: 0,    // T1
-            2: 0,    // T2
-            3: 78,   // T3 Fiber observed
-            4: 92,   // T4 Fiber observed
-            5: 112,  // T5 Fiber observed
-            6: 132,  // T6 (estimated +20/tier)
-            7: 152,  // T7 (estimated)
-            8: 172   // T8 (estimated)
-        };
-        return baseRarities[tier] || 0;
-    }
-
-    // 🔍 Calculate enchantment level from game parameters
-    // Harvestable (Fiber/Wood/Ore/Rock): Calculate from rarity (params[19])
-    // Skinnable (Hide): Cannot be calculated from rarity (game sends constant values)
-    calculateEnchantment(type, tier, rarity, paramsEnchant) {
-        // For Harvestable resources (Fiber/Wood/Ore/Rock): rarity is accurate
-        if (type === EnemyType.LivingHarvestable) {
-            if (rarity === null || rarity === undefined) return 0;
-
-            const baseRarity = this.getBaseRarity(tier);
-            if (baseRarity === 0) return 0;
-
-            // Formula validated: enchant increases rarity by ~45 per level
-            const diff = rarity - baseRarity;
-            const enchant = Math.floor(diff / 45);
-            return Math.max(0, Math.min(4, enchant));
-        }
-
-        // For Skinnable resources (Hide): rarity is CONSTANT per TypeID (unreliable)
-        // Game sends same rarity value regardless of actual enchantment
-        // Cannot calculate from rarity - must use TypeID database or harvestable event
-        if (type === EnemyType.LivingSkinnable) {
-            // TODO: Use MobsInfo enchantment data when available
-            // For now, return 0 (will be corrected when harvestable is created)
-            return 0;
-        }
-
         return 0;
-    }
-
-    // 📊 Enhanced logging for living resources with validation
-    logLivingCreatureEnhanced(id, typeId, health, enchant, rarity, tier, type, name) {
-
-        const typeLabel = type === EnemyType.LivingSkinnable ? "Skinnable" : "Harvestable";
-        const isAlive = health > 0;
-        const timestamp = new Date().toISOString();
-
-        // Calculate REAL enchantment using centralized method
-        const realEnchant = this.calculateEnchantment(type, tier, rarity, enchant);
-
-        // Try to find creature metadata
-        const metadata = this.findCreatureMetadata(tier, name, health);
-
-        // Build structured log
-        const logData = {
-            timestamp,
-            typeId,
-            resource: {
-                type: name,
-                tier,
-                enchant: realEnchant,  // Use calculated enchant
-                category: typeLabel
-            },
-            state: {
-                health,
-                alive: isAlive,
-                rarity
-            },
-            entityId: id
-        };
-
-        // Add validation if metadata found
-        if (metadata) {
-            const hpDiff = Math.abs(metadata.hp - health);
-            const hpMatch = hpDiff <= metadata.hp * 0.2;
-
-            logData.validation = {
-                animal: metadata.animal,
-                expectedHP: metadata.hp,
-                actualHP: health,
-                hpDiff,
-                match: hpMatch,
-                prefab: metadata.prefab
-            };
-        }
-
-        // JSON for parsing
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.NewLivingCreature, logData);
-
-        // Human-readable format
-        const stateIcon = isAlive ? '🟢' : '🔴';
-        const matchIcon = metadata?.validation?.match ? '✓' : '?';
-        const animalInfo = metadata ? ` → ${metadata.animal}` : '';
-        const hpValidation = metadata ? ` (expected ~${metadata.validation.expectedHP}, diff: ${metadata.validation.hpDiff})` : '';
-
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.LivingCreatureCSV, {
-            typeId: typeId,
-            name: name,
-            tier: tier,
-            enchant: realEnchant,
-            health: health,
-            stateIcon: stateIcon,
-            matchIcon: matchIcon,
-            hpValidation: hpValidation,
-            animalInfo: animalInfo
-        });
-    }
-
-    saveCachedTypeIDs() {
-        try {
-            const entries = Array.from(this.staticResourceTypeIDs.entries())
-                .filter(([typeId]) => typeId !== 65535); // Skip unstable TypeID only
-            settingsSync.setJSON('cachedStaticResourceTypeIDs', entries);
-        } catch (e) {
-            // ❌ ERROR (always logged) - Critical save failure
-            if (window.logger) {
-                window.logger.error(CATEGORIES.MOB, EVENTS.SaveCacheFailed, e);
-            }
-        }
-    }
-
-    clearCachedTypeIDs() {
-        try {
-            const count = this.staticResourceTypeIDs.size;
-            settingsSync.remove('cachedStaticResourceTypeIDs');
-            this.staticResourceTypeIDs.clear();
-            this._registrationLogState.clear();
-            // ℹ️ INFO (always logged) - Important user action
-            if (window.logger) {
-                window.logger.info(CATEGORIES.MOB, EVENTS.CacheCleared, { count });
-            }
-        } catch (e) {
-            // ❌ ERROR (always logged) - Critical failure
-            if (window.logger) {
-                window.logger.error(CATEGORIES.MOB, EVENTS.ClearCacheFailed, e);
-            }
-            throw e;
-        }
-    }
-
-    showCachedTypeIDs() {
-        // ℹ️ INFO (always logged) - Display cache (user action)
-        if (window.logger) {
-            const sorted = Array.from(this.staticResourceTypeIDs.entries())
-                .sort((a, b) => a[0] - b[0]);
-
-            const entries = sorted.map(([typeId, info]) => ({
-                typeId,
-                type: info.type,
-                tier: info.tier
-            }));
-
-            window.logger.info(CATEGORIES.MOB, EVENTS.DisplayCachedTypeIDs, {
-                total: this.staticResourceTypeIDs.size,
-                entries
-            });
-        }
     }
 
     normalizeNumber(value, defaultValue = null) {
         if (value === undefined || value === null) return defaultValue;
         const n = Number(value);
         return Number.isFinite(n) ? n : defaultValue;
-    }
-
-
-    registerStaticResourceTypeID(typeId, typeNumber, tier) {
-        if (typeId === 65535) return;
-
-        // 🔧 PRIORITY 1: Check mobinfo first (overrides game bugs)
-        const knownInfo = this.mobinfo && this.mobinfo[typeId];
-        let resourceType;
-
-        if (knownInfo && knownInfo[2]) {
-            // Use mobinfo name (Fiber, Hide, Wood, Ore, Rock)
-            resourceType = knownInfo[2];
-            window.logger?.debug(CATEGORIES.MOB, EVENTS.UsingMobInfo, {
-                    typeId,
-                    resourceType,
-                    tier,
-                    gameTypeNumber: typeNumber
-                });
-        } else {
-            // Fallback: use game's typeNumber
-            resourceType = this.getResourceTypeFromNumber(typeNumber);
-        }
-
-        if (!resourceType) return;
-
-        const existing = this.staticResourceTypeIDs.get(typeId);
-
-        // 📊 Log EVERY registration for analysis (capture typeNumber from game)
-        if (window.logger) {
-            const isUpdate = !!existing;
-            const changed = existing && (existing.type !== resourceType || existing.tier !== tier);
-
-            // ℹ️ INFO (always logged) - Static TypeID registration (important for collection)
-            window.logger.info(CATEGORIES.MOB, isUpdate ? (changed ? 'STATIC_UPDATE' : 'STATIC_DUPLICATE') : 'STATIC_REGISTER', {
-                typeId,
-                typeNumber,
-                resourceType,
-                tier,
-                existing: existing || null,
-                changed,
-                source: knownInfo ? 'mobinfo' : 'game-typeNumber'
-            });
-        }
-
-        if (existing && existing.type === resourceType && existing.tier === tier) {
-            return;
-        }
-
-        this.staticResourceTypeIDs.set(typeId, {type: resourceType, tier: tier});
-        this.saveCachedTypeIDs();
-    }
-
-    getResourceTypeFromNumber(typeNumber) {
-        if (typeof typeNumber !== 'number') return null;
-        if (typeNumber >= 0 && typeNumber <= 5) return 'Log';
-        else if (typeNumber >= 6 && typeNumber <= 10) return 'Rock';
-        else if (typeNumber >= 11 && typeNumber <= 15) return 'Fiber';
-        else if (typeNumber >= 16 && typeNumber <= 22) return 'Hide';
-        else if (typeNumber >= 23 && typeNumber <= 27) return 'Ore';
-        return null;
-    }
-
-    updateMobInfo(newData) {
-        try {
-            this.mobinfo = Object.assign({}, newData);
-        } catch (e) {
-            window.logger?.error(CATEGORIES.MOB, 'UpdateMobInfoError', e);
-            this.mobinfo = {};
-        }
     }
 
     NewMobEvent(parameters) {
@@ -481,7 +129,7 @@ export class MobsHandler {
             try {
                 name = parameters[32] || parameters[31] || null;
             } catch (e) {
-                window.logger?.error(CATEGORIES.MOB, EVENTS.NewMobEvent_NameError, e);
+                window.logger?.error(CATEGORIES.MOB, EVENTS.NewMobEventError, e);
                 name = null;
             }
 
@@ -496,21 +144,6 @@ export class MobsHandler {
                     name
                 }
             });
-
-            // 🔍 DEBUG: Log ALL parameters for living resources to find enchantment
-            const knownInfo = this.mobinfo[typeId];
-            if (knownInfo && (knownInfo[1] === 0 || knownInfo[1] === 1)) { // Living resources
-                window.logger?.debug(CATEGORIES.MOB, EVENTS.NewLivingCreature, {
-                    typeId,
-                    allParams: {
-                        p19_rarity: parameters[19],
-                        p33_enchant: parameters[33],
-                        p8: parameters[8],
-                        p9: parameters[9],
-                        p252: parameters[252]
-                    }
-                });
-            }
 
             if (name) {
                 this.AddMist(mobId, posX, posY, name, enchant);
@@ -535,16 +168,50 @@ export class MobsHandler {
         const actualHealth = healthNormalized < 10 ? 255 : healthNormalized;
 
         const mob = new Mob(id, typeId, posX, posY, actualHealth, maxHealth, enchant, rarity);
-        const normHealth = Number(actualHealth) || 0;
-
-        // Get known info from mobinfo database
-        const knownInfo = this.mobinfo[typeId];
+        Number(actualHealth) || 0;
+        // Phase 5: MobsDatabase ONLY (no fallback to test new system)
+        const dbInfo = window.mobsDatabase?.getMobInfo(typeId);
         let hasKnownInfo = false;
-        if (Array.isArray(knownInfo)) {
-            mob.tier = knownInfo[0] || 0;
-            mob.type = knownInfo[1] || EnemyType.Enemy;
-            mob.name = knownInfo[2] || null;
+
+        if (dbInfo && dbInfo.isHarvestable) {
+            // Living resource from MobsDatabase
+            mob.tier = dbInfo.tier || 0;
+            mob.name = dbInfo.type;  // 'Hide', 'Fiber', 'Log', 'Rock', 'Ore'
+            // Hide = LivingSkinnable (animals), others = LivingHarvestable (critters/guardians)
+            mob.type = dbInfo.type === 'Hide' ? EnemyType.LivingSkinnable : EnemyType.LivingHarvestable;
             hasKnownInfo = true;
+
+            window.logger?.debug(CATEGORIES.MOB, 'MobsDatabaseMatch', {
+                typeId,
+                type: dbInfo.type,
+                tier: dbInfo.tier,
+                uniqueName: dbInfo.uniqueName,
+                assignedEnemyType: this.getEnemyTypeName(mob.type)
+            });
+        } else if (dbInfo) {
+            // Hostile mob from MobsDatabase
+            mob.type = this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
+            mob.name = dbInfo.uniqueName;  // For Mist Boss filtering
+            mob.tier = dbInfo.tier || 0;   // Store tier for hostile mobs
+            mob.category = dbInfo.category || null;  // Store category for badge display
+            mob.namelocatag = dbInfo.namelocatag || null;  // Store localization tag for translated name
+            hasKnownInfo = true;
+
+            window.logger?.debug(CATEGORIES.MOB, 'HostileMobMatch', {
+                typeId,
+                category: dbInfo.category,
+                uniqueName: dbInfo.uniqueName,
+                tier: dbInfo.tier,
+                assignedEnemyType: this.getEnemyTypeName(mob.type)
+            });
+        } else {
+            // Unknown mob (no database entry)
+            // Mob stays as EnemyType.Enemy (default)
+            window.logger?.debug(CATEGORIES.MOB, 'UnknownMob_NoDatabase', {
+                typeId,
+                health: healthNormalized,
+                maxHealth
+            });
         }
 
         // 🐛 DEBUG: Log enemy creation with type info
@@ -558,24 +225,13 @@ export class MobsHandler {
             assignedType: mob.type,
             typeName: this.getEnemyTypeName(mob.type),
             name: mob.name,
-            hasKnownInfo: hasKnownInfo
+            hasKnownInfo: hasKnownInfo,
+            source: hasKnownInfo ? 'MobsDatabase' : 'none'
         });
 
-        // Get cross-referenced static resource info
-        const staticInfo = this.staticResourceTypeIDs.get(typeId);
-
-        // Classification: mobinfo > staticInfo
-        if (hasKnownInfo && (knownInfo[1] === EnemyType.LivingHarvestable || knownInfo[1] === EnemyType.LivingSkinnable)) {
-            mob.type = knownInfo[1];
-        } else if (staticInfo && normHealth > 0) {
-            mob.type = EnemyType.LivingHarvestable;
-            if (!mob.tier || mob.tier === 0) mob.tier = staticInfo.tier;
-            if (!mob.name) mob.name = staticInfo.type;
-        }
-
-        // Calculate REAL enchantment using centralized method (after tier/type/name are set)
+        // Calculate enchantment from server data (parameters[33])
         if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
-            mob.enchantmentLevel = this.calculateEnchantment(mob.type, mob.tier, rarity, enchant);
+            mob.enchantmentLevel = this.calculateEnchantment(enchant);
         }
 
         // Filter living resources based on user settings
@@ -604,14 +260,11 @@ export class MobsHandler {
                     return; // Skip unidentified enemies if setting is disabled
                 }
             } else {
-                // For identified enemies, filter by their specific level (Normal, Medium, Enchanted, MiniBoss, Boss)
-                const enemyLevelIndex = mob.type - EnemyType.Enemy; // 0-4 for Enemy through Boss
-                const settingsEnemyIndexNames = ['settingNormalEnemy', 'settingMediumEnemy', 'settingEnchantedEnemy', 'settingMiniBossEnemy', 'settingBossEnemy'];
-                if (enemyLevelIndex >= 0 && enemyLevelIndex < settingsEnemyIndexNames.length) {
-                    const settingName = settingsEnemyIndexNames[enemyLevelIndex];
-                    if (settingsSync.getBool(settingName) === false) {
-                        return; // Skip if this enemy level is disabled
-                    }
+                // For identified enemies, filter by their specific level (Normal, Enchanted, MiniBoss, Boss)
+                // Note: MediumEnemy completely removed - not aligned with game data categories
+                const settingName = this._getSettingNameForEnemyType(mob.type);
+                if (settingName && settingsSync.getBool(settingName) === false) {
+                    return; // Skip if this enemy level is disabled
                 }
             }
         }
@@ -637,11 +290,6 @@ export class MobsHandler {
         }
 
         this.mobsList.push(mob);
-
-        // 📊 Enhanced logging for living creatures
-        if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
-            this.logLivingCreatureEnhanced(id, typeId, healthNormalized, enchant, rarity, mob.tier, mob.type, mob.name);
-        }
     }
 
     removeMob(id) {
@@ -840,12 +488,122 @@ export class MobsHandler {
         this.harvestablesNotGood = [];
     }
 
-    updateMobInfoEntry(typeId, entry) {
-        this.mobinfo[typeId] = entry;
+    /**
+     * Map category/mobtypecategory from mobs.xml to EnemyType enum
+     *
+     * mobs.xml has TWO category attributes:
+     * 1. mobtypecategory - Primary type (boss, miniboss, champion, standard, trash, critter, summon, etc.)
+     * 2. category - Secondary type (roaming, factionwarfare, rd_solo, camp, static, etc.)
+     *
+     * MobsDatabase.js reads: mob['@mobtypecategory'] || mob['@category'] || ''
+     * So this method must handle values from BOTH attributes.
+     *
+     * Additionally, uses name-based heuristics to detect elite mobs:
+     * - "_VETERAN" (not "_VETERAN_CHAMPION") → MiniBoss
+     * - "_ELITE" → MiniBoss
+     * - "_BOSS" → Boss
+     *
+     * @param {string} category - Category from mobs.xml
+     * @param {string} uniqueName - Unique name of the mob (for heuristics)
+     * @returns {number} EnemyType enum value
+     * @private
+     */
+    _getEnemyTypeFromCategory(category, uniqueName = '') {
+        const cat = (category || '').toLowerCase();
+        const name = (uniqueName || '').toUpperCase();
+
+        // 🔍 Name-based heuristics (checked FIRST, before category)
+        // These override category-based classification
+
+        // VETERAN mobs (elite versions) - MiniBoss tier
+        // Example: T6_MOB_MORGANA_CROSSBOWMAN_VETERAN (has category="static" but is elite)
+        // Exclude VETERAN_CHAMPION (already handled by category="champion")
+        if (name.includes('_VETERAN') && !name.includes('_VETERAN_CHAMPION')) {
+            return EnemyType.MiniBoss;
+        }
+
+        // ELITE mobs - MiniBoss tier
+        if (name.includes('_ELITE')) {
+            return EnemyType.MiniBoss;
+        }
+
+        // BOSS in name (explicit boss indicators)
+        if (name.includes('_BOSS') && !name.includes('MINIBOSS')) {
+            return EnemyType.Boss;
+        }
+
+        // 📋 Category-based classification (fallback if no name heuristic matched)
+        switch(cat) {
+            // Boss tier (mobtypecategory="boss" OR category="boss")
+            case 'boss':
+                return EnemyType.Boss;
+
+            // Mini-boss tier (mobtypecategory="miniboss" OR category="miniboss")
+            case 'miniboss':
+                return EnemyType.MiniBoss;
+
+            // Enchanted/Champion tier (mobtypecategory="champion" OR category="champion")
+            case 'champion':
+                return EnemyType.EnchantedEnemy;
+
+            // Random Dungeon elites - treat as bosses/mini-bosses
+            case 'rd_elite':      // Random Dungeon elite mobs
+            case 'rd_veteran':    // Random Dungeon veteran mobs
+                return EnemyType.MiniBoss;
+
+            case 'rd_solo':       // Random Dungeon solo mobs (weaker)
+                return EnemyType.EnchantedEnemy;
+
+            // Normal enemy tier - all standard/weak hostile mobs
+            case 'standard':      // mobtypecategory="standard"
+            case 'trash':         // mobtypecategory="trash"
+            case 'summon':        // mobtypecategory="summon"
+            case 'roaming':       // category="roaming"
+            case 'factionwarfare': // category="factionwarfare"
+            case 'camp':          // category="camp"
+            case 'static':        // category="static" (WARNING: includes VETERAN mobs, handled by heuristic above)
+            case 'avalon':        // category="avalon" (Avalonian mobs)
+            case 'homebase':      // category="homebase"
+            case 'hidemob':       // category="hidemob"
+            case 'territoryguards': // category="territoryguards"
+            case 'territoryinvaders': // category="territoryinvaders"
+            case 'smugglerguards': // category="smugglerguards"
+            case 'crowdcontrol':  // category="crowdcontrol"
+            case 'castle':        // category="castle"
+            case 'tracking':      // category="tracking"
+            default:
+                return EnemyType.Enemy;
+
+            // Categories ignored (non-hostile or special):
+            // - environment: Non-hostile objects
+            // - chest: Treasure chests
+            // - harmless: Non-hostile NPCs
+            // - vanity: Cosmetic entities
+            // - critter: Living resources (handled separately via isHarvestable)
+            // - hiddentreasures, crystalcreatures, treasuredrones: Non-mob entities
+            // These shouldn't reach this point as they have isHarvestable=false or shouldn't be spawned
+        }
     }
 
-    getMobInfo(typeId) {
-        return this.mobinfo[typeId] || null;
+    /**
+     * Get setting name for enemy type
+     * @param {number} type - EnemyType enum value
+     * @returns {string|null} Setting name or null if no setting exists
+     * @private
+     */
+    _getSettingNameForEnemyType(type) {
+        switch(type) {
+            case EnemyType.Enemy:
+                return 'settingNormalEnemy';
+            case EnemyType.EnchantedEnemy:
+                return 'settingEnchantedEnemy';
+            case EnemyType.MiniBoss:
+                return 'settingMiniBossEnemy';
+            case EnemyType.Boss:
+                return 'settingBossEnemy';
+            default:
+                return null;
+        }
     }
 
     /**

@@ -7,6 +7,9 @@ import {MapDrawing} from '../Drawings/MapsDrawing.js';
 import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
 import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
+import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
+import {MobsDatabase} from '../Data/MobsDatabase.js';
+import {LocalizationDatabase} from '../Data/LocalizationDatabase.js';
 import {EventCodes} from './EventCodes.js';
 import {ItemsDatabase} from '../Data/ItemsDatabase.js';
 import {SpellsDatabase} from '../Data/SpellsDatabase.js';
@@ -23,10 +26,8 @@ import imageCache from './ImageCache.js';
 import {DrawingUtils} from './DrawingUtils.js';
 import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
-import {MobsInfo} from "../Handlers/MobsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
-import settingsSync from './SettingsSync.js';
 
 // ✅ Canvas check for RadarRenderer initialization
 const canvas = document.getElementById("drawCanvas");
@@ -37,33 +38,187 @@ console.log('🔧 [Utils.js] Module loaded');
 
 console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');
 
-// 📊 Initialize Items Database
-const itemsDatabase = new ItemsDatabase();
-(async () => {
-    await itemsDatabase.load('/ao-bin-dumps/items.json');
-    window.itemsDatabase = itemsDatabase; // Expose globally for handlers
-    console.log('📊 [Utils.js] Items database loaded and ready');
-})();
+// 📊 Global database state tracking
+window.databasesReady = false;
+window.databaseLoadingProgress = {
+    items: false,
+    spells: false,
+    harvestables: false,
+    mobs: false,
+    localization: false
+};
 
-// 📊 Initialize Spells Database
-const spellsDatabase = new SpellsDatabase();
-(async () => {
-    await spellsDatabase.load('/ao-bin-dumps/spells.json');
-    window.spellsDatabase = spellsDatabase; // Expose globally for handlers
-    console.log('✨ [Utils.js] Spells database loaded and ready');
-})();
+// 🔄 Retry logic with exponential backoff
+async function loadDatabaseWithRetry(database, path, name, ...extraArgs) {
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
 
-console.log('🔧 [Utils.js] Items & Spells databases initialization started (async)');
+    while (retryCount < MAX_RETRIES) {
+        try {
+            await database.load(path, ...extraArgs);
+            console.log(`✅ [Utils.js] ${name} database loaded successfully`);
+            return { success: true, database };
+        } catch (error) {
+            retryCount++;
+            const isLastAttempt = retryCount >= MAX_RETRIES;
+
+            console.error(`❌ [Utils.js] Failed to load ${name} database (attempt ${retryCount}/${MAX_RETRIES})`, error);
+
+            window.logger?.error(
+                window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+                `${name}DatabaseLoadFailed`,
+                {
+                    error: error.message,
+                    attempt: retryCount,
+                    maxRetries: MAX_RETRIES,
+                    isLastAttempt
+                }
+            );
+
+            if (isLastAttempt) {
+                return { success: false, error, name };
+            }
+
+            // Exponential backoff: 1s, 2s, 4s
+            const delay = 1000 * Math.pow(2, retryCount - 1);
+            console.log(`⏳ [Utils.js] Retrying ${name} database in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+}
+
+// ⚠️ Error notification UI
+function showDatabaseError(databaseName, error) {
+    const notification = document.createElement('div');
+    notification.className = 'error-notification';
+    notification.innerHTML = `
+        <div class="error-content">
+            <h3>⚠️ Database Loading Failed</h3>
+            <p>Unable to load <strong>${databaseName}</strong> database.</p>
+            <p class="error-details">${error.message}</p>
+            <div class="error-actions">
+                <button onclick="location.reload()">Reload Page</button>
+                <button onclick="this.parentElement.parentElement.parentElement.remove()">
+                    Continue Anyway
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+}
+
+// 🚀 Coordinated database initialization
+async function initializeDatabases() {
+    console.log('🔧 [Utils.js] Starting coordinated database initialization...');
+
+    const itemsDatabase = new ItemsDatabase();
+    const spellsDatabase = new SpellsDatabase();
+    const harvestablesDatabase = new HarvestablesDatabase();
+    const mobsDatabase = new MobsDatabase();
+    const localizationDatabase = new LocalizationDatabase();
+
+    const promises = [
+        loadDatabaseWithRetry(itemsDatabase, '/ao-bin-dumps/items.json', 'Items')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.items = true;
+                    window.itemsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(spellsDatabase, '/ao-bin-dumps/spells.json', 'Spells')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.spells = true;
+                    window.spellsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(harvestablesDatabase, '/ao-bin-dumps/harvestables.json', 'Harvestables')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.harvestables = true;
+                    window.harvestablesDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(mobsDatabase, '/ao-bin-dumps/mobs.json', 'Mobs')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.mobs = true;
+                    window.mobsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(localizationDatabase, '/ao-bin-dumps/localization.json', 'Localization', 'EN-US')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.localization = true;
+                    window.localizationDatabase = result.database;
+                }
+                return result;
+            })
+    ];
+
+    const results = await Promise.all(promises);
+
+    // Check for failures
+    const failures = results.filter(r => !r.success);
+    if (failures.length > 0) {
+        console.error(`❌ [Utils.js] ${failures.length} database(s) failed to load:`, failures);
+
+        // Show error notification for each failed database
+        failures.forEach(failure => {
+            showDatabaseError(failure.name, failure.error);
+        });
+    }
+
+    // Mark as ready even if some databases failed (graceful degradation)
+    window.databasesReady = true;
+
+    const successCount = results.filter(r => r.success).length;
+    console.log(`✅ [Utils.js] Database initialization complete: ${successCount}/${results.length} loaded successfully`);
+
+    window.logger?.info(
+        window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+        'DatabasesInitComplete',
+        {
+            totalDatabases: results.length,
+            successCount,
+            failureCount: failures.length,
+            progress: window.databaseLoadingProgress
+        }
+    );
+
+    // Dispatch custom event for components that need to wait for databases
+    window.dispatchEvent(new CustomEvent('databasesReady', {
+        detail: {
+            successCount,
+            failures: failures.map(f => f.name)
+        }
+    }));
+}
+
+// 🚀 Start database initialization
+initializeDatabases().catch(error => {
+    console.error('❌ [Utils.js] Critical error during database initialization:', error);
+    window.logger?.error(
+        window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+        'DatabaseInitCriticalError',
+        { error: error.message }
+    );
+    showDatabaseError('System', error);
+});
 
 const harvestablesDrawing = new HarvestablesDrawing();
 const dungeonsHandler = new DungeonsHandler();
 
 var itemsInfo = new ItemsInfo();
-var mobsInfo = new MobsInfo();
-
 itemsInfo.initItems();
-mobsInfo.initMobs();
-
 
 var map = new MapH(-1);
 const mapsDrawing = new MapDrawing();
@@ -107,7 +262,6 @@ const mapsDrawing = new MapDrawing();
 
 const chestsHandler = new ChestsHandler();
 const mobsHandler = new MobsHandler();
-mobsHandler.updateMobInfo(mobsInfo.moblist);
 
 // existing logEnemiesList button stays the same
 window.addEventListener('load', () => {
@@ -118,45 +272,6 @@ window.addEventListener('load', () => {
             window.logger?.debug(CATEGORIES.DEBUG, EVENTS.EnemiesList, { mobList: mobList });
         });
     }
-
-    // Clear TypeID Cache button
-    const clearTypeIDCache = document.getElementById('clearTypeIDCache');
-    if (clearTypeIDCache) clearTypeIDCache.addEventListener('click', () => {
-        try {
-            // Show what's in cache BEFORE clearing
-            const entries = settingsSync.getJSON('cachedStaticResourceTypeIDs');
-            if (!entries) {
-                window.logger?.info(CATEGORIES.CACHE, EVENTS.ClearingTypeIDCache, {
-                    entriesCount: entries.length,
-                    entries: entries.map(([typeId, info]) => ({
-                        typeId: typeId,
-                        type: info.type,
-                        tier: info.tier
-                    }))
-                });
-            } else {
-                window.logger?.info(CATEGORIES.CACHE, EVENTS.CacheAlreadyEmpty, {});
-            }
-
-            // Clear in-memory cache in MobsHandler
-            mobsHandler.clearCachedTypeIDs();
-
-            // Confirm
-            const shouldReload = confirm('✅ TypeID Cache cleared (in-memory + localStorage)!\n\n🔄 Reload the page to start fresh?\n\n(Recommended: Yes)');
-            if (shouldReload) {
-                window.location.reload();
-            }
-        } catch (e) {
-            window.logger?.error(CATEGORIES.CACHE, EVENTS.ClearCacheFailed, { error: e.message });
-            alert('❌ Failed to clear cache: ' + e.message);
-        }
-    });
-
-    // Show TypeID Cache button (debug)
-    const showTypeIDCache = document.getElementById('showTypeIDCache');
-    if (showTypeIDCache) showTypeIDCache.addEventListener('click', () => {
-        mobsHandler.showCachedTypeIDs();
-    });
 });
 
 
@@ -222,7 +337,7 @@ function updatePlayersList() {
 
                                 // Extract base item name (without @enchant suffix)
                                 const baseName = item.name.split('@')[0];
-                                const iconPath = `/images/Items/${baseName}.png`;
+                                const iconPath = `/images/Items/${baseName}.webp`;
 
                                 // 🔄 Check if image is already loaded in cache before displaying
                                 const preloadedImage = imageCache.GetPreloadedImage(iconPath, "Items");
@@ -266,7 +381,7 @@ function updatePlayersList() {
                             if (spell) {
                                 // Use uisprite for icon, fallback to generic spell icon
                                 const iconName = spell.uiSprite || 'SPELL_GENERIC';
-                                const iconPath = `/images/Spells/${iconName}.png`;
+                                const iconPath = `/images/Spells/${iconName}.webp`;
                                 const tooltipText = spell.uniqueName;
 
                                 // 🔄 Check cache before displaying spell icon
@@ -375,14 +490,63 @@ window.lpY = lpY;
 
 const drawingUtils = new DrawingUtils();
 
-const socket = new WebSocket('ws://localhost:5002');
+// 🔄 WebSocket with auto-reconnect
+let socket = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
+const INITIAL_RECONNECT_DELAY = 1000; // 1 second initial delay
 
+function connectWebSocket() {
+  // Close existing socket if any
+  if (socket) {
+    socket.close();
+  }
 
-socket.addEventListener('open', () => {
-  window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, { page: 'Utils' });
-});
+  console.log('🔌 [Utils.js] Connecting to WebSocket...');
+  socket = new WebSocket('ws://localhost:5002');
 
-socket.addEventListener('message', (event) => {
+  socket.addEventListener('open', () => {
+    reconnectAttempts = 0; // Reset counter on successful connection
+    window.logger?.info(CATEGORIES.WEBSOCKET, EVENTS.Connected, {
+      page: 'Utils',
+      reconnected: reconnectAttempts > 0
+    });
+    console.log('✅ [Utils.js] WebSocket connected successfully');
+  });
+
+  socket.addEventListener('close', () => {
+    window.logger?.warn(CATEGORIES.WEBSOCKET, 'Disconnected', { page: 'Utils' });
+    console.warn('⚠️ [Utils.js] WebSocket disconnected, will attempt to reconnect...');
+    scheduleReconnect();
+  });
+
+  socket.addEventListener('error', (error) => {
+    window.logger?.error(CATEGORIES.WEBSOCKET, 'ConnectionError', {
+      page: 'Utils',
+      error: error.message
+    });
+    console.error('❌ [Utils.js] WebSocket error:', error);
+  });
+
+  socket.addEventListener('message', handleWebSocketMessage);
+}
+
+function scheduleReconnect() {
+  reconnectAttempts++;
+  // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s (max)
+  const delay = Math.min(
+    INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
+    MAX_RECONNECT_DELAY
+  );
+
+  console.log(`🔄 [Utils.js] Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
+
+  setTimeout(() => {
+    connectWebSocket();
+  }, delay);
+}
+
+function handleWebSocketMessage(event) {
   var data = JSON.parse(event.data);
 
   // Extract the string and dictionary from the object
@@ -476,7 +640,10 @@ socket.addEventListener('message', (event) => {
         onResponse(extractedDictionary["parameters"]);
         break;
   }
-});
+}
+
+// 🚀 Start WebSocket connection
+connectWebSocket();
 
 // Helper function to get event name (for debugging)
 function getEventName(eventCode) {
@@ -600,13 +767,15 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.HarvestStart:
-            if (Parameters[3]) {
-                harvestablesHandler.onHarvestStart(Parameters[3]);
-            }
+            // HarvestStart events are now handled by HarvestablesHandler.js
+            // using database validation instead of event-driven detection.
+            // See docs/project/RESOURCE_DETECTION_REFACTOR.md for details.
             break;
 
         case EventCodes.HarvestCancel:
-            harvestablesHandler.onHarvestCancel();
+            // HarvestCancel events are now handled by HarvestablesHandler.js
+            // using database validation instead of event-driven detection.
+            // See docs/project/RESOURCE_DETECTION_REFACTOR.md for details.
             break;
 
         case EventCodes.HarvestFinished:
@@ -627,9 +796,9 @@ function onEvent(Parameters)
             break;
 
         case EventCodes.NewSimpleItem:
-            if (Parameters[1] && Parameters[2]) {
-                harvestablesHandler.onNewSimpleItem(Parameters[1], Parameters[2]);
-            }
+            // NewSimpleItem events are now handled by HarvestablesHandler.js
+            // using database validation instead of event-driven detection.
+            // See docs/project/RESOURCE_DETECTION_REFACTOR.md for details.
             break;
 
         case EventCodes.NewEquipmentItem:

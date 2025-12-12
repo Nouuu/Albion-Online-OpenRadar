@@ -1,7 +1,10 @@
 # 📋 TODO
 
-**Last Update**: 2025-11-07
-**Status**: ✅ Player detection system implemented
+**Last Update**: 2025-12-11
+**Status**: Phase 5 ✅ VALIDATED (100% success) | Next: Mob UI Enhancement
+
+> **📘 RESOURCE DETECTION:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
+> This document contains the complete and up-to-date state of the detection system.
 
 > 📖 **Technical Details**: [DEV_NOTES.md](DEV_NOTES.md) | **Tools**: [tools/](tools/)  
 > 🎯 **New**: [Overlay Mode](OVERLAY_MODE.md) - Popup window for radar  
@@ -29,24 +32,24 @@
     - ✅ TypeID 530 = Fiber T4 for all enchantments
     - ⚠️ **BUT : Harvestable ≠ Skinnable !**
 
-  **Harvestable (Fiber/Wood/Ore/Rock) :**
-    - ✅ `rarity` is **VARIABLE** and allows enchantment calculation
-    - ✅ Validated formula : `enchant = floor((rarity - base) / 45)`
-    - ✅ Base rarity : T3=78, T4=92, T5=112, T6=132...
-    - ✅ Fiber T4.0 : rarity=92 → enchant=0 ✓
-    - ✅ Fiber T5.0 : rarity=112 → enchant=0 ✓
+  **⚠️ OBSOLETE SYSTEM (Nov 2025) - Kept for history**
 
-  **Skinnable (Hide) :**
-    - ❌ `rarity` is **CONSTANT** per TypeID (false value!)
-    - ❌ Hide T5 : **ALWAYS** rarity=257 (regardless of .0/.1/.2/.3)
-    - ❌ Impossible to calculate enchant from rarity for Hide
-    - ✅ Real enchantment comes from **corpse** (HarvestablesHandler)
-    - ✅ Solution : Leave enchant=0 at spawn, will be corrected at kill
+  **Current System (Phase 3B - Dec 2025):**
+    - ✅ Uses `parameters[33]` directly from server
+    - ✅ Works for ALL types (Hide, Fiber, Ore, Wood, Rock)
+    - ✅ No more approximate calculation from `rarity`
+    - ✅ Simplified and reliable code
+    - 📘 **See:** `/docs/project/RESOURCE_DETECTION_REFACTOR.md`
 
-  **Refactored Code :**
-    - ✅ Centralized method `calculateEnchantment(type, tier, rarity)`
-    - ✅ Different treatment Harvestable vs Skinnable
-    - ✅ Logging displays calculated enchant (Fiber) or 0 (Hide awaiting corpse)
+  **Old system (Nov 2025 - OBSOLETE):**
+
+  Harvestable (Fiber/Wood/Ore/Rock):
+    - ❌ Calculation from `rarity` (unreliable)
+    - ❌ Formula: `enchant = floor((rarity - base) / 45)`
+
+  Skinnable (Hide):
+    - ❌ `rarity` constant per TypeID (false)
+    - ❌ Impossible to calculate enchant from rarity
 - **localStorage Cache** : Functional (cross-reference HarvestablesHandler)
 - **Settings Filtering** : By Tier + Enchant operational
 - **🆕 Overlay Mode** : Popup window with opacity control ✅
@@ -80,6 +83,14 @@
 - ✅ localStorage cache + Clear button
 - ✅ Analysis tools (tools/)
 - ✅ Organized documentation
+- ✅ **Field Validation (2025-12-11)** - Phase 5 VALIDATED
+    - ✅ 100% success rate (3698 valid detections, 0 invalid)
+    - ✅ Enchantments .0 to .3 working correctly
+    - ✅ All tiers T1-T6 validated
+    - ✅ All types validated (Wood, Fiber, Hide, Rock)
+    - ✅ Living resources via MobsDatabase (468 detections)
+    - ✅ Static resources via HarvestablesDatabase (3230+ detections)
+    - ❌ **EventNormalizer NOT needed** (0% error rate)
 
 ### Player Detection (2025-11-07)
 - ✅ Basic player radar display (red dots, 10px)
@@ -124,15 +135,18 @@
 
 ### Medium term
 
-#### Resources
-- [ ] Long field session (2h+) with complete validation
-    - Different biomes and tiers
-    - Analyze stability and performance
-    - Verify remaining charges vs harvest bonus
+#### Mobs (Priority 1 - Current Focus)
+- [x] **Mob UI Enhancement - Classification System** ✅ (2025-12-11)
+    - ✅ Color-coded mobs by threat level (Green/Purple/Orange/Red)
+    - ✅ Functional filters (Normal/Enchanted/MiniBoss/Boss)
+    - ✅ Name-based heuristics for VETERAN/ELITE detection
+    - ✅ Removed Medium Enemy (not aligned with game data)
+    - See MOB_UI_ENHANCEMENT.md for details
 
-- [ ] Analyze EventNormalizer necessity
-    - Evaluate if current corrections are sufficient
-    - Decision based on long session results
+- [ ] **Code Cleanup** - Remove obsolete features
+    - Remove resource overlay enhancements (redundant)
+    - Remove grid overlay (not useful)
+    - See CLEANUP_PLAN.md for details
 
 #### Players (Priority 1 - Quick Wins)
 - [ ] **Nickname display** (~30 min)
@@ -166,47 +180,8 @@
 
 ### Medium/Long term
 
-- [ ] EventNormalizer decision (after long session analysis)
 - [ ] Quality metrics
 - [ ] Feature flags
-
----
-
-## 📊 EventNormalizer EVALUATION
-
-**Goal**: Determine if EventNormalizer is still necessary with recent changes
-
-### ✅ Already Applied Corrections
-
-1. **Server TypeID bugs override** (528/530/531) via mobinfo priority
-2. **localStorage cache** of TypeID mappings
-3. **Structured logging** (JSON + CSV) for analysis
-4. **Complete database** (235 TypeIDs)
-
-### ❓ Questions to Resolve via Long Session
-
-1. **False positives**: How many TypeIDs still misclassified?
-2. **Performance**: Slowdowns with cache enabled?
-3. **Stability**: Race conditions in what % of cases?
-4. **"Overlap"**: Annoying or acceptable (different objects)?
-
-### 🎯 Decision Criteria
-
-**EventNormalizer NECESSARY if** :
-
-- [ ] > 10% of TypeIDs still misclassified after session
-- [ ] Frequent race conditions (> 5% of spawns)
-- [ ] Overlap annoying for gameplay
-- [ ] localStorage cache unstable
-
-**EventNormalizer NOT NECESSARY if** :
-
-- [ ] < 5% problematic TypeIDs
-- [ ] Rare race conditions (< 2%)
-- [ ] Acceptable overlap
-- [ ] Current system stable
-
-> **Decision after 2h+ session with complete CSV logging**
 
 ---
 
@@ -219,15 +194,9 @@
     - Normal game behavior (not a bug)
 
 3. **Fiber TypeID**: Server sends incorrect typeNumber (16 instead of 14)
-    - Fix: mobinfo override ✅
+    - Fix: MobsDatabase override ✅
 
-4. **ENCHANTED Hide/Fiber (.1+)**
-    - Cause: Unique TypeIDs per enchantment (unknown)
-    - Example: Hide T4.0 (TypeID 425) ✅, T4.1/T4.2 (TypeID ???) ❌
-    - Impact: T4.2+ and T5.1+ filters non-functional
-    - Solution: Manual collection needed (field session with logs)
-
-5. **Missing Blackzone maps**
+4. **Missing Blackzone maps**
     - Symptom: Black background on radar in blackzone (T6+ zones)
     - Cause: Incomplete Maps pack - blackzone tiles not included
     - Current pack: 103 tiles (mainly blue/yellow/red zones)

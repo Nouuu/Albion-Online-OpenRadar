@@ -40,9 +40,6 @@ export class HarvestablesHandler
         this.harvestableList = [];
         this.mobsHandler = mobsHandler;
 
-        // 💾 Cache pour ressources
-        this.lastHarvestCache = new Map();
-
         // 📊 Statistics tracking
         this.stats = {
             totalDetected: 0,
@@ -68,59 +65,6 @@ export class HarvestablesHandler
         }
     }
 
-    // Get resource info from itemId (for static harvestables)
-    getResourceInfoFromItemId(itemId) {
-        // Theoretical mapping itemId → resource info
-        const theoreticalMap = {
-            // === FIBER (T2-T8) ===
-            412: { type: 'Fiber', tier: 2, charges: 0 },
-            413: { type: 'Fiber', tier: 3, charges: 0 },
-            414: { type: 'Fiber', tier: 4, charges: 0 }, 419: { type: 'Fiber', tier: 4, charges: 1 }, 424: { type: 'Fiber', tier: 4, charges: 2 }, 429: { type: 'Fiber', tier: 4, charges: 3 }, 434: { type: 'Fiber', tier: 4, charges: 4 },
-            415: { type: 'Fiber', tier: 5, charges: 0 }, 420: { type: 'Fiber', tier: 5, charges: 1 }, 425: { type: 'Fiber', tier: 5, charges: 2 }, 430: { type: 'Fiber', tier: 5, charges: 3 }, 435: { type: 'Fiber', tier: 5, charges: 4 },
-            416: { type: 'Fiber', tier: 6, charges: 0 }, 421: { type: 'Fiber', tier: 6, charges: 1 }, 426: { type: 'Fiber', tier: 6, charges: 2 }, 431: { type: 'Fiber', tier: 6, charges: 3 }, 436: { type: 'Fiber', tier: 6, charges: 4 },
-            417: { type: 'Fiber', tier: 7, charges: 0 }, 422: { type: 'Fiber', tier: 7, charges: 1 }, 427: { type: 'Fiber', tier: 7, charges: 2 }, 432: { type: 'Fiber', tier: 7, charges: 3 }, 437: { type: 'Fiber', tier: 7, charges: 4 },
-            418: { type: 'Fiber', tier: 8, charges: 0 }, 423: { type: 'Fiber', tier: 8, charges: 1 }, 428: { type: 'Fiber', tier: 8, charges: 2 }, 433: { type: 'Fiber', tier: 8, charges: 3 }, 438: { type: 'Fiber', tier: 8, charges: 4 },
-
-            // === HIDE (T2-T8) ===
-            385: { type: 'Hide', tier: 2, charges: 0 },
-            386: { type: 'Hide', tier: 3, charges: 0 },
-            387: { type: 'Hide', tier: 4, charges: 0 }, 392: { type: 'Hide', tier: 4, charges: 1 }, 397: { type: 'Hide', tier: 4, charges: 2 }, 402: { type: 'Hide', tier: 4, charges: 3 }, 407: { type: 'Hide', tier: 4, charges: 4 },
-            388: { type: 'Hide', tier: 5, charges: 0 }, 393: { type: 'Hide', tier: 5, charges: 1 }, 398: { type: 'Hide', tier: 5, charges: 2 }, 403: { type: 'Hide', tier: 5, charges: 3 }, 408: { type: 'Hide', tier: 5, charges: 4 },
-            389: { type: 'Hide', tier: 6, charges: 0 }, 394: { type: 'Hide', tier: 6, charges: 1 }, 399: { type: 'Hide', tier: 6, charges: 2 }, 404: { type: 'Hide', tier: 6, charges: 3 }, 409: { type: 'Hide', tier: 6, charges: 4 },
-            390: { type: 'Hide', tier: 7, charges: 0 }, 395: { type: 'Hide', tier: 7, charges: 1 }, 400: { type: 'Hide', tier: 7, charges: 2 }, 405: { type: 'Hide', tier: 7, charges: 3 }, 410: { type: 'Hide', tier: 7, charges: 4 },
-            391: { type: 'Hide', tier: 8, charges: 0 }, 396: { type: 'Hide', tier: 8, charges: 1 }, 401: { type: 'Hide', tier: 8, charges: 2 }, 406: { type: 'Hide', tier: 8, charges: 3 }, 411: { type: 'Hide', tier: 8, charges: 4 },
-
-            // === ORE (T2-T8) ===
-            357: { type: 'Ore', tier: 2, charges: 0 },
-            358: { type: 'Ore', tier: 3, charges: 0 },
-            359: { type: 'Ore', tier: 4, charges: 0 }, 364: { type: 'Ore', tier: 4, charges: 1 }, 369: { type: 'Ore', tier: 4, charges: 2 }, 374: { type: 'Ore', tier: 4, charges: 3 }, 379: { type: 'Ore', tier: 4, charges: 4 },
-            360: { type: 'Ore', tier: 5, charges: 0 }, 365: { type: 'Ore', tier: 5, charges: 1 }, 370: { type: 'Ore', tier: 5, charges: 2 }, 375: { type: 'Ore', tier: 5, charges: 3 }, 380: { type: 'Ore', tier: 5, charges: 4 },
-            361: { type: 'Ore', tier: 6, charges: 0 }, 366: { type: 'Ore', tier: 6, charges: 1 }, 371: { type: 'Ore', tier: 6, charges: 2 }, 376: { type: 'Ore', tier: 6, charges: 3 }, 381: { type: 'Ore', tier: 6, charges: 4 },
-            362: { type: 'Ore', tier: 7, charges: 0 }, 367: { type: 'Ore', tier: 7, charges: 1 }, 372: { type: 'Ore', tier: 7, charges: 2 }, 377: { type: 'Ore', tier: 7, charges: 3 }, 382: { type: 'Ore', tier: 7, charges: 4 },
-            363: { type: 'Ore', tier: 8, charges: 0 }, 368: { type: 'Ore', tier: 8, charges: 1 }, 373: { type: 'Ore', tier: 8, charges: 2 }, 378: { type: 'Ore', tier: 8, charges: 3 }, 383: { type: 'Ore', tier: 8, charges: 4 },
-
-            // === ROCK (T2-T8) - Only .0-.3 (no .4) ===
-            335: { type: 'Rock', tier: 2, charges: 0 },
-            336: { type: 'Rock', tier: 3, charges: 0 },
-            337: { type: 'Rock', tier: 4, charges: 0 }, 342: { type: 'Rock', tier: 4, charges: 1 }, 347: { type: 'Rock', tier: 4, charges: 2 }, 352: { type: 'Rock', tier: 4, charges: 3 },
-            338: { type: 'Rock', tier: 5, charges: 0 }, 343: { type: 'Rock', tier: 5, charges: 1 }, 348: { type: 'Rock', tier: 5, charges: 2 }, 353: { type: 'Rock', tier: 5, charges: 3 },
-            339: { type: 'Rock', tier: 6, charges: 0 }, 344: { type: 'Rock', tier: 6, charges: 1 }, 349: { type: 'Rock', tier: 6, charges: 2 }, 354: { type: 'Rock', tier: 6, charges: 3 },
-            340: { type: 'Rock', tier: 7, charges: 0 }, 345: { type: 'Rock', tier: 7, charges: 1 }, 350: { type: 'Rock', tier: 7, charges: 2 }, 355: { type: 'Rock', tier: 7, charges: 3 },
-            341: { type: 'Rock', tier: 8, charges: 0 }, 346: { type: 'Rock', tier: 8, charges: 1 }, 351: { type: 'Rock', tier: 8, charges: 2 }, 356: { type: 'Rock', tier: 8, charges: 3 },
-
-            // === LOG/WOOD (T2-T8) ===
-            307: { type: 'Log', tier: 2, charges: 0 },
-            308: { type: 'Log', tier: 3, charges: 0 },
-            309: { type: 'Log', tier: 4, charges: 0 }, 314: { type: 'Log', tier: 4, charges: 1 }, 319: { type: 'Log', tier: 4, charges: 2 }, 324: { type: 'Log', tier: 4, charges: 3 }, 329: { type: 'Log', tier: 4, charges: 4 },
-            310: { type: 'Log', tier: 5, charges: 0 }, 315: { type: 'Log', tier: 5, charges: 1 }, 320: { type: 'Log', tier: 5, charges: 2 }, 325: { type: 'Log', tier: 5, charges: 3 }, 330: { type: 'Log', tier: 5, charges: 4 },
-            311: { type: 'Log', tier: 6, charges: 0 }, 316: { type: 'Log', tier: 6, charges: 1 }, 321: { type: 'Log', tier: 6, charges: 2 }, 326: { type: 'Log', tier: 6, charges: 3 }, 331: { type: 'Log', tier: 6, charges: 4 },
-            312: { type: 'Log', tier: 7, charges: 0 }, 317: { type: 'Log', tier: 7, charges: 1 }, 322: { type: 'Log', tier: 7, charges: 2 }, 327: { type: 'Log', tier: 7, charges: 3 }, 332: { type: 'Log', tier: 7, charges: 4 },
-            313: { type: 'Log', tier: 8, charges: 0 }, 318: { type: 'Log', tier: 8, charges: 1 }, 323: { type: 'Log', tier: 8, charges: 2 }, 328: { type: 'Log', tier: 8, charges: 3 }, 333: { type: 'Log', tier: 8, charges: 4 },
-        };
-
-        return theoreticalMap[itemId] || null;
-    }
-
     /**
      * Helper method to check if a harvestable should be displayed based on settings
      * @param {string} stringType - Resource type (Fiber, Hide, Log, Ore, Rock)
@@ -142,6 +86,48 @@ export class HarvestablesHandler
         const resourceType = settingsMap[stringType];
         if (!resourceType) return false;
 
+        // 🔍 Phase 4: Validate with HarvestablesDatabase if available
+        if (window.harvestablesDatabase?.isLoaded) {
+            // Convert HarvestableType to database resource type (WOOD, ROCK, etc.)
+            const resourceTypeMap = {
+                [HarvestableType.Log]: 'WOOD',
+                [HarvestableType.Rock]: 'ROCK',
+                [HarvestableType.Fiber]: 'FIBER',
+                [HarvestableType.Hide]: 'HIDE',
+                [HarvestableType.Ore]: 'ORE'
+            };
+
+            const dbResourceType = resourceTypeMap[stringType];
+            if (dbResourceType) {
+                const isValid = window.harvestablesDatabase.isValidResource(dbResourceType, tier, charges);
+
+                // 🔍 DETAILED DEBUG: Log ALL validation checks
+                window.logger?.debug(CATEGORIES.HARVEST, 'ValidationCheck', {
+                    stringType,
+                    dbResourceType,
+                    tier,
+                    enchant: charges,
+                    isLiving,
+                    isValid,
+                    validationKey: `${dbResourceType}-${tier}-${charges}`,
+                    note: isValid ? 'OK' : 'FILTERED - Not in database'
+                });
+
+                if (!isValid) {
+                    window.logger?.warn(CATEGORIES.HARVEST, 'InvalidResourceCombination', {
+                        stringType,
+                        dbResourceType,
+                        tier,
+                        enchant: charges,
+                        isLiving,
+                        validationKey: `${dbResourceType}-${tier}-${charges}`,
+                        note: 'Not found in harvestables.json - RESOURCE FILTERED'
+                    });
+                    return false; // Don't display invalid resources
+                }
+            }
+        }
+
         let prefix;
         if (resourceType === 'Fiber' || resourceType === 'fiber') prefix = 'fsp';
         else if (resourceType === 'Hide' || resourceType === 'hide') prefix = 'hsp';
@@ -159,35 +145,20 @@ export class HarvestablesHandler
 
     addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // 🔗 Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
-        if (this.mobsHandler && mobileTypeId !== null) {
-            this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
+        // 🔍 Determine resource type: living (animals/creatures) vs static
+        // CORRECTED LOGIC (2025-12-09):
+        // - mobileTypeId === 65535 → STATIC enchanted resource (no creature, just a node)
+        // - mobileTypeId === null → STATIC resource from Event 38 (batch spawn)
+        // - mobileTypeId === real TypeID (425, 530, etc.) → LIVING creature (animal that drops resource)
+        const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
-            // 🔧 OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
-            const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
-            if (staticInfo && staticInfo.type) {
-                // Convert our type name (Fiber/Hide/Log/Ore/Rock) to typeNumber
-                const typeMap = {
-                    'Fiber': 14,
-                    'Hide': 20,
-                    'Log': 3,
-                    'Rock': 8,
-                    'Ore': 25
-                };
-
-                if (typeMap[staticInfo.type]) {
-                    type = typeMap[staticInfo.type]; // Override game typeNumber
-                    tier = staticInfo.tier; // Use our tier too
-                }
-            }
-        }
-
-        // DEBUG: Log ALL harvestable detections (living + static)
+        // 🎨 Get resource type string from typeNumber (0-27)
         const stringType = this.GetStringType(type);
 
-        // Determine if living or static resource
-        const isLiving = mobileTypeId === 65535;
-
+        // 🔍 Phase 4: Check validation with database
+        const databaseValidation = window.harvestablesDatabase?.isLoaded
+            ? window.harvestablesDatabase.isValidResourceByTypeNumber(type, tier, charges)
+            : null;
 
         window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Detection, {
             id,
@@ -197,11 +168,21 @@ export class HarvestablesHandler
             enchant: charges,
             size,
             stringType,
-            isLiving
+            isLiving,
+            databaseLoaded: window.harvestablesDatabase?.isLoaded ?? false,
+            databaseValid: databaseValidation
         });
 
         // 🎯 Check if this harvestable should be displayed based on settings
         if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
+            window.logger?.debug(CATEGORIES.HARVEST, 'FilteredBySettings', {
+                id,
+                stringType,
+                tier,
+                enchant: charges,
+                isLiving,
+                reason: 'settings_disabled_or_invalid_resource'
+            });
             return;
         }
 
@@ -220,36 +201,20 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // Cross-reference with MobsHandler BEFORE settings check (always register TypeID even if not displayed)
-        if (this.mobsHandler && mobileTypeId !== null) {
-            this.mobsHandler.registerStaticResourceTypeID(mobileTypeId, type, tier);
+        // 🔍 Determine resource type: living (animals/creatures) vs static
+        // CORRECTED LOGIC (2025-12-09):
+        // - mobileTypeId === 65535 → STATIC enchanted resource (no creature, just a node)
+        // - mobileTypeId === null → STATIC resource from Event 38 (batch spawn)
+        // - mobileTypeId === real TypeID (425, 530, etc.) → LIVING creature (animal that drops resource)
+        const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
-
-            // OVERRIDE: Use mobinfo data instead of game typeNumber (fixes Albion server bugs)
-            const staticInfo = this.mobsHandler.staticResourceTypeIDs.get(mobileTypeId);
-            if (staticInfo && staticInfo.type) {
-                // Convert our type name (Fiber/Hide/Log/Ore/Rock) to typeNumber
-                const typeMap = {
-                    'Fiber': 14,
-                    'Hide': 20,
-                    'Log': 3,
-                    'Rock': 8,
-                    'Ore': 25
-                };
-
-                if (typeMap[staticInfo.type]) {
-                    type = typeMap[staticInfo.type]; // Override game typeNumber
-                    tier = staticInfo.tier; // Use our tier too
-                }
-            }
-        }
-
-        // DEBUG: Log ALL harvestable updates (living + static)
+        // 🎨 Get resource type string from typeNumber (0-27)
         const stringType = this.GetStringType(type);
 
-        // Determine if living or static resource
-        const isLiving = mobileTypeId === 65535;
-
+        // 🔍 Phase 4: Check validation with database
+        const databaseValidation = window.harvestablesDatabase?.isLoaded
+            ? window.harvestablesDatabase.isValidResourceByTypeNumber(type, tier, charges)
+            : null;
 
         window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Update, {
             id,
@@ -259,11 +224,21 @@ export class HarvestablesHandler
             enchant: charges,
             size,
             stringType,
-            isLiving
+            isLiving,
+            databaseLoaded: window.harvestablesDatabase?.isLoaded ?? false,
+            databaseValid: databaseValidation
         });
 
         // 🎯 Check if this harvestable should be displayed based on settings
         if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
+            window.logger?.debug(CATEGORIES.HARVEST, 'FilteredByUpdate', {
+                id,
+                stringType,
+                tier,
+                enchant: charges,
+                isLiving,
+                reason: 'settings_disabled_or_invalid_resource'
+            });
             return;
         }
 
@@ -286,7 +261,7 @@ export class HarvestablesHandler
         this.updateHarvestable(id, 1);
     }
 
-    HarvestUpdateEvent(Parameters)
+    HarvestUpdateEvent(Parameters) // Event 46 - HarvestableChangeState
     {
         // Ultra-detailed debug: Log ALL parameters to identify patterns
         const allParams = {};
@@ -296,90 +271,76 @@ export class HarvestablesHandler
             }
         }
 
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.HarvestUpdateEvent_ALL_PARAMS, {
-            harvestableId: Parameters[0],
-            charges: Parameters[1],
-            typeId: Parameters[5],
-            tier: Parameters[6],
+        const id = Parameters[0];
+        const newSize = Parameters[1];
+        const enchant = Parameters[2]; // 🔍 ENCHANTMENT / CHARGE
+
+        window.logger?.info(CATEGORIES.HARVEST, 'Event46_ChangeState_FULL', {
+            harvestableId: id,
+            newSize,
+            enchant,
             allParameters: allParams,
             parameterCount: Object.keys(Parameters).length
         });
 
-        const id = Parameters[0];
-
-        if (Parameters[1] === undefined)
+        if (newSize === undefined)
         {
-            // LAST STACK - Called BEFORE harvestFinished!
-            const cacheEntry = this.lastHarvestCache.get(id);
-
-            if (cacheEntry) {
-                const resources = cacheEntry.resources;
-
-                // CASE 1: trackedByNewSimpleItem = true → Already tracked by NewSimpleItem (living resources)
-                if (cacheEntry.trackedByNewSimpleItem) {
-                    window.logger?.debug(CATEGORIES.HARVEST, EVENTS.AlreadyTracked, {
-                        note: 'Already tracked by NewSimpleItem - SKIP'
-                    });
-                }
-                // CASE 2: trackedByNewSimpleItem = false → Static harvestable, must track here
-                else {
-                    // Deduce type/tier from itemId
-                    const resourceInfo = this.getResourceInfoFromItemId(cacheEntry.itemId);
-
-                    if (resourceInfo) {
-                        // INFO (always logged) - Tracking static resources
-                        window.logger?.info(CATEGORIES.HARVEST, EVENTS.TrackingStaticResources, {
-                            resources,
-                            type: resourceInfo.type,
-                            tier: resourceInfo.tier,
-                            charges: resourceInfo.charges
-                        });
-                    } else {
-                        // Fallback: just increment total if we can't map itemId
-                        // WARN (always logged) - Unknown itemId
-                        window.logger?.warn(CATEGORIES.HARVEST, EVENTS.UnknownItemId, {
-                            itemId: cacheEntry.itemId,
-                            note: 'Tracking total only'
-                        });
-                        this.stats.totalHarvested += resources;
-                    }
-                }
-
-                // Nettoyer le cache
-                this.lastHarvestCache.delete(id);
-            } else {
-                // No cache at all
-                // WARN (always logged) - No cache available
-                window.logger?.warn(CATEGORIES.HARVEST, EVENTS.NoCacheWarning, {
-                    note: 'NO CACHE! Resource tracking may be incomplete'
-                });
-            }
-
-            // DO NOT delete here! NewSimpleItem arrives AFTER and needs the harvestable
-            // Deletion will be done by harvestFinished
+            // 🔥 DERNIER STACK - Appelé AVANT harvestFinished!
             return;
         }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
         if (!harvestable) {
+            window.logger?.warn(CATEGORIES.HARVEST, 'Event46_ResourceNotFound', {
+                id,
+                note: 'Harvestable not found in list - maybe filtered by settings'
+            });
             return;
         }
 
-        // Do not update if value decreased (harvestFinished handles this)
-        // Only update if value increased (regeneration)
-        const newSize = Parameters[1];
+        // 🔍 Update size if increased (regeneration)
         if (newSize > harvestable.size) {
             window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Regeneration, {
+                id,
                 oldSize: harvestable.size,
                 newSize
             });
             harvestable.size = newSize;
         }
+
+        // 🔍 Update enchantment if provided and different
+        if (enchant !== undefined && enchant !== harvestable.charges) {
+            window.logger?.info(CATEGORIES.HARVEST, 'EnchantmentUpdate', {
+                id,
+                oldEnchant: harvestable.charges,
+                newEnchant: enchant,
+                tier: harvestable.tier,
+                type: harvestable.type,
+                note: 'Enchantment updated from Event 46'
+            });
+            harvestable.charges = enchant;
+
+            // ⚠️ Re-check if should be displayed with new enchantment
+            const stringType = this.GetStringType(harvestable.type);
+            const isLiving = false; // Event 46 is for static resources
+
+            if (!this.shouldDisplayHarvestable(stringType, isLiving, harvestable.tier, enchant)) {
+                window.logger?.warn(CATEGORIES.HARVEST, 'EnchantmentUpdate_Filtered', {
+                    id,
+                    stringType,
+                    tier: harvestable.tier,
+                    enchant,
+                    note: 'Resource now filtered after enchantment update'
+                });
+                // Remove from list if settings don't allow this enchantment
+                this.removeHarvestable(id);
+            }
+        }
     }
 
     // Normally work with everything
     // Good
-    newHarvestableObject(id, Parameters) // Update
+    newHarvestableObject(id, Parameters) // Update (Event 40 - Individual spawn)
     {
 
         const type = Parameters[5];  // typeNumber (0-27)
@@ -390,13 +351,33 @@ export class HarvestablesHandler
         let enchant = Parameters[11] === undefined ? 0 : Parameters[11];
         let size = Parameters[10] === undefined ? 0 : Parameters[10];
 
+        // 🔍 Log ALL parameters for comparison with Event38
+        const allParams40 = {};
+        for (let key in Parameters) {
+            if (Parameters.hasOwnProperty(key)) {
+                allParams40[`param[${key}]`] = Parameters[key];
+            }
+        }
+
+        window.logger?.info(CATEGORIES.HARVEST, 'Event40_IndividualSpawn_FULL', {
+            id,
+            type,
+            tier,
+            enchant,
+            size,
+            mobileTypeId,
+            // CORRECTED: 65535 = static, real TypeID = living
+            isLiving: mobileTypeId !== null && mobileTypeId !== 65535,
+            allParametersKeys: Object.keys(Parameters),
+            allParameters: allParams40
+        });
 
         this.UpdateHarvestable(id, type, tier, location[0], location[1], enchant, size, mobileTypeId);
     }
 
     // Normally work with everything
     // Good
-    newSimpleHarvestableObject(Parameters) // New
+    newSimpleHarvestableObject(Parameters) // New (Event 38 - Batch spawn)
     {
         let a0 = Parameters[0]["data"];
         if  (a0 === undefined)
@@ -412,6 +393,11 @@ export class HarvestablesHandler
         const a3 = Parameters[3];
         const a4 = Parameters[4]["data"];
 
+        window.logger?.info(CATEGORIES.HARVEST, 'Event38_BatchSpawn', {
+            count: a0.length,
+            note: 'Resources created with enchant=0 (temporary), Event 46 will update enchantments'
+        });
+
         for (let i = 0; i < a0.length; i++) {
             const id = a0[i];
             const type = a1[i];
@@ -420,7 +406,11 @@ export class HarvestablesHandler
             const posY = a3[i * 2 + 1];
             const count = a4[i];
 
-            this.addHarvestable(id, type, tier, posX, posY, 0, count);
+            // 🔍 Event 38 does NOT send enchantment
+            // Resources created with enchant=0, Event 46 (HarvestUpdateEvent) will update it
+            const enchant = 0;
+
+            this.addHarvestable(id, type, tier, posX, posY, enchant, count);
         }
     }
 
@@ -479,35 +469,65 @@ export class HarvestablesHandler
             return typeNumber; // Return as-is if unknown
         }
 
-        // Mapping typeNumber (0-27) → Resource Type
-        if (typeNumber >= 0 && typeNumber <= 5)
-        {
-            return HarvestableType.Log;
-        }
-        else if (typeNumber >= 6 && typeNumber <= 10)
-        {
-            return HarvestableType.Rock;
-        }
-        else if (typeNumber >= 11 && typeNumber <= 15)
-        {
-            return HarvestableType.Fiber;
-        }
-        else if (typeNumber >= 16 && typeNumber <= 22)
-        {
-            return HarvestableType.Hide;
-        }
-        else if (typeNumber >= 23 && typeNumber <= 27)
-        {
-            return HarvestableType.Ore;
-        }
-        else {
-            // WARN (always logged) - Unknown resource type
-            window.logger?.warn(CATEGORIES.HARVEST, EVENTS.UnknownTypeNumber, {
+        // 🔍 Phase 4: Use database (REQUIRED - no fallback)
+        if (!window.harvestablesDatabase?.isLoaded) {
+            // ❌ ERROR: Database not loaded!
+            window.logger?.error(CATEGORIES.HARVEST, 'DatabaseNotLoaded', {
                 typeNumber,
-                note: 'Unknown typeNumber in GetStringType'
+                note: 'HarvestablesDatabase not loaded - cannot determine resource type'
             });
             return '';
         }
+
+        const resourceType = window.harvestablesDatabase.getResourceTypeFromTypeNumber(typeNumber);
+        if (!resourceType) {
+            // ❌ ERROR: typeNumber not found in database
+            window.logger?.error(CATEGORIES.HARVEST, EVENTS.UnknownTypeNumber, {
+                typeNumber,
+                note: 'TypeNumber not found in HarvestablesDatabase'
+            });
+            return '';
+        }
+
+        // Convert database format (WOOD, ROCK, etc.) to HarvestableType
+        const typeMap = {
+            'WOOD': HarvestableType.Log,
+            'ROCK': HarvestableType.Rock,
+            'FIBER': HarvestableType.Fiber,
+            'HIDE': HarvestableType.Hide,
+            'ORE': HarvestableType.Ore
+        };
+
+        const mappedType = typeMap[resourceType];
+        if (!mappedType) {
+            // ❌ ERROR: Unknown resource type from database
+            window.logger?.error(CATEGORIES.HARVEST, 'UnknownResourceType', {
+                typeNumber,
+                resourceType,
+                note: 'Database returned unknown resource type'
+            });
+            return '';
+        }
+
+        return mappedType;
+    }
+
+    /**
+     * 🔍 Phase 4: Helper to convert HarvestableType string to typeNumber for database validation
+     * @param {string} stringType - HarvestableType (Fiber, Hide, Log, Ore, Rock)
+     * @returns {number|null} - typeNumber (0-27) or null if unknown
+     * @private
+     */
+    _getTypeNumberFromString(stringType) {
+        // Map HarvestableType to mid-range typeNumber for each category
+        const typeMap = {
+            [HarvestableType.Log]: 3,    // Wood mid-range (0-5)
+            [HarvestableType.Rock]: 8,   // Rock mid-range (6-10)
+            [HarvestableType.Fiber]: 13, // Fiber mid-range (11-15)
+            [HarvestableType.Hide]: 19,  // Hide mid-range (16-22)
+            [HarvestableType.Ore]: 25    // Ore mid-range (23-27)
+        };
+        return typeMap[stringType] ?? null;
     }
 
     Clear()

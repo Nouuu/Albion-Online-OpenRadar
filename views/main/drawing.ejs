@@ -13,13 +13,10 @@
         <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
             <div class="w-full">
                 <div id="canvasContainer" style="position: relative; width: 520px; height: 520px;">
-                    <canvas class="ttcan" id="mapCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1;"></canvas>
-                    <canvas class="ttcan" id="gridCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 2; border: 2px solid #4a5568;"></canvas>
+                    <canvas class="ttcan" id="mapCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 1; border: 2px solid #4a5568;"></canvas>
                     <canvas class="ttcan" id="drawCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 3;"></canvas>
-                    <canvas class="ttcan" id="flashCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 4;"></canvas>
                     <canvas class="ttcan" id="ourPlayerCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 5;"></canvas>
-                    <canvas class="ttcan" id="uiCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 10;"></canvas>
-                    <canvas id="thirdCanvas" width="500" height="500" style="position: absolute; top: 520px; margin: 10px; left: 0; z-index: 1; display: none;"></canvas>
+                    <canvas class="ttcan" id="uiCanvas" width="500" height="500" style="position: absolute; top: 0; left: 0; margin: 10px; z-index: 6;"></canvas>
                 </div>
             </div>
         </div>
@@ -45,20 +42,6 @@
                 </h4>
 
                 <div class="space-y-3">
-                    <label class="flex items-center space-x-2">
-                        <input type="checkbox" id="overlayEnchantment" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                        <span class="dark:text-white">✨ Enchantments</span>
-                        <span class="relative group">
-                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg>
-                            <span class="tooltip-base tooltip-right">
-                                Display enchantment level (.0, .1, .2, .3, .4) on resources.
-                            </span>
-                        </span>
-                    </label>
-
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" id="overlayResourceCount" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
                         <span class="dark:text-white">📦 Resource Count</span>
@@ -101,37 +84,6 @@
                         </span>
                     </label>
                 </div>
-
-                <!-- Cluster Settings -->
-                <div class="mt-6 space-y-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600">
-                    <div class="flex items-center space-x-3">
-                        <label for="settingClusterRadius" class="dark:text-white text-sm font-medium w-40">Cluster Radius:</label>
-                        <input type="number" id="settingClusterRadius" class="px-3 py-2 w-24 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white" min="10" max="100" step="5" value="30">
-                        <span class="relative group">
-                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg>
-                            <span class="tooltip-base tooltip-right">
-                                Maximum distance (in meters) to group resources into same cluster.
-                            </span>
-                        </span>
-                    </div>
-
-                    <div class="flex items-center space-x-3">
-                        <label for="settingClusterMinSize" class="dark:text-white text-sm font-medium w-40">Min Cluster Size:</label>
-                        <input type="number" id="settingClusterMinSize" class="px-3 py-2 w-24 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white" min="1" max="20" step="1" value="2">
-                        <span class="relative group">
-                            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                                <circle cx="12" cy="12" r="10"></circle>
-                            </svg>
-                            <span class="tooltip-base tooltip-right">
-                                Minimum number of resources required to form a cluster (hide single resources).
-                            </span>
-                        </span>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -146,21 +98,6 @@
                     <div class="p-2 w-1/2 md:w-1/3">
                         <button class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm" id="button">
                             🧹 Clear Canvas
-                        </button>
-                    </div>
-                    <div class="p-2 w-1/2 md:w-1/3">
-                        <button class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm" id="logEnemiesList">
-                            📋 Log Enemies
-                        </button>
-                    </div>
-                    <div class="p-2 w-1/2 md:w-1/3">
-                        <button class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm" id="clearTypeIDCache">
-                            🗑️ Clear Cache
-                        </button>
-                    </div>
-                    <div class="p-2 w-1/2 md:w-1/3">
-                        <button class="w-full px-6 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors duration-200 shadow-sm" id="showTypeIDCache">
-                            🔍 Show Cache
                         </button>
                     </div>
                     <div class="p-2 w-1/2 md:w-1/3">
@@ -179,7 +116,6 @@
 <script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
 <script type="module" src="/scripts/Handlers/DungeonsHandler.js"></script>
 <script type="module" src="/scripts/Handlers/Map.js"></script>
-<script type="module" src="/scripts/Handlers/MobsInfo.js"></script>
 <script type="module" src="/scripts/Handlers/ItemsInfo.js"></script>
 <script type="module" src="/scripts/Handlers/FactionFlagInfo.js"></script>
 <script type="module" src="/scripts/Utils/DrawingUtils.js"></script>
@@ -192,12 +128,9 @@
     // Wait for DOM to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
         // Overlay checkboxes
-        const overlayEnchantment = document.getElementById("overlayEnchantment");
         const overlayResourceCount = document.getElementById("overlayResourceCount");
         const overlayDistance = document.getElementById("overlayDistance");
         const overlayCluster = document.getElementById("settingResourceClusters");
-        const overlayClusterRadius = document.getElementById("settingClusterRadius");
-        const overlayClusterMinSize = document.getElementById("settingClusterMinSize");
 
         // Players section (👥 controlled by settingShowPlayers from players.ejs)
         const playersSection = document.getElementById("playersSection");
@@ -224,20 +157,11 @@
         setInterval(updatePlayersSectionVisibility, 500);
 
         // Load saved settings
-        if (overlayEnchantment) overlayEnchantment.checked = settingsSync.getBool("overlayEnchantment");
         if (overlayResourceCount) overlayResourceCount.checked = settingsSync.getBool("overlayResourceCount");
         if (overlayDistance) overlayDistance.checked = settingsSync.getBool("overlayDistance");
         if (overlayCluster) overlayCluster.checked = settingsSync.getBool("settingResourceClusters");
-        if (overlayClusterRadius) overlayClusterRadius.value = settingsSync.getNumber("settingClusterRadius", 30);
-        if (overlayClusterMinSize) overlayClusterMinSize.value = settingsSync.getNumber("settingClusterMinSize", 2);
 
         // Save on change
-        if (overlayEnchantment) {
-            overlayEnchantment.addEventListener("click", () => {
-                settingsSync.setBool("overlayEnchantment", overlayEnchantment.checked);
-            });
-        }
-
         if (overlayResourceCount) {
             overlayResourceCount.addEventListener("click", () => {
                 settingsSync.setBool("overlayResourceCount", overlayResourceCount.checked);
@@ -253,18 +177,6 @@
         if (overlayCluster) {
             overlayCluster.addEventListener("click", () => {
                 settingsSync.setBool("settingResourceClusters", overlayCluster.checked);
-            });
-        }
-
-        if (overlayClusterRadius) {
-            overlayClusterRadius.addEventListener("input", () => {
-                settingsSync.setNumber("settingClusterRadius", overlayClusterRadius.value);
-            });
-        }
-
-        if (overlayClusterMinSize) {
-            overlayClusterMinSize.addEventListener("input", () => {
-                settingsSync.setNumber("settingClusterMinSize", overlayClusterMinSize.value);
             });
         }
     });

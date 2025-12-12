@@ -54,8 +54,9 @@ class PhotonCommand {
 				// Remove 4 first bytes to be reliable ¯\_(ツ)_/¯
 				this.payload.seek(this.payload.tell() + 4);
 				this.payload = this.payload.slice(this.payload.length - 4);
-                break;
+				// falls through - Intentional fallthrough to case 6!
 			// Reliable Command
+			// eslint-disable-next-line no-fallthrough
 			case 6:
 				this.parseReliableCommand();
 				break;

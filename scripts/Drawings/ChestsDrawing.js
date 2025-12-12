@@ -4,15 +4,7 @@ import settingsSync from "../Utils/SettingsSync.js";
 export class ChestsDrawing extends DrawingUtils {
     interpolate(chests, lpX, lpY, t) {
         for (const chestOne of chests) {
-            const hX = -1 * chestOne.posX + lpX;
-            const hY = chestOne.posY - lpY;
-
-            if (chestOne.hY === 0 && chestOne.hX === 0) {
-                chestOne.hX = hX;
-                chestOne.hY = hY;
-            }
-            chestOne.hX = this.lerp(chestOne.hX, hX, t);
-            chestOne.hY = this.lerp(chestOne.hY, hY, t);
+            this.interpolateEntity(chestOne, lpX, lpY, t);
         }
     }
 

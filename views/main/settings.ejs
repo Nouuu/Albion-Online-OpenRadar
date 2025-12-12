@@ -5,74 +5,6 @@
     <!-- Main Settings Card -->
     <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
       <div class="w-full">
-        <!-- Items Window Settings -->
-        <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
-          📦 Items Window Settings
-        </h2>
-        <div class="flex flex-wrap -m-2 mb-4">
-          <div class="p-2 w-full md:w-1/2">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Width (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Width of the items overlay window
-                  </span>
-                </span>
-              </span>
-              <input
-                id="itemsWidth"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="200"
-              />
-            </label>
-          </div>
-
-          <div class="p-2 w-full md:w-1/2">
-            <label class="block text-sm">
-              <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
-                Height (px)
-                <span class="relative group ml-2">
-                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                    <circle cx="12" cy="12" r="10"></circle>
-                  </svg>
-                  <span class="tooltip-base tooltip-right">
-                    Height of the items overlay window
-                  </span>
-                </span>
-              </span>
-              <input
-                id="itemsHeight"
-                type="number"
-                class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input rounded-md"
-                placeholder="300"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="mb-8">
-          <label class="flex items-center space-x-2">
-            <input type="checkbox" id="settingItemsBorder" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-            <span class="text-gray-600 dark:text-gray-300">Show window border</span>
-            <span class="relative group ml-2">
-              <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                <circle cx="12" cy="12" r="10"></circle>
-              </svg>
-              <span class="tooltip-base tooltip-right">
-                Display a border around the items overlay window
-              </span>
-            </span>
-          </label>
-        </div>
-
         <!-- Resource Overlay Settings -->
         <h2 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
           📊 Resource Overlay Settings
@@ -80,32 +12,6 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <!-- Enchantment Indicator -->
-          <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
-            <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
-              ✨ Enchantment Indicator
-              <span class="relative group ml-2">
-                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
-                  <circle cx="12" cy="12" r="10"></circle>
-                </svg>
-                <span class="tooltip-base tooltip-right">
-                  Displays colored dots (.1 = green, .2 = blue, .3 = purple, .4 = gold)
-                </span>
-              </span>
-            </h3>
-            <label class="flex items-center space-x-2 mb-2">
-              <input type="checkbox" id="settingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="text-gray-600 dark:text-gray-300">Static resources (.1, .2, .3, .4)</span>
-            </label>
-            <label class="flex items-center space-x-2">
-              <input type="checkbox" id="settingLivingResourceEnchantOverlay" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-              <span class="text-gray-600 dark:text-gray-300">Living resources (.1, .2, .3, .4)</span>
-            </label>
-            <p class="text-xs text-gray-500 dark:text-gray-300 mt-2">
-              Visual indicators for enchanted resource types
-            </p>
-          </div>
-
           <!-- Resource Count Badge -->
           <div class="p-4 border border-gray-300 dark:border-gray-600 rounded-lg">
             <h3 class="flex items-center text-lg font-semibold text-gray-600 dark:text-gray-300 mb-3">
@@ -146,10 +52,6 @@
             <label class="flex items-center space-x-2 mb-2">
               <input type="checkbox" id="settingResourceDistance" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
               <span class="text-gray-600 dark:text-gray-300">Show distance from player</span>
-            </label>
-            <label class="flex items-center space-x-2 ml-7">
-              <input type="checkbox" id="settingResourceDistanceLivingOnly" class="h-4 w-4 text-indigo-600 border-gray-300 rounded-md">
-              <span class="text-sm text-gray-600 dark:text-gray-300">Living resources only</span>
             </label>
             <p class="text-xs text-gray-500 dark:text-gray-300 mt-2">
               Distance in meters from your current position
@@ -358,53 +260,20 @@
     // Get references to all input fields and checkboxes
     import settingsSync from "../../scripts/Utils/SettingsSync.js";
 
-    const settingItemsBorderCheckbox = document.getElementById("settingItemsBorder");
-    const itemsWidthInput = document.getElementById("itemsWidth");
-    const itemsHeightInput = document.getElementById("itemsHeight");
-
     // Resource overlay settings (using setting* prefix for consistency)
-    const settingResourceEnchantOverlayCheckbox = document.getElementById("settingResourceEnchantOverlay");
-    const settingLivingResourceEnchantOverlayCheckbox = document.getElementById("settingLivingResourceEnchantOverlay");
     const settingResourceCountCheckbox = document.getElementById("settingResourceCount");
     const settingResourceDistanceCheckbox = document.getElementById("settingResourceDistance");
-    const settingResourceDistanceLivingOnlyCheckbox = document.getElementById("settingResourceDistanceLivingOnly");
     const settingResourceClustersCheckbox = document.getElementById("settingResourceClusters");
     const settingClusterRadiusInput = document.getElementById("settingClusterRadius");
     const settingClusterMinSizeInput = document.getElementById("settingClusterMinSize");
 
-    // Add event listeners to all input fields
-    itemsWidthInput.addEventListener("input", function (event) {
-      settingsSync.setNumber("itemsWidth", event.target.value);
-    });
-
-    itemsHeightInput.addEventListener("input", function (event) {
-      settingsSync.setNumber("itemsHeight", event.target.value);
-    });
-
-    // Add event listener to checkboxes
-    settingItemsBorderCheckbox.addEventListener("change", function (event) {
-      settingsSync.setBool("settingItemsBorder", event.target.checked);
-    });
-
     // Resource overlay event listeners
-    settingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
-      settingsSync.setBool("settingResourceEnchantOverlay", event.target.checked);
-    });
-
-    settingLivingResourceEnchantOverlayCheckbox.addEventListener("change", function (event) {
-      settingsSync.setBool("settingLivingResourceEnchantOverlay", event.target.checked);
-    });
-
     settingResourceCountCheckbox.addEventListener("change", function (event) {
       settingsSync.setBool("settingResourceCount", event.target.checked);
     });
 
     settingResourceDistanceCheckbox.addEventListener("change", function (event) {
       settingsSync.setBool("settingResourceDistance", event.target.checked);
-    });
-
-    settingResourceDistanceLivingOnlyCheckbox.addEventListener("change", function (event) {
-      settingsSync.setBool("settingResourceDistanceLivingOnly", event.target.checked);
     });
 
     settingResourceClustersCheckbox.addEventListener("change", function (event) {
@@ -604,16 +473,9 @@
 
     settingDebugRawPacketsConsoleCheckbox.checked = settingsSync.getBool("settingDebugRawPacketsConsole");
 
-    itemsWidthInput.value = settingsSync.getNumber("itemsWidth", 500);
-    itemsHeightInput.value = settingsSync.getNumber("itemsHeight", 500);
-    settingItemsBorderCheckbox.checked = settingsSync.getBool("settingItemsBorder");
-
     // Initialize resource overlay settings (defaults to enabled for better UX)
-    settingResourceEnchantOverlayCheckbox.checked = settingsSync.getBool("settingResourceEnchantOverlay");
-    settingLivingResourceEnchantOverlayCheckbox.checked = settingsSync.getBool("settingLivingResourceEnchantOverlay");
     settingResourceCountCheckbox.checked = settingsSync.getBool("settingResourceCount");
     settingResourceDistanceCheckbox.checked = settingsSync.getBool("settingResourceDistance");
-    settingResourceDistanceLivingOnlyCheckbox.checked = settingsSync.getBool("settingResourceDistanceLivingOnly");
     settingResourceClustersCheckbox.checked = settingsSync.getBool("settingResourceClusters");
     settingClusterRadiusInput.value = settingsSync.getNumber("settingClusterRadius", 30);
     settingClusterMinSizeInput.value = settingsSync.getNumber("settingClusterMinSize", 2);

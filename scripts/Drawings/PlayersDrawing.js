@@ -12,18 +12,7 @@ export class PlayersDrawing extends DrawingUtils {
 
     interpolate(players, lpX, lpY, t) {
         for (const playerOne of players) {
-            // Formula from AO-Radar: hX = -1 * p.PosX + lpX; hY = p.PosY - lpY
-            // playerOne.posX/posY contain RAW world coordinates from Event 29
-            const hX = (-1 * playerOne.posX) + lpX;
-            const hY = playerOne.posY - lpY;
-
-            if (playerOne.hY === 0 && playerOne.hX === 0) {
-                playerOne.hX = hX;
-                playerOne.hY = hY;
-            }
-
-            playerOne.hX = this.lerp(playerOne.hX, hX, t);
-            playerOne.hY = this.lerp(playerOne.hY, hY, t);
+            this.interpolateEntity(playerOne, lpX, lpY, t);
         }
     }
 

@@ -5,14 +5,12 @@
 # Requires: Node.js v24.11.1, npm, Npcap 1.84
 # ============================================
 
-.PHONY: help install start dev check build build-linux build-macos build-all release clean rebuild package all-in-one clean-all update-ao-data download-assets update-assets
+.PHONY: help install check all-in-one update-ao-data download-assets update-assets
 
 # Variables
 NODE_VERSION = v24.11.1
 NPCAP_VERSION = 1.84
 DIST_DIR = dist
-BUILD_DIR = build
-RELEASE_NAME = OpenRadar-$(shell date +%Y%m%d)
 
 # Colors for display
 GREEN = \033[0;32m
@@ -37,13 +35,6 @@ install: ## Install all dependencies
 	@echo ""
 	@echo "$(GREEN)✓ Installation complete!$(NC)"
 
-start: ## Run OpenRadar in development mode
-	npm start
-
-dev: ## Run with auto-reload (nodemon)
-	@command -v nodemon >/dev/null 2>&1 || npm install -D nodemon
-	npm run dev
-
 check: ## Check system requirements
 	@echo "$(YELLOW)Checking system requirements...$(NC)"
 	@echo ""
@@ -55,51 +46,6 @@ check: ## Check system requirements
 	@npm --version || (echo "$(RED)✗ npm not found!$(NC)" && exit 1)
 	@echo "$(GREEN)✓ npm OK$(NC)"
 	@echo ""
-
-# Build targets
-build: ## Build Windows executable
-	@echo "$(GREEN)Installing build dependencies...$(NC)"
-	npm install -D @yao-pkg/pkg archiver
-	@echo ""
-	@echo "$(GREEN)Building Windows executable...$(NC)"
-	@echo "$(YELLOW)This may take a few minutes...$(NC)"
-	@echo ""
-	npm run build:win
-	@echo ""
-	@echo "$(GREEN)✓ Build complete: dist/OpenRadar.exe$(NC)"
-	@echo ""
-	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
-
-build-linux: ## Build Linux executable
-	@echo "$(GREEN)Building Linux executable...$(NC)"
-	npm run build:linux
-	@echo ""
-	@echo "$(GREEN)✓ Build complete: dist/OpenRadar-linux$(NC)"
-	@echo ""
-	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
-
-build-macos: ## Build macOS executable
-	@echo "$(GREEN)Building macOS executable...$(NC)"
-	npm run build:macos
-	@echo ""
-	@echo "$(GREEN)✓ Build complete: dist/OpenRadar-macos$(NC)"
-	@echo ""
-	@echo "$(YELLOW)💡 Run 'node scripts-shell/post-build.js' to copy assets + create archives$(NC)"
-
-build-all: ## Build for all platforms
-	@echo "$(GREEN)Building for all platforms (Windows, Linux, macOS)...$(NC)"
-	@echo "$(YELLOW)This will take several minutes...$(NC)"
-	@echo ""
-	npm run build:all
-	@echo ""
-	@echo "$(GREEN)✓ Build complete!$(NC)"
-	@echo ""
-	@echo "$(YELLOW)Files created:$(NC)"
-	@ls -lh $(DIST_DIR)/*.exe $(DIST_DIR)/OpenRadar-* 2>/dev/null || true
-	@echo ""
-	@echo "$(YELLOW)Next steps:$(NC)"
-	@echo "  1. Optimize: npm run optimize:images (optional, reduces archives by 30-40%)"
-	@echo "  2. Package: node scripts-shell/post-build.js (copies assets + creates archives)"
 
 # All-in-one build
 all-in-one: ## Complete build process (install + build all platforms + package)
@@ -127,47 +73,6 @@ all-in-one: ## Complete build process (install + build all platforms + package)
 	@echo ""
 	@echo "$(GREEN)✓ Complete build process finished!$(NC)"
 
-# Rebuild (clean + build)
-rebuild: ## Clean and rebuild from scratch
-	@echo "$(YELLOW)Cleaning...$(NC)"
-	@$(MAKE) clean
-	@echo ""
-	@echo "$(YELLOW)Installing dependencies...$(NC)"
-	@npm install
-	@echo ""
-	@echo "$(YELLOW)Rebuilding native modules...$(NC)"
-	@npm rebuild cap
-	@echo ""
-	@echo "$(YELLOW)Building Windows executable...$(NC)"
-	@npm run build:win
-	@echo ""
-	@echo "$(YELLOW)Creating release packages...$(NC)"
-	@node scripts-shell/post-build.js
-	@echo ""
-	@echo "$(GREEN)✓ Rebuild complete!$(NC)"
-
-# Release (build + package)
-release: ## Build and create release (Windows only)
-	@echo "$(GREEN)Creating release...$(NC)"
-	npm run release
-	@echo ""
-	@echo "$(GREEN)✓ Release created!$(NC)"
-
-# Cleaning
-clean: ## Clean build artifacts
-	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
-	@rm -rf $(DIST_DIR);
-	@rm app.cjs
-	@echo "$(GREEN)✓ Clean complete!$(NC)"
-
-clean-all: ## Complete cleanup (including optimized images + node_modules)
-	@echo "$(RED)Complete cleanup (including node_modules)...$(NC)"
-	@rm -rf $(DIST_DIR)
-	@rm app.cjs
-	@rm -rf node_modules package-lock.json
-	@rm -rf logs/
-	@echo "$(GREEN)✓ Complete cleanup done!$(NC)"
-
 
 update-ao-data: ## Update AO data files
 	@echo "$(YELLOW)Updating AO data files...$(NC)"
@@ -175,9 +80,9 @@ update-ao-data: ## Update AO data files
 
 download-assets: ## Download required assets
 	@echo "$(YELLOW)Downloading required assets...$(NC)"
-	@tsx scripts-shell/download-and-optimize-spell-icons.ts --replace-existing --only-upgrade
-	@tsx scripts-shell/download-and-optimize-item-icons.ts --replace-existing --only-upgrade
-	@tsx scripts-shell/download-and-optimize-map.ts --replace-existing --only-upgrade
+	@tsx scripts-shell/download-and-optimize-spell-icons.ts
+	@tsx scripts-shell/download-and-optimize-item-icons.ts
+	@tsx scripts-shell/download-and-optimize-map.ts
 
 update-assets: ## Update all assets
 	@echo "$(YELLOW)Updating all assets...$(NC)"

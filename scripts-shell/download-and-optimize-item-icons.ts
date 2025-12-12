@@ -81,7 +81,7 @@ async function processItemIcon(
     didSkip: boolean,
     didOptimize: boolean
 }> {
-    const filename = item + '.png';
+    const filename = item + '.webp';
     const outputPath = path.join(ICONS_DIR, filename);
     console.log();
 
@@ -98,7 +98,7 @@ async function processItemIcon(
         };
     }
 
-    const url = `${CDN_BASE}${filename}`;
+    const url = `${CDN_BASE}${item}.png`;
     res = await downloadFile(url);
 
     return handleImageBuffer(

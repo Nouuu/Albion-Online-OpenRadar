@@ -9,6 +9,7 @@ lerna-debug.log*
 LOGS.json
 diff_*.txt
 TYPEIDS_SUSPECTS.json
+.browser_opened
 
 # =============================================================================
 # DOSSIER WORK (inclus dans git)

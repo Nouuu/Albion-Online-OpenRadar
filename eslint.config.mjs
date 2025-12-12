@@ -8,7 +8,6 @@ export default [
     // Browser-side code (front-end)
     {
         files: ["scripts/**/*.js"],
-        ignores: ["scripts/init-alpine.js"],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: "module",
@@ -41,10 +40,14 @@ export default [
     // Ignore patterns
     {
         ignores: [
-            "node_modules/**",
-            "dist/**",
+            "*.cjs",
+            "*.min.js",
+            ".venv/**/*",
             "build/**",
-            "*.min.js"
+            "dist/**",
+            "node_modules/**",
+            "scripts/init-alpine.js",
+            "work/**/*"
         ]
     }
 ];

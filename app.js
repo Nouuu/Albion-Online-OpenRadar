@@ -3,6 +3,7 @@
 import path from 'path';
 import fs from 'fs';
 import express from 'express';
+import compression from 'compression';
 import {WebSocketServer} from 'ws';
 import LoggerServer from './server-scripts/LoggerServer.js';
 import PhotonParser from './server-scripts/classes/PhotonPacketParser.js';
@@ -57,6 +58,7 @@ function startServer(appDir, port) {
     const app = express();
     const viewsPath = path.join(appDir, 'views');
     const imagesCacheDuration = 24 * 60 * 60 * 1000; // 24 hours
+    const dataCacheDuration = 7 * 24 * 60 * 60 * 1000; // 7 days (game data changes rarely)
 
     app.set('views', viewsPath);
     app.set('view engine', 'ejs');
@@ -133,11 +135,42 @@ function startServer(appDir, port) {
     });
 
     app.use('/images', express.static(path.join(appDir, 'images'), {maxAge: imagesCacheDuration}));
-    app.use('/ao-bin-dumps', express.static(path.join(appDir, 'public', 'ao-bin-dumps')));
+
+    // Serve ao-bin-dumps with compression and long-term caching
+    app.use('/ao-bin-dumps', (req, res, next) => {
+        const acceptsGzip = req.headers['accept-encoding']?.includes('gzip');
+        const dataDir = path.join(appDir, 'public', 'ao-bin-dumps');
+        const requestedFile = path.join(dataDir, req.path);
+        const gzFile = requestedFile + '.gz';
+
+        // If .gz exists and client accepts gzip, serve it
+        if (acceptsGzip && fs.existsSync(gzFile)) {
+            res.setHeader('Content-Encoding', 'gzip');
+            res.setHeader('Content-Type', req.path.endsWith('.json') ? 'application/json' : 'application/xml');
+            res.setHeader('Cache-Control', `public, max-age=${Math.floor(dataCacheDuration / 1000)}, must-revalidate`);
+            res.setHeader('Vary', 'Accept-Encoding');
+            return res.sendFile(gzFile);
+        }
+        next();
+    });
+
+    // Fallback: serve original files with dynamic compression (dev mode)
+    app.use('/ao-bin-dumps',
+        compression({level: 6, threshold: 1024}),
+        express.static(path.join(appDir, 'public', 'ao-bin-dumps'), {
+            maxAge: dataCacheDuration,
+            setHeaders: (res, filePath) => {
+                const ext = path.extname(filePath).toLowerCase();
+                if (ext === '.json' || ext === '.xml') {
+                    res.setHeader('Cache-Control', `public, max-age=${Math.floor(dataCacheDuration / 1000)}, must-revalidate`);
+                    res.setHeader('Vary', 'Accept-Encoding');
+                }
+            }
+        })
+    );
 
     app.use('/scripts', express.static(path.join(appDir, 'scripts')));
     app.use('/sounds', express.static(path.join(appDir, 'sounds')));
-    app.use('/server-scripts', express.static(path.join(appDir, 'server-scripts')));
 
     app.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);

@@ -30,3 +30,68 @@
     display: none;
     z-index: 1;
 }
+
+/* ========== Error Notification Styles ========== */
+/* Database loading error notifications */
+
+.error-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ff4444;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    max-width: 400px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.error-content h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.error-content p {
+    margin: 8px 0;
+    line-height: 1.4;
+}
+
+.error-details {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin: 10px 0;
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.error-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.error-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: white;
+    color: #ff4444;
+    font-weight: bold;
+    font-size: 0.9em;
+    transition: opacity 0.2s;
+}
+
+.error-actions button:hover {
+    opacity: 0.9;
+}
+
+.error-actions button:active {
+    opacity: 0.8;
+}
