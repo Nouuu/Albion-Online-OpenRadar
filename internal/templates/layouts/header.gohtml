@@ -35,30 +35,36 @@
 (function() {
     const dot = document.getElementById('wsStatusDot');
     const text = document.getElementById('wsStatusText');
+    const indicator = document.getElementById('wsStatusIndicator');
+    const isRadarPage = '{{.Page}}' === 'radar';
+
+    // Hide indicator on non-radar pages (no WebSocket there)
+    if (!isRadarPage && indicator) {
+        indicator.style.display = 'none';
+        return;
+    }
 
     function updateIndicator(status) {
         if (!dot || !text) return;
 
         // Remove all state classes
         dot.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-gray-500', 'animate-pulse');
+        text.classList.remove('text-gray-400', 'text-gray-300', 'text-danger', 'text-warning');
 
         switch(status) {
             case 'connected':
                 dot.classList.add('bg-success', 'animate-pulse');
                 text.textContent = 'Connected';
-                text.classList.remove('text-gray-400', 'text-danger', 'text-warning');
                 text.classList.add('text-gray-300');
                 break;
             case 'disconnected':
                 dot.classList.add('bg-danger');
                 text.textContent = 'Disconnected';
-                text.classList.remove('text-gray-400', 'text-gray-300', 'text-warning');
                 text.classList.add('text-danger');
                 break;
             case 'connecting':
                 dot.classList.add('bg-warning', 'animate-pulse');
                 text.textContent = 'Connecting...';
-                text.classList.remove('text-gray-300', 'text-danger');
                 text.classList.add('text-warning');
                 break;
             default:
@@ -73,11 +79,17 @@
         updateIndicator(e.detail.status);
     });
 
-    // Check initial status after a short delay (wait for Utils.js to load)
-    setTimeout(() => {
+    // Poll for status until connected (handles slow module loading)
+    let attempts = 0;
+    const checkStatus = setInterval(() => {
+        attempts++;
         if (window.wsConnectionStatus) {
             updateIndicator(window.wsConnectionStatus);
+            if (window.wsConnectionStatus === 'connected' || attempts > 20) {
+                clearInterval(checkStatus);
+            }
         }
+        if (attempts > 20) clearInterval(checkStatus); // Stop after 10 seconds
     }, 500);
 })();
 </script>

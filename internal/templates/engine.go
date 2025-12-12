@@ -245,6 +245,18 @@ func (e *Engine) RenderPage(w io.Writer, page string, data *PageData) error {
 	return e.Render(w, "layouts/base.gohtml", data)
 }
 
+// RenderPartial renders only the page content without the base layout (for HTMX requests)
+func (e *Engine) RenderPartial(w io.Writer, page string, data *PageData) error {
+	// Set the page name in data
+	if data == nil {
+		data = &PageData{}
+	}
+	data.Page = page
+
+	// Render using the content template (partial, no full layout)
+	return e.Render(w, "layouts/content.gohtml", data)
+}
+
 // HasTemplate checks if a template exists
 func (e *Engine) HasTemplate(name string) bool {
 	e.mu.RLock()

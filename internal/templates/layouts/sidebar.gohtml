@@ -15,7 +15,17 @@
             <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
             <span class="text-xl font-bold text-white">OpenRadar</span>
         </a>
-        <img x-show="!isExpanded" src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg mx-auto">
+        <!-- Collapsed state: logo + expand button -->
+        <div x-show="!isExpanded" class="flex flex-col items-center gap-2 w-full">
+            <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
+            <button
+                @click="toggleSidebar"
+                class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors"
+                title="Expand sidebar">
+                <i data-lucide="panel-left-open" class="w-4 h-4"></i>
+            </button>
+        </div>
+        <!-- Expanded state: collapse button -->
         <button
             @click="toggleSidebar"
             x-show="isExpanded"
@@ -26,9 +36,12 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 p-4 space-y-1">
+    <!-- Radar page always does full reload (has WebSocket, sounds, etc.) -->
+    <!-- Other pages use HTMX for smooth navigation -->
+    <nav id="desktop-nav" class="flex-1 p-4 space-y-1">
         {{range .NavItems}}
         <a href="{{.Path}}"
+           {{if and (ne .Path "/") (ne $.Page "radar")}}hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true" hx-push-url="true"{{end}}
            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                   {{if .Active}}bg-accent/10 text-accent border-l-2 border-accent -ml-0.5 pl-3.5{{else}}text-gray-400 hover:bg-overlay hover:text-white{{end}}">
             <i data-lucide="{{.Icon}}" class="w-5 h-5 flex-shrink-0"></i>
@@ -69,9 +82,10 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="p-4 space-y-1">
+    <nav id="mobile-nav" class="p-4 space-y-1">
         {{range .NavItems}}
         <a href="{{.Path}}"
+           {{if and (ne .Path "/") (ne $.Page "radar")}}hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true" hx-push-url="true"{{end}}
            @click="mobileMenuOpen = false"
            class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all
                   {{if .Active}}bg-accent/10 text-accent border-l-2 border-accent -ml-0.5 pl-3.5{{else}}text-gray-400 hover:bg-overlay hover:text-white{{end}}">

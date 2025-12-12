@@ -78,60 +78,36 @@
 {{end}}
 
 {{define "scripts/radar"}}
-<script type="module" src="/scripts/Handlers/HarvestablesHandler.js"></script>
-<script type="module" src="/scripts/Handlers/MobsHandler.js"></script>
-<script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
-<script type="module" src="/scripts/Handlers/DungeonsHandler.js"></script>
-<script type="module" src="/scripts/Handlers/Map.js"></script>
-<script type="module" src="/scripts/Handlers/ItemsInfo.js"></script>
-<script type="module" src="/scripts/Handlers/FactionFlagInfo.js"></script>
-<script type="module" src="/scripts/Utils/DrawingUtils.js"></script>
+<!-- Radar core: WebSocket, Handlers, Rendering -->
 <script type="module" src="/scripts/Utils/Utils.js"></script>
-<script type="module" src="/scripts/drawing-ui.js"></script>
 
 <script>
-window.onGlobalsReady(function initRadarPage() {
+window.onGlobalsReady(function() {
     const settingsSync = window.settingsSync;
 
-    const bindCheckbox = (id) => {
+    // Bind checkboxes
+    ['settingResourceCount', 'settingResourceDistance', 'settingResourceClusters'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.checked = settingsSync.getBool(id);
-            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+            el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
         }
-    };
-
-    bindCheckbox("settingResourceCount");
-    bindCheckbox("settingResourceDistance");
-    bindCheckbox("settingResourceClusters");
+    });
 
     // Players section visibility
-    const playersSection = document.getElementById("playersSection");
-
+    const playersSection = document.getElementById('playersSection');
     function updatePlayersSectionVisibility() {
-        const showPlayers = settingsSync.getBool("settingShowPlayers");
         if (playersSection) {
-            playersSection.style.display = showPlayers ? "block" : "none";
+            playersSection.style.display = settingsSync.getBool('settingShowPlayers') ? 'block' : 'none';
         }
     }
-
     updatePlayersSectionVisibility();
+    window.addEventListener('storage', e => e.key === 'settingShowPlayers' && updatePlayersSectionVisibility());
 
-    window.addEventListener('storage', (e) => {
-        if (e.key === 'settingShowPlayers') updatePlayersSectionVisibility();
+    // Overlay button
+    document.getElementById('openOverlayBtn')?.addEventListener('click', () => {
+        window.open('/radar-overlay', 'OpenRadar Overlay', 'popup=yes,width=520,height=520');
     });
-
-    window.addEventListener('settingsChange', (e) => {
-        if (e.detail?.key === 'settingShowPlayers') updatePlayersSectionVisibility();
-    });
-
-    // Overlay button - open in popup window
-    const overlayBtn = document.getElementById('openOverlayBtn');
-    if (overlayBtn) {
-        overlayBtn.addEventListener('click', () => {
-            window.open('/radar-overlay', 'OpenRadar Overlay', 'popup=yes,width=520,height=520,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no');
-        });
-    }
 
     if (window.lucide) lucide.createIcons();
 });

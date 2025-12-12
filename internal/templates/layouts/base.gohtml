@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{.Title}}</title>
+    <title id="page-title">{{.Title}}</title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 
     <!-- Google Fonts: Space Grotesk + JetBrains Mono -->
@@ -112,11 +112,30 @@
     <!-- Logger Client -->
     <script type="module" src="/scripts/LoggerClient.js"></script>
 
+    <!-- SPA Router - simple page transition handling -->
+    <script src="/scripts/spa-router.js"></script>
+
+    <!-- HTMX for SPA-like navigation -->
+    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
     <!-- Alpine.js - defer so it loads after DOM -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
         [x-cloak] { display: none !important; }
+
+        /* HTMX page transitions */
+        .htmx-swapping {
+            opacity: 0;
+            transition: opacity 150ms ease-out;
+        }
+
+        #page-content {
+            transition: opacity 150ms ease-in;
+        }
+
+        #page-content.htmx-settling {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="bg-void text-gray-200 font-display" x-data="appData()">
@@ -131,7 +150,11 @@
             {{template "layouts/header.gohtml" .}}
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-6 bg-void">
+            <main id="page-content"
+                  class="flex-1 overflow-y-auto p-6 bg-void"
+                  data-page="{{.Page}}"
+                  hx-swap="innerHTML transition:true"
+                  hx-swap-oob="true">
                 <div class="container mx-auto animate-in">
                     {{if eq .Page "radar"}}{{template "pages/radar" .}}
                     {{else if eq .Page "players"}}{{template "pages/players" .}}
@@ -143,6 +166,17 @@
                     {{else if eq .Page "settings"}}{{template "pages/settings" .}}
                     {{else}}{{template "pages/radar" .}}{{end}}
                 </div>
+
+                <!-- Page-specific scripts (inline for HTMX support) -->
+                {{if eq .Page "radar"}}{{template "scripts/radar" .}}
+                {{else if eq .Page "players"}}{{template "scripts/players" .}}
+                {{else if eq .Page "resources"}}{{template "scripts/resources" .}}
+                {{else if eq .Page "enemies"}}{{template "scripts/enemies" .}}
+                {{else if eq .Page "chests"}}{{template "scripts/chests" .}}
+                {{else if eq .Page "map"}}{{template "scripts/map" .}}
+                {{else if eq .Page "ignorelist"}}{{template "scripts/ignorelist" .}}
+                {{else if eq .Page "settings"}}{{template "scripts/settings" .}}
+                {{end}}
             </main>
         </div>
     </div>
@@ -166,6 +200,32 @@
             lucide.createIcons();
         });
 
+        // HTMX: Reinitialize Lucide icons after every swap
+        document.addEventListener('htmx:afterSwap', (event) => {
+            // Reinitialize Lucide icons in the swapped content
+            lucide.createIcons();
+            console.log('[HTMX] Content swapped, icons reinitialized');
+        });
+
+        // HTMX: Handle page transitions
+        document.addEventListener('htmx:beforeSwap', (event) => {
+            // Add loading class for transition
+            const target = event.detail.target;
+            if (target && target.id === 'page-content') {
+                target.style.opacity = '0';
+            }
+        });
+
+        document.addEventListener('htmx:afterSettle', (event) => {
+            // Restore opacity after content is settled
+            const target = event.detail.target;
+            if (target && target.id === 'page-content') {
+                requestAnimationFrame(() => {
+                    target.style.opacity = '1';
+                });
+            }
+        });
+
         // Alpine.js app data
         function appData() {
             return {
@@ -183,7 +243,7 @@
                     if (this.sidebarCollapsed) {
                         this.hoverTimeout = setTimeout(() => {
                             this.hoverExpanded = true;
-                        }, 500);
+                        }, 1000); // 1 second delay to allow clicking expand button
                     }
                 },
 
@@ -202,16 +262,6 @@
         }
 
     </script>
-
-    {{if eq .Page "radar"}}{{template "scripts/radar" .}}
-    {{else if eq .Page "players"}}{{template "scripts/players" .}}
-    {{else if eq .Page "resources"}}{{template "scripts/resources" .}}
-    {{else if eq .Page "enemies"}}{{template "scripts/enemies" .}}
-    {{else if eq .Page "chests"}}{{template "scripts/chests" .}}
-    {{else if eq .Page "map"}}{{template "scripts/map" .}}
-    {{else if eq .Page "ignorelist"}}{{template "scripts/ignorelist" .}}
-    {{else if eq .Page "settings"}}{{template "scripts/settings" .}}
-    {{end}}
 </body>
 </html>
 {{end}}

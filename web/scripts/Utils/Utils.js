@@ -1112,59 +1112,82 @@ function onResponse(Parameters)
 // 🎨 Initialize RadarRenderer (unified rendering system)
 let radarRenderer = null;
 
-// Debug: Check canvas availability
-window.logger?.info(CATEGORIES.MAP, 'CanvasCheck', {
-    hasCanvas: !!canvas,
-    hasContext: !!context,
-    canvasId: canvas?.id || 'none',
-    note: 'Checking canvas availability for RadarRenderer'
-});
+/**
+ * Initialize or reinitialize the RadarRenderer
+ * Called on initial page load and when navigating back to radar via SPA
+ */
+function initializeRadarRenderer() {
+    const canvas = document.getElementById("drawCanvas");
+    const context = canvas ? canvas.getContext("2d") : null;
 
-// Only initialize RadarRenderer if canvas elements exist (drawing page)
-if (canvas && context) {
-    radarRenderer = createRadarRenderer('main', {
-        handlers: {
-            harvestablesHandler,
-            mobsHandler,
-            playersHandler,
-            chestsHandler,
-            dungeonsHandler,
-            wispCageHandler,
-            fishingHandler
-        },
-        drawings: {
-            mapsDrawing,
-            harvestablesDrawing,
-            mobsDrawing,
-            playersDrawing,
-            chestsDrawing,
-            dungeonsDrawing,
-            wispCageDrawing,
-            fishingDrawing
-        },
-        drawingUtils
-    });
-
-    radarRenderer.initialize();
-    radarRenderer.setMap(map);
-
-    // Expose globally for debugging
-    window.radarRenderer = radarRenderer;
-
-    // ✨ START THE NEW UNIFIED RENDERING SYSTEM
-    radarRenderer.start();
-
-    window.logger?.info(CATEGORIES.MAP, 'RadarRendererStarted', {
-        note: '✅ New unified RadarRenderer is now active!'
-    });
-} else {
-    // ❌ NO CANVAS - Cannot initialize radar (should only happen on non-radar pages)
-    window.logger?.error(CATEGORIES.MAP, 'NoCanvasFound', {
-        note: 'Canvas elements not found - radar cannot be initialized',
+    // Debug: Check canvas availability
+    window.logger?.info(CATEGORIES.MAP, 'CanvasCheck', {
         hasCanvas: !!canvas,
-        hasContext: !!context
+        hasContext: !!context,
+        canvasId: canvas?.id || 'none',
+        hasExistingRenderer: !!radarRenderer,
+        note: 'Checking canvas availability for RadarRenderer'
     });
+
+    // Only initialize RadarRenderer if canvas elements exist (drawing page)
+    if (canvas && context) {
+        // Stop existing renderer if any
+        if (radarRenderer) {
+            radarRenderer.stop();
+            console.log('🔄 [Utils.js] Stopping existing RadarRenderer for reinit');
+        }
+
+        radarRenderer = createRadarRenderer('main', {
+            handlers: {
+                harvestablesHandler,
+                mobsHandler,
+                playersHandler,
+                chestsHandler,
+                dungeonsHandler,
+                wispCageHandler,
+                fishingHandler
+            },
+            drawings: {
+                mapsDrawing,
+                harvestablesDrawing,
+                mobsDrawing,
+                playersDrawing,
+                chestsDrawing,
+                dungeonsDrawing,
+                wispCageDrawing,
+                fishingDrawing
+            },
+            drawingUtils
+        });
+
+        radarRenderer.initialize();
+        radarRenderer.setMap(map);
+
+        // Expose globally for debugging
+        window.radarRenderer = radarRenderer;
+
+        // ✨ START THE NEW UNIFIED RENDERING SYSTEM
+        radarRenderer.start();
+
+        window.logger?.info(CATEGORIES.MAP, 'RadarRendererStarted', {
+            note: '✅ New unified RadarRenderer is now active!'
+        });
+
+        return true;
+    } else {
+        // ❌ NO CANVAS - Cannot initialize radar (should only happen on non-radar pages)
+        window.logger?.debug(CATEGORIES.MAP, 'NoCanvasFound', {
+            note: 'Canvas elements not found - radar page not active',
+            hasCanvas: !!canvas,
+            hasContext: !!context
+        });
+
+        return false;
+    }
 }
+
+// Initialize radar on load
+initializeRadarRenderer();
 
 // 👥 Update player list UI every 1.5 seconds
 setInterval(updatePlayersList, 1500);

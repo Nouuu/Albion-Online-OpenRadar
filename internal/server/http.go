@@ -142,7 +142,7 @@ func (s *HTTPServer) setupRoutes() {
 	for route, page := range pageRoutes {
 		pageName := page // Capture for closure
 		s.mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			s.renderPage(w, pageName)
+			s.renderPage(w, r, pageName)
 		})
 	}
 
@@ -173,7 +173,7 @@ func (s *HTTPServer) setupRoutes() {
 }
 
 // renderPage renders a page template
-func (s *HTTPServer) renderPage(w http.ResponseWriter, page string) {
+func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page string) {
 	// Get page title
 	titles := map[string]string{
 		"radar":      "Radar",
@@ -195,7 +195,19 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, page string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-	if err := s.tmpl.RenderPage(w, page, data); err != nil {
+	// Check if this is an HTMX request (SPA navigation)
+	isHTMX := r.Header.Get("HX-Request") == "true"
+
+	var err error
+	if isHTMX {
+		// HTMX request: return only the page content (partial render)
+		err = s.tmpl.RenderPartial(w, page, data)
+	} else {
+		// Normal request: return full page with layout
+		err = s.tmpl.RenderPage(w, page, data)
+	}
+
+	if err != nil {
 		s.logger.Error("http", "render", fmt.Sprintf("Failed to render page %s: %v", page, err), nil)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
