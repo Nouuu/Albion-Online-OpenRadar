@@ -172,6 +172,13 @@ function startServer(appDir, port) {
     app.use('/scripts', express.static(path.join(appDir, 'scripts')));
     app.use('/sounds', express.static(path.join(appDir, 'sounds')));
 
+    // SPA test route - serve public/ directory
+    app.use('/public', express.static(path.join(appDir, 'public')));
+    app.get('/spa', (req, res) => {
+        res.sendFile(path.join(appDir, 'public', 'index.html'));
+    });
+    app.use('/pages', express.static(path.join(appDir, 'public', 'pages')));
+
     app.listen(port, () => {
         console.log(`Server is running on http://localhost:${port}`);
     });

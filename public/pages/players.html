@@ -1,0 +1,203 @@
+<div class="container px-6 mx-auto grid">
+  <div class="grid gap-6 mb-8 md:grid-cols-1 xl:grid-cols-1">
+    <!-- Page Title -->
+    <div class="mt-4 flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div>
+        <h2 id="players-text" class="text-4xl font-semibold text-gray-600 dark:text-gray-300">
+          Players
+        </h2>
+      </div>
+    </div>
+
+    <!-- Show Section -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <h4 id="show-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          Show
+        </h4>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingShowPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Show Players on Radar</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Master toggle to show players on the radar.</span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingItems" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Items</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Shows the equipment the other player is carrying.</span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingItemsDev" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Items Dev</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Shows the IDs of the player's items, mainly for development purposes.</span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingFlash" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Screen Flash</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Shows a red flash on screen when a player is detected.</span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingSound" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Sound</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Plays a sound alert when a player is detected.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Types Section -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <h4 id="types-text" class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          Types
+        </h4>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingPassivePlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Passive Players</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Show players who are not flagged for PvP.</span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingFactionPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Faction Players</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Show players flagged for faction warfare.</span>
+          </span>
+        </label>
+
+        <label class="flex items-center space-x-2">
+          <input type="checkbox" id="settingDangerousPlayers" class="h-5 w-5 text-indigo-600 border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+          <span class="dark:text-white">Dangerous Players</span>
+          <span class="relative group">
+            <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+            <span class="tooltip-base tooltip-right">Show hostile/dangerous players.</span>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Display Settings Section -->
+    <div class="flex items-start p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+      <div class="w-full">
+        <h4 class="mb-4 text-2xl font-semibold text-gray-600 dark:text-gray-300">
+          Display Settings
+        </h4>
+
+        <div class="p-2 w-full md:w-1/2">
+          <label class="block text-sm">
+            <span class="flex items-center text-gray-600 dark:text-gray-300 mb-1">
+              Maximum Players Displayed
+              <span class="relative group ml-2">
+                <svg class="w-4 h-4 text-gray-600 dark:text-gray-300 cursor-pointer" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01"></path>
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span class="tooltip-base tooltip-right">Maximum number of players to display (1-100). Default: 50</span>
+              </span>
+            </span>
+            <input
+              id="settingMaxPlayersDisplay"
+              type="number"
+              min="1"
+              max="100"
+              class="block w-full text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none dark:text-gray-300 form-input rounded-md"
+              placeholder="50"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function initPlayersPage() {
+    // Use global settingsSync from index.html
+    const settingsSync = window.settingsSync;
+    const settingShowPlayers = document.getElementById("settingShowPlayers");
+    const settingItems = document.getElementById("settingItems");
+    const settingItemsDev = document.getElementById("settingItemsDev");
+    const settingSound = document.getElementById("settingSound");
+    const settingFlash = document.getElementById("settingFlash");
+    const settingPassivePlayers = document.getElementById("settingPassivePlayers");
+    const settingFactionPlayers = document.getElementById("settingFactionPlayers");
+    const settingDangerousPlayers = document.getElementById("settingDangerousPlayers");
+    const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
+
+    // Load saved settings
+    if (settingShowPlayers) settingShowPlayers.checked = settingsSync.getBool("settingShowPlayers");
+    if (settingItems) settingItems.checked = settingsSync.getBool("settingItems");
+    if (settingItemsDev) settingItemsDev.checked = settingsSync.getBool("settingItemsDev");
+    if (settingSound) settingSound.checked = settingsSync.getBool("settingSound");
+    if (settingFlash) settingFlash.checked = settingsSync.getBool("settingFlash");
+    if (settingPassivePlayers) settingPassivePlayers.checked = settingsSync.getBool("settingPassivePlayers");
+    if (settingFactionPlayers) settingFactionPlayers.checked = settingsSync.getBool("settingFactionPlayers");
+    if (settingDangerousPlayers) settingDangerousPlayers.checked = settingsSync.getBool("settingDangerousPlayers");
+    if (settingMaxPlayersDisplay) settingMaxPlayersDisplay.value = settingsSync.getNumber("settingMaxPlayersDisplay", 50);
+
+    // Save on change
+    if (settingShowPlayers) settingShowPlayers.addEventListener("click", () => settingsSync.setBool("settingShowPlayers", settingShowPlayers.checked));
+    if (settingItems) settingItems.addEventListener("click", () => settingsSync.setBool("settingItems", settingItems.checked));
+    if (settingItemsDev) settingItemsDev.addEventListener("click", () => settingsSync.setBool("settingItemsDev", settingItemsDev.checked));
+    if (settingSound) settingSound.addEventListener("click", () => settingsSync.setBool("settingSound", settingSound.checked));
+    if (settingFlash) settingFlash.addEventListener("click", () => settingsSync.setBool("settingFlash", settingFlash.checked));
+    if (settingPassivePlayers) settingPassivePlayers.addEventListener("click", () => settingsSync.setBool("settingPassivePlayers", settingPassivePlayers.checked));
+    if (settingFactionPlayers) settingFactionPlayers.addEventListener("click", () => settingsSync.setBool("settingFactionPlayers", settingFactionPlayers.checked));
+    if (settingDangerousPlayers) settingDangerousPlayers.addEventListener("click", () => settingsSync.setBool("settingDangerousPlayers", settingDangerousPlayers.checked));
+    if (settingMaxPlayersDisplay) {
+      settingMaxPlayersDisplay.addEventListener("input", () => {
+        const val = Number(settingMaxPlayersDisplay.value);
+        if (val >= 1 && val <= 100) {
+          settingsSync.setNumber("settingMaxPlayersDisplay", val);
+        }
+      });
+    }
+  })();
+</script>

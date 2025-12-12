@@ -1166,3 +1166,118 @@ CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc \
 | Templates      | 3h       |
 | Tests          | 2h       |
 | **Total**      | **~18h** |
+
+---
+
+## CORRECTIONS CRITIQUES (2025-12-12)
+
+> ⚠️ **IMPORTANT**: Les sections ci-dessous contiennent des corrections par rapport au code proposé plus haut.
+
+### 1. Event 3 - Extraction positions mobs/ressources (MANQUANT)
+
+Le code `deserializeEventData` dans Step 4 **ne gère pas** le traitement spécial de l'Event 3.
+
+**Code actuel Node.js** (`Protocol16Deserializer.js:206-217`):
+```javascript
+if (code == 3) {
+    var bytes = new Uint8Array(parameters[1]);
+    var position0 = new DataView(bytes.buffer, 9, 4).getFloat32(0, true);  // Little-Endian!
+    var position1 = new DataView(bytes.buffer, 13, 4).getFloat32(0, true); // Little-Endian!
+    parameters[4] = position0;
+    parameters[5] = position1;
+    parameters[252] = 3;
+}
+```
+
+**Code Go à ajouter dans `ReadEventData()`:**
+```go
+func (r *Protocol16Reader) ReadEventData() (*EventData, error) {
+    code, err := r.ReadByte()
+    if err != nil {
+        return nil, err
+    }
+    params, err := r.ReadParameterTable()
+    if err != nil {
+        return nil, err
+    }
+
+    // ⚠️ CRITICAL: Event 3 - Extract mob/resource positions
+    if code == 3 {
+        if byteArray, ok := params[byte(1)].([]byte); ok && len(byteArray) >= 17 {
+            // Positions are Little-Endian (unlike rest of Photon protocol!)
+            pos0 := math.Float32frombits(binary.LittleEndian.Uint32(byteArray[9:13]))
+            pos1 := math.Float32frombits(binary.LittleEndian.Uint32(byteArray[13:17]))
+            params[byte(4)] = pos0
+            params[byte(5)] = pos1
+            params[byte(252)] = byte(3)
+        }
+    }
+
+    return &EventData{Code: code, Parameters: params}, nil
+}
+```
+
+### 2. Endianness - ATTENTION
+
+- **Protocole Photon**: Big-Endian (tout sauf Event 3)
+- **Event 3 positions**: **Little-Endian** pour les float32
+
+### 3. deserializeParameterTable - Comportement spécifique
+
+Le code Node.js lit `tableSize` à offset 1 sans avancer le curseur:
+```javascript
+const tableSize = input.readUInt16BE(1);  // Lit à offset 1
+let offset = 3;  // Commence à offset 3
+```
+
+Cela suggère que le premier byte est ignoré (probablement un type code ou padding).
+
+---
+
+## STRATÉGIE TEMPLATES EJS (2025-12-12)
+
+### Analyse des templates
+
+**Découverte:** La conversion EJS → HTML statique est **SIMPLE** car:
+- **Une seule ligne EJS**: `<%- include(mainContent) %>` (layout.ejs:147)
+- **Aucune variable serveur** - tout est côté client (localStorage, WebSocket)
+- Alpine.js gère déjà la navigation
+
+### Décision
+
+**SPA avec routing Alpine.js:**
+- `public/index.html` = layout + toutes les pages inline avec `x-show`
+- `public/radar-overlay.html` = copie directe (déjà standalone)
+
+---
+
+## PROGRESSION
+
+| Itération | Status | Date | Notes |
+|-----------|--------|------|-------|
+| 0. EJS → HTML | **TERMINÉ** | 2025-12-12 | SPA créée, à tester |
+| 1. Capture | À faire | - | - |
+| 2. Photon | À faire | - | - |
+| 3. Protocol16 | À faire | - | - |
+| 4. WebSocket | À faire | - | - |
+| 5. HTTP | À faire | - | - |
+
+### Fichiers créés (Itération 0)
+
+```
+public/
+├── index.html              # Layout + routeur Alpine.js
+├── radar-overlay.html      # Page overlay standalone
+└── pages/
+    ├── drawing.html        # Page radar principale
+    ├── players.html        # Page joueurs
+    ├── enemies.html        # Page ennemis/mobs
+    ├── resources.html      # Page ressources
+    ├── chests.html         # Page coffres/donjons
+    ├── ignorelist.html     # Page liste ignorés
+    ├── settings.html       # Page paramètres
+    └── map.html            # Page carte
+
+scripts/
+└── init-alpine-spa.js      # Routeur SPA Alpine.js
+```
