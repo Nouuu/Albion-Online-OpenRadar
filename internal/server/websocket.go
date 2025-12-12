@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,6 +10,11 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
+)
+
+const (
+	// MaxWebSocketClients is the maximum number of concurrent WebSocket connections
+	MaxWebSocketClients = 100
 )
 
 // WSMessage represents a message sent to WebSocket clients
@@ -24,6 +30,7 @@ type WebSocketServer struct {
 	upgrader  websocket.Upgrader
 	port      int
 	logger    *logger.Logger
+	server    *http.Server
 }
 
 // NewWebSocketServer creates a new WebSocket server
@@ -42,19 +49,54 @@ func NewWebSocketServer(port int, log *logger.Logger) *WebSocketServer {
 
 // Start starts the WebSocket server
 func (ws *WebSocketServer) Start() error {
-	http.HandleFunc("/", ws.handleConnection)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", ws.handleConnection)
 
 	addr := fmt.Sprintf("localhost:%d", ws.port)
-	fmt.Printf("📡 WebSocket server started on ws://%s\n", addr)
+	ws.server = &http.Server{
+		Addr:    addr,
+		Handler: mux,
+	}
 
-	return http.ListenAndServe(addr, nil)
+	fmt.Printf("WebSocket server started on ws://%s\n", addr)
+	return ws.server.ListenAndServe()
+}
+
+// Shutdown gracefully shuts down the WebSocket server
+func (ws *WebSocketServer) Shutdown(ctx context.Context) error {
+	// Close all client connections with a proper close message
+	ws.clientsMu.Lock()
+	for client := range ws.clients {
+		_ = client.WriteMessage(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down"),
+		)
+		_ = client.Close()
+		delete(ws.clients, client)
+	}
+	ws.clientsMu.Unlock()
+
+	if ws.server != nil {
+		return ws.server.Shutdown(ctx)
+	}
+	return nil
 }
 
 // handleConnection handles new WebSocket connections
 func (ws *WebSocketServer) handleConnection(w http.ResponseWriter, r *http.Request) {
+	// Check connection limit before upgrade
+	ws.clientsMu.RLock()
+	clientCount := len(ws.clients)
+	ws.clientsMu.RUnlock()
+
+	if clientCount >= MaxWebSocketClients {
+		http.Error(w, "Too many connections", http.StatusServiceUnavailable)
+		return
+	}
+
 	conn, err := ws.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Printf("❌ WebSocket upgrade error: %v\n", err)
+		fmt.Printf("[WS] Upgrade error: %v\n", err)
 		return
 	}
 
@@ -63,7 +105,7 @@ func (ws *WebSocketServer) handleConnection(w http.ResponseWriter, r *http.Reque
 	ws.clients[conn] = true
 	ws.clientsMu.Unlock()
 
-	fmt.Println("📡 [WS] Client connected")
+	fmt.Println("[WS] Client connected")
 
 	// Handle incoming messages (for logs from client)
 	go ws.handleMessages(conn)
@@ -75,15 +117,19 @@ func (ws *WebSocketServer) handleMessages(conn *websocket.Conn) {
 		ws.clientsMu.Lock()
 		delete(ws.clients, conn)
 		ws.clientsMu.Unlock()
-		conn.Close()
-		fmt.Println("📡 [WS] Client disconnected")
+		_ = conn.Close()
+		fmt.Println("[WS] Client disconnected")
 	}()
 
 	for {
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Printf("❌ [WS] Read error: %v\n", err)
+			if websocket.IsUnexpectedCloseError(
+				err,
+				websocket.CloseGoingAway,
+				websocket.CloseAbnormalClosure,
+			) {
+				fmt.Printf("[WS] Read error: %v\n", err)
 			}
 			break
 		}
@@ -108,65 +154,62 @@ func (ws *WebSocketServer) Broadcast(msg *WSMessage) {
 		return
 	}
 
+	// Phase 1: Send messages and collect failed clients under RLock
+	var failedClients []*websocket.Conn
 	ws.clientsMu.RLock()
-	defer ws.clientsMu.RUnlock()
-
 	for client := range ws.clients {
-		err := client.WriteMessage(websocket.TextMessage, data)
-		if err != nil {
-			client.Close()
-			delete(ws.clients, client)
+		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
+			failedClients = append(failedClients, client)
 		}
 	}
+	ws.clientsMu.RUnlock()
+
+	// Phase 2: Remove failed clients under exclusive Lock
+	if len(failedClients) > 0 {
+		ws.clientsMu.Lock()
+		for _, client := range failedClients {
+			_ = client.Close()
+			delete(ws.clients, client)
+		}
+		ws.clientsMu.Unlock()
+	}
+}
+
+// broadcastPayload is a helper to broadcast a typed payload
+func (ws *WebSocketServer) broadcastPayload(code string, payload interface{}) {
+	dictJSON, err := json.Marshal(payload)
+	if err != nil {
+		return
+	}
+	ws.Broadcast(&WSMessage{
+		Code:       code,
+		Dictionary: string(dictJSON),
+	})
 }
 
 // BroadcastEvent broadcasts an event to all clients
 func (ws *WebSocketServer) BroadcastEvent(event *photon.EventData) {
-	dictJSON, err := json.Marshal(map[string]interface{}{
+	ws.broadcastPayload("event", map[string]interface{}{
 		"code":       event.Code,
 		"parameters": event.Parameters,
-	})
-	if err != nil {
-		return
-	}
-
-	ws.Broadcast(&WSMessage{
-		Code:       "event",
-		Dictionary: string(dictJSON),
 	})
 }
 
 // BroadcastRequest broadcasts a request to all clients
 func (ws *WebSocketServer) BroadcastRequest(req *photon.OperationRequest) {
-	dictJSON, err := json.Marshal(map[string]interface{}{
+	ws.broadcastPayload("request", map[string]interface{}{
 		"operationCode": req.OperationCode,
 		"parameters":    req.Parameters,
-	})
-	if err != nil {
-		return
-	}
-
-	ws.Broadcast(&WSMessage{
-		Code:       "request",
-		Dictionary: string(dictJSON),
 	})
 }
 
 // BroadcastResponse broadcasts a response to all clients
 func (ws *WebSocketServer) BroadcastResponse(resp *photon.OperationResponse) {
-	dictJSON, err := json.Marshal(map[string]interface{}{
+	ws.broadcastPayload("response", map[string]interface{}{
 		"operationCode": resp.OperationCode,
 		"returnCode":    resp.ReturnCode,
 		"debugMessage":  resp.DebugMessage,
 		"parameters":    resp.Parameters,
-	})
-	if err != nil {
-		return
-	}
-
-	ws.Broadcast(&WSMessage{
-		Code:       "response",
-		Dictionary: string(dictJSON),
 	})
 }
 

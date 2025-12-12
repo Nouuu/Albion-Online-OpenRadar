@@ -2,6 +2,7 @@ package server
 
 import (
 	"compress/gzip"
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,7 @@ import (
 type HTTPServer struct {
 	port   int
 	mux    *http.ServeMux
+	server *http.Server
 	logger *logger.Logger
 	// Filesystems (can be embed.FS or os.DirFS)
 	images  fs.FS
@@ -27,12 +29,28 @@ type HTTPServer struct {
 }
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
-func NewHTTPServer(port int, images, scripts, public, sounds embed.FS, log *logger.Logger) *HTTPServer {
+func NewHTTPServer(
+	port int,
+	images, scripts, public, sounds embed.FS,
+	log *logger.Logger,
+) *HTTPServer {
 	// Extract subdirectories from embed.FS (they include the folder path)
-	imagesFS, _ := fs.Sub(images, "web/images")
-	scriptsFS, _ := fs.Sub(scripts, "web/scripts")
-	publicFS, _ := fs.Sub(public, "web/public")
-	soundsFS, _ := fs.Sub(sounds, "web/sounds")
+	imagesFS, err := fs.Sub(images, "web/images")
+	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load images: %v\n", err)
+	}
+	scriptsFS, err := fs.Sub(scripts, "web/scripts")
+	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load scripts: %v\n", err)
+	}
+	publicFS, err := fs.Sub(public, "web/public")
+	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load public: %v\n", err)
+	}
+	soundsFS, err := fs.Sub(sounds, "web/sounds")
+	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load sounds: %v\n", err)
+	}
 
 	s := &HTTPServer{
 		port:    port,
@@ -69,7 +87,18 @@ func (s *HTTPServer) setupRoutes() {
 	dataCacheDuration := 7 * 24 * time.Hour
 
 	// SPA routes - serve index.html for all SPA paths
-	spaRoutes := []string{"/", "/home", "/players", "/resources", "/enemies", "/chests", "/map", "/ignorelist", "/settings", "/spa"}
+	spaRoutes := []string{
+		"/",
+		"/home",
+		"/players",
+		"/resources",
+		"/enemies",
+		"/chests",
+		"/map",
+		"/ignorelist",
+		"/settings",
+		"/spa",
+	}
 	for _, route := range spaRoutes {
 		s.mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
 			s.serveFile(w, r, s.public, "index.html")
@@ -89,33 +118,60 @@ func (s *HTTPServer) setupRoutes() {
 	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0))
 
 	// ao-bin-dumps with gzip support
-	s.mux.Handle("/ao-bin-dumps/", s.gzipFSHandler("/ao-bin-dumps/", s.public, "ao-bin-dumps", dataCacheDuration))
+	s.mux.Handle(
+		"/ao-bin-dumps/",
+		s.gzipFSHandler("/ao-bin-dumps/", s.public, "ao-bin-dumps", dataCacheDuration),
+	)
 
 	// API endpoints
 	s.mux.HandleFunc("/api/settings/server-logs", s.handleServerLogs)
 }
 
 // serveFile serves a single file from fs.FS
-func (s *HTTPServer) serveFile(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) {
+func (s *HTTPServer) serveFile(w http.ResponseWriter, _ *http.Request, fsys fs.FS, name string) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
-		http.NotFound(w, r)
+		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
 	// Set content type based on extension
 	if strings.HasSuffix(name, ".html") {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
-	w.Write(data)
+	_, _ = w.Write(data) // Error ignored: client disconnect is not recoverable
+}
+
+// setCacheHeaders sets Cache-Control and optional Vary headers
+func setCacheHeaders(
+	w http.ResponseWriter,
+	duration time.Duration,
+	mustRevalidate bool,
+	vary string,
+) {
+	if duration > 0 {
+		if mustRevalidate {
+			w.Header().
+				Set("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", int(duration.Seconds())))
+		} else {
+			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(duration.Seconds())))
+		}
+	}
+	if vary != "" {
+		w.Header().Set("Vary", vary)
+	}
 }
 
 // fsHandler creates a file server handler from fs.FS
-func (s *HTTPServer) fsHandler(prefix string, fsys fs.FS, cacheDuration time.Duration) http.Handler {
+func (s *HTTPServer) fsHandler(
+	prefix string,
+	fsys fs.FS,
+	cacheDuration time.Duration,
+) http.Handler {
 	handler := http.StripPrefix(prefix, http.FileServer(http.FS(fsys)))
 
 	if cacheDuration > 0 {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(cacheDuration.Seconds())))
+			setCacheHeaders(w, cacheDuration, false, "")
 			handler.ServeHTTP(w, r)
 		})
 	}
@@ -123,9 +179,15 @@ func (s *HTTPServer) fsHandler(prefix string, fsys fs.FS, cacheDuration time.Dur
 }
 
 // fsHandlerSub creates a file server handler from a subdirectory of fs.FS
-func (s *HTTPServer) fsHandlerSub(prefix string, fsys fs.FS, subdir string, cacheDuration time.Duration) http.Handler {
+func (s *HTTPServer) fsHandlerSub(
+	prefix string,
+	fsys fs.FS,
+	subdir string,
+	cacheDuration time.Duration,
+) http.Handler {
 	subFS, err := fs.Sub(fsys, subdir)
 	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
 		return http.NotFoundHandler()
 	}
 	return s.fsHandler(prefix, subFS, cacheDuration)
@@ -133,9 +195,15 @@ func (s *HTTPServer) fsHandlerSub(prefix string, fsys fs.FS, subdir string, cach
 
 // gzipFSHandler serves files from fs.FS with gzip support
 // It looks for pre-compressed .gz files first
-func (s *HTTPServer) gzipFSHandler(prefix string, fsys fs.FS, subdir string, cacheDuration time.Duration) http.Handler {
+func (s *HTTPServer) gzipFSHandler(
+	prefix string,
+	fsys fs.FS,
+	subdir string,
+	cacheDuration time.Duration,
+) http.Handler {
 	subFS, err := fs.Sub(fsys, subdir)
 	if err != nil {
+		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
 		return http.NotFoundHandler()
 	}
 
@@ -148,14 +216,9 @@ func (s *HTTPServer) gzipFSHandler(prefix string, fsys fs.FS, subdir string, cac
 			gzPath := urlPath + ".gz"
 			if data, err := fs.ReadFile(subFS, gzPath); err == nil {
 				w.Header().Set("Content-Encoding", "gzip")
-				if strings.HasSuffix(urlPath, ".json") {
-					w.Header().Set("Content-Type", "application/json")
-				} else if strings.HasSuffix(urlPath, ".xml") {
-					w.Header().Set("Content-Type", "application/xml")
-				}
-				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", int(cacheDuration.Seconds())))
-				w.Header().Set("Vary", "Accept-Encoding")
-				w.Write(data)
+				setContentType(w, urlPath)
+				setCacheHeaders(w, cacheDuration, true, "Accept-Encoding")
+				_, _ = w.Write(data)
 				return
 			}
 		}
@@ -167,27 +230,30 @@ func (s *HTTPServer) gzipFSHandler(prefix string, fsys fs.FS, subdir string, cac
 			return
 		}
 
-		// Set content type
-		if strings.HasSuffix(urlPath, ".json") {
-			w.Header().Set("Content-Type", "application/json")
-		} else if strings.HasSuffix(urlPath, ".xml") {
-			w.Header().Set("Content-Type", "application/xml")
-		}
-
-		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", int(cacheDuration.Seconds())))
-		w.Header().Set("Vary", "Accept-Encoding")
+		setContentType(w, urlPath)
+		setCacheHeaders(w, cacheDuration, true, "Accept-Encoding")
 
 		// Compress on the fly if large and client accepts gzip
 		if acceptsGzip && len(data) > 1024 {
 			w.Header().Set("Content-Encoding", "gzip")
 			gz := gzip.NewWriter(w)
-			gz.Write(data)
-			gz.Close()
+			_, _ = gz.Write(data)
+			_ = gz.Close()
 			return
 		}
 
-		w.Write(data)
+		_, _ = w.Write(data)
 	})
+}
+
+// setContentType sets Content-Type header based on file extension
+func setContentType(w http.ResponseWriter, path string) {
+	switch {
+	case strings.HasSuffix(path, ".json"):
+		w.Header().Set("Content-Type", "application/json")
+	case strings.HasSuffix(path, ".xml"):
+		w.Header().Set("Content-Type", "application/xml")
+	}
 }
 
 // handleServerLogs handles the server logs API
@@ -200,7 +266,7 @@ func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
 		if s.logger != nil {
 			enabled = s.logger.IsEnabled()
 		}
-		json.NewEncoder(w).Encode(map[string]bool{"enabled": enabled})
+		_ = json.NewEncoder(w).Encode(map[string]bool{"enabled": enabled})
 
 	case "POST":
 		var req struct {
@@ -213,7 +279,7 @@ func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
 		if s.logger != nil {
 			s.logger.SetEnabled(req.Enabled)
 		}
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		_ = json.NewEncoder(w).Encode(map[string]interface{}{
 			"success": true,
 			"enabled": s.logger != nil && s.logger.IsEnabled(),
 		})
@@ -226,6 +292,18 @@ func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
 // Start starts the HTTP server
 func (s *HTTPServer) Start() error {
 	addr := fmt.Sprintf(":%d", s.port)
-	fmt.Printf("🌐 HTTP server started on http://localhost%s\n", addr)
-	return http.ListenAndServe(addr, s.mux)
+	s.server = &http.Server{
+		Addr:    addr,
+		Handler: s.mux,
+	}
+	fmt.Printf("HTTP server started on http://localhost%s\n", addr)
+	return s.server.ListenAndServe()
+}
+
+// Shutdown gracefully shuts down the HTTP server
+func (s *HTTPServer) Shutdown(ctx context.Context) error {
+	if s.server != nil {
+		return s.server.Shutdown(ctx)
+	}
+	return nil
 }

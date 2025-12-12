@@ -89,7 +89,7 @@ OpenRadar.exe -version
 
 | Tool       | Version | Notes                          |
 |------------|---------|--------------------------------|
-| **Go**     | 1.24+   | [Download](https://go.dev/dl/) |
+| **Go**     | 1.25+   | [Download](https://go.dev/dl/) |
 | **Npcap**  | 1.84+   | Windows only                   |
 | **Node.js**| 20+     | For data scripts only          |
 | **Docker** | Latest  | For Linux builds               |

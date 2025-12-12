@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
+	"time"
 
 	assets "github.com/nospy/albion-openradar"
 	"github.com/nospy/albion-openradar/internal/capture"
@@ -21,125 +26,198 @@ var (
 )
 
 const (
-	httpPort = 5001
-	wsPort   = 5002
+	httpPort        = 5001
+	wsPort          = 5002
+	shutdownTimeout = 10 * time.Second
 )
 
-func main() {
-	// Parse flags
-	devMode := flag.Bool("dev", false, "Run in development mode (read files from disk)")
-	showVersion := flag.Bool("version", false, "Show version information")
-	ipAddr := flag.String("ip", "", "Network adapter IP address (skip interactive prompt)")
-	flag.Parse()
+// App holds all application components
+type App struct {
+	ctx        context.Context
+	cancel     context.CancelFunc
+	wg         sync.WaitGroup
+	logger     *logger.Logger
+	wsServer   *server.WebSocketServer
+	httpServer *server.HTTPServer
+	capturer   *capture.Capturer
+}
 
-	if *showVersion {
+func main() {
+	cfg := parseFlags()
+	if cfg.showVersion {
 		fmt.Printf("OpenRadar v%s (built: %s)\n", Version, BuildTime)
-		os.Exit(0)
+		return
 	}
 
-	fmt.Printf("🎯 OpenRadar v%s\n", Version)
-	fmt.Println("====================")
+	printBanner()
 
-	// Get working directory
 	appDir, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("❌ Failed to get working directory: %v\n", err)
-		os.Exit(1)
+		exitWithError("Failed to get working directory", err)
 	}
-	fmt.Printf("📂 App directory: %s\n", appDir)
+	fmt.Printf("App directory: %s\n", appDir)
 
-	// Create logger
+	app := newApp(appDir, cfg)
+	app.start()
+	app.waitForShutdown()
+}
+
+// Config holds command-line configuration
+type Config struct {
+	devMode     bool
+	showVersion bool
+	ipAddr      string
+}
+
+func parseFlags() Config {
+	cfg := Config{}
+	flag.BoolVar(&cfg.devMode, "dev", false, "Run in development mode (read files from disk)")
+	flag.BoolVar(&cfg.showVersion, "version", false, "Show version information")
+	flag.StringVar(&cfg.ipAddr, "ip", "", "Network adapter IP address (skip interactive prompt)")
+	flag.Parse()
+	return cfg
+}
+
+func printBanner() {
+	fmt.Printf("OpenRadar v%s\n", Version)
+	fmt.Println("====================")
+}
+
+func exitWithError(msg string, err error) {
+	fmt.Printf("%s: %v\n", msg, err)
+	os.Exit(1)
+}
+
+func newApp(appDir string, cfg Config) *App {
+	ctx, cancel := context.WithCancel(context.Background())
 	log := logger.New("./logs")
 
-	// Create WebSocket server
-	wsServer := server.NewWebSocketServer(wsPort, log)
-	go func() {
-		if err := wsServer.Start(); err != nil {
-			fmt.Printf("❌ WebSocket server error: %v\n", err)
-		}
-	}()
-
-	// Create HTTP server
-	var httpServer *server.HTTPServer
-	if *devMode {
-		fmt.Println("🔧 Development mode: reading files from disk")
-		httpServer = server.NewHTTPServerDev(httpPort, appDir, log)
-	} else {
-		fmt.Println("📦 Production mode: using embedded assets")
-		httpServer = server.NewHTTPServer(httpPort, assets.Images, assets.Scripts, assets.Public, assets.Sounds, log)
+	app := &App{
+		ctx:        ctx,
+		cancel:     cancel,
+		logger:     log,
+		wsServer:   server.NewWebSocketServer(wsPort, log),
+		httpServer: createHTTPServer(cfg.devMode, appDir, log),
 	}
-	go func() {
-		if err := httpServer.Start(); err != nil {
-			fmt.Printf("❌ HTTP server error: %v\n", err)
-		}
-	}()
 
-	// Create capturer
-	cap, err := capture.New(appDir, *ipAddr)
+	capInstance, err := capture.New(ctx, appDir, cfg.ipAddr)
 	if err != nil {
-		fmt.Printf("❌ Failed to create capturer: %v\n", err)
-		os.Exit(1)
+		cancel()
+		exitWithError("Failed to create capturer", err)
 	}
-	defer cap.Close()
+	app.capturer = capInstance
+	app.capturer.OnPacket(app.handlePacket)
 
-	// Handle graceful shutdown
+	return app
+}
+
+func createHTTPServer(devMode bool, appDir string, log *logger.Logger) *server.HTTPServer {
+	if devMode {
+		fmt.Println("Development mode: reading files from disk")
+		return server.NewHTTPServerDev(httpPort, appDir, log)
+	}
+	fmt.Println("Production mode: using embedded assets")
+	return server.NewHTTPServer(
+		httpPort,
+		assets.Images,
+		assets.Scripts,
+		assets.Public,
+		assets.Sounds,
+		log,
+	)
+}
+
+func (app *App) start() {
+	app.startServer("WebSocket", app.wsServer.Start)
+	app.startServer("HTTP", app.httpServer.Start)
+	app.startServer("Capture", app.capturer.Start)
+
+	fmt.Printf("\nWeb UI: http://localhost:%d\n", httpPort)
+	fmt.Printf("WebSocket: ws://localhost:%d\n", wsPort)
+	fmt.Println("\nListening for Albion packets on UDP port 5056...")
+	fmt.Println("   Press Ctrl+C to stop")
+}
+
+func (app *App) startServer(name string, startFn func() error) {
+	app.wg.Add(1)
+	go func() {
+		defer app.wg.Done()
+		if err := startFn(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
+			app.ctx.Err() == nil {
+			fmt.Printf("%s server error: %v\n", name, err)
+		}
+	}()
+}
+
+func (app *App) handlePacket(payload []byte) {
+	packet, err := photon.ParsePacket(payload)
+	if err != nil || packet == nil {
+		return
+	}
+
+	for _, cmd := range packet.Commands {
+		app.processCommand(cmd)
+	}
+}
+
+func (app *App) processCommand(cmd *photon.Command) {
+	if cmd.Payload == nil {
+		return
+	}
+
+	switch cmd.MessageType {
+	case photon.MessageTypeEvent:
+		if event, err := photon.DeserializeEvent(cmd.Payload); err == nil {
+			app.wsServer.BroadcastEvent(event)
+		}
+	case photon.MessageTypeRequest:
+		if req, err := photon.DeserializeRequest(cmd.Payload); err == nil {
+			app.wsServer.BroadcastRequest(req)
+		}
+	case photon.MessageTypeResponse:
+		if resp, err := photon.DeserializeResponse(cmd.Payload); err == nil {
+			app.wsServer.BroadcastResponse(resp)
+		}
+	}
+}
+
+func (app *App) waitForShutdown() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+
+	fmt.Println("\nShutting down gracefully...")
+	app.shutdown()
+}
+
+func (app *App) shutdown() {
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	app.cancel()
+	app.capturer.Close()
+
+	if err := app.wsServer.Shutdown(ctx); err != nil {
+		fmt.Printf("WebSocket server shutdown error: %v\n", err)
+	}
+	if err := app.httpServer.Shutdown(ctx); err != nil {
+		fmt.Printf("HTTP server shutdown error: %v\n", err)
+	}
+
+	app.waitWithTimeout(ctx)
+}
+
+func (app *App) waitWithTimeout(ctx context.Context) {
+	done := make(chan struct{})
 	go func() {
-		<-sigChan
-		fmt.Println("\n👋 Shutting down...")
-		cap.Close()
-		os.Exit(0)
+		app.wg.Wait()
+		close(done)
 	}()
 
-	// Set packet handler
-	cap.OnPacket(func(payload []byte) {
-		// Parse Photon packet
-		packet, err := photon.ParsePacket(payload)
-		if err != nil || packet == nil {
-			return
-		}
-
-		// Process each command
-		for _, cmd := range packet.Commands {
-			if cmd.Payload == nil {
-				continue
-			}
-
-			switch cmd.MessageType {
-			case photon.MessageTypeEvent:
-				event, err := photon.DeserializeEvent(cmd.Payload)
-				if err != nil {
-					continue
-				}
-				// Broadcast to all WebSocket clients
-				wsServer.BroadcastEvent(event)
-
-			case photon.MessageTypeRequest:
-				req, err := photon.DeserializeRequest(cmd.Payload)
-				if err != nil {
-					continue
-				}
-				wsServer.BroadcastRequest(req)
-
-			case photon.MessageTypeResponse:
-				resp, err := photon.DeserializeResponse(cmd.Payload)
-				if err != nil {
-					continue
-				}
-				wsServer.BroadcastResponse(resp)
-			}
-		}
-	})
-
-	fmt.Printf("\n🌐 Web UI: http://localhost:%d\n", httpPort)
-	fmt.Printf("📡 WebSocket: ws://localhost:%d\n", wsPort)
-	fmt.Println("\n🔍 Listening for Albion packets on UDP port 5056...")
-	fmt.Println("   Press Ctrl+C to stop\n")
-
-	// Start capture (blocking)
-	if err := cap.Start(); err != nil {
-		fmt.Printf("❌ Capture error: %v\n", err)
-		os.Exit(1)
+	select {
+	case <-done:
+		fmt.Println("Shutdown complete")
+	case <-ctx.Done():
+		fmt.Println("Shutdown timed out")
 	}
 }

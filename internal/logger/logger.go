@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -39,8 +40,8 @@ func New(logsDir string) *Logger {
 	l.initializeDirectories()
 	l.createSessionFile()
 
-	fmt.Printf("📊 [Logger] Session file: %s\n", l.currentSessionFile)
-	fmt.Printf("📊 [Logger] Logging enabled: %v\n", l.enabled)
+	fmt.Printf("[Logger] Session file: %s\n", l.currentSessionFile)
+	fmt.Printf("[Logger] Logging enabled: %v\n", l.enabled)
 
 	return l
 }
@@ -54,7 +55,7 @@ func (l *Logger) SetEnabled(enabled bool) {
 	if enabled {
 		state = "ENABLED"
 	}
-	fmt.Printf("📊 [Logger] Logging %s\n", state)
+	fmt.Printf("[Logger] Logging %s\n", state)
 }
 
 // IsEnabled returns current logging state
@@ -73,14 +74,18 @@ func (l *Logger) initializeDirectories() {
 
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			fmt.Printf("❌ [Logger] Failed to create directory %s: %v\n", dir, err)
+			fmt.Printf("[Logger] Failed to create directory %s: %v\n", dir, err)
 		}
 	}
 }
 
 func (l *Logger) createSessionFile() {
 	timestamp := strings.ReplaceAll(time.Now().Format("2006-01-02T15-04-05"), ":", "-")
-	l.currentSessionFile = filepath.Join(l.logsDir, "sessions", fmt.Sprintf("session_%s.jsonl", timestamp))
+	l.currentSessionFile = filepath.Join(
+		l.logsDir,
+		"sessions",
+		fmt.Sprintf("session_%s.jsonl", timestamp),
+	)
 }
 
 // WriteLogs writes an array of log entries to the session file
@@ -98,23 +103,29 @@ func (l *Logger) WriteLogs(logs []interface{}) {
 
 	f, err := os.OpenFile(l.currentSessionFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Printf("❌ [Logger] Error opening log file: %v\n", err)
+		fmt.Printf("[Logger] Error opening log file: %v\n", err)
 		return
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
 	for _, log := range logs {
 		line, err := json.Marshal(log)
 		if err != nil {
 			continue
 		}
-		f.Write(line)
-		f.WriteString("\n")
+		_, _ = f.Write(line)
+		_, _ = f.WriteString("\n")
 	}
 }
 
 // Log writes a single log entry
-func (l *Logger) Log(level, category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Log(
+	level, category, event string,
+	data interface{},
+	context map[string]interface{},
+) {
 	l.mu.Lock()
 	if !l.enabled {
 		l.mu.Unlock()
@@ -152,13 +163,25 @@ func (l *Logger) Error(category, event string, data interface{}, context map[str
 
 	f, err := os.OpenFile(errorFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		fmt.Printf("[Logger] Failed to open error file: %v\n", err)
 		return
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
-	dataJSON, _ := json.Marshal(data)
-	line := fmt.Sprintf("[%s] %s.%s: %s\n", time.Now().UTC().Format(time.RFC3339), category, event, string(dataJSON))
-	f.WriteString(line)
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		dataJSON = []byte(fmt.Sprintf(`{"error":"marshal failed: %v"}`, err))
+	}
+	line := fmt.Sprintf(
+		"[%s] %s.%s: %s\n",
+		time.Now().UTC().Format(time.RFC3339),
+		category,
+		event,
+		string(dataJSON),
+	)
+	_, _ = f.WriteString(line)
 }
 
 // Debug logs a debug message
@@ -177,7 +200,11 @@ func (l *Logger) Warn(category, event string, data interface{}, context map[stri
 }
 
 // Critical logs a critical message
-func (l *Logger) Critical(category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Critical(
+	category, event string,
+	data interface{},
+	context map[string]interface{},
+) {
 	l.Log("CRITICAL", category, event, data, context)
 }
 
@@ -206,15 +233,18 @@ func (l *Logger) GetSessionStats() SessionStats {
 
 	stats.FileSize = info.Size()
 
-	// Count lines
-	content, err := os.ReadFile(l.currentSessionFile)
+	// Count lines efficiently using streaming (avoid loading entire file into memory)
+	f, err := os.Open(l.currentSessionFile)
 	if err != nil {
 		return stats
 	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 
-	lines := strings.Split(string(content), "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) != "" {
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		if len(strings.TrimSpace(scanner.Text())) > 0 {
 			stats.LineCount++
 		}
 	}

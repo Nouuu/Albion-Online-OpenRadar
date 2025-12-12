@@ -2,6 +2,7 @@ package capture
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -24,7 +25,7 @@ const (
 type NetworkInterface struct {
 	Name    string
 	Address string
-	Device  string // pcap device name
+	Device  string
 }
 
 // PacketHandler is called for each captured UDP payload
@@ -35,160 +36,28 @@ type Capturer struct {
 	handle   *pcap.Handle
 	iface    NetworkInterface
 	onPacket PacketHandler
-	appDir   string
-}
-
-// ListInterfaces returns all available network interfaces with IPv4 addresses
-func ListInterfaces() ([]NetworkInterface, error) {
-	devices, err := pcap.FindAllDevs()
-	if err != nil {
-		return nil, fmt.Errorf("failed to list devices: %w", err)
-	}
-
-	var interfaces []NetworkInterface
-	for _, device := range devices {
-		for _, addr := range device.Addresses {
-			// Only IPv4
-			if ip4 := addr.IP.To4(); ip4 != nil {
-				interfaces = append(interfaces, NetworkInterface{
-					Name:    device.Description,
-					Address: ip4.String(),
-					Device:  device.Name,
-				})
-				break // Only first IPv4 per device
-			}
-		}
-	}
-
-	return interfaces, nil
-}
-
-// FindDeviceByIP finds the pcap device name for a given IP address
-func FindDeviceByIP(ip string) (string, error) {
-	devices, err := pcap.FindAllDevs()
-	if err != nil {
-		return "", fmt.Errorf("failed to list devices: %w", err)
-	}
-
-	for _, device := range devices {
-		for _, addr := range device.Addresses {
-			if addr.IP.String() == ip {
-				return device.Name, nil
-			}
-		}
-	}
-
-	return "", fmt.Errorf("no device found with IP: %s", ip)
-}
-
-// GetAdapterIP reads IP from: 1) ipOverride param, 2) ip.txt file, 3) prompts user
-func GetAdapterIP(appDir string, ipOverride string) (string, error) {
-	ipFilePath := filepath.Join(appDir, "ip.txt")
-
-	// 1. Use override if provided (e.g., from -ip flag)
-	if ipOverride != "" {
-		if net.ParseIP(ipOverride) != nil {
-			fmt.Printf("⚡ Using IP from command line: %s\n", ipOverride)
-			return ipOverride, nil
-		}
-		return "", fmt.Errorf("invalid IP address provided: %s", ipOverride)
-	}
-
-	// 2. Try to read from ip.txt
-	if data, err := os.ReadFile(ipFilePath); err == nil {
-		ip := strings.TrimSpace(string(data))
-		if net.ParseIP(ip) != nil {
-			return ip, nil
-		}
-	}
-
-	// 3. List interfaces and prompt user
-	interfaces, err := ListInterfaces()
-	if err != nil {
-		return "", err
-	}
-
-	if len(interfaces) == 0 {
-		return "", fmt.Errorf("no network interfaces found")
-	}
-
-	fmt.Println("\nPlease select the adapter used to connect to the Internet:")
-	for i, iface := range interfaces {
-		fmt.Printf("  %d. %s\t ip address: %s\n", i+1, iface.Name, iface.Address)
-	}
-	fmt.Println()
-
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Print("Enter the adapter number: ")
-		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input)
-
-		idx, err := strconv.Atoi(input)
-		if err != nil || idx < 1 || idx > len(interfaces) {
-			fmt.Println("Invalid input, please try again.\n")
-			continue
-		}
-
-		selected := interfaces[idx-1]
-		fmt.Printf("\nYou have selected \"%s - %s\"\n\n", selected.Name, selected.Address)
-
-		// Save to ip.txt
-		if err := os.WriteFile(ipFilePath, []byte(selected.Address), 0644); err != nil {
-			fmt.Println("Warning: Error while saving the IP address.")
-		}
-
-		return selected.Address, nil
-	}
+	ctx      context.Context
+	cancel   context.CancelFunc
 }
 
 // New creates a new Capturer for the given IP address
-// ipOverride can be empty to use ip.txt or interactive prompt
-func New(appDir string, ipOverride string) (*Capturer, error) {
-	ip, err := GetAdapterIP(appDir, ipOverride)
+func New(ctx context.Context, appDir string, ipOverride string) (*Capturer, error) {
+	ip, device, err := resolveAdapter(appDir, ipOverride)
 	if err != nil {
 		return nil, err
 	}
 
-	device, err := FindDeviceByIP(ip)
+	handle, err := openDevice(device)
 	if err != nil {
-		// IP not found, prompt again (only if no override was provided)
-		if ipOverride != "" {
-			return nil, fmt.Errorf("adapter with IP %s not found", ip)
-		}
-		fmt.Printf("Adapter with IP %s not found. Please select a new adapter.\n", ip)
-		ip, err = GetAdapterIP(appDir, "")
-		if err != nil {
-			return nil, err
-		}
-		device, err = FindDeviceByIP(ip)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
-	fmt.Printf("Using adapter IP: %s\n", ip)
-
-	// Open the device
-	handle, err := pcap.OpenLive(device, SnapLen, Promiscuous, pcap.BlockForever)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open device: %w", err)
-	}
-
-	// Set BPF filter for Albion port
-	filter := fmt.Sprintf("udp and (dst port %d or src port %d)", AlbionPort, AlbionPort)
-	if err := handle.SetBPFFilter(filter); err != nil {
-		handle.Close()
-		return nil, fmt.Errorf("failed to set BPF filter: %w", err)
-	}
-
+	ctx, cancel := context.WithCancel(ctx)
 	return &Capturer{
 		handle: handle,
-		iface: NetworkInterface{
-			Address: ip,
-			Device:  device,
-		},
-		appDir: appDir,
+		iface:  NetworkInterface{Address: ip, Device: device},
+		ctx:    ctx,
+		cancel: cancel,
 	}, nil
 }
 
@@ -201,27 +70,218 @@ func (c *Capturer) OnPacket(handler PacketHandler) {
 func (c *Capturer) Start() error {
 	packetSource := gopacket.NewPacketSource(c.handle, c.handle.LinkType())
 
-	for packet := range packetSource.Packets() {
-		// Extract UDP layer
-		udpLayer := packet.Layer(layers.LayerTypeUDP)
-		if udpLayer == nil {
-			continue
-		}
-
-		udp, _ := udpLayer.(*layers.UDP)
-		payload := udp.Payload
-
-		if len(payload) > 0 && c.onPacket != nil {
-			c.onPacket(payload)
+	for {
+		select {
+		case <-c.ctx.Done():
+			return c.ctx.Err()
+		case packet, ok := <-packetSource.Packets():
+			if !ok {
+				return nil
+			}
+			c.processPacket(packet)
 		}
 	}
-
-	return nil
 }
 
 // Close stops the capture
 func (c *Capturer) Close() {
+	if c.cancel != nil {
+		c.cancel()
+	}
 	if c.handle != nil {
 		c.handle.Close()
+	}
+}
+
+func (c *Capturer) processPacket(packet gopacket.Packet) {
+	udpLayer := packet.Layer(layers.LayerTypeUDP)
+	if udpLayer == nil {
+		return
+	}
+
+	udp, ok := udpLayer.(*layers.UDP)
+	if !ok || len(udp.Payload) == 0 || c.onPacket == nil {
+		return
+	}
+
+	c.onPacket(udp.Payload)
+}
+
+// resolveAdapter gets the IP and device name, with retry logic
+func resolveAdapter(appDir, ipOverride string) (ip, device string, err error) {
+	ip, err = getAdapterIP(appDir, ipOverride)
+	if err != nil {
+		return "", "", err
+	}
+
+	device, err = findDeviceByIP(ip)
+	if err == nil {
+		fmt.Printf("Using adapter IP: %s\n", ip)
+		return ip, device, nil
+	}
+
+	// Retry only if no override was provided
+	if ipOverride != "" {
+		return "", "", fmt.Errorf("adapter with IP %s not found", ip)
+	}
+
+	fmt.Printf("Adapter with IP %s not found. Please select a new adapter.\n", ip)
+	ip, err = getAdapterIP(appDir, "")
+	if err != nil {
+		return "", "", err
+	}
+
+	device, err = findDeviceByIP(ip)
+	if err != nil {
+		return "", "", err
+	}
+
+	fmt.Printf("Using adapter IP: %s\n", ip)
+	return ip, device, nil
+}
+
+func openDevice(device string) (*pcap.Handle, error) {
+	handle, err := pcap.OpenLive(device, SnapLen, Promiscuous, pcap.BlockForever)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open device: %w", err)
+	}
+
+	filter := fmt.Sprintf("udp and (dst port %d or src port %d)", AlbionPort, AlbionPort)
+	if err := handle.SetBPFFilter(filter); err != nil {
+		handle.Close()
+		return nil, fmt.Errorf("failed to set BPF filter: %w", err)
+	}
+
+	return handle, nil
+}
+
+// getAdapterIP reads IP from: 1) override, 2) ip.txt, 3) prompt
+func getAdapterIP(appDir, ipOverride string) (string, error) {
+	if ip := tryIPOverride(ipOverride); ip != "" {
+		return ip, nil
+	}
+
+	if ip := tryIPFile(appDir); ip != "" {
+		return ip, nil
+	}
+
+	return promptForInterface(appDir)
+}
+
+func tryIPOverride(ipOverride string) string {
+	if ipOverride == "" {
+		return ""
+	}
+	if net.ParseIP(ipOverride) == nil {
+		return ""
+	}
+	fmt.Printf("Using IP from command line: %s\n", ipOverride)
+	return ipOverride
+}
+
+func tryIPFile(appDir string) string {
+	data, err := os.ReadFile(filepath.Join(appDir, "ip.txt"))
+	if err != nil {
+		return ""
+	}
+	ip := strings.TrimSpace(string(data))
+	if net.ParseIP(ip) == nil {
+		return ""
+	}
+	return ip
+}
+
+func promptForInterface(appDir string) (string, error) {
+	interfaces, err := listInterfaces()
+	if err != nil {
+		return "", err
+	}
+	if len(interfaces) == 0 {
+		return "", fmt.Errorf("no network interfaces found")
+	}
+
+	printInterfaces(interfaces)
+	return selectInterface(interfaces, appDir)
+}
+
+func listInterfaces() ([]NetworkInterface, error) {
+	devices, err := pcap.FindAllDevs()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list devices: %w", err)
+	}
+
+	var interfaces []NetworkInterface
+	for _, device := range devices {
+		if iface := firstIPv4Interface(device); iface != nil {
+			interfaces = append(interfaces, *iface)
+		}
+	}
+	return interfaces, nil
+}
+
+func firstIPv4Interface(device pcap.Interface) *NetworkInterface {
+	for _, addr := range device.Addresses {
+		if ip4 := addr.IP.To4(); ip4 != nil {
+			return &NetworkInterface{
+				Name:    device.Description,
+				Address: ip4.String(),
+				Device:  device.Name,
+			}
+		}
+	}
+	return nil
+}
+
+func findDeviceByIP(ip string) (string, error) {
+	devices, err := pcap.FindAllDevs()
+	if err != nil {
+		return "", fmt.Errorf("failed to list devices: %w", err)
+	}
+
+	for _, device := range devices {
+		for _, addr := range device.Addresses {
+			if addr.IP.String() == ip {
+				return device.Name, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no device found with IP: %s", ip)
+}
+
+func printInterfaces(interfaces []NetworkInterface) {
+	fmt.Println("\nPlease select the adapter used to connect to the Internet:")
+	for i, iface := range interfaces {
+		fmt.Printf("  %d. %s\t ip address: %s\n", i+1, iface.Name, iface.Address)
+	}
+	fmt.Println()
+}
+
+func selectInterface(interfaces []NetworkInterface, appDir string) (string, error) {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("Enter the adapter number: ")
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return "", fmt.Errorf("failed to read input: %w", err)
+		}
+
+		idx, err := strconv.Atoi(strings.TrimSpace(input))
+		if err != nil || idx < 1 || idx > len(interfaces) {
+			fmt.Println("Invalid input, please try again.")
+			continue
+		}
+
+		selected := interfaces[idx-1]
+		fmt.Printf("\nYou have selected \"%s - %s\"\n\n", selected.Name, selected.Address)
+		saveIPToFile(appDir, selected.Address)
+		return selected.Address, nil
+	}
+}
+
+func saveIPToFile(appDir, ip string) {
+	path := filepath.Join(appDir, "ip.txt")
+	if err := os.WriteFile(path, []byte(ip), 0644); err != nil {
+		fmt.Println("Warning: Error while saving the IP address.")
 	}
 }
