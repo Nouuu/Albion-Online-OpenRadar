@@ -6,6 +6,10 @@
 [![GitHub issues](https://img.shields.io/github/issues-raw/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=Issues)](https://github.com/Nouuu/Albion-Online-ZQRadar/issues)
 [![GitHub Repo stars](https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=for-the-badge)]()
 
+<p align="center">
+  <img src="docs/images/OpenRadar.gif" alt="OpenRadar TUI Dashboard" width="700">
+</p>
+
 ---
 
 ## About
@@ -14,12 +18,19 @@
 
 ### v2.0 Highlights
 
+#### Backend
 - **Native Go Backend** - Single binary (~95 MB) with all assets embedded
 - **No External Dependencies** - Just Npcap (Windows) or libpcap (Linux)
 - **Massive Size Reduction** - From ~500 MB (Node.js) to ~95 MB
 - **Faster Startup** - No runtime extraction needed
 - **No Injection** - Lower risk of detection/banning
-- **Real-time Map** - Live tracking with background map overlay
+
+#### UI
+- **Modern Dark Theme** - Tailwind CSS v4 with custom color palette
+- **HTMX Navigation** - Seamless page transitions without reload
+- **Dynamic Radar** - Adjustable size (300-800px) and zoom (0.5x-2.0x)
+- **Player Color Coding** - Green (passive), Orange (faction), Red (hostile)
+- **TUI Dashboard** - Real-time stats in terminal
 
 ---
 
@@ -189,7 +200,8 @@ make lint             # Lint Go code
 ### Architecture
 
 - **Backend**: Native Go with embedded assets
-- **Frontend**: Vanilla JavaScript with Alpine.js
+- **Frontend**: HTMX + Alpine.js + Tailwind CSS v4
+- **Templates**: Go html/template with SSR
 - **Protocol**: Photon Protocol16 deserialization
 - **Capture**: gopacket/pcap for packet capture
 
