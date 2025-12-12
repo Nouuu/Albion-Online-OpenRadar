@@ -134,7 +134,6 @@ func (s *HTTPServer) setupRoutes() {
 		"/resources":  "resources",
 		"/enemies":    "enemies",
 		"/chests":     "chests",
-		"/map":        "map",
 		"/ignorelist": "ignorelist",
 		"/settings":   "settings",
 	}
@@ -181,7 +180,6 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 		"resources":  "Resources",
 		"enemies":    "Enemies",
 		"chests":     "Chests",
-		"map":        "Map",
 		"ignorelist": "Ignore List",
 		"settings":   "Settings",
 	}
