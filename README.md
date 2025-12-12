@@ -65,28 +65,44 @@
 
 ### Linux
 
-1. **Install libpcap**:
+1. **Install dependencies**:
    ```bash
    # Ubuntu/Debian
-   sudo apt-get install libpcap-dev
+   sudo apt-get install libpcap0.8 libcap2-bin
 
    # Fedora/RHEL
-   sudo dnf install libpcap-devel
+   sudo dnf install libpcap libcap
+
+   # Arch Linux
+   sudo pacman -S libpcap libcap
    ```
 
-2. **Download & Configure**:
+2. **Download & Make executable**:
    ```bash
    chmod +x OpenRadar-linux
-
-   # Option A: Run as root
-   sudo ./OpenRadar-linux
-
-   # Option B: Grant capabilities (recommended)
-   sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
-   ./OpenRadar-linux
    ```
 
-3. Open **http://localhost:5001** in your browser
+3. **Grant capture permissions** (choose ONE option):
+
+   **Option A** - Run as root (simple):
+   ```bash
+   sudo ./OpenRadar-linux
+   ```
+
+   **Option B** - Grant capabilities (recommended, allows running as normal user):
+   ```bash
+   # Grant network capture capabilities to the executable
+   sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
+
+   # Verify capabilities were applied (optional)
+   getcap ./OpenRadar-linux
+
+   # Run as normal user
+   ./OpenRadar-linux
+   ```
+   > **Note**: Capabilities are removed if the file is modified or moved. Re-run `setcap` after updates.
+
+4. Open **http://localhost:5001** in your browser
 
 ### Command-line Options
 

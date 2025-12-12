@@ -93,6 +93,11 @@ func (c *Capturer) Close() {
 	}
 }
 
+// AdapterIP returns the IP address of the network adapter being used
+func (c *Capturer) AdapterIP() string {
+	return c.iface.Address
+}
+
 func (c *Capturer) processPacket(packet gopacket.Packet) {
 	udpLayer := packet.Layer(layers.LayerTypeUDP)
 	if udpLayer == nil {

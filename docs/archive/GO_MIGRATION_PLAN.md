@@ -10,7 +10,7 @@
 ### Why Go?
 
 - Single executable (no node_modules)
-- Native cross-compilation (Linux/Windows/macOS)
+- Native cross-compilation (Linux/Windows)
 - gopacket/pcap mature and well documented
 - Native performance, no JS runtime
 - //go:embed to include static assets

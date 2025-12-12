@@ -7,16 +7,18 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
+	"runtime"
 	"sync"
-	"syscall"
+	"sync/atomic"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	assets "github.com/nospy/albion-openradar"
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
 	"github.com/nospy/albion-openradar/internal/server"
+	"github.com/nospy/albion-openradar/internal/ui"
 )
 
 // Version info (injected at build time via ldflags)
@@ -39,11 +41,16 @@ type App struct {
 	httpServer *server.HTTPServer
 	wsHandler  *server.WebSocketHandler
 	capturer   *capture.Capturer
-	// Packet statistics
-	packetStats struct {
-		processed uint64
-		errors    uint64
-	}
+	program    *tea.Program
+	adapterIP  string
+
+	// Packet statistics (atomic for thread safety)
+	packetsProcessed uint64
+	packetsErrors    uint64
+
+	// Server status (atomic for thread safety)
+	httpRunning    int32
+	captureRunning int32
 }
 
 func main() {
@@ -61,7 +68,7 @@ func main() {
 	}
 
 	// Initialize capture first (may prompt for interface selection)
-	// This ensures the prompt isn't mixed with server startup messages
+	// This happens BEFORE the dashboard starts
 	ctx, cancel := context.WithCancel(context.Background())
 	capturer, err := capture.New(ctx, appDir, cfg.ipAddr)
 	if err != nil {
@@ -69,12 +76,38 @@ func main() {
 		exitWithError("Failed to create capturer", err)
 	}
 
-	// Now that interface is selected, show all startup messages
-	logger.PrintInfo("APP", "Directory: %s", appDir)
-
+	// Create the app
 	app := newApp(appDir, cfg, ctx, cancel, capturer)
-	app.start()
-	app.waitForShutdown()
+	app.adapterIP = capturer.AdapterIP()
+
+	// Create dashboard
+	dashboard := ui.NewDashboard(Version, serverPort, cfg.devMode, app.adapterIP)
+	app.program = tea.NewProgram(dashboard, tea.WithAltScreen())
+
+	// Set up log callback to send logs to dashboard
+	logger.SetLogCallback(func(level, tag, message string) {
+		app.program.Send(ui.LogMsg{
+			Level:   level,
+			Tag:     tag,
+			Message: message,
+		})
+	})
+
+	// Start servers in background
+	go app.startServers()
+
+	// Start stats updater
+	go app.updateStats()
+
+	// Run dashboard (blocking)
+	if _, err := app.program.Run(); err != nil {
+		logger.ClearLogCallback()
+		fmt.Printf("Dashboard error: %v\n", err)
+	}
+
+	// Cleanup
+	logger.ClearLogCallback()
+	app.shutdown()
 }
 
 // Config holds command-line configuration
@@ -105,8 +138,6 @@ func exitWithError(msg string, err error) {
 
 func newApp(appDir string, cfg Config, ctx context.Context, cancel context.CancelFunc, capturer *capture.Capturer) *App {
 	log := logger.New("./logs")
-
-	// Create WebSocket handler first (shared between HTTP server and packet processor)
 	wsHandler := server.NewWebSocketHandler(log)
 
 	app := &App{
@@ -145,37 +176,82 @@ func createHTTPServer(
 	)
 }
 
-func (app *App) start() {
-	app.startServer("HTTP", app.httpServer.Start)
-	app.startServer("Capture", app.capturer.Start)
+func (app *App) startServers() {
+	// Log startup messages
+	logger.PrintInfo("APP", "Starting servers...")
 
-	fmt.Println()
-	logger.PrintSuccess("HTTP", "Server: http://localhost:%d", serverPort)
-	logger.PrintSuccess("WS", "WebSocket: ws://localhost:%d/ws", serverPort)
-	logger.PrintInfo("PKT", "Listening for Albion packets on UDP port 5056...")
-	fmt.Println()
-	fmt.Println("Press Ctrl+C to stop")
-	fmt.Println("--------------------")
-}
-
-func (app *App) startServer(name string, startFn func() error) {
+	// Start HTTP server
 	app.wg.Add(1)
 	go func() {
 		defer app.wg.Done()
-		if err := startFn(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
+		atomic.StoreInt32(&app.httpRunning, 1)
+		if err := app.httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
 			app.ctx.Err() == nil {
-			logger.PrintError(name, "Error: %v", err)
+			logger.PrintError("HTTP", "Error: %v", err)
 		}
+		atomic.StoreInt32(&app.httpRunning, 0)
 	}()
+
+	// Start packet capture
+	app.wg.Add(1)
+	go func() {
+		defer app.wg.Done()
+		atomic.StoreInt32(&app.captureRunning, 1)
+		if err := app.capturer.Start(); err != nil && app.ctx.Err() == nil {
+			logger.PrintError("CAP", "Error: %v", err)
+		}
+		atomic.StoreInt32(&app.captureRunning, 0)
+	}()
+
+	// Give servers a moment to start
+	time.Sleep(100 * time.Millisecond)
+
+	logger.PrintSuccess("HTTP", "Server: http://localhost:%d", serverPort)
+	logger.PrintSuccess("WS", "WebSocket: ws://localhost:%d/ws", serverPort)
+	logger.PrintInfo("PKT", "Listening for Albion packets on UDP port 5056...")
+	logger.PrintInfo("NET", "Adapter: %s", app.adapterIP)
+}
+
+func (app *App) updateStats() {
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-app.ctx.Done():
+			return
+		case <-ticker.C:
+			if app.program != nil {
+				var m runtime.MemStats
+				runtime.ReadMemStats(&m)
+
+				app.program.Send(ui.StatsMsg{
+					Packets:    atomic.LoadUint64(&app.packetsProcessed),
+					Errors:     atomic.LoadUint64(&app.packetsErrors),
+					WsClients:  app.wsHandler.ClientCount(),
+					MemoryMB:   float64(m.Alloc) / 1024 / 1024,
+					Goroutines: runtime.NumGoroutine(),
+				})
+
+				// Send status update
+				app.program.Send(ui.StatusMsg{
+					HTTPRunning:    atomic.LoadInt32(&app.httpRunning) == 1,
+					WSRunning:      app.wsHandler.ClientCount() >= 0, // WS is always running if server is up
+					CaptureRunning: atomic.LoadInt32(&app.captureRunning) == 1,
+				})
+			}
+		}
+	}
 }
 
 func (app *App) handlePacket(payload []byte) {
 	packet, err := photon.ParsePacket(payload)
 	if err != nil {
-		app.packetStats.errors++
+		atomic.AddUint64(&app.packetsErrors, 1)
+		errCount := atomic.LoadUint64(&app.packetsErrors)
 		// Log only every 100 errors to avoid spam
-		if app.packetStats.errors%100 == 1 {
-			logger.PrintWarn("PKT", "Parsing errors: %d (latest: %v)", app.packetStats.errors, err)
+		if errCount%100 == 1 {
+			logger.PrintWarn("PKT", "Parsing errors: %d (latest: %v)", errCount, err)
 		}
 		return
 	}
@@ -183,7 +259,7 @@ func (app *App) handlePacket(payload []byte) {
 		return
 	}
 
-	app.packetStats.processed++
+	atomic.AddUint64(&app.packetsProcessed, 1)
 	for _, cmd := range packet.Commands {
 		app.processCommand(cmd)
 	}
@@ -210,17 +286,9 @@ func (app *App) processCommand(cmd *photon.Command) {
 	}
 }
 
-func (app *App) waitForShutdown() {
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-	<-sigChan
-
-	fmt.Println()
-	logger.PrintInfo("APP", "Shutting down gracefully...")
-	app.shutdown()
-}
-
 func (app *App) shutdown() {
+	logger.PrintInfo("APP", "Shutting down gracefully...")
+
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
@@ -231,10 +299,7 @@ func (app *App) shutdown() {
 		logger.PrintError("HTTP", "Shutdown error: %v", err)
 	}
 
-	app.waitWithTimeout(ctx)
-}
-
-func (app *App) waitWithTimeout(ctx context.Context) {
+	// Wait for goroutines
 	done := make(chan struct{})
 	go func() {
 		app.wg.Wait()
