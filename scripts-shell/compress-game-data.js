@@ -5,12 +5,16 @@ import {promisify} from 'util';
 
 const gzip = promisify(zlib.gzip);
 
-// Get target directory from command line args or use default
-const targetDir = process.argv[2] || 'public/ao-bin-dumps';
+// Get target directory and options from command line args
+const args = process.argv.slice(2);
+const deleteOriginals = args.includes('--delete-originals');
+const targetDir = args.find(arg => !arg.startsWith('--')) || 'public/ao-bin-dumps';
 const MIN_SIZE_FOR_COMPRESSION = 100 * 1024; // 100 KB - only compress files larger than this
 
 console.log('\n🗜️  Game Data Compression Script\n');
-console.log('📁 Target directory:', targetDir, '\n');
+console.log('📁 Target directory:', targetDir);
+if (deleteOriginals) console.log('🗑️  Delete originals: ENABLED');
+console.log('');
 
 /**
  * Compress a single file to .gz
@@ -102,11 +106,19 @@ async function compressGameData() {
             if (result === null) {
                 console.log('⏭️  (already up to date)');
                 skippedCount++;
+                // Still delete original if option is set
+                if (deleteOriginals && fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
             } else {
                 console.log(`✓ ${formatSize(result.compressed)} (saved ${result.ratio})`);
                 totalOriginal += result.original;
                 totalCompressed += result.compressed;
                 compressedCount++;
+                // Delete original after successful compression
+                if (deleteOriginals) {
+                    fs.unlinkSync(filePath);
+                }
             }
         } catch (error) {
             console.log(`✗ Failed: ${error.message}`);

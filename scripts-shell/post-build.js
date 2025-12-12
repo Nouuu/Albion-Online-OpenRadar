@@ -4,9 +4,14 @@ import archiver from 'archiver';
 import {execSync} from 'child_process';
 
 const DIST_DIR = 'dist';
-const assetsToCopy = ['images', 'sounds', 'views', 'scripts', 'public'];
+// Check if --embed mode (standalone exe with all assets embedded)
+const embedMode = process.argv.includes('--embed');
+const assetsToCopy = embedMode ? [] : ['images', 'sounds', 'views', 'scripts', 'public'];
 
 console.log('\n📦 Post-build: Checking assets...\n');
+if (embedMode) {
+    console.log('📦 Embed mode: Assets are embedded in the executable\n');
+}
 
 // Check if build was created
 if (!fs.existsSync(DIST_DIR)) {
@@ -166,72 +171,80 @@ function copyRecursiveSync(src, dest) {
     }
 }
 
-console.log('\n📁 Copying assets next to executable...\n');
+// Skip asset copying and compression in embed mode (assets are in the exe)
+if (!embedMode) {
+    console.log('\n📁 Copying assets next to executable...\n');
 
-for (const asset of assetsToCopy) {
-    const srcPath = path.join(asset);
-    const destPath = path.join(DIST_DIR, asset);
+    for (const asset of assetsToCopy) {
+        const srcPath = path.join(asset);
+        const destPath = path.join(DIST_DIR, asset);
 
-    try {
-        copyRecursiveSync(srcPath, destPath);
-        console.log(`✓ ${asset}/ copied`);
-    } catch (err) {
-        console.error(`✗ Error copying ${asset}/:`, err.message);
-    }
-}
-
-// 🗜️ Compress game data files in dist/ for production
-console.log('\n🗜️  Compressing game data files in dist/...\n');
-const aoBinDumpsPath = path.join(DIST_DIR, 'public', 'ao-bin-dumps');
-if (fs.existsSync(aoBinDumpsPath)) {
-    try {
-        // Run compression script targeting dist/public/ao-bin-dumps/
-        execSync(`node scripts-shell/compress-game-data.js "${aoBinDumpsPath}"`, {stdio: 'inherit'});
-        console.log('✅ Game data compression complete!\n');
-    } catch (error) {
-        console.warn('⚠️  Warning: Game data compression failed');
-        console.warn('   Continuing without pre-compressed files\n');
-    }
-}
-
-// 🧹 Clean up: Remove original JSON/XML files that have .gz equivalents
-console.log('\n🧹 Optimizing distribution size...\n');
-if (fs.existsSync(aoBinDumpsPath)) {
-    const files = fs.readdirSync(aoBinDumpsPath);
-    let removedSize = 0;
-    let removedCount = 0;
-
-    for (const file of files) {
-        const ext = path.extname(file).toLowerCase();
-        if (ext === '.json' || ext === '.xml') {
-            const gzFile = `${file}.gz`;
-            const filePath = path.join(aoBinDumpsPath, file);
-            const gzPath = path.join(aoBinDumpsPath, gzFile);
-
-            // If .gz exists, remove the original file
-            if (fs.existsSync(gzPath)) {
-                const stats = fs.statSync(filePath);
-                removedSize += stats.size;
-                fs.unlinkSync(filePath);
-                removedCount++;
-                console.log(`  ✓ Removed ${file} (${(stats.size / 1024 / 1024).toFixed(1)} MB - .gz version exists)`);
-            }
+        try {
+            copyRecursiveSync(srcPath, destPath);
+            console.log(`✓ ${asset}/ copied`);
+        } catch (err) {
+            console.error(`✗ Error copying ${asset}/:`, err.message);
         }
     }
 
-    if (removedCount > 0) {
-        console.log(`\n✅ Removed ${removedCount} original file(s), saved ${(removedSize / 1024 / 1024).toFixed(1)} MB in distribution!`);
-    } else {
-        console.log('  ℹ️  No files to remove (no .gz versions found)');
+    // 🗜️ Compress game data files in dist/ for production
+    console.log('\n🗜️  Compressing game data files in dist/...\n');
+    const aoBinDumpsPath = path.join(DIST_DIR, 'public', 'ao-bin-dumps');
+    if (fs.existsSync(aoBinDumpsPath)) {
+        try {
+            // Run compression script targeting dist/public/ao-bin-dumps/
+            execSync(`node scripts-shell/compress-game-data.js "${aoBinDumpsPath}"`, {stdio: 'inherit'});
+            console.log('✅ Game data compression complete!\n');
+        } catch (error) {
+            console.warn('⚠️  Warning: Game data compression failed');
+            console.warn('   Continuing without pre-compressed files\n');
+        }
     }
-}
 
-console.log('\n✓ Assets copied and optimized!\n');
-console.log('Files in dist/:');
-console.log('  - Executables');
-console.log('  - README files');
-for (const asset of assetsToCopy) {
-    console.log(`  - ${asset}/`);
+    // 🧹 Clean up: Remove original JSON/XML files that have .gz equivalents
+    console.log('\n🧹 Optimizing distribution size...\n');
+    if (fs.existsSync(aoBinDumpsPath)) {
+        const files = fs.readdirSync(aoBinDumpsPath);
+        let removedSize = 0;
+        let removedCount = 0;
+
+        for (const file of files) {
+            const ext = path.extname(file).toLowerCase();
+            if (ext === '.json' || ext === '.xml') {
+                const gzFile = `${file}.gz`;
+                const filePath = path.join(aoBinDumpsPath, file);
+                const gzPath = path.join(aoBinDumpsPath, gzFile);
+
+                // If .gz exists, remove the original file
+                if (fs.existsSync(gzPath)) {
+                    const stats = fs.statSync(filePath);
+                    removedSize += stats.size;
+                    fs.unlinkSync(filePath);
+                    removedCount++;
+                    console.log(`  ✓ Removed ${file} (${(stats.size / 1024 / 1024).toFixed(1)} MB - .gz version exists)`);
+                }
+            }
+        }
+
+        if (removedCount > 0) {
+            console.log(`\n✅ Removed ${removedCount} original file(s), saved ${(removedSize / 1024 / 1024).toFixed(1)} MB in distribution!`);
+        } else {
+            console.log('  ℹ️  No files to remove (no .gz versions found)');
+        }
+    }
+
+    console.log('\n✓ Assets copied and optimized!\n');
+    console.log('Files in dist/:');
+    console.log('  - Executables');
+    console.log('  - README files');
+    for (const asset of assetsToCopy) {
+        console.log(`  - ${asset}/`);
+    }
+} else {
+    console.log('\n✓ Embed mode: Standalone executable ready!\n');
+    console.log('Files in dist/:');
+    console.log('  - Executables (with embedded assets)');
+    console.log('  - README files');
 }
 
 console.log('✓ Post-build completed!\n');

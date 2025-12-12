@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	assets "github.com/nospy/albion-openradar"
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
@@ -18,6 +20,10 @@ const (
 )
 
 func main() {
+	// Parse flags
+	devMode := flag.Bool("dev", false, "Run in development mode (read files from disk)")
+	flag.Parse()
+
 	fmt.Println("🎯 OpenRadar Go v2.0")
 	fmt.Println("====================")
 
@@ -41,7 +47,14 @@ func main() {
 	}()
 
 	// Create HTTP server
-	httpServer := server.NewHTTPServer(httpPort, appDir, log)
+	var httpServer *server.HTTPServer
+	if *devMode {
+		fmt.Println("🔧 Development mode: reading files from disk")
+		httpServer = server.NewHTTPServerDev(httpPort, appDir, log)
+	} else {
+		fmt.Println("📦 Production mode: using embedded assets")
+		httpServer = server.NewHTTPServer(httpPort, assets.Images, assets.Scripts, assets.Public, assets.Sounds, log)
+	}
 	go func() {
 		if err := httpServer.Start(); err != nil {
 			fmt.Printf("❌ HTTP server error: %v\n", err)

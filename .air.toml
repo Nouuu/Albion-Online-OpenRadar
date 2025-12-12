@@ -1,36 +1,16 @@
 # .air.toml - Configuration Air pour hot-reload Go
-# Documentation: https://github.com/air-verse/air
-# Install: go install github.com/air-verse/air@latest
-
 root = "."
 tmp_dir = "tmp"
 
 [build]
-  # Build command
   cmd = "go build -o ./tmp/main.exe ./cmd/radar"
-  # Binary to run
   bin = "./tmp/main.exe"
-  # Delay before rebuild (ms)
+  args_bin = ["-dev"]
   delay = 500
-  # File extensions to watch
-  include_ext = ["go"]
-  # Directories to exclude
-  exclude_dir = ["tmp", "dist", "node_modules", "public", "scripts", "views", "images", "sounds", "logs", "work"]
-  # Regex patterns to exclude
-  exclude_regex = ["_test\\.go$"]
-  # Stop on build error
+  include_ext = ["go", "toml"]
+  include_dir = ["cmd", "internal"]
+  exclude_dir = ["tmp"]
   stop_on_error = false
 
-[log]
-  # Show timestamp
-  time = false
-
-[color]
-  build = "yellow"
-  main = "magenta"
-  runner = "green"
-  watcher = "cyan"
-
 [misc]
-  # Clean tmp on exit
   clean_on_exit = true

@@ -2,33 +2,61 @@ package server
 
 import (
 	"compress/gzip"
+	"embed"
 	"encoding/json"
 	"fmt"
-	"io"
+	"io/fs"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/nospy/albion-openradar/internal/logger"
 )
 
-// HTTPServer serves static files
+// HTTPServer serves static files from embedded assets or filesystem
 type HTTPServer struct {
 	port   int
-	appDir string
 	mux    *http.ServeMux
 	logger *logger.Logger
+	// Filesystems (can be embed.FS or os.DirFS)
+	images  fs.FS
+	scripts fs.FS
+	public  fs.FS
+	sounds  fs.FS
 }
 
-// NewHTTPServer creates a new HTTP server
-func NewHTTPServer(port int, appDir string, log *logger.Logger) *HTTPServer {
+// NewHTTPServer creates a new HTTP server with embedded assets (production mode)
+func NewHTTPServer(port int, images, scripts, public, sounds embed.FS, log *logger.Logger) *HTTPServer {
+	// Extract subdirectories from embed.FS (they include the folder name)
+	imagesFS, _ := fs.Sub(images, "images")
+	scriptsFS, _ := fs.Sub(scripts, "scripts")
+	publicFS, _ := fs.Sub(public, "public")
+	soundsFS, _ := fs.Sub(sounds, "sounds")
+
 	s := &HTTPServer{
-		port:   port,
-		appDir: appDir,
-		mux:    http.NewServeMux(),
-		logger: log,
+		port:    port,
+		mux:     http.NewServeMux(),
+		logger:  log,
+		images:  imagesFS,
+		scripts: scriptsFS,
+		public:  publicFS,
+		sounds:  soundsFS,
+	}
+	s.setupRoutes()
+	return s
+}
+
+// NewHTTPServerDev creates a new HTTP server reading from filesystem (dev mode)
+func NewHTTPServerDev(port int, appDir string, log *logger.Logger) *HTTPServer {
+	s := &HTTPServer{
+		port:    port,
+		mux:     http.NewServeMux(),
+		logger:  log,
+		images:  os.DirFS(appDir + "/images"),
+		scripts: os.DirFS(appDir + "/scripts"),
+		public:  os.DirFS(appDir + "/public"),
+		sounds:  os.DirFS(appDir + "/sounds"),
 	}
 	s.setupRoutes()
 	return s
@@ -43,35 +71,47 @@ func (s *HTTPServer) setupRoutes() {
 	// SPA routes - serve index.html for all SPA paths
 	spaRoutes := []string{"/", "/home", "/players", "/resources", "/enemies", "/chests", "/map", "/ignorelist", "/settings", "/spa"}
 	for _, route := range spaRoutes {
-		route := route // capture for closure
 		s.mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, filepath.Join(s.appDir, "public", "index.html"))
+			s.serveFile(w, r, s.public, "index.html")
 		})
 	}
 
 	// Radar overlay
 	s.mux.HandleFunc("/radar-overlay", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filepath.Join(s.appDir, "public", "radar-overlay.html"))
+		s.serveFile(w, r, s.public, "radar-overlay.html")
 	})
 
 	// Static file handlers with caching
-	s.mux.Handle("/images/", s.staticHandler("/images/", filepath.Join(s.appDir, "images"), imageCacheDuration))
-	s.mux.Handle("/scripts/", s.staticHandler("/scripts/", filepath.Join(s.appDir, "scripts"), 0))
-	s.mux.Handle("/sounds/", s.staticHandler("/sounds/", filepath.Join(s.appDir, "sounds"), 0))
-	s.mux.Handle("/public/", s.staticHandler("/public/", filepath.Join(s.appDir, "public"), 0))
-	s.mux.Handle("/pages/", s.staticHandler("/pages/", filepath.Join(s.appDir, "public", "pages"), 0))
+	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration))
+	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0))
+	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0))
+	s.mux.Handle("/public/", s.fsHandler("/public/", s.public, 0))
+	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0))
 
 	// ao-bin-dumps with gzip support
-	s.mux.Handle("/ao-bin-dumps/", s.gzipStaticHandler("/ao-bin-dumps/", filepath.Join(s.appDir, "public", "ao-bin-dumps"), dataCacheDuration))
+	s.mux.Handle("/ao-bin-dumps/", s.gzipFSHandler("/ao-bin-dumps/", s.public, "ao-bin-dumps", dataCacheDuration))
 
 	// API endpoints
 	s.mux.HandleFunc("/api/settings/server-logs", s.handleServerLogs)
 }
 
-// staticHandler creates a file server with optional caching
-func (s *HTTPServer) staticHandler(prefix, dir string, cacheDuration time.Duration) http.Handler {
-	fs := http.FileServer(http.Dir(dir))
-	handler := http.StripPrefix(prefix, fs)
+// serveFile serves a single file from fs.FS
+func (s *HTTPServer) serveFile(w http.ResponseWriter, r *http.Request, fsys fs.FS, name string) {
+	data, err := fs.ReadFile(fsys, name)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	// Set content type based on extension
+	if strings.HasSuffix(name, ".html") {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	}
+	w.Write(data)
+}
+
+// fsHandler creates a file server handler from fs.FS
+func (s *HTTPServer) fsHandler(prefix string, fsys fs.FS, cacheDuration time.Duration) http.Handler {
+	handler := http.StripPrefix(prefix, http.FileServer(http.FS(fsys)))
 
 	if cacheDuration > 0 {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -79,24 +119,34 @@ func (s *HTTPServer) staticHandler(prefix, dir string, cacheDuration time.Durati
 			handler.ServeHTTP(w, r)
 		})
 	}
-
 	return handler
 }
 
-// gzipStaticHandler serves static files with gzip support
-func (s *HTTPServer) gzipStaticHandler(prefix, dir string, cacheDuration time.Duration) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get the requested file path
-		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
-		filePath := filepath.Join(dir, urlPath)
+// fsHandlerSub creates a file server handler from a subdirectory of fs.FS
+func (s *HTTPServer) fsHandlerSub(prefix string, fsys fs.FS, subdir string, cacheDuration time.Duration) http.Handler {
+	subFS, err := fs.Sub(fsys, subdir)
+	if err != nil {
+		return http.NotFoundHandler()
+	}
+	return s.fsHandler(prefix, subFS, cacheDuration)
+}
 
-		// Check if client accepts gzip
+// gzipFSHandler serves files from fs.FS with gzip support
+// It looks for pre-compressed .gz files first
+func (s *HTTPServer) gzipFSHandler(prefix string, fsys fs.FS, subdir string, cacheDuration time.Duration) http.Handler {
+	subFS, err := fs.Sub(fsys, subdir)
+	if err != nil {
+		return http.NotFoundHandler()
+	}
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
 		acceptsGzip := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
 
-		// Try serving .gz file if exists and client accepts gzip
+		// Try serving .gz file if client accepts gzip
 		if acceptsGzip {
-			gzPath := filePath + ".gz"
-			if _, err := os.Stat(gzPath); err == nil {
+			gzPath := urlPath + ".gz"
+			if data, err := fs.ReadFile(subFS, gzPath); err == nil {
 				w.Header().Set("Content-Encoding", "gzip")
 				if strings.HasSuffix(urlPath, ".json") {
 					w.Header().Set("Content-Type", "application/json")
@@ -105,22 +155,15 @@ func (s *HTTPServer) gzipStaticHandler(prefix, dir string, cacheDuration time.Du
 				}
 				w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", int(cacheDuration.Seconds())))
 				w.Header().Set("Vary", "Accept-Encoding")
-				http.ServeFile(w, r, gzPath)
+				w.Write(data)
 				return
 			}
 		}
 
-		// Serve original file with dynamic compression for JSON/XML
-		file, err := os.Open(filePath)
+		// Try serving original file
+		data, err := fs.ReadFile(subFS, urlPath)
 		if err != nil {
 			http.NotFound(w, r)
-			return
-		}
-		defer file.Close()
-
-		stat, err := file.Stat()
-		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
 
@@ -131,21 +174,19 @@ func (s *HTTPServer) gzipStaticHandler(prefix, dir string, cacheDuration time.Du
 			w.Header().Set("Content-Type", "application/xml")
 		}
 
-		// Set cache headers
 		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d, must-revalidate", int(cacheDuration.Seconds())))
 		w.Header().Set("Vary", "Accept-Encoding")
 
-		// Compress on the fly if file is large enough and client accepts gzip
-		if acceptsGzip && stat.Size() > 1024 {
+		// Compress on the fly if large and client accepts gzip
+		if acceptsGzip && len(data) > 1024 {
 			w.Header().Set("Content-Encoding", "gzip")
 			gz := gzip.NewWriter(w)
-			defer gz.Close()
-			io.Copy(gz, file)
+			gz.Write(data)
+			gz.Close()
 			return
 		}
 
-		// Serve without compression
-		http.ServeContent(w, r, filePath, stat.ModTime(), file)
+		w.Write(data)
 	})
 }
 
