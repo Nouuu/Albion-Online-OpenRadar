@@ -269,17 +269,19 @@ func (app *App) updateStats() {
 				runtime.ReadMemStats(&m)
 
 				wsStats := app.wsHandler.Stats()
+				logStats := app.logger.GetSessionStats()
 				app.program.Send(ui.StatsMsg{
-					Packets:       atomic.LoadUint64(&app.packetsProcessed),
-					Errors:        atomic.LoadUint64(&app.packetsErrors),
-					WsClients:     app.wsHandler.ClientCount(),
-					MemoryMB:      float64(m.Alloc) / 1024 / 1024,
-					Goroutines:    runtime.NumGoroutine(),
-					WsBatches:     wsStats.BatchesSent,
-					WsMessages:    wsStats.MessagesSent,
-					WsQueueSize:   wsStats.MessagesQueue,
-					BytesReceived: app.capturer.BytesReceived(),
-					BytesSent:     wsStats.BytesSent,
+					Packets:         atomic.LoadUint64(&app.packetsProcessed),
+					Errors:          atomic.LoadUint64(&app.packetsErrors),
+					WsClients:       app.wsHandler.ClientCount(),
+					MemoryMB:        float64(m.Alloc) / 1024 / 1024,
+					Goroutines:      runtime.NumGoroutine(),
+					WsBatches:       wsStats.BatchesSent,
+					WsMessages:      wsStats.MessagesSent,
+					WsQueueSize:     wsStats.MessagesQueue,
+					BytesReceived:   app.capturer.BytesReceived(),
+					BytesSent:       wsStats.BytesSent,
+					LogLinesWritten: logStats.LineCount,
 				})
 
 				app.program.Send(ui.StatusMsg{
