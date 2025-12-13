@@ -7,15 +7,12 @@
     <title id="page-title">{{.Title}}</title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 
-    <!-- Google Fonts: Space Grotesk + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS v4 (Browser) -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 
-    <!-- Custom CSS Variables for Theme -->
     <style type="text/tailwindcss">
         @theme {
             --color-void: #050508;
@@ -39,19 +36,16 @@
         }
     </style>
 
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- Custom Styles (minimal - animations only) -->
     <link rel="stylesheet" href="/styles/app.css">
     <link rel="stylesheet" href="/scripts/styles/tooltips.css">
     <link rel="stylesheet" href="/scripts/styles/components.css">
 
-    <!-- jQuery & SignalR (for WebSocket) - must load before modules that use them -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"></script>
 
-    <!-- Helper for page scripts - MUST be defined BEFORE modules (which are deferred) -->
+    <!-- Must be defined before modules -->
     <script>
         window.onGlobalsReady = function(callback) {
             if (window.__globalsReady) {
@@ -62,9 +56,7 @@
         };
     </script>
 
-    <!-- Global Setup Module -->
     <script type="module">
-        // Import everything and expose globally
         import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
         import settingsSync from '/scripts/Utils/SettingsSync.js';
         import {
@@ -76,7 +68,6 @@
             getResourceStorageKey
         } from '/scripts/Utils/ResourcesHelper.js';
 
-        // Expose globally for page scripts
         window.CATEGORIES = CATEGORIES;
         window.settingsSync = settingsSync;
         window.ResourcesHelper = {
@@ -88,11 +79,9 @@
             getResourceStorageKey
         };
 
-        // Signal that globals are ready
         window.__globalsReady = true;
         document.dispatchEvent(new CustomEvent('globalsReady'));
 
-        // Sync server logs setting on page load
         (async () => {
             try {
                 const serverLogsEnabled = settingsSync.getBool("settingServerLogsEnabled");
@@ -105,23 +94,16 @@
                 console.error('[Layout] Error syncing server logs:', error);
             }
         })();
-
-        console.log('[Layout] Global modules initialized');
     </script>
 
-    <!-- Logger Client -->
     <script type="module" src="/scripts/LoggerClient.js"></script>
-
-    <!-- SPA Router - simple page transition handling -->
+    <script type="module" src="/scripts/Utils/Toast.js"></script>
+    <script type="module" src="/scripts/Utils/Modal.js"></script>
     <script src="/scripts/spa-router.js"></script>
-
-    <!-- HTMX for SPA-like navigation -->
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
-
-    <!-- Accordion Manager -->
     <script src="/scripts/accordion.js"></script>
 
-    <!-- Sidebar & Layout Controller - MUST be in head before sidebar template -->
+    <!-- Must be in head before sidebar template -->
     <script>
         window.sidebar = {
             collapsed: localStorage.getItem('sidebarCollapsed') === 'true',
@@ -180,33 +162,18 @@
     </script>
 
     <style>
-        /* HTMX page transitions */
-        .htmx-swapping {
-            opacity: 0;
-            transition: opacity 150ms ease-out;
-        }
-
-        #page-content {
-            transition: opacity 150ms ease-in;
-        }
-
-        #page-content.htmx-settling {
-            opacity: 1;
-        }
+        .htmx-swapping { opacity: 0; transition: opacity 150ms ease-out; }
+        #page-content { transition: opacity 150ms ease-in; }
+        #page-content.htmx-settling { opacity: 1; }
     </style>
 </head>
 <body class="bg-void text-gray-200 font-display">
     <div class="flex h-screen">
-
-        <!-- Sidebar -->
         {{template "layouts/sidebar.gohtml" .}}
 
-        <!-- Main Content Area -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             {{template "layouts/header.gohtml" .}}
 
-            <!-- Page Content -->
             <main id="page-content"
                   class="flex-1 overflow-y-auto p-6 bg-void"
                   data-page="{{.Page}}"
@@ -223,7 +190,6 @@
                     {{else}}{{template "pages/radar" .}}{{end}}
                 </div>
 
-                <!-- Page-specific scripts (inline for HTMX support) -->
                 {{if eq .Page "radar"}}{{template "scripts/radar" .}}
                 {{else if eq .Page "players"}}{{template "scripts/players" .}}
                 {{else if eq .Page "resources"}}{{template "scripts/resources" .}}
@@ -236,13 +202,11 @@
         </div>
     </div>
 
-    <!-- Mobile Menu Overlay -->
     <div id="mobile-overlay"
          onclick="window.sidebar.closeMobile()"
          class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden">
     </div>
 
-    <!-- Init & HTMX handlers -->
     <script>
         document.addEventListener('DOMContentLoaded', () => window.sidebar.init());
         document.addEventListener('htmx:afterSwap', () => lucide.createIcons());
