@@ -30,9 +30,9 @@ This document summarizes the features implemented in OpenRadar v2.0.
 
 ### Framework Stack
 - **HTMX 2.0.8** - SPA navigation without full page reload
-- **Alpine.js** - Reactive components
 - **Tailwind CSS v4** - Utility-first styling with dark theme
 - **Go Templates** (.gohtml) - Server-side rendering
+- **Vanilla JS** - Lightweight UI controllers (sidebar, accordions)
 
 ### Radar Display
 - **4-layer canvas system** (map, draw, player, UI)
