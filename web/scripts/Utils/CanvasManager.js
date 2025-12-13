@@ -1,23 +1,12 @@
-/**
- * CanvasManager.js
- *
- * Unified canvas initialization and management for both main and overlay radar.
- * Handles setup of all 5 canvas layers used by the radar display.
- *
- * Canvas Layers (z-index order):
- * 1. mapCanvas (z-index: 1) - Background map image
- * 2. drawCanvas (z-index: 3) - Main entity rendering (resources, mobs, players, chests)
- * 3. ourPlayerCanvas (z-index: 5) - Local player blue dot (static)
- * 4. uiCanvas (z-index: 6) - UI overlay (player counter, stats, FPS, etc.)
- */
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 
 export class CanvasManager {
     constructor(viewType = 'main') {
-        this.viewType = viewType; // 'main' or 'overlay'
+        this.viewType = viewType;
         this.canvases = {};
         this.contexts = {};
+        this._onCanvasSizeChanged = null;
     }
 
     /**
@@ -48,22 +37,24 @@ export class CanvasManager {
             canvas.height = size;
         });
 
-        // Setup local player canvas (static blue dot)
         this.setupOurPlayerCanvas();
 
-        // Listen for canvas size changes to re-setup player canvas
-        window.addEventListener('canvasSizeChanged', (e) => {
+        // Remove previous listener if exists (prevent accumulation)
+        if (this._onCanvasSizeChanged) {
+            window.removeEventListener('canvasSizeChanged', this._onCanvasSizeChanged);
+        }
+
+        this._onCanvasSizeChanged = (e) => {
             const newSize = e.detail?.size || settingsSync.getNumber('settingCanvasSize') || 500;
-            // Update canvas dimensions
             Object.values(this.canvases).forEach(canvas => {
                 if (canvas) {
                     canvas.width = newSize;
                     canvas.height = newSize;
                 }
             });
-            // Re-draw player dot at new center
             this.setupOurPlayerCanvas();
-        });
+        };
+        window.addEventListener('canvasSizeChanged', this._onCanvasSizeChanged);
 
         return {
             canvases: this.canvases,
