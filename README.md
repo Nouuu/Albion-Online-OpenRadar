@@ -1,36 +1,78 @@
-# OpenRadar - Albion Online Radar Tool
-
-[![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Nouuu/Albion-Online-OpenRadar/main?style=for-the-badge&label=Last%20Commit)]()
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=Latest%20Release)]()
-[![GitHub pull-requests](https://img.shields.io/github/issues-pr-raw/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=PRs)]()
-[![GitHub issues](https://img.shields.io/github/issues-raw/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=Issues)](https://github.com/Nouuu/Albion-Online-ZQRadar/issues)
-[![GitHub Repo stars](https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=for-the-badge)]()
+<h1 align="center">
+  <img src="web/images/icon.png" width="32" height="32" alt="icon">
+  OpenRadar
+</h1>
 
 <p align="center">
-  <img src="docs/images/radar_1.png" alt="OpenRadar Main View" width="700">
+  <strong>Real-time radar for Albion Online</strong><br>
+  <sub>No injection • No risk • Open source</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/releases"><img src="https://img.shields.io/github/v/release/Nouuu/Albion-Online-OpenRadar?style=flat-square&label=Download&color=7c3aed" alt="Download"></a>
+  <img src="https://img.shields.io/badge/Windows%20%7C%20Linux-supported-blue?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/stargazers"><img src="https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=flat-square&color=yellow" alt="Stars"></a>
+</p>
+
+<p align="center">
+  <img src="docs/images/radar_1.png" alt="OpenRadar" width="600">
 </p>
 
 ---
 
-## About
+## ✨ v2.0 Highlights
 
-**OpenRadar** is a real-time radar tool for **Albion Online** that provides situational awareness without game injection. Track players, resources, enemies, and events with a clean, customizable web interface.
+<table>
+<tr>
+<td>
 
-### v2.0 Highlights
+**5x Smaller**<br>
+<sub>~95 MB single binary (was 500 MB)</sub>
 
-#### Backend
-- **Native Go Backend** - Single binary (~95 MB) with all assets embedded
-- **No External Dependencies** - Just Npcap (Windows) or libpcap (Linux)
-- **Massive Size Reduction** - From ~500 MB (Node.js) to ~95 MB
-- **Faster Startup** - No runtime extraction needed
-- **No Injection** - Lower risk of detection/banning
+</td>
+<td>
 
-#### UI
-- **Modern Dark Theme** - Tailwind CSS v4 with custom color palette
-- **HTMX Navigation** - Seamless page transitions without reload
-- **Dynamic Radar** - Adjustable size (300-800px) and zoom (0.5x-2.0x)
-- **Player Color Coding** - Green (passive), Orange (faction), Red (hostile)
-- **TUI Dashboard** - Real-time stats in terminal
+**Instant Start**<br>
+<sub>No extraction, no runtime</sub>
+
+</td>
+<td>
+
+**Modern UI**<br>
+<sub>Tailwind + HTMX + Alpine.js</sub>
+
+</td>
+<td>
+
+**Cross-Platform**<br>
+<sub>Windows & Linux native</sub>
+
+</td>
+</tr>
+</table>
+
+### What Changed
+
+```diff
++ Native Go backend (was Node.js)
++ Single port 5001 (was 5001 + 5002)
++ SPA navigation with HTMX (was full reload)
++ 4-layer canvas (was 7 layers)
++ TUI terminal dashboard
++ Dynamic radar sizing (300-800px)
++ Zoom controls (0.5x - 2.0x)
+```
+
+### Player Threat Detection
+
+| | Status | Color | Description |
+|---|--------|-------|-------------|
+| 🟢 | Passive | `#00ff88` | Not flagged for PvP |
+| 🟠 | Faction | `#ffa500` | Faction warfare flagged |
+| 🔴 | Hostile | `#ff0000` | Hostile (flagged 255) |
+
+> **Alert System**: Screen flash + sound on hostile detection
 
 ---
 
@@ -67,106 +109,82 @@
 
 ## Features
 
-### Player Tracking
-- Real-time position and movement
-- Health bars and equipment visualization
-- Mount status detection
-- Guild and alliance information
+### Detection Coverage
 
-### Resource Detection
-- **100% detection accuracy** - Validated with 3,698+ resources
-- **Harvestables**: Trees, ores, stone, fiber, hide (T1-T8 + enchantments .0-.3)
-- **Living Resources**: Animals and skinnable creatures (~2,800 types)
-- **Fishing spots**: All tiers with enchantment support
+| Category | Count | Details |
+|----------|-------|---------|
+| Resources | 3,698+ | Wood, ore, stone, fiber, hide (T1-T8 + enchants) |
+| Mobs | 4,528 | Normal → Enchanted → Mini-Boss → Boss |
+| Animals | ~2,800 | Skinnable creatures |
+| Dungeons | All | Solo, Group, Corrupted, Mists |
+| Chests | All | Common → Uncommon → Rare → Legendary |
 
-### Enemy & Creature Tracking
-- **Color-coded threat classification**: Normal | Enchanted | Mini-Boss | Boss
-- 4,528 mobs catalogued with metadata
-- Real-time health tracking
-- Mist beasts detection
+### Radar Controls
 
-### Points of Interest
-- Treasure chests (common, uncommon, rare, legendary)
-- Dungeons (solo/group, static/random, corrupted)
-- Mist portals with enchantment levels
+| Feature | Description |
+|---------|-------------|
+| Size | 300px - 800px adjustable |
+| Zoom | 0.5x - 2.0x magnification |
+| Rings | Distance at 10m/20m intervals |
+| Zone | Current zone + Black Zone warning |
+| Stats | Player/resource/mob counts |
+| Threat | Red pulse border on hostile |
+| Overlay | Floating window mode |
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
+
+<table>
+<tr>
+<td width="50%">
 
 ### Windows
 
-1. **Install Npcap** (version 1.84+):
-   - [Official Download](https://npcap.com/) | [Direct Link v1.84](https://npcap.com/dist/npcap-1.84.exe)
+1. Install **[Npcap 1.84+](https://npcap.com/dist/npcap-1.84.exe)**
+2. Download from **[Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)**
+3. Run `OpenRadar.exe`
+4. Select network adapter
+5. Open **http://localhost:5001**
 
-2. **Download & Run**:
-   - Get the latest release from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
-   - Extract and run `OpenRadar.exe`
-   - Select your network adapter (NOT 127.0.0.1)
-   - Open **http://localhost:5001** in your browser
+</td>
+<td width="50%">
 
 ### Linux
 
-1. **Install dependencies**:
-   ```bash
-   # Ubuntu/Debian
-   sudo apt-get install libpcap0.8 libcap2-bin
+```bash
+# Install libpcap
+sudo apt install libpcap0.8  # Debian/Ubuntu
 
-   # Fedora/RHEL
-   sudo dnf install libpcap libcap
+# Grant permissions & run
+sudo setcap cap_net_raw=eip ./OpenRadar-linux
+./OpenRadar-linux
+```
 
-   # Arch Linux
-   sudo pacman -S libpcap libcap
-   ```
-
-2. **Download & Make executable**:
-   ```bash
-   chmod +x OpenRadar-linux
-   ```
-
-3. **Grant capture permissions** (choose ONE option):
-
-   **Option A** - Run as root (simple):
-   ```bash
-   sudo ./OpenRadar-linux
-   ```
-
-   **Option B** - Grant capabilities (recommended, allows running as normal user):
-   ```bash
-   # Grant network capture capabilities to the executable
-   sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
-
-   # Verify capabilities were applied (optional)
-   getcap ./OpenRadar-linux
-
-   # Run as normal user
-   ./OpenRadar-linux
-   ```
-   > **Note**: Capabilities are removed if the file is modified or moved. Re-run `setcap` after updates.
-
-4. Open **http://localhost:5001** in your browser
-
-### Command-line Options
+</td>
+</tr>
+</table>
 
 ```bash
+# CLI Options
 OpenRadar -version       # Show version
 OpenRadar -ip X.X.X.X    # Skip adapter selection
-OpenRadar -dev           # Development mode (read files from disk)
+OpenRadar -dev           # Development mode
 ```
 
 ---
 
-## For Developers
+## 🛠 For Developers
 
 ### Prerequisites
 
-| Tool       | Version | Notes                          |
-|------------|---------|--------------------------------|
-| **Go**     | 1.23+   | [Download](https://go.dev/dl/) |
-| **Npcap**  | 1.84+   | Windows only                   |
-| **libpcap**| Latest  | Linux only                     |
-| **Node.js**| 20+     | For data/build scripts only    |
-| **Docker** | Latest  | For Linux cross-compilation    |
+| Tool | Version | Notes |
+|------|---------|-------|
+| Go | 1.25+ | [Download](https://go.dev/dl/) |
+| Npcap | 1.84+ | Windows only |
+| libpcap | Latest | Linux only |
+| Node.js | 20+ | Build scripts only |
+| Docker | Latest | Linux cross-compile |
 
 ### Quick Setup
 
@@ -174,25 +192,21 @@ OpenRadar -dev           # Development mode (read files from disk)
 git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
 cd Albion-Online-OpenRadar
 
-# Install Air for hot-reload (one time)
-make install-tools
-
-# Start development server
-make dev
+make install-tools  # Install Air (hot-reload)
+make dev            # Start dev server
 ```
-
-Web interface available at **http://localhost:5001**.
 
 ### Build Commands
 
 ```bash
-make build-win        # Build Windows executable
-make build-linux      # Build Linux via Docker
-make build-all        # Build all platforms
-make all-in-one       # Complete release workflow
+make build-win    # Windows executable
+make build-linux  # Linux via Docker
+make build-all    # All platforms
+make all-in-one   # Full release workflow
 ```
 
-### Project Structure
+<details>
+<summary>Project Structure</summary>
 
 ```
 OpenRadar/
@@ -200,92 +214,49 @@ OpenRadar/
 ├── internal/         # Go packages
 │   ├── capture/      # Packet capture (pcap)
 │   ├── photon/       # Protocol parsing
-│   ├── server/       # HTTP & WebSocket servers
+│   ├── server/       # HTTP & WebSocket
+│   ├── templates/    # Go templates (SSR)
 │   └── logger/       # Structured logging
-├── web/              # Frontend assets (embedded)
+├── web/              # Frontend (embedded)
 │   ├── images/
-│   ├── public/       # HTML, game data
-│   ├── scripts/      # JavaScript
+│   ├── scripts/      # JavaScript modules
 │   └── sounds/
-├── tools/            # Build & data scripts (Node.js)
-├── docs/             # Documentation
-├── embed.go          # Asset embedding
-├── go.mod            # Go modules
-└── Makefile          # Build system
+├── tools/            # Build scripts (Node.js)
+└── Makefile
 ```
 
-### Useful Commands
-
-```bash
-make help             # Show all commands
-make check            # Verify dependencies
-make update-ao-data   # Update Albion game data
-make clean            # Clean build artifacts
-make lint             # Lint Go code
-```
+</details>
 
 ---
 
-## Technical Details
-
-### Architecture
-
-- **Backend**: Native Go with embedded assets
-- **Frontend**: HTMX + Alpine.js + Tailwind CSS v4
-- **Templates**: Go html/template with SSR
-- **Protocol**: Photon Protocol16 deserialization
-- **Capture**: gopacket/pcap for packet capture
-
-### Ports
-
-| Port | Service   |
-|------|-----------|
-| 5001 | HTTP + WebSocket (`/ws`) |
-| 5056 | UDP (Albion traffic - captured) |
-
-### Performance Comparison
-
-| Metric | v1.x (Node.js) | v2.0 (Go) |
-|--------|----------------|-----------|
-| Binary size | ~100 MB | ~95 MB |
-| Assets | ~400 MB (separate) | Embedded |
-| Total | ~500 MB | ~95 MB |
-| Startup | Slower (extraction) | Instant |
-
----
-
-## Documentation
-
-Full documentation available in [docs/README.md](docs/README.md).
+## 📖 Documentation
 
 | Guide | Description |
 |-------|-------------|
 | [RELEASE_NOTES.md](RELEASE_NOTES.md) | Version 2.0 changes |
 | [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development guide |
-| [LOGGING.md](docs/technical/LOGGING.md) | Logging system |
+| [docs/](docs/) | Full documentation |
 
 ---
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-**Standards**: ES modules (ESM), 2-space indentation, JSDoc comments, English only.
+2. Create feature branch (`git checkout -b feature/amazing`)
+3. Commit changes (`git commit -m 'feat: add amazing'`)
+4. Push (`git push origin feature/amazing`)
+5. Open Pull Request
 
 ---
 
-## License & Credits
+## Credits
 
-**Current Maintainer**: [@Nouuu](https://github.com/Nouuu) (nospy)
+**Maintainer**: [@Nouuu](https://github.com/Nouuu)
 
-**Original Project**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
-
-**Based on**: [QRadar](https://github.com/FashionFlora/Albion-Online-Radar-QRadar) by [@FashionFlora](https://github.com/FashionFlora)
+**Based on**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
 
 ---
 
-**Disclaimer**: This tool is for educational purposes. Use at your own risk.
+<p align="center">
+  <sub>⚠️ Educational purposes only. Use at your own risk.</sub>
+</p>
