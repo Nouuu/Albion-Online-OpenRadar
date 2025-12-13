@@ -2,8 +2,8 @@ import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
 
-const SCALE_FACTOR = 1.0; // Scale factor for overlay distance
-const BASE_ZOOM = 4; // Base pixels per game unit
+const SCALE_FACTOR = 1.0;
+const BASE_ZOOM = 4;
 
 export class DrawingUtils {
     constructor() {
@@ -13,48 +13,11 @@ export class DrawingUtils {
         this.images = [];
     }
 
-    /**
-     * Get current zoom level from settings
-     * @returns {number} Zoom multiplier (0.5 = zoomed out, 2.0 = zoomed in)
-     */
-    getZoomLevel() {
-        return settingsSync.getFloat('settingRadarZoom') || 1.0;
-    }
-
-    /**
-     * Scale a size value according to current zoom level
-     * @param {number} baseSize - Size at zoom 1.0
-     * @returns {number} Scaled size
-     */
-    getScaledSize(baseSize) {
-        return baseSize * this.getZoomLevel();
-    }
-
-    /**
-     * Scale a font size with zoom, ensuring minimum readability
-     * @param {number} baseFontSize - Font size at zoom 1.0
-     * @param {number} minFontSize - Minimum font size (default: 7)
-     * @returns {number} Scaled font size
-     */
-    getScaledFontSize(baseFontSize, minFontSize = 7) {
-        return Math.max(minFontSize, baseFontSize * this.getZoomLevel());
-    }
-
-    /**
-     * Get current canvas size from settings
-     * @returns {number} Canvas size in pixels (default: 500)
-     */
-    getCanvasSize() {
-        return settingsSync.getNumber('settingCanvasSize') || 500;
-    }
-
-    /**
-     * Get canvas center point (size / 2)
-     * @returns {number} Center coordinate
-     */
-    getCanvasCenter() {
-        return this.getCanvasSize() / 2;
-    }
+    getZoomLevel() { return settingsSync.getFloat('settingRadarZoom') || 1.0; }
+    getScaledSize(baseSize) { return baseSize * this.getZoomLevel(); }
+    getScaledFontSize(baseFontSize, minFontSize = 7) { return Math.max(minFontSize, baseFontSize * this.getZoomLevel()); }
+    getCanvasSize() { return settingsSync.getNumber('settingCanvasSize') || 500; }
+    getCanvasCenter() { return this.getCanvasSize() / 2; }
 
     InitOurPlayerCanvas(ourPlayerCanvas, context) {
         this.drawFilledCircle(context, ourPlayerCanvas.width / 2, ourPlayerCanvas.height / 2, 10, "blue");
@@ -71,18 +34,8 @@ export class DrawingUtils {
         window.logger?.debug(CATEGORIES.MAP, 'InitCanva', { width: canvas.width, height: canvas.height, ctx: context });
     }
 
-    lerp(a, b, t) {
-        return a + (b - a) * t;
-    }
+    lerp(a, b, t) { return a + (b - a) * t; }
 
-    /**
-     * Interpolate entity position based on local player position
-     * This method centralizes the interpolation logic used across all drawing classes
-     * @param {Object} entity - Entity object with posX, posY, hX, hY properties
-     * @param {number} lpX - Local player X coordinate
-     * @param {number} lpY - Local player Y coordinate
-     * @param {number} t - Interpolation factor (0-1)
-     */
     interpolateEntity(entity, lpX, lpY, t) {
         const hX = -1 * entity.posX + lpX;
         const hY = entity.posY - lpY;
@@ -102,8 +55,6 @@ export class DrawingUtils {
         const folderR = (!folder) ? "" : folder + "/";
         const src = "/images/" + folderR + imageName + ".webp";
         const preloadedImage = imageCache.GetPreloadedImage(src, folder);
-
-        // Scale the size with zoom
         const scaledSize = this.getScaledSize(size);
 
         if (preloadedImage === null) {
@@ -113,27 +64,20 @@ export class DrawingUtils {
 
         if (preloadedImage) {
             ctx.drawImage(preloadedImage, x - scaledSize / 2, y - scaledSize / 2, scaledSize, scaledSize);
-        } else  {
+        } else {
             imageCache.preloadImageAndAddToList(src, folder)
-                .then(() => {
-                    window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src: src, folder: folder });
-                })
-                .catch((error) => {
-                    window.logger?.warn(CATEGORIES.ITEM, EVENTS.ItemLoadFailed, { src: src, folder: folder, error: error?.message });
-                });
+                .then(() => window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src, folder }))
+                .catch((error) => window.logger?.warn(CATEGORIES.ITEM, EVENTS.ItemLoadFailed, { src, folder, error: error?.message }));
         }
     }
 
     transformPoint(x, y) {
-        // keep original transform
         const angle = -0.785398;
         let newX = x * angle - y * angle;
         let newY = x * angle + y * angle;
-        // Apply zoom: BASE_ZOOM * zoomLevel
         const zoom = BASE_ZOOM * this.getZoomLevel();
         newX *= zoom;
         newY *= zoom;
-        // Center point is dynamic based on canvas size
         const center = this.getCanvasCenter();
         newX += center;
         newY += center;
@@ -141,7 +85,6 @@ export class DrawingUtils {
     }
 
     drawText(xTemp, yTemp, text, ctx) {
-        // Scale font size with zoom (base 12px from this.fontSize)
         const scaledFontSize = `${this.getScaledFontSize(12, 8)}px`;
         ctx.font = scaledFontSize + " " + this.fontFamily;
         ctx.fillStyle = this.textColor;
@@ -159,18 +102,15 @@ export class DrawingUtils {
         const text = count.toString();
         ctx.save();
 
-        // Scale font size with zoom (base 10px, min 7px)
         const fontSize = this.getScaledFontSize(10, 7);
         ctx.font = `bold ${fontSize}px monospace`;
         const textWidth = ctx.measureText(text).width;
 
-        // Scale badge dimensions with zoom
         const padding = this.getScaledSize(4);
         const rectWidth = textWidth + (padding * 2);
         const rectHeight = this.getScaledSize(14);
         const radius = this.getScaledSize(4);
 
-        // Scale offsets with zoom
         const offset8 = this.getScaledSize(8);
         const offset6 = this.getScaledSize(6);
         const offset20 = this.getScaledSize(20);
@@ -188,7 +128,6 @@ export class DrawingUtils {
         gradient.addColorStop(1, "rgba(0,0,0,0.75)");
         ctx.fillStyle = gradient;
 
-        // rounded rect
         ctx.beginPath();
         ctx.moveTo(rectX + radius, rectY);
         ctx.lineTo(rectX + rectWidth - radius, rectY);
@@ -209,7 +148,6 @@ export class DrawingUtils {
         ctx.shadowColor = "rgba(0,0,0,0.9)";
         ctx.shadowBlur = 2;
         ctx.fillStyle = "#FFFFFF";
-        // Text Y position: rectY + fontSize (approximately 70% of rectHeight for vertical centering)
         ctx.fillText(text, rectX + padding, rectY + fontSize);
         ctx.restore();
     }
@@ -224,30 +162,19 @@ export class DrawingUtils {
         if (!distance || distance <= 0) return;
         ctx.save();
 
-        // compute real distance as float (avoid rounding for the threshold check)
-        const realDistanceFloat = (distance / 3) * SCALE_FACTOR; // baseUnit = 3
+        const realDistanceFloat = (distance / 3) * SCALE_FACTOR;
+        if (realDistanceFloat <= 2) { ctx.restore(); return; }
 
-        // Don't show distance labels for very close resources (<= 2 meters)
-        if (realDistanceFloat <= 2) {
-            ctx.restore();
-            return;
-        }
-
-        // Rounded value for display
         const realDistance = Math.round(realDistanceFloat);
-
-        // Scale font size with zoom (base 9px, min 6px)
         const fontSize = this.getScaledFontSize(9, 6);
         ctx.font = `bold ${fontSize}px monospace`;
         const text = realDistance < 1000 ? `${realDistance}m` : `${(realDistance / 1000).toFixed(1)}km`;
 
         const textWidth = ctx.measureText(text).width;
-        // Scale badge dimensions with zoom
         const padding = this.getScaledSize(3);
         const rectWidth = textWidth + (padding * 2);
         const rectHeight = this.getScaledSize(12);
         const radius = this.getScaledSize(3);
-        // Scale offsets with zoom
         const rectX = x - rectWidth - this.getScaledSize(8);
         const rectY = y - this.getScaledSize(20);
 
@@ -277,95 +204,54 @@ export class DrawingUtils {
         ctx.shadowColor = "rgba(0,0,0,0.9)";
         ctx.shadowBlur = 2;
         ctx.fillStyle = "#FFFFFF";
-        // Text Y position: rectY + fontSize for vertical centering
         ctx.fillText(text, rectX + padding, rectY + fontSize);
         ctx.restore();
     }
 
-    /**
-     * Draw a health bar with gradient colors based on HP percentage
-     * @param {CanvasRenderingContext2D} ctx - Canvas context
-     * @param {number} x - Center X position
-     * @param {number} y - Center Y position (bar will be drawn below this point)
-     * @param {number} currentHP - Current HP value
-     * @param {number} maxHP - Maximum HP value
-     * @param {number} width - Bar width in pixels (default: 50)
-     * @param {number} height - Bar height in pixels (default: 6)
-     */
     drawHealthBar(ctx, x, y, currentHP, maxHP, width = 50, height = 6) {
         if (!currentHP || !maxHP || maxHP <= 0) return;
 
         ctx.save();
-
-        // Calculate HP percentage
         const hpPercent = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
         const fillWidth = (width * hpPercent) / 100;
-
-        // Position (centered horizontally, below the entity)
         const barX = x - width / 2;
-        const barY = y + this.getScaledSize(16); // 16px below entity (scaled)
+        const barY = y + this.getScaledSize(16);
 
-        // Background (dark with slight transparency)
         ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
         ctx.fillRect(barX, barY, width, height);
 
-        // Gradient based on HP percentage
         const gradient = ctx.createLinearGradient(barX, barY, barX + width, barY);
+        if (hpPercent > 75) { gradient.addColorStop(0, "#00FF00"); gradient.addColorStop(1, "#88FF88"); }
+        else if (hpPercent > 50) { gradient.addColorStop(0, "#BBFF00"); gradient.addColorStop(1, "#FFFF00"); }
+        else if (hpPercent > 25) { gradient.addColorStop(0, "#FFAA00"); gradient.addColorStop(1, "#FF6600"); }
+        else { gradient.addColorStop(0, "#FF3300"); gradient.addColorStop(1, "#FF0000"); }
 
-        if (hpPercent > 75) {
-            // 100-75%: Green gradient
-            gradient.addColorStop(0, "#00FF00");
-            gradient.addColorStop(1, "#88FF88");
-        } else if (hpPercent > 50) {
-            // 75-50%: Yellow-green gradient
-            gradient.addColorStop(0, "#BBFF00");
-            gradient.addColorStop(1, "#FFFF00");
-        } else if (hpPercent > 25) {
-            // 50-25%: Orange gradient
-            gradient.addColorStop(0, "#FFAA00");
-            gradient.addColorStop(1, "#FF6600");
-        } else {
-            // 25-0%: Red gradient
-            gradient.addColorStop(0, "#FF3300");
-            gradient.addColorStop(1, "#FF0000");
-        }
-
-        // Fill HP bar with gradient
         ctx.fillStyle = gradient;
         ctx.fillRect(barX, barY, fillWidth, height);
 
-        // Border (white with transparency)
         ctx.strokeStyle = "rgba(255, 255, 255, 0.6)";
         ctx.lineWidth = 1;
         ctx.strokeRect(barX, barY, width, height);
 
-        // HP text inside bar (scaled with zoom)
         const hpFontSize = this.getScaledFontSize(11, 7);
         ctx.font = `bold ${hpFontSize}px monospace`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
 
-        // Format HP text
-        let hpText;
-        if (maxHP < 10000) {
-            hpText = `${Math.round(currentHP)}/${maxHP}`;
-        } else {
-            hpText = `${Math.round(hpPercent)}%`;
-        }
+        let hpText = maxHP < 10000 ? `${Math.round(currentHP)}/${maxHP}` : `${Math.round(hpPercent)}%`;
 
-        // Text shadow for better readability (stronger shadow)
         ctx.shadowColor = "rgba(0, 0, 0, 1.0)";
         ctx.shadowBlur = 4;
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 1;
         ctx.fillStyle = "#FFFFFF";
         ctx.fillText(hpText, x, barY + height / 2);
-
         ctx.restore();
     }
 
     calculateDistance(x1, y1, x2, y2) {
-        const dx = x2 - x1; const dy = y2 - y1; return Math.sqrt(dx * dx + dy * dy);
+        const dx = x2 - x1; const dy = y2 - y1;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     drawClusterIndicator(ctx, x, y, count, clusterType = null) {
@@ -373,7 +259,6 @@ export class DrawingUtils {
         ctx.save();
         const time = Date.now() / 1000;
         const pulse = Math.sin(time * 2) * 0.15 + 0.85;
-        // Scale radii with zoom
         const radius35 = this.getScaledSize(35);
         const radius30 = this.getScaledSize(30);
         ctx.strokeStyle = `rgba(100,200,255,${0.4 * pulse})`;
@@ -382,7 +267,6 @@ export class DrawingUtils {
         ctx.strokeStyle = `rgba(100,200,255,${0.6 * pulse})`;
         ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, radius30 * pulse, 0, 2 * Math.PI); ctx.stroke();
 
-        // Scale font and badge dimensions
         const fontSize = this.getScaledFontSize(11, 8);
         const text = `×${count}`; ctx.font = `bold ${fontSize}px monospace`;
         const textWidth = ctx.measureText(text).width;
@@ -413,7 +297,6 @@ export class DrawingUtils {
     }
 
     drawClusterIndicatorFromCluster(ctx, cluster) {
-        // draw rings then info box
         this.drawClusterRingsFromCluster(ctx, cluster);
         this.drawClusterInfoBox(ctx, cluster);
     }
@@ -428,7 +311,6 @@ export class DrawingUtils {
             const cx = sumX / pts.length, cy = sumY / pts.length;
 
             let maxDist = 0; for (const p of pts) { const dx = p.x - cx, dy = p.y - cy; const d = Math.sqrt(dx * dx + dy * dy); if (d > maxDist) maxDist = d; }
-            // Scale minRadius and padding with zoom
             const minRadius = this.getScaledSize(24); const padding = this.getScaledSize(18) + Math.log(Math.max(1, cluster.count)) * this.getScaledSize(6); const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + padding);
 
             let totalStacks = 0; for (const r of cluster.resources) { const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
@@ -450,7 +332,6 @@ export class DrawingUtils {
             ctx.beginPath(); ctx.arc(cx, cy, (visualRadius - 6) * pulse, 0, 2 * Math.PI); ctx.stroke();
             ctx.restore();
         } catch (e) {
-            // ❌ ERROR (always logged) - Critical fallback rendering error
             window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawRingsFallbackFailed, e);
         }
     }
@@ -464,7 +345,6 @@ export class DrawingUtils {
         const cx = sumX / pts.length, cy = sumY / pts.length;
 
         let maxDist = 0; for (const p of pts) { const dx = p.x - cx, dy = p.y - cy; const d = Math.sqrt(dx * dx + dy * dy); if (d > maxDist) maxDist = d; }
-        // Scale minRadius and padding with zoom
         const minRadius = this.getScaledSize(24); const paddingVal = this.getScaledSize(18) + Math.log(Math.max(1, cluster.count)) * this.getScaledSize(6); const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + paddingVal);
 
         let totalStacks = 0; for (const r of cluster.resources) { const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
@@ -483,7 +363,6 @@ export class DrawingUtils {
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
         const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
 
-        // Scale font sizes
         const fontSize1 = this.getScaledFontSize(12, 8);
         const fontSize2 = this.getScaledFontSize(11, 7);
         ctx.font = `bold ${fontSize1}px monospace`;
@@ -491,7 +370,6 @@ export class DrawingUtils {
         ctx.font = `${fontSize2}px monospace`;
         const w2 = ctx.measureText(line2).width;
 
-        // Scale box dimensions
         const boxPadding = this.getScaledSize(16);
         const infoW = Math.ceil(Math.max(w1, w2)) + boxPadding;
         const lineSpacing = this.getScaledSize(6);
@@ -515,25 +393,19 @@ export class DrawingUtils {
 
         ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.strokeRect(infoX + 0.5, boxY + 0.5, infoW - 1, infoH - 1);
 
-        // Draw text with scaled positions
         ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center';
         ctx.font = `bold ${fontSize1}px monospace`; ctx.fillText(line1, infoX + infoW / 2, boxY + this.getScaledSize(8) + fontSize1 - 2);
         ctx.font = `${fontSize2}px monospace`; ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillText(line2, infoX + infoW / 2, boxY + this.getScaledSize(8) + fontSize1 + lineSpacing + fontSize2 - 2);
         ctx.textAlign = 'start';
     }
 
-    // Convert game units distance to meters applying global scale factor.
     convertGameUnitsToMeters(gameUnits) {
-        const baseUnit = 3;
-        const meters = (gameUnits / baseUnit) * SCALE_FACTOR;
-        return Math.round(meters);
+        return Math.round((gameUnits / 3) * SCALE_FACTOR);
     }
 
-    // Inverse conversion: meters -> game units
     metersToGameUnits(meters) {
         if (!meters || meters <= 0) return 0;
-        const baseUnit = 3;
-        return Math.ceil((meters / SCALE_FACTOR) * baseUnit);
+        return Math.ceil((meters / SCALE_FACTOR) * 3);
     }
 
     detectClusters(resources, clusterRadius = 30, minClusterSize = 2) {
@@ -541,10 +413,9 @@ export class DrawingUtils {
         const gameUnitsRadius = this.metersToGameUnits(clusterRadius);
         const clusters = [];
         const processed = new Set();
+
         const getTypeName = (res) => {
             if (!res) return 'Resource';
-
-            // Check res.name first (most reliable)
             if (res.name && typeof res.name === 'string') {
                 const n = res.name.toLowerCase();
                 if (n.includes('fiber')) return 'Fiber';
@@ -553,8 +424,6 @@ export class DrawingUtils {
                 if (n.includes('ore')) return 'Ore';
                 if (n.includes('rock')) return 'Rock';
             }
-
-            // Fallback to res.type if it's a string
             if (res.type && typeof res.type === 'string') {
                 const t = res.type.toLowerCase();
                 if (t.includes('fiber')) return 'Fiber';
@@ -563,7 +432,6 @@ export class DrawingUtils {
                 if (t.includes('ore')) return 'Ore';
                 if (t.includes('rock')) return 'Rock';
             }
-
             return 'Resource';
         };
 
