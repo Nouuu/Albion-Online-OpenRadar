@@ -1,0 +1,70 @@
+{{define "partials/checkbox.gohtml"}}
+{{/* Checkbox component
+     Usage: {{template "partials/checkbox.gohtml" (dict "ID" "settingName" "Label" "Label Text" "Tooltip" "Help text")}}
+*/}}
+<label class="flex items-center gap-3 cursor-pointer group {{.Class}}">
+    <input type="checkbox"
+           id="{{.ID}}"
+           data-setting="{{.ID}}"
+           {{if .Checked}}checked{{end}}
+           {{if .Disabled}}disabled{{end}}
+           class="w-5 h-5 rounded border-2 border-white/20 bg-surface
+                  checked:bg-accent checked:border-accent
+                  focus:ring-2 focus:ring-accent/30
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  transition-colors cursor-pointer">
+    <span class="text-gray-300 group-hover:text-white transition-colors {{if .Disabled}}opacity-50{{end}}">
+        {{.Label}}
+    </span>
+    {{if .Tooltip}}
+    <span class="relative group/tooltip">
+        <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
+        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50
+                     px-3 py-2 rounded-lg bg-overlay border border-white/10
+                     text-xs text-gray-200 whitespace-nowrap
+                     opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible
+                     transition-all duration-200 shadow-lg">
+            {{.Tooltip}}
+        </span>
+    </span>
+    {{end}}
+</label>
+{{end}}
+
+{{/* Inline checkbox for compact layouts */}}
+{{define "checkbox-inline"}}
+<label class="inline-flex items-center gap-2 cursor-pointer">
+    <input type="checkbox"
+           id="{{.ID}}"
+           data-setting="{{.ID}}"
+           {{if .Checked}}checked{{end}}
+           class="w-4 h-4 rounded border-2 border-white/20 bg-surface
+                  checked:bg-accent checked:border-accent
+                  focus:ring-2 focus:ring-accent/30
+                  transition-colors cursor-pointer">
+    <span class="text-sm text-gray-300">{{.Label}}</span>
+</label>
+{{end}}
+
+{{/* Toggle switch style */}}
+{{define "toggle"}}
+<label class="flex items-center gap-3 cursor-pointer group">
+    <div class="relative">
+        <input type="checkbox"
+               id="{{.ID}}"
+               data-setting="{{.ID}}"
+               {{if .Checked}}checked{{end}}
+               class="sr-only peer">
+        <div class="w-11 h-6 bg-surface border border-white/20 rounded-full
+                    peer-checked:bg-accent peer-checked:border-accent
+                    peer-focus:ring-2 peer-focus:ring-accent/30
+                    transition-colors"></div>
+        <div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full
+                    peer-checked:translate-x-5 transition-transform"></div>
+    </div>
+    <span class="text-gray-300 group-hover:text-white transition-colors">{{.Label}}</span>
+    {{if .Tooltip}}
+    <i data-lucide="info" class="w-4 h-4 text-gray-500" title="{{.Tooltip}}"></i>
+    {{end}}
+</label>
+{{end}}

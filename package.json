@@ -1,64 +1,31 @@
 {
   "name": "albion-openradar",
-  "version": "1.3.0",
-  "description": "OpenRadar - Real-time radar for Albion Online",
-  "main": "app.js",
+  "version": "2.0.0",
+  "description": "OpenRadar - Real-time radar for Albion Online (Go Backend)",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon --config config/nodemon.json app.js",
-    "check": "node scripts-shell/check-system.js",
-    "compress:data": "node scripts-shell/compress-game-data.js",
-    "prebuild": "npm run check",
-    "esbuild": "node scripts-shell/build-esbuild.js",
-    "build:win": "npm run esbuild && pkg . --targets node24-win-x64 --compress GZip --output dist/OpenRadar.exe --no-bytecode --public-packages \"*\" --public",
-    "build:linux": "npm run esbuild && pkg . --targets node24-linux-x64 --compress GZip --output dist/OpenRadar-linux --no-bytecode --public-packages \"*\" --public",
-    "build:macos": "npm run esbuild && pkg . --targets node24-macos-x64 --compress GZip --output dist/OpenRadar-macos --no-bytecode --public-packages \"*\" --public",
-    "build:all": "npm run esbuild && pkg-fetch && pkg . --targets node24-win-x64,node24-linux-x64,node24-macos-x64 --compress GZip --no-bytecode --public-packages \"*\" --public",
-    "postbuild": "node scripts-shell/post-build.js",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
-  },
-  "bin": "app.cjs",
-  "pkg": {
-    "assets": [
-      "node_modules/cap/build/**/*"
-    ],
-    "targets": [
-      "node24-win-x64",
-      "node24-linux-x64",
-      "node24-macos-x64"
-    ],
-    "outputPath": "dist"
+    "update-data": "tsx tools/update-ao-data.ts --replace-existing",
+    "download-icons": "tsx tools/download-and-optimize-item-icons.ts",
+    "download-spells": "tsx tools/download-and-optimize-spell-icons.ts",
+    "download-map": "tsx tools/download-and-optimize-map.ts",
+    "download-assets": "npm run download-icons && npm run download-spells && npm run download-map",
+    "update-assets": "npm run update-data && npm run download-assets",
+    "compress:data": "node tools/compress-game-data.js",
+    "postbuild": "node tools/post-build.js",
+    "lint": "eslint web/scripts/ web/public/",
+    "lint:fix": "eslint web/scripts/ web/public/ --fix"
   },
   "author": "Nospy",
   "license": "ISC",
-  "type": "module",
   "engines": {
-    "node": ">=24.11.1",
-    "npm": ">=11.6.2"
-  },
-  "dependencies": {
-    "buffercursor": "^0.0.12",
-    "cap": "^0.2.1",
-    "compression": "^1.8.1",
-    "ejs": "^3.1.10",
-    "express": "^5.2.1",
-    "nan": "^2.23.0",
-    "node-gyp": "^11.5.0",
-    "readline-sync": "^1.4.10",
-    "winreg": "^1.2.5",
-    "ws": "^8.18.3"
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@types/express": "^5.0.6",
-    "@types/node": "^24.10.1",
-    "@yao-pkg/pkg": "^6.11.0",
     "archiver": "^7.0.1",
-    "esbuild": "^0.27.0",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
-    "nodemon": "^3.1.11",
     "puppeteer": "^24.31.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",

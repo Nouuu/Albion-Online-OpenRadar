@@ -92,6 +92,12 @@ server-scripts/ip.txt
 .idea/
 .vscode/
 
+# Build artifacts
+tmp/
+ip.txt
+nul
+VERSION
+
 # Packages et helpers
 ZIP PACKAGE/
 HELPER PACKAGE/
@@ -102,3 +108,4 @@ HELPER PACKAGE/
 /.serena/memories/suggested_commands.md
 /.serena/.gitignore
 /.serena/project.yml
+/cmd/radar/resource.syso

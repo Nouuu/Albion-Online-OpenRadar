@@ -6,15 +6,62 @@
 [![GitHub issues](https://img.shields.io/github/issues-raw/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=Issues)](https://github.com/Nouuu/Albion-Online-ZQRadar/issues)
 [![GitHub Repo stars](https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=for-the-badge)]()
 
+<p align="center">
+  <img src="docs/images/radar_1.png" alt="OpenRadar Main View" width="700">
+</p>
+
 ---
 
 ## About
 
 **OpenRadar** is a real-time radar tool for **Albion Online** that provides situational awareness without game injection. Track players, resources, enemies, and events with a clean, customizable web interface.
 
-- **No Injection** – Lower risk of detection/banning
-- **Real-time Map** – Live tracking with background map overlay
-- **Overlay Mode** – Popup window for seamless gameplay (use [DeskPins](https://efotinis.neocities.org/deskpins/) to keep it on top)
+### v2.0 Highlights
+
+#### Backend
+- **Native Go Backend** - Single binary (~95 MB) with all assets embedded
+- **No External Dependencies** - Just Npcap (Windows) or libpcap (Linux)
+- **Massive Size Reduction** - From ~500 MB (Node.js) to ~95 MB
+- **Faster Startup** - No runtime extraction needed
+- **No Injection** - Lower risk of detection/banning
+
+#### UI
+- **Modern Dark Theme** - Tailwind CSS v4 with custom color palette
+- **HTMX Navigation** - Seamless page transitions without reload
+- **Dynamic Radar** - Adjustable size (300-800px) and zoom (0.5x-2.0x)
+- **Player Color Coding** - Green (passive), Orange (faction), Red (hostile)
+- **TUI Dashboard** - Real-time stats in terminal
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/images/radar_2.png" alt="Radar with entities" width="400"></td>
+    <td><img src="docs/images/radar_3.png" alt="Radar zoomed" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Radar with detected entities</em></td>
+    <td align="center"><em>Radar with zoom controls</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/settings.png" alt="Settings page" width="400"></td>
+    <td><img src="docs/images/resources.png" alt="Resources page" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Settings page</em></td>
+    <td align="center"><em>Resources filtering</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/overlay.png" alt="Overlay window" width="400"></td>
+    <td><img src="docs/images/OpenRadar.gif" alt="TUI Dashboard" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Floating overlay window</em></td>
+    <td align="center"><em>Terminal dashboard (TUI)</em></td>
+  </tr>
+</table>
 
 ---
 
@@ -31,14 +78,11 @@
 - **Harvestables**: Trees, ores, stone, fiber, hide (T1-T8 + enchantments .0-.3)
 - **Living Resources**: Animals and skinnable creatures (~2,800 types)
 - **Fishing spots**: All tiers with enchantment support
-- **Smart validation** for type, tier, and enchantment combinations
 
 ### Enemy & Creature Tracking
-- **Color-coded threat classification**:
-  - 🟢 Normal | 🟣 Enchanted | 🟠 Mini-Boss | 🔴 Boss
+- **Color-coded threat classification**: Normal | Enchanted | Mini-Boss | Boss
 - 4,528 mobs catalogued with metadata
-- Real-time health tracking (spawn, regen, damage)
-- Filter by category: Normal, Enchanted, Mini-Boss, Boss
+- Real-time health tracking
 - Mist beasts detection
 
 ### Points of Interest
@@ -46,53 +90,69 @@
 - Dungeons (solo/group, static/random, corrupted)
 - Mist portals with enchantment levels
 
-### Advanced Features
-- Background Maps for visual context
-- Smart Filters by tier, enchantment, and category
-- Settings Persistence saved locally
-- Web Interface at `http://localhost:5001`
-
 ---
 
-## Quick Start (Windows)
+## Quick Start
 
-### 1. Prerequisites
+### Windows
 
-Download and install **Npcap** (version **1.84** or newer):
-- [Official Npcap Download Page](https://npcap.com/)
-- [Direct Link: Npcap 1.84](https://npcap.com/dist/npcap-1.84.exe)
+1. **Install Npcap** (version 1.84+):
+   - [Official Download](https://npcap.com/) | [Direct Link v1.84](https://npcap.com/dist/npcap-1.84.exe)
 
-### 2. Download OpenRadar
+2. **Download & Run**:
+   - Get the latest release from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
+   - Extract and run `OpenRadar.exe`
+   - Select your network adapter (NOT 127.0.0.1)
+   - Open **http://localhost:5001** in your browser
 
-Get the latest release from:
-- [Releases Page](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
+### Linux
 
-### 3. Run the Application
+1. **Install dependencies**:
+   ```bash
+   # Ubuntu/Debian
+   sudo apt-get install libpcap0.8 libcap2-bin
 
-1. Extract the ZIP file
-2. Run `OpenRadar.exe`
-3. Select your network adapter:
+   # Fedora/RHEL
+   sudo dnf install libpcap libcap
 
+   # Arch Linux
+   sudo pacman -S libpcap libcap
+   ```
+
+2. **Download & Make executable**:
+   ```bash
+   chmod +x OpenRadar-linux
+   ```
+
+3. **Grant capture permissions** (choose ONE option):
+
+   **Option A** - Run as root (simple):
+   ```bash
+   sudo ./OpenRadar-linux
+   ```
+
+   **Option B** - Grant capabilities (recommended, allows running as normal user):
+   ```bash
+   # Grant network capture capabilities to the executable
+   sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
+
+   # Verify capabilities were applied (optional)
+   getcap ./OpenRadar-linux
+
+   # Run as normal user
+   ./OpenRadar-linux
+   ```
+   > **Note**: Capabilities are removed if the file is modified or moved. Re-run `setcap` after updates.
+
+4. Open **http://localhost:5001** in your browser
+
+### Command-line Options
+
+```bash
+OpenRadar -version       # Show version
+OpenRadar -ip X.X.X.X    # Skip adapter selection
+OpenRadar -dev           # Development mode (read files from disk)
 ```
-Please select one of the adapter that you use to connect to the internet:
-  1. Ethernet adapter
-  2. Wi-Fi adapter
-  3. VPN adapter
-
-input the number here:
-```
-
-4. Choose the correct adapter (NOT 127.0.0.1)
-5. Authenticate with Discord (one-time setup)
-6. Click **"Launch Radar"**
-7. Open your browser: **http://localhost:5001**
-
-### 4. Configure Settings
-
-Navigate to the **Settings** page to:
-- Enable debug logging categories
-- Customize visual overlays
-- Configure tier and enchantment filters
 
 ---
 
@@ -100,34 +160,97 @@ Navigate to the **Settings** page to:
 
 ### Prerequisites
 
-| Tool               | Version  | Download                                                                                     |
-|--------------------|----------|----------------------------------------------------------------------------------------------|
-| **Node.js**        | v24.11.1 | [Download](https://nodejs.org/dist/v24.11.1/node-v24.11.1-x64.msi)                           |
-| **Npcap**          | 1.84+    | [Download](https://npcap.com/)                                                               |
-| **VS Build Tools** | 2022     | [Download](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) |
+| Tool       | Version | Notes                          |
+|------------|---------|--------------------------------|
+| **Go**     | 1.23+   | [Download](https://go.dev/dl/) |
+| **Npcap**  | 1.84+   | Windows only                   |
+| **libpcap**| Latest  | Linux only                     |
+| **Node.js**| 20+     | For data/build scripts only    |
+| **Docker** | Latest  | For Linux cross-compilation    |
 
 ### Quick Setup
 
 ```bash
-git clone https://github.com/Nouuu/Albion-Online-ZQRadar.git
-cd Albion-Online-ZQRadar
-npm install
-npm run dev
+git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
+cd Albion-Online-OpenRadar
+
+# Install Air for hot-reload (one time)
+make install-tools
+
+# Start development server
+make dev
 ```
 
 Web interface available at **http://localhost:5001**.
 
-### Build
+### Build Commands
 
 ```bash
-npm run build:win          # Build Windows executable
-npm run build:all          # Build all platforms (Windows, Linux, macOS)
-npm run postbuild          # Copy assets + create release archives
+make build-win        # Build Windows executable
+make build-linux      # Build Linux via Docker
+make build-all        # Build all platforms
+make all-in-one       # Complete release workflow
 ```
 
-**Troubleshooting:**
-- `Cannot find module 'cap'` → Run `npm rebuild cap`
-- The .exe doesn't start → Install Npcap 1.84+, run as administrator
+### Project Structure
+
+```
+OpenRadar/
+├── cmd/radar/        # Go entry point
+├── internal/         # Go packages
+│   ├── capture/      # Packet capture (pcap)
+│   ├── photon/       # Protocol parsing
+│   ├── server/       # HTTP & WebSocket servers
+│   └── logger/       # Structured logging
+├── web/              # Frontend assets (embedded)
+│   ├── images/
+│   ├── public/       # HTML, game data
+│   ├── scripts/      # JavaScript
+│   └── sounds/
+├── tools/            # Build & data scripts (Node.js)
+├── docs/             # Documentation
+├── embed.go          # Asset embedding
+├── go.mod            # Go modules
+└── Makefile          # Build system
+```
+
+### Useful Commands
+
+```bash
+make help             # Show all commands
+make check            # Verify dependencies
+make update-ao-data   # Update Albion game data
+make clean            # Clean build artifacts
+make lint             # Lint Go code
+```
+
+---
+
+## Technical Details
+
+### Architecture
+
+- **Backend**: Native Go with embedded assets
+- **Frontend**: HTMX + Alpine.js + Tailwind CSS v4
+- **Templates**: Go html/template with SSR
+- **Protocol**: Photon Protocol16 deserialization
+- **Capture**: gopacket/pcap for packet capture
+
+### Ports
+
+| Port | Service   |
+|------|-----------|
+| 5001 | HTTP + WebSocket (`/ws`) |
+| 5056 | UDP (Albion traffic - captured) |
+
+### Performance Comparison
+
+| Metric | v1.x (Node.js) | v2.0 (Go) |
+|--------|----------------|-----------|
+| Binary size | ~100 MB | ~95 MB |
+| Assets | ~400 MB (separate) | Embedded |
+| Total | ~500 MB | ~95 MB |
+| Startup | Slower (extraction) | Instant |
 
 ---
 
@@ -135,21 +258,11 @@ npm run postbuild          # Copy assets + create release archives
 
 Full documentation available in [docs/README.md](docs/README.md).
 
-### Quick Links
-
 | Guide | Description |
 |-------|-------------|
+| [RELEASE_NOTES.md](RELEASE_NOTES.md) | Version 2.0 changes |
 | [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development guide |
-| [LOGGING.md](docs/technical/LOGGING.md) | Logging system v2.2 |
-
-### Active Plans
-
-| Plan | Status |
-|------|--------|
-| [Go Migration](docs/project/GO_MIGRATION_PLAN.md) | Backend rewrite in Go |
-| [Radar Unification](docs/project/RADAR_UNIFICATION_PLAN.md) | ✅ 100% complete |
-| [Settings Migration](docs/project/SETTINGS_MIGRATION_PLAN.md) | ✅ 95% complete |
-| [Resource Detection](docs/project/RESOURCE_DETECTION_REFACTOR.md) | ✅ 100% complete |
+| [LOGGING.md](docs/technical/LOGGING.md) | Logging system |
 
 ---
 
@@ -172,8 +285,6 @@ Full documentation available in [docs/README.md](docs/README.md).
 **Original Project**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
 
 **Based on**: [QRadar](https://github.com/FashionFlora/Albion-Online-Radar-QRadar) by [@FashionFlora](https://github.com/FashionFlora)
-
-**Uses**: [photon-packet-parser](https://github.com/0xN0x/photon-packet-parser)
 
 ---
 

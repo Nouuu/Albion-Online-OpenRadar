@@ -1,0 +1,145 @@
+/**
+ * OpenRadar Tooltip System
+ *
+ * NEW: Uses data-tooltip attribute with CSS ::after pseudo-element
+ * Usage: <i data-lucide="info" class="tooltip-icon" data-tooltip="Help text"></i>
+ *
+ * Position variants: data-tooltip-pos="top|bottom|left|right" (default: right)
+ */
+
+/* ============================================
+   NEW TOOLTIP SYSTEM (data-tooltip attribute)
+   ============================================ */
+
+/* Tooltip trigger element */
+[data-tooltip] {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Tooltip content via ::after pseudo-element */
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background-color: rgba(17, 24, 39, 0.95);
+  color: white;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s;
+  white-space: normal;
+  max-width: 250px;
+  width: max-content;
+  pointer-events: none;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  /* Default position: right */
+  top: 50%;
+  left: 100%;
+  transform: translateX(0.5rem) translateY(-50%);
+}
+
+/* Show tooltip on hover and focus */
+[data-tooltip]:hover::after,
+[data-tooltip]:focus::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Position: Top */
+[data-tooltip-pos="top"]::after {
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-0.5rem);
+}
+
+/* Position: Bottom */
+[data-tooltip-pos="bottom"]::after {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(0.5rem);
+}
+
+/* Position: Left */
+[data-tooltip-pos="left"]::after {
+  top: 50%;
+  left: auto;
+  right: 100%;
+  transform: translateX(-0.5rem) translateY(-50%);
+}
+
+/* Tooltip icon styling (for Lucide info icons) */
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.dark .tooltip-icon {
+  color: #d1d5db;
+}
+
+/* ============================================
+   LEGACY TOOLTIP SYSTEM (for backwards compatibility)
+   Uses: .group:hover .tooltip-base pattern
+   Will be removed after migration is complete
+   ============================================ */
+
+/* Base class for legacy tooltips */
+.tooltip-base {
+  position: absolute;
+  background-color: rgba(17, 24, 39, 0.95);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+}
+
+/* Legacy tooltip hover trigger */
+.group:hover .tooltip-base {
+  opacity: 1;
+}
+
+/* Legacy position: right */
+.tooltip-right {
+  top: 50%;
+  left: 100%;
+  transform: translateX(0.5rem) translateY(-50%);
+}
+
+/* Legacy position: left */
+.tooltip-left {
+  top: 50%;
+  right: 100%;
+  transform: translateX(-0.5rem) translateY(-50%);
+}
+
+/* Legacy position: top */
+.tooltip-top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-0.5rem);
+  margin-bottom: 0.5rem;
+}
+
+/* Legacy position: bottom */
+.tooltip-bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(0.5rem);
+  margin-top: 0.5rem;
+}

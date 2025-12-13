@@ -1,0 +1,24 @@
+{
+  "FixedFileInfo": {
+    "FileVersion": {
+      "Major": 0,
+      "Minor": 0,
+      "Patch": 0,
+      "Build": 0
+    },
+    "ProductVersion": {
+      "Major": 0,
+      "Minor": 0,
+      "Patch": 0,
+      "Build": 0
+    }
+  },
+  "StringFileInfo": {
+    "FileDescription": "OpenRadar - Albion Online Radar",
+    "FileVersion": "feat/go-backend-a83fb611",
+    "ProductName": "OpenRadar",
+    "ProductVersion": "feat/go-backend-a83fb611",
+    "LegalCopyright": "MIT License"
+  },
+  "IconPath": "../../web/images/favicon.ico"
+}

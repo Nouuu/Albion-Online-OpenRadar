@@ -1,0 +1,190 @@
+{{define "overlay/radar-overlay.gohtml"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>OpenRadar - Overlay</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            overflow: hidden;
+            cursor: default;
+            user-select: none;
+        }
+
+        #overlayContainer {
+            position: relative;
+            /* Size will be set dynamically via JS */
+            width: 500px;
+            height: 500px;
+            background-color: rgba(17, 24, 39, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .overlay-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #mapCanvas {
+            border: 2px solid rgba(167, 139, 250, 0.4);
+            border-radius: 12px;
+        }
+
+        #controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+            transition: opacity 0.5s ease;
+        }
+
+        .control-btn {
+            background-color: rgba(124, 58, 237, 0.85);
+            color: white;
+            border: 1px solid rgba(167, 139, 250, 0.4);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:hover {
+            background-color: rgba(139, 92, 246, 0.95);
+            border-color: rgba(167, 139, 250, 0.6);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="overlayContainer">
+        <div id="controls">
+            <button class="control-btn" id="closeBtn" title="Close">X</button>
+        </div>
+
+        <canvas class="overlay-canvas" id="mapCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="drawCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="ourPlayerCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="uiCanvas" width="500" height="500"></canvas>
+    </div>
+
+    <!-- Settings Sync -->
+    <script type="module">
+        import settingsSync from '/scripts/Utils/SettingsSync.js';
+        window.settingsSync = settingsSync;
+    </script>
+
+    <!-- Handlers -->
+    <script type="module" src="/scripts/Handlers/HarvestablesHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/MobsHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/ChestsHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/DungeonsHandler.js"></script>
+    <script type="module" src="/scripts/Handlers/Map.js"></script>
+    <script type="module" src="/scripts/Handlers/ItemsInfo.js"></script>
+    <script type="module" src="/scripts/Utils/DrawingUtils.js"></script>
+    <script type="module" src="/scripts/Utils/Utils.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Close button
+            const closeBtn = document.getElementById('closeBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    if (confirm('Close overlay mode?')) {
+                        window.close();
+                    }
+                });
+            }
+
+            // Auto-hide controls
+            let hideControlsTimeout;
+            const controls = document.getElementById('controls');
+
+            function showControls() {
+                if (controls) controls.style.opacity = '1';
+                clearTimeout(hideControlsTimeout);
+                hideControlsTimeout = setTimeout(() => {
+                    if (controls) controls.style.opacity = '0.2';
+                }, 2000);
+            }
+
+            document.addEventListener('mousemove', showControls);
+
+            if (controls) {
+                controls.addEventListener('mouseenter', () => {
+                    controls.style.opacity = '1';
+                    clearTimeout(hideControlsTimeout);
+                });
+            }
+
+            // Initialize
+            showControls();
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    window.close();
+                }
+            });
+
+            document.title = 'OpenRadar Overlay - ESC:Close';
+
+            // Dynamic canvas size (synced from main page via settingsSync)
+            const overlayContainer = document.getElementById('overlayContainer');
+            const canvases = document.querySelectorAll('.overlay-canvas');
+
+            function applyCanvasSize(size) {
+                size = size || 500;
+                if (overlayContainer) {
+                    overlayContainer.style.width = `${size}px`;
+                    overlayContainer.style.height = `${size}px`;
+                }
+                canvases.forEach(canvas => {
+                    canvas.width = size;
+                    canvas.height = size;
+                });
+                // Resize window to fit
+                window.resizeTo(size + 16, size + 39); // Account for window chrome
+            }
+
+            // Wait for settingsSync to be available
+            const checkSettingsSync = setInterval(() => {
+                if (window.settingsSync) {
+                    clearInterval(checkSettingsSync);
+                    const initialSize = window.settingsSync.getNumber('settingCanvasSize') || 500;
+                    applyCanvasSize(initialSize);
+
+                    // Listen for size changes from main page
+                    window.settingsSync.on('settingCanvasSize', (key, value) => {
+                        applyCanvasSize(parseInt(value) || 500);
+                    });
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
+{{end}}

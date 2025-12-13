@@ -1,0 +1,162 @@
+/**
+ * OpenRadar App Styles
+ * Minimal CSS - only animations and utilities that can't be done in Tailwind
+ */
+
+/* ============================================
+   PAGE TRANSITIONS
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* ============================================
+   STAGGER CHILDREN ANIMATION
+   ============================================ */
+
+.stagger > * {
+    animation: fadeIn 0.25s ease-out both;
+}
+
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 30ms; }
+.stagger > *:nth-child(3) { animation-delay: 60ms; }
+.stagger > *:nth-child(4) { animation-delay: 90ms; }
+.stagger > *:nth-child(5) { animation-delay: 120ms; }
+.stagger > *:nth-child(6) { animation-delay: 150ms; }
+.stagger > *:nth-child(7) { animation-delay: 180ms; }
+.stagger > *:nth-child(8) { animation-delay: 210ms; }
+
+/* ============================================
+   PULSE GLOW (RADAR ACTIVE INDICATOR)
+   ============================================ */
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 20px 4px rgba(0, 212, 255, 0.2);
+    }
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ============================================
+   RADAR CANVAS STYLES
+   ============================================ */
+
+.radar-canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* Canvas container for layered canvases */
+.canvas-container {
+    position: relative;
+    width: 500px;
+    height: 500px;
+}
+
+.canvas-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* ============================================
+   CHECKBOX CUSTOM STYLING
+   ============================================ */
+
+/* Checkmark animation */
+@keyframes checkmark {
+    0% {
+        transform: scale(0.8);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+input[type="checkbox"]:checked {
+    animation: checkmark 0.15s ease-out;
+}
+
+/* ============================================
+   SCROLLBAR STYLING (WEBKIT)
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0f;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2a2a3a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #3a3a4a;
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #2a2a3a #0a0a0f;
+}
+
+/* ============================================
+   FOCUS VISIBLE STYLES
+   ============================================ */
+
+:focus-visible {
+    outline: 2px solid #00d4ff;
+    outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users */
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ============================================
+   TOOLTIP ANIMATION
+   ============================================ */
+
+@keyframes tooltip-appear {
+    from {
+        opacity: 0;
+        transform: translateX(4px) translateY(-50%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(8px) translateY(-50%);
+    }
+}
+
+[data-tooltip]:hover::after {
+    animation: tooltip-appear 0.15s ease-out;
+}
+

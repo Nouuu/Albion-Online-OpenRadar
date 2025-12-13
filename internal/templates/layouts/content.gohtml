@@ -1,0 +1,59 @@
+{{define "layouts/content.gohtml"}}
+<!-- SPA metadata for JavaScript handling -->
+<script>
+(function() {
+    // Update page data attribute
+    var pc = document.getElementById('page-content');
+    if (pc) pc.dataset.page = '{{.Page}}';
+
+    // Update document title
+    document.title = '{{.Title}}';
+
+    // Update sidebar active states
+    var pages = {
+        {{range .NavItems}}'{{.Path}}': {{.Active}},{{end}}
+    };
+
+    ['desktop-nav', 'mobile-nav'].forEach(function(navId) {
+        var nav = document.getElementById(navId);
+        if (!nav) return;
+
+        nav.querySelectorAll('a[href]').forEach(function(link) {
+            var path = link.getAttribute('href');
+            var isActive = pages[path] || false;
+
+            // Remove all state classes
+            link.classList.remove('bg-accent/10', 'text-accent', 'border-l-2', 'border-accent', '-ml-0.5', 'pl-3.5');
+            link.classList.remove('text-gray-400', 'hover:bg-overlay', 'hover:text-white');
+
+            if (isActive) {
+                link.classList.add('bg-accent/10', 'text-accent', 'border-l-2', 'border-accent', '-ml-0.5', 'pl-3.5');
+            } else {
+                link.classList.add('text-gray-400', 'hover:bg-overlay', 'hover:text-white');
+            }
+        });
+    });
+})();
+</script>
+
+<div class="container mx-auto animate-in">
+    {{if eq .Page "radar"}}{{template "pages/radar" .}}
+    {{else if eq .Page "players"}}{{template "pages/players" .}}
+    {{else if eq .Page "resources"}}{{template "pages/resources" .}}
+    {{else if eq .Page "enemies"}}{{template "pages/enemies" .}}
+    {{else if eq .Page "chests"}}{{template "pages/chests" .}}
+    {{else if eq .Page "ignorelist"}}{{template "pages/ignorelist" .}}
+    {{else if eq .Page "settings"}}{{template "pages/settings" .}}
+    {{else}}{{template "pages/radar" .}}{{end}}
+</div>
+
+<!-- Page-specific scripts (inline for HTMX support) -->
+{{if eq .Page "radar"}}{{template "scripts/radar" .}}
+{{else if eq .Page "players"}}{{template "scripts/players" .}}
+{{else if eq .Page "resources"}}{{template "scripts/resources" .}}
+{{else if eq .Page "enemies"}}{{template "scripts/enemies" .}}
+{{else if eq .Page "chests"}}{{template "scripts/chests" .}}
+{{else if eq .Page "ignorelist"}}{{template "scripts/ignorelist" .}}
+{{else if eq .Page "settings"}}{{template "scripts/settings" .}}
+{{end}}
+{{end}}

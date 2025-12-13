@@ -1,95 +1,190 @@
 # ============================================
-# OpenRadar - Makefile
+# OpenRadar - Makefile (Go Backend v2.0)
 # ============================================
 # Usage: make [target]
-# Requires: Node.js v24.11.1, npm, Npcap 1.84
+# Requires: Go 1.25+, Npcap 1.84+ (Windows) or libpcap (Linux)
 # ============================================
 
-.PHONY: help install check all-in-one update-ao-data download-assets update-assets
+.PHONY: help dev run build build-win build-linux build-all \
+        package package-win all-in-one clean test lint install-tools check \
+        update-ao-data download-assets update-assets restore-data
 
-# Variables
-NODE_VERSION = v24.11.1
-NPCAP_VERSION = 1.84
-DIST_DIR = dist
-
-# Colors for display
-GREEN = \033[0;32m
-YELLOW = \033[1;33m
-RED = \033[0;31m
-NC = \033[0m # No Color
-
-help: ## Display help
-	@echo ""
-	@echo "$(GREEN)OpenRadar - Available Commands$(NC)"
-	@echo "=================================="
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
-	@echo ""
-
-install: ## Install all dependencies
-	@echo "$(GREEN)[1/2] Installing npm dependencies...$(NC)"
-	npm install
-	@echo ""
-	@echo "$(GREEN)[2/2] Rebuilding native modules (cap)...$(NC)"
-	npm rebuild cap
-	@echo ""
-	@echo "$(GREEN)✓ Installation complete!$(NC)"
-
-check: ## Check system requirements
-	@echo "$(YELLOW)Checking system requirements...$(NC)"
-	@echo ""
-	@echo -n "Node.js version: "
-	@node --version || (echo "$(RED)✗ Node.js not found!$(NC)" && exit 1)
-	@echo "$(GREEN)✓ Node.js OK$(NC)"
-	@echo ""
-	@echo -n "npm version: "
-	@npm --version || (echo "$(RED)✗ npm not found!$(NC)" && exit 1)
-	@echo "$(GREEN)✓ npm OK$(NC)"
-	@echo ""
-
-# All-in-one build
-all-in-one: ## Complete build process (install + build all platforms + package)
-	@echo "$(GREEN)═══════════════════════════════════════$(NC)"
-	@echo "$(GREEN)  OpenRadar - Complete Build Process   $(NC)"
-	@echo "$(GREEN)═══════════════════════════════════════$(NC)"
-	@echo ""
-	@echo "$(YELLOW)Step 1/6: Installing dependencies...$(NC)"
-	@npm install
-	@echo ""
-	@echo "$(YELLOW)Step 2/6: Rebuilding native modules...$(NC)"
-	@npm rebuild cap
-	@echo ""
-	@echo "$(YELLOW)Step 3/6: Installing build tools...$(NC)"
-	@npm install -D @yao-pkg/pkg archiver sharp
-	@echo ""
-	@echo "$(YELLOW)Step 4/6: Updating ao-data files...$(NC)"
-	@$(MAKE) update-ao-data
-	@echo ""
-	@echo "$(YELLOW)Step 5/6: Building all platforms...$(NC)"
-	@npm run build:all
-	@echo ""
-	@echo "$(YELLOW)Step 6/6: Creating release packages...$(NC)"
-	@node scripts-shell/post-build.js
-	@echo ""
-	@echo "$(GREEN)✓ Complete build process finished!$(NC)"
-
-
-update-ao-data: ## Update AO data files
-	@echo "$(YELLOW)Updating AO data files...$(NC)"
-	@tsx scripts-shell/update-ao-data.ts --replace-existing
-
-download-assets: ## Download required assets
-	@echo "$(YELLOW)Downloading required assets...$(NC)"
-	@tsx scripts-shell/download-and-optimize-spell-icons.ts
-	@tsx scripts-shell/download-and-optimize-item-icons.ts
-	@tsx scripts-shell/download-and-optimize-map.ts
-
-update-assets: ## Update all assets
-	@echo "$(YELLOW)Updating all assets...$(NC)"
-	@$(MAKE) update-ao-data
-	@$(MAKE) download-assets
-
+# Variables - Dynamic version from Git
+# If on a tag: use tag name (strip 'v' prefix if present)
+# Otherwise: branch-commitshort
+GIT_TAG := $(shell git describe --tags --exact-match 2>nul)
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>nul || echo "unknown")
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>nul || echo "unknown")
+VERSION := $(if $(GIT_TAG),$(patsubst v%,%,$(GIT_TAG)),$(GIT_BRANCH)-$(GIT_COMMIT))
+# Windows-compatible: use PowerShell for date, fallback to static if not available
+BUILD_TIME := $(shell powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'" 2>nul || echo "unknown")
+BUILD_DIR := dist
+BINARY_NAME := OpenRadar
+GO := go
+LDFLAGS := -ldflags="-s -w -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)"
 
 # Default target
 .DEFAULT_GOAL := help
 
+help: ## Display help
+	@echo ""
+	@echo "OpenRadar v$(VERSION) - Go Backend"
+	@echo "=================================="
+	@echo ""
+	@echo "Development:"
+	@echo "  dev              Run with hot-reload (requires air)"
+	@echo "  run              Run without hot-reload"
+	@echo ""
+	@echo "Build:"
+	@echo "  build-win        Build for Windows"
+	@echo "  build-linux      Build for Linux (Docker)"
+	@echo "  build-all        Build Win + Linux"
+	@echo ""
+	@echo "Release:"
+	@echo "  all-in-one       Complete build (all platforms + package)"
+	@echo "  package          Build + package for distribution"
+	@echo ""
+	@echo "Data:"
+	@echo "  update-ao-data   Update Albion Online data files"
+	@echo "  restore-data     Restore original data (after build)"
+	@echo ""
+	@echo "Utilities:"
+	@echo "  clean            Clean build artifacts"
+	@echo "  check            Check system requirements"
+	@echo ""
+
+# ============================================
+# Development
+# ============================================
+
+dev: ## Run with hot-reload (requires air)
+	@echo "Starting dev server with hot-reload..."
+	air
+
+run: ## Run without hot-reload
+	@echo "Starting OpenRadar..."
+	$(GO) run ./cmd/radar -dev
+
+# ============================================
+# Build
+# ============================================
+
+build: build-win ## Build for current platform (default: Windows)
+
+build-win: ## Build for Windows
+	@echo "Building for Windows..."
+	-@mkdir $(BUILD_DIR) 2>nul
+	@echo "Generating versioninfo.json with version $(VERSION)..."
+	@node -e "const fs=require('fs'); const v='$(VERSION)'.match(/^(\d+)\.(\d+)\.(\d+)/) || ['','0','0','0']; fs.writeFileSync('cmd/radar/versioninfo.json', JSON.stringify({FixedFileInfo:{FileVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0},ProductVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0}},StringFileInfo:{FileDescription:'OpenRadar - Albion Online Radar',FileVersion:'$(VERSION)',ProductName:'OpenRadar',ProductVersion:'$(VERSION)',LegalCopyright:'MIT License'},IconPath:'../../web/images/favicon.ico'},null,2));"
+	@echo "Generating Windows resources (icon + version info)..."
+	cd cmd/radar && goversioninfo -64
+	$(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME).exe ./cmd/radar
+	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME).exe"
+
+build-linux: ## Build for Linux (via Docker)
+	@echo "Building for Linux via Docker..."
+	-@mkdir $(BUILD_DIR) 2>nul
+	docker build -f Dockerfile.build -o $(BUILD_DIR) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) .
+	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME)-linux"
+
+build-all: build-win build-linux ## Build for all platforms (Windows + Linux)
+
+# ============================================
+# Packaging
+# ============================================
+
+package: build ## Build + copy assets + compress + archive
+	@echo "Creating distribution packages..."
+	@node tools/post-build.js --version=$(VERSION)
+	@echo "Package complete!"
+
+package-win: build-win ## Full Windows package
+	@node tools/post-build.js --version=$(VERSION)
+	@echo "Windows package ready in $(BUILD_DIR)/"
+
+all-in-one: ## Complete build process (update data + build all platforms + package)
+	@echo "=========================================="
+	@echo "  OpenRadar v$(VERSION) - Complete Build"
+	@echo "=========================================="
+	@echo ""
+	@echo "Step 1/7: Updating AO data files..."
+	@$(MAKE) update-ao-data
+	@echo ""
+	@echo "Step 2/7: Installing npm dependencies..."
+	@npm install
+	@echo ""
+	@echo "Step 3/7: Compressing game data for embed..."
+	@node tools/compress-game-data.js web/public/ao-bin-dumps --delete-originals
+	@echo ""
+	@echo "Step 4/7: Building for Windows..."
+	@$(MAKE) build-win
+	@echo ""
+	@echo "Step 5/7: Building for Linux (Docker)..."
+	@$(MAKE) build-linux
+	@echo ""
+	@echo "Step 6/7: Creating release packages..."
+	@node tools/post-build.js --embed --version=$(VERSION)
+	@echo ""
+	@echo "Step 7/7: Restoring original data files..."
+	@$(MAKE) restore-data
+	@echo ""
+	@echo "=========================================="
+	@echo "  Build complete! Check dist/ folder"
+	@echo "=========================================="
+
+# ============================================
+# Data & Assets Management
+# ============================================
+
+update-ao-data: ## Update Albion Online data files
+	@echo "Updating AO data files..."
+	@npx tsx tools/update-ao-data.ts --replace-existing
+
+download-assets: ## Download required assets (icons, maps)
+	@echo "Downloading assets..."
+	@npx tsx tools/download-and-optimize-spell-icons.ts
+	@npx tsx tools/download-and-optimize-item-icons.ts
+	@npx tsx tools/download-and-optimize-map.ts
+
+update-assets: update-ao-data download-assets ## Update all assets
+
+restore-data: ## Restore original data files (removes .gz, re-downloads originals)
+	@echo "Restoring original data files..."
+	-@del /q web\public\ao-bin-dumps\*.gz 2>nul
+	@$(MAKE) update-ao-data
+	@echo "Data files restored!"
+
+# ============================================
+# Utilities
+# ============================================
+
+clean: ## Clean build artifacts
+	@echo "Cleaning..."
+	-@rmdir /s /q $(BUILD_DIR) 2>nul
+	-@rmdir /s /q tmp 2>nul
+	-@del /q *.exe ip.txt nul VERSION 2>nul
+	@echo "Clean complete"
+
+test: ## Run Go tests
+	$(GO) test -v ./...
+
+lint: ## Lint Go code
+	@$(GO) vet ./...
+
+lint-frontend: ## Lint frontend code (ESLint)
+	@npx eslint web/scripts/ web/public/
+
+install-tools: ## Install development tools (air for hot-reload)
+	@echo "Installing development tools..."
+	$(GO) install github.com/air-verse/air@latest
+	@echo "air installed! Run 'make dev' to start with hot-reload"
+
+check: ## Check system requirements
+	@echo "Checking Go installation..."
+	@$(GO) version
+	@echo ""
+	@echo "Checking air (for hot-reload)..."
+	-@air -v
+	@echo ""

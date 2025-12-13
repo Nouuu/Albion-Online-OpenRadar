@@ -1,0 +1,200 @@
+{{define "pages/chests"}}
+<div class="space-y-6 stagger">
+    <!-- Page Header -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6">
+        <h1 class="text-3xl font-bold text-white">Chests & Dungeons</h1>
+        <p class="text-gray-400 mt-2">Configure chest, mist, and dungeon detection settings.</p>
+    </div>
+
+    <!-- Chests Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="archive" class="w-5 h-5 text-tier-5"></i>
+            Chests
+        </h2>
+        <p class="text-gray-400 text-sm mb-4">Select which chest rarities to display on the radar.</p>
+        <div class="flex flex-wrap gap-4">
+            <label class="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" id="settingChestGreen"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-tier-2 checked:border-tier-2 focus:ring-2 focus:ring-tier-2/30 transition-colors cursor-pointer">
+                <span class="w-3 h-3 rounded-full bg-tier-2"></span>
+                <span class="text-tier-2 group-hover:text-white transition-colors font-medium">Green</span>
+                <span class="relative group/tooltip"><i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Common loot chests</span></span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" id="settingChestBlue"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-tier-3 checked:border-tier-3 focus:ring-2 focus:ring-tier-3/30 transition-colors cursor-pointer">
+                <span class="w-3 h-3 rounded-full bg-tier-3"></span>
+                <span class="text-tier-3 group-hover:text-white transition-colors font-medium">Blue</span>
+                <span class="relative group/tooltip"><i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Uncommon loot chests</span></span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" id="settingChestPurple"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-tier-4 checked:border-tier-4 focus:ring-2 focus:ring-tier-4/30 transition-colors cursor-pointer">
+                <span class="w-3 h-3 rounded-full bg-tier-4"></span>
+                <span class="text-tier-4 group-hover:text-white transition-colors font-medium">Purple</span>
+                <span class="relative group/tooltip"><i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Rare loot chests</span></span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer group">
+                <input type="checkbox" id="settingChestYellow"
+                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-tier-5 checked:border-tier-5 focus:ring-2 focus:ring-tier-5/30 transition-colors cursor-pointer">
+                <span class="w-3 h-3 rounded-full bg-tier-5"></span>
+                <span class="text-tier-5 group-hover:text-white transition-colors font-medium">Yellow</span>
+                <span class="relative group/tooltip"><i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Legendary loot chests</span></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Mists Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="cloud-fog" class="w-5 h-5 text-tier-4"></i>
+            Mists
+        </h2>
+
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4 text-gray-500"></i>
+                    Type
+                </h3>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-surface/30 cursor-pointer group hover:bg-surface/50 transition-colors">
+                        <input type="checkbox" id="settingMistSolo"
+                               class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                        <i data-lucide="user" class="w-4 h-4 text-gray-500"></i>
+                        <span class="text-gray-300 group-hover:text-white transition-colors">Solo</span>
+                        <span class="relative group/tooltip"><i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Solo mist portals (1 player)</span></span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-surface/30 cursor-pointer group hover:bg-surface/50 transition-colors">
+                        <input type="checkbox" id="settingMistDuo"
+                               class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                        <i data-lucide="users" class="w-4 h-4 text-gray-500"></i>
+                        <span class="text-gray-300 group-hover:text-white transition-colors">Duo</span>
+                        <span class="relative group/tooltip"><i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Duo mist portals (2 players)</span></span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-gray-500"></i>
+                    Enchant Level
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingMistE0" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E0</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingMistE1" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E1</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingMistE2" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E2</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingMistE3" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E3</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingMistE4" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E4</span></label>
+                </div>
+            </div>
+
+            <label class="flex items-center gap-3 p-3 rounded-lg bg-tier-4/5 border border-tier-4/20 cursor-pointer group hover:bg-tier-4/10 transition-colors mt-2">
+                <input type="checkbox" id="settingCage"
+                       class="w-5 h-5 rounded border-2 border-tier-4/30 bg-surface checked:bg-tier-4 checked:border-tier-4 focus:ring-2 focus:ring-tier-4/30 transition-colors cursor-pointer">
+                <i data-lucide="box" class="w-5 h-5 text-tier-4"></i>
+                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Show Wisp Cages</span>
+                <span class="relative group/tooltip"><i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display wisp cages locations in mists</span></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Dungeons Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
+        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <i data-lucide="door-open" class="w-5 h-5 text-accent"></i>
+            Dungeons
+        </h2>
+
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="users" class="w-4 h-4 text-gray-500"></i>
+                    Type
+                </h3>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-surface/30 cursor-pointer group hover:bg-surface/50 transition-colors">
+                        <input type="checkbox" id="settingDungeonSolo"
+                               class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                        <i data-lucide="user" class="w-4 h-4 text-gray-500"></i>
+                        <span class="text-gray-300 group-hover:text-white transition-colors">Solo</span>
+                        <span class="relative group/tooltip"><i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Solo random dungeons</span></span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-surface/30 cursor-pointer group hover:bg-surface/50 transition-colors">
+                        <input type="checkbox" id="settingDungeonDuo"
+                               class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
+                        <i data-lucide="users" class="w-4 h-4 text-gray-500"></i>
+                        <span class="text-gray-300 group-hover:text-white transition-colors">Group</span>
+                        <span class="relative group/tooltip"><i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Group random dungeons</span></span>
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-gray-500"></i>
+                    Enchant Level
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingDungeonE0" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E0</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingDungeonE1" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E1</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingDungeonE2" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E2</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingDungeonE3" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E3</span></label>
+                    <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-surface/30 cursor-pointer hover:bg-surface/50 transition-colors"><input type="checkbox" id="settingDungeonE4" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer"><span class="text-sm text-gray-300">E4</span></label>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="flame" class="w-4 h-4 text-gray-500"></i>
+                    Special
+                </h3>
+                <div class="flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-danger/5 border border-danger/20 cursor-pointer group hover:bg-danger/10 transition-colors">
+                        <input type="checkbox" id="settingDungeonCorrupted"
+                               class="w-5 h-5 rounded border-2 border-danger/30 bg-surface checked:bg-danger checked:border-danger focus:ring-2 focus:ring-danger/30 transition-colors cursor-pointer">
+                        <span class="w-3 h-3 rounded-full bg-danger"></span>
+                        <span class="text-danger group-hover:text-white transition-colors font-medium">Corrupted</span>
+                        <span class="relative group/tooltip"><i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Corrupted dungeon entrances (PvP)</span></span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-tier-6/5 border border-tier-6/20 cursor-pointer group hover:bg-tier-6/10 transition-colors">
+                        <input type="checkbox" id="settingDungeonHellgate"
+                               class="w-5 h-5 rounded border-2 border-tier-6/30 bg-surface checked:bg-tier-6 checked:border-tier-6 focus:ring-2 focus:ring-tier-6/30 transition-colors cursor-pointer">
+                        <span class="w-3 h-3 rounded-full bg-tier-6"></span>
+                        <span class="text-tier-6 group-hover:text-white transition-colors font-medium">Hellgate</span>
+                        <span class="relative group/tooltip"><i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i><span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Hellgate portals (PvP)</span></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/chests"}}
+<script>
+window.onGlobalsReady(function initChestsPage() {
+    const settingsSync = window.settingsSync;
+
+    const bindCheckbox = (id) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = settingsSync.getBool(id);
+            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+        }
+    };
+
+    // Chests
+    ["settingChestGreen", "settingChestBlue", "settingChestPurple", "settingChestYellow"].forEach(bindCheckbox);
+
+    // Mists
+    ["settingMistSolo", "settingMistDuo", "settingMistE0", "settingMistE1", "settingMistE2", "settingMistE3", "settingMistE4", "settingCage"].forEach(bindCheckbox);
+
+    // Dungeons
+    ["settingDungeonSolo", "settingDungeonDuo", "settingDungeonE0", "settingDungeonE1", "settingDungeonE2", "settingDungeonE3", "settingDungeonE4", "settingDungeonCorrupted", "settingDungeonHellgate"].forEach(bindCheckbox);
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}

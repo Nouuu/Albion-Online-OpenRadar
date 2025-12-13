@@ -5,9 +5,9 @@ export default [
     // ESLint recommended rules
     js.configs.recommended,
 
-    // Browser-side code (front-end)
+    // Browser-side code (front-end) - now in web/scripts/
     {
-        files: ["scripts/**/*.js"],
+        files: ["web/scripts/**/*.js"],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: "module",
@@ -21,13 +21,9 @@ export default [
         }
     },
 
-    // Node.js code (back-end)
+    // Node.js tools/scripts
     {
-        files: [
-            "app.js",
-            "server-scripts/**/*.js",
-            "scripts-shell/*.js"
-        ],
+        files: ["tools/**/*.js"],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: "module",
@@ -46,8 +42,9 @@ export default [
             "build/**",
             "dist/**",
             "node_modules/**",
-            "scripts/init-alpine.js",
-            "work/**/*"
+            "web/scripts/init-alpine.js",
+            "work/**/*",
+            "tmp/**"
         ]
     }
 ];

@@ -1,81 +1,132 @@
 # OpenRadar Documentation
 
-Documentation index for OpenRadar.
+Documentation index for OpenRadar v2.0 (Go Backend).
 
 ---
 
-## For Users
+## Quick Links
 
-- **[Main README](../README.md)** - Installation and features
+| I want to... | Go to |
+|--------------|-------|
+| Install the project | [Main README](../README.md) |
+| Set up development | [DEV_GUIDE.md](./dev/DEV_GUIDE.md) |
+| See what's new in v2.0 | [RELEASE_2.0.0.md](./releases/RELEASE_2.0.0.md) |
+| View the roadmap | [TODO.md](./project/TODO.md) |
+| Understand player detection | [PLAYERS.md](./technical/PLAYERS.md) |
 
 ---
 
-## For Developers
+## Project Status
 
-- **[DEV_GUIDE.md](./dev/DEV_GUIDE.md)** - Development guide
+| Document | Description |
+|----------|-------------|
+| [TODO.md](./project/TODO.md) | Roadmap and upcoming features |
+| [IMPROVEMENTS.md](./project/IMPROVEMENTS.md) | v2.0 features summary |
 
 ---
 
 ## Technical Documentation
 
-| File | Description |
+| Document | Description |
+|----------|-------------|
+| [LOGGING.md](./technical/LOGGING.md) | Centralized logging system |
+| [PLAYERS.md](./technical/PLAYERS.md) | Player detection architecture |
+| [PLAYER_POSITIONS_MITM.md](./technical/PLAYER_POSITIONS_MITM.md) | Protocol encryption limits |
+| [DEATHEYE_ANALYSIS.md](./technical/DEATHEYE_ANALYSIS.md) | Comparison with DEATHEYE project |
+
+---
+
+## Development
+
+| Document | Description |
+|----------|-------------|
+| [DEV_GUIDE.md](./dev/DEV_GUIDE.md) | Development setup (Go backend) |
+
+---
+
+## Releases
+
+| Version | Notes |
+|---------|-------|
+| [v2.0.0](./releases/RELEASE_2.0.0.md) | Go backend + UI overhaul |
+
+---
+
+## Archive
+
+Completed plans and historical documentation are preserved in `docs/archive/` for reference.
+
+### Completed Plans
+| Plan | Description |
 |------|-------------|
-| [LOGGING.md](./technical/LOGGING.md) | Centralized logging system v2.2 |
-| [ENCHANTMENTS.md](./technical/ENCHANTMENTS.md) | Enchantments system |
-| [PLAYERS.md](./technical/PLAYERS.md) | Player detection & radar display |
-| [PLAYER_POSITIONS_MITM.md](./technical/PLAYER_POSITIONS_MITM.md) | Protocol and encryption limits |
-| [DEATHEYE_ANALYSIS.md](./technical/DEATHEYE_ANALYSIS.md) | DEATHEYE vs current implementation |
+| [GO_MIGRATION_PLAN.md](./archive/completed-plans/GO_MIGRATION_PLAN.md) | Node.js → Go migration |
+| [RADAR_UNIFICATION_PLAN.md](./archive/completed-plans/RADAR_UNIFICATION_PLAN.md) | Radar rendering refactor |
+| [SETTINGS_MIGRATION_PLAN.md](./archive/completed-plans/SETTINGS_MIGRATION_PLAN.md) | Settings sync implementation |
+| [RESOURCE_DETECTION_REFACTOR.md](./archive/completed-plans/RESOURCE_DETECTION_REFACTOR.md) | Detection system overhaul |
+| [MOB_UI_ENHANCEMENT.md](./archive/completed-plans/MOB_UI_ENHANCEMENT.md) | Mob classification system |
+| [CLEANUP_PLAN.md](./archive/completed-plans/CLEANUP_PLAN.md) | Code cleanup and removal |
+
+### Historical
+| Document | Description |
+|----------|-------------|
+| [ENCHANTMENTS.md](./archive/historical/ENCHANTMENTS.md) | Old enchantment system (Phase 3B) |
+| [PLAYER_DETECTION_STATUS.md](./archive/historical/PLAYER_DETECTION_STATUS.md) | Player detection investigation |
 
 ---
 
-## Project Management
+## Architecture (v2.0)
 
-| File | Description |
-|------|-------------|
-| [TODO.md](./project/TODO.md) | Current and upcoming tasks |
-| [IMPROVEMENTS.md](./project/IMPROVEMENTS.md) | Summary of improvements |
-| [PLAYER_DETECTION_STATUS.md](./project/PLAYER_DETECTION_STATUS.md) | Player detection investigation |
-| [ROOT_FILES.md](./project/ROOT_FILES.md) | Rules for root files |
+```
+OpenRadar/
+├── cmd/radar/main.go       # Entry point + TUI
+├── internal/
+│   ├── capture/pcap.go     # Packet capture (gopacket)
+│   ├── photon/             # Protocol parsing
+│   │   ├── packet.go
+│   │   ├── command.go
+│   │   └── protocol16.go
+│   ├── server/
+│   │   ├── http.go         # HTTP + static
+│   │   └── websocket.go    # WS handler
+│   ├── templates/          # Go templates (.gohtml)
+│   └── logger/             # JSONL logging
+├── web/                    # Frontend (embedded)
+│   ├── scripts/            # JavaScript
+│   ├── images/             # Assets
+│   ├── public/             # HTML, game data
+│   └── sounds/             # Audio
+├── embed.go                # Asset embedding
+└── go.mod                  # Go modules
+```
 
-### Active Plans
+### Key Changes from v1.x
 
-| Plan | Status |
-|------|--------|
-| [GO_MIGRATION_PLAN.md](./project/GO_MIGRATION_PLAN.md) | Backend rewrite in Go |
-| [RADAR_UNIFICATION_PLAN.md](./project/RADAR_UNIFICATION_PLAN.md) | ✅ 100% complete |
-| [SETTINGS_MIGRATION_PLAN.md](./project/SETTINGS_MIGRATION_PLAN.md) | ✅ 95% complete |
+| Component | v1.x | v2.0 |
+|-----------|------|------|
+| Backend | Node.js + Express | Go native |
+| WebSocket | ws (port 5002) | gorilla/websocket (`/ws`) |
+| Templates | EJS | Go html/template |
+| UI Framework | - | HTMX + Alpine.js |
+| Styling | Custom CSS | Tailwind CSS v4 |
+| Distribution | ~500 MB | ~95 MB |
 
 ---
 
-## Quick Search
+## Documentation Rules
 
-| I want to... | Go to |
-|--------------|-------|
-| Install the project | [Main README](../README.md) |
-| Debug and trace events | [LOGGING.md](./technical/LOGGING.md) |
-| Understand player detection | [PLAYERS.md](./technical/PLAYERS.md) |
-| Understand player position limits | [PLAYER_POSITIONS_MITM.md](./technical/PLAYER_POSITIONS_MITM.md) |
-| See current tasks | [TODO.md](./project/TODO.md) |
-
----
-
-## Important Rules
-
-### Do NOT create temporary Markdown files
-
-- `WORKING_*.md`, `*_FIX.md`, `*_ANALYSIS.md`, `*_SESSION.md`, etc.
-- Use existing files or the appropriate sections
-- Keep long-lived information in `docs/`
+### Do NOT create temporary files
+- No `WORKING_*.md`, `*_FIX.md`, `*_SESSION.md`
+- Use existing files or GitHub Issues
 
 ### Where to put what
 
-| Content type | Destination |
-|--------------|-------------|
-| Temporary session notes | Local notes or issues |
-| Permanent documentation | `docs/` |
-| TODOs | `docs/project/TODO.md` |
-| Known bugs | GitHub Issues or `docs/project/TODO.md` |
+| Content | Destination |
+|---------|-------------|
+| Roadmap items | `project/TODO.md` |
+| Feature summaries | `project/IMPROVEMENTS.md` |
+| Technical reference | `technical/*.md` |
+| Completed plans | `archive/completed-plans/` |
 
 ---
 
-*Last update: 2025-12-09*
+*Last update: 2025-12-13 - v2.0.0*

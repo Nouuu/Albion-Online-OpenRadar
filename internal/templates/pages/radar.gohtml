@@ -1,0 +1,223 @@
+{{define "pages/radar"}}
+<div class="space-y-4">
+    <!-- Canvas Section -->
+    <div class="bg-elevated border border-white/5 rounded-xl p-4">
+        <div id="canvasContainer" class="relative mx-auto" style="width: 520px; height: 520px;">
+            <canvas class="ttcan absolute top-0 left-0 m-2.5 border-2 border-white/10 rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
+            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
+            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
+            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
+        </div>
+        <!-- Display toggles - compact inline -->
+        <div class="flex flex-wrap items-center gap-4 mt-3 mx-2.5 text-sm">
+            <span class="text-xs text-gray-500">Display:</span>
+            <label class="flex items-center gap-1.5 cursor-pointer group">
+                <input type="checkbox" id="settingResourceCount" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                <span class="text-gray-400 group-hover:text-white transition-colors">Count</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer group">
+                <input type="checkbox" id="settingResourceDistance" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                <span class="text-gray-400 group-hover:text-white transition-colors">Distance</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer group">
+                <input type="checkbox" id="settingResourceClusters" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                <span class="text-gray-400 group-hover:text-white transition-colors">Clusters</span>
+            </label>
+        </div>
+        <!-- Zoom control -->
+        <div class="flex items-center gap-3 mt-3 mx-2.5">
+            <span class="text-xs text-gray-500">Zoom:</span>
+            <button id="zoomOut" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
+            <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="w-32 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
+            <button id="zoomIn" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
+            <span id="zoomValue" class="text-xs text-gray-400 font-mono w-10">100%</span>
+            <button id="zoomReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+        </div>
+        <!-- Canvas size control -->
+        <div class="flex items-center gap-3 mt-3 mx-2.5">
+            <span class="text-xs text-gray-500">Size:</span>
+            <button id="sizeDown" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
+            <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="w-32 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
+            <button id="sizeUp" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
+            <span id="sizeValue" class="text-xs text-gray-400 font-mono w-12">500px</span>
+            <button id="sizeReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+        </div>
+    </div>
+
+    <!-- Detected Players Section -->
+    <div id="playersSection" class="bg-elevated border border-white/5 rounded-xl p-6">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold text-white flex items-center gap-3">
+                Detected Players
+                <label class="flex items-center gap-1.5 cursor-pointer" title="Show players on radar and in list below">
+                    <input type="checkbox" id="settingShowPlayers" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                    <span class="text-xs text-gray-400 font-normal">Show</span>
+                </label>
+            </h3>
+            <span id="playersCount" class="hidden items-center gap-1.5 text-xs font-mono font-semibold text-danger bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20">
+                <span class="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></span>
+                <span id="playersCountNum">0</span>
+            </span>
+        </div>
+        <div id="playersListContainer" class="mt-4">
+            <div id="playersList" class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin">
+                <div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center">
+                    <svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    <p class="text-sm text-white/40">No players detected yet</p>
+                    <p class="text-xs text-white/25 font-mono mt-1">Scanning...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts/radar"}}
+<!-- Radar core: WebSocket, Handlers, Rendering -->
+<script type="module" src="/scripts/Utils/Utils.js"></script>
+
+<script>
+window.onGlobalsReady(function() {
+    const settingsSync = window.settingsSync;
+
+    // Cleanup registry for HTMX navigation
+    const cleanup = [];
+    function addListener(el, event, handler) {
+        if (el) {
+            el.addEventListener(event, handler);
+            cleanup.push(() => el.removeEventListener(event, handler));
+        }
+    }
+
+    // HTMX cleanup handler
+    function htmxCleanupHandler(e) {
+        if (e.detail.target.id === 'page-content') {
+            cleanup.forEach(fn => fn());
+            document.body.removeEventListener('htmx:beforeSwap', htmxCleanupHandler);
+        }
+    }
+    document.body.addEventListener('htmx:beforeSwap', htmxCleanupHandler);
+
+    // Bind display checkboxes
+    ['settingResourceCount', 'settingResourceDistance', 'settingResourceClusters'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = settingsSync.getBool(id);
+            addListener(el, 'change', () => settingsSync.setBool(id, el.checked));
+        }
+    });
+
+    // Zoom controls
+    const zoomSlider = document.getElementById('settingRadarZoom');
+    const zoomValue = document.getElementById('zoomValue');
+    const zoomIn = document.getElementById('zoomIn');
+    const zoomOut = document.getElementById('zoomOut');
+    const zoomReset = document.getElementById('zoomReset');
+
+    function updateZoomDisplay(value) {
+        if (zoomValue) zoomValue.textContent = `${Math.round(value * 100)}%`;
+        if (zoomSlider) zoomSlider.value = value;
+    }
+
+    function setZoom(value) {
+        value = Math.max(0.5, Math.min(2, value));
+        settingsSync.setFloat('settingRadarZoom', value);
+        updateZoomDisplay(value);
+    }
+
+    // Initialize zoom
+    const initialZoom = settingsSync.getFloat('settingRadarZoom') || 1.0;
+    updateZoomDisplay(initialZoom);
+
+    addListener(zoomSlider, 'input', () => setZoom(parseFloat(zoomSlider.value)));
+    addListener(zoomIn, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) + 0.1));
+    addListener(zoomOut, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) - 0.1));
+    addListener(zoomReset, 'click', () => setZoom(1.0));
+
+    // Canvas Size controls
+    const sizeSlider = document.getElementById('settingCanvasSize');
+    const sizeValueEl = document.getElementById('sizeValue');
+    const sizeUp = document.getElementById('sizeUp');
+    const sizeDown = document.getElementById('sizeDown');
+    const sizeReset = document.getElementById('sizeReset');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const canvases = document.querySelectorAll('.ttcan');
+
+    function updateSizeDisplay(size) {
+        if (sizeValueEl) sizeValueEl.textContent = `${size}px`;
+        if (sizeSlider) sizeSlider.value = size;
+    }
+
+    function setCanvasSize(size) {
+        size = Math.max(300, Math.min(800, size));
+        settingsSync.setNumber('settingCanvasSize', size);
+
+        // Update container (size + 20px padding for margin)
+        const containerSize = size + 20;
+        if (canvasContainer) {
+            canvasContainer.style.width = `${containerSize}px`;
+            canvasContainer.style.height = `${containerSize}px`;
+        }
+
+        // Update all canvas elements
+        canvases.forEach(canvas => {
+            canvas.width = size;
+            canvas.height = size;
+        });
+
+        updateSizeDisplay(size);
+
+        // Trigger re-render event for RadarRenderer
+        window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size } }));
+    }
+
+    // Initialize canvas size
+    const initialSize = settingsSync.getNumber('settingCanvasSize') || 500;
+    setCanvasSize(initialSize);
+
+    addListener(sizeSlider, 'input', () => setCanvasSize(parseInt(sizeSlider.value)));
+    addListener(sizeUp, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) + 50));
+    addListener(sizeDown, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) - 50));
+    addListener(sizeReset, 'click', () => setCanvasSize(500));
+
+    // Show Players toggle + list visibility
+    const showPlayersToggle = document.getElementById('settingShowPlayers');
+    const playersListContainer = document.getElementById('playersListContainer');
+    const playersCount = document.getElementById('playersCount');
+
+    function updatePlayersListVisibility() {
+        const isVisible = settingsSync.getBool('settingShowPlayers');
+        if (playersListContainer) {
+            playersListContainer.style.display = isVisible ? 'block' : 'none';
+        }
+        if (playersCount) {
+            // Hide count badge when list is hidden
+            playersCount.classList.toggle('!hidden', !isVisible);
+        }
+        if (showPlayersToggle) {
+            showPlayersToggle.checked = isVisible;
+        }
+    }
+
+    // Initialize
+    updatePlayersListVisibility();
+
+    // Bind toggle
+    addListener(showPlayersToggle, 'change', () => {
+        settingsSync.setBool('settingShowPlayers', showPlayersToggle.checked);
+        updatePlayersListVisibility();
+    });
+
+    // Sync with changes from other tabs/pages
+    function storageHandler(e) {
+        if (e.key === 'settingShowPlayers') updatePlayersListVisibility();
+    }
+    window.addEventListener('storage', storageHandler);
+    cleanup.push(() => window.removeEventListener('storage', storageHandler));
+
+    if (window.lucide) lucide.createIcons();
+});
+</script>
+{{end}}
