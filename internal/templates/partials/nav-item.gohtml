@@ -24,7 +24,7 @@
           text-gray-400 hover:bg-overlay hover:text-white
           {{end}}">
     <i data-lucide="{{.Icon}}" class="w-5 h-5 flex-shrink-0"></i>
-    <span x-show="isExpanded" x-transition class="font-medium">{{.Label}}</span>
+    <span class="font-medium sidebar-expanded-only">{{.Label}}</span>
 </a>
 {{end}}
 

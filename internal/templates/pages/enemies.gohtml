@@ -1,5 +1,5 @@
 {{define "pages/enemies"}}
-<div class="space-y-6 stagger" x-data="enemiesPage()">
+<div class="space-y-6 stagger">
     <!-- Page Header with Presets -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -9,19 +9,19 @@
             </div>
             <!-- Preset Buttons -->
             <div class="flex flex-wrap gap-2">
-                <button @click="applyPreset('all')"
+                <button onclick="applyEnemyPreset('all')"
                         class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
                     All Enemies
                 </button>
-                <button @click="applyPreset('bosses')"
+                <button onclick="applyEnemyPreset('bosses')"
                         class="px-3 py-1.5 text-xs bg-tier-5/20 text-tier-5 rounded-lg hover:bg-tier-5 hover:text-void transition-colors font-medium">
                     Bosses Only
                 </button>
-                <button @click="applyPreset('miniboss')"
+                <button onclick="applyEnemyPreset('miniboss')"
                         class="px-3 py-1.5 text-xs bg-tier-4/20 text-tier-4 rounded-lg hover:bg-tier-4 hover:text-void transition-colors font-medium">
                     Mini-Boss+
                 </button>
-                <button @click="applyPreset('clear')"
+                <button onclick="applyEnemyPreset('clear')"
                         class="px-3 py-1.5 text-xs bg-danger/20 text-danger rounded-lg hover:bg-danger hover:text-white transition-colors font-medium">
                     Clear All
                 </button>
@@ -29,25 +29,17 @@
         </div>
     </div>
 
-    <!-- Classic Enemies (Collapsible) -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.classic = !sections.classic"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <!-- Classic Enemies -->
+    <details data-accordion="classic" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors" open>
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="swords" class="w-5 h-5"></i>
                 Classic Enemies
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.classic }"></i>
-        </button>
-        <div x-show="sections.classic"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             class="p-6 pt-2 border-t border-white/5">
-            <div class="space-y-3">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
+            <div class="p-6 pt-4 space-y-3">
                 <label class="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" id="settingAllEnemies"
                            class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
@@ -133,27 +125,19 @@
                 </label>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- Mists (Collapsible) -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.mists = !sections.mists"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <!-- Mists Bosses -->
+    <details data-accordion="mists" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors" open>
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="cloud-fog" class="w-5 h-5"></i>
                 Mists Bosses
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.mists }"></i>
-        </button>
-        <div x-show="sections.mists"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             class="p-6 pt-2 border-t border-white/5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
+            <div class="p-6 pt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label class="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" id="settingBossCrystalSpider"
                            class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-tier-4 checked:border-tier-4 focus:ring-2 focus:ring-tier-4/30 transition-colors cursor-pointer">
@@ -199,27 +183,19 @@
                 </label>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- Other (Collapsible) -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.other = !sections.other"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <!-- Other Enemies -->
+    <details data-accordion="other" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="sparkles" class="w-5 h-5"></i>
                 Other Enemies
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.other }"></i>
-        </button>
-        <div x-show="sections.other"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             class="p-6 pt-2 border-t border-white/5">
-            <div class="space-y-3">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
+            <div class="p-6 pt-4 space-y-3">
                 <label class="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" id="settingAvaloneDrones"
                            class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
@@ -241,27 +217,19 @@
                 </label>
             </div>
         </div>
-    </div>
+    </details>
 
-    <!-- Debug (Collapsible) -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.debug = !sections.debug"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <!-- Debug -->
+    <details data-accordion="debug" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="bug" class="w-5 h-5"></i>
                 Debug
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.debug }"></i>
-        </button>
-        <div x-show="sections.debug"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-150"
-             class="p-6 pt-2 border-t border-white/5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
+            <div class="p-6 pt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 <label class="flex items-center gap-3 cursor-pointer group">
                     <input type="checkbox" id="settingEnemiesHealthBar"
                            class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
@@ -293,80 +261,68 @@
                 </label>
             </div>
 
-            <p class="text-xs text-gray-500 mt-4">
+            <p class="text-xs text-gray-500 px-6 pb-4">
                 Logging options in <a href="/settings" class="text-accent hover:underline">Settings &gt; Debug &amp; Logging</a>
             </p>
         </div>
-    </div>
+    </details>
 </div>
 {{end}}
 
 {{define "scripts/enemies"}}
 <script>
-// Alpine.js component for Enemies page
-function enemiesPage() {
-    // Load saved section states from localStorage
-    const savedSections = localStorage.getItem('enemiesSections');
-    const defaultSections = { classic: true, mists: true, other: false, debug: false };
+// Initialize accordion for enemies page
+window.onGlobalsReady(function() {
+    window.createAccordionManager('enemies', { classic: true, mists: true, other: false, debug: false });
+});
 
-    return {
-        sections: savedSections ? JSON.parse(savedSections) : defaultSections,
+// Preset application function
+function applyEnemyPreset(preset) {
+    const settingsSync = window.settingsSync;
 
-        init() {
-            // Watch for section changes and persist to localStorage
-            this.$watch('sections', (val) => {
-                localStorage.setItem('enemiesSections', JSON.stringify(val));
-            });
-        },
-
-        applyPreset(preset) {
-            const settingsSync = window.settingsSync;
-
-            // Define all settings and their default values
-            const settings = {
-                // Classic enemies
-                'settingAllEnemies': false,
-                'settingNormalEnemy': false,
-                'settingEnchantedEnemy': false,
-                'settingMiniBossEnemy': false,
-                'settingBossEnemy': false,
-                // Mists bosses
-                'settingBossCrystalSpider': false,
-                'settingBossFairyDragon': false,
-                'settingBossVeilWeaver': false,
-                'settingBossGriffin': false,
-                // Other
-                'settingAvaloneDrones': false,
-                'settingShowEventEnemies': false
-            };
-
-            // Apply preset
-            if (preset === 'all') {
-                Object.keys(settings).forEach(k => settings[k] = true);
-            } else if (preset === 'bosses') {
-                settings['settingBossEnemy'] = true;
-                settings['settingBossCrystalSpider'] = true;
-                settings['settingBossFairyDragon'] = true;
-                settings['settingBossVeilWeaver'] = true;
-                settings['settingBossGriffin'] = true;
-            } else if (preset === 'miniboss') {
-                settings['settingMiniBossEnemy'] = true;
-                settings['settingBossEnemy'] = true;
-                settings['settingBossCrystalSpider'] = true;
-                settings['settingBossFairyDragon'] = true;
-                settings['settingBossVeilWeaver'] = true;
-                settings['settingBossGriffin'] = true;
-            }
-            // 'clear' keeps all false
-
-            // Apply to localStorage and update checkboxes
-            Object.entries(settings).forEach(([key, val]) => {
-                settingsSync.setBool(key, val);
-                const el = document.getElementById(key);
-                if (el) el.checked = val;
-            });
-        }
+    // Define all settings and their default values
+    const settings = {
+        // Classic enemies
+        'settingAllEnemies': false,
+        'settingNormalEnemy': false,
+        'settingEnchantedEnemy': false,
+        'settingMiniBossEnemy': false,
+        'settingBossEnemy': false,
+        // Mists bosses
+        'settingBossCrystalSpider': false,
+        'settingBossFairyDragon': false,
+        'settingBossVeilWeaver': false,
+        'settingBossGriffin': false,
+        // Other
+        'settingAvaloneDrones': false,
+        'settingShowEventEnemies': false
     };
+
+    // Apply preset
+    if (preset === 'all') {
+        Object.keys(settings).forEach(k => settings[k] = true);
+    } else if (preset === 'bosses') {
+        settings['settingBossEnemy'] = true;
+        settings['settingBossCrystalSpider'] = true;
+        settings['settingBossFairyDragon'] = true;
+        settings['settingBossVeilWeaver'] = true;
+        settings['settingBossGriffin'] = true;
+    } else if (preset === 'miniboss') {
+        settings['settingMiniBossEnemy'] = true;
+        settings['settingBossEnemy'] = true;
+        settings['settingBossCrystalSpider'] = true;
+        settings['settingBossFairyDragon'] = true;
+        settings['settingBossVeilWeaver'] = true;
+        settings['settingBossGriffin'] = true;
+    }
+    // 'clear' keeps all false
+
+    // Apply to localStorage and update checkboxes
+    Object.entries(settings).forEach(([key, val]) => {
+        settingsSync.setBool(key, val);
+        const el = document.getElementById(key);
+        if (el) el.checked = val;
+    });
 }
 
 window.onGlobalsReady(function initEnemiesPage() {

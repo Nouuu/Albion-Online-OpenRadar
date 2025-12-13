@@ -1,5 +1,5 @@
 {{define "pages/resources"}}
-<div class="space-y-6 stagger" x-data="resourcesPage()">
+<div class="space-y-6 stagger">
     <!-- Page Header with Presets -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -9,27 +9,27 @@
             </div>
             <!-- Preset Buttons -->
             <div class="flex flex-wrap gap-2">
-                <button @click="applyPreset('t5plus')"
+                <button onclick="applyResourcePreset('t5plus')"
                         class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
                     All T5+
                 </button>
-                <button @click="applyPreset('t6plus')"
+                <button onclick="applyResourcePreset('t6plus')"
                         class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
                     All T6+
                 </button>
-                <button @click="applyPreset('t7plus')"
+                <button onclick="applyResourcePreset('t7plus')"
                         class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
                     All T7+
                 </button>
-                <button @click="applyPreset('e2plus')"
+                <button onclick="applyResourcePreset('e2plus')"
                         class="px-3 py-1.5 text-xs bg-tier-3/20 text-tier-3 rounded-lg hover:bg-tier-3 hover:text-void transition-colors font-medium">
                     All E2+
                 </button>
-                <button @click="applyPreset('e3plus')"
+                <button onclick="applyResourcePreset('e3plus')"
                         class="px-3 py-1.5 text-xs bg-tier-4/20 text-tier-4 rounded-lg hover:bg-tier-4 hover:text-void transition-colors font-medium">
                     All E3+
                 </button>
-                <button @click="applyPreset('clear')"
+                <button onclick="applyResourcePreset('clear')"
                         class="px-3 py-1.5 text-xs bg-danger/20 text-danger rounded-lg hover:bg-danger hover:text-white transition-colors font-medium">
                     Clear All
                 </button>
@@ -37,105 +37,90 @@
         </div>
     </div>
 
-    <!-- Fiber Section (Static + Living side by side) -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.fiber = !sections.fiber"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <!-- Fiber Section -->
+    <details data-accordion="fiber" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors" open>
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="flower-2" class="w-5 h-5 text-green-400"></i>
                 Fiber
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.fiber }"></i>
-        </button>
-        <div x-show="sections.fiber" x-collapse class="border-t border-white/5">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
                 <div id="static-fiber-grid"></div>
                 <div id="living-fiber-grid"></div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Hide Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.hide = !sections.hide"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <details data-accordion="hide" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="rabbit" class="w-5 h-5 text-amber-400"></i>
                 Hide
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.hide }"></i>
-        </button>
-        <div x-show="sections.hide" x-collapse class="border-t border-white/5">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
                 <div id="static-hide-grid"></div>
                 <div id="living-hide-grid"></div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Wood Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.wood = !sections.wood"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <details data-accordion="wood" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="tree-pine" class="w-5 h-5 text-emerald-400"></i>
                 Wood
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.wood }"></i>
-        </button>
-        <div x-show="sections.wood" x-collapse class="border-t border-white/5">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
                 <div id="static-wood-grid"></div>
                 <div id="living-wood-grid"></div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Ore Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.ore = !sections.ore"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <details data-accordion="ore" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="gem" class="w-5 h-5 text-blue-400"></i>
                 Ore
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.ore }"></i>
-        </button>
-        <div x-show="sections.ore" x-collapse class="border-t border-white/5">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
                 <div id="static-ore-grid"></div>
                 <div id="living-ore-grid"></div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Rock Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <button @click="sections.rock = !sections.rock"
-                class="w-full flex items-center justify-between p-4 text-left hover:bg-surface/50 transition-colors">
+    <details data-accordion="rock" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
+        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
             <h2 class="text-xl font-semibold text-white flex items-center gap-2">
                 <i data-lucide="mountain" class="w-5 h-5 text-gray-400"></i>
                 Rock
             </h2>
-            <i data-lucide="chevron-down"
-               class="w-5 h-5 text-gray-400 transition-transform duration-200"
-               :class="{ 'rotate-180': sections.rock }"></i>
-        </button>
-        <div x-show="sections.rock" x-collapse class="border-t border-white/5">
+            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
+        </summary>
+        <div class="accordion-content border-t border-white/5">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
                 <div id="static-rock-grid"></div>
                 <div id="living-rock-grid"></div>
             </div>
         </div>
-    </div>
+    </details>
 
     <!-- Other Resources -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
@@ -248,89 +233,77 @@
 
 {{define "scripts/resources"}}
 <script>
-// Alpine.js component for Resources page
-function resourcesPage() {
-    // Load saved section states from localStorage
-    const savedSections = localStorage.getItem('resourcesSections');
-    const defaultSections = { fiber: true, hide: false, wood: false, ore: false, rock: false };
+// Initialize accordion for resources page
+window.onGlobalsReady(function() {
+    window.createAccordionManager('resources', { fiber: true, hide: false, wood: false, ore: false, rock: false });
+});
 
-    return {
-        sections: savedSections ? JSON.parse(savedSections) : defaultSections,
+// Preset application function
+function applyResourcePreset(preset) {
+    const settingsSync = window.settingsSync;
+    const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
 
-        init() {
-            // Watch for section changes and persist to localStorage
-            this.$watch('sections', (val) => {
-                localStorage.setItem('resourcesSections', JSON.stringify(val));
+    // Resource configurations
+    const resourceConfigs = [
+        { prefix: 'fsp', name: 'Fiber', type: 'Static' },
+        { prefix: 'hsp', name: 'Hide', type: 'Static' },
+        { prefix: 'wsp', name: 'Wood', type: 'Static' },
+        { prefix: 'osp', name: 'Ore', type: 'Static' },
+        { prefix: 'rsp', name: 'Rock', type: 'Static' },
+        { prefix: 'flp', name: 'Fiber', type: 'Living' },
+        { prefix: 'hlp', name: 'Hide', type: 'Living' },
+        { prefix: 'wlp', name: 'Wood', type: 'Living' },
+        { prefix: 'olp', name: 'Ore', type: 'Living' },
+        { prefix: 'rlp', name: 'Rock', type: 'Living' }
+    ];
+
+    resourceConfigs.forEach(config => {
+        const storageKey = `setting${config.type}${config.name}Enchants`;
+
+        // Create enchants object with all false by default
+        let enchants = {};
+        enchantLevels.forEach(e => {
+            enchants[e] = [false, false, false, false, false, false, false, false];
+        });
+
+        if (preset === 'clear') {
+            // Keep all false (already set)
+        } else if (preset === 't5plus') {
+            // Tiers 5-8 (indices 4-7) for all enchants
+            enchantLevels.forEach(e => {
+                for (let t = 4; t < 8; t++) enchants[e][t] = true;
             });
-        },
-
-        applyPreset(preset) {
-            const settingsSync = window.settingsSync;
-            const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
-
-            // Resource configurations
-            const resourceConfigs = [
-                { prefix: 'fsp', name: 'Fiber', type: 'Static' },
-                { prefix: 'hsp', name: 'Hide', type: 'Static' },
-                { prefix: 'wsp', name: 'Wood', type: 'Static' },
-                { prefix: 'osp', name: 'Ore', type: 'Static' },
-                { prefix: 'rsp', name: 'Rock', type: 'Static' },
-                { prefix: 'flp', name: 'Fiber', type: 'Living' },
-                { prefix: 'hlp', name: 'Hide', type: 'Living' },
-                { prefix: 'wlp', name: 'Wood', type: 'Living' },
-                { prefix: 'olp', name: 'Ore', type: 'Living' },
-                { prefix: 'rlp', name: 'Rock', type: 'Living' }
-            ];
-
-            resourceConfigs.forEach(config => {
-                const storageKey = `setting${config.type}${config.name}Enchants`;
-
-                // Create enchants object with all false by default
-                let enchants = {};
-                enchantLevels.forEach(e => {
-                    enchants[e] = [false, false, false, false, false, false, false, false];
-                });
-
-                if (preset === 'clear') {
-                    // Keep all false (already set)
-                } else if (preset === 't5plus') {
-                    // Tiers 5-8 (indices 4-7) for all enchants
-                    enchantLevels.forEach(e => {
-                        for (let t = 4; t < 8; t++) enchants[e][t] = true;
-                    });
-                } else if (preset === 't6plus') {
-                    // Tiers 6-8 (indices 5-7) for all enchants
-                    enchantLevels.forEach(e => {
-                        for (let t = 5; t < 8; t++) enchants[e][t] = true;
-                    });
-                } else if (preset === 't7plus') {
-                    // Tiers 7-8 (indices 6-7) for all enchants
-                    enchantLevels.forEach(e => {
-                        for (let t = 6; t < 8; t++) enchants[e][t] = true;
-                    });
-                } else if (preset === 'e2plus') {
-                    // E2, E3, E4 for T4-T8 (indices 3-7)
-                    ['e2', 'e3', 'e4'].forEach(e => {
-                        for (let t = 3; t < 8; t++) enchants[e][t] = true;
-                    });
-                } else if (preset === 'e3plus') {
-                    // E3, E4 for T4-T8 (indices 3-7)
-                    ['e3', 'e4'].forEach(e => {
-                        for (let t = 3; t < 8; t++) enchants[e][t] = true;
-                    });
-                }
-
-                settingsSync.setJSON(storageKey, enchants);
+        } else if (preset === 't6plus') {
+            // Tiers 6-8 (indices 5-7) for all enchants
+            enchantLevels.forEach(e => {
+                for (let t = 5; t < 8; t++) enchants[e][t] = true;
             });
-
-            // Refresh the page content to update checkboxes
-            if (window.htmx) {
-                htmx.ajax('GET', '/resources', {target: '#page-content', swap: 'innerHTML'});
-            } else {
-                location.reload();
-            }
+        } else if (preset === 't7plus') {
+            // Tiers 7-8 (indices 6-7) for all enchants
+            enchantLevels.forEach(e => {
+                for (let t = 6; t < 8; t++) enchants[e][t] = true;
+            });
+        } else if (preset === 'e2plus') {
+            // E2, E3, E4 for T4-T8 (indices 3-7)
+            ['e2', 'e3', 'e4'].forEach(e => {
+                for (let t = 3; t < 8; t++) enchants[e][t] = true;
+            });
+        } else if (preset === 'e3plus') {
+            // E3, E4 for T4-T8 (indices 3-7)
+            ['e3', 'e4'].forEach(e => {
+                for (let t = 3; t < 8; t++) enchants[e][t] = true;
+            });
         }
-    };
+
+        settingsSync.setJSON(storageKey, enchants);
+    });
+
+    // Refresh the page content to update checkboxes
+    if (window.htmx) {
+        htmx.ajax('GET', '/resources', {target: '#page-content', swap: 'innerHTML'});
+    } else {
+        location.reload();
+    }
 }
 
 window.onGlobalsReady(function initResourcesPage() {

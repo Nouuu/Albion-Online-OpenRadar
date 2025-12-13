@@ -117,14 +117,69 @@
 
     <!-- HTMX for SPA-like navigation -->
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
-    <!-- Alpine.js plugins (must load before Alpine) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <!-- Alpine.js - defer so it loads after DOM -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Accordion Manager -->
+    <script src="/scripts/accordion.js"></script>
+
+    <!-- Sidebar & Layout Controller - MUST be in head before sidebar template -->
+    <script>
+        window.sidebar = {
+            collapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+            hoverExpanded: false,
+            hoverTimeout: null,
+
+            init() {
+                this.updateClasses();
+                if (window.lucide) lucide.createIcons();
+            },
+
+            toggle() {
+                this.collapsed = !this.collapsed;
+                localStorage.setItem('sidebarCollapsed', this.collapsed);
+                this.updateClasses();
+            },
+
+            onEnter() {
+                if (this.collapsed) {
+                    this.hoverTimeout = setTimeout(() => {
+                        this.hoverExpanded = true;
+                        this.updateClasses();
+                    }, 1000);
+                }
+            },
+
+            onLeave() {
+                if (this.hoverTimeout) {
+                    clearTimeout(this.hoverTimeout);
+                    this.hoverTimeout = null;
+                }
+                this.hoverExpanded = false;
+                this.updateClasses();
+            },
+
+            get isExpanded() {
+                return !this.collapsed || this.hoverExpanded;
+            },
+
+            openMobile() {
+                document.body.classList.add('mobile-menu-open');
+            },
+
+            closeMobile() {
+                document.body.classList.remove('mobile-menu-open');
+            },
+
+            updateClasses() {
+                document.body.classList.toggle('sidebar-collapsed', this.collapsed && !this.hoverExpanded);
+                const sidebar = document.getElementById('desktop-sidebar');
+                if (sidebar) {
+                    sidebar.style.width = this.isExpanded ? '16rem' : '5rem';
+                }
+            }
+        };
+    </script>
 
     <style>
-        [x-cloak] { display: none !important; }
-
         /* HTMX page transitions */
         .htmx-swapping {
             opacity: 0;
@@ -140,8 +195,8 @@
         }
     </style>
 </head>
-<body class="bg-void text-gray-200 font-display" x-data="appData()">
-    <div class="flex h-screen" :class="{ 'overflow-hidden': mobileMenuOpen }">
+<body class="bg-void text-gray-200 font-display">
+    <div class="flex h-screen">
 
         <!-- Sidebar -->
         {{template "layouts/sidebar.gohtml" .}}
@@ -182,85 +237,23 @@
     </div>
 
     <!-- Mobile Menu Overlay -->
-    <div x-show="mobileMenuOpen"
-         x-transition:enter="transition-opacity ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         @click="mobileMenuOpen = false"
-         class="fixed inset-0 z-30 bg-black/50 md:hidden"
-         x-cloak>
+    <div id="mobile-overlay"
+         onclick="window.sidebar.closeMobile()"
+         class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden">
     </div>
 
-    <!-- Initialize Lucide Icons and Alpine data -->
+    <!-- Init & HTMX handlers -->
     <script>
-        document.addEventListener('alpine:initialized', () => {
-            lucide.createIcons();
+        document.addEventListener('DOMContentLoaded', () => window.sidebar.init());
+        document.addEventListener('htmx:afterSwap', () => lucide.createIcons());
+        document.addEventListener('htmx:beforeSwap', (e) => {
+            if (e.detail.target?.id === 'page-content') e.detail.target.style.opacity = '0';
         });
-
-        // HTMX: Reinitialize Lucide icons after every swap
-        document.addEventListener('htmx:afterSwap', (event) => {
-            // Reinitialize Lucide icons in the swapped content
-            lucide.createIcons();
-            console.log('[HTMX] Content swapped, icons reinitialized');
-        });
-
-        // HTMX: Handle page transitions
-        document.addEventListener('htmx:beforeSwap', (event) => {
-            // Add loading class for transition
-            const target = event.detail.target;
-            if (target && target.id === 'page-content') {
-                target.style.opacity = '0';
+        document.addEventListener('htmx:afterSettle', (e) => {
+            if (e.detail.target?.id === 'page-content') {
+                requestAnimationFrame(() => e.detail.target.style.opacity = '1');
             }
         });
-
-        document.addEventListener('htmx:afterSettle', (event) => {
-            // Restore opacity after content is settled
-            const target = event.detail.target;
-            if (target && target.id === 'page-content') {
-                requestAnimationFrame(() => {
-                    target.style.opacity = '1';
-                });
-            }
-        });
-
-        // Alpine.js app data
-        function appData() {
-            return {
-                sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
-                mobileMenuOpen: false,
-                hoverExpanded: false,
-                hoverTimeout: null,
-
-                toggleSidebar() {
-                    this.sidebarCollapsed = !this.sidebarCollapsed;
-                    localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
-                },
-
-                onSidebarEnter() {
-                    if (this.sidebarCollapsed) {
-                        this.hoverTimeout = setTimeout(() => {
-                            this.hoverExpanded = true;
-                        }, 1000); // 1 second delay to allow clicking expand button
-                    }
-                },
-
-                onSidebarLeave() {
-                    if (this.hoverTimeout) {
-                        clearTimeout(this.hoverTimeout);
-                        this.hoverTimeout = null;
-                    }
-                    this.hoverExpanded = false;
-                },
-
-                get isExpanded() {
-                    return !this.sidebarCollapsed || this.hoverExpanded;
-                }
-            };
-        }
-
     </script>
 </body>
 </html>
