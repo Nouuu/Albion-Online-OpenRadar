@@ -29,7 +29,7 @@ export class SettingsSync {
             this.channel = new BroadcastChannel(CHANNEL_NAME);
             this.channel.addEventListener('message', this._boundMessageHandler);
             this.isInitialized = true;
-        } catch (error) {
+        } catch {
             this.setupFallback();
         }
     }

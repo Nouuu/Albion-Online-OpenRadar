@@ -31,9 +31,7 @@ import {createRadarRenderer} from './RadarRenderer.js';
 import {getEventQueue, destroyEventQueue} from './WebSocketEventQueue.js';
 import imageCache from './ImageCache.js';
 
-// ✅ Canvas check for RadarRenderer initialization
-const canvas = document.getElementById("drawCanvas");
-const context = canvas ? canvas.getContext("2d") : null;
+// ✅ Canvas presence is checked dynamically in initRadarRenderer()
 
 console.log('🔧 [Utils.js] Module loaded');
 

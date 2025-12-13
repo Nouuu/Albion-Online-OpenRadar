@@ -98,12 +98,9 @@ class Logger {
         if (this.wsClient && this.wsClient.readyState === WebSocket.OPEN) {
             try {
                 this.wsClient.send(JSON.stringify({ type: 'logs', logs: this.buffer }));
-                this.buffer = [];
-                this.buffer = [];
-            }
-        } else {
-            this.buffer = [];
+            } catch { /* ignore send errors */ }
         }
+        this.buffer = [];
     }
 }
 
@@ -147,7 +144,7 @@ function connectLoggerWebSocket() {
         socket.addEventListener('open', onLoggerSocketOpen);
         socket.addEventListener('close', onLoggerSocketClose);
         socket.addEventListener('error', onLoggerSocketError);
-    } catch (_e) {
+    } catch {
         scheduleLoggerReconnect();
     }
 }
