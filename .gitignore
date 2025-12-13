@@ -108,3 +108,4 @@ HELPER PACKAGE/
 /.serena/memories/suggested_commands.md
 /.serena/.gitignore
 /.serena/project.yml
+/cmd/radar/resource.syso

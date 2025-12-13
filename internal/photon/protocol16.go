@@ -6,6 +6,10 @@ import (
 	"math"
 )
 
+// MaxArraySize is the maximum allowed size for arrays to prevent DoS attacks
+// via malicious packets with huge allocation requests
+const MaxArraySize = 65536
+
 // Protocol16 deserializer for Photon protocol
 type Protocol16 struct{}
 
@@ -107,6 +111,10 @@ func (p *Protocol16) DeserializeIntegerArray(reader *Reader) ([]uint32, error) {
 		return nil, err
 	}
 
+	if size > MaxArraySize {
+		return nil, fmt.Errorf("integer array size %d exceeds maximum %d", size, MaxArraySize)
+	}
+
 	result := make([]uint32, size)
 	for i := uint32(0); i < size; i++ {
 		val, err := p.DeserializeInteger(reader)
@@ -157,6 +165,10 @@ func (p *Protocol16) DeserializeByteArray(reader *Reader) (ByteArray, error) {
 	size, err := reader.ReadUint32BE()
 	if err != nil {
 		return nil, err
+	}
+
+	if size > MaxArraySize {
+		return nil, fmt.Errorf("byte array size %d exceeds maximum %d", size, MaxArraySize)
 	}
 
 	data, err := reader.ReadBytes(int(size))

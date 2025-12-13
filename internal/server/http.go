@@ -41,7 +41,7 @@ func NewHTTPServer(
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 	version string,
-) *HTTPServer {
+) (*HTTPServer, error) {
 	// Extract subdirectories from embed.FS (they include the folder path)
 	imagesFS, err := fs.Sub(images, "web/images")
 	if err != nil {
@@ -67,7 +67,7 @@ func NewHTTPServer(
 	// Initialize template engine (required)
 	tmpl, err := templates.NewEngine(tmplFS, "internal/templates")
 	if err != nil {
-		panic(fmt.Sprintf("[HTTP] Failed to load templates: %v", err))
+		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}
 	fmt.Println("[HTTP] Template engine initialized (SSR mode)")
 
@@ -85,16 +85,16 @@ func NewHTTPServer(
 		version:   version,
 	}
 	s.setupRoutes()
-	return s
+	return s, nil
 }
 
 // NewHTTPServerDev creates a new HTTP server reading from filesystem (dev mode)
-func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log *logger.Logger, version string) *HTTPServer {
+func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log *logger.Logger, version string) (*HTTPServer, error) {
 	// Initialize template engine in dev mode (hot reload)
 	tmplDir := appDir + "/internal/templates"
 	tmpl, err := templates.NewEngineDev(tmplDir)
 	if err != nil {
-		panic(fmt.Sprintf("[HTTP] Failed to load templates: %v", err))
+		return nil, fmt.Errorf("failed to load templates: %w", err)
 	}
 	fmt.Println("[HTTP] Template engine initialized (dev mode with hot reload)")
 
@@ -112,7 +112,7 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 		version:   version,
 	}
 	s.setupRoutes()
-	return s
+	return s, nil
 }
 
 // setupRoutes configures all HTTP routes
@@ -391,8 +391,12 @@ func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
 func (s *HTTPServer) Start() error {
 	addr := fmt.Sprintf(":%d", s.port)
 	s.server = &http.Server{
-		Addr:    addr,
-		Handler: s.mux,
+		Addr:              addr,
+		Handler:           s.mux,
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 	return s.server.ListenAndServe()
 }

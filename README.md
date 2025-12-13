@@ -7,7 +7,7 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=for-the-badge)]()
 
 <p align="center">
-  <img src="docs/images/OpenRadar.gif" alt="OpenRadar TUI Dashboard" width="700">
+  <img src="docs/images/radar_1.png" alt="OpenRadar Main View" width="700">
 </p>
 
 ---
@@ -31,6 +31,37 @@
 - **Dynamic Radar** - Adjustable size (300-800px) and zoom (0.5x-2.0x)
 - **Player Color Coding** - Green (passive), Orange (faction), Red (hostile)
 - **TUI Dashboard** - Real-time stats in terminal
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/images/radar_2.png" alt="Radar with entities" width="400"></td>
+    <td><img src="docs/images/radar_3.png" alt="Radar zoomed" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Radar with detected entities</em></td>
+    <td align="center"><em>Radar with zoom controls</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/settings.png" alt="Settings page" width="400"></td>
+    <td><img src="docs/images/resources.png" alt="Resources page" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Settings page</em></td>
+    <td align="center"><em>Resources filtering</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/overlay.png" alt="Overlay window" width="400"></td>
+    <td><img src="docs/images/OpenRadar.gif" alt="TUI Dashboard" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Floating overlay window</em></td>
+    <td align="center"><em>Terminal dashboard (TUI)</em></td>
+  </tr>
+</table>
 
 ---
 

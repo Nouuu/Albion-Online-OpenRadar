@@ -57,17 +57,29 @@ if (builtPlatforms.length === 0) {
     process.exit(1);
 }
 
-// Helper function to get version from package.json
+// Helper function to get version
+// Priority: CLI arg --version=X > env var VERSION > package.json
 function getVersion() {
+    // Check CLI argument (--version=X)
+    const versionArg = process.argv.find(arg => arg.startsWith('--version='));
+    if (versionArg) {
+        return versionArg.split('=')[1];
+    }
+    // Check environment variable
+    if (process.env.VERSION) {
+        return process.env.VERSION;
+    }
+    // Fallback to package.json
     try {
         const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        return packageJson.version || '2.0.0';
+        return packageJson.version || 'dev';
     } catch {
-        return '2.0.0';
+        return 'dev';
     }
 }
 
 const version = getVersion();
+console.log(`📋 Version: ${version}`);
 
 // Create README file for dist (platform-aware)
 const createReadme = (platform) => {

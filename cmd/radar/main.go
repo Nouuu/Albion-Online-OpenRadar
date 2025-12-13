@@ -22,8 +22,9 @@ import (
 )
 
 // Version info (injected at build time via ldflags)
+// Default values are used when running with 'go run' without ldflags
 var (
-	Version   = "2.0.0"
+	Version   = "dev"
 	BuildTime = "unknown"
 )
 
@@ -87,7 +88,12 @@ func runApp(cfg Config) bool {
 	}
 
 	// Create the app
-	app := newApp(appDir, cfg, ctx, cancel, capturer)
+	app, err := newApp(appDir, cfg, ctx, cancel, capturer)
+	if err != nil {
+		cancel()
+		capturer.Close()
+		exitWithError("Failed to create app", err)
+	}
 	app.adapterIP = capturer.AdapterIP()
 
 	// Create dashboard
@@ -111,19 +117,6 @@ func runApp(cfg Config) bool {
 
 	// Start stats updater
 	go app.updateStats()
-
-	// Listen for restart messages
-	go func() {
-		for {
-			select {
-			case <-app.ctx.Done():
-				return
-			default:
-				// Check handled in Update via RestartMsg
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-	}()
 
 	// Run dashboard (blocking)
 	model, err := app.program.Run()
@@ -176,22 +169,27 @@ func newApp(
 	ctx context.Context,
 	cancel context.CancelFunc,
 	capturer *capture.Capturer,
-) *App {
+) (*App, error) {
 	log := logger.New("./logs")
 	wsHandler := server.NewWebSocketHandler(log)
+
+	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP server: %w", err)
+	}
 
 	app := &App{
 		ctx:        ctx,
 		cancel:     cancel,
 		logger:     log,
 		wsHandler:  wsHandler,
-		httpServer: createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version),
+		httpServer: httpServer,
 		capturer:   capturer,
 	}
 
 	app.capturer.OnPacket(app.handlePacket)
 
-	return app
+	return app, nil
 }
 
 func createHTTPServer(
@@ -200,7 +198,7 @@ func createHTTPServer(
 	wsHandler *server.WebSocketHandler,
 	log *logger.Logger,
 	version string,
-) *server.HTTPServer {
+) (*server.HTTPServer, error) {
 	if devMode {
 		logger.PrintInfo("MODE", "Development mode: reading files from disk")
 		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version)

@@ -82,12 +82,30 @@
 window.onGlobalsReady(function() {
     const settingsSync = window.settingsSync;
 
+    // Cleanup registry for HTMX navigation
+    const cleanup = [];
+    function addListener(el, event, handler) {
+        if (el) {
+            el.addEventListener(event, handler);
+            cleanup.push(() => el.removeEventListener(event, handler));
+        }
+    }
+
+    // HTMX cleanup handler
+    function htmxCleanupHandler(e) {
+        if (e.detail.target.id === 'page-content') {
+            cleanup.forEach(fn => fn());
+            document.body.removeEventListener('htmx:beforeSwap', htmxCleanupHandler);
+        }
+    }
+    document.body.addEventListener('htmx:beforeSwap', htmxCleanupHandler);
+
     // Bind display checkboxes
     ['settingResourceCount', 'settingResourceDistance', 'settingResourceClusters'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.checked = settingsSync.getBool(id);
-            el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
+            addListener(el, 'change', () => settingsSync.setBool(id, el.checked));
         }
     });
 
@@ -113,18 +131,10 @@ window.onGlobalsReady(function() {
     const initialZoom = settingsSync.getFloat('settingRadarZoom') || 1.0;
     updateZoomDisplay(initialZoom);
 
-    if (zoomSlider) {
-        zoomSlider.addEventListener('input', () => setZoom(parseFloat(zoomSlider.value)));
-    }
-    if (zoomIn) {
-        zoomIn.addEventListener('click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) + 0.1));
-    }
-    if (zoomOut) {
-        zoomOut.addEventListener('click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) - 0.1));
-    }
-    if (zoomReset) {
-        zoomReset.addEventListener('click', () => setZoom(1.0));
-    }
+    addListener(zoomSlider, 'input', () => setZoom(parseFloat(zoomSlider.value)));
+    addListener(zoomIn, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) + 0.1));
+    addListener(zoomOut, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) - 0.1));
+    addListener(zoomReset, 'click', () => setZoom(1.0));
 
     // Canvas Size controls
     const sizeSlider = document.getElementById('settingCanvasSize');
@@ -167,18 +177,10 @@ window.onGlobalsReady(function() {
     const initialSize = settingsSync.getNumber('settingCanvasSize') || 500;
     setCanvasSize(initialSize);
 
-    if (sizeSlider) {
-        sizeSlider.addEventListener('input', () => setCanvasSize(parseInt(sizeSlider.value)));
-    }
-    if (sizeUp) {
-        sizeUp.addEventListener('click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) + 50));
-    }
-    if (sizeDown) {
-        sizeDown.addEventListener('click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) - 50));
-    }
-    if (sizeReset) {
-        sizeReset.addEventListener('click', () => setCanvasSize(500));
-    }
+    addListener(sizeSlider, 'input', () => setCanvasSize(parseInt(sizeSlider.value)));
+    addListener(sizeUp, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) + 50));
+    addListener(sizeDown, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) - 50));
+    addListener(sizeReset, 'click', () => setCanvasSize(500));
 
     // Show Players toggle + list visibility
     const showPlayersToggle = document.getElementById('settingShowPlayers');
@@ -203,17 +205,17 @@ window.onGlobalsReady(function() {
     updatePlayersListVisibility();
 
     // Bind toggle
-    if (showPlayersToggle) {
-        showPlayersToggle.addEventListener('change', () => {
-            settingsSync.setBool('settingShowPlayers', showPlayersToggle.checked);
-            updatePlayersListVisibility();
-        });
-    }
+    addListener(showPlayersToggle, 'change', () => {
+        settingsSync.setBool('settingShowPlayers', showPlayersToggle.checked);
+        updatePlayersListVisibility();
+    });
 
     // Sync with changes from other tabs/pages
-    window.addEventListener('storage', e => {
+    function storageHandler(e) {
         if (e.key === 'settingShowPlayers') updatePlayersListVisibility();
-    });
+    }
+    window.addEventListener('storage', storageHandler);
+    cleanup.push(() => window.removeEventListener('storage', storageHandler));
 
     if (window.lucide) lucide.createIcons();
 });

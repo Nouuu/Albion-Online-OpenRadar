@@ -9,8 +9,13 @@
         package package-win all-in-one clean test lint install-tools check \
         update-ao-data download-assets update-assets restore-data
 
-# Variables - Read version from package.json (single source of truth)
-VERSION := $(shell node -p "require('./package.json').version" 2>nul || echo "2.0.0")
+# Variables - Dynamic version from Git
+# If on a tag: use tag name (strip 'v' prefix if present)
+# Otherwise: branch-commitshort
+GIT_TAG := $(shell git describe --tags --exact-match 2>nul)
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD 2>nul || echo "unknown")
+GIT_COMMIT := $(shell git rev-parse --short HEAD 2>nul || echo "unknown")
+VERSION := $(if $(GIT_TAG),$(patsubst v%,%,$(GIT_TAG)),$(GIT_BRANCH)-$(GIT_COMMIT))
 # Windows-compatible: use PowerShell for date, fallback to static if not available
 BUILD_TIME := $(shell powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ'" 2>nul || echo "unknown")
 BUILD_DIR := dist
@@ -69,6 +74,8 @@ build: build-win ## Build for current platform (default: Windows)
 build-win: ## Build for Windows
 	@echo "Building for Windows..."
 	-@mkdir $(BUILD_DIR) 2>nul
+	@echo "Generating versioninfo.json with version $(VERSION)..."
+	@node -e "const fs=require('fs'); const v='$(VERSION)'.match(/^(\d+)\.(\d+)\.(\d+)/) || ['','0','0','0']; fs.writeFileSync('cmd/radar/versioninfo.json', JSON.stringify({FixedFileInfo:{FileVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0},ProductVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0}},StringFileInfo:{FileDescription:'OpenRadar - Albion Online Radar',FileVersion:'$(VERSION)',ProductName:'OpenRadar',ProductVersion:'$(VERSION)',LegalCopyright:'MIT License'},IconPath:'../../web/images/favicon.ico'},null,2));"
 	@echo "Generating Windows resources (icon + version info)..."
 	cd cmd/radar && goversioninfo -64
 	$(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME).exe ./cmd/radar
@@ -77,7 +84,9 @@ build-win: ## Build for Windows
 build-linux: ## Build for Linux (via Docker)
 	@echo "Building for Linux via Docker..."
 	-@mkdir $(BUILD_DIR) 2>nul
-	docker build -f Dockerfile.build -o $(BUILD_DIR) .
+	docker build -f Dockerfile.build -o $(BUILD_DIR) \
+		--build-arg VERSION=$(VERSION) \
+		--build-arg BUILD_TIME=$(BUILD_TIME) .
 	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME)-linux"
 
 build-all: build-win build-linux ## Build for all platforms (Windows + Linux)
@@ -88,11 +97,11 @@ build-all: build-win build-linux ## Build for all platforms (Windows + Linux)
 
 package: build ## Build + copy assets + compress + archive
 	@echo "Creating distribution packages..."
-	@node tools/post-build.js
+	@node tools/post-build.js --version=$(VERSION)
 	@echo "Package complete!"
 
 package-win: build-win ## Full Windows package
-	@node tools/post-build.js
+	@node tools/post-build.js --version=$(VERSION)
 	@echo "Windows package ready in $(BUILD_DIR)/"
 
 all-in-one: ## Complete build process (update data + build all platforms + package)
@@ -116,7 +125,7 @@ all-in-one: ## Complete build process (update data + build all platforms + packa
 	@$(MAKE) build-linux
 	@echo ""
 	@echo "Step 6/7: Creating release packages..."
-	@node tools/post-build.js --embed
+	@node tools/post-build.js --embed --version=$(VERSION)
 	@echo ""
 	@echo "Step 7/7: Restoring original data files..."
 	@$(MAKE) restore-data

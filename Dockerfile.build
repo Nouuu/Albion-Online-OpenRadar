@@ -1,7 +1,11 @@
 # Dockerfile for Linux build
-# Usage: docker build -f Dockerfile.build -o dist .
+# Usage: docker build -f Dockerfile.build -o dist --build-arg VERSION=x.x.x .
 
 FROM golang:1.25-bookworm AS builder
+
+# Build arguments for version injection
+ARG VERSION=dev
+ARG BUILD_TIME=unknown
 
 WORKDIR /app
 
@@ -14,10 +18,11 @@ RUN apt-get update && \
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source and build
+# Copy source and build with version info
 COPY . .
 RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-    go build -ldflags="-s -w" -o /out/OpenRadar-linux ./cmd/radar
+    go build -ldflags="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}" \
+    -o /out/OpenRadar-linux ./cmd/radar
 
 # Export binary only
 FROM scratch

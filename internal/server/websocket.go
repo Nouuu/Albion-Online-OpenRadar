@@ -146,8 +146,11 @@ func (ws *WebSocketHandler) Broadcast(msg *WSMessage) {
 	if len(failedClients) > 0 {
 		ws.clientsMu.Lock()
 		for _, client := range failedClients {
-			_ = client.Close()
-			delete(ws.clients, client)
+			// Check if client still exists (may have been removed by handleMessages)
+			if _, exists := ws.clients[client]; exists {
+				_ = client.Close()
+				delete(ws.clients, client)
+			}
 		}
 		ws.clientsMu.Unlock()
 	}

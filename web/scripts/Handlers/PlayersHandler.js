@@ -142,8 +142,11 @@ export class PlayersHandler {
             playersCount: this.playersList.length
         });
 
-        // Screen flash alert (Tailwind inline)
-        if (settingsSync.getBool('settingFlash')) {
+        // Alerts only for hostile players (flagId = 255)
+        const isHostile = flagId === 255;
+
+        // Screen flash alert (Tailwind inline) - hostile only
+        if (isHostile && settingsSync.getBool('settingFlash')) {
             const flash = document.createElement('div');
             flash.className = 'fixed inset-0 bg-danger/60 pointer-events-none z-[9999] transition-opacity duration-300';
             document.body.appendChild(flash);
@@ -154,8 +157,8 @@ export class PlayersHandler {
             setTimeout(() => flash.remove(), 300);
         }
 
-        // Sound alert (conditional)
-        if (settingsSync.getBool('settingSound')) {
+        // Sound alert - hostile only
+        if (isHostile && settingsSync.getBool('settingSound')) {
             this.audio.play().catch(err => {
                 window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
                     error: err.message,

@@ -246,11 +246,29 @@ function settingsPage() {
 window.onGlobalsReady(function initSettingsPage() {
     const settingsSync = window.settingsSync;
 
+    // Cleanup registry for HTMX navigation
+    const cleanup = [];
+    function addListener(el, event, handler) {
+        if (el) {
+            el.addEventListener(event, handler);
+            cleanup.push(() => el.removeEventListener(event, handler));
+        }
+    }
+
+    // HTMX cleanup handler
+    function htmxCleanupHandler(e) {
+        if (e.detail.target.id === 'page-content') {
+            cleanup.forEach(fn => fn());
+            document.body.removeEventListener('htmx:beforeSwap', htmxCleanupHandler);
+        }
+    }
+    document.body.addEventListener('htmx:beforeSwap', htmxCleanupHandler);
+
     const bindCheckbox = (id, onChange) => {
         const el = document.getElementById(id);
         if (el) {
             el.checked = settingsSync.getBool(id);
-            el.addEventListener("change", (e) => {
+            addListener(el, "change", (e) => {
                 settingsSync.setBool(id, e.target.checked);
                 if (onChange) onChange(e.target.checked);
             });
@@ -261,7 +279,7 @@ window.onGlobalsReady(function initSettingsPage() {
         const el = document.getElementById(id);
         if (el) {
             el.value = settingsSync.getNumber(id, defaultVal);
-            el.addEventListener("input", () => settingsSync.setNumber(id, Number(el.value)));
+            addListener(el, "input", () => settingsSync.setNumber(id, Number(el.value)));
         }
     };
 
@@ -293,7 +311,7 @@ window.onGlobalsReady(function initSettingsPage() {
     const serverLogsEl = document.getElementById("settingServerLogsEnabled");
     if (serverLogsEl) {
         serverLogsEl.checked = settingsSync.getBool("settingServerLogsEnabled");
-        serverLogsEl.addEventListener("change", async (e) => {
+        addListener(serverLogsEl, "change", async (e) => {
             const enabled = e.target.checked;
             settingsSync.setBool("settingServerLogsEnabled", enabled);
             try {
@@ -310,34 +328,32 @@ window.onGlobalsReady(function initSettingsPage() {
 
     // Download debug logs
     const downloadBtn = document.getElementById('downloadLogsBtn');
-    if (downloadBtn) {
-        downloadBtn.addEventListener('click', () => {
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const debugData = {
-                timestamp,
-                session: {
-                    userAgent: navigator.userAgent,
-                    screenResolution: `${window.screen.width}x${window.screen.height}`,
-                    language: navigator.language
-                },
-                localStorage: Object.keys(localStorage).reduce((acc, key) => {
-                    if (key.startsWith('setting')) acc[key] = localStorage.getItem(key);
-                    return acc;
-                }, {})
-            };
+    addListener(downloadBtn, 'click', () => {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const debugData = {
+            timestamp,
+            session: {
+                userAgent: navigator.userAgent,
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                language: navigator.language
+            },
+            localStorage: Object.keys(localStorage).reduce((acc, key) => {
+                if (key.startsWith('setting')) acc[key] = localStorage.getItem(key);
+                return acc;
+            }, {})
+        };
 
-            const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `openradar-debug-${timestamp}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        });
-    }
+        const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `openradar-debug-${timestamp}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
 
     // Reset settings
-    document.getElementById("resetSettingsBtn")?.addEventListener("click", () => {
+    addListener(document.getElementById("resetSettingsBtn"), "click", () => {
         if (confirm("Are you sure you want to reset all settings to defaults?")) {
             localStorage.clear();
             location.reload();
@@ -345,7 +361,7 @@ window.onGlobalsReady(function initSettingsPage() {
     });
 
     // Clear cache
-    document.getElementById("clearCacheBtn")?.addEventListener("click", () => {
+    addListener(document.getElementById("clearCacheBtn"), "click", () => {
         if (confirm("Clear browser cache for this site?")) {
             caches.keys().then(names => {
                 names.forEach(name => caches.delete(name));
