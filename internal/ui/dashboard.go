@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	headerHeight    = 5
-	footerHeight    = 5
-	maxLogs         = 1000
-	sparklineLength = 60
+	headerHeight        = 5
+	footerHeight        = 5
+	maxLogs             = 1000
+	sparklineHistory    = 60 // 60s of data
+	sparklineDisplayLen = 42 // Display width (30% smaller)
 )
 
 // View tabs
@@ -46,16 +47,17 @@ type LogMsg struct {
 }
 
 type StatsMsg struct {
-	Packets       uint64
-	Errors        uint64
-	WsClients     int
-	MemoryMB      float64
-	Goroutines    int
-	WsBatches     uint64
-	WsMessages    uint64
-	WsQueueSize   int
-	BytesReceived uint64
-	BytesSent     uint64
+	Packets         uint64
+	Errors          uint64
+	WsClients       int
+	MemoryMB        float64
+	Goroutines      int
+	WsBatches       uint64
+	WsMessages      uint64
+	WsQueueSize     int
+	BytesReceived   uint64
+	BytesSent       uint64
+	LogLinesWritten int
 }
 
 type StatusMsg struct {
@@ -116,6 +118,9 @@ type Dashboard struct {
 	rxPerSec          uint64
 	txPerSec          uint64
 
+	// Log file stats
+	logLinesWritten int
+
 	// Sparkline history
 	packetsHistory []uint64
 	memoryHistory  []float64
@@ -159,9 +164,9 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 		adapterIP:      adapterIP,
 		startTime:      time.Now(),
 		logs:           make([]LogEntry, 0, maxLogs),
-		packetsHistory: make([]uint64, 0, sparklineLength),
-		memoryHistory:  make([]float64, 0, sparklineLength),
-		wsBatchHistory: make([]uint64, 0, sparklineLength),
+		packetsHistory: make([]uint64, 0, sparklineHistory),
+		memoryHistory:  make([]float64, 0, sparklineHistory),
+		wsBatchHistory: make([]uint64, 0, sparklineHistory),
 		autoScroll:     true,
 		currentTab:     TabLogs,
 		logFilter:      LevelAll,
@@ -285,19 +290,19 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		packetsDiff := msg.Packets - d.lastPackets
 		d.lastPackets = msg.Packets
 		d.packetsHistory = append(d.packetsHistory, packetsDiff)
-		if len(d.packetsHistory) > sparklineLength {
+		if len(d.packetsHistory) > sparklineHistory {
 			d.packetsHistory = d.packetsHistory[1:]
 		}
 
 		d.memoryHistory = append(d.memoryHistory, msg.MemoryMB)
-		if len(d.memoryHistory) > sparklineLength {
+		if len(d.memoryHistory) > sparklineHistory {
 			d.memoryHistory = d.memoryHistory[1:]
 		}
 
 		batchDiff := msg.WsBatches - d.lastWsBatches
 		d.lastWsBatches = msg.WsBatches
 		d.wsBatchHistory = append(d.wsBatchHistory, batchDiff)
-		if len(d.wsBatchHistory) > sparklineLength {
+		if len(d.wsBatchHistory) > sparklineHistory {
 			d.wsBatchHistory = d.wsBatchHistory[1:]
 		}
 
@@ -317,6 +322,7 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		d.lastBytesSent = msg.BytesSent
 		d.bytesReceived = msg.BytesReceived
 		d.bytesSent = msg.BytesSent
+		d.logLinesWritten = msg.LogLinesWritten
 
 	case StatusMsg:
 		d.httpRunning = msg.HTTPRunning
@@ -596,84 +602,75 @@ func (d *Dashboard) renderStatsView() string {
 	if d.wsBatches > 0 {
 		avgMsgsPerBatch = float64(d.wsMessages) / float64(d.wsBatches)
 	}
-
 	errorRate := float64(0)
 	if d.packets > 0 {
 		errorRate = float64(d.errors) / float64(d.packets) * 100
 	}
-
 	packetsPerSec := float64(0)
 	if len(d.packetsHistory) > 0 {
 		packetsPerSec = float64(d.packetsHistory[len(d.packetsHistory)-1])
 	}
-
 	batchesPerSec := float64(0)
 	if len(d.wsBatchHistory) > 0 {
 		batchesPerSec = float64(d.wsBatchHistory[len(d.wsBatchHistory)-1])
 	}
 
-	// Helpers
-	section := func(icon, title string) string {
-		return fmt.Sprintf("%s %s", icon, TitleStyle.Render(title))
+	// Fixed-width stat helper
+	labelStyle := StatLabelStyle.Width(12).Align(lipgloss.Right)
+	valStyle := func(color lipgloss.Color) lipgloss.Style {
+		return lipgloss.NewStyle().Bold(true).Foreground(color).Width(12)
 	}
-
 	stat := func(label, value string, color lipgloss.Color) string {
-		return fmt.Sprintf("  %s %s",
-			StatLabelStyle.Render(label),
-			lipgloss.NewStyle().Bold(true).Foreground(color).Render(value))
+		return fmt.Sprintf(" %s %s", labelStyle.Render(label), valStyle(color).Render(value))
+	}
+	section := func(icon, title string) string {
+		return fmt.Sprintf(" %s %s", icon, TitleStyle.Render(title))
 	}
 
-	// Left column: Server & WebSocket
+	// Left column: Server, WebSocket, Traffic
 	leftLines := []string{
 		section("📊", "Server"),
-		"",
-		stat("Uptime:      ", formatDuration(uptime), ColorHighlight),
-		stat("Packets:     ", formatNumber(d.packets), ColorSuccess),
-		stat("Packets/sec: ", fmt.Sprintf("%.0f", packetsPerSec), ColorPrimary),
-		stat("Errors:      ", formatNumber(d.errors), d.getErrorColor(errorRate)),
-		stat("Error rate:  ", fmt.Sprintf("%.2f%%", errorRate), d.getErrorColor(errorRate)),
+		stat("Uptime:", formatDuration(uptime), ColorHighlight),
+		stat("Packets:", formatNumber(d.packets), ColorSuccess),
+		stat("Pkts/sec:", fmt.Sprintf("%.0f", packetsPerSec), ColorPrimary),
+		stat("Errors:", formatNumber(d.errors), d.getErrorColor(errorRate)),
+		stat("Err rate:", fmt.Sprintf("%.2f%%", errorRate), d.getErrorColor(errorRate)),
 		"",
 		section("🔌", "WebSocket"),
-		"",
-		stat("Clients:     ", fmt.Sprintf("%d / %d", d.wsClients, 100), ColorPrimary),
-		stat("Batches:     ", formatNumber(d.wsBatches), ColorSuccess),
-		stat("Batch/sec:   ", fmt.Sprintf("%.0f", batchesPerSec), ColorPrimary),
-		stat("Messages:    ", formatNumber(d.wsMessages), ColorSuccess),
-		stat("Avg/batch:   ", fmt.Sprintf("%.1f", avgMsgsPerBatch), ColorWarning),
-		stat("Queue:       ", fmt.Sprintf("%d", d.wsQueueSize), d.getQueueColor()),
+		stat("Clients:", fmt.Sprintf("%d", d.wsClients), ColorPrimary),
+		stat("Batches:", formatNumber(d.wsBatches), ColorSuccess),
+		stat("Batch/s:", fmt.Sprintf("%.0f", batchesPerSec), ColorPrimary),
+		stat("Messages:", formatNumber(d.wsMessages), ColorSuccess),
+		stat("Avg/batch:", fmt.Sprintf("%.1f", avgMsgsPerBatch), ColorWarning),
+		stat("Queue:", fmt.Sprintf("%d", d.wsQueueSize), d.getQueueColor()),
 		"",
 		section("📡", "Traffic"),
-		"",
-		stat("RX total:    ", formatBytes(d.bytesReceived), ColorPrimary),
-		stat("RX/sec:      ", formatBytes(d.rxPerSec)+"/s", ColorSuccess),
-		stat("TX total:    ", formatBytes(d.bytesSent), ColorPrimary),
-		stat("TX/sec:      ", formatBytes(d.txPerSec)+"/s", ColorWarning),
+		stat("RX total:", formatBytes(d.bytesReceived), ColorPrimary),
+		stat("RX/sec:", formatBytes(d.rxPerSec)+"/s", ColorSuccess),
+		stat("TX total:", formatBytes(d.bytesSent), ColorPrimary),
+		stat("TX/sec:", formatBytes(d.txPerSec)+"/s", ColorWarning),
 	}
 
-	// Right column: Resources & Graphs
+	// Right column: Sparklines
 	rightLines := []string{
-		section("💻", "Resources"),
+		section("📈", "Packets/s"),
+		" " + renderSparkline(d.packetsHistory, ColorPrimary),
+		" " + d.getSparklineStats(d.packetsHistory, ""),
 		"",
-		stat("Memory:      ", fmt.Sprintf("%.2f MB", d.memoryMB), d.getMemoryColor()),
-		stat("Goroutines:  ", fmt.Sprintf("%d", d.goroutines), ColorPrimary),
-		stat("Logs:        ", fmt.Sprintf("%d / %d", len(d.logs), maxLogs), ColorMuted),
+		section("🧠", "Memory MB"),
+		" " + renderSparkline(d.memoryHistory, ColorWarning),
+		" " + d.getSparklineStatsFloat(d.memoryHistory, ""),
 		"",
-		section("📈", "Packets (60s)"),
-		"",
-		fmt.Sprintf("  %s", renderSparkline(d.packetsHistory, ColorPrimary)),
-		fmt.Sprintf("  %s", d.getSparklineStats(d.packetsHistory, "/s")),
-		"",
-		section("🧠", "Memory (60s)"),
-		"",
-		fmt.Sprintf("  %s", renderSparkline(d.memoryHistory, ColorWarning)),
-		fmt.Sprintf("  %s", d.getSparklineStatsFloat(d.memoryHistory, "MB")),
+		section("📦", "WS Batch/s"),
+		" " + renderSparkline(d.wsBatchHistory, ColorSuccess),
+		" " + d.getSparklineStats(d.wsBatchHistory, ""),
 	}
 
-	colWidth := (d.width - 6) / 2
+	colWidth := (d.width - 4) / 2
 	leftCol := lipgloss.NewStyle().Width(colWidth).Render(strings.Join(leftLines, "\n"))
 	rightCol := lipgloss.NewStyle().Width(colWidth).Render(strings.Join(rightLines, "\n"))
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, "  ", leftCol, "  ", rightCol)
+	return lipgloss.JoinHorizontal(lipgloss.Top, " ", leftCol, " ", rightCol)
 }
 
 func (d *Dashboard) getErrorColor(rate float64) lipgloss.Color {
@@ -720,62 +717,55 @@ func (d *Dashboard) getSparklineStatsFloat(data []float64, unit string) string {
 }
 
 func (d *Dashboard) renderConfigView() string {
-	lines := []string{
-		"",
-		TitleStyle.Render("  Configuration"),
-		"",
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Version:    "),
-			StatValueStyle.Render(d.version),
-		),
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Mode:       "),
-			StatValueStyle.Render(d.mode),
-		),
-		fmt.Sprintf("  %s %s", StatLabelStyle.Render("HTTP URL:   "), URLStyle.Render(d.serverURL)),
-		fmt.Sprintf("  %s %s", StatLabelStyle.Render("WS URL:     "), URLStyle.Render(d.wsURL)),
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Adapter IP: "),
-			StatValueStyle.Render(d.adapterIP),
-		),
-		"",
-		TitleStyle.Render("  Keyboard Shortcuts"),
-		"",
-		fmt.Sprintf(
-			"  %s  %s",
-			StatValueStyle.Render("q"),
-			StatLabelStyle.Render("Quit application"),
-		),
-		fmt.Sprintf(
-			"  %s  %s",
-			StatValueStyle.Render("r"),
-			StatLabelStyle.Render("Restart application"),
-		),
-		fmt.Sprintf(
-			"  %s  %s",
-			StatValueStyle.Render("p"),
-			StatLabelStyle.Render("Toggle auto-scroll"),
-		),
-		fmt.Sprintf("  %s  %s", StatValueStyle.Render("c"), StatLabelStyle.Render("Clear logs")),
-		fmt.Sprintf(
-			"  %s  %s",
-			StatValueStyle.Render("f"),
-			StatLabelStyle.Render("Cycle log filter"),
-		),
-		fmt.Sprintf("  %s  %s", StatValueStyle.Render("/"), StatLabelStyle.Render("Search logs")),
-		fmt.Sprintf("  %s  %s", StatValueStyle.Render("↑↓"), StatLabelStyle.Render("Scroll logs")),
-		fmt.Sprintf(
-			"  %s  %s",
-			StatValueStyle.Render("g/G"),
-			StatLabelStyle.Render("Go to top/bottom"),
-		),
-		fmt.Sprintf("  %s  %s", StatValueStyle.Render("1-3"), StatLabelStyle.Render("Switch tabs")),
+	section := func(icon, title string) string {
+		return fmt.Sprintf(" %s %s", icon, TitleStyle.Render(title))
+	}
+	labelStyle := StatLabelStyle.Width(12).Align(lipgloss.Right)
+	cfgLine := func(label, value string, style lipgloss.Style) string {
+		return fmt.Sprintf(" %s %s", labelStyle.Render(label), style.Render(value))
+	}
+	keyStyle := lipgloss.NewStyle().Bold(true).Foreground(ColorPrimary).Width(6)
+	keyLine := func(key, desc string) string {
+		return fmt.Sprintf(" %s %s", keyStyle.Render(key), StatLabelStyle.Render(desc))
 	}
 
-	return strings.Join(lines, "\n")
+	// Left column: Configuration
+	leftLines := []string{
+		section("⚙️", "Configuration"),
+		cfgLine("Version:", d.version, StatValueStyle),
+		cfgLine("Mode:", d.mode, ModeStyle),
+		cfgLine("HTTP URL:", d.serverURL, URLStyle),
+		cfgLine("WS URL:", d.wsURL, URLStyle),
+		cfgLine("Adapter:", d.adapterIP, StatValueStyle),
+		"",
+		section("ℹ️", "About"),
+		cfgLine("", "OpenRadar - Albion Online", StatLabelStyle),
+		cfgLine("", "Real-time packet radar", StatLabelStyle),
+	}
+
+	// Right column: Keyboard shortcuts (single column for alignment)
+	rightLines := []string{
+		section("⌨️", "Shortcuts"),
+		keyLine("q", "Quit application"),
+		keyLine("r", "Restart application"),
+		keyLine("p", "Toggle auto-scroll"),
+		keyLine("c", "Clear logs"),
+		keyLine("f", "Cycle log filter"),
+		keyLine("/", "Search logs"),
+		keyLine("↑↓", "Scroll logs"),
+		keyLine("g/G", "Go to top/bottom"),
+		keyLine("1-3", "Switch tabs"),
+		keyLine("tab", "Next tab"),
+		"",
+		section("📋", "Log Levels"),
+		" " + LogInfoStyle.Render("INFO") + " " + LogSuccessStyle.Render("SUCCESS") + " " + LogWarnStyle.Render("WARN") + " " + LogErrorStyle.Render("ERROR"),
+	}
+
+	colWidth := (d.width - 4) / 2
+	leftCol := lipgloss.NewStyle().Width(colWidth).Render(strings.Join(leftLines, "\n"))
+	rightCol := lipgloss.NewStyle().Width(colWidth).Render(strings.Join(rightLines, "\n"))
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, " ", leftCol, " ", rightCol)
 }
 
 // Sparkline rendering
@@ -786,8 +776,28 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 		return ""
 	}
 
+	// Downsample if needed (60 data points -> 42 display chars)
+	displayData := data
+	if len(data) > sparklineDisplayLen {
+		displayData = make([]T, sparklineDisplayLen)
+		ratio := float64(len(data)) / float64(sparklineDisplayLen)
+		for i := 0; i < sparklineDisplayLen; i++ {
+			// Average the values in each bucket
+			start := int(float64(i) * ratio)
+			end := int(float64(i+1) * ratio)
+			if end > len(data) {
+				end = len(data)
+			}
+			var sum float64
+			for j := start; j < end; j++ {
+				sum += float64(data[j])
+			}
+			displayData[i] = T(sum / float64(end-start))
+		}
+	}
+
 	var max T
-	for _, v := range data {
+	for _, v := range displayData {
 		if v > max {
 			max = v
 		}
@@ -796,11 +806,11 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 	if max == 0 {
 		return lipgloss.NewStyle().
 			Foreground(color).
-			Render(strings.Repeat(string(sparkChars[0]), len(data)))
+			Render(strings.Repeat(string(sparkChars[0]), len(displayData)))
 	}
 
 	var sb strings.Builder
-	for _, v := range data {
+	for _, v := range displayData {
 		idx := int(float64(v) / float64(max) * float64(len(sparkChars)-1))
 		if idx >= len(sparkChars) {
 			idx = len(sparkChars) - 1
