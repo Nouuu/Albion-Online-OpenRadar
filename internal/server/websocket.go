@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -11,14 +12,23 @@ import (
 )
 
 const (
-	// MaxWebSocketClients is the maximum number of concurrent WebSocket connections
 	MaxWebSocketClients = 100
+	BatchInterval       = 16 * time.Millisecond // ~60 fps
+	MaxBatchSize        = 100
 )
 
-// WSMessage represents a message sent to WebSocket clients
-type WSMessage struct {
-	Code       string `json:"code"`
-	Dictionary string `json:"dictionary"`
+// WSBatchMessage represents a batch of messages
+type WSBatchMessage struct {
+	Type     string        `json:"type"`
+	Messages []interface{} `json:"messages"`
+}
+
+// WSStats holds WebSocket statistics
+type WSStats struct {
+	BatchesSent   uint64
+	MessagesSent  uint64
+	MessagesQueue int
+	BytesSent     uint64
 }
 
 // WebSocketHandler manages WebSocket connections and broadcasts
@@ -27,18 +37,109 @@ type WebSocketHandler struct {
 	clientsMu sync.RWMutex
 	upgrader  websocket.Upgrader
 	logger    *logger.Logger
+
+	// Batching
+	batchBuffer []interface{}
+	batchMu     sync.Mutex
+	batchTicker *time.Ticker
+	stopBatch   chan struct{}
+
+	// Stats
+	batchesSent  uint64
+	messagesSent uint64
+	bytesSent    uint64
 }
 
 // NewWebSocketHandler creates a new WebSocket handler
 func NewWebSocketHandler(log *logger.Logger) *WebSocketHandler {
-	return &WebSocketHandler{
-		clients: make(map[*websocket.Conn]bool),
-		logger:  log,
+	ws := &WebSocketHandler{
+		clients:     make(map[*websocket.Conn]bool),
+		logger:      log,
+		batchBuffer: make([]interface{}, 0, MaxBatchSize),
+		stopBatch:   make(chan struct{}),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
-				return true // Allow all origins for local development
+				return true
 			},
 		},
+	}
+	ws.startBatchTicker()
+	return ws
+}
+
+func (ws *WebSocketHandler) startBatchTicker() {
+	ws.batchTicker = time.NewTicker(BatchInterval)
+	go func() {
+		for {
+			select {
+			case <-ws.batchTicker.C:
+				ws.flushBatch()
+			case <-ws.stopBatch:
+				ws.batchTicker.Stop()
+				return
+			}
+		}
+	}()
+}
+
+func (ws *WebSocketHandler) flushBatch() {
+	ws.batchMu.Lock()
+	if len(ws.batchBuffer) == 0 {
+		ws.batchMu.Unlock()
+		return
+	}
+	batch := ws.batchBuffer
+	msgCount := uint64(len(batch))
+	ws.batchBuffer = make([]interface{}, 0, MaxBatchSize)
+	ws.batchMu.Unlock()
+
+	msg := &WSBatchMessage{Type: "batch", Messages: batch}
+	data, err := json.Marshal(msg)
+	if err != nil {
+		return
+	}
+
+	dataLen := uint64(len(data))
+	var failedClients []*websocket.Conn
+	var sentCount uint64
+
+	ws.clientsMu.RLock()
+	for client := range ws.clients {
+		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
+			failedClients = append(failedClients, client)
+		} else {
+			sentCount++
+		}
+	}
+	ws.clientsMu.RUnlock()
+
+	ws.batchesSent++
+	ws.messagesSent += msgCount
+	ws.bytesSent += dataLen * sentCount
+
+	if len(failedClients) > 0 {
+		ws.clientsMu.Lock()
+		for _, client := range failedClients {
+			if _, exists := ws.clients[client]; exists {
+				_ = client.Close()
+				delete(ws.clients, client)
+			}
+		}
+		ws.clientsMu.Unlock()
+	}
+}
+
+// Stats returns current WebSocket statistics
+func (ws *WebSocketHandler) Stats() WSStats {
+	ws.batchMu.Lock()
+	queueLen := len(ws.batchBuffer)
+	ws.batchMu.Unlock()
+
+	return WSStats{
+		BatchesSent:   ws.batchesSent,
+		MessagesSent:  ws.messagesSent,
+		MessagesQueue: queueLen,
+		BytesSent:     ws.bytesSent,
 	}
 }
 
@@ -113,6 +214,9 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 
 // CloseAllClients closes all WebSocket connections gracefully
 func (ws *WebSocketHandler) CloseAllClients() {
+	close(ws.stopBatch)
+	ws.flushBatch() // Flush remaining events
+
 	ws.clientsMu.Lock()
 	for client := range ws.clients {
 		_ = client.WriteMessage(
@@ -125,47 +229,15 @@ func (ws *WebSocketHandler) CloseAllClients() {
 	ws.clientsMu.Unlock()
 }
 
-// Broadcast sends a message to all connected clients
-func (ws *WebSocketHandler) Broadcast(msg *WSMessage) {
-	data, err := json.Marshal(msg)
-	if err != nil {
-		return
-	}
-
-	// Phase 1: Send messages and collect failed clients under RLock
-	var failedClients []*websocket.Conn
-	ws.clientsMu.RLock()
-	for client := range ws.clients {
-		if err := client.WriteMessage(websocket.TextMessage, data); err != nil {
-			failedClients = append(failedClients, client)
-		}
-	}
-	ws.clientsMu.RUnlock()
-
-	// Phase 2: Remove failed clients under exclusive Lock
-	if len(failedClients) > 0 {
-		ws.clientsMu.Lock()
-		for _, client := range failedClients {
-			// Check if client still exists (may have been removed by handleMessages)
-			if _, exists := ws.clients[client]; exists {
-				_ = client.Close()
-				delete(ws.clients, client)
-			}
-		}
-		ws.clientsMu.Unlock()
-	}
-}
-
-// broadcastPayload is a helper to broadcast a typed payload
+// broadcastPayload adds a message to the batch buffer
 func (ws *WebSocketHandler) broadcastPayload(code string, payload interface{}) {
-	dictJSON, err := json.Marshal(payload)
-	if err != nil {
-		return
+	msg := map[string]interface{}{
+		"code":       code,
+		"dictionary": payload,
 	}
-	ws.Broadcast(&WSMessage{
-		Code:       code,
-		Dictionary: string(dictJSON),
-	})
+	ws.batchMu.Lock()
+	ws.batchBuffer = append(ws.batchBuffer, msg)
+	ws.batchMu.Unlock()
 }
 
 // BroadcastEvent broadcasts an event to all clients
