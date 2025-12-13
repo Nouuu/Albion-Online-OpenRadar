@@ -40,7 +40,7 @@
 <td>
 
 **Modern UI**<br>
-<sub>Tailwind + HTMX + Alpine.js</sub>
+<sub>Tailwind CSS + HTMX</sub>
 
 </td>
 <td>
