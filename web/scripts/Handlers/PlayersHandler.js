@@ -184,7 +184,7 @@ export class PlayersHandler {
         }
     }
 
-    updateLocalPlayerNextPosition(posX, posY) {
+    updateLocalPlayerNextPosition(_posX, _posY) {
         // TODO: Implement update local player next position
         throw new Error('Not implemented');
     }
