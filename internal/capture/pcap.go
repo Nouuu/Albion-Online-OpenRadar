@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -38,6 +39,9 @@ type Capturer struct {
 	onPacket PacketHandler
 	ctx      context.Context
 	cancel   context.CancelFunc
+
+	// Traffic stats
+	bytesReceived uint64
 }
 
 // New creates a new Capturer for the given IP address
@@ -109,7 +113,12 @@ func (c *Capturer) processPacket(packet gopacket.Packet) {
 		return
 	}
 
+	atomic.AddUint64(&c.bytesReceived, uint64(len(udp.Payload)))
 	c.onPacket(udp.Payload)
+}
+
+func (c *Capturer) BytesReceived() uint64 {
+	return atomic.LoadUint64(&c.bytesReceived)
 }
 
 // resolveAdapter gets the IP and device name, with retry logic

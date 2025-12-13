@@ -15,7 +15,7 @@ const (
 	headerHeight    = 5
 	footerHeight    = 5
 	maxLogs         = 1000
-	sparklineLength = 30
+	sparklineLength = 60
 )
 
 // View tabs
@@ -46,11 +46,16 @@ type LogMsg struct {
 }
 
 type StatsMsg struct {
-	Packets    uint64
-	Errors     uint64
-	WsClients  int
-	MemoryMB   float64
-	Goroutines int
+	Packets       uint64
+	Errors        uint64
+	WsClients     int
+	MemoryMB      float64
+	Goroutines    int
+	WsBatches     uint64
+	WsMessages    uint64
+	WsQueueSize   int
+	BytesReceived uint64
+	BytesSent     uint64
 }
 
 type StatusMsg struct {
@@ -98,10 +103,25 @@ type Dashboard struct {
 	goroutines int
 	startTime  time.Time
 
+	// WebSocket batching stats
+	wsBatches   uint64
+	wsMessages  uint64
+	wsQueueSize int
+
+	// Traffic stats
+	bytesReceived     uint64
+	bytesSent         uint64
+	lastBytesReceived uint64
+	lastBytesSent     uint64
+	rxPerSec          uint64
+	txPerSec          uint64
+
 	// Sparkline history
 	packetsHistory []uint64
 	memoryHistory  []float64
+	wsBatchHistory []uint64
 	lastPackets    uint64
+	lastWsBatches  uint64
 
 	// Components
 	viewport    viewport.Model
@@ -141,6 +161,7 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 		logs:           make([]LogEntry, 0, maxLogs),
 		packetsHistory: make([]uint64, 0, sparklineLength),
 		memoryHistory:  make([]float64, 0, sparklineLength),
+		wsBatchHistory: make([]uint64, 0, sparklineLength),
 		autoScroll:     true,
 		currentTab:     TabLogs,
 		logFilter:      LevelAll,
@@ -260,7 +281,7 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case StatsMsg:
-		// Update sparkline history
+		// Update sparkline histories
 		packetsDiff := msg.Packets - d.lastPackets
 		d.lastPackets = msg.Packets
 		d.packetsHistory = append(d.packetsHistory, packetsDiff)
@@ -273,11 +294,29 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			d.memoryHistory = d.memoryHistory[1:]
 		}
 
+		batchDiff := msg.WsBatches - d.lastWsBatches
+		d.lastWsBatches = msg.WsBatches
+		d.wsBatchHistory = append(d.wsBatchHistory, batchDiff)
+		if len(d.wsBatchHistory) > sparklineLength {
+			d.wsBatchHistory = d.wsBatchHistory[1:]
+		}
+
 		d.packets = msg.Packets
 		d.errors = msg.Errors
 		d.wsClients = msg.WsClients
 		d.memoryMB = msg.MemoryMB
 		d.goroutines = msg.Goroutines
+		d.wsBatches = msg.WsBatches
+		d.wsMessages = msg.WsMessages
+		d.wsQueueSize = msg.WsQueueSize
+
+		// Traffic stats (per second)
+		d.rxPerSec = msg.BytesReceived - d.lastBytesReceived
+		d.txPerSec = msg.BytesSent - d.lastBytesSent
+		d.lastBytesReceived = msg.BytesReceived
+		d.lastBytesSent = msg.BytesSent
+		d.bytesReceived = msg.BytesReceived
+		d.bytesSent = msg.BytesSent
 
 	case StatusMsg:
 		d.httpRunning = msg.HTTPRunning
@@ -479,28 +518,28 @@ func (d *Dashboard) renderFooter() string {
 	packetsSparkline := renderSparkline(d.packetsHistory, ColorPrimary)
 	memorySparkline := renderSparkline(d.memoryHistory, ColorWarning)
 
-	// Stats line 1
+	// Stats line 1: Packets & Memory
 	stats1 := fmt.Sprintf(
-		"%s %s %s  |  %s %s  |  %s %s  |  %s %s",
+		"%s %s %s  |  %s %s %s  |  %s %s",
 		StatLabelStyle.Render("Pkts:"),
 		StatValueStyle.Render(formatNumber(d.packets)),
 		packetsSparkline,
-		StatLabelStyle.Render("Err:"),
-		StatValueStyle.Render(formatNumber(d.errors)),
-		StatLabelStyle.Render("WS:"),
-		StatValueStyle.Render(fmt.Sprintf("%d", d.wsClients)),
+		StatLabelStyle.Render("Mem:"),
+		StatValueStyle.Render(fmt.Sprintf("%.1fMB", d.memoryMB)),
+		memorySparkline,
 		StatLabelStyle.Render("Up:"),
 		StatValueStyle.Render(formatDuration(uptime)),
 	)
 
-	// Stats line 2
+	// Stats line 2: WS batching & system
 	stats2 := fmt.Sprintf(
-		"%s %s %s  |  %s %s  |  %s %s",
-		StatLabelStyle.Render("Mem:"),
-		StatValueStyle.Render(fmt.Sprintf("%.1fMB", d.memoryMB)),
-		memorySparkline,
-		StatLabelStyle.Render("Goroutines:"),
-		StatValueStyle.Render(fmt.Sprintf("%d", d.goroutines)),
+		"%s %s  |  %s %s  |  %s %s  |  %s %s",
+		StatLabelStyle.Render("Batch:"),
+		StatValueStyle.Render(fmt.Sprintf("%s/%s", formatNumber(d.wsBatches), formatNumber(d.wsMessages))),
+		StatLabelStyle.Render("WS:"),
+		StatValueStyle.Render(fmt.Sprintf("%d", d.wsClients)),
+		StatLabelStyle.Render("Err:"),
+		StatValueStyle.Render(formatNumber(d.errors)),
 		StatLabelStyle.Render("Logs:"),
 		StatValueStyle.Render(fmt.Sprintf("%d", len(d.logs))),
 	)
@@ -552,54 +591,132 @@ func (d *Dashboard) getFilterString() string {
 func (d *Dashboard) renderStatsView() string {
 	uptime := time.Since(d.startTime).Round(time.Second)
 
-	lines := []string{
-		"",
-		TitleStyle.Render("  Server Statistics"),
-		"",
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Packets processed:"),
-			StatValueStyle.Render(formatNumber(d.packets)),
-		),
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Packet errors:    "),
-			StatValueStyle.Render(formatNumber(d.errors)),
-		),
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("WS clients:       "),
-			StatValueStyle.Render(fmt.Sprintf("%d", d.wsClients)),
-		),
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Uptime:           "),
-			StatValueStyle.Render(formatDuration(uptime)),
-		),
-		"",
-		TitleStyle.Render("  Resource Usage"),
-		"",
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Memory:           "),
-			StatValueStyle.Render(fmt.Sprintf("%.2f MB", d.memoryMB)),
-		),
-		fmt.Sprintf(
-			"  %s %s",
-			StatLabelStyle.Render("Goroutines:       "),
-			StatValueStyle.Render(fmt.Sprintf("%d", d.goroutines)),
-		),
-		"",
-		TitleStyle.Render("  Packet Rate (last 30s)"),
-		"",
-		fmt.Sprintf("  %s", renderSparklineLarge(d.packetsHistory)),
-		"",
-		TitleStyle.Render("  Memory Usage (last 30s)"),
-		"",
-		fmt.Sprintf("  %s", renderSparklineLarge(d.memoryHistory)),
+	// Calculate derived metrics
+	avgMsgsPerBatch := float64(0)
+	if d.wsBatches > 0 {
+		avgMsgsPerBatch = float64(d.wsMessages) / float64(d.wsBatches)
 	}
 
-	return strings.Join(lines, "\n")
+	errorRate := float64(0)
+	if d.packets > 0 {
+		errorRate = float64(d.errors) / float64(d.packets) * 100
+	}
+
+	packetsPerSec := float64(0)
+	if len(d.packetsHistory) > 0 {
+		packetsPerSec = float64(d.packetsHistory[len(d.packetsHistory)-1])
+	}
+
+	batchesPerSec := float64(0)
+	if len(d.wsBatchHistory) > 0 {
+		batchesPerSec = float64(d.wsBatchHistory[len(d.wsBatchHistory)-1])
+	}
+
+	// Helpers
+	section := func(icon, title string) string {
+		return fmt.Sprintf("%s %s", icon, TitleStyle.Render(title))
+	}
+
+	stat := func(label, value string, color lipgloss.Color) string {
+		return fmt.Sprintf("  %s %s",
+			StatLabelStyle.Render(label),
+			lipgloss.NewStyle().Bold(true).Foreground(color).Render(value))
+	}
+
+	// Left column: Server & WebSocket
+	leftLines := []string{
+		section("📊", "Server"),
+		"",
+		stat("Uptime:      ", formatDuration(uptime), ColorHighlight),
+		stat("Packets:     ", formatNumber(d.packets), ColorSuccess),
+		stat("Packets/sec: ", fmt.Sprintf("%.0f", packetsPerSec), ColorPrimary),
+		stat("Errors:      ", formatNumber(d.errors), d.getErrorColor(errorRate)),
+		stat("Error rate:  ", fmt.Sprintf("%.2f%%", errorRate), d.getErrorColor(errorRate)),
+		"",
+		section("🔌", "WebSocket"),
+		"",
+		stat("Clients:     ", fmt.Sprintf("%d / %d", d.wsClients, 100), ColorPrimary),
+		stat("Batches:     ", formatNumber(d.wsBatches), ColorSuccess),
+		stat("Batch/sec:   ", fmt.Sprintf("%.0f", batchesPerSec), ColorPrimary),
+		stat("Messages:    ", formatNumber(d.wsMessages), ColorSuccess),
+		stat("Avg/batch:   ", fmt.Sprintf("%.1f", avgMsgsPerBatch), ColorWarning),
+		stat("Queue:       ", fmt.Sprintf("%d", d.wsQueueSize), d.getQueueColor()),
+		"",
+		section("📡", "Traffic"),
+		"",
+		stat("RX total:    ", formatBytes(d.bytesReceived), ColorPrimary),
+		stat("RX/sec:      ", formatBytes(d.rxPerSec)+"/s", ColorSuccess),
+		stat("TX total:    ", formatBytes(d.bytesSent), ColorPrimary),
+		stat("TX/sec:      ", formatBytes(d.txPerSec)+"/s", ColorWarning),
+	}
+
+	// Right column: Resources & Graphs
+	rightLines := []string{
+		section("💻", "Resources"),
+		"",
+		stat("Memory:      ", fmt.Sprintf("%.2f MB", d.memoryMB), d.getMemoryColor()),
+		stat("Goroutines:  ", fmt.Sprintf("%d", d.goroutines), ColorPrimary),
+		stat("Logs:        ", fmt.Sprintf("%d / %d", len(d.logs), maxLogs), ColorMuted),
+		"",
+		section("📈", "Packets (60s)"),
+		"",
+		fmt.Sprintf("  %s", renderSparkline(d.packetsHistory, ColorPrimary)),
+		fmt.Sprintf("  %s", d.getSparklineStats(d.packetsHistory, "/s")),
+		"",
+		section("🧠", "Memory (60s)"),
+		"",
+		fmt.Sprintf("  %s", renderSparkline(d.memoryHistory, ColorWarning)),
+		fmt.Sprintf("  %s", d.getSparklineStatsFloat(d.memoryHistory, "MB")),
+	}
+
+	colWidth := (d.width - 6) / 2
+	leftCol := lipgloss.NewStyle().Width(colWidth).Render(strings.Join(leftLines, "\n"))
+	rightCol := lipgloss.NewStyle().Width(colWidth).Render(strings.Join(rightLines, "\n"))
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, "  ", leftCol, "  ", rightCol)
+}
+
+func (d *Dashboard) getErrorColor(rate float64) lipgloss.Color {
+	if rate > 5 {
+		return ColorError
+	} else if rate > 1 {
+		return ColorWarning
+	}
+	return ColorSuccess
+}
+
+func (d *Dashboard) getQueueColor() lipgloss.Color {
+	if d.wsQueueSize > 50 {
+		return ColorError
+	} else if d.wsQueueSize > 20 {
+		return ColorWarning
+	}
+	return ColorSuccess
+}
+
+func (d *Dashboard) getMemoryColor() lipgloss.Color {
+	if d.memoryMB > 500 {
+		return ColorError
+	} else if d.memoryMB > 200 {
+		return ColorWarning
+	}
+	return ColorSuccess
+}
+
+func (d *Dashboard) getSparklineStats(data []uint64, unit string) string {
+	if len(data) == 0 {
+		return StatLabelStyle.Render("No data")
+	}
+	min, max, avg := minVal(data), maxVal(data), avgVal(data)
+	return StatLabelStyle.Render(fmt.Sprintf("min: %.0f  avg: %.0f  max: %.0f %s", min, avg, max, unit))
+}
+
+func (d *Dashboard) getSparklineStatsFloat(data []float64, unit string) string {
+	if len(data) == 0 {
+		return StatLabelStyle.Render("No data")
+	}
+	min, max, avg := minVal(data), maxVal(data), avgVal(data)
+	return StatLabelStyle.Render(fmt.Sprintf("min: %.1f  avg: %.1f  max: %.1f %s", min, avg, max, unit))
 }
 
 func (d *Dashboard) renderConfigView() string {
@@ -694,20 +811,6 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 	return lipgloss.NewStyle().Foreground(color).Render(sb.String())
 }
 
-func renderSparklineLarge[T uint64 | float64](data []T) string {
-	if len(data) == 0 {
-		return StatLabelStyle.Render("No data yet...")
-	}
-	return renderSparkline(
-		data,
-		ColorPrimary,
-	) + fmt.Sprintf(
-		" (min/max: %.0f/%.0f)",
-		minVal(data),
-		maxVal(data),
-	)
-}
-
 func minVal[T uint64 | float64](data []T) float64 {
 	if len(data) == 0 {
 		return 0
@@ -734,6 +837,17 @@ func maxVal[T uint64 | float64](data []T) float64 {
 	return float64(max)
 }
 
+func avgVal[T uint64 | float64](data []T) float64 {
+	if len(data) == 0 {
+		return 0
+	}
+	var sum float64
+	for _, v := range data {
+		sum += float64(v)
+	}
+	return sum / float64(len(data))
+}
+
 func formatNumber(n uint64) string {
 	str := fmt.Sprintf("%d", n)
 	if len(str) <= 3 {
@@ -748,6 +862,19 @@ func formatNumber(n uint64) string {
 		result.WriteRune(c)
 	}
 	return result.String()
+}
+
+func formatBytes(b uint64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := uint64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
 func formatDuration(d time.Duration) string {
