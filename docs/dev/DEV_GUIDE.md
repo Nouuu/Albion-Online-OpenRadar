@@ -194,7 +194,7 @@ Manages client connections and broadcasts.
 
 ### 4.1 Overview
 
-Static SPA using Alpine.js for routing and state management.
+Static SPA using HTMX for navigation and vanilla JS for state management.
 
 **Key files:**
 - `web/public/index.html` - Main SPA with all pages

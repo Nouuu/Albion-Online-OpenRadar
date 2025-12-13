@@ -21,7 +21,7 @@
 #### UI
 - [x] Modern dark theme (Tailwind CSS v4)
 - [x] HTMX SPA navigation
-- [x] Alpine.js reactive components
+- [x] Vanilla JS UI controllers (sidebar, accordions)
 - [x] 4-layer canvas system
 - [x] Dynamic radar size (300-800px)
 - [x] Zoom controls (0.5x-2.0x)
