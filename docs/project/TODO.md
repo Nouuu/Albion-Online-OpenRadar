@@ -29,49 +29,78 @@
 - [x] Collapsible sidebar navigation
 - [x] Floating overlay window with sync
 
-#### Detection
+#### Detection (Refactored)
 - [x] Resource detection 100% validated (3,698 detections)
 - [x] Mob classification (Normal/Enchanted/MiniBoss/Boss)
 - [x] Living resources via MobsDatabase (~2,800 types)
 - [x] Static resources via HarvestablesDatabase (3,230+ types)
 - [x] Enchantment detection (.0 to .3)
+- [x] Player detection (nicknames, guild, alliance, equipment, spells)
 
 ---
 
-## v2.1 - Map & Stability (Next)
+## v2.1 - Detection Refactoring (Next)
+
+### Priority: Complete Detection Systems
+
+The following systems need to be refactored like Resources/Mobs/Players:
+- Database-driven detection
+- Proper event handlers
+- Stale entity cleanup
+- Settings-based filtering
+- Classification system
+
+#### Dungeons
+- [ ] Create DungeonsDatabase.js (types, tiers, difficulties)
+- [ ] Add stale entity cleanup
+- [ ] Improve classification (Solo/Group/Corrupted/Hellgate/Avalonian)
+- [ ] Add filtering by type in settings
+
+#### Chests
+- [ ] Create ChestsDatabase.js (rarities, types)
+- [ ] Add stale entity cleanup
+- [ ] Classification by rarity (Common/Uncommon/Rare/Legendary)
+- [ ] Add filtering in settings
+
+#### Mists
+- [ ] Implement 19 event handlers (events 513-531)
+- [ ] Add missing event codes in EventCodes.js
+- [ ] Create proper MistsHandler.js
+- [ ] Track Mists entrances/exits
+- [ ] Wisp cages detection
+
+#### Fishing
+- [ ] Complete FishingHandler.js (TODOs in code)
+- [ ] Add fishing zones on radar
+- [ ] Fishing state tracking
 
 ### Priority: Map Improvements
 - [ ] Blackzone map tiles extraction from Albion client
 - [ ] Map tile size normalization (fix stretching on small zones)
-- [ ] Map background loading optimization
-
-### Priority: Bug Fixes & Stability
-- [ ] Player movement reliability improvements
-- [ ] WebSocket reconnection handling
-- [ ] Memory usage optimization for long sessions
+- [ ] Map centering optimization (background alignment)
+- [ ] Map scaling for different zone sizes
 
 ---
 
 ## v2.2+ - Future (Backlog)
 
-### Player Enhancements
-- [ ] Nickname display option
-- [ ] Health bar overlay
-- [ ] Distance indicator (meters)
-- [ ] Guild/Alliance tags
-- [ ] Mount status indicator
+### Stability & Performance
+- [ ] WebSocket reconnection handling
+- [ ] Memory usage optimization for long sessions
+- [ ] BZ portal transitions fix
 
 ### Other Improvements
 - [ ] Quality metrics dashboard
-- [ ] Feature flags system
 - [ ] Configuration file support
 
 ---
 
 ## Known Limitations
 
-### Player Movement
-- Movement tracking limited due to Albion's encryption
+### Player Positions (Permanent)
+- Position tracking impossible - Albion encrypts movement data
+- Players detected but coordinates unavailable
+- No fix possible - this is by design from Albion
 - See [PLAYER_POSITIONS_MITM.md](../technical/PLAYER_POSITIONS_MITM.md) for technical details
 
 ### Blackzone Maps
@@ -83,6 +112,20 @@
 - Remaining charges display may be inaccurate
 - Server counts harvest bonus differently
 - No fix possible (missing server-side data)
+
+---
+
+## Detection Systems Status
+
+| System | Status | Refactored | Notes |
+|--------|--------|------------|-------|
+| Resources | ✅ Working | ✅ Yes | Database-driven, cleanup, filtering |
+| Mobs | ✅ Working | ✅ Yes | Database-driven, 9 classifications |
+| Players | ⚠️ Partial | ✅ Yes | Positions encrypted (Albion limitation) |
+| Dungeons | ⚠️ Basic | ❌ No | No cleanup, no database |
+| Chests | ⚠️ Basic | ❌ No | Minimal implementation (57 lines) |
+| Mists | ❌ Broken | ❌ No | 19 events defined but not implemented |
+| Fishing | ⚠️ Partial | ❌ No | TODOs in code, incomplete |
 
 ---
 
