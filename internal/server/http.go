@@ -151,7 +151,10 @@ func (s *HTTPServer) setupRoutes() {
 	})
 
 	// Static file handlers with caching
-	// Images: cache 24h | ao-bin-dumps: cache 7 days (handled below)
+	// Items and Spells: serve fallback image if not found
+	s.mux.Handle("/images/Items/", s.fsHandlerWithFallback("/images/Items/", s.images, "Items", "_default.webp", imageCacheDuration))
+	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp", imageCacheDuration))
+	// Other images: standard handler (cache 24h)
 	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration, false))
 	// Scripts, pages: NO CACHE (for development)
 	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0, true))
@@ -272,6 +275,38 @@ func (s *HTTPServer) fsHandler(
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		setCacheHeaders(w, cacheDuration, noCache, "")
 		handler.ServeHTTP(w, r)
+	})
+}
+
+// fsHandlerWithFallback serves files from fs.FS with a fallback image for missing files
+func (s *HTTPServer) fsHandlerWithFallback(
+	prefix string,
+	fsys fs.FS,
+	subdir string,
+	fallbackFile string,
+	cacheDuration time.Duration,
+) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract filename from path
+		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
+		filePath := subdir + "/" + urlPath
+
+		// Try to read the requested file
+		data, err := fs.ReadFile(fsys, filePath)
+		if err != nil {
+			// File not found - serve fallback
+			fallbackPath := subdir + "/" + fallbackFile
+			data, err = fs.ReadFile(fsys, fallbackPath)
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
+		}
+
+		// Set headers
+		setCacheHeaders(w, cacheDuration, false, "")
+		w.Header().Set("Content-Type", "image/webp")
+		_, _ = w.Write(data)
 	})
 }
 

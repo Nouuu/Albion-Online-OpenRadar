@@ -1,35 +1,20 @@
-/**
- * OpenRadar App Styles
- * Minimal CSS - only animations and utilities that can't be done in Tailwind
- */
+/* OpenRadar - Design System */
 
-/* ============================================
-   PAGE TRANSITIONS
-   ============================================ */
+:root {
+    --transition-fast: 100ms ease-out;
+    --transition-normal: 150ms ease-out;
+    --transition-slow: 200ms ease-out;
+}
 
+/* Animations */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(4px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-in {
-    animation: fadeIn 0.2s ease-out;
-}
+.animate-in { animation: fadeIn 0.2s ease-out; }
 
-/* ============================================
-   STAGGER CHILDREN ANIMATION
-   ============================================ */
-
-.stagger > * {
-    animation: fadeIn 0.25s ease-out both;
-}
-
+.stagger > * { animation: fadeIn 0.25s ease-out both; }
 .stagger > *:nth-child(1) { animation-delay: 0ms; }
 .stagger > *:nth-child(2) { animation-delay: 30ms; }
 .stagger > *:nth-child(3) { animation-delay: 60ms; }
@@ -39,201 +24,66 @@
 .stagger > *:nth-child(7) { animation-delay: 180ms; }
 .stagger > *:nth-child(8) { animation-delay: 210ms; }
 
-/* ============================================
-   PULSE GLOW (RADAR ACTIVE INDICATOR)
-   ============================================ */
-
-@keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 0 0 0 rgba(0, 212, 255, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 20px 4px rgba(0, 212, 255, 0.2);
-    }
-}
-
-.animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite;
-}
-
-/* ============================================
-   RADAR CANVAS STYLES
-   ============================================ */
-
-.radar-canvas {
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-}
-
-/* Canvas container for layered canvases */
-.canvas-container {
-    position: relative;
-    width: 500px;
-    height: 500px;
-}
-
-.canvas-container canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-/* ============================================
-   CHECKBOX CUSTOM STYLING
-   ============================================ */
-
-/* Checkmark animation */
+/* Checkbox */
 @keyframes checkmark {
-    0% {
-        transform: scale(0.8);
-    }
-    50% {
-        transform: scale(1.1);
-    }
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(0.8); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
 }
 
-input[type="checkbox"]:checked {
-    animation: checkmark 0.15s ease-out;
-}
+input[type="checkbox"]:checked { animation: checkmark 0.15s ease-out; }
 
-/* ============================================
-   SCROLLBAR STYLING (WEBKIT)
-   ============================================ */
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0a0a0f; }
+::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
+* { scrollbar-width: thin; scrollbar-color: #2a2a3a #0a0a0f; }
 
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-}
+/* Focus */
+:focus-visible { outline: 2px solid #00d4ff; outline-offset: 2px; }
+:focus:not(:focus-visible) { outline: none; }
 
-::-webkit-scrollbar-track {
-    background: #0a0a0f;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #2a2a3a;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #3a3a4a;
-}
-
-/* Firefox scrollbar */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #2a2a3a #0a0a0f;
-}
-
-/* ============================================
-   FOCUS VISIBLE STYLES
-   ============================================ */
-
-:focus-visible {
-    outline: 2px solid #00d4ff;
-    outline-offset: 2px;
-}
-
-/* Remove default focus for mouse users */
-:focus:not(:focus-visible) {
-    outline: none;
-}
-
-/* ============================================
-   TOOLTIP ANIMATION
-   ============================================ */
-
+/* Tooltip */
 @keyframes tooltip-appear {
-    from {
-        opacity: 0;
-        transform: translateX(4px) translateY(-50%);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(8px) translateY(-50%);
-    }
+    from { opacity: 0; transform: translateX(4px) translateY(-50%); }
+    to { opacity: 1; transform: translateX(8px) translateY(-50%); }
 }
 
-[data-tooltip]:hover::after {
-    animation: tooltip-appear 0.15s ease-out;
-}
+[data-tooltip]:hover::after { animation: tooltip-appear 0.15s ease-out; }
 
-/* ============================================
-   ACCORDION (DETAILS/SUMMARY)
-   Uses Tailwind classes + minimal CSS for animations
-   ============================================ */
+/* Accordion */
+details.accordion > summary { list-style: none; }
+details.accordion > summary::-webkit-details-marker { display: none; }
 
-/* Hide default marker */
-details.accordion > summary {
-    list-style: none;
-}
-details.accordion > summary::-webkit-details-marker {
-    display: none;
-}
-
-/* Grid animation for smooth expand/collapse */
 details.accordion > .accordion-content {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 200ms ease-out;
+    transition: grid-template-rows var(--transition-slow);
 }
-details.accordion[open] > .accordion-content {
-    grid-template-rows: 1fr;
-}
-details.accordion > .accordion-content > div {
-    overflow: hidden;
-}
+details.accordion[open] > .accordion-content { grid-template-rows: 1fr; }
+details.accordion > .accordion-content > div { overflow: hidden; }
 
-/* Chevron rotation */
-details.accordion > summary .accordion-chevron {
-    transition: transform 200ms ease-out;
-}
-details.accordion[open] > summary .accordion-chevron {
-    transform: rotate(180deg);
-}
+details.accordion > summary .accordion-chevron { transition: transform var(--transition-normal); }
+details.accordion[open] > summary .accordion-chevron { transform: rotate(180deg); }
 
-/* ============================================
-   SIDEBAR STATES
-   ============================================ */
+/* Sidebar */
+body.sidebar-collapsed .sidebar-expanded-only { display: none !important; }
+body:not(.sidebar-collapsed) .sidebar-collapsed-only { display: none !important; }
+.sidebar-transition { transition: width var(--transition-slow); }
 
-/* Sidebar collapsed state */
-body.sidebar-collapsed .sidebar-expanded-only {
-    display: none !important;
-}
-
-body:not(.sidebar-collapsed) .sidebar-collapsed-only {
-    display: none !important;
-}
-
-/* Sidebar transition */
-.sidebar-transition {
-    transition: width 300ms ease-out;
-}
-
-/* Mobile menu states */
-body.mobile-menu-open {
-    overflow: hidden;
-}
+/* Mobile menu */
+body.mobile-menu-open { overflow: hidden; }
 
 .mobile-menu-overlay {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 200ms ease-out;
+    transition: opacity var(--transition-normal);
 }
-
-body.mobile-menu-open .mobile-menu-overlay {
-    opacity: 1;
-    pointer-events: auto;
-}
+body.mobile-menu-open .mobile-menu-overlay { opacity: 1; pointer-events: auto; }
 
 .mobile-sidebar {
     transform: translateX(-100%);
-    transition: transform 300ms ease-out;
+    transition: transform var(--transition-slow);
 }
-
-body.mobile-menu-open .mobile-sidebar {
-    transform: translateX(0);
-}
-
+body.mobile-menu-open .mobile-sidebar { transform: translateX(0); }

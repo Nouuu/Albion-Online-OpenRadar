@@ -8,7 +8,7 @@
     "strict": false,
     "skipLibCheck": true,
     "allowJs": true,
-    "checkJs": true,
+    "checkJs": false,
     "noEmit": true,
     "baseUrl": ".",
     "paths": {

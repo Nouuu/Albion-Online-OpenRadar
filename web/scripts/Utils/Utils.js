@@ -23,17 +23,14 @@ import {ChestsHandler} from '../Handlers/ChestsHandler.js';
 import {HarvestablesHandler} from '../Handlers/HarvestablesHandler.js';
 import {MapH} from '../Handlers/Map.js';
 
-import imageCache from './ImageCache.js';
 import {DrawingUtils} from './DrawingUtils.js';
 import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
-import {VirtualScroll} from './VirtualScroll.js';
+import {getEventQueue, destroyEventQueue} from './WebSocketEventQueue.js';
 
-// ✅ Canvas check for RadarRenderer initialization
-const canvas = document.getElementById("drawCanvas");
-const context = canvas ? canvas.getContext("2d") : null;
+// ✅ Canvas presence is checked dynamically in initRadarRenderer()
 
 console.log('🔧 [Utils.js] Module loaded');
 
@@ -296,11 +293,7 @@ const dungeonsDrawing = new DungeonsDrawing();
 playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
 // 👥 Player list rendering with incremental updates
-// Uses virtual scrolling for large lists (20+ players)
-
-const VIRTUAL_SCROLL_THRESHOLD = 20;
-let playerListScroller = null;
-let lastRenderedPlayerIds = new Map(); // Track rendered players for incremental updates
+let lastRenderedPlayerIds = new Map();
 
 /**
  * Render a single player card HTML (Tailwind-only)
@@ -369,10 +362,8 @@ function renderPlayerCard(player) {
                 const baseName = item.name.split('@')[0];
                 const iconPath = `/images/Items/${baseName}.webp`;
 
-                // Direct image with lazy loading - no blocking preload check
-                const imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-surface/50 rounded" loading="lazy" onerror="this.style.display='none'">`;
-
-                return `<div class="inline-flex items-center gap-1.5 bg-void/60 px-2 py-1 rounded border border-white/5 hover:border-white/10 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}">${imgHtml}<span class="text-[10px] font-mono font-semibold text-white/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
+                // Server returns fallback for missing images, browser handles HTTP cache (24h)
+                return `<div class="inline-flex items-center gap-1.5 bg-void/60 px-2 py-1 rounded border border-white/5 hover:border-white/10 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}"><img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-surface/50 rounded" loading="lazy"><span class="text-[10px] font-mono font-semibold text-white/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
             }).filter(Boolean).join('');
 
             if (items) {
@@ -390,12 +381,9 @@ function renderPlayerCard(player) {
                 const spell = window.spellsDatabase.getSpellByIndex(spellIndex);
                 if (!spell) return '';
 
+                // Server returns fallback for missing images, browser handles HTTP cache (24h)
                 const iconPath = `/images/Spells/${spell.uiSprite || 'SPELL_GENERIC'}.webp`;
-
-                // Direct image with lazy loading - no blocking preload check
-                const imgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-surface/50 rounded" loading="lazy" onerror="this.parentElement.style.display='none'">`;
-
-                return `<div class="flex items-center justify-center bg-accent/10 p-1.5 rounded border border-accent/15 hover:bg-accent/15 hover:border-accent/25 transition-all" title="${spell.uniqueName}">${imgHtml}</div>`;
+                return `<div class="flex items-center justify-center bg-accent/10 p-1.5 rounded border border-accent/15 hover:bg-accent/15 hover:border-accent/25 transition-all" title="${spell.uniqueName}"><img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-surface/50 rounded" loading="lazy"></div>`;
             }).filter(Boolean).join('');
 
             if (spells) {
@@ -466,63 +454,61 @@ function updatePlayersIncremental(container, players) {
                 }
             }
         } else {
-            // Create new card
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = renderPlayerCard(player);
-            container.appendChild(tempDiv.firstElementChild);
+            // Create new card using template to avoid detached nodes
+            const template = document.createElement('template');
+            template.innerHTML = renderPlayerCard(player).trim();
+            container.appendChild(template.content.firstChild);
         }
 
         lastRenderedPlayerIds.set(player.id, { health: player.currentHealth });
     });
 }
 
-/**
- * Main update function - chooses between incremental and virtual scroll
- */
+// Cache DOM references to avoid repeated lookups
+let _playersListContainer = null;
+let _playersCountBadge = null;
+let _playersCountNum = null;
+let _lastPlayerCount = -1;
+
+function getPlayerListElements() {
+    if (!_playersListContainer) {
+        _playersListContainer = document.getElementById('playersList');
+        _playersCountBadge = document.getElementById('playersCount');
+        _playersCountNum = document.getElementById('playersCountNum');
+    }
+    return { container: _playersListContainer, badge: _playersCountBadge, num: _playersCountNum };
+}
+
 function updatePlayersList() {
-    const container = document.getElementById('playersList');
+    const { container, badge, num } = getPlayerListElements();
     if (!container) return;
 
     const players = playersHandler.getFilteredPlayers();
+    const playerCount = players.length;
 
-    // Update count badge
-    const countBadge = document.getElementById('playersCount');
-    const countNum = document.getElementById('playersCountNum');
-    if (countBadge && countNum) {
-        if (players.length > 0) {
-            countBadge.classList.remove('hidden');
-            countBadge.classList.add('inline-flex');
-            countNum.textContent = players.length;
+    // Only update badge if count changed
+    if (badge && num && playerCount !== _lastPlayerCount) {
+        _lastPlayerCount = playerCount;
+        if (playerCount > 0) {
+            badge.classList.remove('hidden');
+            badge.classList.add('inline-flex');
+            num.textContent = playerCount;
         } else {
-            countBadge.classList.add('hidden');
-            countBadge.classList.remove('inline-flex');
+            badge.classList.add('hidden');
+            badge.classList.remove('inline-flex');
         }
     }
 
-    if (players.length === 0) {
-        if (playerListScroller) {
-            playerListScroller.destroy();
-            playerListScroller = null;
+    if (playerCount === 0) {
+        if (lastRenderedPlayerIds.size > 0) {
+            lastRenderedPlayerIds.clear();
+            container.innerHTML = `<div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center"><svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><p class="text-sm text-white/40">No players detected yet</p><p class="text-xs text-white/25 font-mono mt-1">Scanning...</p></div>`;
         }
-        lastRenderedPlayerIds.clear();
-        container.innerHTML = `<div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center"><svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><p class="text-sm text-white/40">No players detected yet</p><p class="text-xs text-white/25 font-mono mt-1">Scanning...</p></div>`;
         return;
     }
 
-    // Disable virtual scroll - it breaks grid layout
-    // Always use incremental updates for proper grid display
-    if (playerListScroller) {
-        playerListScroller.destroy();
-        playerListScroller = null;
-        container.style.height = '';
-    }
-
-    // Reset grid classes if they were removed
-    if (!container.classList.contains('grid')) {
-        container.className = 'grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin';
-    }
-
-    updatePlayersIncremental(container, players);
+    // Use requestAnimationFrame to batch DOM updates
+    requestAnimationFrame(() => updatePlayersIncremental(container, players));
 }
 
 let lpX = 0.0;
@@ -545,8 +531,18 @@ const INITIAL_RECONNECT_DELAY = 1000;
 window.wsConnectionStatus = 'disconnected';
 
 function updateConnectionStatus(status) {
+  const previousStatus = window.wsConnectionStatus;
   window.wsConnectionStatus = status;
   document.dispatchEvent(new CustomEvent('wsStatusChange', { detail: { status } }));
+
+  // Show toast notifications for status changes
+  if (window.toast && previousStatus !== status) {
+    if (status === 'connected') {
+      window.toast.success('Connected to radar backend');
+    } else if (status === 'disconnected' && previousStatus === 'connected') {
+      window.toast.error('Connection lost');
+    }
+  }
 }
 
 // Named handlers for proper cleanup
@@ -603,25 +599,21 @@ function scheduleReconnect() {
   reconnectTimeoutId = setTimeout(connectWebSocket, delay);
 }
 
-function handleWebSocketMessage(event) {
-  var data = JSON.parse(event.data);
-  var extractedString = data.code;
-  var extractedDictionary = JSON.parse(data.dictionary);
+// WebSocket Event Queue - coalescing & throttling
+const eventQueue = getEventQueue();
+eventQueue.setFlushCallback((messageType, params) => {
+    switch (messageType) {
+        case 'request': onRequest(params); break;
+        case 'event': onEvent(params); break;
+        case 'response': onResponse(params); break;
+    }
+});
 
-  switch (extractedString) {
-    case "request":
-        onRequest(extractedDictionary["parameters"]);
-        break;
-    case "event":
-        onEvent(extractedDictionary["parameters"]);
-        break;
-    case "response":
-        onResponse(extractedDictionary["parameters"]);
-        break;
-  }
+function handleWebSocketMessage(event) {
+    eventQueue.queueRawMessage(event.data);
 }
 
-// 🚀 Start WebSocket connection
+// Start WebSocket connection
 connectWebSocket();
 
 // Helper function to get event name (for debugging)
@@ -692,25 +684,6 @@ function onEvent(Parameters)
 
     switch (eventCode)
     {
-        // DEBUG
-
-        /*case 506:
-            console.log("MistsPlayerJoinedInfo");
-            console.log(Parameters);
-            break;
-
-        case 474:
-            console.log("CarriedObjectUpdate");
-            console.log(Parameters);
-            break;
-
-        case 530:
-            console.log("TemporaryFlaggingStatusUpdate ");
-            console.log(Parameters);
-            break;*/
-
-        // END DEBUG
-
         case EventCodes.Leave:
             playersHandler.removePlayer(id);
             mobsHandler.removeMist(id);
@@ -889,12 +862,8 @@ function onEvent(Parameters)
                 window.logger?.debug(CATEGORIES.PACKET_RAW, EVENTS.KeySync, { Parameters });
             }
             break;
-
-        /*default:
-            console.log("default");
-            console.log(Parameters);*/
     }
-};
+}
 
 
 function onRequest(Parameters)
@@ -1128,9 +1097,54 @@ function initializeRadarRenderer() {
 initializeRadarRenderer();
 
 // 👥 Update player list UI every 1.5 seconds
-setInterval(updatePlayersList, 1500);
+let playerListIntervalId = setInterval(updatePlayersList, 1500);
 
+// 🧹 Automatic stale entity cleanup every 60 seconds (5 min max age)
+const STALE_ENTITY_MAX_AGE = 300000;
+let cleanupIntervalId = setInterval(() => {
+    const cleanedPlayers = playersHandler.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const cleanedMobs = mobsHandler.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const cleanedHarvestables = harvestablesHandler.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
 
+    // Cleanup lastRenderedPlayerIds for players no longer tracked
+    const activePlayerIds = new Set(playersHandler.getFilteredPlayers?.().map(p => p.id) || []);
+    let cleanedRenderCache = 0;
+    for (const id of lastRenderedPlayerIds.keys()) {
+        if (!activePlayerIds.has(id)) {
+            lastRenderedPlayerIds.delete(id);
+            cleanedRenderCache++;
+        }
+    }
+
+    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedRenderCache) {
+        window.logger?.debug(CATEGORIES.DEBUG, 'StaleEntityCleanup', {
+            players: cleanedPlayers,
+            mobs: cleanedMobs,
+            harvestables: cleanedHarvestables,
+            renderCache: cleanedRenderCache
+        });
+    }
+}, 60000);
+
+// 🧹 Cleanup intervals on page unload
+function cleanupIntervals() {
+    if (playerListIntervalId) clearInterval(playerListIntervalId);
+    if (cleanupIntervalId) clearInterval(cleanupIntervalId);
+    playerListIntervalId = null;
+    cleanupIntervalId = null;
+    _playersListContainer = null;
+    _playersCountBadge = null;
+    _playersCountNum = null;
+    _lastPlayerCount = -1;
+    if (radarRenderer) radarRenderer.stop();
+    cleanupSocket();
+    destroyEventQueue();
+}
+
+window.addEventListener('beforeunload', cleanupIntervals);
+document.body.addEventListener('htmx:beforeSwap', (e) => {
+    if (e.detail.target?.id === 'page-content') cleanupIntervals();
+});
 
 document.getElementById("button")?.addEventListener("click", function () {
     ClearHandlers();

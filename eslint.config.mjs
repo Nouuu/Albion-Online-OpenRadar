@@ -8,16 +8,11 @@ const browserGlobals = {
     // CDN-loaded libraries (declared in base.gohtml)
     lucide: "readonly",
     htmx: "readonly",
-    // jQuery & SignalR
-    $: "readonly",
-    jQuery: "readonly",
-    signalR: "readonly",
     // App globals exposed in base.gohtml
     CATEGORIES: "readonly",
     settingsSync: "readonly",
     ResourcesHelper: "readonly",
     logger: "readonly",
-    sidebar: "readonly",
     createAccordionManager: "readonly"
 };
 

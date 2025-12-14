@@ -1,4 +1,43 @@
 {{define "pages/settings"}}
+<!-- Confirmation Modals -->
+<div data-modal="resetSettings" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div data-modal-backdrop class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 opacity-0"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div data-modal-panel class="relative bg-elevated border border-white/10 rounded-xl p-6 w-full max-w-md shadow-xl transition-all duration-200 scale-95 opacity-0">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 rounded-lg bg-danger/10">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-danger"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Reset All Settings</h3>
+            </div>
+            <p class="text-gray-400 mb-6">This will reset all settings to their default values and reload the page. This action cannot be undone.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="window.modal.close('resetSettings')" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                <button onclick="window.modal.confirm('resetSettings')" class="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/80 transition-colors">Reset Settings</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div data-modal="clearCache" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div data-modal-backdrop class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 opacity-0"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div data-modal-panel class="relative bg-elevated border border-white/10 rounded-xl p-6 w-full max-w-md shadow-xl transition-all duration-200 scale-95 opacity-0">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 rounded-lg bg-warning/10">
+                    <i data-lucide="trash-2" class="w-6 h-6 text-warning"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white">Clear Browser Cache</h3>
+            </div>
+            <p class="text-gray-400 mb-6">This will clear the browser cache for this site. Cached images and data will need to be reloaded.</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="window.modal.close('clearCache')" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
+                <button onclick="window.modal.confirm('clearCache')" class="px-4 py-2 bg-warning text-void rounded-lg hover:bg-warning/80 transition-colors">Clear Cache</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="space-y-6 stagger">
     <!-- Page Header -->
     <div class="bg-elevated border border-white/5 rounded-xl p-6">
@@ -165,6 +204,32 @@
                 </div>
             </div>
 
+            <!-- WebSocket Performance -->
+            <div class="mx-6 mb-4">
+                <h3 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4"></i>
+                    WebSocket Performance
+                </h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
+                        <input type="checkbox" id="settingWsCoalescing" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
+                        <span class="text-gray-300 text-xs group-hover:text-white">Event Coalescing</span>
+                        <span class="relative group/tooltip">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
+                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Groups Move/Health events per entity per frame.</span>
+                        </span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
+                        <input type="checkbox" id="settingWsThrottling" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
+                        <span class="text-gray-300 text-xs group-hover:text-white">Health Throttling</span>
+                        <span class="relative group/tooltip">
+                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
+                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Limits health updates to 20/sec per entity.</span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
             <!-- RAW Packet Debug (Warning box) -->
             <div class="mx-6 mb-4 p-3 rounded-lg bg-warning/5 border border-warning/20">
                 <h4 class="text-xs font-semibold text-warning mb-2 flex items-center gap-2">
@@ -287,6 +352,12 @@ window.onGlobalsReady(function initSettingsPage() {
     bindCheckbox("settingDebugRawPacketsConsole");
     bindCheckbox("settingDebugRawPacketsServer");
 
+    // WebSocket performance (default: enabled)
+    if (settingsSync.get("settingWsCoalescing") === null) settingsSync.setBool("settingWsCoalescing", true);
+    if (settingsSync.get("settingWsThrottling") === null) settingsSync.setBool("settingWsThrottling", true);
+    bindCheckbox("settingWsCoalescing");
+    bindCheckbox("settingWsThrottling");
+
     // Server-side logging (with API call)
     const serverLogsEl = document.getElementById("settingServerLogsEnabled");
     if (serverLogsEl) {
@@ -332,22 +403,27 @@ window.onGlobalsReady(function initSettingsPage() {
         URL.revokeObjectURL(url);
     });
 
-    // Reset settings
+    // Reset settings - using Modal
     addListener(document.getElementById("resetSettingsBtn"), "click", () => {
-        if (confirm("Are you sure you want to reset all settings to defaults?")) {
-            localStorage.clear();
-            location.reload();
-        }
+        window.modal.open('resetSettings', {
+            onConfirm: () => {
+                localStorage.clear();
+                if (window.toast) window.toast.success('Settings reset successfully');
+                setTimeout(() => location.reload(), 500);
+            }
+        });
     });
 
-    // Clear cache
+    // Clear cache - using Modal
     addListener(document.getElementById("clearCacheBtn"), "click", () => {
-        if (confirm("Clear browser cache for this site?")) {
-            caches.keys().then(names => {
-                names.forEach(name => caches.delete(name));
-            });
-            alert("Cache cleared.");
-        }
+        window.modal.open('clearCache', {
+            onConfirm: () => {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+                if (window.toast) window.toast.success('Cache cleared');
+            }
+        });
     });
 
     if (window.lucide) lucide.createIcons();
