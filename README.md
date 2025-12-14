@@ -52,7 +52,7 @@
 </tr>
 </table>
 
-### What Changed
+### What Changed in v2.0
 
 ```diff
 + Native Go backend (was Node.js)
@@ -63,6 +63,18 @@
 + Dynamic radar sizing (300-800px)
 + Zoom controls (0.5x - 2.0x)
 ```
+
+### 🔧 v2.0.1 - Memory & Performance
+
+Fixed **critical memory leaks** that caused RAM to spike to 4 GB after long sessions:
+
+| Improvement | Details |
+|-------------|---------|
+| 🧠 **58% less RAM** | ~420 MB stable (was ~1 GB growing) |
+| **Alpine.js removed** | Replaced with lightweight Vanilla JS |
+| **Smart caching** | ImageCache LRU with auto-eviction |
+| 🧹 **Entity cleanup** | Stale players/mobs removed after 5 min |
+| ⚡ **Event throttling** | WebSocket queue prevents flooding |
 
 ### Player Threat Detection
 
@@ -104,6 +116,12 @@
     <td align="center"><em>Terminal dashboard (TUI)</em></td>
   </tr>
 </table>
+
+<p align="center">
+  <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/raw/main/docs/images/OpenRadar.mp4">
+    <img src="https://img.shields.io/badge/▶️_Watch_Demo-Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white" alt="Watch Demo Video">
+  </a>
+</p>
 
 ---
 
