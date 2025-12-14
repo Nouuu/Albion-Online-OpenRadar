@@ -99,10 +99,6 @@ func (l *Logger) WriteLogs(logs []interface{}) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if !l.enabled {
-		return
-	}
-
 	f, err := os.OpenFile(l.currentSessionFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Printf("[Logger] Error opening log file: %v\n", err)

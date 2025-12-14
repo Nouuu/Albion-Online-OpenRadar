@@ -85,10 +85,10 @@
             <button class="control-btn" id="closeBtn" title="Close">X</button>
         </div>
 
-        <canvas class="overlay-canvas" id="mapCanvas" width="500" height="500"></canvas>
-        <canvas class="overlay-canvas" id="drawCanvas" width="500" height="500"></canvas>
-        <canvas class="overlay-canvas" id="ourPlayerCanvas" width="500" height="500"></canvas>
-        <canvas class="overlay-canvas" id="uiCanvas" width="500" height="500"></canvas>
+        <canvas class="overlay-canvas" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
+        <canvas class="overlay-canvas" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
+        <canvas class="overlay-canvas" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
+        <canvas class="overlay-canvas" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
     </div>
 
     <!-- Settings Sync -->
@@ -167,7 +167,9 @@
                     canvas.height = size;
                 });
                 // Resize window to fit
-                window.resizeTo(size + 16, size + 39); // Account for window chrome
+                window.resizeTo(size + 16, size + 16); // Account for window chrome
+                // Dispatch event so CanvasManager redraws the local player dot
+                window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size } }));
             }
 
             // Wait for settingsSync to be available
