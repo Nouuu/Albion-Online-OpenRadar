@@ -29,7 +29,6 @@ import {ItemsInfo} from "../Handlers/ItemsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
 import {getEventQueue, destroyEventQueue} from './WebSocketEventQueue.js';
-import imageCache from './ImageCache.js';
 
 // ✅ Canvas presence is checked dynamically in initRadarRenderer()
 
@@ -363,19 +362,8 @@ function renderPlayerCard(player) {
                 const baseName = item.name.split('@')[0];
                 const iconPath = `/images/Items/${baseName}.webp`;
 
-                // Check cache status: true = exists, false = 404, null = unknown
-                const cacheStatus = imageCache.checkImage(iconPath);
-                let imgHtml = '';
-
-                if (cacheStatus === true) {
-                    imgHtml = `<img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-surface/50 rounded">`;
-                } else if (cacheStatus === null) {
-                    // Unknown - preload silently for next time
-                    imageCache.preloadSilent(iconPath);
-                }
-                // cacheStatus === false means 404, no image
-
-                return `<div class="inline-flex items-center gap-1.5 bg-void/60 px-2 py-1 rounded border border-white/5 hover:border-white/10 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}">${imgHtml}<span class="text-[10px] font-mono font-semibold text-white/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
+                // Server returns fallback for missing images, browser handles HTTP cache (24h)
+                return `<div class="inline-flex items-center gap-1.5 bg-void/60 px-2 py-1 rounded border border-white/5 hover:border-white/10 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}"><img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-surface/50 rounded" loading="lazy"><span class="text-[10px] font-mono font-semibold text-white/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
             }).filter(Boolean).join('');
 
             if (items) {
@@ -393,17 +381,9 @@ function renderPlayerCard(player) {
                 const spell = window.spellsDatabase.getSpellByIndex(spellIndex);
                 if (!spell) return '';
 
+                // Server returns fallback for missing images, browser handles HTTP cache (24h)
                 const iconPath = `/images/Spells/${spell.uiSprite || 'SPELL_GENERIC'}.webp`;
-
-                const cacheStatus = imageCache.checkImage(iconPath);
-                if (cacheStatus === false) return ''; // Known 404
-                if (cacheStatus === null) {
-                    imageCache.preloadSilent(iconPath);
-                    return ''; // Not yet loaded
-                }
-
-                const imgHtml = `<img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-surface/50 rounded">`;
-                return `<div class="flex items-center justify-center bg-accent/10 p-1.5 rounded border border-accent/15 hover:bg-accent/15 hover:border-accent/25 transition-all" title="${spell.uniqueName}">${imgHtml}</div>`;
+                return `<div class="flex items-center justify-center bg-accent/10 p-1.5 rounded border border-accent/15 hover:bg-accent/15 hover:border-accent/25 transition-all" title="${spell.uniqueName}"><img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-surface/50 rounded" loading="lazy"></div>`;
             }).filter(Boolean).join('');
 
             if (spells) {
