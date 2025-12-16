@@ -320,11 +320,28 @@ func (app *App) processCommand(cmd *photon.Command) {
 		return
 	}
 
+	// DEBUG: Log command info to understand different paths
+	app.logger.Debug("CMD_CAPTURE", fmt.Sprintf("CmdType_%d_MsgType_%d", cmd.CommandType, cmd.MessageType), map[string]interface{}{
+		"commandType": cmd.CommandType,
+		"messageType": cmd.MessageType,
+		"channelID":   cmd.ChannelID,
+	}, nil)
+
 	switch cmd.MessageType {
 	case photon.MessageTypeEvent:
-		if event, err := photon.DeserializeEvent(cmd.Payload); err == nil {
-			app.wsHandler.BroadcastEvent(event)
+		event, err := photon.DeserializeEvent(cmd.Payload)
+		if err != nil {
+			app.logger.Warn("EVENT_ERROR", "DeserializeEvent_Failed", map[string]interface{}{
+				"error":       err.Error(),
+				"commandType": cmd.CommandType,
+			}, nil)
+			return
 		}
+		app.logger.Debug("EVENT_CAPTURE", fmt.Sprintf("Event_%d", event.Code), map[string]interface{}{
+			"code":       event.Code,
+			"paramCount": len(event.Parameters),
+		}, nil)
+		app.wsHandler.BroadcastEvent(event)
 	case photon.MessageTypeRequest:
 		if req, err := photon.DeserializeRequest(cmd.Payload); err == nil {
 			app.wsHandler.BroadcastRequest(req)

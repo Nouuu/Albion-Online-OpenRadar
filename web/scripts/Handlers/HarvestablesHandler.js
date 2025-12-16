@@ -13,7 +13,7 @@ const HarvestableType =
 
 class Harvestable
 {
-    constructor(id, type, tier, posX, posY, charges, size)
+    constructor(id, type, tier, posX, posY, charges, size, stringType = null)
     {
         this.id = id;
         this.type = type;
@@ -25,7 +25,13 @@ class Harvestable
 
         this.charges = charges;
         this.size = size;
+        this.stringType = stringType; // Type corrigé (Fiber, Hide, etc.)
         this.lastUpdateTime = Date.now(); // For stale entity cleanup
+
+        window.logger?.info(CATEGORIES.HARVEST, 'HarvestableCreated', {
+            id, type, stringType, tier, charges, size,
+            note: 'New Harvestable object created'
+        });
     }
 
     setCharges(charges)
@@ -158,8 +164,23 @@ export class HarvestablesHandler
         // - mobileTypeId === real TypeID (425, 530, etc.) → LIVING creature (animal that drops resource)
         const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
-        // 🎨 Get resource type string from typeNumber (0-27)
-        const stringType = this.GetStringType(type);
+        // 🎨 Get resource type string
+        // Pour living resources: utiliser MobsDatabase (typeNumber est FAUX pour les living!)
+        // Pour static resources: utiliser HarvestablesDatabase basé sur typeNumber
+        let stringType;
+        if (isLiving && window.mobsDatabase?.isLoaded) {
+            const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
+            stringType = resourceInfo?.type || this.GetStringType(type);
+
+            window.logger?.info(CATEGORIES.HARVEST, 'LivingResource_TypeFromMobsDB', {
+                id, mobileTypeId, type,
+                mobsDbType: resourceInfo?.type,
+                fallbackType: this.GetStringType(type),
+                finalStringType: stringType
+            });
+        } else {
+            stringType = this.GetStringType(type);
+        }
 
         // 🔍 Phase 4: Check validation with database
         const databaseValidation = window.harvestablesDatabase?.isLoaded
@@ -196,12 +217,22 @@ export class HarvestablesHandler
 
         if (!harvestable)
         {
-            const h = new Harvestable(id, type, tier, posX, posY, charges, size);
+            const h = new Harvestable(id, type, tier, posX, posY, charges, size, stringType);
             this.harvestableList.push(h);
+
+            window.logger?.info(CATEGORIES.HARVEST, 'HarvestableAdded', {
+                id, type, stringType, tier, charges, size, mobileTypeId,
+                listSize: this.harvestableList.length
+            });
         }
         else // update
         {
             harvestable.setCharges(charges);
+            if (stringType) harvestable.stringType = stringType;
+
+            window.logger?.debug(CATEGORIES.HARVEST, 'HarvestableUpdated', {
+                id, stringType, newCharges: charges
+            });
         }
     }
 
@@ -214,8 +245,23 @@ export class HarvestablesHandler
         // - mobileTypeId === real TypeID (425, 530, etc.) → LIVING creature (animal that drops resource)
         const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
-        // 🎨 Get resource type string from typeNumber (0-27)
-        const stringType = this.GetStringType(type);
+        // 🎨 Get resource type string
+        // Pour living resources: utiliser MobsDatabase (typeNumber est FAUX pour les living!)
+        // Pour static resources: utiliser HarvestablesDatabase basé sur typeNumber
+        let stringType;
+        if (isLiving && window.mobsDatabase?.isLoaded) {
+            const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
+            stringType = resourceInfo?.type || this.GetStringType(type);
+
+            window.logger?.info(CATEGORIES.HARVEST, 'UpdateHarvestable_LivingResource_TypeFromMobsDB', {
+                id, mobileTypeId, type,
+                mobsDbType: resourceInfo?.type,
+                fallbackType: this.GetStringType(type),
+                finalStringType: stringType
+            });
+        } else {
+            stringType = this.GetStringType(type);
+        }
 
         // 🔍 Phase 4: Check validation with database
         const databaseValidation = window.harvestablesDatabase?.isLoaded
@@ -256,15 +302,36 @@ export class HarvestablesHandler
             return;
         }
 
+        window.logger?.info(CATEGORIES.HARVEST, 'UpdateHarvestable_Existing', {
+            id,
+            oldCharges: harvestable.charges,
+            newCharges: charges,
+            oldSize: harvestable.size,
+            newSize: size,
+            stringType: harvestable.stringType
+        });
+
         harvestable.charges = charges;
         harvestable.size = size;
+        if (stringType) harvestable.stringType = stringType;
     }
 
     harvestFinished(Parameters)
     {
         const id = Parameters[3];
-        // Decrement 1 stack
-        this.updateHarvestable(id, 1);
+
+        const harvestable = this.harvestableList.find((h) => h.id === id);
+        window.logger?.info(CATEGORIES.HARVEST, 'Event61_HarvestFinished', {
+            id,
+            found: !!harvestable,
+            currentSize: harvestable?.size,
+            stringType: harvestable?.stringType,
+            note: 'Event 46 handles size updates - Event 61 is just a notification'
+        });
+
+        // NE PAS décrémenter ici!
+        // Event 46 (HarvestableChangeState) gère les mises à jour de size
+        // Event 61 arrive APRÈS Event 46 et n'est qu'une notification
     }
 
     HarvestUpdateEvent(Parameters) // Event 46 - HarvestableChangeState
@@ -304,14 +371,26 @@ export class HarvestablesHandler
             return;
         }
 
-        // 🔍 Update size if increased (regeneration)
-        if (newSize > harvestable.size) {
-            window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Regeneration, {
+        // 🔍 Update size - Event 46 est la source de vérité du serveur
+        // Accepter TOUTES les mises à jour de size (diminution ET augmentation)
+        if (newSize !== harvestable.size) {
+            window.logger?.info(CATEGORIES.HARVEST, 'Event46_SizeUpdate', {
                 id,
                 oldSize: harvestable.size,
-                newSize
+                newSize,
+                delta: newSize - harvestable.size,
+                note: newSize > harvestable.size ? 'REGENERATION' : 'HARVEST'
             });
             harvestable.size = newSize;
+
+            // Si size <= 0, supprimer la ressource
+            if (harvestable.size <= 0) {
+                window.logger?.info(CATEGORIES.HARVEST, 'Event46_ResourceDepleted', {
+                    id,
+                    note: 'Resource depleted via Event 46'
+                });
+                this.removeHarvestable(id);
+            }
         }
 
         // 🔍 Update enchantment if provided and different
