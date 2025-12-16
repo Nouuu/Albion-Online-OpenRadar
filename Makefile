@@ -7,7 +7,7 @@
 
 .PHONY: help dev run build build-win build-linux build-all \
         package package-win all-in-one clean test lint install-tools check \
-        update-ao-data download-assets update-assets restore-data
+        update-ao-data download-assets update-assets restore-data css css-watch
 
 # Variables - Dynamic version from Git
 # If on a tag: use tag name (strip 'v' prefix if present)
@@ -34,6 +34,8 @@ help: ## Display help
 	@echo "Development:"
 	@echo "  dev              Run with hot-reload (requires air)"
 	@echo "  run              Run without hot-reload"
+	@echo "  css              Build Tailwind CSS"
+	@echo "  css-watch        Watch and rebuild Tailwind CSS"
 	@echo ""
 	@echo "Build:"
 	@echo "  build-win        Build for Windows"
@@ -57,13 +59,21 @@ help: ## Display help
 # Development
 # ============================================
 
-dev: ## Run with hot-reload (requires air)
+dev: css ## Run with hot-reload (requires air)
 	@echo "Starting dev server with hot-reload..."
 	air
 
-run: ## Run without hot-reload
+run: css ## Run without hot-reload
 	@echo "Starting OpenRadar..."
 	$(GO) run ./cmd/radar -dev
+
+css: ## Build Tailwind CSS
+	@echo "Building Tailwind CSS..."
+	@npm run css
+
+css-watch: ## Watch and rebuild Tailwind CSS
+	@echo "Watching Tailwind CSS..."
+	@npm run css:watch
 
 # ============================================
 # Build
@@ -109,25 +119,28 @@ all-in-one: ## Complete build process (update data + build all platforms + packa
 	@echo "  OpenRadar v$(VERSION) - Complete Build"
 	@echo "=========================================="
 	@echo ""
-	@echo "Step 1/7: Updating AO data files..."
+	@echo "Step 1/8: Updating AO data files..."
 	@$(MAKE) update-ao-data
 	@echo ""
-	@echo "Step 2/7: Installing npm dependencies..."
+	@echo "Step 2/8: Installing npm dependencies..."
 	@npm install
 	@echo ""
-	@echo "Step 3/7: Compressing game data for embed..."
+	@echo "Step 3/8: Building Tailwind CSS..."
+	@npm run css
+	@echo ""
+	@echo "Step 4/8: Compressing game data for embed..."
 	@node tools/compress-game-data.js web/public/ao-bin-dumps --delete-originals
 	@echo ""
-	@echo "Step 4/7: Building for Windows..."
+	@echo "Step 5/8: Building for Windows..."
 	@$(MAKE) build-win
 	@echo ""
-	@echo "Step 5/7: Building for Linux (Docker)..."
+	@echo "Step 6/8: Building for Linux (Docker)..."
 	@$(MAKE) build-linux
 	@echo ""
-	@echo "Step 6/7: Creating release packages..."
+	@echo "Step 7/8: Creating release packages..."
 	@node tools/post-build.js --embed --version=$(VERSION)
 	@echo ""
-	@echo "Step 7/7: Restoring original data files..."
+	@echo "Step 8/8: Restoring original data files..."
 	@$(MAKE) restore-data
 	@echo ""
 	@echo "=========================================="

@@ -1,153 +1,144 @@
 {{define "pages/players"}}
 <div class="space-y-6 stagger">
     <!-- Page Header -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6">
-        <h1 class="text-3xl font-bold text-white">Players</h1>
-        <p class="text-gray-400 mt-2">Configure player detection and display settings.</p>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h1 class="text-3xl font-bold text-base-content">Players</h1>
+            <p class="text-base-content/60 mt-2">Configure player detection and display settings.</p>
+        </div>
     </div>
 
     <!-- Show Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="eye" class="w-5 h-5 text-accent"></i>
-            Display
-        </h2>
-        <div class="space-y-3">
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingShowPlayers"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <i data-lucide="users" class="w-4 h-4 text-gray-500 group-hover:text-accent transition-colors"></i>
-                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Show Players on Radar</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Master toggle to show players on the radar.</span>
-                </span>
-            </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingItems"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <i data-lucide="backpack" class="w-4 h-4 text-gray-500 group-hover:text-accent transition-colors"></i>
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Equipment</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows the equipment the other player is carrying.</span>
-                </span>
-            </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingShowSpells"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <i data-lucide="wand-2" class="w-4 h-4 text-gray-500 group-hover:text-accent transition-colors"></i>
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Spells</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows active and passive spells on player cards.</span>
-                </span>
-            </label>
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingShowPlayerHealthBar"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <i data-lucide="heart-pulse" class="w-4 h-4 text-gray-500 group-hover:text-accent transition-colors"></i>
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Health Bar</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows health bar on player cards when health data is available.</span>
-                </span>
-            </label>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
+                Display
+            </h2>
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingShowPlayers" class="checkbox checkbox-primary">
+                    <i data-lucide="users" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Players on Radar</span>
+                    <div class="tooltip" data-tip="Master toggle to show players on the radar.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingItems" class="checkbox checkbox-primary">
+                    <i data-lucide="backpack" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Equipment</span>
+                    <div class="tooltip" data-tip="Shows the equipment the other player is carrying.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingShowSpells" class="checkbox checkbox-primary">
+                    <i data-lucide="wand-2" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Spells</span>
+                    <div class="tooltip" data-tip="Shows active and passive spells on player cards.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingShowPlayerHealthBar" class="checkbox checkbox-primary">
+                    <i data-lucide="heart-pulse" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Health Bar</span>
+                    <div class="tooltip" data-tip="Shows health bar on player cards when health data is available.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+            </div>
         </div>
     </div>
 
     <!-- Alerts Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="bell" class="w-5 h-5 text-warning"></i>
-            Alerts
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <label class="flex items-center gap-3 p-3 rounded-lg bg-danger/5 border border-danger/20 cursor-pointer group hover:bg-danger/10 transition-colors">
-                <input type="checkbox" id="settingFlash"
-                       class="w-5 h-5 rounded border-2 border-danger/30 bg-surface checked:bg-danger checked:border-danger focus:ring-2 focus:ring-danger/30 transition-colors cursor-pointer">
-                <i data-lucide="zap" class="w-5 h-5 text-danger"></i>
-                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Screen Flash</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows a red flash when a player is detected.</span>
-                </span>
-            </label>
-            <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/5 border border-warning/20 cursor-pointer group hover:bg-warning/10 transition-colors">
-                <input type="checkbox" id="settingSound"
-                       class="w-5 h-5 rounded border-2 border-warning/30 bg-surface checked:bg-warning checked:border-warning focus:ring-2 focus:ring-warning/30 transition-colors cursor-pointer">
-                <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
-                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Sound Alert</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Plays a sound alert when a player is detected.</span>
-                </span>
-            </label>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="bell" class="w-5 h-5 text-warning"></i>
+                Alerts
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                    <input type="checkbox" id="settingFlash" class="checkbox checkbox-error">
+                    <i data-lucide="zap" class="w-5 h-5 text-error"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
+                    <div class="tooltip" data-tip="Shows a red flash when a player is detected.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
+                    <input type="checkbox" id="settingSound" class="checkbox checkbox-warning">
+                    <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
+                    <div class="tooltip" data-tip="Plays a sound alert when a player is detected.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+            </div>
         </div>
     </div>
 
     <!-- Player Types Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="shield" class="w-5 h-5 text-accent"></i>
-            Player Types
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <!-- Passive Players -->
-            <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-surface/50 transition-colors">
-                <input type="checkbox" id="settingPassivePlayers"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-success checked:border-success focus:ring-2 focus:ring-success/30 transition-colors cursor-pointer">
-                <span class="w-3 h-3 rounded-full bg-success"></span>
-                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Passive</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show players who are not flagged for PvP.</span>
-                </span>
-            </label>
-            <!-- Faction Players -->
-            <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-surface/50 transition-colors">
-                <input type="checkbox" id="settingFactionPlayers"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-warning checked:border-warning focus:ring-2 focus:ring-warning/30 transition-colors cursor-pointer">
-                <span class="w-3 h-3 rounded-full bg-warning"></span>
-                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Faction</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show players flagged for faction warfare.</span>
-                </span>
-            </label>
-            <!-- Dangerous Players -->
-            <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-surface/50 transition-colors">
-                <input type="checkbox" id="settingDangerousPlayers"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-danger checked:border-danger focus:ring-2 focus:ring-danger/30 transition-colors cursor-pointer">
-                <span class="w-3 h-3 rounded-full bg-danger"></span>
-                <span class="text-gray-300 group-hover:text-white transition-colors font-medium">Hostile</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Show hostile/dangerous players.</span>
-                </span>
-            </label>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
+                Player Types
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <!-- Passive Players -->
+                <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
+                    <input type="checkbox" id="settingPassivePlayers" class="checkbox checkbox-success">
+                    <span class="w-3 h-3 rounded-full bg-success"></span>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Passive</span>
+                    <div class="tooltip" data-tip="Show players who are not flagged for PvP.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <!-- Faction Players -->
+                <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
+                    <input type="checkbox" id="settingFactionPlayers" class="checkbox checkbox-info">
+                    <span class="w-3 h-3 rounded-full bg-info"></span>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Faction</span>
+                    <div class="tooltip" data-tip="Show players flagged for faction warfare.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <!-- Dangerous Players -->
+                <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
+                    <input type="checkbox" id="settingDangerousPlayers" class="checkbox checkbox-error">
+                    <span class="w-3 h-3 rounded-full bg-error"></span>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Hostile</span>
+                    <div class="tooltip" data-tip="Show hostile/dangerous players.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+            </div>
         </div>
     </div>
 
     <!-- Display Limit -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="sliders-horizontal" class="w-5 h-5 text-accent"></i>
-            Limits
-        </h2>
-        <div class="max-w-xs">
-            <label class="block">
-                <span class="flex items-center gap-2 text-gray-300 mb-2">
-                    <i data-lucide="list" class="w-4 h-4 text-gray-500"></i>
-                    Maximum Players Displayed
-                    <span class="relative group/tooltip">
-                        <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                        <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Maximum number of players to display (1-100). Default: 50</span>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="sliders-horizontal" class="w-5 h-5 text-primary"></i>
+                Limits
+            </h2>
+            <div class="max-w-xs">
+                <label class="block">
+                    <span class="flex items-center gap-2 text-base-content/80 mb-2">
+                        <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
+                        Maximum Players Displayed
+                        <div class="tooltip" data-tip="Maximum number of players to display (1-100). Default: 50">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
                     </span>
-                </span>
-                <input id="settingMaxPlayersDisplay" type="number" min="1" max="100" placeholder="50"
-                       class="w-full px-4 py-2 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors">
-            </label>
+                    <input id="settingMaxPlayersDisplay" type="number" min="1" max="100" placeholder="50"
+                           class="input input-bordered w-full">
+                </label>
+            </div>
         </div>
     </div>
 </div>
@@ -180,8 +171,6 @@ window.onGlobalsReady(function initPlayersPage() {
             }
         });
     }
-
-    if (window.lucide) lucide.createIcons();
 });
 </script>
 {{end}}

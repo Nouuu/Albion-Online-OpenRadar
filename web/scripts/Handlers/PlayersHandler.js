@@ -144,7 +144,7 @@ export class PlayersHandler {
         // Screen flash alert - hostile only, not in city, and mapId must be known
         if (isHostile && mapId && !inCityZone && settingsSync.getBool('settingFlash')) {
             const flash = document.createElement('div');
-            flash.className = 'fixed inset-0 bg-danger/60 pointer-events-none z-[9999] transition-opacity duration-300';
+            flash.className = 'fixed inset-0 bg-error/60 pointer-events-none z-[9999] transition-opacity duration-300';
             document.body.appendChild(flash);
             // Fade out
             requestAnimationFrame(() => {
@@ -263,7 +263,7 @@ export class PlayersHandler {
 
         if (settingsSync.getBool('settingFlash')) {
             const flash = document.createElement('div');
-            flash.className = 'fixed inset-0 bg-danger/60 pointer-events-none z-[9999] transition-opacity duration-300';
+            flash.className = 'fixed inset-0 bg-error/60 pointer-events-none z-[9999] transition-opacity duration-300';
             document.body.appendChild(flash);
             requestAnimationFrame(() => flash.style.opacity = '0');
             setTimeout(() => flash.remove(), 300);

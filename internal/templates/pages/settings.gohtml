@@ -1,281 +1,274 @@
 {{define "pages/settings"}}
 <!-- Confirmation Modals -->
-<div data-modal="resetSettings" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div data-modal-backdrop class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 opacity-0"></div>
-    <div class="flex min-h-full items-center justify-center p-4">
-        <div data-modal-panel class="relative bg-elevated border border-white/10 rounded-xl p-6 w-full max-w-md shadow-xl transition-all duration-200 scale-95 opacity-0">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 rounded-lg bg-danger/10">
-                    <i data-lucide="alert-triangle" class="w-6 h-6 text-danger"></i>
-                </div>
-                <h3 class="text-lg font-semibold text-white">Reset All Settings</h3>
+<dialog id="modal-resetSettings" class="modal">
+    <div class="modal-box bg-base-200">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-lg bg-error/10">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-error"></i>
             </div>
-            <p class="text-gray-400 mb-6">This will reset all settings to their default values and reload the page. This action cannot be undone.</p>
-            <div class="flex justify-end gap-3">
-                <button onclick="window.modal.close('resetSettings')" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
-                <button onclick="window.modal.confirm('resetSettings')" class="px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger/80 transition-colors">Reset Settings</button>
-            </div>
+            <h3 class="text-lg font-semibold text-base-content">Reset All Settings</h3>
+        </div>
+        <p class="text-base-content/60 mb-6">This will reset all settings to their default values and reload the page. This action cannot be undone.</p>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn btn-ghost">Cancel</button>
+            </form>
+            <button id="confirmResetSettings" class="btn btn-error">Reset Settings</button>
         </div>
     </div>
-</div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
 
-<div data-modal="clearCache" class="hidden fixed inset-0 z-50 overflow-y-auto">
-    <div data-modal-backdrop class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 opacity-0"></div>
-    <div class="flex min-h-full items-center justify-center p-4">
-        <div data-modal-panel class="relative bg-elevated border border-white/10 rounded-xl p-6 w-full max-w-md shadow-xl transition-all duration-200 scale-95 opacity-0">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2 rounded-lg bg-warning/10">
-                    <i data-lucide="trash-2" class="w-6 h-6 text-warning"></i>
-                </div>
-                <h3 class="text-lg font-semibold text-white">Clear Browser Cache</h3>
+<dialog id="modal-clearCache" class="modal">
+    <div class="modal-box bg-base-200">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2 rounded-lg bg-warning/10">
+                <i data-lucide="trash-2" class="w-6 h-6 text-warning"></i>
             </div>
-            <p class="text-gray-400 mb-6">This will clear the browser cache for this site. Cached images and data will need to be reloaded.</p>
-            <div class="flex justify-end gap-3">
-                <button onclick="window.modal.close('clearCache')" class="px-4 py-2 text-gray-400 hover:text-white transition-colors">Cancel</button>
-                <button onclick="window.modal.confirm('clearCache')" class="px-4 py-2 bg-warning text-void rounded-lg hover:bg-warning/80 transition-colors">Clear Cache</button>
-            </div>
+            <h3 class="text-lg font-semibold text-base-content">Clear Browser Cache</h3>
+        </div>
+        <p class="text-base-content/60 mb-6">This will clear the browser cache for this site. Cached images and data will need to be reloaded.</p>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn btn-ghost">Cancel</button>
+            </form>
+            <button id="confirmClearCache" class="btn btn-warning">Clear Cache</button>
         </div>
     </div>
-</div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
 
 <div class="space-y-6 stagger">
     <!-- Page Header -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6">
-        <h1 class="text-3xl font-bold text-white">Settings</h1>
-        <p class="text-gray-400 mt-2">Configure radar display and debug options.</p>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h1 class="text-3xl font-bold text-base-content">Settings</h1>
+            <p class="text-base-content/60 mt-2">Configure radar display and debug options.</p>
+        </div>
     </div>
 
     <!-- Display Settings -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="eye" class="w-5 h-5 text-accent"></i>
-            Display
-        </h2>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
+                Display
+            </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <!-- Map Background -->
-            <label class="flex items-center gap-3 p-3 rounded-lg bg-surface/50 cursor-pointer group hover:bg-surface transition-colors">
-                <input type="checkbox" id="settingShowMap"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
-                    <i data-lucide="map" class="w-4 h-4 text-gray-500"></i>
-                    Map Background
-                </span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display the Albion Online map as background on the radar.</span>
-                </span>
-            </label>
-
-            <!-- Resource Count -->
-            <label class="flex items-center gap-3 p-3 rounded-lg bg-surface/50 cursor-pointer group hover:bg-surface transition-colors">
-                <input type="checkbox" id="settingResourceCount"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
-                    <i data-lucide="hash" class="w-4 h-4 text-gray-500"></i>
-                    Resource Count
-                </span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Shows total quantity including gathering bonuses.</span>
-                </span>
-            </label>
-
-            <!-- Distance Indicator -->
-            <label class="flex items-center gap-3 p-3 rounded-lg bg-surface/50 cursor-pointer group hover:bg-surface transition-colors">
-                <input type="checkbox" id="settingResourceDistance"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
-                    <i data-lucide="ruler" class="w-4 h-4 text-gray-500"></i>
-                    Distance Indicator
-                </span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Color-coded: Green (&lt;20m), Yellow (20-40m), Red (&gt;40m).</span>
-                </span>
-            </label>
-        </div>
-
-        <!-- Cluster Settings (sub-section) -->
-        <div class="mt-4 p-4 rounded-lg bg-surface/30 border border-white/5">
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingResourceClusters"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors flex items-center gap-2">
-                    <i data-lucide="group" class="w-4 h-4 text-gray-500"></i>
-                    Resource Clusters
-                </span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Groups nearby resources for efficient harvesting routes.</span>
-                </span>
-            </label>
-            <div class="mt-3 ml-8 flex flex-wrap gap-4">
-                <label class="flex items-center gap-2">
-                    <span class="text-gray-400 text-xs">Radius</span>
-                    <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
-                           class="w-20 px-2 py-1 bg-surface border border-white/10 rounded text-white text-sm focus:border-accent transition-colors">
-                    <span class="text-gray-500 text-xs">m</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Map Background -->
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" id="settingShowMap" class="checkbox checkbox-primary checkbox-sm">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
+                        <i data-lucide="map" class="w-4 h-4 text-base-content/50"></i>
+                        Map Background
+                    </span>
+                    <div class="tooltip" data-tip="Display the Albion Online map as background on the radar.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
                 </label>
-                <label class="flex items-center gap-2">
-                    <span class="text-gray-400 text-xs">Min size</span>
-                    <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
-                           class="w-16 px-2 py-1 bg-surface border border-white/10 rounded text-white text-sm focus:border-accent transition-colors">
+
+                <!-- Resource Count -->
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" id="settingResourceCount" class="checkbox checkbox-primary checkbox-sm">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
+                        <i data-lucide="hash" class="w-4 h-4 text-base-content/50"></i>
+                        Resource Count
+                    </span>
+                    <div class="tooltip" data-tip="Shows total quantity including gathering bonuses.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
                 </label>
+
+                <!-- Distance Indicator -->
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" id="settingResourceDistance" class="checkbox checkbox-primary checkbox-sm">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
+                        <i data-lucide="ruler" class="w-4 h-4 text-base-content/50"></i>
+                        Distance Indicator
+                    </span>
+                    <div class="tooltip" data-tip="Color-coded: Green (<20m), Yellow (20-40m), Red (>40m).">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Cluster Settings (sub-section) -->
+            <div class="mt-4 p-4 rounded-lg bg-base-300">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceClusters" class="checkbox checkbox-primary checkbox-sm">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
+                        <i data-lucide="group" class="w-4 h-4 text-base-content/50"></i>
+                        Resource Clusters
+                    </span>
+                    <div class="tooltip" data-tip="Groups nearby resources for efficient harvesting routes.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <div class="mt-3 ml-8 flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2">
+                        <span class="text-base-content/60 text-xs">Radius</span>
+                        <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
+                               class="input input-bordered input-xs w-20">
+                        <span class="text-base-content/50 text-xs">m</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <span class="text-base-content/60 text-xs">Min size</span>
+                        <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
+                               class="input input-bordered input-xs w-16">
+                    </label>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Debug & Logging -->
-    <details data-accordion="debug" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i data-lucide="bug" class="w-5 h-5 text-warning"></i>
-                Debug & Logging
-            </h2>
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Advanced</span>
-                <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
-            </div>
-        </summary>
-        <div class="accordion-content border-t border-white/5">
-            <div class="p-6 pt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-debug" />
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="bug" class="w-5 h-5 text-warning"></i>
+            Debug & Logging
+            <span class="text-xs text-base-content/50 ml-auto mr-6">Advanced</span>
+        </div>
+        <div class="collapse-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <!-- Verbose Logging -->
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                         Verbose Logging
                     </h3>
                     <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingDebugEnemies" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <span class="text-gray-300 text-xs group-hover:text-white">Enemies</span>
+                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingDebugEnemies" class="checkbox checkbox-primary checkbox-xs">
+                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Enemies</span>
                         </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingDebugPlayers" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <span class="text-gray-300 text-xs group-hover:text-white">Players</span>
+                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingDebugPlayers" class="checkbox checkbox-primary checkbox-xs">
+                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
                         </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingDebugChests" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <span class="text-gray-300 text-xs group-hover:text-white">Chests</span>
+                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingDebugChests" class="checkbox checkbox-primary checkbox-xs">
+                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Chests</span>
                         </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingDebugDungeons" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <span class="text-gray-300 text-xs group-hover:text-white">Dungeons</span>
+                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingDebugDungeons" class="checkbox checkbox-primary checkbox-xs">
+                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
                         </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingDebugFishing" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <span class="text-gray-300 text-xs group-hover:text-white">Fishing</span>
+                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingDebugFishing" class="checkbox checkbox-primary checkbox-xs">
+                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
                         </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingDebugHarvestables" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <span class="text-gray-300 text-xs group-hover:text-white">Resources</span>
+                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingDebugHarvestables" class="checkbox checkbox-primary checkbox-xs">
+                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Resources</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- Output Destination -->
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="monitor" class="w-4 h-4"></i>
                         Output
                     </h3>
                     <div class="space-y-2">
-                        <label class="flex items-center gap-3 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingLogToConsole" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <i data-lucide="terminal" class="w-4 h-4 text-gray-500"></i>
-                            <span class="text-gray-300 text-sm group-hover:text-white">Browser Console (F12)</span>
+                        <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingLogToConsole" class="checkbox checkbox-primary checkbox-xs">
+                            <i data-lucide="terminal" class="w-4 h-4 text-base-content/50"></i>
+                            <span class="text-base-content/80 text-sm group-hover:text-base-content">Browser Console (F12)</span>
                         </label>
-                        <label class="flex items-center gap-3 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingLogToServer" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <i data-lucide="server" class="w-4 h-4 text-gray-500"></i>
-                            <span class="text-gray-300 text-sm group-hover:text-white">Server Logs (JSONL)</span>
+                        <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingLogToServer" class="checkbox checkbox-primary checkbox-xs">
+                            <i data-lucide="server" class="w-4 h-4 text-base-content/50"></i>
+                            <span class="text-base-content/80 text-sm group-hover:text-base-content">Server Logs (JSONL)</span>
                         </label>
-                        <label class="flex items-center gap-3 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                            <input type="checkbox" id="settingServerLogsEnabled" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                            <i data-lucide="hard-drive" class="w-4 h-4 text-gray-500"></i>
-                            <span class="text-gray-300 text-sm group-hover:text-white">Server-side Recording</span>
-                            <span class="relative group/tooltip">
-                                <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
-                                <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Controls backend server logs written to logs/sessions/ directory.</span>
-                            </span>
+                        <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                            <input type="checkbox" id="settingServerLogsEnabled" class="checkbox checkbox-primary checkbox-xs">
+                            <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
+                            <span class="text-base-content/80 text-sm group-hover:text-base-content">Server-side Recording</span>
+                            <div class="tooltip" data-tip="Controls backend server logs written to logs/sessions/ directory.">
+                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            </div>
                         </label>
                     </div>
                 </div>
             </div>
 
             <!-- WebSocket Performance -->
-            <div class="mx-6 mb-4">
-                <h3 class="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+            <div class="mt-4">
+                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                     <i data-lucide="zap" class="w-4 h-4"></i>
                     WebSocket Performance
                 </h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                        <input type="checkbox" id="settingWsCoalescing" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                        <span class="text-gray-300 text-xs group-hover:text-white">Event Coalescing</span>
-                        <span class="relative group/tooltip">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
-                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Groups Move/Health events per entity per frame.</span>
-                        </span>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="settingWsCoalescing" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Event Coalescing</span>
+                        <div class="tooltip" data-tip="Groups Move/Health events per entity per frame.">
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                        </div>
                     </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-surface/30 cursor-pointer group hover:bg-surface/50">
-                        <input type="checkbox" id="settingWsThrottling" class="w-4 h-4 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent transition-colors cursor-pointer">
-                        <span class="text-gray-300 text-xs group-hover:text-white">Health Throttling</span>
-                        <span class="relative group/tooltip">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
-                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Limits health updates to 20/sec per entity.</span>
-                        </span>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="settingWsThrottling" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Health Throttling</span>
+                        <div class="tooltip" data-tip="Limits health updates to 20/sec per entity.">
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                        </div>
                     </label>
                 </div>
             </div>
 
             <!-- RAW Packet Debug (Warning box) -->
-            <div class="mx-6 mb-4 p-3 rounded-lg bg-warning/5 border border-warning/20">
+            <div class="mt-4 p-3 rounded-lg bg-warning/10 border border-warning/20">
                 <h4 class="text-xs font-semibold text-warning mb-2 flex items-center gap-2">
                     <i data-lucide="alert-triangle" class="w-4 h-4"></i>
                     RAW Packet Debug (Very Verbose)
                 </h4>
                 <div class="flex flex-wrap gap-4">
                     <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="settingDebugRawPacketsConsole" class="w-4 h-4 rounded border-2 border-warning/30 bg-surface checked:bg-warning checked:border-warning transition-colors cursor-pointer">
-                        <span class="text-gray-300 text-xs group-hover:text-white">Console</span>
+                        <input type="checkbox" id="settingDebugRawPacketsConsole" class="checkbox checkbox-warning checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Console</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="settingDebugRawPacketsServer" class="w-4 h-4 rounded border-2 border-warning/30 bg-surface checked:bg-warning checked:border-warning transition-colors cursor-pointer">
-                        <span class="text-gray-300 text-xs group-hover:text-white">Server</span>
+                        <input type="checkbox" id="settingDebugRawPacketsServer" class="checkbox checkbox-warning checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Server</span>
                     </label>
                 </div>
             </div>
 
             <!-- Export -->
-            <div class="mx-6 mb-6 flex items-center gap-4">
-                <button id="downloadLogsBtn" class="px-4 py-2 bg-accent text-void font-medium rounded-lg hover:bg-accent/80 transition-all flex items-center gap-2">
+            <div class="mt-4 flex items-center gap-4">
+                <button id="downloadLogsBtn" class="btn btn-primary btn-sm">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     Export Debug Data
                 </button>
-                <span class="text-xs text-gray-500">Download settings and session info as JSON</span>
+                <span class="text-xs text-base-content/50">Download settings and session info as JSON</span>
             </div>
         </div>
-    </details>
+    </div>
 
     <!-- Danger Zone -->
-    <div class="bg-danger/5 border border-danger/20 rounded-xl p-6">
-        <h2 class="text-lg font-semibold text-danger mb-3 flex items-center gap-2">
-            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
-            Danger Zone
-        </h2>
-        <div class="flex flex-wrap gap-3">
-            <button id="resetSettingsBtn"
-                    class="px-4 py-2 bg-transparent border border-danger/50 text-danger rounded-lg hover:bg-danger hover:text-white transition-all flex items-center gap-2">
-                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                Reset All Settings
-            </button>
-            <button id="clearCacheBtn"
-                    class="px-4 py-2 bg-transparent border border-white/10 text-gray-400 rounded-lg hover:bg-overlay hover:text-white transition-all flex items-center gap-2">
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-                Clear Cache
-            </button>
+    <div class="card bg-error/5 border border-error/20">
+        <div class="card-body">
+            <h2 class="text-lg font-semibold text-error mb-3 flex items-center gap-2">
+                <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                Danger Zone
+            </h2>
+            <div class="flex flex-wrap gap-3">
+                <button id="resetSettingsBtn" class="btn btn-outline btn-error btn-sm">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    Reset All Settings
+                </button>
+                <button id="clearCacheBtn" class="btn btn-outline btn-ghost btn-sm">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    Clear Cache
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -283,13 +276,15 @@
 
 {{define "scripts/settings"}}
 <script>
-// Initialize accordion for settings page
-window.onGlobalsReady(function() {
-    window.createAccordionManager('settings', { debug: false });
-});
-
 window.onGlobalsReady(function initSettingsPage() {
     const settingsSync = window.settingsSync;
+
+    // Collapse state persistence
+    const collapseDebug = document.getElementById('collapse-debug');
+    if (collapseDebug) {
+        collapseDebug.checked = settingsSync.getBool('collapse-settings-debug', false);
+        collapseDebug.addEventListener('change', () => settingsSync.setBool('collapse-settings-debug', collapseDebug.checked));
+    }
 
     // Cleanup registry for HTMX navigation
     const cleanup = [];
@@ -403,30 +398,30 @@ window.onGlobalsReady(function initSettingsPage() {
         URL.revokeObjectURL(url);
     });
 
-    // Reset settings - using Modal
+    // Reset settings - using DaisyUI modal
     addListener(document.getElementById("resetSettingsBtn"), "click", () => {
-        window.modal.open('resetSettings', {
-            onConfirm: () => {
-                localStorage.clear();
-                if (window.toast) window.toast.success('Settings reset successfully');
-                setTimeout(() => location.reload(), 500);
-            }
-        });
+        document.getElementById('modal-resetSettings').showModal();
     });
 
-    // Clear cache - using Modal
+    addListener(document.getElementById("confirmResetSettings"), "click", () => {
+        localStorage.clear();
+        document.getElementById('modal-resetSettings').close();
+        if (window.toast) window.toast.success('Settings reset successfully');
+        setTimeout(() => location.reload(), 500);
+    });
+
+    // Clear cache - using DaisyUI modal
     addListener(document.getElementById("clearCacheBtn"), "click", () => {
-        window.modal.open('clearCache', {
-            onConfirm: () => {
-                caches.keys().then(names => {
-                    names.forEach(name => caches.delete(name));
-                });
-                if (window.toast) window.toast.success('Cache cleared');
-            }
-        });
+        document.getElementById('modal-clearCache').showModal();
     });
 
-    if (window.lucide) lucide.createIcons();
+    addListener(document.getElementById("confirmClearCache"), "click", () => {
+        caches.keys().then(names => {
+            names.forEach(name => caches.delete(name));
+        });
+        document.getElementById('modal-clearCache').close();
+        if (window.toast) window.toast.success('Cache cleared');
+    });
 });
 </script>
 {{end}}

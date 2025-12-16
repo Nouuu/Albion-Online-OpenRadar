@@ -24,9 +24,9 @@ class ToastManager {
 
         const typeStyles = {
             success: 'bg-success/10 border-success/20 text-success',
-            error: 'bg-danger/10 border-danger/20 text-danger',
+            error: 'bg-error/10 border-error/20 text-error',
             warning: 'bg-warning/10 border-warning/20 text-warning',
-            info: 'bg-accent/10 border-accent/20 text-accent'
+            info: 'bg-primary/10 border-primary/20 text-primary'
         };
 
         const icons = {

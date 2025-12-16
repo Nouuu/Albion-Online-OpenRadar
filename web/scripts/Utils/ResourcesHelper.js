@@ -56,8 +56,45 @@ export function updateTierButtonState(resourcePrefix, tierIndex) {
 
 export function initializeTierButtonStates() {
     const resources = ['fsp', 'hsp', 'wsp', 'osp', 'rsp', 'flp', 'hlp', 'wlp', 'olp', 'rlp'];
+    const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
+
+    // Phase 1: Batch all DOM reads (no reflow)
+    const updates = [];
     resources.forEach(prefix => {
-        for (let i = 0; i < 8; i++) updateTierButtonState(prefix, i);
+        for (let tierIndex = 0; tierIndex < 8; tierIndex++) {
+            const states = [];
+            enchantLevels.forEach(enchantLevel => {
+                const row = document.getElementById(`${prefix}-${enchantLevel}`);
+                if (row) {
+                    const el = row.children[tierIndex];
+                    if (el?.tagName === 'INPUT') states.push(el.checked);
+                }
+            });
+
+            const button = document.querySelector(`button[onclick*="selectAllTierEnchants('${prefix}', ${tierIndex})"]`);
+            if (button && states.length > 0) {
+                updates.push({
+                    button,
+                    tierIndex,
+                    allChecked: states.every(c => c),
+                    anyChecked: states.some(c => c)
+                });
+            }
+        }
+    });
+
+    // Phase 2: Batch all DOM writes (single reflow)
+    updates.forEach(({ button, tierIndex, allChecked, anyChecked }) => {
+        const t = tierIndex + 1;
+        button.className = button.className.replace(/opacity-\d+/g, '').trim();
+        if (allChecked) {
+            button.textContent = `✓T${t}`;
+        } else if (anyChecked) {
+            button.textContent = `◐T${t}`;
+        } else {
+            button.textContent = `☐T${t}`;
+            button.classList.add('opacity-50');
+        }
     });
 }
 
@@ -89,16 +126,16 @@ export function generateResourceGrid(config) {
     const typeIcon = isLiving ? '🌿' : '⛏️';
 
     const buttons = Array.from({ length: 8 }, (_, i) =>
-        `<button onclick="selectAllTierEnchants('${prefix}', ${i})" class="text-[10px] w-full py-0.5 bg-accent/20 text-accent rounded hover:bg-accent hover:text-void transition-colors font-medium text-center" title="Select all T${i+1}">✓T${i+1}</button>`
+        `<button onclick="selectAllTierEnchants('${prefix}', ${i})" class="btn btn-primary btn-xs text-[10px] w-full" title="Select all T${i+1}">✓T${i+1}</button>`
     ).join('');
 
     const tierHeaders = Array.from({ length: 8 }, (_, i) =>
-        `<span class="text-gray-400 text-[10px] text-center block">T${i+1}</span>`
+        `<span class="text-base-content/60 text-[10px] text-center block">T${i+1}</span>`
     ).join('');
 
     const enchantmentRows = ['e0', 'e1', 'e2', 'e3', 'e4'].map(enchantLevel => {
         const isE0 = enchantLevel === 'e0';
-        const checkboxClass = 'w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer';
+        const checkboxClass = 'checkbox checkbox-primary checkbox-xs';
 
         const cells = Array.from({ length: 8 }, (_, i) => {
             if (!isE0 && i < 3) return '<span class="w-4 h-4"></span>';
@@ -108,20 +145,20 @@ export function generateResourceGrid(config) {
         return `<div class="grid grid-cols-8 gap-1 justify-items-center" id="${prefix}-${enchantLevel}">${cells}</div>`;
     }).join('');
 
-    return `<div class="bg-surface/50 border border-white/5 rounded-lg p-3">
-        <h4 class="text-sm mb-2 font-medium text-white flex items-center gap-2">
+    return `<div class="bg-base-300 rounded-lg p-3">
+        <h4 class="text-sm mb-2 font-medium text-base-content flex items-center gap-2">
             <span class="text-xs">${typeIcon}</span>
             ${typeLabel}
         </h4>
         <div class="grid" style="grid-template-columns: 24px 1fr; gap: 4px;">
             <div class="grid gap-1 items-center">
-                <span class="text-[10px] text-gray-500 h-5"></span>
-                <span class="text-[10px] text-gray-500 h-4"></span>
-                <span class="text-[10px] text-gray-400 h-4 flex items-center">E0</span>
-                <span class="text-[10px] text-gray-400 h-4 flex items-center">E1</span>
-                <span class="text-[10px] text-gray-400 h-4 flex items-center">E2</span>
-                <span class="text-[10px] text-gray-400 h-4 flex items-center">E3</span>
-                <span class="text-[10px] text-gray-400 h-4 flex items-center">E4</span>
+                <span class="text-[10px] text-base-content/50 h-5"></span>
+                <span class="text-[10px] text-base-content/50 h-4"></span>
+                <span class="text-[10px] text-base-content/60 h-4 flex items-center">E0</span>
+                <span class="text-[10px] text-base-content/60 h-4 flex items-center">E1</span>
+                <span class="text-[10px] text-base-content/60 h-4 flex items-center">E2</span>
+                <span class="text-[10px] text-base-content/60 h-4 flex items-center">E3</span>
+                <span class="text-[10px] text-base-content/60 h-4 flex items-center">E4</span>
             </div>
             <div class="grid gap-1">
                 <div class="grid grid-cols-8 gap-1 justify-items-center">${buttons}</div>

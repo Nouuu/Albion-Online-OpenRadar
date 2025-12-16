@@ -13,104 +13,108 @@
 </style>
 <div class="space-y-4">
     <!-- Canvas Section -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-4">
-        <div id="canvasContainer" class="relative mx-auto" style="width: 520px; height: 520px;">
-            <canvas class="ttcan absolute top-0 left-0 m-2.5 border-2 border-white/10 rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
-            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
-            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
-            <canvas class="ttcan absolute top-0 left-0 m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
-        </div>
-        <!-- Controls - flex wrap for responsive -->
-        <div class="flex flex-wrap items-center gap-4 mt-3 mx-2.5 text-sm">
-            <!-- Display toggles -->
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-gray-500">Display:</span>
-                <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="checkbox" id="settingResourceCount" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                    <span class="text-gray-400 group-hover:text-white transition-colors">Count</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="checkbox" id="settingResourceDistance" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                    <span class="text-gray-400 group-hover:text-white transition-colors">Distance</span>
-                </label>
-                <label class="flex items-center gap-1.5 cursor-pointer group">
-                    <input type="checkbox" id="settingResourceClusters" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                    <span class="text-gray-400 group-hover:text-white transition-colors">Clusters</span>
-                </label>
+    <div class="card bg-base-200">
+        <div class="card-body p-4">
+            <div id="canvasContainer" class="relative mx-auto" style="width: 520px; height: 520px;">
+                <canvas class="ttcan absolute top-0 left-0 m-2.5 border-2 border-base-content/10 rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
             </div>
-            <!-- Zoom control -->
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Zoom:</span>
-                <button id="zoomOut" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
-                <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="w-24 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
-                <button id="zoomIn" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
-                <span id="zoomValue" class="text-xs text-gray-400 font-mono w-10">100%</span>
-                <button id="zoomReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
-            </div>
-            <!-- Size control -->
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Size:</span>
-                <button id="sizeDown" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
-                <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="w-24 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
-                <button id="sizeUp" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
-                <span id="sizeValue" class="text-xs text-gray-400 font-mono w-12">500px</span>
-                <button id="sizeReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+            <!-- Controls - flex wrap for responsive -->
+            <div class="flex flex-wrap items-center gap-4 mt-3 mx-2.5 text-sm">
+                <!-- Display toggles -->
+                <div class="flex items-center gap-3">
+                    <span class="text-xs text-base-content/50">Display:</span>
+                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                        <input type="checkbox" id="settingResourceCount" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/60 group-hover:text-base-content transition-colors">Count</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                        <input type="checkbox" id="settingResourceDistance" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/60 group-hover:text-base-content transition-colors">Distance</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer group">
+                        <input type="checkbox" id="settingResourceClusters" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/60 group-hover:text-base-content transition-colors">Clusters</span>
+                    </label>
+                </div>
+                <!-- Zoom control -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-base-content/50">Zoom:</span>
+                    <button id="zoomOut" class="btn btn-ghost btn-xs">−</button>
+                    <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="range range-primary range-xs w-24">
+                    <button id="zoomIn" class="btn btn-ghost btn-xs">+</button>
+                    <span id="zoomValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
+                    <button id="zoomReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
+                </div>
+                <!-- Size control -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-base-content/50">Size:</span>
+                    <button id="sizeDown" class="btn btn-ghost btn-xs">−</button>
+                    <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="range range-primary range-xs w-24">
+                    <button id="sizeUp" class="btn btn-ghost btn-xs">+</button>
+                    <span id="sizeValue" class="text-xs text-base-content/60 font-mono w-12">500px</span>
+                    <button id="sizeReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Detected Players Section -->
-    <div id="playersSection" class="bg-elevated border border-white/5 rounded-xl p-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h3 class="text-xl font-semibold text-white flex items-center gap-3">
-                Detected Players
-                <label class="flex items-center gap-1.5 cursor-pointer" title="Show players on radar and in list below">
-                    <input type="checkbox" id="settingShowPlayers" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                    <span class="text-xs text-gray-400 font-normal">Show</span>
-                </label>
-            </h3>
-            <span id="playersCount" class="hidden items-center gap-2 text-xs font-mono px-2.5 py-1 rounded-full bg-surface/50 border border-white/10">
-                <!-- Counter populated by JS: formatPlayerCount() -->
-            </span>
-        </div>
-        <div id="playersListContainer" class="mt-4">
-            <!-- Flex container: sections share space equally, wrap on small screens -->
-            <!-- data-sections set by JS: controls card grid columns -->
-            <div id="playersList" class="flex flex-wrap gap-4" data-sections="0">
-                <!-- Hostile Section -->
-                <div id="playersHostile" class="hidden flex-1 min-w-[280px]">
-                    <div class="flex items-center gap-2 pb-2 mb-3 border-b border-danger/20">
-                        <span class="text-sm font-medium text-danger">⚠️ Hostiles</span>
-                        <span id="hostileCount" class="text-xs text-white/50">(0)</span>
+    <div id="playersSection" class="card bg-base-200">
+        <div class="card-body">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <h3 class="text-xl font-semibold text-base-content flex items-center gap-3">
+                    Detected Players
+                    <label class="flex items-center gap-1.5 cursor-pointer" title="Show players on radar and in list below">
+                        <input type="checkbox" id="settingShowPlayers" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-xs text-base-content/60 font-normal">Show</span>
+                    </label>
+                </h3>
+                <span id="playersCount" class="hidden badge badge-ghost font-mono">
+                    <!-- Counter populated by JS: formatPlayerCount() -->
+                </span>
+            </div>
+            <div id="playersListContainer" class="mt-4">
+                <!-- Flex container: sections share space equally, wrap on small screens -->
+                <!-- data-sections set by JS: controls card grid columns -->
+                <div id="playersList" class="flex flex-wrap gap-4" data-sections="0">
+                    <!-- Hostile Section -->
+                    <div id="playersHostile" class="hidden flex-1 min-w-[280px]">
+                        <div class="flex items-center gap-2 pb-2 mb-3 border-b border-error/20">
+                            <span class="text-sm font-medium text-error">Hostiles</span>
+                            <span id="hostileCount" class="text-xs text-base-content/50">(0)</span>
+                        </div>
+                        <div id="hostileList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
                     </div>
-                    <div id="hostileList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
-                </div>
 
-                <!-- Faction Section -->
-                <div id="playersFaction" class="hidden flex-1 min-w-[280px]">
-                    <div class="flex items-center gap-2 pb-2 mb-3 border-b border-blue-400/20">
-                        <span class="text-sm font-medium text-blue-400">⚔️ Faction</span>
-                        <span id="factionCount" class="text-xs text-white/50">(0)</span>
+                    <!-- Faction Section -->
+                    <div id="playersFaction" class="hidden flex-1 min-w-[280px]">
+                        <div class="flex items-center gap-2 pb-2 mb-3 border-b border-info/20">
+                            <span class="text-sm font-medium text-info">Faction</span>
+                            <span id="factionCount" class="text-xs text-base-content/50">(0)</span>
+                        </div>
+                        <div id="factionList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
                     </div>
-                    <div id="factionList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
-                </div>
 
-                <!-- Passive Section -->
-                <div id="playersPassive" class="hidden flex-1 min-w-[280px]">
-                    <div class="flex items-center gap-2 pb-2 mb-3 border-b border-success/20">
-                        <span class="text-sm font-medium text-success">✓ Passive</span>
-                        <span id="passiveCount" class="text-xs text-white/50">(0)</span>
+                    <!-- Passive Section -->
+                    <div id="playersPassive" class="hidden flex-1 min-w-[280px]">
+                        <div class="flex items-center gap-2 pb-2 mb-3 border-b border-success/20">
+                            <span class="text-sm font-medium text-success">Passive</span>
+                            <span id="passiveCount" class="text-xs text-base-content/50">(0)</span>
+                        </div>
+                        <div id="passiveList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
                     </div>
-                    <div id="passiveList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
-                </div>
 
-                <!-- Empty State -->
-                <div id="playersEmpty" class="w-full flex flex-col items-center justify-center py-8 text-center">
-                    <svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                    <p class="text-sm text-white/40">No players detected yet</p>
-                    <p class="text-xs text-white/25 font-mono mt-1">Scanning...</p>
+                    <!-- Empty State -->
+                    <div id="playersEmpty" class="w-full flex flex-col items-center justify-center py-8 text-center">
+                        <svg class="w-10 h-10 text-base-content/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <p class="text-sm text-base-content/40">No players detected yet</p>
+                        <p class="text-xs text-base-content/25 font-mono mt-1">Scanning...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -260,8 +264,6 @@ window.onGlobalsReady(function() {
     }
     window.addEventListener('storage', storageHandler);
     cleanup.push(() => window.removeEventListener('storage', storageHandler));
-
-    if (window.lucide) lucide.createIcons();
 });
 </script>
 {{end}}

@@ -1,6 +1,6 @@
 {{define "layouts/base.gohtml"}}
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html data-theme="dark" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,35 +11,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-
-    <style type="text/tailwindcss">
-        @theme {
-            --color-void: #050508;
-            --color-surface: #0a0a0f;
-            --color-elevated: #12121a;
-            --color-overlay: #1a1a24;
-            --color-accent: #00d4ff;
-            --color-success: #00ff88;
-            --color-danger: #ff3366;
-            --color-warning: #ffa500;
-            --color-tier-1: #a0a0a0;
-            --color-tier-2: #22c55e;
-            --color-tier-3: #3b82f6;
-            --color-tier-4: #a855f7;
-            --color-tier-5: #eab308;
-            --color-tier-6: #f97316;
-            --color-tier-7: #ef4444;
-            --color-tier-8: #ec4899;
-            --font-display: 'Space Grotesk', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles/tailwind.css">
 
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link rel="stylesheet" href="/styles/app.css">
-    <link rel="stylesheet" href="/scripts/styles/tooltips.css">
     <link rel="stylesheet" href="/scripts/styles/components.css">
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -101,7 +77,6 @@
     <script type="module" src="/scripts/Utils/Modal.js"></script>
     <script src="/scripts/spa-router.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
-    <script src="/scripts/accordion.js"></script>
 
     <!-- Must be in head before sidebar template -->
     <script>
@@ -162,12 +137,12 @@
     </script>
 
     <style>
-        .htmx-swapping { opacity: 0; transition: opacity 150ms ease-out; }
-        #page-content { transition: opacity 150ms ease-in; }
+        .htmx-swapping { opacity: 0; transition: opacity 50ms ease-out; }
+        #page-content { transition: opacity 50ms ease-in; }
         #page-content.htmx-settling { opacity: 1; }
     </style>
 </head>
-<body class="bg-void text-gray-200 font-display">
+<body class="bg-base-100 text-base-content font-display">
     <div class="flex h-screen">
         {{template "layouts/sidebar.gohtml" .}}
 
@@ -175,7 +150,7 @@
             {{template "layouts/header.gohtml" .}}
 
             <main id="page-content"
-                  class="flex-1 overflow-y-auto p-6 bg-void"
+                  class="flex-1 overflow-y-auto p-6 bg-base-100"
                   data-page="{{.Page}}"
                   hx-swap="innerHTML transition:true"
                   hx-swap-oob="true">
@@ -209,14 +184,45 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => window.sidebar.init());
-        document.addEventListener('htmx:afterSwap', () => lucide.createIcons());
+
+        // Page lifecycle cleanup - prevents memory leaks on navigation
         document.addEventListener('htmx:beforeSwap', (e) => {
-            if (e.detail.target?.id === 'page-content') e.detail.target.style.opacity = '0';
+            if (e.detail.target?.id === 'page-content') {
+                e.detail.target.style.opacity = '0';
+                // Dispatch cleanup event for page scripts to unregister listeners
+                document.dispatchEvent(new CustomEvent('pageCleanup'));
+            }
         });
+
+        // Only create icons within swapped content (not globally)
+        document.addEventListener('htmx:afterSwap', (e) => {
+            if (e.detail.target && window.lucide) {
+                // Defer icon creation to next frame to avoid blocking
+                requestAnimationFrame(() => {
+                    lucide.createIcons({ nodes: [e.detail.target] });
+                });
+            }
+        });
+
         document.addEventListener('htmx:afterSettle', (e) => {
             if (e.detail.target?.id === 'page-content') {
                 requestAnimationFrame(() => e.detail.target.style.opacity = '1');
             }
+        });
+
+        // Update sidebar active state on navigation
+        document.addEventListener('htmx:pushedIntoHistory', (e) => {
+            const currentPath = window.location.pathname;
+            const baseClasses = 'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors';
+            const activeClasses = 'text-primary border-l-2 border-primary -ml-px pl-2.5';
+            const inactiveClasses = 'text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]';
+
+            document.querySelectorAll('#desktop-nav a, #mobile-nav a').forEach(link => {
+                const linkPath = link.getAttribute('href');
+                const isActive = linkPath === currentPath;
+
+                link.className = baseClasses + ' ' + (isActive ? activeClasses : inactiveClasses);
+            });
         });
     </script>
 </body>

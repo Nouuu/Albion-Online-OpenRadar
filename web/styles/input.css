@@ -1,0 +1,26 @@
+/* OpenRadar - Tailwind CSS Input */
+@import "tailwindcss";
+@plugin "daisyui" {
+    themes: dark --default;
+}
+
+/* Source paths for class detection */
+@source "../../internal/templates/**/*.gohtml";
+@source "../scripts/**/*.js";
+
+/* Custom theme extending DaisyUI dark theme */
+@theme {
+    /* Tier colors for resources */
+    --color-tier-1: #a0a0a0;
+    --color-tier-2: #22c55e;
+    --color-tier-3: #3b82f6;
+    --color-tier-4: #a855f7;
+    --color-tier-5: #eab308;
+    --color-tier-6: #f97316;
+    --color-tier-7: #ef4444;
+    --color-tier-8: #ec4899;
+
+    /* Fonts */
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}

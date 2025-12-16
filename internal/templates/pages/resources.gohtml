@@ -1,231 +1,195 @@
 {{define "pages/resources"}}
 <div class="space-y-6 stagger">
     <!-- Page Header with Presets -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-white">Resources</h1>
-                <p class="text-gray-400 mt-2">Configure which resources to display on the radar.</p>
-            </div>
-            <!-- Preset Buttons -->
-            <div class="flex flex-wrap gap-2">
-                <button onclick="applyResourcePreset('t5plus')"
-                        class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
-                    All T5+
-                </button>
-                <button onclick="applyResourcePreset('t6plus')"
-                        class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
-                    All T6+
-                </button>
-                <button onclick="applyResourcePreset('t7plus')"
-                        class="px-3 py-1.5 text-xs bg-accent/20 text-accent rounded-lg hover:bg-accent hover:text-void transition-colors font-medium">
-                    All T7+
-                </button>
-                <button onclick="applyResourcePreset('e2plus')"
-                        class="px-3 py-1.5 text-xs bg-tier-3/20 text-tier-3 rounded-lg hover:bg-tier-3 hover:text-void transition-colors font-medium">
-                    All E2+
-                </button>
-                <button onclick="applyResourcePreset('e3plus')"
-                        class="px-3 py-1.5 text-xs bg-tier-4/20 text-tier-4 rounded-lg hover:bg-tier-4 hover:text-void transition-colors font-medium">
-                    All E3+
-                </button>
-                <button onclick="applyResourcePreset('clear')"
-                        class="px-3 py-1.5 text-xs bg-danger/20 text-danger rounded-lg hover:bg-danger hover:text-white transition-colors font-medium">
-                    Clear All
-                </button>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-base-content">Resources</h1>
+                    <p class="text-base-content/60 mt-2">Configure which resources to display on the radar.</p>
+                </div>
+                <!-- Preset Buttons -->
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="applyResourcePreset('t5plus')" class="btn btn-primary btn-xs">All T5+</button>
+                    <button onclick="applyResourcePreset('t6plus')" class="btn btn-primary btn-xs">All T6+</button>
+                    <button onclick="applyResourcePreset('t7plus')" class="btn btn-primary btn-xs">All T7+</button>
+                    <button onclick="applyResourcePreset('e2plus')" class="btn btn-secondary btn-xs">All E2+</button>
+                    <button onclick="applyResourcePreset('e3plus')" class="btn btn-secondary btn-xs">All E3+</button>
+                    <button onclick="applyResourcePreset('clear')" class="btn btn-error btn-xs">Clear All</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Fiber Section -->
-    <details data-accordion="fiber" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors" open>
-        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i data-lucide="flower-2" class="w-5 h-5 text-green-400"></i>
-                Fiber
-            </h2>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
-        </summary>
-        <div class="accordion-content border-t border-white/5">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-fiber" />
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="flower-2" class="w-5 h-5 text-green-400"></i>
+            Fiber
+        </div>
+        <div class="collapse-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div id="static-fiber-grid"></div>
                 <div id="living-fiber-grid"></div>
             </div>
         </div>
-    </details>
+    </div>
 
     <!-- Hide Section -->
-    <details data-accordion="hide" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i data-lucide="rabbit" class="w-5 h-5 text-amber-400"></i>
-                Hide
-            </h2>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
-        </summary>
-        <div class="accordion-content border-t border-white/5">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-hide" />
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="rabbit" class="w-5 h-5 text-amber-400"></i>
+            Hide
+        </div>
+        <div class="collapse-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div id="static-hide-grid"></div>
                 <div id="living-hide-grid"></div>
             </div>
         </div>
-    </details>
+    </div>
 
     <!-- Wood Section -->
-    <details data-accordion="wood" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i data-lucide="tree-pine" class="w-5 h-5 text-emerald-400"></i>
-                Wood
-            </h2>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
-        </summary>
-        <div class="accordion-content border-t border-white/5">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-wood" />
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="tree-pine" class="w-5 h-5 text-emerald-400"></i>
+            Wood
+        </div>
+        <div class="collapse-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div id="static-wood-grid"></div>
                 <div id="living-wood-grid"></div>
             </div>
         </div>
-    </details>
+    </div>
 
     <!-- Ore Section -->
-    <details data-accordion="ore" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i data-lucide="gem" class="w-5 h-5 text-blue-400"></i>
-                Ore
-            </h2>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
-        </summary>
-        <div class="accordion-content border-t border-white/5">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-ore" />
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="gem" class="w-5 h-5 text-blue-400"></i>
+            Ore
+        </div>
+        <div class="collapse-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div id="static-ore-grid"></div>
                 <div id="living-ore-grid"></div>
             </div>
         </div>
-    </details>
+    </div>
 
     <!-- Rock Section -->
-    <details data-accordion="rock" class="accordion bg-elevated border border-white/5 rounded-xl overflow-hidden hover:border-accent/10 transition-colors">
-        <summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-surface/50 transition-colors">
-            <h2 class="text-xl font-semibold text-white flex items-center gap-2">
-                <i data-lucide="mountain" class="w-5 h-5 text-gray-400"></i>
-                Rock
-            </h2>
-            <i data-lucide="chevron-down" class="w-5 h-5 text-gray-400 accordion-chevron"></i>
-        </summary>
-        <div class="accordion-content border-t border-white/5">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-rock" />
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="mountain" class="w-5 h-5 text-gray-400"></i>
+            Rock
+        </div>
+        <div class="collapse-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div id="static-rock-grid"></div>
                 <div id="living-rock-grid"></div>
             </div>
         </div>
-    </details>
+    </div>
 
     <!-- Other Resources -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="fish" class="w-5 h-5 text-accent"></i>
-            Other
-        </h2>
-        <label class="flex items-center gap-3 cursor-pointer group">
-            <input type="checkbox" id="settingFishing"
-                   class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-            <span class="text-gray-300 group-hover:text-white transition-colors">Show Fishing Pools</span>
-            <span class="relative group/tooltip">
-                <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display fishing zones on the radar.</span>
-            </span>
-        </label>
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="fish" class="w-5 h-5 text-primary"></i>
+                Other
+            </h2>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" id="settingFishing" class="checkbox checkbox-primary">
+                <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Fishing Pools</span>
+                <div class="tooltip" data-tip="Display fishing zones on the radar.">
+                    <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                </div>
+            </label>
+        </div>
     </div>
 
     <!-- Visual & Tools -->
-    <div class="bg-elevated border border-white/5 rounded-xl p-6 hover:border-accent/10 transition-colors">
-        <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-            <i data-lucide="settings-2" class="w-5 h-5 text-accent"></i>
-            Visual & Tools
-        </h2>
-        <div class="space-y-3">
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingResourceCount"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Resources Count</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display the number of resources available on each node.</span>
-                </span>
-            </label>
-
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingResourceDistance"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Distance</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display distance to each resource node in meters.</span>
-                </span>
-            </label>
-
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingResourceClusters"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Clusters</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Group nearby resources and display cluster indicators.</span>
-                </span>
-            </label>
-
-            <div class="ml-8 pl-4 border-l-2 border-white/10 space-y-3">
-                <label class="block">
-                    <span class="flex items-center gap-2 text-gray-400 text-xs mb-1">
-                        Cluster radius (meters)
-                        <span class="relative group/tooltip">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
-                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Maximum distance to group resources together. Default: 30m</span>
-                        </span>
-                    </span>
-                    <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
-                           class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm">
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="settings-2" class="w-5 h-5 text-primary"></i>
+                Visual & Tools
+            </h2>
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceCount" class="checkbox checkbox-primary">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Resources Count</span>
+                    <div class="tooltip" data-tip="Display the number of resources available on each node.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
                 </label>
-                <label class="block">
-                    <span class="flex items-center gap-2 text-gray-400 text-xs mb-1">
-                        Min resources per cluster
-                        <span class="relative group/tooltip">
-                            <i data-lucide="info" class="w-3 h-3 text-gray-500 cursor-help"></i>
-                            <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Minimum number of resources to form a cluster. Default: 2</span>
-                        </span>
-                    </span>
-                    <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
-                           class="w-32 px-3 py-1.5 bg-surface border border-white/10 rounded-lg text-white placeholder-gray-500 focus:border-accent focus:ring-2 focus:ring-accent/20 transition-colors text-sm">
+
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceDistance" class="checkbox checkbox-primary">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Distance</span>
+                    <div class="tooltip" data-tip="Display distance to each resource node in meters.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
                 </label>
+
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceClusters" class="checkbox checkbox-primary">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Clusters</span>
+                    <div class="tooltip" data-tip="Group nearby resources and display cluster indicators.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+
+                <div class="ml-8 pl-4 border-l-2 border-base-content/10 space-y-3">
+                    <label class="block">
+                        <span class="flex items-center gap-2 text-base-content/60 text-xs mb-1">
+                            Cluster radius (meters)
+                            <div class="tooltip" data-tip="Maximum distance to group resources together. Default: 30m">
+                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            </div>
+                        </span>
+                        <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
+                               class="input input-bordered input-sm w-32">
+                    </label>
+                    <label class="block">
+                        <span class="flex items-center gap-2 text-base-content/60 text-xs mb-1">
+                            Min resources per cluster
+                            <div class="tooltip" data-tip="Minimum number of resources to form a cluster. Default: 2">
+                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            </div>
+                        </span>
+                        <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
+                               class="input input-bordered input-sm w-32">
+                    </label>
+                </div>
+
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingLivingResourcesHealthBar" class="checkbox checkbox-primary">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Health Bar</span>
+                    <div class="tooltip" data-tip="Display health bar on living resources (mobs).">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingLivingResourcesID" class="checkbox checkbox-primary">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show ID</span>
+                    <div class="tooltip" data-tip="Display internal ID for living resources (debug).">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+
+                <hr class="border-base-content/10 my-4">
+
+                <p class="text-xs text-base-content/50">
+                    <strong>Tip:</strong> Logging options in <a href="/settings" class="text-primary hover:underline">Settings > Debug & Logging</a>
+                </p>
             </div>
-
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingLivingResourcesHealthBar"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show Health Bar</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display health bar on living resources (mobs).</span>
-                </span>
-            </label>
-
-            <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingLivingResourcesID"
-                       class="w-5 h-5 rounded border-2 border-white/20 bg-surface checked:bg-accent checked:border-accent focus:ring-2 focus:ring-accent/30 transition-colors cursor-pointer">
-                <span class="text-gray-300 group-hover:text-white transition-colors">Show ID</span>
-                <span class="relative group/tooltip">
-                    <i data-lucide="info" class="w-4 h-4 text-gray-500 cursor-help"></i>
-                    <span class="absolute left-full ml-2 top-1/2 -translate-y-1/2 z-50 px-3 py-2 rounded-lg bg-overlay border border-white/10 text-xs text-gray-200 whitespace-nowrap opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 shadow-lg">Display internal ID for living resources (debug).</span>
-                </span>
-            </label>
-
-            <hr class="border-white/10 my-4">
-
-            <p class="text-xs text-gray-500">
-                <strong>Tip:</strong> Logging options in <a href="/settings" class="text-accent hover:underline">Settings > Debug & Logging</a>
-            </p>
         </div>
     </div>
 </div>
@@ -233,11 +197,6 @@
 
 {{define "scripts/resources"}}
 <script>
-// Initialize accordion for resources page
-window.onGlobalsReady(function() {
-    window.createAccordionManager('resources', { fiber: true, hide: false, wood: false, ore: false, rock: false });
-});
-
 // Preset application function
 function applyResourcePreset(preset) {
     const settingsSync = window.settingsSync;
@@ -353,27 +312,37 @@ window.onGlobalsReady(function initResourcesPage() {
         }
     });
 
-    // Bind resource grid checkboxes
+    // Bind resource grid checkboxes (batched to avoid reflow)
+    // Phase 1: Collect all elements and their target states
+    const checkboxUpdates = [];
     resources.forEach(config => {
         const storageKey = getResourceStorageKey(config.prefix, config.type);
-        let enchants = settingsSync.getJSON(storageKey, defaultEnchants);
+        const enchants = settingsSync.getJSON(storageKey, defaultEnchants);
 
         enchantLevels.forEach(enchantLevel => {
             const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
             if (!parent) return;
 
-            for (let i = 0; i < parent.children.length; i++) {
-                const element = parent.children[i];
-                if (element.nodeName !== 'INPUT') continue;
-
-                element.checked = enchants[enchantLevel][i];
-                element.addEventListener("change", () => {
-                    enchants[enchantLevel][i] = element.checked;
-                    settingsSync.setJSON(storageKey, enchants);
-                    updateTierButtonState(config.prefix, i);
+            const children = Array.from(parent.children);
+            children.forEach((element, i) => {
+                if (element.nodeName !== 'INPUT') return;
+                checkboxUpdates.push({
+                    element,
+                    checked: enchants[enchantLevel][i],
+                    onChange: () => {
+                        enchants[enchantLevel][i] = element.checked;
+                        settingsSync.setJSON(storageKey, enchants);
+                        updateTierButtonState(config.prefix, i);
+                    }
                 });
-            }
+            });
         });
+    });
+
+    // Phase 2: Apply all updates (single reflow)
+    checkboxUpdates.forEach(({ element, checked, onChange }) => {
+        element.checked = checked;
+        element.addEventListener("change", onChange);
     });
 
     // Helper to bind checkboxes
@@ -410,7 +379,18 @@ window.onGlobalsReady(function initResourcesPage() {
         initializeTierButtonStates();
     }, 50);
 
-    if (window.lucide) lucide.createIcons();
+    // Collapse state persistence
+    const collapseIds = ['collapse-fiber', 'collapse-hide', 'collapse-wood', 'collapse-ore', 'collapse-rock'];
+    const defaultStates = { 'collapse-fiber': true, 'collapse-hide': false, 'collapse-wood': false, 'collapse-ore': false, 'collapse-rock': false };
+
+    collapseIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const saved = settingsSync.getBool(id, defaultStates[id]);
+            el.checked = saved;
+            el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
+        }
+    });
 });
 </script>
 {{end}}

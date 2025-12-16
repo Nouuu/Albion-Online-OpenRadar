@@ -97,6 +97,7 @@ tmp/
 ip.txt
 nul
 VERSION
+web/styles/tailwind.css
 
 # Packages et helpers
 ZIP PACKAGE/

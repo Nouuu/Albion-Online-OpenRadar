@@ -1,21 +1,21 @@
 {{define "layouts/header.gohtml"}}
-<header class="flex items-center justify-between h-14 px-4 bg-surface/50 border-b border-white/5">
+<header class="flex items-center justify-between h-14 px-4 bg-base-200/50 border-b border-base-content/[0.03]">
     <button onclick="window.sidebar.openMobile()"
-        class="p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition-colors md:hidden">
+        class="p-2 rounded-md text-base-content/60 hover:text-base-content hover:bg-base-content/5 transition-colors md:hidden">
         <i data-lucide="menu" class="w-5 h-5" stroke-width="1.5"></i>
     </button>
 
-    <h1 class="text-sm font-medium text-gray-200 md:hidden">{{.Title}}</h1>
+    <h1 class="text-sm font-medium text-base-content/80 md:hidden">{{.Title}}</h1>
     <div class="hidden md:block"></div>
 
     <div class="flex items-center gap-3">
-        <div id="wsStatusIndicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.02] border border-white/5">
-            <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-            <span id="wsStatusText" class="text-xs text-gray-500 hidden sm:inline">Connecting...</span>
+        <div id="wsStatusIndicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-base-content/[0.02]">
+            <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-base-content/50"></span>
+            <span id="wsStatusText" class="text-xs text-base-content/50 hidden sm:inline">Connecting...</span>
         </div>
 
         <button onclick="window.open('/radar-overlay', 'OpenRadar Overlay', 'popup=yes,width=520,height=520,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no')"
-           class="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 text-accent hover:bg-accent hover:text-void transition-all font-medium text-sm cursor-pointer">
+           class="btn btn-primary btn-sm">
             <i data-lucide="external-link" class="w-4 h-4"></i>
             <span class="hidden sm:inline">Open Overlay</span>
         </button>
@@ -37,19 +37,19 @@
     function updateIndicator(status) {
         if (!dot || !text) return;
 
-        dot.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-gray-500', 'animate-pulse');
-        text.classList.remove('text-gray-400', 'text-gray-300', 'text-danger', 'text-warning');
+        dot.classList.remove('bg-success', 'bg-error', 'bg-warning', 'bg-base-content/50', 'animate-pulse');
+        text.classList.remove('text-base-content/60', 'text-base-content/80', 'text-error', 'text-warning');
 
         switch(status) {
             case 'connected':
                 dot.classList.add('bg-success', 'animate-pulse');
                 text.textContent = 'Connected';
-                text.classList.add('text-gray-300');
+                text.classList.add('text-base-content/80');
                 break;
             case 'disconnected':
-                dot.classList.add('bg-danger');
+                dot.classList.add('bg-error');
                 text.textContent = 'Disconnected';
-                text.classList.add('text-danger');
+                text.classList.add('text-error');
                 break;
             case 'connecting':
                 dot.classList.add('bg-warning', 'animate-pulse');
@@ -57,9 +57,9 @@
                 text.classList.add('text-warning');
                 break;
             default:
-                dot.classList.add('bg-gray-500');
+                dot.classList.add('bg-base-content/50');
                 text.textContent = 'Unknown';
-                text.classList.add('text-gray-400');
+                text.classList.add('text-base-content/60');
         }
     }
 

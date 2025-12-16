@@ -12,17 +12,17 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-in { animation: fadeIn 0.2s ease-out; }
+.animate-in { animation: fadeIn 0.1s ease-out; }
 
-.stagger > * { animation: fadeIn 0.25s ease-out both; }
+.stagger > * { animation: fadeIn 0.15s ease-out both; }
 .stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: 30ms; }
-.stagger > *:nth-child(3) { animation-delay: 60ms; }
-.stagger > *:nth-child(4) { animation-delay: 90ms; }
-.stagger > *:nth-child(5) { animation-delay: 120ms; }
-.stagger > *:nth-child(6) { animation-delay: 150ms; }
-.stagger > *:nth-child(7) { animation-delay: 180ms; }
-.stagger > *:nth-child(8) { animation-delay: 210ms; }
+.stagger > *:nth-child(2) { animation-delay: 15ms; }
+.stagger > *:nth-child(3) { animation-delay: 30ms; }
+.stagger > *:nth-child(4) { animation-delay: 45ms; }
+.stagger > *:nth-child(5) { animation-delay: 60ms; }
+.stagger > *:nth-child(6) { animation-delay: 75ms; }
+.stagger > *:nth-child(7) { animation-delay: 90ms; }
+.stagger > *:nth-child(8) { animation-delay: 105ms; }
 
 /* Checkbox */
 @keyframes checkmark {
@@ -40,32 +40,9 @@ input[type="checkbox"]:checked { animation: checkmark 0.15s ease-out; }
 ::-webkit-scrollbar-thumb:hover { background: #3a3a4a; }
 * { scrollbar-width: thin; scrollbar-color: #2a2a3a #0a0a0f; }
 
-/* Focus */
-:focus-visible { outline: 2px solid #00d4ff; outline-offset: 2px; }
+/* Focus - uses DaisyUI primary color */
+:focus-visible { outline: 2px solid oklch(var(--p)); outline-offset: 2px; }
 :focus:not(:focus-visible) { outline: none; }
-
-/* Tooltip */
-@keyframes tooltip-appear {
-    from { opacity: 0; transform: translateX(4px) translateY(-50%); }
-    to { opacity: 1; transform: translateX(8px) translateY(-50%); }
-}
-
-[data-tooltip]:hover::after { animation: tooltip-appear 0.15s ease-out; }
-
-/* Accordion */
-details.accordion > summary { list-style: none; }
-details.accordion > summary::-webkit-details-marker { display: none; }
-
-details.accordion > .accordion-content {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows var(--transition-slow);
-}
-details.accordion[open] > .accordion-content { grid-template-rows: 1fr; }
-details.accordion > .accordion-content > div { overflow: hidden; }
-
-details.accordion > summary .accordion-chevron { transition: transform var(--transition-normal); }
-details.accordion[open] > summary .accordion-chevron { transform: rotate(180deg); }
 
 /* Sidebar */
 body.sidebar-collapsed .sidebar-expanded-only { display: none !important; }

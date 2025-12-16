@@ -214,6 +214,10 @@ itemsInfo.initItems();
 var map = new MapH(-1);
 const mapsDrawing = new MapDrawing();
 
+// 🛡️ Debounce map changes to prevent flickering from duplicate/retransmitted packets
+let lastMapChangeTime = 0;
+const MAP_CHANGE_DEBOUNCE_MS = 500; // Ignore map changes within 500ms of the previous one
+
 // 🔄 Restore map from sessionStorage if available
 (function restoreMapFromSession() {
     try {
@@ -310,7 +314,7 @@ function renderPlayerCard(player) {
     // Guild & Alliance badges
     const guildBadge = player.guildName
         ? `<span class="text-[11px] font-mono font-medium text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/20">[${player.guildName}]</span>`
-        : '<span class="text-[10px] text-white/30 italic">No Guild</span>';
+        : '<span class="text-[10px] text-base-content/30 italic">No Guild</span>';
     const allianceBadge = player.allianceName
         ? `<span class="text-[11px] font-mono font-medium text-purple-400 bg-purple-400/10 px-1.5 py-0.5 rounded border border-purple-400/20">&lt;${player.allianceName}&gt;</span>`
         : '';
@@ -327,22 +331,22 @@ function renderPlayerCard(player) {
 
     // Mounted badge
     const mountedBadge = isMounted
-        ? `<span class="text-[9px] font-mono font-semibold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/25 uppercase tracking-wide">Mounted</span>`
+        ? `<span class="text-[9px] font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/25 uppercase tracking-wide">Mounted</span>`
         : '';
 
     // Player type badge based on faction
     let playerTypeBadge = '';
-    let playerTypeColor = 'danger';
+    let playerTypeColor = 'error';
     if (player.isPassive?.()) {
         playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded border border-success/25 uppercase tracking-wide">Passive</span>`;
         playerTypeColor = 'success';
     } else if (player.isFactionPlayer?.()) {
         // Show city name instead of generic "Faction"
         const cityLabel = factionCityName ? `⚔ ${factionCityName}` : 'Faction';
-        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded border border-blue-400/25 uppercase tracking-wide">${cityLabel}</span>`;
-        playerTypeColor = 'warning';
+        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-info bg-info/10 px-1.5 py-0.5 rounded border border-info/25 uppercase tracking-wide">${cityLabel}</span>`;
+        playerTypeColor = 'info';
     } else {
-        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-danger bg-danger/10 px-1.5 py-0.5 rounded border border-danger/25 uppercase tracking-wide">Hostile</span>`;
+        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-error bg-error/10 px-1.5 py-0.5 rounded border border-error/25 uppercase tracking-wide">Hostile</span>`;
     }
 
     // Equipment section - controlled by settingItems
@@ -364,11 +368,11 @@ function renderPlayerCard(player) {
                 const iconPath = `/images/Items/${baseName}.webp`;
 
                 // Server returns fallback for missing images, browser handles HTTP cache (24h)
-                return `<div class="inline-flex items-center gap-1.5 bg-void/60 px-2 py-1 rounded border border-white/5 hover:border-white/10 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}"><img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-surface/50 rounded" loading="lazy"><span class="text-[10px] font-mono font-semibold text-white/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
+                return `<div class="inline-flex items-center gap-1.5 bg-base-100/60 px-2 py-1 rounded hover:bg-base-100/80 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}"><img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-base-200/50 rounded" loading="lazy"><span class="text-[10px] font-mono font-semibold text-base-content/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
             }).filter(Boolean).join('');
 
             if (items) {
-                equipHtml = `<div class="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-white/5">${items}</div>`;
+                equipHtml = `<div class="flex flex-wrap gap-1.5 mt-2.5 pt-2 border-t border-base-content/[0.03]">${items}</div>`;
             }
         }
     }
@@ -384,7 +388,7 @@ function renderPlayerCard(player) {
 
                 // Server returns fallback for missing images, browser handles HTTP cache (24h)
                 const iconPath = `/images/Spells/${spell.uiSprite || 'SPELL_GENERIC'}.webp`;
-                return `<div class="flex items-center justify-center bg-accent/10 p-1.5 rounded border border-accent/15 hover:bg-accent/15 hover:border-accent/25 transition-all" title="${spell.uniqueName}"><img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-surface/50 rounded" loading="lazy"></div>`;
+                return `<div class="flex items-center justify-center bg-primary/10 p-1.5 rounded hover:bg-primary/15 transition-all" title="${spell.uniqueName}"><img src="${iconPath}" alt="${spell.uniqueName}" class="w-5 h-5 object-contain bg-base-200/50 rounded" loading="lazy"></div>`;
             }).filter(Boolean).join('');
 
             if (spells) {
@@ -399,18 +403,18 @@ function renderPlayerCard(player) {
         const pct = Math.round((player.currentHealth / player.initialHealth) * 100);
         const colorClass = pct > 60 ? 'bg-gradient-to-r from-success to-green-500'
                          : pct > 30 ? 'bg-gradient-to-r from-warning to-amber-500'
-                         : 'bg-gradient-to-r from-danger to-red-500 animate-pulse';
-        healthHtml = `<div class="flex items-center gap-2 mt-3"><div class="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden"><div data-health-bar class="h-full rounded-full transition-all duration-300 ${colorClass}" style="width: ${pct}%;"></div></div><span class="text-[10px] font-mono text-white/50 min-w-[2.5rem] text-right">${pct}%</span></div>`;
+                         : 'bg-gradient-to-r from-error to-red-500 animate-pulse';
+        healthHtml = `<div class="flex items-center gap-2 mt-3"><div class="flex-1 h-1.5 bg-base-content/5 rounded-full overflow-hidden"><div data-health-bar class="h-full rounded-full transition-all duration-300 ${colorClass}" style="width: ${pct}%;"></div></div><span class="text-[10px] font-mono text-base-content/50 min-w-[2.5rem] text-right">${pct}%</span></div>`;
     }
 
     // ID display
-    const idStr = `<div class="text-[10px] font-mono text-white/25 mt-3 pt-2 border-t border-white/5">ID: ${player.id}</div>`;
+    const idStr = `<div class="text-[10px] font-mono text-base-content/25 mt-3 pt-2 border-t border-base-content/[0.03]">ID: ${player.id}</div>`;
 
     // Build the card with proper structure - use player type color for accent bar
     const accentBarClass = `bg-${playerTypeColor}`;
     const hoverBorderClass = `hover:border-${playerTypeColor}/25`;
 
-    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-elevated to-surface border border-white/5 rounded-lg transition-all duration-200 ${hoverBorderClass} hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-white truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-white/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
 }
 
 /**
@@ -471,14 +475,14 @@ function formatPlayerCount(counts) {
     if (total === 0) return null;
 
     const parts = [];
-    if (hostile > 0) parts.push(`<span class="text-danger">🔴${hostile}</span>`);
-    if (faction > 0) parts.push(`<span class="text-blue-400">🔵${faction}</span>`);
+    if (hostile > 0) parts.push(`<span class="text-error">🔴${hostile}</span>`);
+    if (faction > 0) parts.push(`<span class="text-info">🔵${faction}</span>`);
     if (passive > 0) parts.push(`<span class="text-success">🟢${passive}</span>`);
 
     if (parts.length === 1) {
-        return `<span class="font-semibold text-white">${total}</span> ${parts[0]}`;
+        return `<span class="font-semibold text-base-content">${total}</span> ${parts[0]}`;
     }
-    return `<span class="font-semibold text-white">${total}</span> <span class="text-white/50">(</span>${parts.join(' ')}<span class="text-white/50">)</span>`;
+    return `<span class="font-semibold text-base-content">${total}</span> <span class="text-base-content/50">(</span>${parts.join(' ')}<span class="text-base-content/50">)</span>`;
 }
 
 // Cache DOM references to avoid repeated lookups
@@ -1010,8 +1014,43 @@ function onResponse(Parameters)
     // Player change cluster
     if (Parameters[253] == 35)
     {
-        map.id = Parameters[0];
+        const newMapId = Parameters[0];
+        const now = Date.now();
+        const timeSinceLastChange = now - lastMapChangeTime;
+
+        // 🛡️ Debounce: Ignore map changes that arrive too quickly after a previous one
+        // This prevents flickering from duplicate/retransmitted packets
+        if (timeSinceLastChange < MAP_CHANGE_DEBOUNCE_MS && map.id !== -1) {
+            window.logger?.debug(CATEGORIES.MAP, 'MapChangeDebounced', {
+                currentMapId: map.id,
+                newMapId: newMapId,
+                timeSinceLastChange: timeSinceLastChange,
+                debounceMs: MAP_CHANGE_DEBOUNCE_MS,
+                note: '⏳ Map change ignored (debounce)'
+            });
+            return;
+        }
+
+        // 🛡️ Skip if same map ID (no actual change)
+        if (newMapId === map.id) {
+            window.logger?.debug(CATEGORIES.MAP, 'MapChangeSameId', {
+                mapId: newMapId,
+                note: '↔️ Same map ID, skipping update'
+            });
+            return;
+        }
+
+        // ✅ Accept the map change
+        const previousMapId = map.id;
+        map.id = newMapId;
+        lastMapChangeTime = now;
         window.currentMapId = map.id; // Expose for zone-aware features
+
+        window.logger?.info(CATEGORIES.MAP, 'MapChanged', {
+            previousMapId: previousMapId,
+            newMapId: map.id,
+            timeSinceLastChange: timeSinceLastChange
+        });
 
         // Sync with RadarRenderer
         if (radarRenderer) {

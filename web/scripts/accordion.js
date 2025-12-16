@@ -74,6 +74,4 @@ window.createAccordionManager = function(pageKey, defaults = {}) {
     return manager;
 };
 
-document.addEventListener('htmx:afterSettle', () => {
-    if (window.lucide) lucide.createIcons();
-});
+// Icon creation handled in base.gohtml with proper scoping
