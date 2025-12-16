@@ -480,9 +480,8 @@ export class RadarRenderer {
         // Check if setting is enabled
         if (!settingsSync.getBool('settingFlashDangerousPlayer')) return;
 
-        // Check for hostile players (flagId === 255)
         const hostilePlayers = this.handlers.playersHandler?.getFilteredPlayers?.()?.filter(
-            p => p.flagId === 255
+            p => p.isHostile?.()
         ) || [];
 
         if (hostilePlayers.length === 0) return;

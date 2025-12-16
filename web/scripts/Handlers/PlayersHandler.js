@@ -1,8 +1,9 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {isCityZone} from "../constants/FactionConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
 class Player {
-    constructor(posX, posY, id, nickname, guildName1, flagId, allianceName, factionName, equipments, spells) {
+    constructor(posX, posY, id, nickname, guildName1, faction, allianceName, equipments, spells) {
         this.posX = posX;
         this.posY = posY;
         this.oldPosX = posX;
@@ -10,19 +11,18 @@ class Player {
         this.id = id;
         this.nickname = nickname;
         this.guildName = guildName1;
-        this.allianceName = allianceName || null; // 👥 Parameters[51]
-        this.factionName = factionName || null; // 👥 Parameters[53]
+        this.allianceName = allianceName || null;
+        this.faction = faction ?? 0; // 0=passive, 1-6=faction city, 255=hostile
         this.hX = 0;
         this.hY = 0;
         this.currentHealth = 0;
         this.initialHealth = 0;
-        this.equipments = equipments || null; // 👥 Parameters[40] - Array of item IDs
-        this.spells = spells || null; // 👥 Parameters[43] - Array of spell IDs
-        this.items = null; // Legacy field (Event 90 CharacterEquipmentChanged)
-        this.flagId = flagId;
+        this.equipments = equipments || null;
+        this.spells = spells || null;
+        this.items = null;
         this.mounted = false;
-        this.detectedAt = Date.now(); // 👥 Detection timestamp
-        this.lastUpdateTime = Date.now(); // For stale entity cleanup
+        this.detectedAt = Date.now();
+        this.lastUpdateTime = Date.now();
     }
 
     touch() {
@@ -33,9 +33,19 @@ class Player {
         this.mounted = mounted;
     }
 
-    // 👥 Calculate average item power from equipments
-    // Equipment slots: 0=MainHand, 1=OffHand, 2=Head, 3=Chest, 4=Shoes, 5=Cape, 6=Mount, 7=Bag, 8=Food
-    // Uses ItemsDatabase to lookup actual itempower values from items.xml
+    isHostile() {
+        return this.faction === 255;
+    }
+
+    isPassive() {
+        return this.faction === 0;
+    }
+
+    isFactionPlayer() {
+        return this.faction >= 1 && this.faction <= 6;
+    }
+
+    // Equipment slots: 0-4=combat, 5=Cape, 6=Mount, 7=Bag, 8=Food
     getAverageItemPower() {
         // Safety check: ensure equipments is an array
         if (!this.equipments || !Array.isArray(this.equipments) || this.equipments.length === 0) {
@@ -104,49 +114,35 @@ export class PlayersHandler {
 
         const nickname = Parameters[1];
         const guildName = Parameters[8];
-        const flagId = Parameters[11] || 0;
-        const allianceName = Parameters[51] || null; // 👥 Alliance name (DEATHEYE offset)
-        const factionName = Parameters[53] || null; // 👥 Faction (Caerleon, etc.)
-        const equipments = Parameters[40] || null; // 👥 Equipment item IDs array
-        const spells = Parameters[43] || null; // 👥 Spell IDs array
+        const faction = Parameters[53] ?? 0; // 0=passive, 1-6=faction, 255=hostile
+        const allianceName = Parameters[51] || null;
+        const equipments = Parameters[40] || null;
+        const spells = Parameters[43] || null;
 
-        // MVP: Track players WITHOUT positions (positions are encrypted)
-        // Just add to list for counting and info display
         const existingPlayer = this.playersList.find(player => player.id === id);
-        // 👥 Limit playersList to max players
         const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
         const maxPlayers = Math.min(100, parsedMaxPlayers);
 
         if (!existingPlayer && this.playersList.length < maxPlayers) {
-            const player = new Player(0, 0, id, nickname, guildName, flagId, allianceName, factionName, equipments, spells);
+            const player = new Player(0, 0, id, nickname, guildName, faction, allianceName, equipments, spells);
             this.playersList.push(player);
-
         }
 
-        // 🐛 DEBUG: Log player equipment on detection
-        window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected_WithEquipment', {
-            id: id,
-            nickname: nickname,
+        window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected', {
+            id,
+            nickname,
             guild: guildName,
             alliance: allianceName,
-            faction: factionName,
-            equipments: equipments,
-            spells: spells,
+            faction,
             playersCount: this.playersList.length
         });
 
-        window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected', {
-            id: id,
-            nickname: nickname,
-            guild: guildName,
-            playersCount: this.playersList.length
-        });
+        const isHostile = faction === 255;
+        const mapId = window.currentMapId;
+        const inCityZone = isCityZone(mapId);
 
-        // Alerts only for hostile players (flagId = 255)
-        const isHostile = flagId === 255;
-
-        // Screen flash alert (Tailwind inline) - hostile only
-        if (isHostile && settingsSync.getBool('settingFlash')) {
+        // Screen flash alert - hostile only, not in city, and mapId must be known
+        if (isHostile && mapId && !inCityZone && settingsSync.getBool('settingFlash')) {
             const flash = document.createElement('div');
             flash.className = 'fixed inset-0 bg-danger/60 pointer-events-none z-[9999] transition-opacity duration-300';
             document.body.appendChild(flash);
@@ -157,8 +153,8 @@ export class PlayersHandler {
             setTimeout(() => flash.remove(), 300);
         }
 
-        // Sound alert - hostile only
-        if (isHostile && settingsSync.getBool('settingSound')) {
+        // Sound alert - hostile only, not in city, and mapId must be known
+        if (isHostile && mapId && !inCityZone && settingsSync.getBool('settingSound')) {
             this.audio.play().catch(err => {
                 window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
                     error: err.message,
@@ -247,6 +243,43 @@ export class PlayersHandler {
         this.alreadyIgnoredPlayers = [];
     }
 
+    updatePlayerFaction(id, newFaction) {
+        const player = this.playersList.find(p => p.id === id);
+        if (!player) return;
+
+        const wasHostile = player.isHostile();
+        player.faction = newFaction;
+        player.touch();
+
+        // Trigger alert if player BECAME hostile
+        if (!wasHostile && player.isHostile()) {
+            this.triggerHostileAlert(player);
+        }
+    }
+
+    triggerHostileAlert(player) {
+        // No alerts in city zones
+        if (isCityZone(window.currentMapId)) return;
+
+        if (settingsSync.getBool('settingFlash')) {
+            const flash = document.createElement('div');
+            flash.className = 'fixed inset-0 bg-danger/60 pointer-events-none z-[9999] transition-opacity duration-300';
+            document.body.appendChild(flash);
+            requestAnimationFrame(() => flash.style.opacity = '0');
+            setTimeout(() => flash.remove(), 300);
+        }
+
+        if (settingsSync.getBool('settingSound')) {
+            this.audio.play().catch(() => {});
+        }
+
+        window.logger?.info(CATEGORIES.PLAYER, 'PlayerBecameHostile', {
+            id: player.id,
+            nickname: player.nickname,
+            faction: player.faction
+        });
+    }
+
     /**
      * Remove players not updated for a given time period
      * @param {number} maxAgeMs - Maximum age in milliseconds (default: 5 minutes for players)
@@ -302,14 +335,22 @@ export class PlayersHandler {
         const showDangerous = settingsSync.getBool('settingDangerousPlayers') ?? true;
 
         return this.playersList.filter(player => {
-            const flagId = player.flagId || 0;
-
-            // Passive: flagId = 0
-            if (flagId === 0) return showPassive;
-            // Faction: flagId 1-6
-            if (flagId >= 1 && flagId <= 6) return showFaction;
-            // Hostile/Dangerous: flagId = 255 or unknown
+            if (player.isPassive()) return showPassive;
+            if (player.isFactionPlayer()) return showFaction;
             return showDangerous;
         });
+    }
+
+    /**
+     * Get players grouped by type for sectioned display
+     * @returns {{hostile: Player[], faction: Player[], passive: Player[]}}
+     */
+    getPlayersByType() {
+        const filtered = this.getFilteredPlayers();
+        return {
+            hostile: filtered.filter(p => p.isHostile()),
+            faction: filtered.filter(p => p.isFactionPlayer()),
+            passive: filtered.filter(p => p.isPassive())
+        };
     }
 }
