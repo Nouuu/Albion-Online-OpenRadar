@@ -232,6 +232,7 @@ const mapsDrawing = new MapDrawing();
                 map.hX = data.hX || 0;
                 map.hY = data.hY || 0;
                 map.isBZ = data.isBZ || false;
+                window.currentMapId = map.id; // Expose for zone-aware features
 
                 window.logger?.info(CATEGORIES.MAP, 'MapRestoredFromSession', {
                     mapId: map.id,
@@ -314,10 +315,9 @@ function renderPlayerCard(player) {
         ? `<span class="text-[11px] font-mono font-medium text-purple-400 bg-purple-400/10 px-1.5 py-0.5 rounded border border-purple-400/20">&lt;${player.allianceName}&gt;</span>`
         : '';
 
-    // Faction
-    const factionBadge = player.factionName
-        ? `<span class="text-[10px] font-mono font-medium text-blue-400 uppercase tracking-wide">⚔ ${player.factionName}</span>`
-        : '';
+    // Faction city name lookup
+    const factionCityNames = ['', 'Martlock', 'Lymhurst', 'Bridgewatch', 'Fort Sterling', 'Thetford', 'Caerleon'];
+    const factionCityName = player.isFactionPlayer?.() ? factionCityNames[player.faction] : null;
 
     // Average IP badge
     const avgItemPower = player.getAverageItemPower?.();
@@ -330,15 +330,16 @@ function renderPlayerCard(player) {
         ? `<span class="text-[9px] font-mono font-semibold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/25 uppercase tracking-wide">Mounted</span>`
         : '';
 
-    // Player type badge based on flagId
-    const flagId = player.flagId || 0;
+    // Player type badge based on faction
     let playerTypeBadge = '';
-    let playerTypeColor = 'danger'; // Default: Hostile (red)
-    if (flagId === 0) {
+    let playerTypeColor = 'danger';
+    if (player.isPassive?.()) {
         playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded border border-success/25 uppercase tracking-wide">Passive</span>`;
         playerTypeColor = 'success';
-    } else if (flagId >= 1 && flagId <= 6) {
-        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-warning bg-warning/10 px-1.5 py-0.5 rounded border border-warning/25 uppercase tracking-wide">Faction</span>`;
+    } else if (player.isFactionPlayer?.()) {
+        // Show city name instead of generic "Faction"
+        const cityLabel = factionCityName ? `⚔ ${factionCityName}` : 'Faction';
+        playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-blue-400 bg-blue-400/10 px-1.5 py-0.5 rounded border border-blue-400/25 uppercase tracking-wide">${cityLabel}</span>`;
         playerTypeColor = 'warning';
     } else {
         playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-danger bg-danger/10 px-1.5 py-0.5 rounded border border-danger/25 uppercase tracking-wide">Hostile</span>`;
@@ -409,23 +410,17 @@ function renderPlayerCard(player) {
     const accentBarClass = `bg-${playerTypeColor}`;
     const hoverBorderClass = `hover:border-${playerTypeColor}/25`;
 
-    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-elevated to-surface border border-white/5 rounded-lg transition-all duration-200 ${hoverBorderClass} hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-white truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-white/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${factionBadge}${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-elevated to-surface border border-white/5 rounded-lg transition-all duration-200 ${hoverBorderClass} hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-white truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-white/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
 }
 
 /**
- * Update players list with incremental updates for small lists
+ * Update a section's player list with incremental updates
  */
-function updatePlayersIncremental(container, players) {
-    // Clear empty state if present
-    const emptyState = container.querySelector('[data-empty-state]');
-    if (emptyState) {
-        emptyState.remove();
-    }
-
+function updateSectionPlayers(listContainer, players) {
     const currentIds = new Set(players.map(p => p.id));
 
-    // Remove players no longer in list
-    container.querySelectorAll('[data-player-id]').forEach(card => {
+    // Remove players no longer in this section
+    listContainer.querySelectorAll('[data-player-id]').forEach(card => {
         const id = parseInt(card.dataset.playerId);
         if (!currentIds.has(id)) {
             card.remove();
@@ -435,7 +430,7 @@ function updatePlayersIncremental(container, players) {
 
     // Update or add players
     players.forEach(player => {
-        const existingCard = container.querySelector(`[data-player-id="${player.id}"]`);
+        const existingCard = listContainer.querySelector(`[data-player-id="${player.id}"]`);
         const lastRender = lastRenderedPlayerIds.get(player.id);
 
         if (existingCard && lastRender) {
@@ -454,61 +449,148 @@ function updatePlayersIncremental(container, players) {
                 }
             }
         } else {
-            // Create new card using template to avoid detached nodes
+            // Create new card
             const template = document.createElement('template');
             template.innerHTML = renderPlayerCard(player).trim();
-            container.appendChild(template.content.firstChild);
+            listContainer.appendChild(template.content.firstChild);
         }
 
         lastRenderedPlayerIds.set(player.id, { health: player.currentHealth });
     });
 }
 
+/**
+ * Format player count with type breakdown
+ * @param {{hostile: number, faction: number, passive: number}} counts
+ * @returns {string|null} HTML string or null if no players
+ */
+function formatPlayerCount(counts) {
+    const { hostile, faction, passive } = counts;
+    const total = hostile + faction + passive;
+
+    if (total === 0) return null;
+
+    const parts = [];
+    if (hostile > 0) parts.push(`<span class="text-danger">🔴${hostile}</span>`);
+    if (faction > 0) parts.push(`<span class="text-blue-400">🔵${faction}</span>`);
+    if (passive > 0) parts.push(`<span class="text-success">🟢${passive}</span>`);
+
+    if (parts.length === 1) {
+        return `<span class="font-semibold text-white">${total}</span> ${parts[0]}`;
+    }
+    return `<span class="font-semibold text-white">${total}</span> <span class="text-white/50">(</span>${parts.join(' ')}<span class="text-white/50">)</span>`;
+}
+
 // Cache DOM references to avoid repeated lookups
-let _playersListContainer = null;
-let _playersCountBadge = null;
-let _playersCountNum = null;
-let _lastPlayerCount = -1;
+let _playerElements = null;
+let _lastPlayerCounts = { hostile: -1, faction: -1, passive: -1 };
 
 function getPlayerListElements() {
-    if (!_playersListContainer) {
-        _playersListContainer = document.getElementById('playersList');
-        _playersCountBadge = document.getElementById('playersCount');
-        _playersCountNum = document.getElementById('playersCountNum');
+    if (!_playerElements) {
+        _playerElements = {
+            container: document.getElementById('playersList'),
+            badge: document.getElementById('playersCount'),
+            // Sections
+            hostileSection: document.getElementById('playersHostile'),
+            factionSection: document.getElementById('playersFaction'),
+            passiveSection: document.getElementById('playersPassive'),
+            emptyState: document.getElementById('playersEmpty'),
+            // Lists within sections
+            hostileList: document.getElementById('hostileList'),
+            factionList: document.getElementById('factionList'),
+            passiveList: document.getElementById('passiveList'),
+            // Count labels
+            hostileCount: document.getElementById('hostileCount'),
+            factionCount: document.getElementById('factionCount'),
+            passiveCount: document.getElementById('passiveCount')
+        };
     }
-    return { container: _playersListContainer, badge: _playersCountBadge, num: _playersCountNum };
+    return _playerElements;
 }
 
 function updatePlayersList() {
-    const { container, badge, num } = getPlayerListElements();
-    if (!container) return;
+    const els = getPlayerListElements();
+    if (!els.container) return;
 
-    const players = playersHandler.getFilteredPlayers();
-    const playerCount = players.length;
+    const playersByType = playersHandler.getPlayersByType();
+    const counts = {
+        hostile: playersByType.hostile.length,
+        faction: playersByType.faction.length,
+        passive: playersByType.passive.length
+    };
+    const total = counts.hostile + counts.faction + counts.passive;
 
-    // Only update badge if count changed
-    if (badge && num && playerCount !== _lastPlayerCount) {
-        _lastPlayerCount = playerCount;
-        if (playerCount > 0) {
-            badge.classList.remove('hidden');
-            badge.classList.add('inline-flex');
-            num.textContent = playerCount;
+    // Update counter badge
+    if (els.badge) {
+        const countsChanged = counts.hostile !== _lastPlayerCounts.hostile ||
+                              counts.faction !== _lastPlayerCounts.faction ||
+                              counts.passive !== _lastPlayerCounts.passive;
+
+        if (countsChanged) {
+            _lastPlayerCounts = { ...counts };
+            const counterHtml = formatPlayerCount(counts);
+            if (counterHtml) {
+                els.badge.innerHTML = counterHtml;
+                els.badge.classList.remove('hidden');
+                els.badge.classList.add('inline-flex');
+            } else {
+                els.badge.classList.add('hidden');
+                els.badge.classList.remove('inline-flex');
+            }
+        }
+    }
+
+    // Show/hide empty state
+    if (els.emptyState) {
+        els.emptyState.classList.toggle('hidden', total > 0);
+    }
+
+    // Set data-sections for CSS grid rules (1-2 sections: max 2 cols, 3 sections: 1 col)
+    const visibleSections = (counts.hostile > 0 ? 1 : 0) +
+                           (counts.faction > 0 ? 1 : 0) +
+                           (counts.passive > 0 ? 1 : 0);
+    els.container.dataset.sections = visibleSections;
+
+    // Update hostile section
+    if (els.hostileSection && els.hostileList) {
+        if (counts.hostile > 0) {
+            els.hostileSection.classList.remove('hidden');
+            if (els.hostileCount) els.hostileCount.textContent = `(${counts.hostile})`;
+            requestAnimationFrame(() => updateSectionPlayers(els.hostileList, playersByType.hostile));
         } else {
-            badge.classList.add('hidden');
-            badge.classList.remove('inline-flex');
+            els.hostileSection.classList.add('hidden');
+            els.hostileList.innerHTML = '';
         }
     }
 
-    if (playerCount === 0) {
-        if (lastRenderedPlayerIds.size > 0) {
-            lastRenderedPlayerIds.clear();
-            container.innerHTML = `<div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center"><svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg><p class="text-sm text-white/40">No players detected yet</p><p class="text-xs text-white/25 font-mono mt-1">Scanning...</p></div>`;
+    // Update faction section
+    if (els.factionSection && els.factionList) {
+        if (counts.faction > 0) {
+            els.factionSection.classList.remove('hidden');
+            if (els.factionCount) els.factionCount.textContent = `(${counts.faction})`;
+            requestAnimationFrame(() => updateSectionPlayers(els.factionList, playersByType.faction));
+        } else {
+            els.factionSection.classList.add('hidden');
+            els.factionList.innerHTML = '';
         }
-        return;
     }
 
-    // Use requestAnimationFrame to batch DOM updates
-    requestAnimationFrame(() => updatePlayersIncremental(container, players));
+    // Update passive section
+    if (els.passiveSection && els.passiveList) {
+        if (counts.passive > 0) {
+            els.passiveSection.classList.remove('hidden');
+            if (els.passiveCount) els.passiveCount.textContent = `(${counts.passive})`;
+            requestAnimationFrame(() => updateSectionPlayers(els.passiveList, playersByType.passive));
+        } else {
+            els.passiveSection.classList.add('hidden');
+            els.passiveList.innerHTML = '';
+        }
+    }
+
+    // Clear render cache for players no longer in any section
+    if (total === 0 && lastRenderedPlayerIds.size > 0) {
+        lastRenderedPlayerIds.clear();
+    }
 }
 
 let lpX = 0.0;
@@ -851,9 +933,12 @@ function onEvent(Parameters)
             fishingHandler.NewFishEvent(Parameters);
             break;
 
-        // TODO
         case EventCodes.FishingFinished:
             fishingHandler.FishingEnd(Parameters);
+            break;
+
+        case EventCodes.ChangeFlaggingFinished:
+            playersHandler.updatePlayerFaction(Parameters[0], Parameters[1]);
             break;
 
         case 590:
@@ -926,6 +1011,7 @@ function onResponse(Parameters)
     if (Parameters[253] == 35)
     {
         map.id = Parameters[0];
+        window.currentMapId = map.id; // Expose for zone-aware features
 
         // Sync with RadarRenderer
         if (radarRenderer) {
@@ -1132,10 +1218,8 @@ function cleanupIntervals() {
     if (cleanupIntervalId) clearInterval(cleanupIntervalId);
     playerListIntervalId = null;
     cleanupIntervalId = null;
-    _playersListContainer = null;
-    _playersCountBadge = null;
-    _playersCountNum = null;
-    _lastPlayerCount = -1;
+    _playerElements = null;
+    _lastPlayerCounts = { hostile: -1, faction: -1, passive: -1 };
     if (radarRenderer) radarRenderer.stop();
     cleanupSocket();
     destroyEventQueue();

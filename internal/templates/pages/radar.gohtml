@@ -1,4 +1,16 @@
 {{define "pages/radar"}}
+<style>
+/* Player cards grid: max columns based on visible sections */
+/* 1 section: max 2 cards per row, but switch to 1 col earlier (min 400px per card) */
+[data-sections="1"] .player-cards {
+    grid-template-columns: repeat(auto-fill, minmax(max(400px, calc((100% - 0.75rem) / 2)), 1fr));
+}
+/* 2-3 sections: 1 card per row */
+[data-sections="2"] .player-cards,
+[data-sections="3"] .player-cards {
+    grid-template-columns: 1fr;
+}
+</style>
 <div class="space-y-4">
     <!-- Canvas Section -->
     <div class="bg-elevated border border-white/5 rounded-xl p-4">
@@ -8,45 +20,48 @@
             <canvas class="ttcan absolute top-0 left-0 m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
             <canvas class="ttcan absolute top-0 left-0 m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
         </div>
-        <!-- Display toggles - compact inline -->
+        <!-- Controls - flex wrap for responsive -->
         <div class="flex flex-wrap items-center gap-4 mt-3 mx-2.5 text-sm">
-            <span class="text-xs text-gray-500">Display:</span>
-            <label class="flex items-center gap-1.5 cursor-pointer group">
-                <input type="checkbox" id="settingResourceCount" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                <span class="text-gray-400 group-hover:text-white transition-colors">Count</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group">
-                <input type="checkbox" id="settingResourceDistance" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                <span class="text-gray-400 group-hover:text-white transition-colors">Distance</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer group">
-                <input type="checkbox" id="settingResourceClusters" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
-                <span class="text-gray-400 group-hover:text-white transition-colors">Clusters</span>
-            </label>
-        </div>
-        <!-- Zoom control -->
-        <div class="flex items-center gap-3 mt-3 mx-2.5">
-            <span class="text-xs text-gray-500">Zoom:</span>
-            <button id="zoomOut" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
-            <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="w-32 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
-            <button id="zoomIn" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
-            <span id="zoomValue" class="text-xs text-gray-400 font-mono w-10">100%</span>
-            <button id="zoomReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
-        </div>
-        <!-- Canvas size control -->
-        <div class="flex items-center gap-3 mt-3 mx-2.5">
-            <span class="text-xs text-gray-500">Size:</span>
-            <button id="sizeDown" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
-            <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="w-32 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
-            <button id="sizeUp" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
-            <span id="sizeValue" class="text-xs text-gray-400 font-mono w-12">500px</span>
-            <button id="sizeReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+            <!-- Display toggles -->
+            <div class="flex items-center gap-3">
+                <span class="text-xs text-gray-500">Display:</span>
+                <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceCount" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                    <span class="text-gray-400 group-hover:text-white transition-colors">Count</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceDistance" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                    <span class="text-gray-400 group-hover:text-white transition-colors">Distance</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="settingResourceClusters" class="w-4 h-4 rounded border border-white/20 bg-surface checked:bg-accent checked:border-accent cursor-pointer">
+                    <span class="text-gray-400 group-hover:text-white transition-colors">Clusters</span>
+                </label>
+            </div>
+            <!-- Zoom control -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Zoom:</span>
+                <button id="zoomOut" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
+                <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="w-24 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
+                <button id="zoomIn" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
+                <span id="zoomValue" class="text-xs text-gray-400 font-mono w-10">100%</span>
+                <button id="zoomReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+            </div>
+            <!-- Size control -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Size:</span>
+                <button id="sizeDown" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">−</button>
+                <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="w-24 h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-accent">
+                <button id="sizeUp" class="w-6 h-6 flex items-center justify-center rounded bg-surface hover:bg-white/10 text-gray-400 hover:text-white transition-colors text-sm font-bold">+</button>
+                <span id="sizeValue" class="text-xs text-gray-400 font-mono w-12">500px</span>
+                <button id="sizeReset" class="text-xs text-gray-500 hover:text-accent transition-colors">Reset</button>
+            </div>
         </div>
     </div>
 
     <!-- Detected Players Section -->
     <div id="playersSection" class="bg-elevated border border-white/5 rounded-xl p-6">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h3 class="text-xl font-semibold text-white flex items-center gap-3">
                 Detected Players
                 <label class="flex items-center gap-1.5 cursor-pointer" title="Show players on radar and in list below">
@@ -54,14 +69,43 @@
                     <span class="text-xs text-gray-400 font-normal">Show</span>
                 </label>
             </h3>
-            <span id="playersCount" class="hidden items-center gap-1.5 text-xs font-mono font-semibold text-danger bg-danger/10 px-2.5 py-1 rounded-full border border-danger/20">
-                <span class="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></span>
-                <span id="playersCountNum">0</span>
+            <span id="playersCount" class="hidden items-center gap-2 text-xs font-mono px-2.5 py-1 rounded-full bg-surface/50 border border-white/10">
+                <!-- Counter populated by JS: formatPlayerCount() -->
             </span>
         </div>
         <div id="playersListContainer" class="mt-4">
-            <div id="playersList" class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin">
-                <div data-empty-state class="col-span-full flex flex-col items-center justify-center py-8 text-center">
+            <!-- Flex container: sections share space equally, wrap on small screens -->
+            <!-- data-sections set by JS: controls card grid columns -->
+            <div id="playersList" class="flex flex-wrap gap-4" data-sections="0">
+                <!-- Hostile Section -->
+                <div id="playersHostile" class="hidden flex-1 min-w-[280px]">
+                    <div class="flex items-center gap-2 pb-2 mb-3 border-b border-danger/20">
+                        <span class="text-sm font-medium text-danger">⚠️ Hostiles</span>
+                        <span id="hostileCount" class="text-xs text-white/50">(0)</span>
+                    </div>
+                    <div id="hostileList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
+                </div>
+
+                <!-- Faction Section -->
+                <div id="playersFaction" class="hidden flex-1 min-w-[280px]">
+                    <div class="flex items-center gap-2 pb-2 mb-3 border-b border-blue-400/20">
+                        <span class="text-sm font-medium text-blue-400">⚔️ Faction</span>
+                        <span id="factionCount" class="text-xs text-white/50">(0)</span>
+                    </div>
+                    <div id="factionList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
+                </div>
+
+                <!-- Passive Section -->
+                <div id="playersPassive" class="hidden flex-1 min-w-[280px]">
+                    <div class="flex items-center gap-2 pb-2 mb-3 border-b border-success/20">
+                        <span class="text-sm font-medium text-success">✓ Passive</span>
+                        <span id="passiveCount" class="text-xs text-white/50">(0)</span>
+                    </div>
+                    <div id="passiveList" class="player-cards grid gap-3 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin"></div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="playersEmpty" class="w-full flex flex-col items-center justify-center py-8 text-center">
                     <svg class="w-10 h-10 text-white/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
