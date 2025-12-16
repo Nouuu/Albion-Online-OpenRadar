@@ -47,17 +47,19 @@ type LogMsg struct {
 }
 
 type StatsMsg struct {
-	Packets         uint64
-	Errors          uint64
-	WsClients       int
-	MemoryMB        float64
-	Goroutines      int
-	WsBatches       uint64
-	WsMessages      uint64
-	WsQueueSize     int
-	BytesReceived   uint64
-	BytesSent       uint64
-	LogLinesWritten int
+	Packets       uint64
+	Errors        uint64
+	WsClients     int
+	MemoryMB      float64
+	Goroutines    int
+	WsBatches     uint64
+	WsMessages    uint64
+	WsQueueSize   int
+	BytesReceived uint64
+	BytesSent     uint64
+	LogEntries    uint64
+	LogBatches    uint64
+	LogBufferSize int
 }
 
 type StatusMsg struct {
@@ -118,8 +120,10 @@ type Dashboard struct {
 	rxPerSec          uint64
 	txPerSec          uint64
 
-	// Log file stats
-	logLinesWritten int
+	// Log stats
+	logEntries    uint64
+	logBatches    uint64
+	logBufferSize int
 
 	// Sparkline history
 	packetsHistory []uint64
@@ -322,7 +326,9 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		d.lastBytesSent = msg.BytesSent
 		d.bytesReceived = msg.BytesReceived
 		d.bytesSent = msg.BytesSent
-		d.logLinesWritten = msg.LogLinesWritten
+		d.logEntries = msg.LogEntries
+		d.logBatches = msg.LogBatches
+		d.logBufferSize = msg.LogBufferSize
 
 	case StatusMsg:
 		d.httpRunning = msg.HTTPRunning
@@ -651,7 +657,7 @@ func (d *Dashboard) renderStatsView() string {
 		stat("TX/sec:", formatBytes(d.txPerSec)+"/s", ColorWarning),
 	}
 
-	// Right column: Sparklines
+	// Right column: Sparklines + Logging
 	rightLines := []string{
 		section("📈", "Packets/s"),
 		" " + renderSparkline(d.packetsHistory, ColorPrimary),
@@ -661,9 +667,10 @@ func (d *Dashboard) renderStatsView() string {
 		" " + renderSparkline(d.memoryHistory, ColorWarning),
 		" " + d.getSparklineStatsFloat(d.memoryHistory, ""),
 		"",
-		section("📦", "WS Batch/s"),
-		" " + renderSparkline(d.wsBatchHistory, ColorSuccess),
-		" " + d.getSparklineStats(d.wsBatchHistory, ""),
+		section("📝", "Logging"),
+		stat("Entries:", formatNumber(d.logEntries), ColorSuccess),
+		stat("Batches:", formatNumber(d.logBatches), ColorPrimary),
+		stat("Buffer:", fmt.Sprintf("%d", d.logBufferSize), ColorWarning),
 	}
 
 	colWidth := (d.width - 4) / 2
