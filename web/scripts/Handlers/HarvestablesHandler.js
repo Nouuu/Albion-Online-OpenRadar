@@ -318,106 +318,62 @@ export class HarvestablesHandler
 
     harvestFinished(Parameters)
     {
+        // Event 61 is just a notification - Event 46 handles size changes
         const id = Parameters[3];
-
-        const harvestable = this.harvestableList.find((h) => h.id === id);
-        window.logger?.info(CATEGORIES.HARVEST, 'Event61_HarvestFinished', {
-            id,
-            found: !!harvestable,
-            currentSize: harvestable?.size,
-            stringType: harvestable?.stringType,
-            note: 'Event 46 handles size updates - Event 61 is just a notification'
-        });
-
-        // NE PAS décrémenter ici!
-        // Event 46 (HarvestableChangeState) gère les mises à jour de size
-        // Event 61 arrive APRÈS Event 46 et n'est qu'une notification
+        window.logger?.debug(CATEGORIES.HARVEST, 'Event61_HarvestFinished', { id });
     }
 
     HarvestUpdateEvent(Parameters) // Event 46 - HarvestableChangeState
     {
-        // Ultra-detailed debug: Log ALL parameters to identify patterns
-        const allParams = {};
-        for (let key in Parameters) {
-            if (Parameters.hasOwnProperty(key)) {
-                allParams[`param[${key}]`] = Parameters[key];
-            }
-        }
-
         const id = Parameters[0];
         const newSize = Parameters[1];
-        const enchant = Parameters[2]; // 🔍 ENCHANTMENT / CHARGE
+        const enchant = Parameters[2];
 
-        window.logger?.info(CATEGORIES.HARVEST, 'Event46_ChangeState_FULL', {
+        window.logger?.info(CATEGORIES.HARVEST, 'Event46_ChangeState', {
             harvestableId: id,
             newSize,
-            enchant,
-            allParameters: allParams,
-            parameterCount: Object.keys(Parameters).length
+            enchant
         });
 
-        if (newSize === undefined)
-        {
-            // 🔥 DERNIER STACK - Appelé AVANT harvestFinished!
+        // newSize undefined = resource depleted, remove it
+        if (newSize === undefined) {
+            window.logger?.info(CATEGORIES.HARVEST, 'Event46_ResourceDepleted', { id });
+            this.removeHarvestable(id);
             return;
         }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
         if (!harvestable) {
-            window.logger?.warn(CATEGORIES.HARVEST, 'Event46_ResourceNotFound', {
-                id,
-                note: 'Harvestable not found in list - maybe filtered by settings'
-            });
             return;
         }
 
-        // 🔍 Update size - Event 46 est la source de vérité du serveur
-        // Accepter TOUTES les mises à jour de size (diminution ET augmentation)
+        harvestable.touch();
+
+        // Event 46 is the source of truth - accept ALL size changes
         if (newSize !== harvestable.size) {
             window.logger?.info(CATEGORIES.HARVEST, 'Event46_SizeUpdate', {
                 id,
                 oldSize: harvestable.size,
                 newSize,
-                delta: newSize - harvestable.size,
-                note: newSize > harvestable.size ? 'REGENERATION' : 'HARVEST'
+                delta: newSize - harvestable.size
             });
             harvestable.size = newSize;
-
-            // Si size <= 0, supprimer la ressource
-            if (harvestable.size <= 0) {
-                window.logger?.info(CATEGORIES.HARVEST, 'Event46_ResourceDepleted', {
-                    id,
-                    note: 'Resource depleted via Event 46'
-                });
-                this.removeHarvestable(id);
-            }
         }
 
-        // 🔍 Update enchantment if provided and different
+        // Update enchantment if provided and different
         if (enchant !== undefined && enchant !== harvestable.charges) {
-            window.logger?.info(CATEGORIES.HARVEST, 'EnchantmentUpdate', {
+            window.logger?.info(CATEGORIES.HARVEST, 'Event46_EnchantmentUpdate', {
                 id,
                 oldEnchant: harvestable.charges,
-                newEnchant: enchant,
-                tier: harvestable.tier,
-                type: harvestable.type,
-                note: 'Enchantment updated from Event 46'
+                newEnchant: enchant
             });
             harvestable.charges = enchant;
 
-            // ⚠️ Re-check if should be displayed with new enchantment
+            // Re-check if should be displayed with new enchantment
             const stringType = this.GetStringType(harvestable.type);
-            const isLiving = false; // Event 46 is for static resources
+            const isLiving = false;
 
             if (!this.shouldDisplayHarvestable(stringType, isLiving, harvestable.tier, enchant)) {
-                window.logger?.warn(CATEGORIES.HARVEST, 'EnchantmentUpdate_Filtered', {
-                    id,
-                    stringType,
-                    tier: harvestable.tier,
-                    enchant,
-                    note: 'Resource now filtered after enchantment update'
-                });
-                // Remove from list if settings don't allow this enchantment
                 this.removeHarvestable(id);
             }
         }
