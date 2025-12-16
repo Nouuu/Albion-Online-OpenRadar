@@ -20,7 +20,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
             let draw = undefined;
 
-            // PRIORITE 1: Utiliser stringType si disponible (corrigé par MobsDatabase pour living resources)
+            // Use stringType if available (corrected by MobsDatabase for living resources)
             if (harvestableOne.stringType) {
                 const st = harvestableOne.stringType.toLowerCase();
                 if (st === 'log' || st === 'wood' || st === 'logs') {
@@ -45,7 +45,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 });
             }
 
-            // FALLBACK: Utiliser type (typeNumber) si pas de stringType
+            // Fallback: use type (typeNumber) if no stringType available
             if (!draw) {
                 const type = harvestableOne.type;
                 if (type >= 0 && type <= 5) {

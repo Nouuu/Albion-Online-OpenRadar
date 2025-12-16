@@ -25,7 +25,7 @@ class Harvestable
 
         this.charges = charges;
         this.size = size;
-        this.stringType = stringType; // Type corrigé (Fiber, Hide, etc.)
+        this.stringType = stringType;
         this.lastUpdateTime = Date.now(); // For stale entity cleanup
 
         window.logger?.info(CATEGORIES.HARVEST, 'HarvestableCreated', {
@@ -164,9 +164,9 @@ export class HarvestablesHandler
         // - mobileTypeId === real TypeID (425, 530, etc.) → LIVING creature (animal that drops resource)
         const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
-        // 🎨 Get resource type string
-        // Pour living resources: utiliser MobsDatabase (typeNumber est FAUX pour les living!)
-        // Pour static resources: utiliser HarvestablesDatabase basé sur typeNumber
+        // Get resource type string
+        // Living resources: use MobsDatabase (typeNumber is WRONG for living!)
+        // Static resources: use HarvestablesDatabase based on typeNumber
         let stringType;
         if (isLiving && window.mobsDatabase?.isLoaded) {
             const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
@@ -245,9 +245,9 @@ export class HarvestablesHandler
         // - mobileTypeId === real TypeID (425, 530, etc.) → LIVING creature (animal that drops resource)
         const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
 
-        // 🎨 Get resource type string
-        // Pour living resources: utiliser MobsDatabase (typeNumber est FAUX pour les living!)
-        // Pour static resources: utiliser HarvestablesDatabase basé sur typeNumber
+        // Get resource type string
+        // Living resources: use MobsDatabase (typeNumber is WRONG for living!)
+        // Static resources: use HarvestablesDatabase based on typeNumber
         let stringType;
         if (isLiving && window.mobsDatabase?.isLoaded) {
             const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
