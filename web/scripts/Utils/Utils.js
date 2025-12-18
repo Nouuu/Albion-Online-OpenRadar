@@ -510,7 +510,16 @@ function getPlayerListElements() {
     if (!_playerElements) {
         _playerElements = {
             container: document.getElementById('playersList'),
-            badge: document.getElementById('playersCount'),
+            // Stats component container
+            playerStats: document.getElementById('playerStats'),
+            // Stats component individual containers (for filtering visibility)
+            statHostileContainer: document.getElementById('statHostileContainer'),
+            statFactionContainer: document.getElementById('statFactionContainer'),
+            statPassiveContainer: document.getElementById('statPassiveContainer'),
+            // Stats component values
+            statHostile: document.getElementById('statHostile'),
+            statFaction: document.getElementById('statFaction'),
+            statPassive: document.getElementById('statPassive'),
             // Sections
             hostileSection: document.getElementById('playersHostile'),
             factionSection: document.getElementById('playersFaction'),
@@ -541,24 +550,32 @@ function updatePlayersList() {
     };
     const total = counts.hostile + counts.faction + counts.passive;
 
-    // Update counter badge
-    if (els.badge) {
-        const countsChanged = counts.hostile !== _lastPlayerCounts.hostile ||
-                              counts.faction !== _lastPlayerCounts.faction ||
-                              counts.passive !== _lastPlayerCounts.passive;
+    // Get filter settings (same as PlayersHandler.getFilteredPlayers)
+    const showHostile = window.settingsSync?.getBool('settingDangerousPlayers') ?? true;
+    const showFaction = window.settingsSync?.getBool('settingFactionPlayers') ?? true;
+    const showPassive = window.settingsSync?.getBool('settingPassivePlayers') ?? true;
 
-        if (countsChanged) {
-            _lastPlayerCounts = { ...counts };
-            const counterHtml = formatPlayerCount(counts);
-            if (counterHtml) {
-                els.badge.innerHTML = counterHtml;
-                els.badge.classList.remove('hidden');
-                els.badge.classList.add('inline-flex');
-            } else {
-                els.badge.classList.add('hidden');
-                els.badge.classList.remove('inline-flex');
-            }
-        }
+    // Update stats component values and visibility
+    const countsChanged = counts.hostile !== _lastPlayerCounts.hostile ||
+        counts.faction !== _lastPlayerCounts.faction ||
+        counts.passive !== _lastPlayerCounts.passive;
+
+    if (countsChanged) {
+        _lastPlayerCounts = {...counts};
+        if (els.statHostile) els.statHostile.textContent = counts.hostile;
+        if (els.statFaction) els.statFaction.textContent = counts.faction;
+        if (els.statPassive) els.statPassive.textContent = counts.passive;
+    }
+
+    // Show/hide individual stat containers based on filter settings
+    if (els.statHostileContainer) els.statHostileContainer.classList.toggle('hidden', !showHostile);
+    if (els.statFactionContainer) els.statFactionContainer.classList.toggle('hidden', !showFaction);
+    if (els.statPassiveContainer) els.statPassiveContainer.classList.toggle('hidden', !showPassive);
+
+    // Show stats container only when there are players AND at least one type is visible
+    const hasVisibleStats = (showHostile || showFaction || showPassive) && total > 0;
+    if (els.playerStats) {
+        els.playerStats.classList.toggle('hidden', !hasVisibleStats);
     }
 
     // Show/hide empty state

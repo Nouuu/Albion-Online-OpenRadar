@@ -3,20 +3,9 @@
     <!-- Page Header with Presets -->
     <div class="card bg-base-200">
         <div class="card-body">
-            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h1 class="text-3xl font-bold text-base-content">Resources</h1>
-                    <p class="text-base-content/60 mt-2">Configure which resources to display on the radar.</p>
-                </div>
-                <!-- Preset Buttons -->
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="applyResourcePreset('t5plus')" class="btn btn-primary btn-xs">All T5+</button>
-                    <button onclick="applyResourcePreset('t6plus')" class="btn btn-primary btn-xs">All T6+</button>
-                    <button onclick="applyResourcePreset('t7plus')" class="btn btn-primary btn-xs">All T7+</button>
-                    <button onclick="applyResourcePreset('e2plus')" class="btn btn-secondary btn-xs">All E2+</button>
-                    <button onclick="applyResourcePreset('e3plus')" class="btn btn-secondary btn-xs">All E3+</button>
-                    <button onclick="applyResourcePreset('clear')" class="btn btn-error btn-xs">Clear All</button>
-                </div>
+            <div>
+                <h1 class="text-3xl font-bold text-base-content">Resources</h1>
+                <p class="text-base-content/60 mt-2">Configure which resources to display on the radar.</p>
             </div>
         </div>
     </div>
@@ -197,74 +186,6 @@
 
 {{define "scripts/resources"}}
 <script>
-// Preset application function
-function applyResourcePreset(preset) {
-    const settingsSync = window.settingsSync;
-    const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
-
-    // Resource configurations
-    const resourceConfigs = [
-        { prefix: 'fsp', name: 'Fiber', type: 'Static' },
-        { prefix: 'hsp', name: 'Hide', type: 'Static' },
-        { prefix: 'wsp', name: 'Wood', type: 'Static' },
-        { prefix: 'osp', name: 'Ore', type: 'Static' },
-        { prefix: 'rsp', name: 'Rock', type: 'Static' },
-        { prefix: 'flp', name: 'Fiber', type: 'Living' },
-        { prefix: 'hlp', name: 'Hide', type: 'Living' },
-        { prefix: 'wlp', name: 'Wood', type: 'Living' },
-        { prefix: 'olp', name: 'Ore', type: 'Living' },
-        { prefix: 'rlp', name: 'Rock', type: 'Living' }
-    ];
-
-    resourceConfigs.forEach(config => {
-        const storageKey = `setting${config.type}${config.name}Enchants`;
-
-        // Create enchants object with all false by default
-        let enchants = {};
-        enchantLevels.forEach(e => {
-            enchants[e] = [false, false, false, false, false, false, false, false];
-        });
-
-        if (preset === 'clear') {
-            // Keep all false (already set)
-        } else if (preset === 't5plus') {
-            // Tiers 5-8 (indices 4-7) for all enchants
-            enchantLevels.forEach(e => {
-                for (let t = 4; t < 8; t++) enchants[e][t] = true;
-            });
-        } else if (preset === 't6plus') {
-            // Tiers 6-8 (indices 5-7) for all enchants
-            enchantLevels.forEach(e => {
-                for (let t = 5; t < 8; t++) enchants[e][t] = true;
-            });
-        } else if (preset === 't7plus') {
-            // Tiers 7-8 (indices 6-7) for all enchants
-            enchantLevels.forEach(e => {
-                for (let t = 6; t < 8; t++) enchants[e][t] = true;
-            });
-        } else if (preset === 'e2plus') {
-            // E2, E3, E4 for T4-T8 (indices 3-7)
-            ['e2', 'e3', 'e4'].forEach(e => {
-                for (let t = 3; t < 8; t++) enchants[e][t] = true;
-            });
-        } else if (preset === 'e3plus') {
-            // E3, E4 for T4-T8 (indices 3-7)
-            ['e3', 'e4'].forEach(e => {
-                for (let t = 3; t < 8; t++) enchants[e][t] = true;
-            });
-        }
-
-        settingsSync.setJSON(storageKey, enchants);
-    });
-
-    // Refresh the page content to update checkboxes
-    if (window.htmx) {
-        htmx.ajax('GET', '/resources', {target: '#page-content', swap: 'innerHTML'});
-    } else {
-        location.reload();
-    }
-}
-
 window.onGlobalsReady(function initResourcesPage() {
     const settingsSync = window.settingsSync;
     const {

@@ -10,7 +10,7 @@
 
     <div class="flex items-center gap-3">
         <div id="wsStatusIndicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-base-content/[0.02]">
-            <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-base-content/50"></span>
+            <span id="wsStatusDot" class="status status-neutral"></span>
             <span id="wsStatusText" class="text-xs text-base-content/50 hidden sm:inline">Connecting...</span>
         </div>
 
@@ -37,27 +37,27 @@
     function updateIndicator(status) {
         if (!dot || !text) return;
 
-        dot.classList.remove('bg-success', 'bg-error', 'bg-warning', 'bg-base-content/50', 'animate-pulse');
+        dot.classList.remove('status-success', 'status-error', 'status-warning', 'status-neutral', 'animate-pulse');
         text.classList.remove('text-base-content/60', 'text-base-content/80', 'text-error', 'text-warning');
 
         switch(status) {
             case 'connected':
-                dot.classList.add('bg-success', 'animate-pulse');
+                dot.classList.add('status-success', 'animate-pulse');
                 text.textContent = 'Connected';
                 text.classList.add('text-base-content/80');
                 break;
             case 'disconnected':
-                dot.classList.add('bg-error');
+                dot.classList.add('status-error');
                 text.textContent = 'Disconnected';
                 text.classList.add('text-error');
                 break;
             case 'connecting':
-                dot.classList.add('bg-warning', 'animate-pulse');
+                dot.classList.add('status-warning', 'animate-pulse');
                 text.textContent = 'Connecting...';
                 text.classList.add('text-warning');
                 break;
             default:
-                dot.classList.add('bg-base-content/50');
+                dot.classList.add('status-neutral');
                 text.textContent = 'Unknown';
                 text.classList.add('text-base-content/60');
         }

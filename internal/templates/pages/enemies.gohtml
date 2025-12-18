@@ -9,11 +9,16 @@
                     <p class="text-base-content/60 mt-2">Configure enemy and mob detection settings.</p>
                 </div>
                 <!-- Preset Buttons -->
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="applyEnemyPreset('all')" class="btn btn-primary btn-xs">All Enemies</button>
-                    <button onclick="applyEnemyPreset('bosses')" class="btn btn-secondary btn-xs">Bosses Only</button>
-                    <button onclick="applyEnemyPreset('miniboss')" class="btn btn-secondary btn-xs">Mini-Boss+</button>
-                    <button onclick="applyEnemyPreset('clear')" class="btn btn-error btn-xs">Clear All</button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="applyEnemyPreset('all')" class="btn btn-primary btn-xs">All</button>
+                    <div class="join">
+                        <button onclick="applyEnemyPreset('bosses')" class="btn btn-secondary btn-xs join-item">Bosses
+                        </button>
+                        <button onclick="applyEnemyPreset('miniboss')" class="btn btn-secondary btn-xs join-item">
+                            Mini-Boss+
+                        </button>
+                    </div>
+                    <button onclick="applyEnemyPreset('clear')" class="btn btn-error btn-xs">Clear</button>
                 </div>
             </div>
         </div>

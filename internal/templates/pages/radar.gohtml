@@ -72,9 +72,21 @@
                         <span class="text-xs text-base-content/60 font-normal">Show</span>
                     </label>
                 </h3>
-                <span id="playersCount" class="hidden badge badge-ghost font-mono">
-                    <!-- Counter populated by JS: formatPlayerCount() -->
-                </span>
+                <!-- Compact Player Stats (next to title) -->
+                <div id="playerStats" class="hidden stats stats-horizontal bg-base-300/50 shadow-sm text-xs">
+                    <div id="statHostileContainer" class="stat py-1 px-3 gap-0">
+                        <div class="stat-title text-[10px]">Hostile</div>
+                        <div id="statHostile" class="stat-value text-error text-sm">0</div>
+                    </div>
+                    <div id="statFactionContainer" class="stat py-1 px-3 gap-0">
+                        <div class="stat-title text-[10px]">Faction</div>
+                        <div id="statFaction" class="stat-value text-info text-sm">0</div>
+                    </div>
+                    <div id="statPassiveContainer" class="stat py-1 px-3 gap-0">
+                        <div class="stat-title text-[10px]">Passive</div>
+                        <div id="statPassive" class="stat-value text-success text-sm">0</div>
+                    </div>
+                </div>
             </div>
             <div id="playersListContainer" class="mt-4">
                 <!-- Flex container: sections share space equally, wrap on small screens -->
@@ -109,9 +121,7 @@
 
                     <!-- Empty State -->
                     <div id="playersEmpty" class="w-full flex flex-col items-center justify-center py-8 text-center">
-                        <svg class="w-10 h-10 text-base-content/20 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
+                        <span class="loading loading-ring loading-lg text-primary mb-3"></span>
                         <p class="text-sm text-base-content/40">No players detected yet</p>
                         <p class="text-xs text-base-content/25 font-mono mt-1">Scanning...</p>
                     </div>
@@ -233,16 +243,15 @@ window.onGlobalsReady(function() {
     // Show Players toggle + list visibility
     const showPlayersToggle = document.getElementById('settingShowPlayers');
     const playersListContainer = document.getElementById('playersListContainer');
-    const playersCount = document.getElementById('playersCount');
+    const playerStats = document.getElementById('playerStats');
 
     function updatePlayersListVisibility() {
         const isVisible = settingsSync.getBool('settingShowPlayers');
         if (playersListContainer) {
             playersListContainer.style.display = isVisible ? 'block' : 'none';
         }
-        if (playersCount) {
-            // Hide count badge when list is hidden
-            playersCount.classList.toggle('!hidden', !isVisible);
+        if (playerStats) {
+            playerStats.classList.toggle('!hidden', !isVisible);
         }
         if (showPlayersToggle) {
             showPlayersToggle.checked = isVisible;

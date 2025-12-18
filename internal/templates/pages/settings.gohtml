@@ -178,17 +178,18 @@
                     </h3>
                     <div class="space-y-2">
                         <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingLogToConsole" class="checkbox checkbox-primary checkbox-xs">
+                            <input type="checkbox" id="settingLogToConsole" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="terminal" class="w-4 h-4 text-base-content/50"></i>
                             <span class="text-base-content/80 text-sm group-hover:text-base-content">Browser Console (F12)</span>
                         </label>
                         <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingLogToServer" class="checkbox checkbox-primary checkbox-xs">
+                            <input type="checkbox" id="settingLogToServer" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="server" class="w-4 h-4 text-base-content/50"></i>
                             <span class="text-base-content/80 text-sm group-hover:text-base-content">Server Logs (JSONL)</span>
                         </label>
                         <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingServerLogsEnabled" class="checkbox checkbox-primary checkbox-xs">
+                            <input type="checkbox" id="settingServerLogsEnabled"
+                                   class="toggle toggle-primary toggle-sm">
                             <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
                             <span class="text-base-content/80 text-sm group-hover:text-base-content">Server-side Recording</span>
                             <div class="tooltip" data-tip="Controls backend server logs written to logs/sessions/ directory.">
@@ -207,14 +208,14 @@
                 </h3>
                 <div class="grid grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingWsCoalescing" class="checkbox checkbox-primary checkbox-xs">
+                        <input type="checkbox" id="settingWsCoalescing" class="toggle toggle-primary toggle-sm">
                         <span class="text-base-content/80 text-xs group-hover:text-base-content">Event Coalescing</span>
                         <div class="tooltip" data-tip="Groups Move/Health events per entity per frame.">
                             <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingWsThrottling" class="checkbox checkbox-primary checkbox-xs">
+                        <input type="checkbox" id="settingWsThrottling" class="toggle toggle-primary toggle-sm">
                         <span class="text-base-content/80 text-xs group-hover:text-base-content">Health Throttling</span>
                         <div class="tooltip" data-tip="Limits health updates to 20/sec per entity.">
                             <i data-lucide="info" class="w-3 h-3 opacity-50"></i>

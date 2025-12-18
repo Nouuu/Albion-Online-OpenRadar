@@ -1,7 +1,7 @@
 /* OpenRadar - Tailwind CSS Input */
 @import "tailwindcss";
 @plugin "daisyui" {
-    themes: dark --default;
+    themes: night --default;
 }
 
 /* Source paths for class detection */

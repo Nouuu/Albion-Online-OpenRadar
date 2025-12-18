@@ -12,8 +12,7 @@ const browserGlobals = {
     CATEGORIES: "readonly",
     settingsSync: "readonly",
     ResourcesHelper: "readonly",
-    logger: "readonly",
-    createAccordionManager: "readonly"
+    logger: "readonly"
 };
 
 export default [

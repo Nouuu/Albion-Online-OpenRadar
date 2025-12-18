@@ -139,7 +139,8 @@ export function generateResourceGrid(config) {
 
         const cells = Array.from({ length: 8 }, (_, i) => {
             if (!isE0 && i < 3) return '<span class="w-4 h-4"></span>';
-            return `<input type="checkbox" class="${checkboxClass}">`;
+            const inputId = `${prefix}-${enchantLevel}-t${i + 1}`;
+            return `<input type="checkbox" class="${checkboxClass}" id="${inputId}" name="${inputId}">`;
         }).join('');
 
         return `<div class="grid grid-cols-8 gap-1 justify-items-center" id="${prefix}-${enchantLevel}">${cells}</div>`;
