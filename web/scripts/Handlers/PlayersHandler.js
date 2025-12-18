@@ -1,5 +1,5 @@
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
-import {isCityZone} from "../constants/FactionConstants.js";
+import zonesDatabase from "../Data/ZonesDatabase.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
 class Player {
@@ -89,6 +89,13 @@ export class PlayersHandler {
         this.audio = new Audio('/sounds/player.mp3');
     }
 
+    isPlayerThreat(faction, pvpType) {
+        if (pvpType === 'safe') return false;
+        if (pvpType === 'black') return true;
+        if (pvpType === 'red' || pvpType === 'yellow') return faction === 255;
+        return faction === 255;
+    }
+
     updateItems(id, Parameters) {
         let items = null;
         try {
@@ -128,33 +135,32 @@ export class PlayersHandler {
             this.playersList.push(player);
         }
 
+        const mapId = window.currentMapId;
+        const pvpType = zonesDatabase.getPvpType(mapId);
+        const isThreat = this.isPlayerThreat(faction, pvpType);
+
         window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected', {
             id,
             nickname,
             guild: guildName,
             alliance: allianceName,
             faction,
+            pvpType,
+            isThreat,
             playersCount: this.playersList.length
         });
 
-        const isHostile = faction === 255;
-        const mapId = window.currentMapId;
-        const inCityZone = isCityZone(mapId);
-
-        // Screen flash alert - hostile only, not in city, and mapId must be known
-        if (isHostile && mapId && !inCityZone && settingsSync.getBool('settingFlash')) {
+        if (isThreat && mapId && settingsSync.getBool('settingFlash')) {
             const flash = document.createElement('div');
             flash.className = 'fixed inset-0 bg-error/60 pointer-events-none z-[9999] transition-opacity duration-300';
             document.body.appendChild(flash);
-            // Fade out
             requestAnimationFrame(() => {
                 flash.style.opacity = '0';
             });
             setTimeout(() => flash.remove(), 300);
         }
 
-        // Sound alert - hostile only, not in city, and mapId must be known
-        if (isHostile && mapId && !inCityZone && settingsSync.getBool('settingSound')) {
+        if (isThreat && mapId && settingsSync.getBool('settingSound')) {
             this.audio.play().catch(err => {
                 window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
                     error: err.message,
@@ -163,7 +169,7 @@ export class PlayersHandler {
             });
         }
 
-        return 2; // Return flashTime value
+        return 2;
     }
 
     handleMountedPlayerEvent(id, parameters) {
@@ -258,8 +264,8 @@ export class PlayersHandler {
     }
 
     triggerHostileAlert(player) {
-        // No alerts in city zones
-        if (isCityZone(window.currentMapId)) return;
+        const pvpType = zonesDatabase.getPvpType(window.currentMapId);
+        if (!this.isPlayerThreat(player.faction, pvpType)) return;
 
         if (settingsSync.getBool('settingFlash')) {
             const flash = document.createElement('div');
@@ -276,7 +282,8 @@ export class PlayersHandler {
         window.logger?.info(CATEGORIES.PLAYER, 'PlayerBecameHostile', {
             id: player.id,
             nickname: player.nickname,
-            faction: player.faction
+            faction: player.faction,
+            pvpType
         });
     }
 
@@ -326,7 +333,8 @@ export class PlayersHandler {
     }
 
     /**
-     * Get filtered players based on type settings
+     * Get filtered players based on type settings (zone-aware)
+     * In blackzone, ALL players are threats - filter uses showDangerous setting
      * @returns {Player[]} - Filtered list of players
      */
     getFilteredPlayers() {
@@ -334,19 +342,34 @@ export class PlayersHandler {
         const showFaction = settingsSync.getBool('settingFactionPlayers') ?? true;
         const showDangerous = settingsSync.getBool('settingDangerousPlayers') ?? true;
 
+        const pvpType = zonesDatabase.getPvpType(window.currentMapId);
+
         return this.playersList.filter(player => {
+            // In blackzone, ALL players are threats - use showDangerous setting
+            if (pvpType === 'black') {
+                return showDangerous;
+            }
+
+            // In other zones, filter based on player's internal faction
             if (player.isPassive()) return showPassive;
             if (player.isFactionPlayer()) return showFaction;
             return showDangerous;
         });
     }
 
-    /**
-     * Get players grouped by type for sectioned display
-     * @returns {{hostile: Player[], faction: Player[], passive: Player[]}}
-     */
     getPlayersByType() {
         const filtered = this.getFilteredPlayers();
+        const pvpType = zonesDatabase.getPvpType(window.currentMapId);
+
+        // In blackzone, ALL players are threats
+        if (pvpType === 'black') {
+            return {
+                hostile: filtered,
+                faction: [],
+                passive: []
+            };
+        }
+
         return {
             hostile: filtered.filter(p => p.isHostile()),
             faction: filtered.filter(p => p.isFactionPlayer()),

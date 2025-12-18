@@ -1,6 +1,7 @@
-import { CanvasManager } from './CanvasManager.js';
+import {CanvasManager} from './CanvasManager.js';
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
+import zonesDatabase from "../Data/ZonesDatabase.js";
 
 export class RadarRenderer {
     constructor(viewType, dependencies) {
@@ -121,7 +122,7 @@ export class RadarRenderer {
         }
 
         // Interpolate map position
-        if (settingsSync.getBool('settingShowMap') && this.drawings.mapsDrawing) {
+        if (settingsSync.getBool('settingShowMap', true) && this.drawings.mapsDrawing) {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
@@ -406,23 +407,33 @@ export class RadarRenderer {
         ctx.restore();
     }
 
-    /**
-     * Render zone info (top left)
-     */
     renderZoneInfo(ctx) {
         if (!this.map?.id) return;
 
-        const zoneText = `📍 ${this.map.id}${this.map.isBZ ? ' (BZ)' : ''}`;
+        const zone = zonesDatabase.getZone(this.map.id);
+        const zoneName = zone?.name || this.map.id;
+        const tier = zone?.tier ? `T${zone.tier}` : '';
+        const pvpType = zone?.pvpType || 'safe';
+
+        const pvpStyles = {
+            'black': {icon: '\u{1F480}', color: '#ff4444'},
+            'red': {icon: '\u{2694}\uFE0F', color: '#ff8800'},
+            'yellow': {icon: '\u{1F536}', color: '#ffff00'},
+            'safe': {icon: '\u{1F6E1}\uFE0F', color: '#44ff44'}
+        };
+        const style = pvpStyles[pvpType] || pvpStyles.safe;
+
+        const zoneText = `${zoneName}${tier ? ` (${tier})` : ''} ${style.icon}`;
         ctx.font = 'bold 11px monospace';
         const textWidth = ctx.measureText(zoneText).width;
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(10, 10, textWidth + 16, 22);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.strokeStyle = style.color;
         ctx.lineWidth = 1;
         ctx.strokeRect(10, 10, textWidth + 16, 22);
 
-        ctx.fillStyle = '#00d4ff';
+        ctx.fillStyle = style.color;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
         ctx.fillText(zoneText, 18, 16);
@@ -432,9 +443,8 @@ export class RadarRenderer {
      * Render stats box (top right, conditional based on settings)
      */
     renderStatsBox(ctx) {
-        // Get counts
-        const playerCount = this.handlers.playersHandler?.getFilteredPlayers?.()?.length ||
-                           this.handlers.playersHandler?.playersList?.length || 0;
+        // Get counts (filtered only, no fallback to full list)
+        const playerCount = this.handlers.playersHandler?.getFilteredPlayers?.()?.length ?? 0;
         const resourceCount = this.handlers.harvestablesHandler?.harvestableList?.length || 0;
         const mobCount = this.handlers.mobsHandler?.mobsList?.length || 0;
 

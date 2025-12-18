@@ -32,7 +32,7 @@ export class MapDrawing extends DrawingUtils
         ctx.fillStyle = '#1a1c23';
         ctx.fillRect(0, 0, ctx.width, ctx.height);
 
-        if (!settingsSync.getBool("settingShowMap")) return;
+        if (!settingsSync.getBool("settingShowMap", true)) return;
 
         if (imageName === undefined || imageName == "undefined")
             return;

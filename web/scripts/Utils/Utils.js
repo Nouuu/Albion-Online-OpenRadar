@@ -9,6 +9,7 @@ import {FishingDrawing} from '../Drawings/FishingDrawing.js';
 
 import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
 import {MobsDatabase} from '../Data/MobsDatabase.js';
+import zonesDatabase from '../Data/ZonesDatabase.js';
 // LocalizationDatabase removed - 86MB file, only used for mob name translation
 // import {LocalizationDatabase} from '../Data/LocalizationDatabase.js';
 import {EventCodes} from './EventCodes.js';
@@ -28,7 +29,7 @@ import {DungeonsHandler} from "../Handlers/DungeonsHandler.js";
 import {ItemsInfo} from "../Handlers/ItemsInfo.js";
 import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
-import {getEventQueue, destroyEventQueue} from './WebSocketEventQueue.js';
+import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 
 // ✅ Canvas presence is checked dynamically in initRadarRenderer()
 
@@ -44,6 +45,7 @@ window.databaseLoadingProgress = {
     spells: false,
     harvestables: false,
     mobs: false,
+    zones: false,
     localization: false
 };
 
@@ -150,6 +152,15 @@ async function initializeDatabases() {
                 if (result.success) {
                     window.databaseLoadingProgress.mobs = true;
                     window.mobsDatabase = result.database;
+                }
+                return result;
+            }),
+
+        loadDatabaseWithRetry(zonesDatabase, '/ao-bin-dumps/zones.json', 'Zones')
+            .then(result => {
+                if (result.success) {
+                    window.databaseLoadingProgress.zones = true;
+                    window.zonesDatabase = zonesDatabase;
                 }
                 return result;
             })
@@ -302,8 +313,10 @@ let lastRenderedPlayerIds = new Map();
 
 /**
  * Render a single player card HTML (Tailwind-only)
+ * @param {Player} player - The player object
+ * @param {string} threatType - 'hostile', 'faction', or 'passive' (based on zone context)
  */
-function renderPlayerCard(player) {
+function renderPlayerCard(player, threatType = null) {
     const elapsedMs = Date.now() - player.detectedAt;
     const elapsedSec = Math.floor(elapsedMs / 1000);
     const timeStr = elapsedSec < 60 ? `${elapsedSec}s` : `${Math.floor(elapsedSec / 60)}m`;
@@ -334,14 +347,15 @@ function renderPlayerCard(player) {
         ? `<span class="text-[9px] font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/25 uppercase tracking-wide">Mounted</span>`
         : '';
 
-    // Player type badge based on faction
+    // Player type badge - use threatType from zone context if provided, else fall back to player faction
     let playerTypeBadge = '';
     let playerTypeColor = 'error';
-    if (player.isPassive?.()) {
+    const effectiveType = threatType || (player.isPassive?.() ? 'passive' : player.isFactionPlayer?.() ? 'faction' : 'hostile');
+
+    if (effectiveType === 'passive') {
         playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-success bg-success/10 px-1.5 py-0.5 rounded border border-success/25 uppercase tracking-wide">Passive</span>`;
         playerTypeColor = 'success';
-    } else if (player.isFactionPlayer?.()) {
-        // Show city name instead of generic "Faction"
+    } else if (effectiveType === 'faction') {
         const cityLabel = factionCityName ? `⚔ ${factionCityName}` : 'Faction';
         playerTypeBadge = `<span class="text-[9px] font-mono font-semibold text-info bg-info/10 px-1.5 py-0.5 rounded border border-info/25 uppercase tracking-wide">${cityLabel}</span>`;
         playerTypeColor = 'info';
@@ -419,8 +433,11 @@ function renderPlayerCard(player) {
 
 /**
  * Update a section's player list with incremental updates
+ * @param {HTMLElement} listContainer - The container element
+ * @param {Player[]} players - Array of players
+ * @param {string} threatType - 'hostile', 'faction', or 'passive' (zone-aware type)
  */
-function updateSectionPlayers(listContainer, players) {
+function updateSectionPlayers(listContainer, players, threatType) {
     const currentIds = new Set(players.map(p => p.id));
 
     // Remove players no longer in this section
@@ -453,9 +470,9 @@ function updateSectionPlayers(listContainer, players) {
                 }
             }
         } else {
-            // Create new card
+            // Create new card with zone-aware threat type
             const template = document.createElement('template');
-            template.innerHTML = renderPlayerCard(player).trim();
+            template.innerHTML = renderPlayerCard(player, threatType).trim();
             listContainer.appendChild(template.content.firstChild);
         }
 
@@ -560,7 +577,7 @@ function updatePlayersList() {
         if (counts.hostile > 0) {
             els.hostileSection.classList.remove('hidden');
             if (els.hostileCount) els.hostileCount.textContent = `(${counts.hostile})`;
-            requestAnimationFrame(() => updateSectionPlayers(els.hostileList, playersByType.hostile));
+            requestAnimationFrame(() => updateSectionPlayers(els.hostileList, playersByType.hostile, 'hostile'));
         } else {
             els.hostileSection.classList.add('hidden');
             els.hostileList.innerHTML = '';
@@ -572,7 +589,7 @@ function updatePlayersList() {
         if (counts.faction > 0) {
             els.factionSection.classList.remove('hidden');
             if (els.factionCount) els.factionCount.textContent = `(${counts.faction})`;
-            requestAnimationFrame(() => updateSectionPlayers(els.factionList, playersByType.faction));
+            requestAnimationFrame(() => updateSectionPlayers(els.factionList, playersByType.faction, 'faction'));
         } else {
             els.factionSection.classList.add('hidden');
             els.factionList.innerHTML = '';
@@ -584,7 +601,7 @@ function updatePlayersList() {
         if (counts.passive > 0) {
             els.passiveSection.classList.remove('hidden');
             if (els.passiveCount) els.passiveCount.textContent = `(${counts.passive})`;
-            requestAnimationFrame(() => updateSectionPlayers(els.passiveList, playersByType.passive));
+            requestAnimationFrame(() => updateSectionPlayers(els.passiveList, playersByType.passive, 'passive'));
         } else {
             els.passiveSection.classList.add('hidden');
             els.passiveList.innerHTML = '';

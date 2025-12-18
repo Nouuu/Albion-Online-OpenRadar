@@ -5,9 +5,36 @@ import {connect, PageWithCursor} from 'puppeteer-real-browser';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import {downloadFileWithPlaywright, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
-const MAP_XML_FILES_DIR = path.join('work/data/ao-bin-dumps/cluster');
+const ZONES_JSON_PATH = path.join('web/public/ao-bin-dumps/zones.json');
 const OUTPUT_DIR = path.join('web/images/Maps');
 const CDN_BASE_URL = 'https://cdn.albiononline2d.com/game-images/'
+
+interface ZoneInfo {
+    name: string;
+    type: string;
+    pvpType: string;
+    tier: number;
+    file: string;
+}
+
+function getMapFilesFromZones(): string[] {
+    if (!fs.existsSync(ZONES_JSON_PATH)) {
+        console.error(`❌ zones.json not found at ${ZONES_JSON_PATH}`);
+        console.log('💡 Run "npm run update-data" first to generate zones.json');
+        process.exit(1);
+    }
+
+    const zonesData: Record<string, ZoneInfo> = JSON.parse(fs.readFileSync(ZONES_JSON_PATH, 'utf-8'));
+    const mapFiles = new Set<string>();
+
+    for (const zone of Object.values(zonesData)) {
+        if (zone.file) {
+            mapFiles.add(zone.file + '.png');
+        }
+    }
+
+    return Array.from(mapFiles);
+}
 
 // Image optimization settings
 const MAX_IMAGE_SIZE = 1024; // Max width or height in pixels
@@ -62,9 +89,9 @@ async function initPrerequisites() {
     // Use stealth plugin to avoid detection
     puppeteer.use(stealth());
 
-    // List all map XML files
-    const mapFiles = fs.readdirSync(MAP_XML_FILES_DIR).filter(file => file.endsWith('.xml'))
-        .map(value => value.replace(".cluster.xml", ".png"));
+    // Get map files from zones.json
+    const mapFiles = getMapFilesFromZones();
+    console.log(`📍 Found ${mapFiles.length} unique map files from zones.json\n`);
 
     if (mapFiles.length === 0) {
         console.log('⚠️ No map files found to process. Exiting.');
