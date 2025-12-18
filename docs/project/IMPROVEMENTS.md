@@ -1,6 +1,6 @@
-# OpenRadar v2.0 - Features Summary
+# OpenRadar v2.0.x - Features Summary
 
-This document summarizes the features implemented in OpenRadar v2.0.
+This document summarizes the features implemented in OpenRadar v2.0.x.
 
 ---
 
@@ -31,16 +31,17 @@ This document summarizes the features implemented in OpenRadar v2.0.
 ### Framework Stack
 - **HTMX 2.0.8** - SPA navigation without full page reload
 - **Tailwind CSS v4** - Utility-first styling with dark theme
+- **DaisyUI** - Component library (buttons, badges, toggles, collapse)
 - **Go Templates** (.gohtml) - Server-side rendering
-- **Vanilla JS** - Lightweight UI controllers (sidebar, accordions)
+- **Vanilla JS** - Lightweight UI controllers
 
 ### Radar Display
 - **4-layer canvas system** (map, draw, player, UI)
 - **Dynamic sizing** - 300-800px adjustable
 - **Zoom controls** - 0.5x to 2.0x magnification
 - **Distance rings** - Visual indicators
-- **Stats box** - Player/resource/mob counts
-- **Zone indicator** - Current zone with BZ status
+- **Stats box** - Player/resource/mob counts by type
+- **Zone indicator** - Zone name, tier, PvP type indicator
 - **Threat border** - Red pulse on hostile detection
 
 ### Navigation
@@ -75,32 +76,64 @@ This document summarizes the features implemented in OpenRadar v2.0.
 - 4,528 mobs catalogued with metadata
 - Filter categories: Normal/Enchanted/MiniBoss/Boss
 
-### Player Detection
-- Real-time position tracking
+### Player Detection (v2.0.1)
+
+- **Faction-based detection** using Parameters[53]
 - **Type-based color coding**:
-  - Green (#00ff88): Passive
-  - Orange (#ffa500): Faction
-  - Red (#FF0000): Hostile
-- Equipment and spell overlay options
+  - Green (#00ff88): Passive (faction=0)
+  - Orange (#ffa500): Faction (faction=1-6)
+  - Red (#FF0000): Hostile (faction=255)
+- **Zone-aware threat logic**:
+  - Safe zones: no alerts
+  - Yellow/Red zones: alert on hostile flagged
+  - Black zones: ALL players = threat
+- Equipment and spell overlay in player cards
 - Alert system (screen flash, sound)
+- 3-section player list (Hostile/Faction/Passive)
+
+### Zone System (v2.0.1)
+
+- **ZonesDatabase.js** with 1000+ zones
+- PvP type detection (safe/yellow/red/black)
+- Zone info display (name, tier, indicator)
+- Threat logic based on zone type
 
 ---
 
-## Performance
+## Performance (v2.0.1)
 
-| Metric | v1.x (Node.js) | v2.0 (Go) |
-|--------|----------------|-----------|
-| Total size | ~500 MB | ~95 MB |
-| Ports | 5001 + 5002 | 5001 only |
-| Startup | Slow (extraction) | Instant |
-| Canvas layers | 7 | 4 |
-| Rendering | 60 FPS | 30 FPS (CPU efficient) |
+### WebSocket Optimization
+
+- **Event coalescing** for Move (3), HealthUpdate (6)
+- **Event throttling** with configurable intervals
+- **WebSocketEventQueue** with batch processing
+- Settings toggles for optimization features
+
+### Code Cleanup
+
+- Removed VirtualScroll (unused)
+- Removed accordion.js (DaisyUI handles)
+- Removed tooltips.css (DaisyUI handles)
+- ESLint configured for underscore-prefixed vars
+
+---
+
+## Performance Comparison
+
+| Metric           | v1.x (Node.js)    | v2.0.x (Go)            |
+|------------------|-------------------|------------------------|
+| Total size       | ~500 MB           | ~95 MB                 |
+| Ports            | 5001 + 5002       | 5001 only              |
+| Startup          | Slow (extraction) | Instant                |
+| Canvas layers    | 7                 | 4                      |
+| Rendering        | 60 FPS            | 30 FPS (CPU efficient) |
+| Event processing | Direct            | Coalesced + Throttled  |
 
 ---
 
 ## Known Limitations
 
-- **Player movement** - Limited due to Albion encryption
+- **Player positions** - Encrypted by Albion (dots disabled)
 - **Blackzone maps** - Some tiles missing
 - **Resource charges** - Server calculation differences
 
@@ -108,4 +141,4 @@ See [TODO.md](TODO.md) for roadmap and planned improvements.
 
 ---
 
-*Last update: 2025-12-13 - v2.0.0 Release*
+*Last update: 2025-12-19 - v2.0.1*
