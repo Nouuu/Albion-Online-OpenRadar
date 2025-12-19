@@ -139,12 +139,16 @@
             const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
             const {initRadar, destroyRadar} = await import('/scripts/Utils/Utils.js');
 
-        registerPage('radar', {
-            init: async () => await initRadar(),
-            destroy: () => destroyRadar()
-        });
+            // Only register once per session (avoids PageController_Overwrite warning on SPA navigation)
+            if (!window._radarPageRegistered) {
+                registerPage('radar', {
+                    init: async () => await initRadar(),
+                    destroy: () => destroyRadar()
+                });
+                window._radarPageRegistered = true;
+            }
 
-        reinitCurrentPage();
+            reinitCurrentPage();
         })();
     </script>
 
