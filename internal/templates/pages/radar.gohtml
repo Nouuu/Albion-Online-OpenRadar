@@ -133,8 +133,23 @@
 {{end}}
 
 {{define "scripts/radar"}}
-<!-- Radar core: WebSocket, Handlers, Rendering -->
-<script type="module" src="/scripts/Utils/Utils.js"></script>
+    <!-- Radar core: register page with PageController -->
+    <script type="module">
+        import {registerPage, reinitCurrentPage} from '/scripts/core/PageController.js';
+        import {destroyRadar, initRadar} from '/scripts/Utils/Utils.js';
+
+        registerPage('radar', {
+            init: async () => {
+                await initRadar();
+            },
+            destroy: () => {
+                destroyRadar();
+            }
+        });
+
+        // Trigger init - PageController may have already run DOMContentLoaded
+        reinitCurrentPage();
+    </script>
 
 <script>
 window.onGlobalsReady(function() {

@@ -31,12 +31,39 @@ import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
 import {createRadarRenderer} from './RadarRenderer.js';
 import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 
-// ✅ Canvas presence is checked dynamically in initRadarRenderer()
+// MODULE STATE - Controlled by init/destroy
+let isInitialized = false;
+let radarRenderer = null;
+let socket = null;
+let reconnectTimeoutId = null;
+let reconnectAttempts = 0;
+let eventQueue = null;
+let playerListIntervalId = null;
+let cleanupIntervalId = null;
 
-console.log('🔧 [Utils.js] Module loaded');
+// Handlers (recreated on each init)
+let harvestablesHandler = null;
+let mobsHandler = null;
+let playersHandler = null;
+let chestsHandler = null;
+let dungeonsHandler = null;
+let wispCageHandler = null;
+let fishingHandler = null;
 
+// Drawings (recreated on each init)
+let harvestablesDrawing = null;
+let mobsDrawing = null;
+let playersDrawing = null;
+let chestsDrawing = null;
+let dungeonsDrawing = null;
+let wispCageDrawing = null;
+let fishingDrawing = null;
+let mapsDrawing = null;
 
-console.log('🔧 [Utils.js] Settings initialized (logger is managed by LoggerClient.js)');
+// Utilities (recreated on each init)
+let drawingUtils = null;
+let itemsInfo = null;
+let map = null;
 
 // 📊 Global database state tracking
 window.databasesReady = false;
@@ -110,6 +137,16 @@ function showDatabaseError(databaseName, error) {
 
 // 🚀 Coordinated database initialization
 async function initializeDatabases() {
+    // Skip if already loaded (cached)
+    if (window.databasesReady &&
+        window.itemsDatabase &&
+        window.spellsDatabase &&
+        window.harvestablesDatabase &&
+        window.mobsDatabase) {
+        window.logger?.info(CATEGORIES.DEBUG, 'DatabasesCached', {});
+        return;
+    }
+
     console.log('🔧 [Utils.js] Starting coordinated database initialization...');
 
     const itemsDatabase = new ItemsDatabase();
@@ -205,32 +242,201 @@ async function initializeDatabases() {
     }));
 }
 
-// 🚀 Start database initialization
-initializeDatabases().catch(error => {
-    console.error('❌ [Utils.js] Critical error during database initialization:', error);
-    window.logger?.error(
-        window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
-        'DatabaseInitCriticalError',
-        { error: error.message }
-    );
-    showDatabaseError('System', error);
-});
+// MOVED TO initRadar() - databases loaded on demand
+// initializeDatabases().catch(error => {
+//     console.error('❌ [Utils.js] Critical error during database initialization:', error);
+//     window.logger?.error(
+//         window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
+//         'DatabaseInitCriticalError',
+//         { error: error.message }
+//     );
+//     showDatabaseError('System', error);
+// });
 
-const harvestablesDrawing = new HarvestablesDrawing();
-const dungeonsHandler = new DungeonsHandler();
+// Stale entity cleanup function
+const STALE_ENTITY_MAX_AGE = 300000;
 
-var itemsInfo = new ItemsInfo();
-itemsInfo.initItems();
+function cleanupStaleEntities() {
+    const cleanedPlayers = playersHandler?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const cleanedMobs = mobsHandler?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const cleanedHarvestables = harvestablesHandler?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
 
-var map = new MapH(-1);
-const mapsDrawing = new MapDrawing();
+    const activePlayerIds = new Set(playersHandler?.getFilteredPlayers?.().map(p => p.id) || []);
+    let cleanedRenderCache = 0;
+    for (const id of lastRenderedPlayerIds.keys()) {
+        if (!activePlayerIds.has(id)) {
+            lastRenderedPlayerIds.delete(id);
+            cleanedRenderCache++;
+        }
+    }
+
+    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedRenderCache) {
+        window.logger?.debug(CATEGORIES.DEBUG, 'StaleEntityCleanup', {
+            players: cleanedPlayers, mobs: cleanedMobs,
+            harvestables: cleanedHarvestables, renderCache: cleanedRenderCache
+        });
+    }
+}
+
+// PUBLIC API - Called by PageController
+export async function initRadar() {
+    if (isInitialized) {
+        window.logger?.warn(CATEGORIES.DEBUG, 'RadarAlreadyInitialized', {});
+        return;
+    }
+
+    window.logger?.info(CATEGORIES.DEBUG, 'RadarInitializing', {});
+
+    try {
+        await initializeDatabases();
+
+        drawingUtils = new DrawingUtils();
+        itemsInfo = new ItemsInfo();
+        itemsInfo.initItems();
+        map = new MapH(-1);
+
+        restoreMapFromSession();
+
+        dungeonsHandler = new DungeonsHandler();
+        chestsHandler = new ChestsHandler();
+        mobsHandler = new MobsHandler();
+        harvestablesHandler = new HarvestablesHandler(mobsHandler);
+        playersHandler = new PlayersHandler();
+        wispCageHandler = new WispCageHandler();
+        fishingHandler = new FishingHandler();
+
+        mapsDrawing = new MapDrawing();
+        harvestablesDrawing = new HarvestablesDrawing();
+        mobsDrawing = new MobsDrawing();
+        playersDrawing = new PlayersDrawing();
+        chestsDrawing = new ChestsDrawing();
+        dungeonsDrawing = new DungeonsDrawing();
+        wispCageDrawing = new WispCageDrawing();
+        fishingDrawing = new FishingDrawing();
+
+        playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
+
+        window.harvestablesHandler = harvestablesHandler;
+        window.mobsHandler = mobsHandler;
+        window.playersHandler = playersHandler;
+
+        connectWebSocket();
+
+        eventQueue = getEventQueue();
+        eventQueue.setFlushCallback((messageType, params) => {
+            switch (messageType) {
+                case 'request':
+                    onRequest(params);
+                    break;
+                case 'event':
+                    onEvent(params);
+                    break;
+                case 'response':
+                    onResponse(params);
+                    break;
+            }
+        });
+
+        initializeRadarRenderer();
+
+        playerListIntervalId = setInterval(updatePlayersList, 1500);
+        cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
+
+        document.getElementById("button")?.addEventListener("click", ClearHandlers);
+
+        isInitialized = true;
+        window.logger?.info(CATEGORIES.DEBUG, 'RadarInitialized', {});
+
+    } catch (error) {
+        window.logger?.error(CATEGORIES.DEBUG, 'RadarInitFailed', {error: error.message});
+        if (window.toast) window.toast.error('Failed to initialize radar');
+        throw error;
+    }
+}
+
+export function destroyRadar() {
+    if (!isInitialized) {
+        window.logger?.warn(CATEGORIES.DEBUG, 'RadarNotInitialized', {});
+        return;
+    }
+
+    window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroying', {});
+
+    if (playerListIntervalId) {
+        clearInterval(playerListIntervalId);
+        playerListIntervalId = null;
+    }
+    if (cleanupIntervalId) {
+        clearInterval(cleanupIntervalId);
+        cleanupIntervalId = null;
+    }
+
+    if (radarRenderer) {
+        radarRenderer.stop();
+        radarRenderer = null;
+    }
+
+    destroyEventQueue();
+    eventQueue = null;
+
+    cleanupSocket();
+    ClearHandlers();
+
+    harvestablesHandler = null;
+    mobsHandler = null;
+    playersHandler = null;
+    chestsHandler = null;
+    dungeonsHandler = null;
+    wispCageHandler = null;
+    fishingHandler = null;
+
+    harvestablesDrawing = null;
+    mobsDrawing = null;
+    playersDrawing = null;
+    chestsDrawing = null;
+    dungeonsDrawing = null;
+    wispCageDrawing = null;
+    fishingDrawing = null;
+    mapsDrawing = null;
+
+    drawingUtils = null;
+    itemsInfo = null;
+    map = null;
+
+    window.harvestablesHandler = null;
+    window.mobsHandler = null;
+    window.playersHandler = null;
+    window.radarRenderer = null;
+
+    _playerElements = null;
+    _lastPlayerCounts = {hostile: -1, faction: -1, passive: -1};
+    lastRenderedPlayerIds.clear();
+
+    lpX = 0.0;
+    lpY = 0.0;
+    window.lpX = 0;
+    window.lpY = 0;
+
+    isInitialized = false;
+    window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroyed', {});
+}
+
+// === LEGACY CODE BELOW - Commented out for PageController ===
+// All initialization now happens in initRadar()
+
+// harvestablesDrawing = new HarvestablesDrawing();
+// dungeonsHandler = new DungeonsHandler();
+// itemsInfo = new ItemsInfo();
+// itemsInfo.initItems();
+// map = new MapH(-1);
+// mapsDrawing = new MapDrawing();
 
 // 🛡️ Debounce map changes to prevent flickering from duplicate/retransmitted packets
 let lastMapChangeTime = 0;
 const MAP_CHANGE_DEBOUNCE_MS = 500; // Ignore map changes within 500ms of the previous one
 
 // 🔄 Restore map from sessionStorage if available
-(function restoreMapFromSession() {
+function restoreMapFromSession() {
     try {
         const savedMap = sessionStorage.getItem('lastMapDisplayed');
         window.logger?.debug(CATEGORIES.MAP, 'SessionRestoreAttempt', {
@@ -265,48 +471,26 @@ const MAP_CHANGE_DEBOUNCE_MS = 500; // Ignore map changes within 500ms of the pr
     } catch (e) {
         window.logger?.warn(CATEGORIES.MAP, 'SessionRestoreFailed', { error: e?.message });
     }
-})();
+}
 
-const chestsHandler = new ChestsHandler();
-const mobsHandler = new MobsHandler();
-
-// existing logEnemiesList button stays the same
-window.addEventListener('load', () => {
-    const logEnemiesList = document.getElementById('logEnemiesList');
-    if (logEnemiesList) {
-        logEnemiesList.addEventListener('click', () => {
-            const mobList = mobsHandler.getMobList();
-            window.logger?.debug(CATEGORIES.DEBUG, EVENTS.EnemiesList, { mobList: mobList });
-        });
-    }
-});
-
-
-const harvestablesHandler = new HarvestablesHandler(mobsHandler); // 🔗 Pass MobsHandler reference
-const playersHandler = new PlayersHandler();
-
-
-// 📊 Expose handlers globally for statistics and debug access
-window.harvestablesHandler = harvestablesHandler;
-window.mobsHandler = mobsHandler;
-window.playersHandler = playersHandler;
-
-// ♻️ MEMORY MANAGEMENT: Manual cleanup methods available on handlers
-// Call harvestablesHandler.cleanupStaleEntities() etc. when needed
-// Automatic cleanup disabled for now - needs lastUpdateTime to be updated on entity updates
-console.log('[MemoryManager] Manual cleanup methods available on handlers');
-
-const wispCageHandler = new WispCageHandler();
-const wispCageDrawing = new WispCageDrawing();
-
-const fishingHandler = new FishingHandler();
-const fishingDrawing = new FishingDrawing();
-
-const chestsDrawing = new ChestsDrawing();
-const mobsDrawing = new MobsDrawing();
-const playersDrawing = new PlayersDrawing();
-const dungeonsDrawing = new DungeonsDrawing();
-playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
+// chestsHandler = new ChestsHandler();
+// mobsHandler = new MobsHandler();
+// window.addEventListener('load', () => { ... });
+// harvestablesHandler = new HarvestablesHandler(mobsHandler);
+// playersHandler = new PlayersHandler();
+// window.harvestablesHandler = harvestablesHandler;
+// window.mobsHandler = mobsHandler;
+// window.playersHandler = playersHandler;
+// console.log('[MemoryManager] Manual cleanup methods available on handlers');
+// wispCageHandler = new WispCageHandler();
+// wispCageDrawing = new WispCageDrawing();
+// fishingHandler = new FishingHandler();
+// fishingDrawing = new FishingDrawing();
+// chestsDrawing = new ChestsDrawing();
+// mobsDrawing = new MobsDrawing();
+// playersDrawing = new PlayersDrawing();
+// dungeonsDrawing = new DungeonsDrawing();
+// playersDrawing.updateItemsInfo(itemsInfo.iteminfo);
 
 // 👥 Player list rendering with incremental updates
 let lastRenderedPlayerIds = new Map();
@@ -615,12 +799,9 @@ let lpY = 0.0;
 window.lpX = lpX;
 window.lpY = lpY;
 
-const drawingUtils = new DrawingUtils();
+// drawingUtils = new DrawingUtils();  // MOVED TO initRadar()
 
 // 🔄 WebSocket with auto-reconnect
-let socket = null;
-let reconnectAttempts = 0;
-let reconnectTimeoutId = null;
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
 
@@ -696,22 +877,22 @@ function scheduleReconnect() {
   reconnectTimeoutId = setTimeout(connectWebSocket, delay);
 }
 
-// WebSocket Event Queue - coalescing & throttling
-const eventQueue = getEventQueue();
-eventQueue.setFlushCallback((messageType, params) => {
-    switch (messageType) {
-        case 'request': onRequest(params); break;
-        case 'event': onEvent(params); break;
-        case 'response': onResponse(params); break;
-    }
-});
+// WebSocket Event Queue - MOVED TO initRadar()
+// eventQueue = getEventQueue();
+// eventQueue.setFlushCallback((messageType, params) => {
+//     switch (messageType) {
+//         case 'request': onRequest(params); break;
+//         case 'event': onEvent(params); break;
+//         case 'response': onResponse(params); break;
+//     }
+// });
 
 function handleWebSocketMessage(event) {
     eventQueue.queueRawMessage(event.data);
 }
 
-// Start WebSocket connection
-connectWebSocket();
+// Start WebSocket connection - MOVED TO initRadar()
+// connectWebSocket();
 
 // Helper function to get event name (for debugging)
 function getEventName(eventCode) {
@@ -1153,7 +1334,6 @@ function onResponse(Parameters)
 };
 
 // 🎨 Initialize RadarRenderer (unified rendering system)
-let radarRenderer = null;
 
 /**
  * Initialize or reinitialize the RadarRenderer
@@ -1229,40 +1409,16 @@ function initializeRadarRenderer() {
     }
 }
 
-// Initialize radar on load
-initializeRadarRenderer();
+// Initialize radar on load - MOVED TO initRadar()
+// initializeRadarRenderer();
 
-// 👥 Update player list UI every 1.5 seconds
-let playerListIntervalId = setInterval(updatePlayersList, 1500);
+// 👥 Update player list UI every 1.5 seconds - MOVED TO initRadar()
+// playerListIntervalId = setInterval(updatePlayersList, 1500);
 
-// 🧹 Automatic stale entity cleanup every 60 seconds (5 min max age)
-const STALE_ENTITY_MAX_AGE = 300000;
-let cleanupIntervalId = setInterval(() => {
-    const cleanedPlayers = playersHandler.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
-    const cleanedMobs = mobsHandler.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
-    const cleanedHarvestables = harvestablesHandler.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+// 🧹 Automatic stale entity cleanup every 60 seconds (5 min max age) - MOVED TO initRadar()
+// cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
 
-    // Cleanup lastRenderedPlayerIds for players no longer tracked
-    const activePlayerIds = new Set(playersHandler.getFilteredPlayers?.().map(p => p.id) || []);
-    let cleanedRenderCache = 0;
-    for (const id of lastRenderedPlayerIds.keys()) {
-        if (!activePlayerIds.has(id)) {
-            lastRenderedPlayerIds.delete(id);
-            cleanedRenderCache++;
-        }
-    }
-
-    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedRenderCache) {
-        window.logger?.debug(CATEGORIES.DEBUG, 'StaleEntityCleanup', {
-            players: cleanedPlayers,
-            mobs: cleanedMobs,
-            harvestables: cleanedHarvestables,
-            renderCache: cleanedRenderCache
-        });
-    }
-}, 60000);
-
-// 🧹 Cleanup intervals on page unload
+// 🧹 Cleanup intervals on page unload - handled by destroyRadar()
 function cleanupIntervals() {
     if (playerListIntervalId) clearInterval(playerListIntervalId);
     if (cleanupIntervalId) clearInterval(cleanupIntervalId);
@@ -1275,14 +1431,18 @@ function cleanupIntervals() {
     destroyEventQueue();
 }
 
+// beforeunload cleanup - kept for browser tab close
 window.addEventListener('beforeunload', cleanupIntervals);
-document.body.addEventListener('htmx:beforeSwap', (e) => {
-    if (e.detail.target?.id === 'page-content') cleanupIntervals();
-});
 
-document.getElementById("button")?.addEventListener("click", function () {
-    ClearHandlers();
-});
+// htmx cleanup - now handled by PageController
+// document.body.addEventListener('htmx:beforeSwap', (e) => {
+//     if (e.detail.target?.id === 'page-content') cleanupIntervals();
+// });
+
+// button click - MOVED TO initRadar()
+// document.getElementById("button")?.addEventListener("click", function () {
+//     ClearHandlers();
+// });
 
 function ClearHandlers()
 {
