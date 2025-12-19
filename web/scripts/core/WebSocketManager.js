@@ -114,6 +114,7 @@ export function disconnect() {
     isGracefulDisconnect = true;  // Mark as intentional disconnect (no "Connection lost" toast)
     cleanupSocket();
     updateConnectionStatus('disconnected');
+    messageCallback = null;  // Clear callback to prevent memory leaks
 }
 
 export function setMessageCallback(callback) {

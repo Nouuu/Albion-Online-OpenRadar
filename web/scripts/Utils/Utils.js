@@ -39,6 +39,7 @@ let eventQueue = null;
 let playerListIntervalId = null;
 let cleanupIntervalId = null;
 let buttonClickHandler = null;
+let lastPlayerListHash = '';
 
 // Handlers (recreated on each init)
 let handlers = {
@@ -241,9 +242,16 @@ export async function initRadar() {
         initializeRadarRenderer();
         EventRouter.setRadarRenderer(radarRenderer);
 
-        // Setup intervals
+        // Setup intervals (with hash-based skip to avoid unnecessary DOM updates)
         playerListIntervalId = setInterval(() => {
-            PlayerListRenderer.update(handlers.players);
+            const players = handlers.players?.getFilteredPlayers?.() || [];
+            // Hash includes count, IDs, health, and mounted state for change detection
+            // Count prefix ensures removal is always detected
+            const hash = `${players.length}:` + players.map(p => `${p.id}:${p.currentHealth}:${p.mounted ? 1 : 0}`).join(',');
+            if (hash !== lastPlayerListHash) {
+                lastPlayerListHash = hash;
+                PlayerListRenderer.update(handlers.players);
+            }
         }, 1500);
         cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
 
@@ -321,6 +329,7 @@ export function destroyRadar() {
     // Reset modules
     PlayerListRenderer.reset();
     EventRouter.reset();
+    lastPlayerListHash = '';
 
     isInitialized = false;
     isDestroying = false;

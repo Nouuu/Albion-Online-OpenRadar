@@ -7,6 +7,7 @@ const pageHandlers = new Map();
 let currentPage = null;
 let isTransitioning = false;
 let destroyPromise = null;  // Track ongoing destroy for race condition prevention
+let isPageControllerInitialized = false;  // Guard against duplicate initialization
 
 export function registerPage(pageName, handlers) {
     if (pageHandlers.has(pageName)) {
@@ -91,6 +92,13 @@ async function initCurrentPage() {
 }
 
 export function initPageController() {
+    // Guard against duplicate initialization (prevents listener accumulation)
+    if (isPageControllerInitialized) {
+        window.logger?.debug(CATEGORIES.DEBUG, 'PageController_AlreadyInitialized', {});
+        return;
+    }
+    isPageControllerInitialized = true;
+
     document.body.addEventListener('htmx:beforeSwap', (event) => {
         if (event.detail.target?.id === 'page-content') {
             destroyCurrentPage();

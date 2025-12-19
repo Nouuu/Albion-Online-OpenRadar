@@ -71,13 +71,18 @@ export class RadarRenderer {
     }
 
     /**
-     * Stop the game loop
+     * Stop the game loop and cleanup resources
      */
     stop() {
         if (this.animationFrameId !== null) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
             window.logger?.info(CATEGORIES.MAP, 'RadarRendererGameLoopStopped', { viewType: this.viewType });
+        }
+
+        // Cleanup CanvasManager to remove event listeners
+        if (this.canvasManager) {
+            this.canvasManager.destroy();
         }
     }
 

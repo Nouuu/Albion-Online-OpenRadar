@@ -185,133 +185,169 @@
 {{end}}
 
 {{define "scripts/resources"}}
+    <!-- Resources page: register with PageController for proper lifecycle management -->
 <script>
-window.onGlobalsReady(function initResourcesPage() {
-    const settingsSync = window.settingsSync;
-    const {
-        attachCheckboxListeners,
-        generateResourceGrid,
-        initializeTierButtonStates,
-        updateTierButtonState,
-        selectAllTierEnchants,
-        getResourceStorageKey
-    } = window.ResourcesHelper;
+    (async function () {
+        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
 
-    window.selectAllTierEnchants = selectAllTierEnchants;
+        const gridContainerIds = [
+            'static-fiber-grid', 'static-hide-grid', 'static-wood-grid', 'static-ore-grid', 'static-rock-grid',
+            'living-fiber-grid', 'living-hide-grid', 'living-wood-grid', 'living-ore-grid', 'living-rock-grid'
+        ];
 
-    const resources = [
-        { prefix: 'fsp', name: 'Fiber', emoji: '', type: 'Static', containerId: 'static-fiber-grid' },
-        { prefix: 'hsp', name: 'Hide', emoji: '', type: 'Static', containerId: 'static-hide-grid' },
-        { prefix: 'wsp', name: 'Wood', emoji: '', type: 'Static', containerId: 'static-wood-grid' },
-        { prefix: 'osp', name: 'Ore', emoji: '', type: 'Static', containerId: 'static-ore-grid' },
-        { prefix: 'rsp', name: 'Rock', emoji: '', type: 'Static', containerId: 'static-rock-grid' },
-        { prefix: 'flp', name: 'Dryad (Fiber)', emoji: '', type: 'Living', containerId: 'living-fiber-grid' },
-        { prefix: 'hlp', name: 'Animals (Hide)', emoji: '', type: 'Living', containerId: 'living-hide-grid' },
-        { prefix: 'wlp', name: 'Spirit (Wood)', emoji: '', type: 'Living', containerId: 'living-wood-grid' },
-        { prefix: 'olp', name: 'Elemental (Ore)', emoji: '', type: 'Living', containerId: 'living-ore-grid' },
-        { prefix: 'rlp', name: 'Elemental (Rock)', emoji: '', type: 'Living', containerId: 'living-rock-grid' }
-    ];
+        function initResourcesPage() {
+            const settingsSync = window.settingsSync;
+            const {
+                attachCheckboxListeners,
+                generateResourceGrid,
+                initializeTierButtonStates,
+                updateTierButtonState,
+                selectAllTierEnchants,
+                getResourceStorageKey
+            } = window.ResourcesHelper;
 
-    const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
-    const defaultEnchants = {
-        'e0': [false, false, false, false, false, false, false, false],
-        'e1': [false, false, false, false, false, false, false, false],
-        'e2': [false, false, false, false, false, false, false, false],
-        'e3': [false, false, false, false, false, false, false, false],
-        'e4': [false, false, false, false, false, false, false, false],
-    };
+            window.selectAllTierEnchants = selectAllTierEnchants;
 
-    // Generate all resource grids
-    resources.forEach(resource => {
-        const container = document.getElementById(resource.containerId);
-        if (container) {
-            container.innerHTML = generateResourceGrid({
-                prefix: resource.prefix,
-                name: resource.name,
-                emoji: resource.emoji
+            const resources = [
+                {prefix: 'fsp', name: 'Fiber', emoji: '', type: 'Static', containerId: 'static-fiber-grid'},
+                {prefix: 'hsp', name: 'Hide', emoji: '', type: 'Static', containerId: 'static-hide-grid'},
+                {prefix: 'wsp', name: 'Wood', emoji: '', type: 'Static', containerId: 'static-wood-grid'},
+                {prefix: 'osp', name: 'Ore', emoji: '', type: 'Static', containerId: 'static-ore-grid'},
+                {prefix: 'rsp', name: 'Rock', emoji: '', type: 'Static', containerId: 'static-rock-grid'},
+                {prefix: 'flp', name: 'Dryad (Fiber)', emoji: '', type: 'Living', containerId: 'living-fiber-grid'},
+                {prefix: 'hlp', name: 'Animals (Hide)', emoji: '', type: 'Living', containerId: 'living-hide-grid'},
+                {prefix: 'wlp', name: 'Spirit (Wood)', emoji: '', type: 'Living', containerId: 'living-wood-grid'},
+                {prefix: 'olp', name: 'Elemental (Ore)', emoji: '', type: 'Living', containerId: 'living-ore-grid'},
+                {prefix: 'rlp', name: 'Elemental (Rock)', emoji: '', type: 'Living', containerId: 'living-rock-grid'}
+            ];
+
+            const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
+            const defaultEnchants = {
+                'e0': [false, false, false, false, false, false, false, false],
+                'e1': [false, false, false, false, false, false, false, false],
+                'e2': [false, false, false, false, false, false, false, false],
+                'e3': [false, false, false, false, false, false, false, false],
+                'e4': [false, false, false, false, false, false, false, false],
+            };
+
+            // Generate all resource grids
+            resources.forEach(resource => {
+                const container = document.getElementById(resource.containerId);
+                if (container) {
+                    container.innerHTML = generateResourceGrid({
+                        prefix: resource.prefix,
+                        name: resource.name,
+                        emoji: resource.emoji
+                    });
+                }
             });
-        }
-    });
 
-    // Bind resource grid checkboxes (batched to avoid reflow)
-    // Phase 1: Collect all elements and their target states
-    const checkboxUpdates = [];
-    resources.forEach(config => {
-        const storageKey = getResourceStorageKey(config.prefix, config.type);
-        const enchants = settingsSync.getJSON(storageKey, defaultEnchants);
+            // Bind resource grid checkboxes (batched to avoid reflow)
+            const checkboxUpdates = [];
+            resources.forEach(config => {
+                const storageKey = getResourceStorageKey(config.prefix, config.type);
+                const enchants = settingsSync.getJSON(storageKey, defaultEnchants);
 
-        enchantLevels.forEach(enchantLevel => {
-            const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
-            if (!parent) return;
+                enchantLevels.forEach(enchantLevel => {
+                    const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
+                    if (!parent) return;
 
-            const children = Array.from(parent.children);
-            children.forEach((element, i) => {
-                if (element.nodeName !== 'INPUT') return;
-                checkboxUpdates.push({
-                    element,
-                    checked: enchants[enchantLevel][i],
-                    onChange: () => {
-                        enchants[enchantLevel][i] = element.checked;
-                        settingsSync.setJSON(storageKey, enchants);
-                        updateTierButtonState(config.prefix, i);
-                    }
+                    const children = Array.from(parent.children);
+                    children.forEach((element, i) => {
+                        if (element.nodeName !== 'INPUT') return;
+                        checkboxUpdates.push({
+                            element,
+                            checked: enchants[enchantLevel][i],
+                            onChange: () => {
+                                enchants[enchantLevel][i] = element.checked;
+                                settingsSync.setJSON(storageKey, enchants);
+                                updateTierButtonState(config.prefix, i);
+                            }
+                        });
+                    });
                 });
             });
-        });
-    });
 
-    // Phase 2: Apply all updates (single reflow)
-    checkboxUpdates.forEach(({ element, checked, onChange }) => {
-        element.checked = checked;
-        element.addEventListener("change", onChange);
-    });
+            // Apply all updates (single reflow)
+            checkboxUpdates.forEach(({element, checked, onChange}) => {
+                element.checked = checked;
+                element.addEventListener("change", onChange);
+            });
 
-    // Helper to bind checkboxes
-    const bindCheckbox = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.checked = settingsSync.getBool(id);
-            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+            // Helper to bind checkboxes
+            const bindCheckbox = (id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.checked = settingsSync.getBool(id);
+                    el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+                }
+            };
+
+            const bindNumber = (id, defaultVal) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = settingsSync.getNumber(id, defaultVal);
+                    el.addEventListener("input", () => settingsSync.setNumber(id, Number(el.value)));
+                }
+            };
+
+            // Other settings
+            bindCheckbox("settingFishing");
+            bindCheckbox("settingResourceCount");
+            bindCheckbox("settingResourceDistance");
+            bindCheckbox("settingResourceClusters");
+            bindCheckbox("settingLivingResourcesHealthBar");
+            bindCheckbox("settingLivingResourcesID");
+
+            bindNumber("settingClusterRadius", 30);
+            bindNumber("settingClusterMinSize", 2);
+
+            // Initialize tier buttons after grids are rendered
+            setTimeout(() => {
+                attachCheckboxListeners();
+                initializeTierButtonStates();
+            }, 50);
+
+            // Collapse state persistence
+            const collapseIds = ['collapse-fiber', 'collapse-hide', 'collapse-wood', 'collapse-ore', 'collapse-rock'];
+            const defaultStates = {
+                'collapse-fiber': true,
+                'collapse-hide': false,
+                'collapse-wood': false,
+                'collapse-ore': false,
+                'collapse-rock': false
+            };
+
+            collapseIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const saved = settingsSync.getBool(id, defaultStates[id]);
+                    el.checked = saved;
+                    el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
+                }
+            });
         }
-    };
 
-    const bindNumber = (id, defaultVal) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = settingsSync.getNumber(id, defaultVal);
-            el.addEventListener("input", () => settingsSync.setNumber(id, Number(el.value)));
+        function destroyResourcesPage() {
+            // Clear all grid containers to release DOM nodes and event listeners
+            gridContainerIds.forEach(id => {
+                const container = document.getElementById(id);
+                if (container) container.innerHTML = '';
+            });
+            // Clear global reference
+            delete window.selectAllTierEnchants;
         }
-    };
 
-    // Other settings
-    bindCheckbox("settingFishing");
-    bindCheckbox("settingResourceCount");
-    bindCheckbox("settingResourceDistance");
-    bindCheckbox("settingResourceClusters");
-    bindCheckbox("settingLivingResourcesHealthBar");
-    bindCheckbox("settingLivingResourcesID");
-
-    bindNumber("settingClusterRadius", 30);
-    bindNumber("settingClusterMinSize", 2);
-
-    // Initialize tier buttons after grids are rendered
-    setTimeout(() => {
-        attachCheckboxListeners();
-        initializeTierButtonStates();
-    }, 50);
-
-    // Collapse state persistence
-    const collapseIds = ['collapse-fiber', 'collapse-hide', 'collapse-wood', 'collapse-ore', 'collapse-rock'];
-    const defaultStates = { 'collapse-fiber': true, 'collapse-hide': false, 'collapse-wood': false, 'collapse-ore': false, 'collapse-rock': false };
-
-    collapseIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            const saved = settingsSync.getBool(id, defaultStates[id]);
-            el.checked = saved;
-            el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
+        // Register with PageController (only once per session)
+        if (!window._resourcesPageRegistered) {
+            registerPage('resources', {
+                init: initResourcesPage,
+                destroy: destroyResourcesPage
+            });
+            window._resourcesPageRegistered = true;
         }
-    });
-});
+
+        reinitCurrentPage();
+    })();
 </script>
 {{end}}

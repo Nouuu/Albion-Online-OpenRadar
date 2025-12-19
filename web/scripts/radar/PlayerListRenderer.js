@@ -135,30 +135,37 @@ function renderPlayerCard(player, threatType = null) {
 }
 
 function updateSectionPlayers(listContainer, players, threatType) {
-    const currentIds = new Set(players.map(p => p.id));
-
-    // Remove players no longer in this section
+    // 1. Build Map of existing cards in ONE query (not N queries in loop)
+    const existingCards = new Map();
     listContainer.querySelectorAll('[data-player-id]').forEach(card => {
-        const id = parseInt(card.dataset.playerId);
-        if (!currentIds.has(id)) {
-            card.remove();
-            lastRenderedPlayerIds.delete(id);
-        }
+        existingCards.set(parseInt(card.dataset.playerId), card);
     });
 
-    // Update or add players
-    players.forEach(player => {
-        const existingCard = listContainer.querySelector(`[data-player-id="${player.id}"]`);
+    const currentIds = new Set(players.map(p => p.id));
+
+    // 2. Collect cards to remove (batch removal, not one-by-one)
+    const toRemove = [];
+    for (const [id, card] of existingCards) {
+        if (!currentIds.has(id)) {
+            toRemove.push(card);
+            lastRenderedPlayerIds.delete(id);
+        }
+    }
+
+    // 3. Create new cards in DocumentFragment (off-DOM, no reflow)
+    const fragment = document.createDocumentFragment();
+
+    for (const player of players) {
+        const existingCard = existingCards.get(player.id);
         const lastRender = lastRenderedPlayerIds.get(player.id);
 
         if (existingCard && lastRender) {
-            // Update timestamp
+            // Update existing card - minimal DOM operations
             const timeEl = existingCard.querySelector('[data-time]');
             if (timeEl) {
-                const elapsedSec = Math.floor((Date.now() - player.detectedAt) / 1000);
-                timeEl.textContent = elapsedSec < 60 ? `${elapsedSec}s` : `${Math.floor(elapsedSec / 60)}m`;
+                timeEl.textContent = formatElapsedTime(player.detectedAt);
             }
-            // Update health bar if changed
+
             if (player.currentHealth !== lastRender.health) {
                 const healthBar = existingCard.querySelector('[data-health-bar]');
                 if (healthBar && player.initialHealth > 0) {
@@ -167,14 +174,20 @@ function updateSectionPlayers(listContainer, players, threatType) {
                 }
             }
         } else {
-            // Create new card
+            // Create new card in fragment (off-DOM)
             const template = document.createElement('template');
             template.innerHTML = renderPlayerCard(player, threatType).trim();
-            listContainer.appendChild(template.content.firstChild);
+            fragment.appendChild(template.content.firstChild);
         }
 
         lastRenderedPlayerIds.set(player.id, {health: player.currentHealth});
-    });
+    }
+
+    // 4. Batch DOM operations: removals first, then single append
+    toRemove.forEach(card => card.remove());
+    if (fragment.childNodes.length > 0) {
+        listContainer.appendChild(fragment);
+    }
 }
 
 function getPlayerListElements() {
@@ -278,6 +291,13 @@ export function update(playersHandler) {
 }
 
 export function reset() {
+    // Clear DOM elements before nulling references (prevents memory leak)
+    if (_playerElements) {
+        if (_playerElements.hostileList) _playerElements.hostileList.innerHTML = '';
+        if (_playerElements.factionList) _playerElements.factionList.innerHTML = '';
+        if (_playerElements.passiveList) _playerElements.passiveList.innerHTML = '';
+    }
+
     _playerElements = null;
     _lastPlayerCounts = {hostile: -1, faction: -1, passive: -1};
     lastRenderedPlayerIds.clear();

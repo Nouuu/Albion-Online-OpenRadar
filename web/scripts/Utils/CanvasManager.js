@@ -136,6 +136,19 @@ export class CanvasManager {
     getAllContexts() {
         return this.contexts;
     }
+
+    /**
+     * Cleanup resources and remove event listeners
+     * Called when radar is destroyed to prevent memory leaks
+     */
+    destroy() {
+        if (this._onCanvasSizeChanged) {
+            window.removeEventListener('canvasSizeChanged', this._onCanvasSizeChanged);
+            this._onCanvasSizeChanged = null;
+        }
+        this.canvases = {};
+        this.contexts = {};
+    }
 }
 
 // Export singleton instance factory
