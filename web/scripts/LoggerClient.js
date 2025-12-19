@@ -174,3 +174,6 @@ export function isLoggerConnected() {
 }
 
 export {globalLogger as logger};
+
+// Auto-initialize logger WebSocket on module load (should be active on all pages)
+connectLoggerWebSocket();

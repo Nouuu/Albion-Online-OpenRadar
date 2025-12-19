@@ -29,8 +29,8 @@
     <nav id="desktop-nav" class="flex-1 p-3 space-y-0.5">
         {{range .NavItems}}
         <a href="{{.Path}}"
-           {{if ne .Path "/"}}hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true"
-           hx-push-url="true"{{end}}
+           hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true"
+           hx-push-url="true"
            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors
                   {{if .Active}}text-primary border-l-2 border-primary -ml-px pl-2.5{{else}}text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]{{end}}">
             <i data-lucide="{{.Icon}}" class="w-[18px] h-[18px] flex-shrink-0" stroke-width="1.5"></i>
@@ -61,8 +61,8 @@
     <nav id="mobile-nav" class="p-3 space-y-0.5">
         {{range .NavItems}}
         <a href="{{.Path}}"
-           {{if ne .Path "/"}}hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true"
-           hx-push-url="true"{{end}}
+           hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true"
+           hx-push-url="true"
            onclick="window.sidebar.closeMobile()"
            class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors
                   {{if .Active}}text-primary border-l-2 border-primary -ml-px pl-2.5{{else}}text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]{{end}}">

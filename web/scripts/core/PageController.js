@@ -6,6 +6,7 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 const pageHandlers = new Map();
 let currentPage = null;
 let isTransitioning = false;
+let destroyPromise = null;  // Track ongoing destroy for race condition prevention
 
 export function registerPage(pageName, handlers) {
     if (pageHandlers.has(pageName)) {
@@ -26,26 +27,49 @@ function detectCurrentPage() {
 }
 
 async function destroyCurrentPage() {
-    if (!currentPage || isTransitioning) return;
+    if (!currentPage) return;
 
-    const handlers = pageHandlers.get(currentPage);
-    if (handlers?.destroy) {
-        try {
-            window.logger?.info(CATEGORIES.DEBUG, 'PageController_Destroying', {page: currentPage});
-            await handlers.destroy();
-        } catch (error) {
-            window.logger?.error(CATEGORIES.DEBUG, 'PageController_DestroyError', {
-                page: currentPage,
-                error: error.message
-            });
-        }
+    // Wait for any ongoing transition to complete
+    if (isTransitioning && destroyPromise) {
+        await destroyPromise;
+        return;  // Already destroyed by previous call
     }
-    currentPage = null;
+
+    isTransitioning = true;
+    const pageToDestroy = currentPage;
+
+    destroyPromise = (async () => {
+        const handlers = pageHandlers.get(pageToDestroy);
+        if (handlers?.destroy) {
+            try {
+                window.logger?.info(CATEGORIES.DEBUG, 'PageController_Destroying', {page: pageToDestroy});
+                await handlers.destroy();
+            } catch (error) {
+                window.logger?.error(CATEGORIES.DEBUG, 'PageController_DestroyError', {
+                    page: pageToDestroy,
+                    error: error.message
+                });
+            }
+        }
+        currentPage = null;
+        isTransitioning = false;
+        destroyPromise = null;
+    })();
+
+    await destroyPromise;
 }
 
 async function initCurrentPage() {
     const newPage = detectCurrentPage();
     if (!newPage || newPage === currentPage) return;
+
+    // Wait for any ongoing destroy to complete first
+    if (destroyPromise) {
+        await destroyPromise;
+    }
+
+    // Double-check after waiting - page might have changed
+    if (currentPage === newPage) return;
 
     isTransitioning = true;
     currentPage = newPage;

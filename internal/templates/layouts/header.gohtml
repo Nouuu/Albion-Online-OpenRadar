@@ -27,11 +27,19 @@
     const dot = document.getElementById('wsStatusDot');
     const text = document.getElementById('wsStatusText');
     const indicator = document.getElementById('wsStatusIndicator');
-    const isRadarPage = '{{.Page}}' === 'radar';
 
-    if (!isRadarPage && indicator) {
-        indicator.style.display = 'none';
-        return;
+    function isOnRadarPage() {
+        const pageContent = document.getElementById('page-content');
+        return pageContent?.dataset?.page === 'radar';
+    }
+
+    function updateVisibility() {
+        if (!indicator) return;
+        const onRadar = isOnRadarPage();
+        indicator.style.display = onRadar ? 'flex' : 'none';
+        if (onRadar) {
+            updateIndicator(window.wsConnectionStatus || 'disconnected');
+        }
     }
 
     function updateIndicator(status) {
@@ -58,24 +66,29 @@
                 break;
             default:
                 dot.classList.add('status-neutral');
-                text.textContent = 'Unknown';
+                text.textContent = 'Disconnected';
                 text.classList.add('text-base-content/60');
         }
     }
 
-    document.addEventListener('wsStatusChange', (e) => updateIndicator(e.detail.status));
+    // Listen to WS status changes
+    document.addEventListener('wsStatusChange', (e) => {
+        if (isOnRadarPage()) updateIndicator(e.detail.status);
+    });
 
-    let attempts = 0;
-    const checkStatus = setInterval(() => {
-        attempts++;
-        if (window.wsConnectionStatus) {
-            updateIndicator(window.wsConnectionStatus);
-            if (window.wsConnectionStatus === 'connected' || attempts > 20) {
-                clearInterval(checkStatus);
-            }
+    // Listen to HTMX page changes
+    document.body.addEventListener('htmx:afterSettle', (e) => {
+        if (e.detail.target?.id === 'page-content') {
+            updateVisibility();
         }
-        if (attempts > 20) clearInterval(checkStatus);
-    }, 500);
+    });
+
+    // Initial visibility check (wait for DOM since header renders before #page-content)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateVisibility);
+    } else {
+        updateVisibility();
+    }
 })();
 </script>
 {{end}}

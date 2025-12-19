@@ -48,7 +48,8 @@ export class MapDrawing extends DrawingUtils
             ctx.save();
 
             ctx.scale(1, -1);
-            ctx.translate(250, -250);
+            const center = this.getCanvasCenter();
+            ctx.translate(center, -center);
 
             ctx.rotate(-0.785398);
             ctx.translate(-x, y);

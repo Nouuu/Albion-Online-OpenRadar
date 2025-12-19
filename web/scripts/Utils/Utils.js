@@ -33,6 +33,7 @@ import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 
 // MODULE STATE - Controlled by init/destroy
 let isInitialized = false;
+let isDestroying = false;  // Guard against init/destroy race condition
 let radarRenderer = null;
 let socket = null;
 let reconnectTimeoutId = null;
@@ -40,6 +41,7 @@ let reconnectAttempts = 0;
 let eventQueue = null;
 let playerListIntervalId = null;
 let cleanupIntervalId = null;
+let buttonClickHandler = null;  // Store reference for cleanup
 
 // Handlers (recreated on each init)
 let harvestablesHandler = null;
@@ -285,6 +287,11 @@ export async function initRadar() {
         return;
     }
 
+    // Wait for any ongoing destroy operation to complete
+    while (isDestroying) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+    }
+
     window.logger?.info(CATEGORIES.DEBUG, 'RadarInitializing', {});
 
     try {
@@ -342,7 +349,12 @@ export async function initRadar() {
         playerListIntervalId = setInterval(updatePlayersList, 1500);
         cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
 
-        document.getElementById("button")?.addEventListener("click", ClearHandlers);
+        // Store button listener reference for cleanup
+        const buttonElement = document.getElementById("button");
+        if (buttonElement) {
+            buttonClickHandler = () => ClearHandlers();
+            buttonElement.addEventListener("click", buttonClickHandler);
+        }
 
         isInitialized = true;
         window.logger?.info(CATEGORIES.DEBUG, 'RadarInitialized', {});
@@ -360,7 +372,15 @@ export function destroyRadar() {
         return;
     }
 
+    isDestroying = true;
     window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroying', {});
+
+    // Remove button listener FIRST (before clearing handlers)
+    const buttonElement = document.getElementById("button");
+    if (buttonElement && buttonClickHandler) {
+        buttonElement.removeEventListener("click", buttonClickHandler);
+        buttonClickHandler = null;
+    }
 
     if (playerListIntervalId) {
         clearInterval(playerListIntervalId);
@@ -380,7 +400,7 @@ export function destroyRadar() {
     eventQueue = null;
 
     cleanupSocket();
-    ClearHandlers();
+    ClearHandlers(true); // Preserve sessionStorage for SPA navigation (map restoration)
 
     harvestablesHandler = null;
     mobsHandler = null;
@@ -418,6 +438,7 @@ export function destroyRadar() {
     window.lpY = 0;
 
     isInitialized = false;
+    isDestroying = false;
     window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroyed', {});
 }
 
@@ -823,35 +844,45 @@ function updateConnectionStatus(status) {
   }
 }
 
-// Named handlers for proper cleanup
 function onSocketOpen() {
   reconnectAttempts = 0;
   updateConnectionStatus('connected');
-  console.log('✅ [Utils.js] WebSocket connected');
+    window.logger?.info(CATEGORIES.DEBUG, 'WebSocketConnected', {});
 }
 
 function onSocketClose() {
+    // Guard: Don't handle close events after destroy
+    if (!isInitialized || isDestroying) return;
+
   updateConnectionStatus('disconnected');
-  console.warn('⚠️ [Utils.js] WebSocket disconnected');
+    window.logger?.warn(CATEGORIES.DEBUG, 'WebSocketDisconnected', {});
   scheduleReconnect();
 }
 
 function onSocketError(error) {
-  console.error('❌ [Utils.js] WebSocket error:', error);
+    window.logger?.error(CATEGORIES.DEBUG, 'WebSocketError', {error: error?.message});
 }
 
 function cleanupSocket() {
+    // Clear reconnect timeout FIRST to prevent ghost reconnects
+    if (reconnectTimeoutId) {
+        clearTimeout(reconnectTimeoutId);
+        reconnectTimeoutId = null;
+    }
+    reconnectAttempts = 0;
+
   if (socket) {
+      // Remove listeners BEFORE closing to prevent callbacks
     socket.removeEventListener('open', onSocketOpen);
     socket.removeEventListener('close', onSocketClose);
     socket.removeEventListener('error', onSocketError);
     socket.removeEventListener('message', handleWebSocketMessage);
-    socket.close();
+
+      // Close socket if not already closed
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+          socket.close();
+      }
     socket = null;
-  }
-  if (reconnectTimeoutId) {
-    clearTimeout(reconnectTimeoutId);
-    reconnectTimeoutId = null;
   }
 }
 
@@ -859,7 +890,7 @@ function connectWebSocket() {
   updateConnectionStatus('connecting');
   cleanupSocket();
 
-  console.log('🔌 [Utils.js] Connecting to WebSocket...');
+    window.logger?.debug(CATEGORIES.DEBUG, 'WebSocketConnecting', {});
   socket = new WebSocket('ws://localhost:5001/ws');
   socket.addEventListener('open', onSocketOpen);
   socket.addEventListener('close', onSocketClose);
@@ -868,12 +899,18 @@ function connectWebSocket() {
 }
 
 function scheduleReconnect() {
+    // Guard: Don't schedule reconnect if destroyed
+    if (!isInitialized || isDestroying) return;
+
   reconnectAttempts++;
   const delay = Math.min(
     INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
     MAX_RECONNECT_DELAY
   );
-  console.log(`🔄 [Utils.js] Reconnecting in ${delay / 1000}s (attempt ${reconnectAttempts})...`);
+    window.logger?.debug(CATEGORIES.DEBUG, 'WebSocketReconnecting', {
+        delay: delay / 1000,
+        attempt: reconnectAttempts
+    });
   reconnectTimeoutId = setTimeout(connectWebSocket, delay);
 }
 
@@ -1354,10 +1391,9 @@ function initializeRadarRenderer() {
 
     // Only initialize RadarRenderer if canvas elements exist (drawing page)
     if (canvas && context) {
-        // Stop existing renderer if any
         if (radarRenderer) {
             radarRenderer.stop();
-            console.log('🔄 [Utils.js] Stopping existing RadarRenderer for reinit');
+            window.logger?.debug(CATEGORIES.DEBUG, 'RadarRendererStopping', {reason: 'reinit'});
         }
 
         radarRenderer = createRadarRenderer('main', {
@@ -1444,7 +1480,7 @@ window.addEventListener('beforeunload', cleanupIntervals);
 //     ClearHandlers();
 // });
 
-function ClearHandlers()
+function ClearHandlers(preserveSession = false)
 {
     chestsHandler.chestsList = [];
     dungeonsHandler.dungeonList = [];
@@ -1453,11 +1489,13 @@ function ClearHandlers()
     mobsHandler.Clear();
     playersHandler.Clear();
     wispCageHandler.Clear();
-    // 🗑️ Clear session map cache
-    try {
-        sessionStorage.removeItem('lastMapDisplayed');
-        window.logger?.debug(CATEGORIES.MAP, 'SessionMapCleared');
-    } catch (e) {
-        window.logger?.warn(CATEGORIES.MAP, 'SessionStorageClearFailed', { error: e?.message });
+    // 🗑️ Clear session map cache (unless preserving for SPA navigation)
+    if (!preserveSession) {
+        try {
+            sessionStorage.removeItem('lastMapDisplayed');
+            window.logger?.debug(CATEGORIES.MAP, 'SessionMapCleared');
+        } catch (e) {
+            window.logger?.warn(CATEGORIES.MAP, 'SessionStorageClearFailed', {error: e?.message});
+        }
     }
 }

@@ -7,6 +7,7 @@ export class WebSocketEventQueue {
         this.throttleMap = new Map();
         this.flushScheduled = false;
         this.flushCallback = null;
+        this.rafId = null;  // Track RAF for cleanup
         this.cleanupInterval = setInterval(() => this.cleanupThrottleMap(), 30000);
     }
 
@@ -74,15 +75,19 @@ export class WebSocketEventQueue {
     scheduleFlush() {
         if (this.flushScheduled) return;
         this.flushScheduled = true;
-        requestAnimationFrame(() => this.flush());
+        this.rafId = requestAnimationFrame(() => this.flush());
     }
 
     flush() {
+        this.rafId = null;
         this.flushScheduled = false;
         if (this.eventQueue.size === 0) return;
 
+        // Guard: Don't flush if callback was cleared (destroyed)
+        if (!this.flushCallback) return;
+
         for (const [, event] of this.eventQueue) {
-            if (this.flushCallback) this.flushCallback(event.messageType, event.params);
+            this.flushCallback(event.messageType, event.params);
         }
         this.eventQueue.clear();
     }
@@ -95,6 +100,13 @@ export class WebSocketEventQueue {
     }
 
     destroy() {
+        // Cancel pending RAF first
+        if (this.rafId !== null) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+        }
+        this.flushScheduled = false;
+
         if (this.cleanupInterval) {
             clearInterval(this.cleanupInterval);
             this.cleanupInterval = null;

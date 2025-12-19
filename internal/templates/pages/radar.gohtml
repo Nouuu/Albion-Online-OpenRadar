@@ -133,22 +133,19 @@
 {{end}}
 
 {{define "scripts/radar"}}
-    <!-- Radar core: register page with PageController -->
-    <script type="module">
-        import {registerPage, reinitCurrentPage} from '/scripts/core/PageController.js';
-        import {destroyRadar, initRadar} from '/scripts/Utils/Utils.js';
+    <!-- Radar core: register page with PageController using dynamic import for HTMX compatibility -->
+    <script>
+        (async function () {
+            const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
+            const {initRadar, destroyRadar} = await import('/scripts/Utils/Utils.js');
 
         registerPage('radar', {
-            init: async () => {
-                await initRadar();
-            },
-            destroy: () => {
-                destroyRadar();
-            }
+            init: async () => await initRadar(),
+            destroy: () => destroyRadar()
         });
 
-        // Trigger init - PageController may have already run DOMContentLoaded
         reinitCurrentPage();
+        })();
     </script>
 
 <script>
