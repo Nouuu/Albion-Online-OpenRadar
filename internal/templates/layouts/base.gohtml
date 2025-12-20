@@ -7,19 +7,13 @@
     <title id="page-title">{{.Title}}</title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="/styles/tailwind.css">
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/scripts/vendors/lucide.min.js"></script>
 
     <link rel="stylesheet" href="/styles/app.css">
     <link rel="stylesheet" href="/scripts/styles/components.css">
 
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"></script>
 
     <!-- Must be defined before modules -->
     <script>
@@ -77,7 +71,7 @@
     <script type="module" src="/scripts/Utils/Toast.js"></script>
     <script type="module" src="/scripts/Utils/Modal.js"></script>
     <script src="/scripts/spa-router.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
+    <script src="/scripts/vendors/htmx.min.js"></script>
 
     <!-- Must be in head before sidebar template -->
     <script>

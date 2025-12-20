@@ -1,4 +1,5 @@
 /* OpenRadar - Tailwind CSS Input */
+@import "./fonts.css";
 @import "tailwindcss";
 @plugin "daisyui" {
     themes: night --default;
