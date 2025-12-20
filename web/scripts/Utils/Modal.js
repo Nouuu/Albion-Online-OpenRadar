@@ -4,15 +4,26 @@ class ModalManager {
     constructor() {
         this.modals = new Map();
         this.activeModal = null;
+        this._onKeydown = null;
         this.init();
     }
 
     init() {
-        document.addEventListener('keydown', (e) => {
+        this._onKeydown = (e) => {
             if (e.key === 'Escape' && this.activeModal) {
                 this.close(this.activeModal);
             }
-        });
+        };
+        document.addEventListener('keydown', this._onKeydown);
+    }
+
+    destroy() {
+        if (this._onKeydown) {
+            document.removeEventListener('keydown', this._onKeydown);
+            this._onKeydown = null;
+        }
+        this.modals.clear();
+        this.activeModal = null;
     }
 
     open(id, options = {}) {

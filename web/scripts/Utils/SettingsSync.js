@@ -29,7 +29,8 @@ export class SettingsSync {
             this.channel = new BroadcastChannel(CHANNEL_NAME);
             this.channel.addEventListener('message', this._boundMessageHandler);
             this.isInitialized = true;
-        } catch {
+        } catch (e) {
+            window.logger?.info(CATEGORIES.SYSTEM, 'BroadcastChannel_Fallback', {reason: e?.message});
             this.setupFallback();
         }
     }
@@ -37,6 +38,7 @@ export class SettingsSync {
     setupFallback() {
         window.addEventListener('storage', this._boundStorageHandler);
         this._usingFallback = true;
+        window.logger?.info(CATEGORIES.SYSTEM, 'SettingsSync_UsingStorageFallback', {});
     }
 
     _getCached(key) {

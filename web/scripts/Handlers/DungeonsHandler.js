@@ -25,18 +25,23 @@ class Dungeon
 
         this.hY = 0;
         this.hX = 0;
+        this.lastUpdateTime = Date.now();
 
-        this.SetDrawNameByType();
+        this.setDrawNameByType();
     }
 
-    SetDrawNameByType()
+    touch() {
+        this.lastUpdateTime = Date.now();
+    }
+
+    setDrawNameByType()
     {
         switch (this.type)
         {
             case DungeonType.Solo:
                 this.drawName = "dungeon_" + this.enchant;
                 break;
-            
+
             case DungeonType.Group:
                 this.drawName = "group_" + this.enchant;
                 break;
@@ -85,16 +90,18 @@ export class DungeonsHandler
         this.addDungeon(id, position[0], position[1], name, enchant);
     }
 
-    addDungeon(id, posX, posY, name, enchant)
-    {        
-        if (this.dungeonList.some(item => item.id === id))
+    addDungeon(id, posX, posY, name, enchant) {
+        const existing = this.dungeonList.find(item => item.id === id);
+        if (existing) {
+            existing.touch();
             return;
+        }
 
         const lowerCaseName = name.toLowerCase(name);
         let dungeonType = undefined;
 
         // Corrupted dungeons have "solo" in their names
-        // So check before solo to avoir problems
+        // So check before solo to avoid problems
         // "CORRUPTED_SOLO"
         if (lowerCaseName.includes("corrupted")) // corrupt
         {
@@ -128,8 +135,25 @@ export class DungeonsHandler
         this.dungeonList.push(d);
     }
 
-    RemoveDungeon(id)
+    removeDungeon(id)
     {
         this.dungeonList = this.dungeonList.filter((dungeon) => dungeon.id !== id);
+    }
+
+    Clear() {
+        this.dungeonList = [];
+    }
+
+    cleanupStaleEntities(maxAgeMs = 120000) {
+        const now = Date.now();
+        const before = this.dungeonList.length;
+        this.dungeonList = this.dungeonList.filter(dungeon =>
+            (now - dungeon.lastUpdateTime) < maxAgeMs
+        );
+        const removed = before - this.dungeonList.length;
+        if (removed > 0) {
+            window.logger?.debug(CATEGORIES.DUNGEONS, 'dungeon_cleanup', {removed, maxAgeMs});
+        }
+        return removed;
     }
 }

@@ -14,6 +14,11 @@ class Fish
         this.totalSize = this.sizeSpawned + this.sizeLeftToSpawn;
         this.hX = 0;
         this.hY = 0;
+        this.lastUpdateTime = Date.now();
+    }
+
+    touch() {
+        this.lastUpdateTime = Date.now();
     }
 }
 
@@ -24,7 +29,7 @@ export class FishingHandler
         this.fishes = [];
     }
 
-    NewFishEvent(Parameters)
+    newFishEvent(Parameters)
     {
         if (settingsSync.getBool("settingShowFish") === false) return;
 
@@ -48,28 +53,29 @@ export class FishingHandler
             sizeSpawned,
             sizeLeftToSpawn,
         )
-
     }
 
-    upsertFish(...args)
+    upsertFish(id, posX, posY, type, sizeSpawned, sizeLeftToSpawn)
     {
-        const fish = new Fish(...args);
-
-        const index = this.fishes.findIndex(f => f.id == fish.id)
-        if (index != -1) {
-            this.fishes[index] = fish;
+        const existing = this.fishes.find(f => f.id === id);
+        if (existing) {
+            existing.posX = posX;
+            existing.posY = posY;
+            existing.sizeSpawned = sizeSpawned;
+            existing.sizeLeftToSpawn = sizeLeftToSpawn;
+            existing.totalSize = sizeSpawned + sizeLeftToSpawn;
+            existing.touch();
             return;
         }
 
-        this.fishes.push(fish)
+        const fish = new Fish(id, posX, posY, type, sizeSpawned, sizeLeftToSpawn);
+        this.fishes.push(fish);
     }
 
-    // TODO
-    FishingEnd(Parameters)
+    fishingEnd(Parameters)
     {
         if (settingsSync.getBool("settingShowFish") === false) return;
 
-        // 🐛 DEBUG: Log fishing end event
         window.logger?.debug(CATEGORIES.FISHING, 'fishing_end', {
             parameters: Parameters
         });
@@ -79,10 +85,10 @@ export class FishingHandler
         if (!this.fishes.some(fish => fish.id === id))
             return;
 
-        this.RemoveFish(id);
+        this.removeFish(id);
     }
 
-    RemoveFish(id)
+    removeFish(id)
     {
         this.fishes = this.fishes.filter(fish => fish.id !== id);
     }
@@ -90,5 +96,18 @@ export class FishingHandler
     Clear()
     {
         this.fishes = [];
+    }
+
+    cleanupStaleEntities(maxAgeMs = 120000) {
+        const now = Date.now();
+        const before = this.fishes.length;
+        this.fishes = this.fishes.filter(fish =>
+            (now - fish.lastUpdateTime) < maxAgeMs
+        );
+        const removed = before - this.fishes.length;
+        if (removed > 0) {
+            window.logger?.debug(CATEGORIES.FISHING, 'fish_cleanup', {removed, maxAgeMs});
+        }
+        return removed;
     }
 }

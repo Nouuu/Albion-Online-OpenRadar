@@ -8,7 +8,11 @@ class Chest {
         this.chestName = name;
         this.hX = 0;
         this.hY = 0;
+        this.lastUpdateTime = Date.now();
+    }
 
+    touch() {
+        this.lastUpdateTime = Date.now();
     }
 }
 
@@ -18,15 +22,34 @@ export class ChestsHandler {
     }
 
     addChest(id, posX, posY, name) {
-        const h = new Chest(id, posX, posY, name);
-        if (!this.chestsList.some(chest => chest.id === h.id)) {
-            this.chestsList.push(h);
+        const existing = this.chestsList.find(chest => chest.id === id);
+        if (existing) {
+            existing.touch();
+            return;
         }
+        const h = new Chest(id, posX, posY, name);
+        this.chestsList.push(h);
     }
 
     removeChest(id) {
         this.chestsList = this.chestsList.filter(chest => chest.id !== id);
-      
+    }
+
+    Clear() {
+        this.chestsList = [];
+    }
+
+    cleanupStaleEntities(maxAgeMs = 120000) {
+        const now = Date.now();
+        const before = this.chestsList.length;
+        this.chestsList = this.chestsList.filter(chest =>
+            (now - chest.lastUpdateTime) < maxAgeMs
+        );
+        const removed = before - this.chestsList.length;
+        if (removed > 0) {
+            window.logger?.debug(CATEGORIES.DUNGEONS, 'chest_cleanup', {removed, maxAgeMs});
+        }
+        return removed;
     }
 
     addChestEvent(Parameters)

@@ -184,7 +184,8 @@ class PictureInPictureManager {
 
     destroy() {
         if (document.pictureInPictureElement) {
-            document.exitPictureInPicture().catch(() => {
+            document.exitPictureInPicture().catch((e) => {
+                window.logger?.warn(CATEGORIES.SYSTEM, 'PiP_DestroyExitFailed', {error: e?.message});
             });
         }
 

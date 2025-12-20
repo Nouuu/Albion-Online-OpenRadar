@@ -105,11 +105,11 @@ export class PlayersHandler {
         }
 
         if (items != null) {
-            this.playersList.forEach(playerOne => {
-                if (playerOne.id === id) {
-                    playerOne.items = items;
-                }
-            });
+            const player = this.playersList.find(p => p.id === id);
+            if (player) {
+                player.items = items;
+                player.touch();
+            }
         }
     }
 
@@ -192,11 +192,10 @@ export class PlayersHandler {
     }
 
     updatePlayerMounted(id, mounted) {
-        for (const player of this.playersList) {
-            if (player.id === id) {
-                player.setMounted(mounted);
-                break;
-            }
+        const player = this.playersList.find(p => p.id === id);
+        if (player) {
+            player.setMounted(mounted);
+            player.touch();
         }
     }
 
@@ -227,21 +226,22 @@ export class PlayersHandler {
             parameterCount: Object.keys(Parameters).length
         });
 
-        var uPlayer = this.playersList.find(player => player.id === Parameters[0]);
+        const uPlayer = this.playersList.find(player => player.id === Parameters[0]);
 
         if (!uPlayer) return;
 
-
         uPlayer.currentHealth = Parameters[2];
         uPlayer.initialHealth = Parameters[3];
+        uPlayer.touch();
     }
 
     UpdatePlayerLooseHealth(Parameters) {
-        var uPlayer = this.playersList.find(player => player.id === Parameters[0]);
+        const uPlayer = this.playersList.find(player => player.id === Parameters[0]);
 
         if (!uPlayer) return;
 
         uPlayer.currentHealth = Parameters[3];
+        uPlayer.touch();
     }
 
     Clear() {
@@ -276,7 +276,9 @@ export class PlayersHandler {
         }
 
         if (settingsSync.getBool('settingSound')) {
-            this.audio.play().catch(() => {});
+            this.audio.play().catch((err) => {
+                window.logger?.debug(CATEGORIES.PLAYERS, 'audio_blocked_hostile', {error: err?.message});
+            });
         }
 
         window.logger?.info(CATEGORIES.PLAYERS, 'PlayerBecameHostile', {

@@ -323,6 +323,7 @@ export class MobsHandler {
         if (m) {
             m.posX = posX;
             m.posY = posY;
+            m.touch();
         }
     }
 
@@ -332,6 +333,7 @@ export class MobsHandler {
         const found = this.mobsList.find(m => m.id === mobId) || this.harvestablesNotGood.find(m => m.id === mobId);
         if (found) {
             found.enchantmentLevel = enchantmentLevel;
+            found.touch();
         }
     }
 
@@ -469,7 +471,11 @@ export class MobsHandler {
     }
 
     AddMist(id, posX, posY, name, enchant) {
-        if (this.mistList.some(m => m.id === id)) return;
+        const existing = this.mistList.find(m => m.id === id);
+        if (existing) {
+            existing.touch();
+            return;
+        }
         this.mistList.push(new Mist(id, posX, posY, name, enchant));
     }
 
@@ -482,6 +488,7 @@ export class MobsHandler {
         if (mist) {
             mist.posX = posX;
             mist.posY = posY;
+            mist.touch();
         }
     }
 
@@ -489,6 +496,7 @@ export class MobsHandler {
         const mist = this.mistList.find(m => m.id === id);
         if (mist) {
             mist.enchant = enchantmentLevel;
+            mist.touch();
         }
     }
 

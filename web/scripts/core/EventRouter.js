@@ -151,10 +151,10 @@ export function onEvent(Parameters) {
             playersHandler.removePlayer(id);
             mobsHandler.removeMist(id);
             mobsHandler.removeMob(id);
-            dungeonsHandler.RemoveDungeon(id);
+            dungeonsHandler.removeDungeon(id);
             chestsHandler.removeChest(id);
-            fishingHandler.RemoveFish(id);
-            wispCageHandler.RemoveCage(id);
+            fishingHandler.removeFish(id);
+            wispCageHandler.removeCage(id);
             break;
 
         case EventCodes.Move:
@@ -259,19 +259,19 @@ export function onEvent(Parameters) {
             break;
 
         case EventCodes.NewMistsCagedWisp:
-            wispCageHandler.NewCageEvent(Parameters);
+            wispCageHandler.newCageEvent(Parameters);
             break;
 
         case EventCodes.MistsWispCageOpened:
-            wispCageHandler.CageOpenedEvent(Parameters);
+            wispCageHandler.cageOpenedEvent(Parameters);
             break;
 
         case EventCodes.NewFishingZoneObject:
-            fishingHandler.NewFishEvent(Parameters);
+            fishingHandler.newFishEvent(Parameters);
             break;
 
         case EventCodes.FishingFinished:
-            fishingHandler.FishingEnd(Parameters);
+            fishingHandler.fishingEnd(Parameters);
             break;
 
         case EventCodes.ChangeFlaggingFinished:

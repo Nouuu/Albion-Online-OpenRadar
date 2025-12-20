@@ -111,7 +111,10 @@ class Logger {
         if (this.wsClient && this.wsClient.readyState === WebSocket.OPEN) {
             try {
                 this.wsClient.send(JSON.stringify({ type: 'logs', logs: this.buffer }));
-            } catch { /* ignore send errors */ }
+            } catch (e) {
+                // Exception: console allowed here to avoid logger recursion
+                console.warn('[Logger] WebSocket send failed:', e?.message);
+            }
         }
         this.buffer = [];
     }
@@ -157,7 +160,9 @@ function connectLoggerWebSocket() {
         socket.addEventListener('open', onLoggerSocketOpen);
         socket.addEventListener('close', onLoggerSocketClose);
         socket.addEventListener('error', onLoggerSocketError);
-    } catch {
+    } catch (e) {
+        // Exception: console allowed here to avoid logger recursion
+        console.warn('[Logger] WebSocket connection failed:', e?.message);
         scheduleLoggerReconnect();
     }
 }
