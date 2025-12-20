@@ -1,3 +1,5 @@
+import {CATEGORIES} from '../constants/LoggerConstants.js';
+
 class ModalManager {
     constructor() {
         this.modals = new Map();
@@ -16,7 +18,7 @@ class ModalManager {
     open(id, options = {}) {
         const modal = document.querySelector(`[data-modal="${id}"]`);
         if (!modal) {
-            console.warn(`Modal "${id}" not found`);
+            window.logger?.warn(CATEGORIES.SYSTEM, 'ModalNotFound', {id});
             return;
         }
 

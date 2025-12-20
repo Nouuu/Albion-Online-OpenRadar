@@ -1,4 +1,4 @@
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 
 class Chest {
     constructor(id, posX, posY, name) {
@@ -38,7 +38,7 @@ export class ChestsHandler {
                 allParams[`param[${key}]`] = Parameters[key];
             }
         }
-        window.logger?.debug(CATEGORIES.CHEST, EVENTS.NewChestEvent_ALL_PARAMS, {
+        window.logger?.debug(CATEGORIES.DUNGEONS, 'new_chest_all_params', {
             chestId: Parameters[0],
             position: Parameters[7],
             allParameters: allParams,

@@ -4,7 +4,7 @@
  * Follows the same pattern as ItemsDatabase and SpellsDatabase
  */
 
-import { CATEGORIES } from '../constants/LoggerConstants.js';
+import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class HarvestablesDatabase {
     constructor() {
@@ -78,7 +78,7 @@ export class HarvestablesDatabase {
             }
 
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'HarvestablesLoaded',
                 {
                     typesLoaded: this.stats.typesLoaded,
@@ -91,7 +91,7 @@ export class HarvestablesDatabase {
 
         } catch (error) {
             window.logger?.error(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'HarvestablesLoadError',
                 {
                     error: error.message,

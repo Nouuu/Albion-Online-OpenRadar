@@ -1,5 +1,5 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
 import imageCache from "../Utils/ImageCache.js";
 
@@ -61,10 +61,10 @@ export class MapDrawing extends DrawingUtils
         {
             imageCache.preloadImageAndAddToList(src, "Maps")
             .then(() => {
-                window.logger?.info(CATEGORIES.MAP, EVENTS.MapLoaded, { src: src });
+                window.logger?.info(CATEGORIES.MAP, 'map_loaded', {src: src});
             })
             .catch((error) => {
-                window.logger?.warn(CATEGORIES.MAP, EVENTS.MapLoadFailed, { src: src, error: error?.message });
+                window.logger?.warn(CATEGORIES.MAP, 'map_load_failed', {src: src, error: error?.message});
             });
         }
     }

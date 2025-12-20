@@ -1,5 +1,5 @@
 import {CanvasManager} from './CanvasManager.js';
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../Data/ZonesDatabase.js";
 
@@ -200,7 +200,7 @@ export class RadarRenderer {
                     );
                     this.lastClusterUpdate = currentTime;
                 } catch (e) {
-                    window.logger?.error(CATEGORIES.CLUSTER, EVENTS.ComputeFailed, e);
+                    window.logger?.error(CATEGORIES.RENDERING, 'cluster_compute_failed', e);
                 }
             }
 
@@ -278,7 +278,7 @@ export class RadarRenderer {
                         this.drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
                     }
                 } catch (e) {
-                    window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawInfoBoxFailed, e);
+                    window.logger?.error(CATEGORIES.RENDERING, 'cluster_draw_failed', e);
                 }
             }
         }

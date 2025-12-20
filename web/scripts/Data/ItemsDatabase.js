@@ -4,6 +4,8 @@
  * Mimics DEATHEYE's ItemData.Load() logic
  */
 
+import {CATEGORIES} from '../constants/LoggerConstants.js';
+
 export class ItemsDatabase {
     constructor() {
         /** @type {Map<number, {name: string, tier: number, itempower: number, enchant: number}>} */
@@ -17,7 +19,7 @@ export class ItemsDatabase {
      */
     async load(jsonPath) {
         try {
-            console.log('📄 Loading items.json...');
+            window.logger?.info(CATEGORIES.SYSTEM, 'ItemsLoading', {path: jsonPath});
 
             const response = await fetch(jsonPath);
             if (!response.ok) {
@@ -93,10 +95,10 @@ export class ItemsDatabase {
             }
 
             this.isLoaded = true;
-            console.log(`✅ ItemsDatabase loaded: ${this.items.size} items indexed (skipped ${skipped} without itempower)`);
+            window.logger?.info(CATEGORIES.SYSTEM, 'ItemsLoaded', {count: this.items.size, skipped});
 
         } catch (error) {
-            console.error('❌ Error loading ItemsDatabase:', error);
+            window.logger?.error(CATEGORIES.SYSTEM, 'ItemsLoadError', {error: error.message});
             throw error;
         }
     }

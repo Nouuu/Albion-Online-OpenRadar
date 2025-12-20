@@ -1,6 +1,6 @@
 import {DrawingUtils} from "../Utils/DrawingUtils.js";
 import {EnemyType} from "../Handlers/MobsHandler.js";
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
 export class MobsDrawing extends DrawingUtils
@@ -93,7 +93,7 @@ export class MobsDrawing extends DrawingUtils
 
                 // 🐛 DEBUG: Log color assignment (only once per mob to avoid spam)
                 if (!mobOne._debugLogged) {
-                    window.logger?.debug(CATEGORIES.MOB_DRAW, EVENTS.MobDrawDetails, {
+                    window.logger?.debug(CATEGORIES.RENDERING, 'mob_draw_details', {
                         id: mobOne.id,
                         typeId: mobOne.typeId,
                         type: mobOne.type,

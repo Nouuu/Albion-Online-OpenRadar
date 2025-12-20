@@ -62,7 +62,7 @@ function cleanupStaleEntities() {
     const cleanedRenderCache = PlayerListRenderer.cleanupStaleCache(activePlayerIds);
 
     if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedRenderCache) {
-        window.logger?.debug(CATEGORIES.DEBUG, 'StaleEntityCleanup', {
+        window.logger?.debug(CATEGORIES.SYSTEM, 'StaleEntityCleanup', {
             players: cleanedPlayers,
             mobs: cleanedMobs,
             harvestables: cleanedHarvestables,
@@ -136,7 +136,7 @@ function clearHandlers(preserveSession = false) {
 
 export async function initRadar() {
     if (isInitialized) {
-        window.logger?.warn(CATEGORIES.DEBUG, 'RadarAlreadyInitialized', {});
+        window.logger?.warn(CATEGORIES.SYSTEM, 'RadarAlreadyInitialized', {});
         return;
     }
 
@@ -144,7 +144,7 @@ export async function initRadar() {
         await new Promise(resolve => setTimeout(resolve, 10));
     }
 
-    window.logger?.info(CATEGORIES.DEBUG, 'RadarInitializing', {});
+    window.logger?.info(CATEGORIES.SYSTEM, 'RadarInitializing', {});
 
     try {
         await DatabaseLoader.load();
@@ -232,17 +232,17 @@ export async function initRadar() {
         }
 
         isInitialized = true;
-        window.logger?.info(CATEGORIES.DEBUG, 'RadarInitialized', {});
+        window.logger?.info(CATEGORIES.SYSTEM, 'RadarInitialized', {});
 
         if (pictureInPictureManager.isSupported()) {
             pictureInPictureManager.initialize(radarRenderer.canvasManager);
             window.pipManager = pictureInPictureManager;
             document.dispatchEvent(new CustomEvent('pipManagerReady'));
-            window.logger?.info(CATEGORIES.DEBUG, 'PiPManagerInitialized', {});
+            window.logger?.info(CATEGORIES.SYSTEM, 'PiPManagerInitialized', {});
         }
 
     } catch (error) {
-        window.logger?.error(CATEGORIES.DEBUG, 'RadarInitFailed', {error: error.message});
+        window.logger?.error(CATEGORIES.SYSTEM, 'RadarInitFailed', {error: error.message});
         if (window.toast) window.toast.error('Failed to initialize radar');
         throw error;
     }
@@ -250,12 +250,12 @@ export async function initRadar() {
 
 export function destroyRadar() {
     if (!isInitialized) {
-        window.logger?.warn(CATEGORIES.DEBUG, 'RadarNotInitialized', {});
+        window.logger?.warn(CATEGORIES.SYSTEM, 'RadarNotInitialized', {});
         return;
     }
 
     isDestroying = true;
-    window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroying', {});
+    window.logger?.info(CATEGORIES.SYSTEM, 'RadarDestroying', {});
 
     const buttonElement = document.getElementById('button');
     if (buttonElement && buttonClickHandler) {
@@ -305,7 +305,7 @@ export function destroyRadar() {
 
     isInitialized = false;
     isDestroying = false;
-    window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroyed', {});
+    window.logger?.info(CATEGORIES.SYSTEM, 'RadarDestroyed', {});
 }
 
 window.addEventListener('beforeunload', () => {

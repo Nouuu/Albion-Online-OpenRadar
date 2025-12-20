@@ -35,7 +35,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
                     draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
                 }
 
-                window.logger?.debug(CATEGORIES.HARVEST, 'Drawing_UsingStringType', {
+                window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingStringType', {
                     id: harvestableOne.id,
                     stringType: harvestableOne.stringType,
                     type: harvestableOne.type,
@@ -60,7 +60,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
                     draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
                 }
 
-                window.logger?.debug(CATEGORIES.HARVEST, 'Drawing_UsingTypeNumber', {
+                window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingTypeNumber', {
                     id: harvestableOne.id,
                     stringType: harvestableOne.stringType,
                     type: harvestableOne.type,
@@ -72,7 +72,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
             }
 
             if (draw === undefined) {
-                window.logger?.warn(CATEGORIES.HARVEST, 'Drawing_NoMatch', {
+                window.logger?.warn(CATEGORIES.HARVESTABLES, 'Drawing_NoMatch', {
                     id: harvestableOne.id,
                     stringType: harvestableOne.stringType,
                     type: harvestableOne.type,

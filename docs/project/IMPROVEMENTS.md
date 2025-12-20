@@ -50,7 +50,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - Mobile-responsive design
 - Active state indicators
 
-### Picture-in-Picture Mode (v2.0.1)
+### Picture-in-Picture Mode (v2.1.0)
 
 - Native browser PiP via `canvas.captureStream(30)`
 - 4-layer canvas compositing (map, draw, player, UI)
@@ -79,7 +79,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - 4,528 mobs catalogued with metadata
 - Filter categories: Normal/Enchanted/MiniBoss/Boss
 
-### Player Detection (v2.0.1)
+### Player Detection (v2.1.0)
 
 - **Faction-based detection** using Parameters[53]
 - **Type-based color coding**:
@@ -94,7 +94,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - Alert system (screen flash, sound)
 - 3-section player list (Hostile/Faction/Passive)
 
-### Zone System (v2.0.1)
+### Zone System (v2.1.0)
 
 - **ZonesDatabase.js** with 1000+ zones
 - PvP type detection (safe/yellow/red/black)
@@ -103,7 +103,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 
 ---
 
-## Performance (v2.0.1)
+## Performance (v2.1.0)
 
 ### WebSocket Optimization
 
@@ -119,7 +119,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - Removed tooltips.css (DaisyUI handles)
 - ESLint configured for underscore-prefixed vars
 
-### SPA Navigation & Lifecycle (v2.0.1)
+### SPA Navigation & Lifecycle (v2.1.0)
 
 - **PageController.js** - Orchestrates page init/destroy cycles
 - **WebSocketManager.js** - Robust connection handling with auto-reconnect
@@ -136,7 +136,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - DOM node growth monitoring
 - RAF budget tracking
 
-### CDN to Local Migration (v2.0.1)
+### CDN to Local Migration (v2.1.0)
 
 - **Lucide icons** - CDN → `/scripts/vendors/lucide.min.js`
 - **HTMX** - CDN → `/scripts/vendors/htmx.min.js`
@@ -171,4 +171,4 @@ See [TODO.md](TODO.md) for roadmap and planned improvements.
 
 ---
 
-*Last update: 2025-12-20 - v2.0.1*
+*Last update: 2025-12-20 - v2.1.0*

@@ -1,3 +1,5 @@
+import {CATEGORIES} from '../constants/LoggerConstants.js';
+
 class PictureInPictureManager {
     constructor() {
         this.pipCanvas = null;
@@ -13,7 +15,7 @@ class PictureInPictureManager {
 
     initialize(canvasManager) {
         if (!document.pictureInPictureEnabled) {
-            console.warn('[PiP] Picture-in-Picture not supported in this browser');
+            window.logger?.warn(CATEGORIES.SYSTEM, 'PiP_NotSupported', {reason: 'browser'});
             return false;
         }
 
@@ -73,12 +75,12 @@ class PictureInPictureManager {
 
     async start() {
         if (!this.canvasManager) {
-            console.error('[PiP] CanvasManager not initialized');
+            window.logger?.error(CATEGORIES.SYSTEM, 'PiP_NoCanvasManager', {});
             return false;
         }
 
         if (!document.pictureInPictureEnabled) {
-            console.error('[PiP] Picture-in-Picture not supported');
+            window.logger?.error(CATEGORIES.SYSTEM, 'PiP_NotSupported', {});
             return false;
         }
 
@@ -111,7 +113,7 @@ class PictureInPictureManager {
 
             return true;
         } catch (error) {
-            console.error('[PiP] Failed to start:', error);
+            window.logger?.error(CATEGORIES.SYSTEM, 'PiP_StartFailed', {error: error.message});
             return false;
         }
     }
@@ -122,7 +124,7 @@ class PictureInPictureManager {
                 await document.exitPictureInPicture();
             }
         } catch (error) {
-            console.error('[PiP] Failed to exit:', error);
+            window.logger?.error(CATEGORIES.SYSTEM, 'PiP_ExitFailed', {error: error.message});
         }
 
         this.cleanup();

@@ -2,7 +2,7 @@
 // Extracted from Utils.js during Phase 1B refactor
 
 import {EventCodes} from '../Utils/EventCodes.js';
-import {CATEGORIES, EVENTS} from '../constants/LoggerConstants.js';
+import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 // Map change debouncing
 const MAP_CHANGE_DEBOUNCE_MS = 4000;
@@ -117,7 +117,7 @@ export function onEvent(Parameters) {
     const eventCode = Parameters[252];
 
     // Raw packet logging
-    window.logger?.debug(CATEGORIES.PACKET_RAW, `Event_${eventCode}`, {
+    window.logger?.debug(CATEGORIES.NETWORK, `Event_${eventCode}`, {
         id,
         eventCode,
         allParameters: Parameters
@@ -132,7 +132,7 @@ export function onEvent(Parameters) {
             }
         }
 
-        window.logger?.debug(CATEGORIES.EVENT_DETAIL, `Event_${eventCode}_ID_${id}`, {
+        window.logger?.debug(CATEGORIES.NETWORK, `Event_${eventCode}_ID_${id}`, {
             id,
             eventCode,
             eventName: getEventName(eventCode),
@@ -206,7 +206,7 @@ export function onEvent(Parameters) {
 
         case EventCodes.RegenerationHealthChanged: {
             const mobInfo = mobsHandler.debugLogMobById(Parameters[0]);
-            window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.RegenerationHealthChanged, {
+            window.logger?.debug(CATEGORIES.MOBS, 'regen_health_changed', {
                 eventCode: 91,
                 id: Parameters[0],
                 mobInfo,
@@ -219,7 +219,7 @@ export function onEvent(Parameters) {
 
         case EventCodes.HealthUpdate: {
             const mobInfo = mobsHandler.debugLogMobById(Parameters[0]);
-            window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.HealthUpdate, {
+            window.logger?.debug(CATEGORIES.MOBS, 'health_update', {
                 eventCode: 6,
                 id: Parameters[0],
                 mobInfo,
@@ -231,7 +231,7 @@ export function onEvent(Parameters) {
             break;
 
         case EventCodes.HealthUpdates:
-            window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.BulkHPUpdate, {
+            window.logger?.debug(CATEGORIES.MOBS, 'bulk_hp_update', {
                 eventCode: 7,
                 allParameters: Parameters
             });
@@ -279,19 +279,17 @@ export function onEvent(Parameters) {
             break;
 
         case 590:
-            window.logger?.debug(CATEGORIES.PACKET_RAW, EVENTS.KeySync, {Parameters});
+            window.logger?.debug(CATEGORIES.NETWORK, 'key_sync', {Parameters});
             break;
     }
 }
 
 export function onRequest(Parameters) {
-    const {playersHandler} = handlers;
-
     // Player moving - Operation 21 is for LOCAL PLAYER ONLY
     if (Parameters[253] == 21) {
         if (Array.isArray(Parameters[1]) && Parameters[1].length === 2) {
             updateLocalPlayerPosition(Parameters[1][0], Parameters[1][1]);
-            window.logger?.debug(CATEGORIES.PLAYER, 'Operation21_LocalPlayer', {lpX, lpY});
+            window.logger?.debug(CATEGORIES.PLAYERS, 'Operation21_LocalPlayer', {lpX, lpY});
         }
         // Legacy Buffer handling
         else if (Parameters[1] && Parameters[1].type === 'Buffer') {
@@ -299,7 +297,7 @@ export function onRequest(Parameters) {
             const dataView = new DataView(uint8Array.buffer);
             updateLocalPlayerPosition(dataView.getFloat32(0, true), dataView.getFloat32(4, true));
         } else {
-            window.logger?.error(CATEGORIES.PLAYER, 'OnRequest_Move_UnknownFormat', {
+            window.logger?.error(CATEGORIES.PLAYERS, 'OnRequest_Move_UnknownFormat', {
                 param1: Parameters[1],
                 param1Type: typeof Parameters[1]
             });
@@ -308,8 +306,6 @@ export function onRequest(Parameters) {
 }
 
 export function onResponse(Parameters, clearHandlersCallback) {
-    const {playersHandler} = handlers;
-
     // Player change cluster
     if (Parameters[253] == 35) {
         const newMapId = Parameters[0];
@@ -365,12 +361,12 @@ export function onResponse(Parameters, clearHandlersCallback) {
             const uint8Array = new Uint8Array(Parameters[9].data);
             const dataView = new DataView(uint8Array.buffer);
             updateLocalPlayerPosition(dataView.getFloat32(0, true), dataView.getFloat32(4, true));
-            window.logger?.warn(CATEGORIES.PLAYER, 'OnResponse_JoinMap_BufferDecoded', {lpX, lpY});
+            window.logger?.info(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_BufferDecoded', {lpX, lpY});
         } else if (Array.isArray(Parameters[9])) {
             updateLocalPlayerPosition(Parameters[9][0], Parameters[9][1]);
-            window.logger?.info(CATEGORIES.PLAYER, 'OnResponse_JoinMap_Array', {lpX, lpY});
+            window.logger?.info(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_Array', {lpX, lpY});
         } else {
-            window.logger?.error(CATEGORIES.PLAYER, 'OnResponse_JoinMap_UnknownFormat', {
+            window.logger?.error(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_UnknownFormat', {
                 param9: Parameters[9],
                 param9Type: typeof Parameters[9]
             });

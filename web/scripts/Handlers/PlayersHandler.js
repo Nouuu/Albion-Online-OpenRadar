@@ -1,4 +1,4 @@
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import zonesDatabase from "../Data/ZonesDatabase.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
@@ -139,7 +139,7 @@ export class PlayersHandler {
         const pvpType = zonesDatabase.getPvpType(mapId);
         const isThreat = this.isPlayerThreat(faction, pvpType);
 
-        window.logger?.info(CATEGORIES.PLAYER, 'PlayerDetected', {
+        window.logger?.info(CATEGORIES.PLAYERS, 'PlayerDetected', {
             id,
             nickname,
             guild: guildName,
@@ -162,7 +162,7 @@ export class PlayersHandler {
 
         if (isThreat && mapId && settingsSync.getBool('settingSound')) {
             this.audio.play().catch(err => {
-                window.logger?.debug(CATEGORIES.PLAYER, EVENTS.AudioPlayBlocked, {
+                window.logger?.debug(CATEGORIES.PLAYERS, 'audio_blocked', {
                     error: err.message,
                     player: nickname
                 });
@@ -218,7 +218,7 @@ export class PlayersHandler {
             }
         }
 
-        window.logger?.debug(CATEGORIES.PLAYER_HEALTH, EVENTS.PlayerHealthUpdate_DETAIL, {
+        window.logger?.debug(CATEGORIES.PLAYERS, 'health_update_detail', {
             playerId: Parameters[0],
             params2_currentHP: Parameters[2],
             params3_maxHP: Parameters[3],
@@ -279,7 +279,7 @@ export class PlayersHandler {
             this.audio.play().catch(() => {});
         }
 
-        window.logger?.info(CATEGORIES.PLAYER, 'PlayerBecameHostile', {
+        window.logger?.info(CATEGORIES.PLAYERS, 'PlayerBecameHostile', {
             id: player.id,
             nickname: player.nickname,
             faction: player.faction,
@@ -302,7 +302,7 @@ export class PlayersHandler {
 
         const removed = before - this.playersList.length;
         if (removed > 0) {
-            console.log(`[PlayersHandler] Cleaned up ${removed} stale players (>${maxAgeMs/1000}s old)`);
+            window.logger?.debug(CATEGORIES.PLAYERS, 'cleanup', {removed, maxAgeMs});
         }
         return removed;
     }
@@ -320,7 +320,7 @@ export class PlayersHandler {
         const removed = this.playersList.length - maxSize;
         this.playersList = this.playersList.slice(0, maxSize);
 
-        console.log(`[PlayersHandler] Enforced max size: removed ${removed} oldest players`);
+        window.logger?.debug(CATEGORIES.PLAYERS, 'max_size_enforced', {removed});
         return removed;
     }
 

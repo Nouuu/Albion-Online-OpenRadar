@@ -1,4 +1,4 @@
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
 class Fish
@@ -70,7 +70,7 @@ export class FishingHandler
         if (settingsSync.getBool("settingShowFish") === false) return;
 
         // 🐛 DEBUG: Log fishing end event
-        window.logger?.debug(CATEGORIES.FISHING, EVENTS.FishingEnd, {
+        window.logger?.debug(CATEGORIES.FISHING, 'fishing_end', {
             parameters: Parameters
         });
 

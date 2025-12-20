@@ -19,7 +19,7 @@ export class ZonesDatabase {
 
         try {
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'ZonesDatabaseLoading',
                 {path: jsonPath}
             );
@@ -44,7 +44,7 @@ export class ZonesDatabase {
             this.stats.loadTimeMs = Math.round(performance.now() - startTime);
 
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'ZonesDatabaseLoaded',
                 {
                     totalZones: this.stats.totalZones,
@@ -58,7 +58,7 @@ export class ZonesDatabase {
 
         } catch (error) {
             window.logger?.error(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'ZonesDatabaseLoadError',
                 {
                     error: error.message,

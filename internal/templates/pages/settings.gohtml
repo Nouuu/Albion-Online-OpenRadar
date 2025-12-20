@@ -126,48 +126,29 @@
         </div>
     </div>
 
-    <!-- Debug & Logging -->
+    <!-- Logging Settings -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="collapse-debug" />
+        <input type="checkbox" id="collapse-logging"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
-            <i data-lucide="bug" class="w-5 h-5 text-warning"></i>
-            Debug & Logging
-            <span class="text-xs text-base-content/50 ml-auto mr-6">Advanced</span>
+            <i data-lucide="scroll-text" class="w-5 h-5 text-info"></i>
+            Logging
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <!-- Verbose Logging -->
+                <!-- Log Level -->
                 <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
-                        Verbose Logging
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                        Log Level
                     </h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingDebugEnemies" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Enemies</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingDebugPlayers" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingDebugChests" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Chests</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingDebugDungeons" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingDebugFishing" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
-                        </label>
-                        <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingDebugHarvestables" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-base-content/80 text-xs group-hover:text-base-content">Resources</span>
-                        </label>
-                    </div>
+                    <select id="logLevel" class="select select-bordered select-sm w-full max-w-xs">
+                        <option value="OFF">OFF - No logs</option>
+                        <option value="ERROR">ERROR - Errors only</option>
+                        <option value="WARN" selected>WARN - Warnings & Errors</option>
+                        <option value="INFO">INFO - Info, Warnings & Errors</option>
+                        <option value="DEBUG">DEBUG - Everything</option>
+                    </select>
+                    <p class="text-xs text-base-content/50 mt-2">Controls minimum log level displayed</p>
                 </div>
 
                 <!-- Output Destination -->
@@ -187,16 +168,81 @@
                             <i data-lucide="server" class="w-4 h-4 text-base-content/50"></i>
                             <span class="text-base-content/80 text-sm group-hover:text-base-content">Server Logs (JSONL)</span>
                         </label>
-                        <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingServerLogsEnabled"
-                                   class="toggle toggle-primary toggle-sm">
-                            <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 text-sm group-hover:text-base-content">Server-side Recording</span>
-                            <div class="tooltip" data-tip="Controls backend server logs written to logs/sessions/ directory.">
-                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                            </div>
-                        </label>
                     </div>
+                </div>
+            </div>
+
+            <!-- Category Filters -->
+            <div class="mt-4">
+                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                    <i data-lucide="filter" class="w-4 h-4"></i>
+                    Category Filters
+                    <span class="text-xs text-base-content/50 font-normal">(applies to DEBUG & INFO only)</span>
+                </h3>
+                <div class="grid grid-cols-3 gap-2">
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categorySystem" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryNetwork" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Network</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryMap" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Map</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryPlayers" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryMobs" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Mobs</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryHarvestables" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Harvestables</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryDungeons" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryFishing" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="categoryRendering" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Rendering</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug -->
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-debug"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="bug" class="w-5 h-5 text-warning"></i>
+            Debug
+            <span class="text-xs text-base-content/50 ml-auto mr-6">Advanced</span>
+        </div>
+        <div class="collapse-content">
+            <div class="pt-2">
+                <!-- Server-side Recording -->
+                <div class="mb-4">
+                    <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="settingServerLogsEnabled"
+                               class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
+                        <span class="text-base-content/80 text-sm group-hover:text-base-content">Server-side Recording</span>
+                        <div class="tooltip"
+                             data-tip="Controls backend server logs written to logs/sessions/ directory.">
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                        </div>
+                    </label>
                 </div>
             </div>
 
@@ -298,7 +344,20 @@
             if (collapseDebug) {
                 collapseDebug.checked = settingsSync.getBool('collapse-settings-debug', false);
                 addListener(collapseDebug, 'change', () => settingsSync.setBool('collapse-settings-debug', collapseDebug.checked));
-        }
+            }
+
+            const collapseLogging = document.getElementById('collapse-logging');
+            if (collapseLogging) {
+                collapseLogging.checked = settingsSync.getBool('collapse-settings-logging', false);
+                addListener(collapseLogging, 'change', () => settingsSync.setBool('collapse-settings-logging', collapseLogging.checked));
+            }
+
+            // Log level dropdown
+            const logLevelEl = document.getElementById('logLevel');
+            if (logLevelEl) {
+                logLevelEl.value = settingsSync.get('logLevel') || 'WARN';
+                addListener(logLevelEl, 'change', () => settingsSync.set('logLevel', logLevelEl.value));
+            }
 
             const bindCheckbox = (id, onChange) => {
                 const el = document.getElementById(id);
@@ -329,13 +388,16 @@
             bindNumber("settingClusterRadius", 30);
             bindNumber("settingClusterMinSize", 2);
 
-            // Debug settings
-            bindCheckbox("settingDebugEnemies");
-            bindCheckbox("settingDebugPlayers");
-            bindCheckbox("settingDebugChests");
-            bindCheckbox("settingDebugDungeons");
-            bindCheckbox("settingDebugFishing");
-            bindCheckbox("settingDebugHarvestables");
+            // Category filters (Logging section)
+            bindCheckbox("categorySystem");
+            bindCheckbox("categoryNetwork");
+            bindCheckbox("categoryMap");
+            bindCheckbox("categoryPlayers");
+            bindCheckbox("categoryMobs");
+            bindCheckbox("categoryHarvestables");
+            bindCheckbox("categoryDungeons");
+            bindCheckbox("categoryFishing");
+            bindCheckbox("categoryRendering");
 
             // Console & Server settings
             bindCheckbox("settingLogToConsole");

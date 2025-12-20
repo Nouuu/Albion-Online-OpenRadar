@@ -89,7 +89,8 @@ export default [
             "node_modules/**",
             "work/**/*",
             "tmp/**",
-            "internal/templates/layouts/content.gohtml"
+            "internal/templates/layouts/content.gohtml",
+            "web/scripts/vendors/**"
         ]
     }
 ];

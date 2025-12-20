@@ -1,4 +1,4 @@
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
 
 const DungeonType =
@@ -70,7 +70,7 @@ export class DungeonsHandler
             }
         }
 
-        window.logger?.debug(CATEGORIES.DUNGEON, EVENTS.NewDungeonEvent_ALL_PARAMS, {
+        window.logger?.debug(CATEGORIES.DUNGEONS, 'new_dungeon_all_params', {
             dungeonId: parameters[0],
             position: parameters[7],
             allParameters: allParams,

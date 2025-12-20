@@ -26,13 +26,13 @@ async function loadDatabaseWithRetry(database, path, name, ...extraArgs) {
     while (retryCount < MAX_RETRIES) {
         try {
             await database.load(path, ...extraArgs);
-            window.logger?.debug(CATEGORIES.ITEM_DATABASE, `${name}Loaded`, {});
+            window.logger?.debug(CATEGORIES.SYSTEM, `${name}Loaded`, {});
             return {success: true, database};
         } catch (error) {
             retryCount++;
             const isLastAttempt = retryCount >= MAX_RETRIES;
 
-            window.logger?.error(CATEGORIES.ITEM_DATABASE, `${name}LoadFailed`, {
+            window.logger?.error(CATEGORIES.SYSTEM, `${name}LoadFailed`, {
                 error: error.message,
                 attempt: retryCount,
                 maxRetries: MAX_RETRIES,
@@ -85,11 +85,11 @@ export async function load() {
         window.spellsDatabase &&
         window.harvestablesDatabase &&
         window.mobsDatabase) {
-        window.logger?.info(CATEGORIES.DEBUG, 'DatabasesCached', {});
+        window.logger?.info(CATEGORIES.SYSTEM, 'DatabasesCached', {});
         return;
     }
 
-    window.logger?.info(CATEGORIES.ITEM_DATABASE, 'LoadingStart', {});
+    window.logger?.info(CATEGORIES.SYSTEM, 'LoadingStart', {});
 
     const itemsDatabase = new ItemsDatabase();
     const spellsDatabase = new SpellsDatabase();
@@ -157,7 +157,7 @@ export async function load() {
     window.databasesReady = true;
 
     const successCount = results.filter(r => r.success).length;
-    window.logger?.info(CATEGORIES.ITEM_DATABASE, 'LoadingComplete', {
+    window.logger?.info(CATEGORIES.SYSTEM, 'LoadingComplete', {
         success: successCount,
         failed: failures.length
     });

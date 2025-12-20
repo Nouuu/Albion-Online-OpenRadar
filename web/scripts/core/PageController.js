@@ -11,7 +11,7 @@ let isPageControllerInitialized = false;  // Guard against duplicate initializat
 
 export function registerPage(pageName, handlers) {
     if (pageHandlers.has(pageName)) {
-        window.logger?.warn(CATEGORIES.DEBUG, 'PageController_Overwrite', {pageName});
+        window.logger?.warn(CATEGORIES.SYSTEM, 'PageController_Overwrite', {pageName});
     }
     pageHandlers.set(pageName, {
         init: handlers.init || (() => {
@@ -19,7 +19,7 @@ export function registerPage(pageName, handlers) {
         destroy: handlers.destroy || (() => {
         })
     });
-    window.logger?.debug(CATEGORIES.DEBUG, 'PageController_Registered', {pageName});
+    window.logger?.debug(CATEGORIES.SYSTEM, 'PageController_Registered', {pageName});
 }
 
 function detectCurrentPage() {
@@ -43,10 +43,10 @@ async function destroyCurrentPage() {
         const handlers = pageHandlers.get(pageToDestroy);
         if (handlers?.destroy) {
             try {
-                window.logger?.info(CATEGORIES.DEBUG, 'PageController_Destroying', {page: pageToDestroy});
+                window.logger?.info(CATEGORIES.SYSTEM, 'PageController_Destroying', {page: pageToDestroy});
                 await handlers.destroy();
             } catch (error) {
-                window.logger?.error(CATEGORIES.DEBUG, 'PageController_DestroyError', {
+                window.logger?.error(CATEGORIES.SYSTEM, 'PageController_DestroyError', {
                     page: pageToDestroy,
                     error: error.message
                 });
@@ -78,10 +78,10 @@ async function initCurrentPage() {
     const handlers = pageHandlers.get(newPage);
     if (handlers?.init) {
         try {
-            window.logger?.info(CATEGORIES.DEBUG, 'PageController_Initializing', {page: newPage});
+            window.logger?.info(CATEGORIES.SYSTEM, 'PageController_Initializing', {page: newPage});
             await handlers.init();
         } catch (error) {
-            window.logger?.error(CATEGORIES.DEBUG, 'PageController_InitError', {page: newPage, error: error.message});
+            window.logger?.error(CATEGORIES.SYSTEM, 'PageController_InitError', {page: newPage, error: error.message});
             if (window.toast) {
                 window.toast.error(`Failed to initialize ${newPage} page`);
             }
@@ -94,7 +94,7 @@ async function initCurrentPage() {
 export function initPageController() {
     // Guard against duplicate initialization (prevents listener accumulation)
     if (isPageControllerInitialized) {
-        window.logger?.debug(CATEGORIES.DEBUG, 'PageController_AlreadyInitialized', {});
+        window.logger?.debug(CATEGORIES.SYSTEM, 'PageController_AlreadyInitialized', {});
         return;
     }
     isPageControllerInitialized = true;
@@ -119,11 +119,10 @@ export function initPageController() {
         }, 0);
     });
 
-    window.logger?.info(CATEGORIES.DEBUG, 'PageController_Initialized', {});
+    window.logger?.info(CATEGORIES.SYSTEM, 'PageController_Initialized', {});
 }
 
 export function reinitCurrentPage() {
-    const page = currentPage;
     currentPage = null;
     return initCurrentPage();
 }

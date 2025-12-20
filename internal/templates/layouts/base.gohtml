@@ -206,7 +206,7 @@
         });
 
         // Update sidebar active state on navigation
-        document.addEventListener('htmx:pushedIntoHistory', (e) => {
+        document.addEventListener('htmx:pushedIntoHistory', (_e) => {
             const currentPath = window.location.pathname;
             const baseClasses = 'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors';
             const activeClasses = 'text-primary border-l-2 border-primary -ml-px pl-2.5';

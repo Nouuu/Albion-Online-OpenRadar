@@ -56,14 +56,22 @@ export class SettingsSync {
 
             const listeners = this.listeners.get(data.key) || [];
             listeners.forEach(callback => {
-                try { callback(data.key, data.value); }
-                catch (error) { window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncListenerError', { key: data.key, error: error?.message || error }); }
+                try { callback(data.key, data.value); } catch (error) {
+                    window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncListenerError', {
+                        key: data.key,
+                        error: error?.message || error
+                    });
+                }
             });
 
             const wildcardListeners = this.listeners.get('*') || [];
             wildcardListeners.forEach(callback => {
-                try { callback(data.key, data.value); }
-                catch (error) { window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncWildcardListenerError', { key: data.key, error: error?.message || error }); }
+                try { callback(data.key, data.value); } catch (error) {
+                    window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncWildcardListenerError', {
+                        key: data.key,
+                        error: error?.message || error
+                    });
+                }
             });
         }
     }
@@ -75,7 +83,10 @@ export class SettingsSync {
             try {
                 this.channel.postMessage({ type: 'setting-changed', key, value, timestamp: Date.now() });
             } catch (error) {
-                window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncBroadcastFailed', { key, error: error?.message || error });
+                window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncBroadcastFailed', {
+                    key,
+                    error: error?.message || error
+                });
             }
         }
 
@@ -134,14 +145,21 @@ export class SettingsSync {
         if (value === null || value === '') return defaultValue;
         try { return JSON.parse(value); }
         catch (error) {
-            window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncJSONParseFailed', { key, error: error?.message || error });
+            window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncJSONParseFailed', {
+                key,
+                error: error?.message || error
+            });
             return defaultValue;
         }
     }
 
     setJSON(key, value) {
-        try { this.broadcast(key, JSON.stringify(value)); }
-        catch (error) { window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncJSONStringifyFailed', { key, error: error?.message || error }); }
+        try { this.broadcast(key, JSON.stringify(value)); } catch (error) {
+            window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncJSONStringifyFailed', {
+                key,
+                error: error?.message || error
+            });
+        }
     }
 
     remove(key) {
@@ -151,7 +169,10 @@ export class SettingsSync {
             try {
                 this.channel.postMessage({ type: 'setting-removed', key, timestamp: Date.now() });
             } catch (error) {
-                window.logger?.error(CATEGORIES.SETTINGS, 'SettingsSyncRemoveFailed', { key, error: error?.message || error });
+                window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncRemoveFailed', {
+                    key,
+                    error: error?.message || error
+                });
             }
         }
 

@@ -8,6 +8,8 @@
  * - Excludes: colortag elements (skipped in indexing)
  */
 
+import {CATEGORIES} from '../constants/LoggerConstants.js';
+
 export class SpellsDatabase {
     constructor() {
         this.spells = new Map(); // Map<index, spell>
@@ -20,7 +22,7 @@ export class SpellsDatabase {
      */
     async load(jsonPath) {
         try {
-            console.log('📄 Loading spells.json...');
+            window.logger?.info(CATEGORIES.SYSTEM, 'SpellsLoading', {path: jsonPath});
 
             const response = await fetch(jsonPath);
             if (!response.ok) {
@@ -70,10 +72,10 @@ export class SpellsDatabase {
             }
 
             this.isLoaded = true;
-            console.log(`✅ SpellsDatabase loaded: ${this.spells.size} spells indexed`);
+            window.logger?.info(CATEGORIES.SYSTEM, 'SpellsLoaded', {count: this.spells.size});
 
         } catch (error) {
-            console.error('❌ Error loading SpellsDatabase:', error);
+            window.logger?.error(CATEGORIES.SYSTEM, 'SpellsLoadError', {error: error.message});
             throw error;
         }
     }
@@ -86,7 +88,7 @@ export class SpellsDatabase {
         const uniqueName = spellData['@uniquename'];
 
         if (!uniqueName) {
-            console.warn(`⚠️  Spell at index ${index} missing @uniquename, skipping`);
+            window.logger?.warn(CATEGORIES.SYSTEM, 'SpellMissingUniquename', {index});
             return;
         }
 
@@ -109,7 +111,7 @@ export class SpellsDatabase {
      */
     getSpellByIndex(index) {
         if (!this.isLoaded) {
-            console.warn('⚠️  SpellsDatabase not loaded yet');
+            window.logger?.warn(CATEGORIES.SYSTEM, 'SpellsDatabase_NotLoaded', {method: 'getSpellByIndex', index});
             return null;
         }
 
@@ -123,7 +125,7 @@ export class SpellsDatabase {
      */
     getSpellByName(uniqueName) {
         if (!this.isLoaded) {
-            console.warn('⚠️  SpellsDatabase not loaded yet');
+            window.logger?.warn(CATEGORIES.SYSTEM, 'SpellsDatabase_NotLoaded', {method: 'getSpellByName', uniqueName});
             return null;
         }
 

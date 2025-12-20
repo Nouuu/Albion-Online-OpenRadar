@@ -36,7 +36,7 @@ function updateConnectionStatus(status) {
 function onSocketOpen() {
     reconnectAttempts = 0;
     updateConnectionStatus('connected');
-    window.logger?.info(CATEGORIES.DEBUG, 'WebSocketConnected', {});
+    window.logger?.info(CATEGORIES.NETWORK, 'WebSocketConnected', {});
 }
 
 function onSocketClose() {
@@ -44,12 +44,12 @@ function onSocketClose() {
     if (!isActive) return;
 
     updateConnectionStatus('disconnected');
-    window.logger?.warn(CATEGORIES.DEBUG, 'WebSocketDisconnected', {});
+    window.logger?.warn(CATEGORIES.NETWORK, 'WebSocketDisconnected', {});
     scheduleReconnect();
 }
 
 function onSocketError(error) {
-    window.logger?.error(CATEGORIES.DEBUG, 'WebSocketError', {error: error?.message});
+    window.logger?.error(CATEGORIES.NETWORK, 'WebSocketError', {error: error?.message});
 }
 
 function onSocketMessage(event) {
@@ -65,7 +65,7 @@ function scheduleReconnect() {
         INITIAL_RECONNECT_DELAY * Math.pow(2, reconnectAttempts - 1),
         MAX_RECONNECT_DELAY
     );
-    window.logger?.debug(CATEGORIES.DEBUG, 'WebSocketReconnecting', {
+    window.logger?.debug(CATEGORIES.NETWORK, 'WebSocketReconnecting', {
         delay: delay / 1000,
         attempt: reconnectAttempts
     });
@@ -101,7 +101,7 @@ export function connect() {
     updateConnectionStatus('connecting');
     cleanupSocket();
 
-    window.logger?.debug(CATEGORIES.DEBUG, 'WebSocketConnecting', {});
+    window.logger?.debug(CATEGORIES.NETWORK, 'WebSocketConnecting', {});
     socket = new WebSocket(WS_URL);
     socket.addEventListener('open', onSocketOpen);
     socket.addEventListener('close', onSocketClose);

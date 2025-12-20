@@ -1,4 +1,4 @@
-import { CATEGORIES, EVENTS } from '../constants/LoggerConstants.js';
+import {CATEGORIES} from '../constants/LoggerConstants.js';
 import settingsSync from '../Utils/SettingsSync.js';
 import {getResourceStorageKey} from "../Utils/ResourcesHelper.js";
 
@@ -118,7 +118,7 @@ export class MobsHandler {
                 }
             }
 
-            window.logger?.debug(CATEGORIES.MOB, EVENTS.NewMobEvent_ALL_PARAMS, {
+            window.logger?.debug(CATEGORIES.MOBS, 'new_mob_all_params', {
                 mobId,
                 typeId,
                 posX: parameters[8],
@@ -139,12 +139,12 @@ export class MobsHandler {
             try {
                 name = parameters[32] || parameters[31] || null;
             } catch (e) {
-                window.logger?.error(CATEGORIES.MOB, EVENTS.NewMobEventError, e);
+                window.logger?.error(CATEGORIES.MOBS, 'new_mob_error', e);
                 name = null;
             }
 
             // 🐛 DEBUG: Log raw parameters from server
-            window.logger?.debug(CATEGORIES.MOB, EVENTS.NewMobEvent_RAW, {
+            window.logger?.debug(CATEGORIES.MOBS, 'new_mob_raw', {
                 mobId, typeId,
                 params: {
                     health_normalized: parameters[2],
@@ -163,7 +163,7 @@ export class MobsHandler {
         } catch (e) {
             // ❌ ERROR (always logged) - Critical error in NewMobEvent
             if (window.logger) {
-                window.logger.error(CATEGORIES.MOB, EVENTS.NewMobEventError, e);
+                window.logger.error(CATEGORIES.MOBS, 'new_mob_error', e);
             }
         }
     }
@@ -191,7 +191,7 @@ export class MobsHandler {
             mob.type = dbInfo.type === 'Hide' ? EnemyType.LivingSkinnable : EnemyType.LivingHarvestable;
             hasKnownInfo = true;
 
-            window.logger?.debug(CATEGORIES.MOB, 'MobsDatabaseMatch', {
+            window.logger?.debug(CATEGORIES.MOBS, 'MobsDatabaseMatch', {
                 typeId,
                 type: dbInfo.type,
                 tier: dbInfo.tier,
@@ -207,7 +207,7 @@ export class MobsHandler {
             mob.namelocatag = dbInfo.namelocatag || null;  // Store localization tag for translated name
             hasKnownInfo = true;
 
-            window.logger?.debug(CATEGORIES.MOB, 'HostileMobMatch', {
+            window.logger?.debug(CATEGORIES.MOBS, 'HostileMobMatch', {
                 typeId,
                 category: dbInfo.category,
                 uniqueName: dbInfo.uniqueName,
@@ -217,7 +217,7 @@ export class MobsHandler {
         } else {
             // Unknown mob (no database entry)
             // Mob stays as EnemyType.Enemy (default)
-            window.logger?.debug(CATEGORIES.MOB, 'UnknownMob_NoDatabase', {
+            window.logger?.debug(CATEGORIES.MOBS, 'UnknownMob_NoDatabase', {
                 typeId,
                 health: healthNormalized,
                 maxHealth
@@ -225,7 +225,7 @@ export class MobsHandler {
         }
 
         // 🐛 DEBUG: Log enemy creation with type info
-        window.logger?.debug(CATEGORIES.MOB, EVENTS.NewMobDebug, {
+        window.logger?.debug(CATEGORIES.MOBS, 'new_mob_debug', {
             id: id,
             typeId: typeId,
             health: `${mob.getCurrentHP()}/${maxHealth}`,
@@ -308,9 +308,9 @@ export class MobsHandler {
         this.harvestablesNotGood = this.harvestablesNotGood.filter(x => x.id !== id);
         const after = this.mobsList.length;
 
-        // 🐛 DEBUG (filtered by debugEnemies) - Detailed mob removal
+        // 🐛 DEBUG (filtered by categoryMobs setting) - Detailed mob removal
         if (before !== after) {
-            window.logger?.debug(CATEGORIES.MOB, EVENTS.MobRemoved, {
+            window.logger?.debug(CATEGORIES.MOBS, 'mob_removed', {
                 id: id,
                 livingResourcesBefore: before,
                 livingResourcesAfter: after
@@ -364,7 +364,7 @@ export class MobsHandler {
 
         // 🐛 DEBUG: Log health update
         const oldHP = mob.getCurrentHP();
-        window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.HealthUpdate, {
+        window.logger?.debug(CATEGORIES.MOBS, 'health_update', {
             mobId: mobId,
             oldHP: oldHP,
             newHP: currentHP,
@@ -375,7 +375,7 @@ export class MobsHandler {
 
         // Handle death (currentHP is undefined when entity dies)
         if (currentHP === undefined || currentHP <= 0) {
-            window.logger?.debug(CATEGORIES.MOB, EVENTS.MobDied, {
+            window.logger?.debug(CATEGORIES.MOBS, 'mob_died', {
                 mobId: mobId,
                 typeId: mob.typeId
             });
@@ -408,7 +408,7 @@ export class MobsHandler {
             }
         }
 
-        window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.RegenerationHealthChanged_DETAIL, {
+        window.logger?.debug(CATEGORIES.MOBS, 'regen_health_detail', {
             mobId,
             eventCode: 91,
             mobFound: !!mob,
@@ -453,7 +453,7 @@ export class MobsHandler {
             };
 
             // 🐛 DEBUG: Log bulk processing
-            window.logger?.debug(CATEGORIES.MOB_HEALTH, EVENTS.BulkHPUpdate, {
+            window.logger?.debug(CATEGORIES.MOBS, 'bulk_hp_update', {
                 index: i,
                 total: currentHPs.length,
                 delta: hpDeltas[i],
@@ -658,7 +658,7 @@ export class MobsHandler {
         const removedMists = beforeMists - this.mistList.length;
 
         if (removedMobs > 0 || removedMists > 0) {
-            console.log(`[MobsHandler] Cleaned up ${removedMobs} mobs, ${removedMists} mists (>${maxAgeMs/1000}s old)`);
+            window.logger?.debug(CATEGORIES.MOBS, 'cleanup', {removedMobs, removedMists, maxAgeMs});
         }
         return removedMobs + removedMists;
     }
@@ -677,7 +677,7 @@ export class MobsHandler {
             const removed = this.mobsList.length - maxMobs;
             this.mobsList = this.mobsList.slice(0, maxMobs);
             totalRemoved += removed;
-            console.log(`[MobsHandler] Enforced max mobs: removed ${removed} oldest`);
+            window.logger?.debug(CATEGORIES.MOBS, 'max_mobs_enforced', {removed});
         }
 
         if (this.mistList.length > maxMists) {
@@ -685,7 +685,7 @@ export class MobsHandler {
             const removed = this.mistList.length - maxMists;
             this.mistList = this.mistList.slice(0, maxMists);
             totalRemoved += removed;
-            console.log(`[MobsHandler] Enforced max mists: removed ${removed} oldest`);
+            window.logger?.debug(CATEGORIES.MOBS, 'max_mists_enforced', {removed});
         }
 
         return totalRemoved;

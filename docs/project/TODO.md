@@ -86,7 +86,7 @@
 
 ---
 
-## v2.1 - Detection Refactoring (Next)
+## v2.2 - Detection Refactoring (Next)
 
 ### Priority: Complete Detection Systems
 
@@ -129,7 +129,7 @@ The following systems need refactoring like Resources/Mobs/Players:
 
 ---
 
-## v2.2+ - Future (Backlog)
+## v2.3+ - Future (Backlog)
 
 ### Stability & Performance
 - [ ] Memory usage optimization for long sessions

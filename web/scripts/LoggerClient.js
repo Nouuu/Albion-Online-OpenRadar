@@ -1,4 +1,4 @@
-import {CATEGORY_SETTINGS_MAP} from './constants/LoggerConstants.js';
+import {CATEGORY_SETTINGS, LOG_LEVELS} from './constants/LoggerConstants.js';
 import settingsSync from './Utils/SettingsSync.js';
 
 let socket = null;
@@ -31,51 +31,50 @@ class Logger {
         }
     }
 
-    shouldLog(category, level) {
-        if (level !== 'DEBUG') return true;
+    shouldLog(level, category) {
+        const minLevelName = settingsSync.get('logLevel', 'WARN');
+        const minLevel = LOG_LEVELS[minLevelName] ?? LOG_LEVELS.WARN;
 
-        const settingKey = CATEGORY_SETTINGS_MAP?.[category];
-        if (!settingKey) return true;
+        if (minLevel === LOG_LEVELS.OFF) return false;
+        if (level === 'CRITICAL') return true;
 
-        if (settingKey === 'debugRawPackets') {
-            return settingsSync.getBool('settingDebugRawPacketsConsole') ||
-                   settingsSync.getBool('settingDebugRawPacketsServer');
+        const currentLevel = LOG_LEVELS[level] ?? LOG_LEVELS.DEBUG;
+        if (currentLevel < minLevel) return false;
+
+        if (level === 'DEBUG' || level === 'INFO') {
+            const settingKey = CATEGORY_SETTINGS[category];
+            if (settingKey && !settingsSync.getBool(settingKey)) {
+                return false;
+            }
         }
 
-        const localStorageKey = 'setting' + settingKey.charAt(0).toUpperCase() + settingKey.slice(1);
-        return settingsSync.getBool(localStorageKey);
+        return true;
     }
 
-    log(level, category, event, data, context = {}) {
-        if (!this.shouldLog(category, level)) return;
+    log(level, category, event, data = {}) {
+        if (!this.shouldLog(level, category)) return;
 
         const logEntry = {
             timestamp: new Date().toISOString(),
             level,
-            category: `[CLIENT] ${category}`,
+            category,
             event,
             data,
-            context: { ...context, sessionId: this.sessionId, page: window.location.pathname }
+            sessionId: this.sessionId,
+            page: window.location.pathname
         };
 
         if (settingsSync.getBool('settingLogToConsole')) {
             this.logToConsole(logEntry);
         }
 
-        const logToServer = settingsSync.getBool('settingLogToServer');
-        const debugRawPacketsServer = settingsSync.getBool('settingDebugRawPacketsServer');
-
-        if (logEntry.category === '[CLIENT] PACKET_RAW' && !debugRawPacketsServer) return;
-
-        if (logToServer && socketConnected) {
+        if (settingsSync.getBool('settingLogToServer') && socketConnected) {
             this.buffer.push(logEntry);
             if (this.buffer.length >= this.maxBufferSize) this.flush();
         }
     }
 
     logToConsole(entry) {
-        if (entry.category === '[CLIENT] PACKET_RAW' && !settingsSync.getBool('settingDebugRawPacketsConsole')) return;
-
         const emoji = { 'DEBUG': '🔍', 'INFO': 'ℹ️', 'WARN': '⚠️', 'ERROR': '❌', 'CRITICAL': '🚨' }[entry.level] || '📝';
         const color = {
             'DEBUG': 'color: #888', 'INFO': 'color: #0af', 'WARN': 'color: #fa0',
@@ -86,11 +85,25 @@ class Logger {
         console.log(`%c${emoji} [${entry.level}] ${entry.category}.${entry.event} @ ${time}`, color, entry.data);
     }
 
-    debug(category, event, data, context) { this.log('DEBUG', category, event, data, context); }
-    info(category, event, data, context) { this.log('INFO', category, event, data, context); }
-    warn(category, event, data, context) { this.log('WARN', category, event, data, context); }
-    error(category, event, data, context) { this.log('ERROR', category, event, data, context); }
-    critical(category, event, data, context) { this.log('CRITICAL', category, event, data, context); }
+    debug(category, event, data) {
+        this.log('DEBUG', category, event, data);
+    }
+
+    info(category, event, data) {
+        this.log('INFO', category, event, data);
+    }
+
+    warn(category, event, data) {
+        this.log('WARN', category, event, data);
+    }
+
+    error(category, event, data) {
+        this.log('ERROR', category, event, data);
+    }
+
+    critical(category, event, data) {
+        this.log('CRITICAL', category, event, data);
+    }
 
     flush() {
         if (this.buffer.length === 0) return;
@@ -155,7 +168,6 @@ function scheduleLoggerReconnect() {
     reconnectTimeoutId = setTimeout(connectLoggerWebSocket, delay);
 }
 
-// Lifecycle exports for PageController
 export function initLogger() {
     if (!socket || socket.readyState === WebSocket.CLOSED) {
         connectLoggerWebSocket();
@@ -175,5 +187,4 @@ export function isLoggerConnected() {
 
 export {globalLogger as logger};
 
-// Auto-initialize logger WebSocket on module load (should be active on all pages)
 connectLoggerWebSocket();

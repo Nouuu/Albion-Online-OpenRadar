@@ -1,4 +1,4 @@
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../Utils/SettingsSync.js";
 import {getResourceStorageKey} from "../Utils/ResourcesHelper.js";
 
@@ -28,7 +28,7 @@ class Harvestable
         this.stringType = stringType;
         this.lastUpdateTime = Date.now(); // For stale entity cleanup
 
-        window.logger?.info(CATEGORIES.HARVEST, 'HarvestableCreated', {
+        window.logger?.info(CATEGORIES.HARVESTABLES, 'HarvestableCreated', {
             id, type, stringType, tier, charges, size,
             note: 'New Harvestable object created'
         });
@@ -114,7 +114,7 @@ export class HarvestablesHandler
                 const isValid = window.harvestablesDatabase.isValidResource(dbResourceType, tier, charges);
 
                 // 🔍 DETAILED DEBUG: Log ALL validation checks
-                window.logger?.debug(CATEGORIES.HARVEST, 'ValidationCheck', {
+                window.logger?.debug(CATEGORIES.HARVESTABLES, 'ValidationCheck', {
                     stringType,
                     dbResourceType,
                     tier,
@@ -126,7 +126,7 @@ export class HarvestablesHandler
                 });
 
                 if (!isValid) {
-                    window.logger?.warn(CATEGORIES.HARVEST, 'InvalidResourceCombination', {
+                    window.logger?.debug(CATEGORIES.HARVESTABLES, 'InvalidResourceCombination', {
                         stringType,
                         dbResourceType,
                         tier,
@@ -172,7 +172,7 @@ export class HarvestablesHandler
             const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
             stringType = resourceInfo?.type || this.GetStringType(type);
 
-            window.logger?.info(CATEGORIES.HARVEST, 'LivingResource_TypeFromMobsDB', {
+            window.logger?.info(CATEGORIES.HARVESTABLES, 'LivingResource_TypeFromMobsDB', {
                 id, mobileTypeId, type,
                 mobsDbType: resourceInfo?.type,
                 fallbackType: this.GetStringType(type),
@@ -187,7 +187,7 @@ export class HarvestablesHandler
             ? window.harvestablesDatabase.isValidResourceByTypeNumber(type, tier, charges)
             : null;
 
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Detection, {
+        window.logger?.debug(CATEGORIES.HARVESTABLES, 'detection', {
             id,
             mobileTypeId,
             type,
@@ -202,7 +202,7 @@ export class HarvestablesHandler
 
         // 🎯 Check if this harvestable should be displayed based on settings
         if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
-            window.logger?.debug(CATEGORIES.HARVEST, 'FilteredBySettings', {
+            window.logger?.debug(CATEGORIES.HARVESTABLES, 'FilteredBySettings', {
                 id,
                 stringType,
                 tier,
@@ -220,7 +220,7 @@ export class HarvestablesHandler
             const h = new Harvestable(id, type, tier, posX, posY, charges, size, stringType);
             this.harvestableList.push(h);
 
-            window.logger?.info(CATEGORIES.HARVEST, 'HarvestableAdded', {
+            window.logger?.info(CATEGORIES.HARVESTABLES, 'HarvestableAdded', {
                 id, type, stringType, tier, charges, size, mobileTypeId,
                 listSize: this.harvestableList.length
             });
@@ -230,7 +230,7 @@ export class HarvestablesHandler
             harvestable.setCharges(charges);
             if (stringType) harvestable.stringType = stringType;
 
-            window.logger?.debug(CATEGORIES.HARVEST, 'HarvestableUpdated', {
+            window.logger?.debug(CATEGORIES.HARVESTABLES, 'HarvestableUpdated', {
                 id, stringType, newCharges: charges
             });
         }
@@ -253,7 +253,7 @@ export class HarvestablesHandler
             const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
             stringType = resourceInfo?.type || this.GetStringType(type);
 
-            window.logger?.info(CATEGORIES.HARVEST, 'UpdateHarvestable_LivingResource_TypeFromMobsDB', {
+            window.logger?.info(CATEGORIES.HARVESTABLES, 'UpdateHarvestable_LivingResource_TypeFromMobsDB', {
                 id, mobileTypeId, type,
                 mobsDbType: resourceInfo?.type,
                 fallbackType: this.GetStringType(type),
@@ -268,7 +268,7 @@ export class HarvestablesHandler
             ? window.harvestablesDatabase.isValidResourceByTypeNumber(type, tier, charges)
             : null;
 
-        window.logger?.debug(CATEGORIES.HARVEST, EVENTS.Update, {
+        window.logger?.debug(CATEGORIES.HARVESTABLES, 'update', {
             id,
             mobileTypeId,
             type,
@@ -283,7 +283,7 @@ export class HarvestablesHandler
 
         // 🎯 Check if this harvestable should be displayed based on settings
         if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
-            window.logger?.debug(CATEGORIES.HARVEST, 'FilteredByUpdate', {
+            window.logger?.debug(CATEGORIES.HARVESTABLES, 'FilteredByUpdate', {
                 id,
                 stringType,
                 tier,
@@ -302,7 +302,7 @@ export class HarvestablesHandler
             return;
         }
 
-        window.logger?.info(CATEGORIES.HARVEST, 'UpdateHarvestable_Existing', {
+        window.logger?.info(CATEGORIES.HARVESTABLES, 'UpdateHarvestable_Existing', {
             id,
             oldCharges: harvestable.charges,
             newCharges: charges,
@@ -320,7 +320,7 @@ export class HarvestablesHandler
     {
         // Event 61 is just a notification - Event 46 handles size changes
         const id = Parameters[3];
-        window.logger?.debug(CATEGORIES.HARVEST, 'Event61_HarvestFinished', { id });
+        window.logger?.debug(CATEGORIES.HARVESTABLES, 'Event61_HarvestFinished', {id});
     }
 
     HarvestUpdateEvent(Parameters) // Event 46 - HarvestableChangeState
@@ -329,7 +329,7 @@ export class HarvestablesHandler
         const newSize = Parameters[1];
         const enchant = Parameters[2];
 
-        window.logger?.info(CATEGORIES.HARVEST, 'Event46_ChangeState', {
+        window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_ChangeState', {
             harvestableId: id,
             newSize,
             enchant
@@ -337,7 +337,7 @@ export class HarvestablesHandler
 
         // newSize undefined = resource depleted, remove it
         if (newSize === undefined) {
-            window.logger?.info(CATEGORIES.HARVEST, 'Event46_ResourceDepleted', { id });
+            window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_ResourceDepleted', {id});
             this.removeHarvestable(id);
             return;
         }
@@ -351,7 +351,7 @@ export class HarvestablesHandler
 
         // Event 46 is the source of truth - accept ALL size changes
         if (newSize !== harvestable.size) {
-            window.logger?.info(CATEGORIES.HARVEST, 'Event46_SizeUpdate', {
+            window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_SizeUpdate', {
                 id,
                 oldSize: harvestable.size,
                 newSize,
@@ -362,7 +362,7 @@ export class HarvestablesHandler
 
         // Update enchantment if provided and different
         if (enchant !== undefined && enchant !== harvestable.charges) {
-            window.logger?.info(CATEGORIES.HARVEST, 'Event46_EnchantmentUpdate', {
+            window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_EnchantmentUpdate', {
                 id,
                 oldEnchant: harvestable.charges,
                 newEnchant: enchant
@@ -400,7 +400,7 @@ export class HarvestablesHandler
             }
         }
 
-        window.logger?.info(CATEGORIES.HARVEST, 'Event40_IndividualSpawn_FULL', {
+        window.logger?.info(CATEGORIES.HARVESTABLES, 'Event40_IndividualSpawn_FULL', {
             id,
             type,
             tier,
@@ -434,7 +434,7 @@ export class HarvestablesHandler
         const a3 = Parameters[3];
         const a4 = Parameters[4]["data"];
 
-        window.logger?.info(CATEGORIES.HARVEST, 'Event38_BatchSpawn', {
+        window.logger?.info(CATEGORIES.HARVESTABLES, 'Event38_BatchSpawn', {
             count: a0.length,
             note: 'Resources created with enchant=0 (temporary), Event 46 will update enchantments'
         });
@@ -512,8 +512,8 @@ export class HarvestablesHandler
 
         // 🔍 Phase 4: Use database (REQUIRED - no fallback)
         if (!window.harvestablesDatabase?.isLoaded) {
-            // ❌ ERROR: Database not loaded!
-            window.logger?.error(CATEGORIES.HARVEST, 'DatabaseNotLoaded', {
+            // Database not loaded - use fallback
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'DatabaseNotLoaded', {
                 typeNumber,
                 note: 'HarvestablesDatabase not loaded - cannot determine resource type'
             });
@@ -522,8 +522,8 @@ export class HarvestablesHandler
 
         const resourceType = window.harvestablesDatabase.getResourceTypeFromTypeNumber(typeNumber);
         if (!resourceType) {
-            // ❌ ERROR: typeNumber not found in database
-            window.logger?.error(CATEGORIES.HARVEST, EVENTS.UnknownTypeNumber, {
+            // typeNumber not found in database
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'unknown_type_number', {
                 typeNumber,
                 note: 'TypeNumber not found in HarvestablesDatabase'
             });
@@ -541,8 +541,8 @@ export class HarvestablesHandler
 
         const mappedType = typeMap[resourceType];
         if (!mappedType) {
-            // ❌ ERROR: Unknown resource type from database
-            window.logger?.error(CATEGORIES.HARVEST, 'UnknownResourceType', {
+            // Unknown resource type from database
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'UnknownResourceType', {
                 typeNumber,
                 resourceType,
                 note: 'Database returned unknown resource type'
@@ -591,7 +591,7 @@ export class HarvestablesHandler
 
         const removed = before - this.harvestableList.length;
         if (removed > 0) {
-            console.log(`[HarvestablesHandler] Cleaned up ${removed} stale entities (>${maxAgeMs/1000}s old)`);
+            window.logger?.debug(CATEGORIES.HARVESTABLES, 'cleanup', {removed, maxAgeMs});
         }
         return removed;
     }
@@ -609,7 +609,7 @@ export class HarvestablesHandler
         const removed = this.harvestableList.length - maxSize;
         this.harvestableList = this.harvestableList.slice(0, maxSize);
 
-        console.log(`[HarvestablesHandler] Enforced max size: removed ${removed} oldest entities`);
+        window.logger?.debug(CATEGORIES.HARVESTABLES, 'max_size_enforced', {removed});
         return removed;
     }
 

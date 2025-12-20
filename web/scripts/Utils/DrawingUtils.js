@@ -1,4 +1,4 @@
-import {CATEGORIES, EVENTS} from "../constants/LoggerConstants.js";
+import {CATEGORIES} from "../constants/LoggerConstants.js";
 import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
 
@@ -66,8 +66,12 @@ export class DrawingUtils {
             ctx.drawImage(preloadedImage, x - scaledSize / 2, y - scaledSize / 2, scaledSize, scaledSize);
         } else {
             imageCache.preloadImageAndAddToList(src, folder)
-                .then(() => window.logger?.info(CATEGORIES.ITEM, EVENTS.ItemLoaded, { src, folder }))
-                .catch((error) => window.logger?.warn(CATEGORIES.ITEM, EVENTS.ItemLoadFailed, { src, folder, error: error?.message }));
+                .then(() => window.logger?.info(CATEGORIES.SYSTEM, 'item_loaded', {src, folder}))
+                .catch((error) => window.logger?.warn(CATEGORIES.SYSTEM, 'item_load_failed', {
+                    src,
+                    folder,
+                    error: error?.message
+                }));
         }
     }
 
@@ -332,7 +336,7 @@ export class DrawingUtils {
             ctx.beginPath(); ctx.arc(cx, cy, (visualRadius - 6) * pulse, 0, 2 * Math.PI); ctx.stroke();
             ctx.restore();
         } catch (e) {
-            window.logger?.error(CATEGORIES.CLUSTER, EVENTS.DrawRingsFallbackFailed, e);
+            window.logger?.error(CATEGORIES.RENDERING, 'cluster_draw_failed', e);
         }
     }
 

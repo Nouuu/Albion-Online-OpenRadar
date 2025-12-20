@@ -22,7 +22,7 @@
  * }
  */
 
-import { CATEGORIES } from '../constants/LoggerConstants.js';
+import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class LocalizationDatabase {
     constructor() {
@@ -49,7 +49,7 @@ export class LocalizationDatabase {
 
         try {
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'LocalizationDatabaseLoading',
                 { path: jsonPath, lang }
             );
@@ -78,7 +78,7 @@ export class LocalizationDatabase {
             this.isLoaded = true;
 
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'LocalizationDatabaseLoaded',
                 {
                     totalEntries: this.stats.totalEntries,
@@ -89,7 +89,7 @@ export class LocalizationDatabase {
 
         } catch (error) {
             window.logger?.error(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'LocalizationDatabaseLoadError',
                 {
                     error: error.message,

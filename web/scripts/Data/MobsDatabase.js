@@ -21,7 +21,7 @@
  * }
  */
 
-import { CATEGORIES } from '../constants/LoggerConstants.js';
+import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class MobsDatabase {
     /**
@@ -67,7 +67,7 @@ export class MobsDatabase {
 
         try {
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'MobsDatabaseLoading',
                 { path: jsonPath }
             );
@@ -107,7 +107,7 @@ export class MobsDatabase {
             }
 
             window.logger?.info(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'MobsDatabaseLoaded',
                 {
                     totalMobs: this.stats.totalMobs,
@@ -119,7 +119,7 @@ export class MobsDatabase {
 
         } catch (error) {
             window.logger?.error(
-                CATEGORIES.ITEM_DATABASE,
+                CATEGORIES.SYSTEM,
                 'MobsDatabaseLoadError',
                 {
                     error: error.message,
