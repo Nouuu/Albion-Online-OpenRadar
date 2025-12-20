@@ -1,6 +1,3 @@
-// Utils.js - Radar orchestration layer
-// Refactored during Phase 1B: extracted WebSocketManager, DatabaseLoader, EventRouter, PlayerListRenderer
-
 import {PlayersDrawing} from '../Drawings/PlayersDrawing.js';
 import {HarvestablesDrawing} from '../Drawings/HarvestablesDrawing.js';
 import {MobsDrawing} from '../Drawings/MobsDrawing.js';
@@ -24,14 +21,13 @@ import {DrawingUtils} from './DrawingUtils.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import {createRadarRenderer} from './RadarRenderer.js';
 import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
+import pictureInPictureManager from './PictureInPictureManager.js';
 
-// Extracted modules (Phase 1B)
 import * as WebSocketManager from '../core/WebSocketManager.js';
 import * as DatabaseLoader from '../core/DatabaseLoader.js';
 import * as EventRouter from '../core/EventRouter.js';
 import * as PlayerListRenderer from '../radar/PlayerListRenderer.js';
 
-// MODULE STATE
 let isInitialized = false;
 let isDestroying = false;
 let radarRenderer = null;
@@ -41,30 +37,16 @@ let cleanupIntervalId = null;
 let buttonClickHandler = null;
 let lastPlayerListHash = '';
 
-// Handlers (recreated on each init)
 let handlers = {
-    harvestables: null,
-    mobs: null,
-    players: null,
-    chests: null,
-    dungeons: null,
-    wispCage: null,
-    fishing: null
+    harvestables: null, mobs: null, players: null, chests: null,
+    dungeons: null, wispCage: null, fishing: null
 };
 
-// Drawings (recreated on each init)
 let drawings = {
-    harvestables: null,
-    mobs: null,
-    players: null,
-    chests: null,
-    dungeons: null,
-    wispCage: null,
-    fishing: null,
-    maps: null
+    harvestables: null, mobs: null, players: null, chests: null,
+    dungeons: null, wispCage: null, fishing: null, maps: null
 };
 
-// Utilities
 let drawingUtils = null;
 let itemsInfo = null;
 let map = null;
@@ -102,7 +84,7 @@ function initializeRadarRenderer() {
         radarRenderer.stop();
     }
 
-    radarRenderer = createRadarRenderer('main', {
+    radarRenderer = createRadarRenderer({
         handlers: {
             harvestablesHandler: handlers.harvestables,
             mobsHandler: handlers.mobs,
@@ -152,7 +134,6 @@ function clearHandlers(preserveSession = false) {
     }
 }
 
-// PUBLIC API
 export async function initRadar() {
     if (isInitialized) {
         window.logger?.warn(CATEGORIES.DEBUG, 'RadarAlreadyInitialized', {});
@@ -173,7 +154,6 @@ export async function initRadar() {
         itemsInfo.initItems();
         map = new MapH(-1);
 
-        // Initialize handlers
         handlers.dungeons = new DungeonsHandler();
         handlers.chests = new ChestsHandler();
         handlers.mobs = new MobsHandler();
@@ -182,7 +162,6 @@ export async function initRadar() {
         handlers.wispCage = new WispCageHandler();
         handlers.fishing = new FishingHandler();
 
-        // Initialize drawings
         drawings.maps = new MapDrawing();
         drawings.harvestables = new HarvestablesDrawing();
         drawings.mobs = new MobsDrawing();
@@ -191,15 +170,12 @@ export async function initRadar() {
         drawings.dungeons = new DungeonsDrawing();
         drawings.wispCage = new WispCageDrawing();
         drawings.fishing = new FishingDrawing();
-
         drawings.players.updateItemsInfo(itemsInfo.iteminfo);
 
-        // Expose handlers globally
         window.harvestablesHandler = handlers.harvestables;
         window.mobsHandler = handlers.mobs;
         window.playersHandler = handlers.players;
 
-        // Initialize EventRouter
         EventRouter.init({
             handlers: {
                 playersHandler: handlers.players,
@@ -211,18 +187,16 @@ export async function initRadar() {
                 wispCageHandler: handlers.wispCage
             },
             map,
-            radarRenderer: null  // Set after renderer init
+            radarRenderer: null
         });
 
         EventRouter.restoreMapFromSession();
 
-        // Connect WebSocket
         WebSocketManager.setMessageCallback((data) => {
             eventQueue.queueRawMessage(data);
         });
         WebSocketManager.connect();
 
-        // Setup event queue
         eventQueue = getEventQueue();
         eventQueue.setFlushCallback((messageType, params) => {
             switch (messageType) {
@@ -238,15 +212,11 @@ export async function initRadar() {
             }
         });
 
-        // Initialize renderer
         initializeRadarRenderer();
         EventRouter.setRadarRenderer(radarRenderer);
 
-        // Setup intervals (with hash-based skip to avoid unnecessary DOM updates)
         playerListIntervalId = setInterval(() => {
             const players = handlers.players?.getFilteredPlayers?.() || [];
-            // Hash includes count, IDs, health, and mounted state for change detection
-            // Count prefix ensures removal is always detected
             const hash = `${players.length}:` + players.map(p => `${p.id}:${p.currentHealth}:${p.mounted ? 1 : 0}`).join(',');
             if (hash !== lastPlayerListHash) {
                 lastPlayerListHash = hash;
@@ -255,7 +225,6 @@ export async function initRadar() {
         }, 1500);
         cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
 
-        // Button listener
         const buttonElement = document.getElementById('button');
         if (buttonElement) {
             buttonClickHandler = () => clearHandlers();
@@ -264,6 +233,13 @@ export async function initRadar() {
 
         isInitialized = true;
         window.logger?.info(CATEGORIES.DEBUG, 'RadarInitialized', {});
+
+        if (pictureInPictureManager.isSupported()) {
+            pictureInPictureManager.initialize(radarRenderer.canvasManager);
+            window.pipManager = pictureInPictureManager;
+            document.dispatchEvent(new CustomEvent('pipManagerReady'));
+            window.logger?.info(CATEGORIES.DEBUG, 'PiPManagerInitialized', {});
+        }
 
     } catch (error) {
         window.logger?.error(CATEGORIES.DEBUG, 'RadarInitFailed', {error: error.message});
@@ -281,14 +257,12 @@ export function destroyRadar() {
     isDestroying = true;
     window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroying', {});
 
-    // Remove button listener
     const buttonElement = document.getElementById('button');
     if (buttonElement && buttonClickHandler) {
         buttonElement.removeEventListener('click', buttonClickHandler);
         buttonClickHandler = null;
     }
 
-    // Clear intervals
     if (playerListIntervalId) {
         clearInterval(playerListIntervalId);
         playerListIntervalId = null;
@@ -298,23 +272,22 @@ export function destroyRadar() {
         cleanupIntervalId = null;
     }
 
-    // Stop renderer
+    if (window.pipManager) {
+        pictureInPictureManager.destroy();
+        window.pipManager = null;
+    }
+
     if (radarRenderer) {
         radarRenderer.stop();
         radarRenderer = null;
     }
 
-    // Cleanup event queue
     destroyEventQueue();
     eventQueue = null;
 
-    // Disconnect WebSocket
     WebSocketManager.disconnect();
-
-    // Clear handlers
     clearHandlers(true);
 
-    // Null out references
     Object.keys(handlers).forEach(k => handlers[k] = null);
     Object.keys(drawings).forEach(k => drawings[k] = null);
     drawingUtils = null;
@@ -326,7 +299,6 @@ export function destroyRadar() {
     window.playersHandler = null;
     window.radarRenderer = null;
 
-    // Reset modules
     PlayerListRenderer.reset();
     EventRouter.reset();
     lastPlayerListHash = '';
@@ -336,7 +308,6 @@ export function destroyRadar() {
     window.logger?.info(CATEGORIES.DEBUG, 'RadarDestroyed', {});
 }
 
-// Browser tab close cleanup
 window.addEventListener('beforeunload', () => {
     if (isInitialized) destroyRadar();
 });

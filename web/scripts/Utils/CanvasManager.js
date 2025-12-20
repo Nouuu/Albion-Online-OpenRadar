@@ -2,8 +2,7 @@ import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 
 export class CanvasManager {
-    constructor(viewType = 'main') {
-        this.viewType = viewType;
+    constructor() {
         this.canvases = {};
         this.contexts = {};
         this._onCanvasSizeChanged = null;
@@ -152,6 +151,6 @@ export class CanvasManager {
 }
 
 // Export singleton instance factory
-export function createCanvasManager(viewType = 'main') {
-    return new CanvasManager(viewType);
+export function createCanvasManager() {
+    return new CanvasManager();
 }

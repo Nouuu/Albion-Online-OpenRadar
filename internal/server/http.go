@@ -145,11 +145,6 @@ func (s *HTTPServer) setupRoutes() {
 		})
 	}
 
-	// Radar overlay
-	s.mux.HandleFunc("/radar-overlay", func(w http.ResponseWriter, r *http.Request) {
-		s.renderOverlay(w)
-	})
-
 	// Static file handlers with caching
 	// Items and Spells: serve fallback image if not found
 	s.mux.Handle("/images/Items/", s.fsHandlerWithFallback("/images/Items/", s.images, "Items", "_default.webp", imageCacheDuration))
@@ -210,19 +205,6 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 
 	if err != nil {
 		s.logger.Error("http", "render", fmt.Sprintf("Failed to render page %s: %v", page, err), nil)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// renderOverlay renders the radar overlay template
-func (s *HTTPServer) renderOverlay(w http.ResponseWriter) {
-	data := templates.NewPageData("overlay", "OpenRadar - Radar Overlay").WithVersion(s.version)
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-	if err := s.tmpl.Render(w, "overlay/radar-overlay.gohtml", data); err != nil {
-		s.logger.Error("http", "render", fmt.Sprintf("Failed to render overlay: %v", err), nil)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

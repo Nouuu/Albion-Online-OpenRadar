@@ -5,7 +5,7 @@ import {EventCodes} from '../Utils/EventCodes.js';
 import {CATEGORIES, EVENTS} from '../constants/LoggerConstants.js';
 
 // Map change debouncing
-const MAP_CHANGE_DEBOUNCE_MS = 1500;
+const MAP_CHANGE_DEBOUNCE_MS = 4000;
 let lastMapChangeTime = 0;
 
 // Local player position (relative coords)

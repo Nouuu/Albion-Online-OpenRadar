@@ -14,10 +14,9 @@
             <span id="wsStatusText" class="text-xs text-base-content/50 hidden sm:inline">Connecting...</span>
         </div>
 
-        <button onclick="window.open('/radar-overlay', 'OpenRadar Overlay', 'popup=yes,width=520,height=520,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no')"
-           class="btn btn-primary btn-sm">
-            <i data-lucide="external-link" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">Open Overlay</span>
+        <button id="pipToggleBtn" class="btn btn-primary btn-sm" disabled style="display:none;">
+            <i id="pipIcon" data-lucide="picture-in-picture-2" class="w-4 h-4"></i>
+            <span id="pipText" class="hidden sm:inline">PiP Mode</span>
         </button>
     </div>
 </header>
@@ -27,6 +26,9 @@
     const dot = document.getElementById('wsStatusDot');
     const text = document.getElementById('wsStatusText');
     const indicator = document.getElementById('wsStatusIndicator');
+    const pipBtn = document.getElementById('pipToggleBtn');
+    const pipIcon = document.getElementById('pipIcon');
+    const pipText = document.getElementById('pipText');
 
     function isOnRadarPage() {
         const pageContent = document.getElementById('page-content');
@@ -34,11 +36,21 @@
     }
 
     function updateVisibility() {
-        if (!indicator) return;
         const onRadar = isOnRadarPage();
-        indicator.style.display = onRadar ? 'flex' : 'none';
-        if (onRadar) {
-            updateIndicator(window.wsConnectionStatus || 'disconnected');
+
+        // WS indicator
+        if (indicator) {
+            indicator.style.display = onRadar ? 'flex' : 'none';
+            if (onRadar) {
+                updateIndicator(window.wsConnectionStatus || 'disconnected');
+            }
+        }
+
+        // PiP button
+        if (pipBtn) {
+            const pipSupported = document.pictureInPictureEnabled === true;
+            pipBtn.style.display = (onRadar && pipSupported) ? 'flex' : 'none';
+            pipBtn.disabled = !onRadar || !window.pipManager;
         }
     }
 
@@ -71,9 +83,49 @@
         }
     }
 
+    function updatePipButton(isActive) {
+        if (!pipBtn || !pipIcon || !pipText) return;
+
+        if (isActive) {
+            pipBtn.classList.remove('btn-primary');
+            pipBtn.classList.add('btn-secondary');
+            pipIcon.setAttribute('data-lucide', 'picture-in-picture');
+            pipText.textContent = 'Exit PiP';
+        } else {
+            pipBtn.classList.remove('btn-secondary');
+            pipBtn.classList.add('btn-primary');
+            pipIcon.setAttribute('data-lucide', 'picture-in-picture-2');
+            pipText.textContent = 'PiP Mode';
+        }
+        // Re-render lucide icon
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    // PiP button click handler
+    if (pipBtn) {
+        pipBtn.addEventListener('click', async () => {
+            if (window.pipManager) {
+                const isActive = await window.pipManager.toggle();
+                updatePipButton(isActive);
+            }
+        });
+    }
+
+    // Listen to PiP status changes (e.g., when user closes PiP window)
+    document.addEventListener('pipStatusChange', (e) => {
+        updatePipButton(e.detail.isActive);
+    });
+
     // Listen to WS status changes
     document.addEventListener('wsStatusChange', (e) => {
         if (isOnRadarPage()) updateIndicator(e.detail.status);
+    });
+
+    // Listen to PiP manager ready
+    document.addEventListener('pipManagerReady', () => {
+        if (pipBtn && isOnRadarPage()) {
+            pipBtn.disabled = false;
+        }
     });
 
     // Listen to HTMX page changes
