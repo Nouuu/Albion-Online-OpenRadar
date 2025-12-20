@@ -1,6 +1,6 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../Utils/SettingsSync.js";
-import {getResourceStorageKey} from "../Utils/ResourcesHelper.js";
+import settingsSync from "../utils/SettingsSync.js";
+import {getResourceStorageKey} from "../utils/ResourcesHelper.js";
 
 const HarvestableType =
 {

@@ -1,5 +1,5 @@
-import {DrawingUtils} from "../Utils/DrawingUtils.js";
-import settingsSync from "../Utils/SettingsSync.js";
+import {DrawingUtils} from "../utils/DrawingUtils.js";
+import settingsSync from "../utils/SettingsSync.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 
 export class HarvestablesDrawing extends DrawingUtils  {

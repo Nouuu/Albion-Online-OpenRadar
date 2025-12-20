@@ -1,5 +1,5 @@
 import {CATEGORY_SETTINGS, LOG_LEVELS} from './constants/LoggerConstants.js';
-import settingsSync from './Utils/SettingsSync.js';
+import settingsSync from './utils/SettingsSync.js';
 
 let socket = null;
 let socketConnected = false;
@@ -75,7 +75,7 @@ class Logger {
     }
 
     logToConsole(entry) {
-        const emoji = { 'DEBUG': '🔍', 'INFO': 'ℹ️', 'WARN': '⚠️', 'ERROR': '❌', 'CRITICAL': '🚨' }[entry.level] || '📝';
+        const emoji = {'DEBUG': '🔍', 'INFO': 'ℹ️', 'WARN': '⚠️', 'ERROR': '❌', 'CRITICAL': '🚨'}[entry.level] || '📝';
         const color = {
             'DEBUG': 'color: #888', 'INFO': 'color: #0af', 'WARN': 'color: #fa0',
             'ERROR': 'color: #f00', 'CRITICAL': 'color: #f0f; font-weight: bold'
@@ -110,7 +110,7 @@ class Logger {
 
         if (this.wsClient && this.wsClient.readyState === WebSocket.OPEN) {
             try {
-                this.wsClient.send(JSON.stringify({ type: 'logs', logs: this.buffer }));
+                this.wsClient.send(JSON.stringify({type: 'logs', logs: this.buffer}));
             } catch (e) {
                 // Exception: console allowed here to avoid logger recursion
                 console.warn('[Logger] WebSocket send failed:', e?.message);

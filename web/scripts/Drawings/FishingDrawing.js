@@ -1,4 +1,4 @@
-import {DrawingUtils} from "../Utils/DrawingUtils.js";
+import {DrawingUtils} from "../utils/DrawingUtils.js";
 
 export class FishingDrawing extends DrawingUtils
 {

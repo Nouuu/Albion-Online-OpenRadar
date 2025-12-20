@@ -1,22 +1,20 @@
-import {PlayersDrawing} from '../Drawings/PlayersDrawing.js';
-import {HarvestablesDrawing} from '../Drawings/HarvestablesDrawing.js';
-import {MobsDrawing} from '../Drawings/MobsDrawing.js';
-import {ChestsDrawing} from '../Drawings/ChestsDrawing.js';
-import {DungeonsDrawing} from '../Drawings/DungeonsDrawing.js';
-import {MapDrawing} from '../Drawings/MapsDrawing.js';
-import {WispCageDrawing} from '../Drawings/WispCageDrawing.js';
-import {FishingDrawing} from '../Drawings/FishingDrawing.js';
+import {PlayersDrawing} from '../drawings/PlayersDrawing.js';
+import {HarvestablesDrawing} from '../drawings/HarvestablesDrawing.js';
+import {MobsDrawing} from '../drawings/MobsDrawing.js';
+import {ChestsDrawing} from '../drawings/ChestsDrawing.js';
+import {DungeonsDrawing} from '../drawings/DungeonsDrawing.js';
+import {MapDrawing} from '../drawings/MapsDrawing.js';
+import {WispCageDrawing} from '../drawings/WispCageDrawing.js';
+import {FishingDrawing} from '../drawings/FishingDrawing.js';
 
-import {PlayersHandler} from '../Handlers/PlayersHandler.js';
-import {WispCageHandler} from '../Handlers/WispCageHandler.js';
-import {FishingHandler} from '../Handlers/FishingHandler.js';
-import {MobsHandler} from '../Handlers/MobsHandler.js';
-import {ChestsHandler} from '../Handlers/ChestsHandler.js';
-import {HarvestablesHandler} from '../Handlers/HarvestablesHandler.js';
-import {MapH} from '../Handlers/Map.js';
-import {DungeonsHandler} from '../Handlers/DungeonsHandler.js';
-import {ItemsInfo} from '../Handlers/ItemsInfo.js';
-
+import {PlayersHandler} from '../handlers/PlayersHandler.js';
+import {WispCageHandler} from '../handlers/WispCageHandler.js';
+import {FishingHandler} from '../handlers/FishingHandler.js';
+import {MobsHandler} from '../handlers/MobsHandler.js';
+import {ChestsHandler} from '../handlers/ChestsHandler.js';
+import {HarvestablesHandler} from '../handlers/HarvestablesHandler.js';
+import {MapH} from './Map.js';
+import {DungeonsHandler} from '../handlers/DungeonsHandler.js';
 import {DrawingUtils} from './DrawingUtils.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import {createRadarRenderer} from './RadarRenderer.js';
@@ -26,7 +24,7 @@ import pictureInPictureManager from './PictureInPictureManager.js';
 import * as WebSocketManager from '../core/WebSocketManager.js';
 import * as DatabaseLoader from '../core/DatabaseLoader.js';
 import * as EventRouter from '../core/EventRouter.js';
-import * as PlayerListRenderer from '../radar/PlayerListRenderer.js';
+import * as PlayerListRenderer from '../core/PlayerListRenderer.js';
 
 let isInitialized = false;
 let isDestroying = false;
@@ -48,7 +46,6 @@ let drawings = {
 };
 
 let drawingUtils = null;
-let itemsInfo = null;
 let map = null;
 
 const STALE_ENTITY_MAX_AGE = 300000;
@@ -150,8 +147,6 @@ export async function initRadar() {
         await DatabaseLoader.load();
 
         drawingUtils = new DrawingUtils();
-        itemsInfo = new ItemsInfo();
-        itemsInfo.initItems();
         map = new MapH(-1);
 
         handlers.dungeons = new DungeonsHandler();
@@ -170,7 +165,6 @@ export async function initRadar() {
         drawings.dungeons = new DungeonsDrawing();
         drawings.wispCage = new WispCageDrawing();
         drawings.fishing = new FishingDrawing();
-        drawings.players.updateItemsInfo(itemsInfo.iteminfo);
 
         window.harvestablesHandler = handlers.harvestables;
         window.mobsHandler = handlers.mobs;
@@ -291,7 +285,6 @@ export function destroyRadar() {
     Object.keys(handlers).forEach(k => handlers[k] = null);
     Object.keys(drawings).forEach(k => drawings[k] = null);
     drawingUtils = null;
-    itemsInfo = null;
     map = null;
 
     window.harvestablesHandler = null;

@@ -12,7 +12,7 @@
     <script src="/scripts/vendors/lucide.min.js"></script>
 
     <link rel="stylesheet" href="/styles/app.css">
-    <link rel="stylesheet" href="/scripts/styles/components.css">
+    <link rel="stylesheet" href="/styles/components.css">
 
 
     <!-- Must be defined before modules -->
@@ -28,7 +28,7 @@
 
     <script type="module">
         import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
-        import settingsSync from '/scripts/Utils/SettingsSync.js';
+        import settingsSync from '/scripts/utils/SettingsSync.js';
         import {
             attachCheckboxListeners,
             generateResourceGrid,
@@ -36,7 +36,7 @@
             updateTierButtonState,
             selectAllTierEnchants,
             getResourceStorageKey
-        } from '/scripts/Utils/ResourcesHelper.js';
+        } from '/scripts/utils/ResourcesHelper.js';
 
         window.CATEGORIES = CATEGORIES;
         window.settingsSync = settingsSync;
@@ -66,11 +66,10 @@
         })();
     </script>
 
-    <script type="module" src="/scripts/LoggerClient.js"></script>
+    <script type="module" src="/scripts/logger.js"></script>
     <script type="module" src="/scripts/core/PageController.js"></script>
-    <script type="module" src="/scripts/Utils/Toast.js"></script>
-    <script type="module" src="/scripts/Utils/Modal.js"></script>
-    <script src="/scripts/spa-router.js"></script>
+    <script type="module" src="/scripts/utils/Toast.js"></script>
+    <script type="module" src="/scripts/utils/Modal.js"></script>
     <script src="/scripts/vendors/htmx.min.js"></script>
 
     <!-- Must be in head before sidebar template -->

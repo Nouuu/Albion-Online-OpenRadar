@@ -1,7 +1,7 @@
-import {DrawingUtils} from "../Utils/DrawingUtils.js";
+import {DrawingUtils} from "../utils/DrawingUtils.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../Utils/SettingsSync.js";
-import imageCache from "../Utils/ImageCache.js";
+import settingsSync from "../utils/SettingsSync.js";
+import imageCache from "../utils/ImageCache.js";
 
 export class MapDrawing extends DrawingUtils
 {

@@ -119,6 +119,9 @@ export function initPageController() {
         }, 0);
     });
 
+    // Handle browser back/forward navigation
+    window.addEventListener('popstate', () => window.location.reload());
+
     window.logger?.info(CATEGORIES.SYSTEM, 'PageController_Initialized', {});
 }
 

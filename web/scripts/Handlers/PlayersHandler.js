@@ -1,6 +1,6 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import zonesDatabase from "../Data/ZonesDatabase.js";
-import settingsSync from "../Utils/SettingsSync.js";
+import zonesDatabase from "../data/ZonesDatabase.js";
+import settingsSync from "../utils/SettingsSync.js";
 
 class Player {
     constructor(posX, posY, id, nickname, guildName1, faction, allianceName, equipments, spells) {

@@ -1,11 +1,11 @@
 // DatabaseLoader.js - Coordinated database initialization
 // Extracted from Utils.js during Phase 1B refactor
 
-import {ItemsDatabase} from '../Data/ItemsDatabase.js';
-import {SpellsDatabase} from '../Data/SpellsDatabase.js';
-import {HarvestablesDatabase} from '../Data/HarvestablesDatabase.js';
-import {MobsDatabase} from '../Data/MobsDatabase.js';
-import zonesDatabase from '../Data/ZonesDatabase.js';
+import {ItemsDatabase} from '../data/ItemsDatabase.js';
+import {SpellsDatabase} from '../data/SpellsDatabase.js';
+import {HarvestablesDatabase} from '../data/HarvestablesDatabase.js';
+import {MobsDatabase} from '../data/MobsDatabase.js';
+import zonesDatabase from '../data/ZonesDatabase.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 const MAX_RETRIES = 3;

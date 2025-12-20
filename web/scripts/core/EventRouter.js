@@ -1,7 +1,7 @@
 // EventRouter.js - WebSocket event routing to handlers
 // Extracted from Utils.js during Phase 1B refactor
 
-import {EventCodes} from '../Utils/EventCodes.js';
+import {EventCodes} from '../utils/EventCodes.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 // Map change debouncing
@@ -258,11 +258,11 @@ export function onEvent(Parameters) {
             chestsHandler.addChestEvent(Parameters);
             break;
 
-        case EventCodes.NewMistsCagedWisp:
+        case EventCodes.NewCagedObject:
             wispCageHandler.newCageEvent(Parameters);
             break;
 
-        case EventCodes.MistsWispCageOpened:
+        case EventCodes.CagedObjectStateUpdated:
             wispCageHandler.cageOpenedEvent(Parameters);
             break;
 

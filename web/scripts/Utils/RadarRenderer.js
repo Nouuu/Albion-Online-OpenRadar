@@ -1,7 +1,7 @@
 import {CanvasManager} from './CanvasManager.js';
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
-import zonesDatabase from "../Data/ZonesDatabase.js";
+import zonesDatabase from "../data/ZonesDatabase.js";
 
 export class RadarRenderer {
     constructor(dependencies) {

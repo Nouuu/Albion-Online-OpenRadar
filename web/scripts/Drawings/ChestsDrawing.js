@@ -1,5 +1,5 @@
-﻿import {DrawingUtils} from "../Utils/DrawingUtils.js";
-import settingsSync from "../Utils/SettingsSync.js";
+﻿import {DrawingUtils} from "../utils/DrawingUtils.js";
+import settingsSync from "../utils/SettingsSync.js";
 
 export class ChestsDrawing extends DrawingUtils {
     interpolate(chests, lpX, lpY, t) {

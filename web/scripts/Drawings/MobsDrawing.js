@@ -1,7 +1,7 @@
-import {DrawingUtils} from "../Utils/DrawingUtils.js";
-import {EnemyType} from "../Handlers/MobsHandler.js";
+import {DrawingUtils} from "../utils/DrawingUtils.js";
+import {EnemyType} from "../handlers/MobsHandler.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../Utils/SettingsSync.js";
+import settingsSync from "../utils/SettingsSync.js";
 
 export class MobsDrawing extends DrawingUtils
 {

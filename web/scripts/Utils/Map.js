@@ -1,7 +1,5 @@
-export class MapH
-{
-    constructor(id)
-    {
+export class MapH {
+    constructor(id) {
         this.id = id;
         this.hX = 0;
         this.hY = 0;
