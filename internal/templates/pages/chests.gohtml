@@ -223,25 +223,51 @@
 
 {{define "scripts/chests"}}
 <script>
-window.onGlobalsReady(function initChestsPage() {
-    const settingsSync = window.settingsSync;
+    (async function () {
+        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
 
-    const bindCheckbox = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.checked = settingsSync.getBool(id);
-            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
+        let cleanup = [];
+
+        function initChestsPage() {
+            const settingsSync = window.settingsSync;
+            cleanup = [];
+
+            function addListener(el, event, handler) {
+                if (el) {
+                    el.addEventListener(event, handler);
+                    cleanup.push(() => el.removeEventListener(event, handler));
+                }
+            }
+
+            const bindCheckbox = (id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.checked = settingsSync.getBool(id);
+                    addListener(el, "change", () => settingsSync.setBool(id, el.checked));
+                }
+            };
+
+            // Chests
+            ["settingChestGreen", "settingChestBlue", "settingChestPurple", "settingChestYellow"].forEach(bindCheckbox);
+
+            // Mists
+            ["settingMistSolo", "settingMistDuo", "settingMistE0", "settingMistE1", "settingMistE2", "settingMistE3", "settingMistE4", "settingCage"].forEach(bindCheckbox);
+
+            // Dungeons
+            ["settingDungeonSolo", "settingDungeonDuo", "settingDungeonE0", "settingDungeonE1", "settingDungeonE2", "settingDungeonE3", "settingDungeonE4", "settingDungeonCorrupted", "settingDungeonHellgate"].forEach(bindCheckbox);
         }
-    };
 
-    // Chests
-    ["settingChestGreen", "settingChestBlue", "settingChestPurple", "settingChestYellow"].forEach(bindCheckbox);
+        function destroyChestsPage() {
+            cleanup.forEach(fn => fn());
+            cleanup = [];
+        }
 
-    // Mists
-    ["settingMistSolo", "settingMistDuo", "settingMistE0", "settingMistE1", "settingMistE2", "settingMistE3", "settingMistE4", "settingCage"].forEach(bindCheckbox);
+        if (!window._chestsPageRegistered) {
+            registerPage('chests', {init: initChestsPage, destroy: destroyChestsPage});
+            window._chestsPageRegistered = true;
+        }
 
-    // Dungeons
-    ["settingDungeonSolo", "settingDungeonDuo", "settingDungeonE0", "settingDungeonE1", "settingDungeonE2", "settingDungeonE3", "settingDungeonE4", "settingDungeonCorrupted", "settingDungeonHellgate"].forEach(bindCheckbox);
-});
+        window.onGlobalsReady(() => reinitCurrentPage());
+    })();
 </script>
 {{end}}

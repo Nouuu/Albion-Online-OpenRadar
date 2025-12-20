@@ -277,152 +277,161 @@
 
 {{define "scripts/settings"}}
 <script>
-window.onGlobalsReady(function initSettingsPage() {
-    const settingsSync = window.settingsSync;
+    (async function () {
+        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
 
-    // Collapse state persistence
-    const collapseDebug = document.getElementById('collapse-debug');
-    if (collapseDebug) {
-        collapseDebug.checked = settingsSync.getBool('collapse-settings-debug', false);
-        collapseDebug.addEventListener('change', () => settingsSync.setBool('collapse-settings-debug', collapseDebug.checked));
-    }
+        let cleanup = [];
 
-    // Cleanup registry for HTMX navigation
-    const cleanup = [];
-    function addListener(el, event, handler) {
-        if (el) {
-            el.addEventListener(event, handler);
-            cleanup.push(() => el.removeEventListener(event, handler));
+        function initSettingsPage() {
+            const settingsSync = window.settingsSync;
+            cleanup = [];
+
+            function addListener(el, event, handler) {
+                if (el) {
+                    el.addEventListener(event, handler);
+                    cleanup.push(() => el.removeEventListener(event, handler));
+                }
+            }
+
+            // Collapse state persistence
+            const collapseDebug = document.getElementById('collapse-debug');
+            if (collapseDebug) {
+                collapseDebug.checked = settingsSync.getBool('collapse-settings-debug', false);
+                addListener(collapseDebug, 'change', () => settingsSync.setBool('collapse-settings-debug', collapseDebug.checked));
         }
-    }
 
-    // HTMX cleanup handler
-    function htmxCleanupHandler(e) {
-        if (e.detail.target.id === 'page-content') {
-            cleanup.forEach(fn => fn());
-            document.body.removeEventListener('htmx:beforeSwap', htmxCleanupHandler);
-        }
-    }
-    document.body.addEventListener('htmx:beforeSwap', htmxCleanupHandler);
+            const bindCheckbox = (id, onChange) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.checked = settingsSync.getBool(id);
+                    addListener(el, "change", (e) => {
+                        settingsSync.setBool(id, e.target.checked);
+                        if (onChange) onChange(e.target.checked);
+                    });
+                }
+            };
 
-    const bindCheckbox = (id, onChange) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.checked = settingsSync.getBool(id);
-            addListener(el, "change", (e) => {
-                settingsSync.setBool(id, e.target.checked);
-                if (onChange) onChange(e.target.checked);
+            const bindNumber = (id, defaultVal) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.value = settingsSync.getNumber(id, defaultVal);
+                    addListener(el, "input", () => settingsSync.setNumber(id, Number(el.value)));
+                }
+            };
+
+            // Map display setting
+            bindCheckbox("settingShowMap");
+
+            // Resource overlay settings
+            bindCheckbox("settingResourceCount");
+            bindCheckbox("settingResourceDistance");
+            bindCheckbox("settingResourceClusters");
+            bindNumber("settingClusterRadius", 30);
+            bindNumber("settingClusterMinSize", 2);
+
+            // Debug settings
+            bindCheckbox("settingDebugEnemies");
+            bindCheckbox("settingDebugPlayers");
+            bindCheckbox("settingDebugChests");
+            bindCheckbox("settingDebugDungeons");
+            bindCheckbox("settingDebugFishing");
+            bindCheckbox("settingDebugHarvestables");
+
+            // Console & Server settings
+            bindCheckbox("settingLogToConsole");
+            bindCheckbox("settingLogToServer");
+            bindCheckbox("settingDebugRawPacketsConsole");
+            bindCheckbox("settingDebugRawPacketsServer");
+
+            // WebSocket performance (default: enabled)
+            if (settingsSync.get("settingWsCoalescing") === null) settingsSync.setBool("settingWsCoalescing", true);
+            if (settingsSync.get("settingWsThrottling") === null) settingsSync.setBool("settingWsThrottling", true);
+            bindCheckbox("settingWsCoalescing");
+            bindCheckbox("settingWsThrottling");
+
+            // Server-side logging (with API call)
+            const serverLogsEl = document.getElementById("settingServerLogsEnabled");
+            if (serverLogsEl) {
+                serverLogsEl.checked = settingsSync.getBool("settingServerLogsEnabled");
+                addListener(serverLogsEl, "change", async (e) => {
+                    const enabled = e.target.checked;
+                    settingsSync.setBool("settingServerLogsEnabled", enabled);
+                    try {
+                        await fetch('/api/settings/server-logs', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({enabled})
+                        });
+                    } catch (error) {
+                        console.error('Error updating server logs setting:', error);
+                    }
+                });
+            }
+
+            // Download debug logs
+            const downloadBtn = document.getElementById('downloadLogsBtn');
+            addListener(downloadBtn, 'click', () => {
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const debugData = {
+                    timestamp,
+                    session: {
+                        userAgent: navigator.userAgent,
+                        screenResolution: `${window.screen.width}x${window.screen.height}`,
+                        language: navigator.language
+                    },
+                    localStorage: Object.keys(localStorage).reduce((acc, key) => {
+                        if (key.startsWith('setting')) acc[key] = localStorage.getItem(key);
+                        return acc;
+                    }, {})
+                };
+
+                const blob = new Blob([JSON.stringify(debugData, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `openradar-debug-${timestamp}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            // Reset settings - using DaisyUI modal
+            addListener(document.getElementById("resetSettingsBtn"), "click", () => {
+                document.getElementById('modal-resetSettings').showModal();
+            });
+
+            addListener(document.getElementById("confirmResetSettings"), "click", () => {
+                localStorage.clear();
+                document.getElementById('modal-resetSettings').close();
+                if (window.toast) window.toast.success('Settings reset successfully');
+                setTimeout(() => location.reload(), 500);
+            });
+
+            // Clear cache - using DaisyUI modal
+            addListener(document.getElementById("clearCacheBtn"), "click", () => {
+                document.getElementById('modal-clearCache').showModal();
+            });
+
+            addListener(document.getElementById("confirmClearCache"), "click", () => {
+                caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                });
+                document.getElementById('modal-clearCache').close();
+                if (window.toast) window.toast.success('Cache cleared');
             });
         }
-    };
 
-    const bindNumber = (id, defaultVal) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.value = settingsSync.getNumber(id, defaultVal);
-            addListener(el, "input", () => settingsSync.setNumber(id, Number(el.value)));
+        function destroySettingsPage() {
+            cleanup.forEach(fn => fn());
+            cleanup = [];
         }
-    };
 
-    // Map display setting
-    bindCheckbox("settingShowMap");
+        if (!window._settingsPageRegistered) {
+            registerPage('settings', {init: initSettingsPage, destroy: destroySettingsPage});
+            window._settingsPageRegistered = true;
+        }
 
-    // Resource overlay settings
-    bindCheckbox("settingResourceCount");
-    bindCheckbox("settingResourceDistance");
-    bindCheckbox("settingResourceClusters");
-    bindNumber("settingClusterRadius", 30);
-    bindNumber("settingClusterMinSize", 2);
-
-    // Debug settings
-    bindCheckbox("settingDebugEnemies");
-    bindCheckbox("settingDebugPlayers");
-    bindCheckbox("settingDebugChests");
-    bindCheckbox("settingDebugDungeons");
-    bindCheckbox("settingDebugFishing");
-    bindCheckbox("settingDebugHarvestables");
-
-    // Console & Server settings
-    bindCheckbox("settingLogToConsole");
-    bindCheckbox("settingLogToServer");
-    bindCheckbox("settingDebugRawPacketsConsole");
-    bindCheckbox("settingDebugRawPacketsServer");
-
-    // WebSocket performance (default: enabled)
-    if (settingsSync.get("settingWsCoalescing") === null) settingsSync.setBool("settingWsCoalescing", true);
-    if (settingsSync.get("settingWsThrottling") === null) settingsSync.setBool("settingWsThrottling", true);
-    bindCheckbox("settingWsCoalescing");
-    bindCheckbox("settingWsThrottling");
-
-    // Server-side logging (with API call)
-    const serverLogsEl = document.getElementById("settingServerLogsEnabled");
-    if (serverLogsEl) {
-        serverLogsEl.checked = settingsSync.getBool("settingServerLogsEnabled");
-        addListener(serverLogsEl, "change", async (e) => {
-            const enabled = e.target.checked;
-            settingsSync.setBool("settingServerLogsEnabled", enabled);
-            try {
-                await fetch('/api/settings/server-logs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enabled })
-                });
-            } catch (error) {
-                console.error('Error updating server logs setting:', error);
-            }
-        });
-    }
-
-    // Download debug logs
-    const downloadBtn = document.getElementById('downloadLogsBtn');
-    addListener(downloadBtn, 'click', () => {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const debugData = {
-            timestamp,
-            session: {
-                userAgent: navigator.userAgent,
-                screenResolution: `${window.screen.width}x${window.screen.height}`,
-                language: navigator.language
-            },
-            localStorage: Object.keys(localStorage).reduce((acc, key) => {
-                if (key.startsWith('setting')) acc[key] = localStorage.getItem(key);
-                return acc;
-            }, {})
-        };
-
-        const blob = new Blob([JSON.stringify(debugData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `openradar-debug-${timestamp}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    });
-
-    // Reset settings - using DaisyUI modal
-    addListener(document.getElementById("resetSettingsBtn"), "click", () => {
-        document.getElementById('modal-resetSettings').showModal();
-    });
-
-    addListener(document.getElementById("confirmResetSettings"), "click", () => {
-        localStorage.clear();
-        document.getElementById('modal-resetSettings').close();
-        if (window.toast) window.toast.success('Settings reset successfully');
-        setTimeout(() => location.reload(), 500);
-    });
-
-    // Clear cache - using DaisyUI modal
-    addListener(document.getElementById("clearCacheBtn"), "click", () => {
-        document.getElementById('modal-clearCache').showModal();
-    });
-
-    addListener(document.getElementById("confirmClearCache"), "click", () => {
-        caches.keys().then(names => {
-            names.forEach(name => caches.delete(name));
-        });
-        document.getElementById('modal-clearCache').close();
-        if (window.toast) window.toast.success('Cache cleared');
-    });
-});
+        // Wait for globals (settingsSync) to be ready before reinitializing
+        window.onGlobalsReady(() => reinitCurrentPage());
+    })();
 </script>
 {{end}}

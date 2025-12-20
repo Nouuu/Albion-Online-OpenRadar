@@ -146,31 +146,57 @@
 
 {{define "scripts/players"}}
 <script>
-window.onGlobalsReady(function initPlayersPage() {
-    const settingsSync = window.settingsSync;
+    (async function () {
+        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
 
-    const bindCheckbox = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.checked = settingsSync.getBool(id);
-            el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
-        }
-    };
+        let cleanup = [];
 
-    ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
-     "settingSound", "settingFlash", "settingPassivePlayers", "settingFactionPlayers",
-     "settingDangerousPlayers"].forEach(bindCheckbox);
+        function initPlayersPage() {
+            const settingsSync = window.settingsSync;
+            cleanup = [];
 
-    const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
-    if (settingMaxPlayersDisplay) {
-        settingMaxPlayersDisplay.value = settingsSync.getNumber("settingMaxPlayersDisplay", 50);
-        settingMaxPlayersDisplay.addEventListener("input", () => {
-            const val = Number(settingMaxPlayersDisplay.value);
-            if (val >= 1 && val <= 100) {
-                settingsSync.setNumber("settingMaxPlayersDisplay", val);
+            function addListener(el, event, handler) {
+                if (el) {
+                    el.addEventListener(event, handler);
+                    cleanup.push(() => el.removeEventListener(event, handler));
+                }
             }
-        });
-    }
-});
+
+            const bindCheckbox = (id) => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.checked = settingsSync.getBool(id);
+                    addListener(el, "change", () => settingsSync.setBool(id, el.checked));
+                }
+            };
+
+            ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
+                "settingSound", "settingFlash", "settingPassivePlayers", "settingFactionPlayers",
+                "settingDangerousPlayers"].forEach(bindCheckbox);
+
+            const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
+            if (settingMaxPlayersDisplay) {
+                settingMaxPlayersDisplay.value = settingsSync.getNumber("settingMaxPlayersDisplay", 50);
+                addListener(settingMaxPlayersDisplay, "input", () => {
+                    const val = Number(settingMaxPlayersDisplay.value);
+                    if (val >= 1 && val <= 100) {
+                        settingsSync.setNumber("settingMaxPlayersDisplay", val);
+                    }
+                });
+            }
+        }
+
+        function destroyPlayersPage() {
+            cleanup.forEach(fn => fn());
+            cleanup = [];
+        }
+
+        if (!window._playersPageRegistered) {
+            registerPage('players', {init: initPlayersPage, destroy: destroyPlayersPage});
+            window._playersPageRegistered = true;
+        }
+
+        window.onGlobalsReady(() => reinitCurrentPage());
+    })();
 </script>
 {{end}}

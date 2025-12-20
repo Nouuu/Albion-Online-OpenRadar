@@ -347,7 +347,8 @@
             window._resourcesPageRegistered = true;
         }
 
-        reinitCurrentPage();
+        // Wait for globals (settingsSync) to be ready before reinitializing
+        window.onGlobalsReady(() => reinitCurrentPage());
     })();
 </script>
 {{end}}
