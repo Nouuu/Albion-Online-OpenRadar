@@ -50,11 +50,14 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - Mobile-responsive design
 - Active state indicators
 
-### Overlay Window
-- Floating radar window
-- BroadcastChannel settings sync
-- Auto-hiding controls
-- Transparent background option
+### Picture-in-Picture Mode (v2.0.1)
+
+- Native browser PiP via `canvas.captureStream(30)`
+- 4-layer canvas compositing (map, draw, player, UI)
+- PiP toggle button in header (radar page only)
+- Automatic close on page navigation
+- Real-time updates synced with radar rendering
+- No separate window/iframe needed
 
 ---
 
@@ -116,6 +119,33 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - Removed tooltips.css (DaisyUI handles)
 - ESLint configured for underscore-prefixed vars
 
+### SPA Navigation & Lifecycle (v2.0.1)
+
+- **PageController.js** - Orchestrates page init/destroy cycles
+- **WebSocketManager.js** - Robust connection handling with auto-reconnect
+- **HTMX integration** - Partial page rendering, no full reloads
+- **Page visibility handling** - WS pause on tab hide, resume on show
+- **Database caching** - Persists across navigations (ItemsDB, MobsDB, etc.)
+- **Dynamic imports** - Lazy loading for radar page (faster initial load)
+- **Memory leak prevention** - Proper cleanup of handlers, drawings, WS
+
+### Memory & Performance Analysis
+
+- **Chrome DevTools trace analysis** with `tools/analyze_trace.py`
+- Event listener leak detection and fix
+- DOM node growth monitoring
+- RAF budget tracking
+
+### CDN to Local Migration (v2.0.1)
+
+- **Lucide icons** - CDN → `/scripts/vendors/lucide.min.js`
+- **HTMX** - CDN → `/scripts/vendors/htmx.min.js`
+- **Google Fonts** → local woff2 in `/styles/fonts/`
+    - JetBrains Mono (400, 500)
+    - Space Grotesk (400, 500, 700)
+- **fonts.css** with @font-face declarations
+- **Offline-capable** - No external dependencies
+
 ---
 
 ## Performance Comparison
@@ -141,4 +171,4 @@ See [TODO.md](TODO.md) for roadmap and planned improvements.
 
 ---
 
-*Last update: 2025-12-19 - v2.0.1*
+*Last update: 2025-12-20 - v2.0.1*

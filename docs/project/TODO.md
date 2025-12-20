@@ -1,13 +1,50 @@
 # OpenRadar Roadmap
 
 **Version**: 2.0.1 (Go Backend)
-**Last Update**: 2025-12-19
+**Last Update**: 2025-12-20
 
 ---
 
 ## v2.0.1 - Current Development
 
 ### Completed (since v2.0.0)
+
+#### Picture-in-Picture Mode (2025-12-20)
+
+- [x] PiP implementation using `canvas.captureStream(30)`
+- [x] 4-layer canvas compositing for PiP window
+- [x] PiP toggle button in header (radar page only)
+- [x] Automatic PiP close on page navigation
+- [x] Event listener cleanup (stored refs + proper removal in destroy())
+- [x] Removed legacy iframe-based overlay (radar-overlay.gohtml deleted)
+
+#### Performance & Memory (2025-12-20)
+
+- [x] Fix event listener leak in PictureInPictureManager
+- [x] Trace analysis tooling (tools/analyze_trace.py)
+- [x] Verified: 47% reduction in event listener accumulation
+- [x] Verified: 30% reduction in DOM node growth
+
+#### CDN to Local Migration (2025-12-20)
+
+- [x] Lucide icons: CDN → `/scripts/vendors/lucide.min.js`
+- [x] HTMX: CDN → `/scripts/vendors/htmx.min.js`
+- [x] Google Fonts → local woff2 files in `/styles/fonts/`
+    - JetBrains Mono (400, 500)
+    - Space Grotesk (400, 500, 700)
+- [x] fonts.css with @font-face declarations
+- [x] Removed external CDN dependencies (offline-capable)
+
+#### SPA Navigation & Lifecycle (2025-12-19)
+
+- [x] PageController.js for page init/destroy orchestration
+- [x] WebSocketManager.js for robust WS connection handling
+- [x] HTMX integration for partial page rendering
+- [x] Page visibility handling (WS pause/resume)
+- [x] Resource page lifecycle with memory leak prevention
+- [x] Database caching across navigations
+- [x] Settings restoration on F5 refresh
+- [x] Dynamic imports for lazy loading (radar page)
 
 #### Player Detection Overhaul
 
