@@ -5,7 +5,7 @@ import {connect, PageWithCursor} from 'puppeteer-real-browser';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import {downloadFileWithPlaywright, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
-const ZONES_JSON_PATH = path.join('web/public/ao-bin-dumps/zones.json');
+const ZONES_JSON_PATH = path.join('web/ao-bin-dumps/zones.json');
 const OUTPUT_DIR = path.join('web/images/Maps');
 const CDN_BASE_URL = 'https://cdn.albiononline2d.com/game-images/'
 

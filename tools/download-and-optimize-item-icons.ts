@@ -2,8 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import {downloadFile, DownloadStatus, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master';
 const ICONS_DIR = path.join('web/images', 'Items');
-const ITEMS_XML = path.join('web/public', 'ao-bin-dumps', 'items.xml');
 const CDN_BASE = 'https://render.albiononline.com/v1/item/';
 
 const MAX_IMAGE_SIZE = 128;
@@ -34,39 +34,38 @@ function parseArgs() {
     }
 }
 
-function initPrerequisites() {
+async function initPrerequisites() {
     console.log('Albion Online Item Icons Downloader and Optimizer Started');
     console.log('=======================================================\n');
 
     parseArgs();
 
-    if (optimize) {
-        console.log('⚙️  Image optimization is ENABLED\n');
-    }
-    if (replaceExisting) {
-        console.log('🔧  Replace existing files: ENABLED\n');
-    }
-    if (onlyUpgrade) {
-        console.log('⬆️  Only upgrade existing files: ENABLED\n');
-    }
+    if (optimize) console.log('⚙️  Image optimization is ENABLED\n');
+    if (replaceExisting) console.log('🔧  Replace existing files: ENABLED\n');
+    if (onlyUpgrade) console.log('⬆️  Only upgrade existing files: ENABLED\n');
 
     if (!fs.existsSync(ICONS_DIR)) {
         fs.mkdirSync(ICONS_DIR, {recursive: true});
         console.log(`✅ Created directory: ${ICONS_DIR}\n`);
     }
 
-    console.log(`📄 Parsing ${ITEMS_XML} to find unique item icons...`);
+    console.log(`📥 Downloading items.xml from GitHub...`);
+    const res = await downloadFile(`${GITHUB_RAW_BASE}/items.xml`);
+    if (res.status !== DownloadStatus.SUCCESS || !res.buffer) {
+        console.error('❌ Failed to download items.xml');
+        process.exit(1);
+    }
+    console.log(`✅ Downloaded items.xml\n`);
 
-    const xmlContent = fs.readFileSync(ITEMS_XML, 'utf-8');
+    const xmlContent = res.buffer.toString('utf-8');
     const uniqueNameRegex = /uniquename="([^"]+)"/g;
     const uniqueNames = new Set<string>();
     let match;
     while ((match = uniqueNameRegex.exec(xmlContent)) !== null) {
         uniqueNames.add(match[1]);
     }
-    console.log(`📋 Found ${uniqueNames.size} unique items in items.xml`);
-    const uniqueItems: string[] = Array.from(uniqueNames);
-    return {uniqueItems};
+    console.log(`📋 Found ${uniqueNames.size} unique items`);
+    return {uniqueItems: Array.from(uniqueNames)};
 }
 
 async function processItemIcon(
@@ -115,7 +114,7 @@ async function processItemIcon(
 }
 
 async function main() {
-    const {uniqueItems} = initPrerequisites();
+    const {uniqueItems} = await initPrerequisites();
 
     let completed = 0;
     let downloaded = 0;

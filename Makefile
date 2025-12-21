@@ -129,7 +129,7 @@ update-assets: update-ao-data download-assets ## Update all assets
 
 restore-data: ## Restore original data files (removes .gz, re-downloads originals)
 	@echo "Restoring original data files..."
-	@powershell -Command "Remove-Item -Path 'web/public/ao-bin-dumps/*.gz' -Force -ErrorAction SilentlyContinue"
+	@powershell -Command "Remove-Item -Path 'web/ao-bin-dumps/*.gz' -Force -ErrorAction SilentlyContinue"
 	@$(MAKE) update-ao-data
 	@echo "Data files restored!"
 

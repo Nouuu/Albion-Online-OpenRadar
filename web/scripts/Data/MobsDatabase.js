@@ -74,17 +74,13 @@ export class MobsDatabase {
 
             const response = await fetch(jsonPath);
             if (!response.ok) {
-                throw new Error(`Failed to fetch mobs.json: ${response.status}`);
+                throw new Error(`Failed to fetch mobs: ${response.status}`);
             }
 
-            const jsonData = await response.json();
-
-            // Structure: { "Mobs": { "Mob": [...] } }
-            const mobsRoot = jsonData['Mobs'] || jsonData;
-            const mobs = mobsRoot['Mob'] || mobsRoot['Mobs']?.['Mob'] || [];
+            const mobs = await response.json();
 
             if (!Array.isArray(mobs)) {
-                throw new Error('Invalid mobs.json structure: "Mob" is not an array');
+                throw new Error('Invalid mobs.min.json structure: expected array');
             }
 
             this._parseMobs(mobs);
@@ -138,39 +134,32 @@ export class MobsDatabase {
      */
     _parseMobs(mobs) {
         // Server TypeID = index + OFFSET
-        // Reference: DeathEye C# code reads from array at (TypeId - 15)
         mobs.forEach((mob, index) => {
             const typeId = index + MobsDatabase.OFFSET;
-            const uniqueName = mob['@uniquename'] || '';
-            const tier = parseInt(mob['@tier']) || 0;
-            const category = mob['@mobtypecategory'] || mob['@category'] || '';
-            const namelocatag = mob['@namelocatag'] || '';
-
-            // Vérifier si c'est une ressource (a Loot.Harvestable)
-            const loot = mob['Loot'];
-            const harvestable = loot?.['Harvestable'];
+            const uniqueName = mob.u || '';
+            const tier = mob.t || 0;
+            const category = mob.c || '';
+            const namelocatag = mob.n || '';
 
             let resourceType = null;
             let resourceTier = tier;
 
-            if (harvestable) {
-                resourceType = this._normalizeResourceType(harvestable['@type']);
-                resourceTier = parseInt(harvestable['@tier']) || tier;
+            if (mob.l) {
+                resourceType = this._normalizeResourceType(mob.l);
+                resourceTier = mob.lt || tier;
 
-                // Only count as harvestable if it's a valid resource type
                 if (resourceType) {
                     this.harvestableTypeIds.add(typeId);
                     this.stats.harvestables++;
                 }
             }
 
-            // Stocker les infos du mob
             this.mobsById.set(typeId, {
-                type: resourceType,           // null si pas une ressource
+                type: resourceType,
                 tier: resourceTier,
                 uniqueName,
                 category,
-                namelocatag,                  // Tag for localized name lookup
+                namelocatag,
                 isHarvestable: !!resourceType
             });
 

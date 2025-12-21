@@ -33,7 +33,7 @@ before:
     # Step 5: Copy vendor libraries
     - npm run vendors
     # Step 6: Compress game data for embed
-    - 'npx tsx tools/compress-game-data.ts web/public/ao-bin-dumps --delete-originals'
+    - 'npx tsx tools/compress-game-data.ts web/ao-bin-dumps --delete-originals'
     # Step 7: Ensure Go dependencies are up to date
     - go mod tidy
     # Step 8: Build Linux binary via Docker (CGO with libpcap) - outputs to temp directory

@@ -26,49 +26,24 @@ export class SpellsDatabase {
 
             const response = await fetch(jsonPath);
             if (!response.ok) {
-                throw new Error(`Failed to fetch spells.json: ${response.status}`);
+                throw new Error(`Failed to fetch spells: ${response.status}`);
             }
 
-            const jsonData = await response.json();
-            const spellsRoot = jsonData.spells;
+            const spells = await response.json();
 
-            if (!spellsRoot) {
-                throw new Error('Invalid spells.json structure: missing "spells" root');
+            if (!Array.isArray(spells)) {
+                throw new Error('Invalid spells.min.json structure: expected array');
             }
 
-            let index = 0;
+            for (let i = 0; i < spells.length; i++) {
+                const spell = spells[i];
+                if (!spell.n) continue;
 
-            // Process passive spells
-            if (spellsRoot.passivespell) {
-                const passiveSpells = Array.isArray(spellsRoot.passivespell)
-                    ? spellsRoot.passivespell
-                    : [spellsRoot.passivespell];
-
-                for (const spell of passiveSpells) {
-                    this.addSpell(index++, spell, 'passivespell');
-                }
-            }
-
-            // Process active spells
-            if (spellsRoot.activespell) {
-                const activeSpells = Array.isArray(spellsRoot.activespell)
-                    ? spellsRoot.activespell
-                    : [spellsRoot.activespell];
-
-                for (const spell of activeSpells) {
-                    this.addSpell(index++, spell, 'activespell');
-                }
-            }
-
-            // Process toggle spells
-            if (spellsRoot.togglespell) {
-                const toggleSpells = Array.isArray(spellsRoot.togglespell)
-                    ? spellsRoot.togglespell
-                    : [spellsRoot.togglespell];
-
-                for (const spell of toggleSpells) {
-                    this.addSpell(index++, spell, 'togglespell');
-                }
+                this.spells.set(i, {
+                    index: i,
+                    uniqueName: spell.n,
+                    uiSprite: spell.i || ''
+                });
             }
 
             this.isLoaded = true;

@@ -27,7 +27,7 @@ type HTTPServer struct {
 	// Filesystems (can be embed.FS or os.DirFS)
 	images  fs.FS
 	scripts fs.FS
-	public  fs.FS
+	data    fs.FS
 	sounds  fs.FS
 	styles  fs.FS
 	// Template engine
@@ -38,7 +38,7 @@ type HTTPServer struct {
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
 func NewHTTPServer(
 	port int,
-	images, scripts, public, sounds, styles, tmplFS embed.FS,
+	images, scripts, data, sounds, styles, tmplFS embed.FS,
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 	version string,
@@ -52,9 +52,9 @@ func NewHTTPServer(
 	if err != nil {
 		fmt.Printf("[HTTP] Warning: failed to load scripts: %v\n", err)
 	}
-	publicFS, err := fs.Sub(public, "web/public")
+	dataFS, err := fs.Sub(data, "web/ao-bin-dumps")
 	if err != nil {
-		fmt.Printf("[HTTP] Warning: failed to load public: %v\n", err)
+		fmt.Printf("[HTTP] Warning: failed to load data: %v\n", err)
 	}
 	soundsFS, err := fs.Sub(sounds, "web/sounds")
 	if err != nil {
@@ -79,7 +79,7 @@ func NewHTTPServer(
 		wsHandler: wsHandler,
 		images:    imagesFS,
 		scripts:   scriptsFS,
-		public:    publicFS,
+		data:      dataFS,
 		sounds:    soundsFS,
 		styles:    stylesFS,
 		tmpl:      tmpl,
@@ -106,7 +106,7 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 		wsHandler: wsHandler,
 		images:    os.DirFS(appDir + "/web/images"),
 		scripts:   os.DirFS(appDir + "/web/scripts"),
-		public:    os.DirFS(appDir + "/web/public"),
+		data:      os.DirFS(appDir + "/web/ao-bin-dumps"),
 		sounds:    os.DirFS(appDir + "/web/sounds"),
 		styles:    os.DirFS(appDir + "/web/styles"),
 		tmpl:      tmpl,
@@ -155,15 +155,13 @@ func (s *HTTPServer) setupRoutes() {
 	// Scripts, pages: NO CACHE (for development)
 	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0, true))
 	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0, false))
-	s.mux.Handle("/public/", s.fsHandler("/public/", s.public, 0, true))
-	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0, true))
 	// Styles: NO CACHE (for development)
 	s.mux.Handle("/styles/", s.fsHandler("/styles/", s.styles, 0, true))
 
-	// ao-bin-dumps with gzip support
+	// ao-bin-dumps with gzip support (data FS is already the ao-bin-dumps directory)
 	s.mux.Handle(
 		"/ao-bin-dumps/",
-		s.gzipFSHandler("/ao-bin-dumps/", s.public, "ao-bin-dumps", dataCacheDuration),
+		s.gzipFSHandlerDirect("/ao-bin-dumps/", s.data, dataCacheDuration),
 	)
 
 	// API endpoints
@@ -278,36 +276,13 @@ func (s *HTTPServer) fsHandlerWithFallback(
 	})
 }
 
-// fsHandlerSub creates a file server handler from a subdirectory of fs.FS
-func (s *HTTPServer) fsHandlerSub(
-	prefix string,
-	fsys fs.FS,
-	subdir string,
-	cacheDuration time.Duration,
-	noCache bool,
-) http.Handler {
-	subFS, err := fs.Sub(fsys, subdir)
-	if err != nil {
-		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
-		return http.NotFoundHandler()
-	}
-	return s.fsHandler(prefix, subFS, cacheDuration, noCache)
-}
-
-// gzipFSHandler serves files from fs.FS with gzip support
+// gzipFSHandlerDirect serves files directly from fs.FS with gzip support
 // It looks for pre-compressed .gz files first
-func (s *HTTPServer) gzipFSHandler(
+func (s *HTTPServer) gzipFSHandlerDirect(
 	prefix string,
 	fsys fs.FS,
-	subdir string,
 	cacheDuration time.Duration,
 ) http.Handler {
-	subFS, err := fs.Sub(fsys, subdir)
-	if err != nil {
-		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
-		return http.NotFoundHandler()
-	}
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
 		acceptsGzip := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
@@ -315,7 +290,7 @@ func (s *HTTPServer) gzipFSHandler(
 		// Try serving .gz file if client accepts gzip
 		if acceptsGzip {
 			gzPath := urlPath + ".gz"
-			if data, err := fs.ReadFile(subFS, gzPath); err == nil {
+			if data, err := fs.ReadFile(fsys, gzPath); err == nil {
 				w.Header().Set("Content-Encoding", "gzip")
 				setContentType(w, urlPath)
 				setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
@@ -325,7 +300,7 @@ func (s *HTTPServer) gzipFSHandler(
 		}
 
 		// Try serving original file
-		data, err := fs.ReadFile(subFS, urlPath)
+		data, err := fs.ReadFile(fsys, urlPath)
 		if err != nil {
 			http.NotFound(w, r)
 			return

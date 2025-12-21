@@ -2,10 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import {downloadFile, DownloadResult, DownloadStatus, handleImageBuffer, handleReplacing, printSummary} from "./common";
 
-// Paths
-const SPELLS_JSON_PATH = path.join( 'web/public/ao-bin-dumps/spells.json');
-const LOCALIZATION_JSON_PATH = path.join( 'web/public/ao-bin-dumps/localization.json');
-const OUTPUT_DIR = path.join( 'web/images/Spells');
+const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master';
+const OUTPUT_DIR = path.join('web/images/Spells');
 const CDN_BASE_URL = 'https://render.albiononline.com/v1/spell/';
 
 // Image optimization settings
@@ -90,60 +88,54 @@ function parseArgs() {
     }
 }
 
-function initPrerequisites() {
+async function initPrerequisites() {
     console.log('🔮 Unified Spell Icon Downloader & Optimizer');
     console.log('=============================================\n');
 
     parseArgs();
 
-    if (optimize) {
-        console.log(`⚙️ Image optimization is ENABLED`);
-    }
-    if (replaceExisting) {
-        console.log(`⚙️ Existing icons will be REPLACED`);
-    }
-    if (onlyUpgrade) {
-        console.log(`⚙️ Only UPGRADE existing icons if new version is larger`);
-    }
+    if (optimize) console.log(`⚙️ Image optimization is ENABLED`);
+    if (replaceExisting) console.log(`⚙️ Existing icons will be REPLACED`);
+    if (onlyUpgrade) console.log(`⚙️ Only UPGRADE existing icons if new version is larger`);
 
-    // Create output directory if it doesn't exist
     if (!fs.existsSync(OUTPUT_DIR)) {
         fs.mkdirSync(OUTPUT_DIR, {recursive: true});
         console.log(`✅ Created directory: ${OUTPUT_DIR}\n`);
     }
 
-    // Load and parse spells.json
-    console.log(`📄 Loading ${SPELLS_JSON_PATH}...`);
-    const spellsData = JSON.parse(fs.readFileSync(SPELLS_JSON_PATH, 'utf8'));
-
-    if (!spellsData.spells) {
-        console.error('❌ Invalid spells.json structure: missing "spells" root');
+    // Download spells.json from GitHub
+    console.log(`📥 Downloading spells.json from GitHub...`);
+    const spellsRes = await downloadFile(`${GITHUB_RAW_BASE}/spells.json`);
+    if (spellsRes.status !== DownloadStatus.SUCCESS || !spellsRes.buffer) {
+        console.error('❌ Failed to download spells.json');
         process.exit(1);
     }
+    const spellsData = JSON.parse(spellsRes.buffer.toString('utf8'));
+    console.log(`✅ Downloaded spells.json\n`);
 
-    // Load and parse localization.json
-    console.log(`📄 Building ${LOCALIZATION_JSON_PATH} map... (this may take a moment)`);
-    const localizationMap = buildLocalizationMap(JSON.parse(fs.readFileSync(LOCALIZATION_JSON_PATH, 'utf8')));
+    // Download localization.json from GitHub
+    console.log(`📥 Downloading localization.json from GitHub... (this may take a moment)`);
+    const locRes = await downloadFile(`${GITHUB_RAW_BASE}/localization.json`);
+    if (locRes.status !== DownloadStatus.SUCCESS || !locRes.buffer) {
+        console.error('❌ Failed to download localization.json');
+        process.exit(1);
+    }
+    const localizationMap = buildLocalizationMap(JSON.parse(locRes.buffer.toString('utf8')));
     console.log(`✅ Loaded ${localizationMap.size} localizations\n`);
 
-    // Extract unique uisprite values (these will be the icon filenames)
     const uiSprites = new Set<string>();
-    // Process all spell types
     extractUiSprites(uiSprites, spellsData.spells.passivespell);
     extractUiSprites(uiSprites, spellsData.spells.activespell);
     extractUiSprites(uiSprites, spellsData.spells.togglespell);
     console.log(`✅ Found ${uiSprites.size} unique spell uisprites\n`);
 
-    // Build reverse map: uisprite -> localized name (for API calls)
     const uiSpriteToLocalizedName = new Map<string, string>();
-    // Build the map
     buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsData.spells.passivespell);
     buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsData.spells.activespell);
     buildUiSpriteMap(localizationMap, uiSpriteToLocalizedName, spellsData.spells.togglespell);
     console.log(`✅ Built uisprite->localized name map: ${uiSpriteToLocalizedName.size} mappings\n`);
 
-    const uiSpritesArray = Array.from(uiSprites);
-    return {uiSpritesArray, uiSpriteToLocalizedName};
+    return {uiSpritesArray: Array.from(uiSprites), uiSpriteToLocalizedName};
 }
 
 async function processUiSprite(
@@ -200,7 +192,7 @@ async function processUiSprite(
 }
 
 async function main() {
-    const {uiSpritesArray, uiSpriteToLocalizedName} = initPrerequisites();
+    const {uiSpritesArray, uiSpriteToLocalizedName} = await initPrerequisites();
 
     let downloaded = 0;
     let completed = 0;

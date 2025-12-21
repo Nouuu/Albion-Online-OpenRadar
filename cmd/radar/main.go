@@ -209,7 +209,7 @@ func createHTTPServer(
 		serverPort,
 		assets.Images,
 		assets.Scripts,
-		assets.Public,
+		assets.Data,
 		assets.Sounds,
 		assets.Styles,
 		assets.Templates,

@@ -39,111 +39,49 @@ export class HarvestablesDatabase {
         const startTime = performance.now();
 
         try {
-            window.logger?.info(
-                window.CATEGORIES?.ITEM_DATABASE || 'ITEM_DATABASE',
-                'HarvestablesLoading',
-                {path: jsonPath}
-            );
+            window.logger?.info(CATEGORIES.SYSTEM, 'HarvestablesLoading', {path: jsonPath});
 
             const response = await fetch(jsonPath);
             if (!response.ok) {
-                throw new Error(`Failed to fetch harvestables.json: ${response.status}`);
+                throw new Error(`Failed to fetch harvestables: ${response.status}`);
             }
 
-            const jsonData = await response.json();
-            const aoHarvestables = jsonData['AO-Harvestables'];
-
-            if (!aoHarvestables || !aoHarvestables.Harvestable) {
-                throw new Error('Invalid harvestables.json structure: missing "AO-Harvestables.Harvestable"');
-            }
-
-            const harvestables = Array.isArray(aoHarvestables.Harvestable)
-                ? aoHarvestables.Harvestable
-                : [aoHarvestables.Harvestable];
-
-            this._parseHarvestables(harvestables);
+            const data = await response.json();
+            this._parseHarvestables(data);
 
             this.stats.loadTimeMs = Math.round(performance.now() - startTime);
             this.isLoaded = true;
 
-            // 🔍 Debug: Log sample combinations for each resource type
-            const sampleCombinations = {};
-            for (const [resourceType, data] of this.harvestableTypes.entries()) {
-                sampleCombinations[resourceType] = {
-                    tiers: Array.from(data.tiers),
-                    sampleKeys: Array.from(this.validCombinations)
-                        .filter(k => k.startsWith(resourceType))
-                        .slice(0, 10) // First 10 combinations
-                };
-            }
-
-            window.logger?.info(
-                CATEGORIES.SYSTEM,
-                'HarvestablesLoaded',
-                {
-                    typesLoaded: this.stats.typesLoaded,
-                    combinationsLoaded: this.stats.combinationsLoaded,
-                    loadTimeMs: this.stats.loadTimeMs,
-                    resources: Array.from(this.harvestableTypes.keys()),
-                    sampleCombinations
-                }
-            );
+            window.logger?.info(CATEGORIES.SYSTEM, 'HarvestablesLoaded', {
+                typesLoaded: this.stats.typesLoaded,
+                combinationsLoaded: this.stats.combinationsLoaded,
+                loadTimeMs: this.stats.loadTimeMs
+            });
 
         } catch (error) {
-            window.logger?.error(
-                CATEGORIES.SYSTEM,
-                'HarvestablesLoadError',
-                {
-                    error: error.message,
-                    stack: error.stack,
-                    path: jsonPath
-                }
-            );
+            window.logger?.error(CATEGORIES.SYSTEM, 'HarvestablesLoadError', {
+                error: error.message,
+                path: jsonPath
+            });
             throw error;
         }
     }
 
-    /**
-     * Parse harvestables array and build validation structures
-     * @param {Array} harvestables - Array of harvestable definitions
-     * @private
-     */
-    _parseHarvestables(harvestables) {
-        for (const harvestable of harvestables) {
-            const resourceType = harvestable['@resource'];
-            if (!resourceType) continue;
+    _parseHarvestables(data) {
+        for (const [resourceType, tierEntries] of Object.entries(data)) {
+            if (!Array.isArray(tierEntries)) continue;
 
-            // Track unique resource types
-            if (!this.harvestableTypes.has(resourceType)) {
-                this.harvestableTypes.set(resourceType, {
-                    resource: resourceType,
-                    tiers: new Set()
-                });
-                this.stats.typesLoaded++;
-            }
+            const tierNumbers = new Set(tierEntries.map(e => e.tier));
+            this.harvestableTypes.set(resourceType, {
+                resource: resourceType,
+                tiers: tierNumbers,
+                tierData: tierEntries
+            });
+            this.stats.typesLoaded++;
 
-            const resourceData = this.harvestableTypes.get(resourceType);
-
-            // Parse tiers
-            if (harvestable.Tier) {
-                const tiers = Array.isArray(harvestable.Tier)
-                    ? harvestable.Tier
-                    : [harvestable.Tier];
-
-                for (const tierData of tiers) {
-                    const tier = parseInt(tierData['@tier']);
-                    if (isNaN(tier)) continue;
-
-                    resourceData.tiers.add(tier);
-
-                    // Valid enchantments are 0-4
-                    const enchants = [0, 1, 2, 3, 4];
-
-                    for (const enchant of enchants) {
-                        // Create validation key: "resource-tier-enchant"
-                        const key = `${resourceType}-${tier}-${enchant}`;
-                        this.validCombinations.add(key);
-                    }
+            for (const tierNum of tierNumbers) {
+                for (const enchant of [0, 1, 2, 3, 4]) {
+                    this.validCombinations.add(`${resourceType}-${tierNum}-${enchant}`);
                 }
             }
         }

@@ -9,10 +9,10 @@ const gzip = promisify(zlib.gzip);
 const args = process.argv.slice(2);
 const deleteOriginals = args.includes("--delete-originals");
 const targetDir =
-    args.find((arg) => !arg.startsWith("--")) || "web/public/ao-bin-dumps";
+    args.find((arg) => !arg.startsWith("--")) || "web/ao-bin-dumps";
 
-// Only compress files larger than 100 KB
-const MIN_SIZE_FOR_COMPRESSION = 100 * 1024;
+// Only compress files larger than 10 KB (minified files are smaller)
+const MIN_SIZE_FOR_COMPRESSION = 10 * 1024;
 
 console.log("\n Game Data Compression Script\n");
 console.log(" Target directory:", targetDir);
@@ -85,17 +85,8 @@ async function compressGameData(): Promise<void> {
         const filePath = path.join(targetDir, file);
         const stats = fs.statSync(filePath);
 
-        // Ignore localization.json for compression
-        if (file === "localization.json") {
-            return false;
-        }
-
-        // Only compress .json and .xml files larger than MIN_SIZE
-        return (
-            (ext === ".json" || ext === ".xml") &&
-            stats.isFile() &&
-            stats.size >= MIN_SIZE_FOR_COMPRESSION
-        );
+        // Only compress .json files larger than MIN_SIZE
+        return ext === ".json" && stats.isFile() && stats.size >= MIN_SIZE_FOR_COMPRESSION;
     });
 
     if (toCompress.length === 0) {
@@ -114,15 +105,6 @@ async function compressGameData(): Promise<void> {
         const filePath = path.join(targetDir, file);
 
         if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-            continue;
-        }
-
-        if (file === "localization.json") {
-            console.log(` Skipping compression for ${file}`);
-            if (deleteOriginals && fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath);
-                console.log(` Deleted original file: ${file}`);
-            }
             continue;
         }
 

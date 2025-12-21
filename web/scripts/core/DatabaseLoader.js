@@ -97,7 +97,7 @@ export async function load() {
     const mobsDatabase = new MobsDatabase();
 
     const promises = [
-        loadDatabaseWithRetry(itemsDatabase, '/ao-bin-dumps/items.json', 'Items')
+        loadDatabaseWithRetry(itemsDatabase, '/ao-bin-dumps/items.min.json', 'Items')
             .then(result => {
                 if (result.success) {
                     window.databaseLoadingProgress.items = true;
@@ -106,7 +106,7 @@ export async function load() {
                 return result;
             }),
 
-        loadDatabaseWithRetry(spellsDatabase, '/ao-bin-dumps/spells.json', 'Spells')
+        loadDatabaseWithRetry(spellsDatabase, '/ao-bin-dumps/spells.min.json', 'Spells')
             .then(result => {
                 if (result.success) {
                     window.databaseLoadingProgress.spells = true;
@@ -115,7 +115,7 @@ export async function load() {
                 return result;
             }),
 
-        loadDatabaseWithRetry(harvestablesDatabase, '/ao-bin-dumps/harvestables.json', 'Harvestables')
+        loadDatabaseWithRetry(harvestablesDatabase, '/ao-bin-dumps/harvestables.min.json', 'Harvestables')
             .then(result => {
                 if (result.success) {
                     window.databaseLoadingProgress.harvestables = true;
@@ -124,7 +124,7 @@ export async function load() {
                 return result;
             }),
 
-        loadDatabaseWithRetry(mobsDatabase, '/ao-bin-dumps/mobs.json', 'Mobs')
+        loadDatabaseWithRetry(mobsDatabase, '/ao-bin-dumps/mobs.min.json', 'Mobs')
             .then(result => {
                 if (result.success) {
                     window.databaseLoadingProgress.mobs = true;
