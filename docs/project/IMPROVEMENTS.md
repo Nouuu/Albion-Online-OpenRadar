@@ -171,4 +171,22 @@ See [TODO.md](TODO.md) for roadmap and planned improvements.
 
 ---
 
-*Last update: 2025-12-20 - v2.1.0*
+## Future Exploration
+
+### Native Desktop App (Wails v3)
+
+A design study for migrating to a native desktop application is available:
+
+- **Design document**: [wails-migration-design.md](wails-migration-design.md)
+
+Key features under exploration:
+
+- Native transparent overlay (replaces browser PiP)
+- Session path tracing & heatmaps
+- Squad mode with P2P radar sharing (privacy-first, no central server)
+- System tray, global hotkeys, native notifications
+- Reduced RAM footprint (~50-100MB less than browser)
+
+---
+
+*Last update: 2025-12-21 - v2.1.0*

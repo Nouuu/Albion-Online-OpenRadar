@@ -139,6 +139,18 @@ The following systems need refactoring like Resources/Mobs/Players:
 - [ ] Quality metrics dashboard
 - [ ] Configuration file support
 
+### Native Desktop App (Wails v3) - Study Phase
+
+- [ ] Evaluate Wails v3 for native desktop application
+- [ ] Design document: [wails-migration-design.md](wails-migration-design.md)
+- Features under consideration:
+  - Native overlay (transparent always-on-top window)
+  - Session path tracing & heatmaps
+  - Squad mode (P2P radar sharing)
+  - System tray integration
+  - Global hotkeys
+  - Native notifications
+
 ---
 
 ## Known Limitations
