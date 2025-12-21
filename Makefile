@@ -5,8 +5,9 @@
 # Requires: Go 1.25+, Npcap 1.84+ (Windows) or libpcap (Linux)
 # ============================================
 
-.PHONY: help dev run build build-win build-linux build-all \
-        package package-win all-in-one clean test lint install-tools check \
+.PHONY: help dev run all-in-one clean clean-goreleaser-intermediate \
+        test lint lint-go lint-frontend lint-fix \
+        install-tools check release release-snapshot \
         update-ao-data download-assets update-assets restore-data css css-watch vendors
 
 # Variables - Dynamic version from Git
@@ -38,14 +39,15 @@ help: ## Display help
 	@echo "  css-watch        Watch and rebuild Tailwind CSS"
 	@echo "  vendors          Copy vendor libraries (JS + fonts)"
 	@echo ""
-	@echo "Build:"
-	@echo "  build-win        Build for Windows"
-	@echo "  build-linux      Build for Linux (Docker)"
-	@echo "  build-all        Build Win + Linux"
+	@echo "Build (GoReleaser - single source of truth):"
+	@echo "  all-in-one       Complete build via GoReleaser (5 files in dist/)"
+	@echo "  release-snapshot Same as all-in-one, for testing"
+	@echo "  release          Create GitHub release (requires git tag)"
 	@echo ""
-	@echo "Release:"
-	@echo "  all-in-one       Complete build (all platforms + package)"
-	@echo "  package          Build + package for distribution"
+	@echo "Quality:"
+	@echo "  lint             Lint all code (Go + Frontend)"
+	@echo "  lint-fix         Lint and auto-fix all code"
+	@echo "  test             Run Go tests"
 	@echo ""
 	@echo "Data:"
 	@echo "  update-ao-data   Update Albion Online data files"
@@ -54,6 +56,7 @@ help: ## Display help
 	@echo "Utilities:"
 	@echo "  clean            Clean build artifacts"
 	@echo "  check            Check system requirements"
+	@echo "  install-tools    Install dev tools (air, golangci-lint, goreleaser)"
 	@echo ""
 
 # ============================================
@@ -81,79 +84,32 @@ vendors: ## Copy vendor libraries (JS + fonts)
 	@npm run vendors
 
 # ============================================
-# Build
+# Build (GoReleaser is the single source of truth)
 # ============================================
 
-build: build-win ## Build for current platform (default: Windows)
-
-build-win: ## Build for Windows
-	@echo "Building for Windows..."
-	-@mkdir $(BUILD_DIR) 2>nul
-	@echo "Generating versioninfo.json with version $(VERSION)..."
-	@node -e "const fs=require('fs'); const v='$(VERSION)'.match(/^(\d+)\.(\d+)\.(\d+)/) || ['','0','0','0']; fs.writeFileSync('cmd/radar/versioninfo.json', JSON.stringify({FixedFileInfo:{FileVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0},ProductVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0}},StringFileInfo:{FileDescription:'OpenRadar - Albion Online Radar',FileVersion:'$(VERSION)',ProductName:'OpenRadar',ProductVersion:'$(VERSION)',LegalCopyright:'MIT License'},IconPath:'../../web/images/favicon.ico'},null,2));"
-	@echo "Generating Windows resources (icon + version info)..."
-	cd cmd/radar && goversioninfo -64
-	$(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME).exe ./cmd/radar
-	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME).exe"
-
-build-linux: ## Build for Linux (via Docker)
-	@echo "Building for Linux via Docker..."
-	-@mkdir $(BUILD_DIR) 2>nul
-	docker build -f Dockerfile.build -o $(BUILD_DIR) \
-		--build-arg VERSION=$(VERSION) \
-		--build-arg BUILD_TIME=$(BUILD_TIME) .
-	@echo "Built: $(BUILD_DIR)/$(BINARY_NAME)-linux"
-
-build-all: build-win build-linux ## Build for all platforms (Windows + Linux)
-
-# ============================================
-# Packaging
-# ============================================
-
-package: build ## Build + copy assets + compress + archive
-	@echo "Creating distribution packages..."
-	@node tools/post-build.js --version=$(VERSION)
-	@echo "Package complete!"
-
-package-win: build-win ## Full Windows package
-	@node tools/post-build.js --version=$(VERSION)
-	@echo "Windows package ready in $(BUILD_DIR)/"
-
-all-in-one: ## Complete build process (update data + build all platforms + package)
+all-in-one: ## Complete build via GoReleaser (single source of truth)
 	@echo "=========================================="
-	@echo "  OpenRadar v$(VERSION) - Complete Build"
+	@echo "  OpenRadar - Complete Build (GoReleaser)"
 	@echo "=========================================="
 	@echo ""
-	@echo "Step 1/9: Updating AO data files..."
-	@$(MAKE) update-ao-data
+	@echo "Using GoReleaser as single source of truth..."
+	@echo "This ensures identical builds locally and in CI."
 	@echo ""
-	@echo "Step 2/9: Installing npm dependencies..."
-	@npm install
+	goreleaser release --snapshot --clean --skip=publish
 	@echo ""
-	@echo "Step 3/9: Building Tailwind CSS..."
-	@npm run css
+	@echo "Cleaning up intermediate files..."
+	@$(MAKE) clean-goreleaser-intermediate
 	@echo ""
-	@echo "Step 4/9: Copying vendor libraries..."
-	@npm run vendors
-	@echo ""
-	@echo "Step 5/9: Compressing game data for embed..."
-	@node tools/compress-game-data.js web/public/ao-bin-dumps --delete-originals
-	@echo ""
-	@echo "Step 6/9: Building for Windows..."
-	@$(MAKE) build-win
-	@echo ""
-	@echo "Step 7/9: Building for Linux (Docker)..."
-	@$(MAKE) build-linux
-	@echo ""
-	@echo "Step 8/9: Creating release packages..."
-	@node tools/post-build.js --embed --version=$(VERSION)
-	@echo ""
-	@echo "Step 9/9: Restoring original data files..."
+	@echo "Restoring original data files..."
 	@$(MAKE) restore-data
 	@echo ""
 	@echo "=========================================="
 	@echo "  Build complete! Check dist/ folder"
 	@echo "=========================================="
+	@echo ""
+	@echo "Final artifacts (5 files):"
+	@dir /b dist 2>nul || ls dist 2>/dev/null
+	@echo ""
 
 # ============================================
 # Data & Assets Management
@@ -173,7 +129,7 @@ update-assets: update-ao-data download-assets ## Update all assets
 
 restore-data: ## Restore original data files (removes .gz, re-downloads originals)
 	@echo "Restoring original data files..."
-	-@del /q web\public\ao-bin-dumps\*.gz 2>nul
+	@powershell -Command "Remove-Item -Path 'web/public/ao-bin-dumps/*.gz' -Force -ErrorAction SilentlyContinue"
 	@$(MAKE) update-ao-data
 	@echo "Data files restored!"
 
@@ -188,19 +144,71 @@ clean: ## Clean build artifacts
 	-@del /q *.exe ip.txt nul VERSION 2>nul
 	@echo "Clean complete"
 
+clean-goreleaser-intermediate: ## Consolidate all artifacts into dist/ with exactly 5 files
+	@npx tsx tools/consolidate-dist.ts
+
 test: ## Run Go tests
 	$(GO) test -v ./...
 
-lint: ## Lint Go code
-	@$(GO) vet ./...
+lint: lint-go lint-frontend ## Lint all code (Go + Frontend)
+
+lint-go: ## Lint Go code (golangci-lint)
+	@golangci-lint run ./...
+
+lint-go-fix: ## Lint and auto-fix Go code
+	@golangci-lint run --fix ./...
 
 lint-frontend: ## Lint frontend code (ESLint)
-	@npx eslint web/scripts/ web/public/
+	@npm run lint
 
-install-tools: ## Install development tools (air for hot-reload)
+lint-frontend-fix: ## Lint and auto-fix frontend code
+	@npm run lint:fix
+
+lint-fix: lint-go-fix lint-frontend-fix ## Lint and fix all code
+
+install-tools: ## Install development tools (air, golangci-lint v2, goreleaser)
 	@echo "Installing development tools..."
 	$(GO) install github.com/air-verse/air@latest
-	@echo "air installed! Run 'make dev' to start with hot-reload"
+	$(GO) install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+	$(GO) install github.com/goreleaser/goreleaser/v2@latest
+	@echo "Tools installed: air, golangci-lint v2, goreleaser"
+
+release: ## Create GitHub release with goreleaser (requires git tag)
+	@echo "=========================================="
+	@echo "  OpenRadar - GitHub Release (GoReleaser)"
+	@echo "=========================================="
+	@echo ""
+	@echo "Note: Ensure you have created and pushed a git tag first"
+	@echo "  git tag -a v1.0.0 -m 'Release v1.0.0'"
+	@echo "  git push origin v1.0.0"
+	@echo ""
+	goreleaser release --clean
+	@echo ""
+	@echo "Restoring original data files..."
+	@$(MAKE) restore-data
+	@echo ""
+	@echo "Release complete!"
+
+release-snapshot: ## Test release locally (dry-run, no publish)
+	@echo "=========================================="
+	@echo "  OpenRadar - Snapshot Test (GoReleaser)"
+	@echo "=========================================="
+	@echo ""
+	goreleaser release --snapshot --clean --skip=publish
+	@echo ""
+	@echo "Cleaning up intermediate files..."
+	@$(MAKE) clean-goreleaser-intermediate
+	@echo ""
+	@echo "Restoring original data files..."
+	@$(MAKE) restore-data
+	@echo ""
+	@echo "=========================================="
+	@echo "  Snapshot complete! Check dist/ folder"
+	@echo "=========================================="
+	@echo ""
+	@echo "Final artifacts (5 files):"
+	@dir /b dist 2>nul || ls dist 2>/dev/null
+	@echo ""
 
 check: ## Check system requirements
 	@echo "Checking Go installation..."

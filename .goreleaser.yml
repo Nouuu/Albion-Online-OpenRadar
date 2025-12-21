@@ -1,0 +1,182 @@
+# GoReleaser configuration for OpenRadar
+# CGO project - Windows native build, Linux via Docker hook
+# Run: goreleaser release --clean
+# Docs: https://goreleaser.com/
+#
+# This is the SINGLE SOURCE OF TRUTH for all builds:
+# - `make all-in-one` uses: goreleaser release --snapshot --clean --skip=publish
+# - `make release` uses: goreleaser release --clean
+#
+# Output: dist/ folder with exactly 5 files:
+# - OpenRadar-windows-amd64.exe
+# - OpenRadar-linux-amd64
+# - README-windows.txt
+# - README-linux.txt
+# - checksums-sha256.txt
+
+version: 2
+
+project_name: OpenRadar
+
+before:
+  hooks:
+    # Step 1: Update AO data files
+    - 'npx tsx tools/update-ao-data.ts --replace-existing'
+    # Step 2: Download assets (icons) - uncomment for full release
+    # Note: Map download uses Puppeteer/Cloudflare bypass, run manually if needed
+    # - 'npx tsx tools/download-and-optimize-spell-icons.ts'
+    # - 'npx tsx tools/download-and-optimize-item-icons.ts'
+    # Step 3: Install npm dependencies
+    - npm install
+    # Step 4: Build Tailwind CSS
+    - npm run css
+    # Step 5: Copy vendor libraries
+    - npm run vendors
+    # Step 6: Compress game data for embed
+    - 'npx tsx tools/compress-game-data.ts web/public/ao-bin-dumps --delete-originals'
+    # Step 7: Ensure Go dependencies are up to date
+    - go mod tidy
+    # Step 8: Build Linux binary via Docker (CGO with libpcap) - outputs to temp directory
+    - 'docker build -f Dockerfile.build -o dist-build --build-arg VERSION={{ .Version }} --build-arg BUILD_TIME={{ .Date }} .'
+    # Step 9: Rename Linux binary to include architecture
+    - 'powershell -Command "Rename-Item -Path dist-build/OpenRadar-linux -NewName OpenRadar-linux-amd64"'
+    # Step 10: Generate platform-specific README files to temp directory
+    - 'npx tsx tools/generate-readmes.ts --output-dir=dist-build --version={{ .Version }}'
+
+builds:
+  # Windows build (native CGO with Npcap SDK)
+  - id: windows
+    main: ./cmd/radar
+    binary: OpenRadar-windows-amd64
+    goos:
+      - windows
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w
+      - -X main.Version={{ .Version }}
+      - -X main.BuildTime={{ .Date }}
+    hooks:
+      pre:
+        # Generate Windows resources (icon + version info)
+        - 'node -e "const fs=require(''fs''); const v=''{{ .Version }}''.match(/^(\d+)\.(\d+)\.(\d+)/) || ['''',''0'',''0'',''0'']; fs.writeFileSync(''cmd/radar/versioninfo.json'', JSON.stringify({FixedFileInfo:{FileVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0},ProductVersion:{Major:parseInt(v[1])||0,Minor:parseInt(v[2])||0,Patch:parseInt(v[3])||0,Build:0}},StringFileInfo:{FileDescription:''OpenRadar - Albion Online Radar'',FileVersion:''{{ .Version }}'',ProductName:''OpenRadar'',ProductVersion:''{{ .Version }}'',LegalCopyright:''MIT License''},IconPath:''../../web/images/favicon.ico''},null,2));"'
+        - cmd: goversioninfo -64
+          dir: cmd/radar
+
+# No archives - upload raw binaries
+archives:
+  - id: binary-only
+    ids:
+      - windows
+    formats:
+      - binary
+
+checksum:
+  name_template: "checksums-sha256.txt"
+  algorithm: sha256
+
+# Additional SHA512 for extra security
+# checksum:
+#   extra_files:
+#     - glob: dist-linux/*
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: Bug fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Performance
+      regexp: "^.*perf[(\\w)]*:+.*$"
+      order: 2
+    - title: Other
+      order: 999
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
+      - "Merge pull request"
+      - "Merge branch"
+
+release:
+  github:
+    owner: Nouuu
+    name: Albion-Online-OpenRadar
+
+  draft: true
+  name_template: "OpenRadar v{{ .Version }}"
+
+  header: |
+    ## OpenRadar v{{ .Version }}
+
+    Real-time radar for Albion Online.
+
+    ### Verification
+
+    All binaries are built from source via GitHub Actions CI/CD.
+    You can verify the integrity using the checksums:
+
+    ```bash
+    # Verify SHA256 checksum
+    sha256sum -c checksums-sha256.txt
+    ```
+
+    For full provenance verification, see the GitHub Actions workflow run
+    linked to this release or use `gh attestation verify`.
+
+  footer: |
+    ---
+
+    ### Requirements
+
+    **Windows:**
+    - Windows 10/11 (64-bit)
+    - [Npcap 1.84+](https://npcap.com/) installed
+
+    **Linux:**
+    - libpcap (`apt install libpcap0.8`)
+    - Run with: `chmod +x OpenRadar-linux-amd64 && ./OpenRadar-linux-amd64`
+    - Or with sudo: `sudo ./OpenRadar-linux-amd64`
+
+    ### Build Provenance
+
+    This release was built using GitHub Actions from the open source repository.
+    The build process is fully reproducible and auditable.
+
+    **Full Changelog**: https://github.com/Nouuu/Albion-Online-OpenRadar/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+  # Upload raw binaries and READMEs (from dist-build/ temp directory)
+  extra_files:
+    # Linux binary (already renamed in before hooks)
+    - glob: dist-build/OpenRadar-linux-amd64
+    # Platform-specific READMEs
+    - glob: dist-build/README-windows.txt
+    - glob: dist-build/README-linux.txt
+
+  prerelease: auto
+  make_latest: true
+
+snapshot:
+  # For local builds: use branch-commit format (e.g., main-abc1234)
+  # This matches the original Makefile VERSION logic for non-tagged builds
+  version_template: "{{ .Branch }}-{{ .ShortCommit }}"
+
+metadata:
+  mod_timestamp: "{{ .CommitTimestamp }}"
+
+# For GitHub Actions: Enable build provenance attestation
+# This creates SLSA provenance that proves the binary was built from this source
+# Uncomment when running in GitHub Actions:
+# sboms:
+#   - artifacts: binary
+#     documents:
+#       - "{{ .Binary }}_{{ .Version }}_sbom.spdx.json"
