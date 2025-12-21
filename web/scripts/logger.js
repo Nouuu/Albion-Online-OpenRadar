@@ -173,23 +173,6 @@ function scheduleLoggerReconnect() {
     reconnectTimeoutId = setTimeout(connectLoggerWebSocket, delay);
 }
 
-export function initLogger() {
-    if (!socket || socket.readyState === WebSocket.CLOSED) {
-        connectLoggerWebSocket();
-    }
-}
-
-export function destroyLogger() {
-    globalLogger.flush();
-    globalLogger.stopFlushInterval();
-    cleanupLoggerSocket();
-    socketConnected = false;
-}
-
-export function isLoggerConnected() {
-    return socketConnected;
-}
-
 export {globalLogger as logger};
 
 connectLoggerWebSocket();

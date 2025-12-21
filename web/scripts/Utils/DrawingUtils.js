@@ -19,19 +19,11 @@ export class DrawingUtils {
     getCanvasSize() { return settingsSync.getNumber('settingCanvasSize') || 500; }
     getCanvasCenter() { return this.getCanvasSize() / 2; }
 
-    InitOurPlayerCanvas(ourPlayerCanvas, context) {
-        this.drawFilledCircle(context, ourPlayerCanvas.width / 2, ourPlayerCanvas.height / 2, 10, "blue");
-    }
-
     drawFilledCircle(context, x, y, radius, color) {
         context.beginPath();
         context.arc(x, y, radius, 0, 2 * Math.PI);
         context.fillStyle = color;
         context.fill();
-    }
-
-    initCanvas(canvas, context) {
-        window.logger?.debug(CATEGORIES.MAP, 'InitCanva', { width: canvas.width, height: canvas.height, ctx: context });
     }
 
     lerp(a, b, t) { return a + (b - a) * t; }

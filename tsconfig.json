@@ -5,28 +5,15 @@
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "strict": false,
+    "strict": true,
     "skipLibCheck": true,
-    "allowJs": true,
-    "checkJs": false,
     "noEmit": true,
-    "baseUrl": ".",
-    "paths": {
-      "/scripts/*": ["./web/scripts/*"],
-      "/images/*": ["./web/images/*"],
-      "/styles/*": ["./web/styles/*"],
-      "/public/*": ["./web/public/*"]
-    }
+    "resolveJsonModule": true
   },
   "include": [
-    "web/scripts/**/*",
-    "web/public/**/*",
-    "tools/**/*"
+    "tools/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    "work"
+    "node_modules"
   ]
 }
