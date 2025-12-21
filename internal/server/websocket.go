@@ -1,7 +1,6 @@
 package server
 
 import (
-	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
+	"github.com/segmentio/encoding/json"
 )
 
 const (

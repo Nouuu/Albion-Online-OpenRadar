@@ -1,13 +1,13 @@
 {
   "FixedFileInfo": {
     "FileVersion": {
-      "Major": 2,
+      "Major": 0,
       "Minor": 0,
       "Patch": 0,
       "Build": 0
     },
     "ProductVersion": {
-      "Major": 2,
+      "Major": 0,
       "Minor": 0,
       "Patch": 0,
       "Build": 0
@@ -15,9 +15,9 @@
   },
   "StringFileInfo": {
     "FileDescription": "OpenRadar - Albion Online Radar",
-    "FileVersion": "2.0.0",
+    "FileVersion": "hotfix/resources-events-257ae635",
     "ProductName": "OpenRadar",
-    "ProductVersion": "2.0.0",
+    "ProductVersion": "hotfix/resources-events-257ae635",
     "LegalCopyright": "MIT License"
   },
   "IconPath": "../../web/images/favicon.ico"

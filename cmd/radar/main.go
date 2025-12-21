@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	assets "github.com/nospy/albion-openradar"
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -275,6 +276,7 @@ func (app *App) updateStats() {
 					Errors:        atomic.LoadUint64(&app.packetsErrors),
 					WsClients:     app.wsHandler.ClientCount(),
 					MemoryMB:      float64(m.Alloc) / 1024 / 1024,
+					MemorySysMB:   float64(m.Sys) / 1024 / 1024,
 					Goroutines:    runtime.NumGoroutine(),
 					WsBatches:     wsStats.BatchesSent,
 					WsMessages:    wsStats.MessagesSent,

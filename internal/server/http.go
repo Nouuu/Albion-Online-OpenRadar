@@ -4,13 +4,14 @@ import (
 	"compress/gzip"
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/segmentio/encoding/json"
 
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/templates"
@@ -182,8 +183,9 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 		"settings":   "Settings",
 	}
 	title := titles[page]
-	if title == "" {
-		title = strings.Title(page)
+	if title == "" && page != "" {
+		// Capitalize first letter
+		title = strings.ToUpper(page[:1]) + page[1:]
 	}
 
 	data := templates.NewPageData(page, "OpenRadar - "+title).WithVersion(s.version)
@@ -206,24 +208,8 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 	if err != nil {
 		s.logger.Error("http", "render", fmt.Sprintf("Failed to render page %s: %v", page, err), nil)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// serveFile serves a single file from fs.FS
-func (s *HTTPServer) serveFile(w http.ResponseWriter, _ *http.Request, fsys fs.FS, name string) {
-	data, err := fs.ReadFile(fsys, name)
-	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
-	// Set content type and no-cache for HTML files
-	if strings.HasSuffix(name, ".html") {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-	}
-	_, _ = w.Write(data) // Error ignored: client disconnect is not recoverable
 }
 
 // setCacheHeaders sets Cache-Control and optional Vary headers

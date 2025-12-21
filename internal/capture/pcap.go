@@ -295,7 +295,7 @@ func selectInterface(interfaces []NetworkInterface, appDir string) (string, erro
 
 func saveIPToFile(appDir, ip string) {
 	path := filepath.Join(appDir, "ip.txt")
-	if err := os.WriteFile(path, []byte(ip), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(ip), 0o644); err != nil {
 		fmt.Println("Warning: Error while saving the IP address.")
 	}
 }

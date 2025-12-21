@@ -51,6 +51,7 @@ type StatsMsg struct {
 	Errors        uint64
 	WsClients     int
 	MemoryMB      float64
+	MemorySysMB   float64
 	Goroutines    int
 	WsBatches     uint64
 	WsMessages    uint64
@@ -100,12 +101,13 @@ type Dashboard struct {
 	captureRunning bool
 
 	// Real-time stats
-	packets    uint64
-	errors     uint64
-	wsClients  int
-	memoryMB   float64
-	goroutines int
-	startTime  time.Time
+	packets     uint64
+	errors      uint64
+	wsClients   int
+	memoryMB    float64
+	memorySysMB float64
+	goroutines  int
+	startTime   time.Time
 
 	// WebSocket batching stats
 	wsBatches   uint64
@@ -126,11 +128,12 @@ type Dashboard struct {
 	logBufferSize int
 
 	// Sparkline history
-	packetsHistory []uint64
-	memoryHistory  []float64
-	wsBatchHistory []uint64
-	lastPackets    uint64
-	lastWsBatches  uint64
+	packetsHistory   []uint64
+	memoryHistory    []float64
+	memorySysHistory []float64
+	wsBatchHistory   []uint64
+	lastPackets      uint64
+	lastWsBatches    uint64
 
 	// Components
 	viewport    viewport.Model
@@ -161,20 +164,21 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 	ti.CharLimit = 50
 
 	return Dashboard{
-		version:        version,
-		serverURL:      fmt.Sprintf("http://localhost:%d", port),
-		wsURL:          fmt.Sprintf("ws://localhost:%d/ws", port),
-		mode:           mode,
-		adapterIP:      adapterIP,
-		startTime:      time.Now(),
-		logs:           make([]LogEntry, 0, maxLogs),
-		packetsHistory: make([]uint64, 0, sparklineHistory),
-		memoryHistory:  make([]float64, 0, sparklineHistory),
-		wsBatchHistory: make([]uint64, 0, sparklineHistory),
-		autoScroll:     true,
-		currentTab:     TabLogs,
-		logFilter:      LevelAll,
-		searchInput:    ti,
+		version:          version,
+		serverURL:        fmt.Sprintf("http://localhost:%d", port),
+		wsURL:            fmt.Sprintf("ws://localhost:%d/ws", port),
+		mode:             mode,
+		adapterIP:        adapterIP,
+		startTime:        time.Now(),
+		logs:             make([]LogEntry, 0, maxLogs),
+		packetsHistory:   make([]uint64, 0, sparklineHistory),
+		memoryHistory:    make([]float64, 0, sparklineHistory),
+		memorySysHistory: make([]float64, 0, sparklineHistory),
+		wsBatchHistory:   make([]uint64, 0, sparklineHistory),
+		autoScroll:       true,
+		currentTab:       TabLogs,
+		logFilter:        LevelAll,
+		searchInput:      ti,
 	}
 }
 
@@ -303,6 +307,11 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			d.memoryHistory = d.memoryHistory[1:]
 		}
 
+		d.memorySysHistory = append(d.memorySysHistory, msg.MemorySysMB)
+		if len(d.memorySysHistory) > sparklineHistory {
+			d.memorySysHistory = d.memorySysHistory[1:]
+		}
+
 		batchDiff := msg.WsBatches - d.lastWsBatches
 		d.lastWsBatches = msg.WsBatches
 		d.wsBatchHistory = append(d.wsBatchHistory, batchDiff)
@@ -314,6 +323,7 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		d.errors = msg.Errors
 		d.wsClients = msg.WsClients
 		d.memoryMB = msg.MemoryMB
+		d.memorySysMB = msg.MemorySysMB
 		d.goroutines = msg.Goroutines
 		d.wsBatches = msg.WsBatches
 		d.wsMessages = msg.WsMessages
@@ -526,19 +536,19 @@ func statusIndicator(running bool, label string) string {
 func (d *Dashboard) renderFooter() string {
 	uptime := time.Since(d.startTime).Round(time.Second)
 
-	// Sparklines
+	// Sparkline
 	packetsSparkline := renderSparkline(d.packetsHistory, ColorPrimary)
-	memorySparkline := renderSparkline(d.memoryHistory, ColorWarning)
 
 	// Stats line 1: Packets & Memory
 	stats1 := fmt.Sprintf(
-		"%s %s %s  |  %s %s %s  |  %s %s",
+		"%s %s %s  |  %s %s  %s %s  |  %s %s",
 		StatLabelStyle.Render("Pkts:"),
 		StatValueStyle.Render(formatNumber(d.packets)),
 		packetsSparkline,
-		StatLabelStyle.Render("Mem:"),
-		StatValueStyle.Render(fmt.Sprintf("%.1fMB", d.memoryMB)),
-		memorySparkline,
+		StatLabelStyle.Render("Heap:"),
+		StatValueStyle.Render(fmt.Sprintf("%.0fMB", d.memoryMB)),
+		StatLabelStyle.Render("Sys:"),
+		StatValueStyle.Render(fmt.Sprintf("%.0fMB", d.memorySysMB)),
 		StatLabelStyle.Render("Up:"),
 		StatValueStyle.Render(formatDuration(uptime)),
 	)
@@ -663,9 +673,13 @@ func (d *Dashboard) renderStatsView() string {
 		" " + renderSparkline(d.packetsHistory, ColorPrimary),
 		" " + d.getSparklineStats(d.packetsHistory, ""),
 		"",
-		section("🧠", "Memory MB"),
+		section("🧠", "Heap MB"),
 		" " + renderSparkline(d.memoryHistory, ColorWarning),
 		" " + d.getSparklineStatsFloat(d.memoryHistory, ""),
+		"",
+		section("💾", "Sys MB"),
+		" " + renderSparkline(d.memorySysHistory, ColorError),
+		" " + d.getSparklineStatsFloat(d.memorySysHistory, ""),
 		"",
 		section("📝", "Logging"),
 		stat("Entries:", formatNumber(d.logEntries), ColorSuccess),
@@ -693,15 +707,6 @@ func (d *Dashboard) getQueueColor() lipgloss.Color {
 	if d.wsQueueSize > 50 {
 		return ColorError
 	} else if d.wsQueueSize > 20 {
-		return ColorWarning
-	}
-	return ColorSuccess
-}
-
-func (d *Dashboard) getMemoryColor() lipgloss.Color {
-	if d.memoryMB > 500 {
-		return ColorError
-	} else if d.memoryMB > 200 {
 		return ColorWarning
 	}
 	return ColorSuccess

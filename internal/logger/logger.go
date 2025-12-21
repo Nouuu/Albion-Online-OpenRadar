@@ -2,13 +2,14 @@ package logger
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/segmentio/encoding/json"
 )
 
 const (
@@ -109,7 +110,7 @@ func (l *Logger) initializeDirectories() {
 	}
 
 	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
 			PrintError("LOG", "Failed to create directory %s: %v", dir, err)
 		}
 	}
@@ -155,7 +156,7 @@ func (l *Logger) Flush() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	f, err := os.OpenFile(l.currentSessionFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(l.currentSessionFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return
 	}
@@ -213,7 +214,7 @@ func (l *Logger) Error(category, event string, data interface{}, context map[str
 	date := time.Now().Format("2006-01-02")
 	errorFile := filepath.Join(l.logsDir, "errors", fmt.Sprintf("errors_%s.log", date))
 
-	f, err := os.OpenFile(errorFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(errorFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return
 	}
@@ -292,7 +293,7 @@ func (l *Logger) GetSessionStats() SessionStats {
 
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		if len(strings.TrimSpace(scanner.Text())) > 0 {
+		if strings.TrimSpace(scanner.Text()) != "" {
 			stats.LineCount++
 		}
 	}

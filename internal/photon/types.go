@@ -1,6 +1,6 @@
 package photon
 
-import "encoding/json"
+import "github.com/segmentio/encoding/json"
 
 // ByteArray wraps []byte to serialize like Node.js Buffer
 type ByteArray []byte
