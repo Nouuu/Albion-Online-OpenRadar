@@ -420,19 +420,36 @@ export class HarvestablesHandler
     // Good
     newSimpleHarvestableObject(Parameters) // New (Event 38 - Batch spawn)
     {
-        let a0 = Parameters[0]["data"];
-        if  (a0 === undefined)
-        {
-            a0 = Parameters[0];
+        // Validate required parameters exist
+        if (!Parameters[0] || !Parameters[1] || !Parameters[2] || !Parameters[3] || !Parameters[4]) {
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'Event38_MissingParams', {
+                has0: !!Parameters[0],
+                has1: !!Parameters[1],
+                has2: !!Parameters[2],
+                has3: !!Parameters[3],
+                has4: !!Parameters[4]
+            });
+            return;
         }
 
-        if (a0.length === 0) return;
+        let a0 = Parameters[0]["data"] ?? Parameters[0];
+        if (!Array.isArray(a0) || a0.length === 0) return;
 
-        const a1 = Parameters[1]["data"];
-        const a2 = Parameters[2]["data"];
- 
+        const a1 = Parameters[1]["data"] ?? Parameters[1];
+        const a2 = Parameters[2]["data"] ?? Parameters[2];
+
         const a3 = Parameters[3];
-        const a4 = Parameters[4]["data"];
+        const a4 = Parameters[4]["data"] ?? Parameters[4];
+
+        // Validate arrays
+        if (!Array.isArray(a1) || !Array.isArray(a2) || !Array.isArray(a4)) {
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'Event38_InvalidArrays', {
+                a1IsArray: Array.isArray(a1),
+                a2IsArray: Array.isArray(a2),
+                a4IsArray: Array.isArray(a4)
+            });
+            return;
+        }
 
         window.logger?.info(CATEGORIES.HARVESTABLES, 'Event38_BatchSpawn', {
             count: a0.length,

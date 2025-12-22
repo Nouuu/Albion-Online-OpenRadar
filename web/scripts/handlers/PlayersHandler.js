@@ -100,7 +100,11 @@ export class PlayersHandler {
         let items = null;
         try {
             items = Parameters[2];
-        } catch {
+        } catch (error) {
+            window.logger?.warn(CATEGORIES.PLAYERS, 'UpdateItems_Failed', {
+                playerId: id,
+                error: error?.message
+            });
             items = null;
         }
 

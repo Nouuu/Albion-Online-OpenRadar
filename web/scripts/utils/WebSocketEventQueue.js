@@ -1,3 +1,5 @@
+import {CATEGORIES} from '../constants/LoggerConstants.js';
+
 const COALESCABLE_EVENTS = new Set([3, 6, 91]);
 const THROTTLED_EVENTS = { 6: 50, 91: 100 };
 
@@ -37,8 +39,8 @@ export class WebSocketEventQueue {
                 const { code, params } = this.parseMessage(msg);
                 this.queueEventInternal(code, params);
             }
-        } catch {
-            // Skip malformed message
+        } catch (e) {
+            window.logger?.warn(CATEGORIES.NETWORK, 'MalformedWSMessage', {error: e?.message});
         }
     }
 
