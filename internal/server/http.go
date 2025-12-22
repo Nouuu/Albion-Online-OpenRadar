@@ -121,6 +121,8 @@ func (s *HTTPServer) setupRoutes() {
 	// Cache durations
 	imageCacheDuration := 24 * time.Hour
 	dataCacheDuration := 7 * 24 * time.Hour
+	scriptsCacheDuration := 1 * time.Hour
+	stylesCacheDuration := 1 * time.Hour
 
 	// WebSocket endpoint
 	if s.wsHandler != nil {
@@ -152,11 +154,11 @@ func (s *HTTPServer) setupRoutes() {
 	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp", imageCacheDuration))
 	// Other images: standard handler (cache 24h)
 	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration, false))
-	// Scripts, pages: NO CACHE (for development)
-	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0, true))
+	// Scripts: cache 1h + gzip
+	s.mux.Handle("/scripts/", s.gzipFSHandlerDirect("/scripts/", s.scripts, scriptsCacheDuration))
 	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0, false))
-	// Styles: NO CACHE (for development)
-	s.mux.Handle("/styles/", s.fsHandler("/styles/", s.styles, 0, true))
+	// Styles: cache 1h + gzip
+	s.mux.Handle("/styles/", s.gzipFSHandlerDirect("/styles/", s.styles, stylesCacheDuration))
 
 	// ao-bin-dumps with gzip support (data FS is already the ao-bin-dumps directory)
 	s.mux.Handle(
@@ -325,6 +327,10 @@ func (s *HTTPServer) gzipFSHandlerDirect(
 // setContentType sets Content-Type header based on file extension
 func setContentType(w http.ResponseWriter, path string) {
 	switch {
+	case strings.HasSuffix(path, ".js"):
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	case strings.HasSuffix(path, ".css"):
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	case strings.HasSuffix(path, ".json"):
 		w.Header().Set("Content-Type", "application/json")
 	case strings.HasSuffix(path, ".xml"):
