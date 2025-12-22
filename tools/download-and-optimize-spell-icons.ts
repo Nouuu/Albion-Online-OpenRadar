@@ -152,7 +152,6 @@ async function processUiSprite(
     didOptimize: boolean
 }> {
     const filename = `${sprite}.webp`;
-    const localizedFilename = `${uiSpriteToLocalizedName.get(sprite)}.webp`;
     const outputPath = path.join(OUTPUT_DIR, filename);
     console.log();
 
@@ -170,11 +169,15 @@ async function processUiSprite(
         };
     }
 
-    const url = `${CDN_BASE_URL}${uiSpriteToLocalizedName.get(sprite)}.png`;
+    // Try sprite name first (most reliable), then localized name as fallback
+    const url = `${CDN_BASE_URL}${sprite}.png`;
     res = await downloadFile(url);
-    if (res.status === DownloadStatus.NOT_FOUND && localizedFilename !== filename && localizedFilename !== 'undefined.webp') {
-        const localizedUrl = `${CDN_BASE_URL}${localizedFilename}`;
-        console.log(`🔄 404 : Trying localized filename: ${localizedFilename}`);
+
+    // If sprite name fails and we have a localized name, try that
+    const localizedName = uiSpriteToLocalizedName.get(sprite);
+    if (res.status === DownloadStatus.NOT_FOUND && localizedName && localizedName !== sprite) {
+        const localizedUrl = `${CDN_BASE_URL}${localizedName}.png`;
+        console.log(`🔄 Trying localized name: ${localizedName}`);
         res = await downloadFile(localizedUrl);
     }
 
@@ -191,6 +194,8 @@ async function processUiSprite(
     );
 }
 
+const CONCURRENCY = 2; // Number of parallel downloads
+
 async function main() {
     const {uiSpritesArray, uiSpriteToLocalizedName} = await initPrerequisites();
 
@@ -203,28 +208,29 @@ async function main() {
     let skipped = 0;
     const now = Date.now();
 
-    for (let i = 0; i < uiSpritesArray.length; i++) {
-        const {
-            downloaded: didDownload,
-            failed: didFail,
-            optimizeFail: didOptimizeFail,
-            didReplace,
-            didSkip,
-            didOptimize
-        } = await processUiSprite(
-            uiSpritesArray[i],
-            i,
-            uiSpritesArray.length,
-            uiSpriteToLocalizedName
+    // Process in batches of CONCURRENCY
+    for (let i = 0; i < uiSpritesArray.length; i += CONCURRENCY) {
+        const batch = uiSpritesArray.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(
+            batch.map((sprite, batchIndex) =>
+                processUiSprite(
+                    sprite,
+                    i + batchIndex,
+                    uiSpritesArray.length,
+                    uiSpriteToLocalizedName
+                )
+            )
         );
 
-        if (didDownload) downloaded++;
-        if (didFail) failed++;
-        if (didOptimizeFail) optimizeFail++;
-        if (didReplace) replaced++;
-        if (didSkip) skipped++;
-        if (didOptimize) optimized++;
-        completed++;
+        for (const result of results) {
+            if (result.downloaded) downloaded++;
+            if (result.failed) failed++;
+            if (result.optimizeFail) optimizeFail++;
+            if (result.didReplace) replaced++;
+            if (result.didSkip) skipped++;
+            if (result.didOptimize) optimized++;
+            completed++;
+        }
     }
 
     printSummary({
