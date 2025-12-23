@@ -1,57 +1,21 @@
 {{define "layouts/base.gohtml"}}
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html data-theme="night" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">{{.Title}}</title>
     <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 
-    <!-- Google Fonts: Space Grotesk + JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/tailwind.css">
 
-    <!-- Tailwind CSS v4 (Browser) -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="/scripts/vendors/lucide.min.js"></script>
 
-    <!-- Custom CSS Variables for Theme -->
-    <style type="text/tailwindcss">
-        @theme {
-            --color-void: #050508;
-            --color-surface: #0a0a0f;
-            --color-elevated: #12121a;
-            --color-overlay: #1a1a24;
-            --color-accent: #00d4ff;
-            --color-success: #00ff88;
-            --color-danger: #ff3366;
-            --color-warning: #ffa500;
-            --color-tier-1: #a0a0a0;
-            --color-tier-2: #22c55e;
-            --color-tier-3: #3b82f6;
-            --color-tier-4: #a855f7;
-            --color-tier-5: #eab308;
-            --color-tier-6: #f97316;
-            --color-tier-7: #ef4444;
-            --color-tier-8: #ec4899;
-            --font-display: 'Space Grotesk', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
-        }
-    </style>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Custom Styles (minimal - animations only) -->
     <link rel="stylesheet" href="/styles/app.css">
-    <link rel="stylesheet" href="/scripts/styles/tooltips.css">
-    <link rel="stylesheet" href="/scripts/styles/components.css">
+    <link rel="stylesheet" href="/styles/components.css">
 
-    <!-- jQuery & SignalR (for WebSocket) - must load before modules that use them -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/9.0.6/signalr.min.js"></script>
 
-    <!-- Helper for page scripts - MUST be defined BEFORE modules (which are deferred) -->
+    <!-- Must be defined before modules -->
     <script>
         window.onGlobalsReady = function(callback) {
             if (window.__globalsReady) {
@@ -62,11 +26,9 @@
         };
     </script>
 
-    <!-- Global Setup Module -->
     <script type="module">
-        // Import everything and expose globally
         import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
-        import settingsSync from '/scripts/Utils/SettingsSync.js';
+        import settingsSync from '/scripts/utils/SettingsSync.js';
         import {
             attachCheckboxListeners,
             generateResourceGrid,
@@ -74,9 +36,8 @@
             updateTierButtonState,
             selectAllTierEnchants,
             getResourceStorageKey
-        } from '/scripts/Utils/ResourcesHelper.js';
+        } from '/scripts/utils/ResourcesHelper.js';
 
-        // Expose globally for page scripts
         window.CATEGORIES = CATEGORIES;
         window.settingsSync = settingsSync;
         window.ResourcesHelper = {
@@ -88,11 +49,9 @@
             getResourceStorageKey
         };
 
-        // Signal that globals are ready
         window.__globalsReady = true;
         document.dispatchEvent(new CustomEvent('globalsReady'));
 
-        // Sync server logs setting on page load
         (async () => {
             try {
                 const serverLogsEnabled = settingsSync.getBool("settingServerLogsEnabled");
@@ -105,55 +64,87 @@
                 console.error('[Layout] Error syncing server logs:', error);
             }
         })();
-
-        console.log('[Layout] Global modules initialized');
     </script>
 
-    <!-- Logger Client -->
-    <script type="module" src="/scripts/LoggerClient.js"></script>
+    <script type="module" src="/scripts/logger.js"></script>
+    <script type="module" src="/scripts/core/PageController.js"></script>
+    <script type="module" src="/scripts/utils/Toast.js"></script>
+    <script type="module" src="/scripts/utils/Modal.js"></script>
+    <script src="/scripts/vendors/htmx.min.js"></script>
 
-    <!-- SPA Router - simple page transition handling -->
-    <script src="/scripts/spa-router.js"></script>
+    <!-- Must be in head before sidebar template -->
+    <script>
+        window.sidebar = {
+            collapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+            hoverExpanded: false,
+            hoverTimeout: null,
 
-    <!-- HTMX for SPA-like navigation -->
-    <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.min.js"></script>
-    <!-- Alpine.js plugins (must load before Alpine) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <!-- Alpine.js - defer so it loads after DOM -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+            init() {
+                this.updateClasses();
+                if (window.lucide) lucide.createIcons();
+            },
+
+            toggle() {
+                this.collapsed = !this.collapsed;
+                localStorage.setItem('sidebarCollapsed', this.collapsed);
+                this.updateClasses();
+            },
+
+            onEnter() {
+                if (this.collapsed) {
+                    this.hoverTimeout = setTimeout(() => {
+                        this.hoverExpanded = true;
+                        this.updateClasses();
+                    }, 1000);
+                }
+            },
+
+            onLeave() {
+                if (this.hoverTimeout) {
+                    clearTimeout(this.hoverTimeout);
+                    this.hoverTimeout = null;
+                }
+                this.hoverExpanded = false;
+                this.updateClasses();
+            },
+
+            get isExpanded() {
+                return !this.collapsed || this.hoverExpanded;
+            },
+
+            openMobile() {
+                document.body.classList.add('mobile-menu-open');
+            },
+
+            closeMobile() {
+                document.body.classList.remove('mobile-menu-open');
+            },
+
+            updateClasses() {
+                document.body.classList.toggle('sidebar-collapsed', this.collapsed && !this.hoverExpanded);
+                const sidebar = document.getElementById('desktop-sidebar');
+                if (sidebar) {
+                    sidebar.style.width = this.isExpanded ? '16rem' : '5rem';
+                }
+            }
+        };
+    </script>
 
     <style>
-        [x-cloak] { display: none !important; }
-
-        /* HTMX page transitions */
-        .htmx-swapping {
-            opacity: 0;
-            transition: opacity 150ms ease-out;
-        }
-
-        #page-content {
-            transition: opacity 150ms ease-in;
-        }
-
-        #page-content.htmx-settling {
-            opacity: 1;
-        }
+        .htmx-swapping { opacity: 0; transition: opacity 50ms ease-out; }
+        #page-content { transition: opacity 50ms ease-in; }
+        #page-content.htmx-settling { opacity: 1; }
     </style>
 </head>
-<body class="bg-void text-gray-200 font-display" x-data="appData()">
-    <div class="flex h-screen" :class="{ 'overflow-hidden': mobileMenuOpen }">
-
-        <!-- Sidebar -->
+<body class="bg-base-100 text-base-content font-display">
+    <div class="flex h-screen">
         {{template "layouts/sidebar.gohtml" .}}
 
-        <!-- Main Content Area -->
         <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
             {{template "layouts/header.gohtml" .}}
 
-            <!-- Page Content -->
             <main id="page-content"
-                  class="flex-1 overflow-y-auto p-6 bg-void"
+                  class="flex-1 overflow-y-auto p-6 bg-base-100"
                   data-page="{{.Page}}"
                   hx-swap="innerHTML transition:true"
                   hx-swap-oob="true">
@@ -168,7 +159,6 @@
                     {{else}}{{template "pages/radar" .}}{{end}}
                 </div>
 
-                <!-- Page-specific scripts (inline for HTMX support) -->
                 {{if eq .Page "radar"}}{{template "scripts/radar" .}}
                 {{else if eq .Page "players"}}{{template "scripts/players" .}}
                 {{else if eq .Page "resources"}}{{template "scripts/resources" .}}
@@ -181,86 +171,53 @@
         </div>
     </div>
 
-    <!-- Mobile Menu Overlay -->
-    <div x-show="mobileMenuOpen"
-         x-transition:enter="transition-opacity ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         @click="mobileMenuOpen = false"
-         class="fixed inset-0 z-30 bg-black/50 md:hidden"
-         x-cloak>
+    <div id="mobile-overlay"
+         onclick="window.sidebar.closeMobile()"
+         class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden">
     </div>
 
-    <!-- Initialize Lucide Icons and Alpine data -->
     <script>
-        document.addEventListener('alpine:initialized', () => {
-            lucide.createIcons();
-        });
+        document.addEventListener('DOMContentLoaded', () => window.sidebar.init());
 
-        // HTMX: Reinitialize Lucide icons after every swap
-        document.addEventListener('htmx:afterSwap', (event) => {
-            // Reinitialize Lucide icons in the swapped content
-            lucide.createIcons();
-            console.log('[HTMX] Content swapped, icons reinitialized');
-        });
-
-        // HTMX: Handle page transitions
-        document.addEventListener('htmx:beforeSwap', (event) => {
-            // Add loading class for transition
-            const target = event.detail.target;
-            if (target && target.id === 'page-content') {
-                target.style.opacity = '0';
+        // Page lifecycle cleanup - prevents memory leaks on navigation
+        document.addEventListener('htmx:beforeSwap', (e) => {
+            if (e.detail.target?.id === 'page-content') {
+                e.detail.target.style.opacity = '0';
+                // Dispatch cleanup event for page scripts to unregister listeners
+                document.dispatchEvent(new CustomEvent('pageCleanup'));
             }
         });
 
-        document.addEventListener('htmx:afterSettle', (event) => {
-            // Restore opacity after content is settled
-            const target = event.detail.target;
-            if (target && target.id === 'page-content') {
+        // Only create icons within swapped content (not globally)
+        document.addEventListener('htmx:afterSwap', (e) => {
+            if (e.detail.target && window.lucide) {
+                // Defer icon creation to next frame to avoid blocking
                 requestAnimationFrame(() => {
-                    target.style.opacity = '1';
+                    lucide.createIcons({ nodes: [e.detail.target] });
                 });
             }
         });
 
-        // Alpine.js app data
-        function appData() {
-            return {
-                sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
-                mobileMenuOpen: false,
-                hoverExpanded: false,
-                hoverTimeout: null,
+        document.addEventListener('htmx:afterSettle', (e) => {
+            if (e.detail.target?.id === 'page-content') {
+                requestAnimationFrame(() => e.detail.target.style.opacity = '1');
+            }
+        });
 
-                toggleSidebar() {
-                    this.sidebarCollapsed = !this.sidebarCollapsed;
-                    localStorage.setItem('sidebarCollapsed', this.sidebarCollapsed);
-                },
+        // Update sidebar active state on navigation
+        document.addEventListener('htmx:pushedIntoHistory', (_e) => {
+            const currentPath = window.location.pathname;
+            const baseClasses = 'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors';
+            const activeClasses = 'text-primary border-l-2 border-primary -ml-px pl-2.5';
+            const inactiveClasses = 'text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]';
 
-                onSidebarEnter() {
-                    if (this.sidebarCollapsed) {
-                        this.hoverTimeout = setTimeout(() => {
-                            this.hoverExpanded = true;
-                        }, 1000); // 1 second delay to allow clicking expand button
-                    }
-                },
+            document.querySelectorAll('#desktop-nav a, #mobile-nav a').forEach(link => {
+                const linkPath = link.getAttribute('href');
+                const isActive = linkPath === currentPath;
 
-                onSidebarLeave() {
-                    if (this.hoverTimeout) {
-                        clearTimeout(this.hoverTimeout);
-                        this.hoverTimeout = null;
-                    }
-                    this.hoverExpanded = false;
-                },
-
-                get isExpanded() {
-                    return !this.sidebarCollapsed || this.hoverExpanded;
-                }
-            };
-        }
-
+                link.className = baseClasses + ' ' + (isActive ? activeClasses : inactiveClasses);
+            });
+        });
     </script>
 </body>
 </html>

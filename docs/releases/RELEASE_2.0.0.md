@@ -15,7 +15,7 @@ Major release delivering a **complete backend rewrite to Go** and a **fully mode
 ### Modern UI Overhaul
 - **HTMX SPA Navigation**: Seamless page transitions without reload
 - **Tailwind CSS v4**: Dark theme with custom color palette
-- **Alpine.js**: Reactive components without heavy frameworks
+- **Vanilla JS**: Lightweight UI controllers (sidebar, accordions)
 - **Dynamic Radar**: Adjustable size (300-800px) and zoom (0.5x-2.0x)
 - **Player Color Coding**: Green (passive), Orange (faction), Red (hostile)
 - **TUI Dashboard**: Real-time stats in terminal
@@ -67,8 +67,8 @@ Major release delivering a **complete backend rewrite to Go** and a **fully mode
 
 ### Frontend Stack
 - **HTMX 2.0.8** for SPA-like navigation
-- **Alpine.js** for reactive components
 - **Tailwind CSS v4** with custom dark theme
+- **Vanilla JS** for UI state management
 - **Canvas API** multi-layer rendering
 - **BroadcastChannel** for cross-window sync
 - **Lucide Icons** for UI elements

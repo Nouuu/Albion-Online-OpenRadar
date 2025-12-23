@@ -1,103 +1,79 @@
 {{define "layouts/sidebar.gohtml"}}
-<!-- Desktop Sidebar -->
 <aside
-    :class="{
-        'w-64': isExpanded,
-        'w-20': !isExpanded
-    }"
-    @mouseenter="onSidebarEnter"
-    @mouseleave="onSidebarLeave"
-    class="hidden md:flex flex-col z-20 flex-shrink-0 overflow-y-auto bg-surface border-r border-white/5 transition-all duration-300">
+    id="desktop-sidebar"
+    onmouseenter="window.sidebar.onEnter()"
+    onmouseleave="window.sidebar.onLeave()"
+    class="hidden md:flex flex-col z-20 flex-shrink-0 overflow-y-auto bg-base-200 border-r border-base-content/[0.03] sidebar-transition"
+    style="width: 16rem;">
 
-    <!-- Logo & Toggle -->
-    <div class="flex items-center justify-between p-4 border-b border-white/5">
-        <a href="/" class="flex items-center gap-3" x-show="isExpanded" x-transition>
+    <div class="flex items-center justify-between p-4 border-b border-base-content/[0.03]">
+        <a href="/" class="flex items-center gap-3 sidebar-expanded-only">
             <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
-            <span class="text-xl font-bold text-white">OpenRadar</span>
+            <span class="text-xl font-bold text-base-content">OpenRadar</span>
         </a>
-        <!-- Collapsed state: logo + expand button -->
-        <div x-show="!isExpanded" class="flex flex-col items-center gap-2 w-full">
+        <div class="flex flex-col items-center gap-2 w-full sidebar-collapsed-only">
             <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
-            <button
-                @click="toggleSidebar"
-                class="p-1.5 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors"
+            <button onclick="window.sidebar.toggle()"
+                class="p-1.5 rounded-lg text-base-content/60 hover:text-base-content hover:bg-base-300 transition-colors"
                 title="Expand sidebar">
                 <i data-lucide="panel-left-open" class="w-4 h-4"></i>
             </button>
         </div>
-        <!-- Expanded state: collapse button -->
-        <button
-            @click="toggleSidebar"
-            x-show="isExpanded"
-            class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors"
+        <button onclick="window.sidebar.toggle()"
+            class="p-2 rounded-lg text-base-content/60 hover:text-base-content hover:bg-base-300 transition-colors sidebar-expanded-only"
             title="Collapse sidebar">
             <i data-lucide="panel-left-close" class="w-5 h-5"></i>
         </button>
     </div>
 
-    <!-- Navigation -->
-    <!-- Radar page always does full reload (has WebSocket, sounds, etc.) -->
-    <!-- Other pages use HTMX for smooth navigation -->
-    <nav id="desktop-nav" class="flex-1 p-4 space-y-1">
+    <nav id="desktop-nav" class="flex-1 p-3 space-y-0.5">
         {{range .NavItems}}
         <a href="{{.Path}}"
-           {{if and (ne .Path "/") (ne $.Page "radar")}}hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true" hx-push-url="true"{{end}}
-           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                  {{if .Active}}bg-accent/10 text-accent border-l-2 border-accent -ml-0.5 pl-3.5{{else}}text-gray-400 hover:bg-overlay hover:text-white{{end}}">
-            <i data-lucide="{{.Icon}}" class="w-5 h-5 flex-shrink-0"></i>
-            <span x-show="isExpanded" x-transition class="font-medium">{{.Label}}</span>
+           hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true"
+           hx-push-url="true"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors
+                  {{if .Active}}text-primary border-l-2 border-primary -ml-px pl-2.5{{else}}text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]{{end}}">
+            <i data-lucide="{{.Icon}}" class="w-[18px] h-[18px] flex-shrink-0" stroke-width="1.5"></i>
+            <span class="text-sm sidebar-expanded-only">{{.Label}}</span>
         </a>
         {{end}}
     </nav>
 
-    <!-- Version -->
-    <div class="p-4 border-t border-white/5" x-show="isExpanded" x-transition>
-        <p class="text-xs text-gray-500 font-mono">v{{.Version}}</p>
+    <div class="p-4 border-t border-base-content/[0.03] sidebar-expanded-only">
+        <p class="text-xs text-base-content/50 font-mono">v{{.Version}}</p>
     </div>
 </aside>
 
-<!-- Mobile Sidebar -->
-<aside
-    x-show="mobileMenuOpen"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="-translate-x-full"
-    x-transition:enter-end="translate-x-0"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="translate-x-0"
-    x-transition:leave-end="-translate-x-full"
-    class="fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-white/5 md:hidden"
-    x-cloak>
+<aside id="mobile-sidebar"
+    class="mobile-sidebar fixed inset-y-0 left-0 z-40 w-64 bg-base-200 border-r border-base-content/[0.03] md:hidden">
 
-    <!-- Logo & Close -->
-    <div class="flex items-center justify-between p-4 border-b border-white/5">
+    <div class="flex items-center justify-between p-4 border-b border-base-content/[0.03]">
         <a href="/" class="flex items-center gap-3">
             <img src="/images/icon.png" alt="OpenRadar" class="w-10 h-10 rounded-lg">
-            <span class="text-xl font-bold text-white">OpenRadar</span>
+            <span class="text-xl font-bold text-base-content">OpenRadar</span>
         </a>
-        <button
-            @click="mobileMenuOpen = false"
-            class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors">
+        <button onclick="window.sidebar.closeMobile()"
+            class="p-2 rounded-lg text-base-content/60 hover:text-base-content hover:bg-base-300 transition-colors">
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
     </div>
 
-    <!-- Navigation -->
-    <nav id="mobile-nav" class="p-4 space-y-1">
+    <nav id="mobile-nav" class="p-3 space-y-0.5">
         {{range .NavItems}}
         <a href="{{.Path}}"
-           {{if and (ne .Path "/") (ne $.Page "radar")}}hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true" hx-push-url="true"{{end}}
-           @click="mobileMenuOpen = false"
-           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                  {{if .Active}}bg-accent/10 text-accent border-l-2 border-accent -ml-0.5 pl-3.5{{else}}text-gray-400 hover:bg-overlay hover:text-white{{end}}">
-            <i data-lucide="{{.Icon}}" class="w-5 h-5"></i>
-            <span class="font-medium">{{.Label}}</span>
+           hx-get="{{.Path}}" hx-target="#page-content" hx-swap="innerHTML transition:true"
+           hx-push-url="true"
+           onclick="window.sidebar.closeMobile()"
+           class="flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors
+                  {{if .Active}}text-primary border-l-2 border-primary -ml-px pl-2.5{{else}}text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]{{end}}">
+            <i data-lucide="{{.Icon}}" class="w-[18px] h-[18px]" stroke-width="1.5"></i>
+            <span class="text-sm">{{.Label}}</span>
         </a>
         {{end}}
     </nav>
 
-    <!-- Version -->
-    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/5">
-        <p class="text-xs text-gray-500 font-mono">v{{.Version}}</p>
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-base-content/[0.03]">
+        <p class="text-xs text-base-content/50 font-mono">v{{.Version}}</p>
     </div>
 </aside>
 {{end}}

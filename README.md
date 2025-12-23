@@ -1,94 +1,36 @@
-# OpenRadar - Albion Online Radar Tool
-
-[![GitHub last commit (branch)](https://img.shields.io/github/last-commit/Nouuu/Albion-Online-OpenRadar/main?style=for-the-badge&label=Last%20Commit)]()
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=Latest%20Release)]()
-[![GitHub pull-requests](https://img.shields.io/github/issues-pr-raw/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=PRs)]()
-[![GitHub issues](https://img.shields.io/github/issues-raw/Nouuu/Albion-Online-OpenRadar?style=for-the-badge&label=Issues)](https://github.com/Nouuu/Albion-Online-ZQRadar/issues)
-[![GitHub Repo stars](https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=for-the-badge)]()
+<h1 align="center">
+  <img src="web/images/icon.png" width="32" height="32" alt="icon">
+  OpenRadar
+</h1>
 
 <p align="center">
-  <img src="docs/images/radar_1.png" alt="OpenRadar Main View" width="700">
+  <strong>Real-time radar for Albion Online</strong><br>
+  <sub>Passive network capture • Zero injection • Open source</sub>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/releases">
+    <img src="https://img.shields.io/github/v/release/Nouuu/Albion-Online-OpenRadar?style=flat-square&label=Download&color=7c3aed" alt="Download">
+  </a>
+  <img src="https://img.shields.io/badge/Windows%20%7C%20Linux-blue?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/stargazers">
+    <img src="https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=flat-square&color=yellow" alt="Stars">
+  </a>
+</p>
+
+<p align="center">
+  https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 </p>
 
 ---
 
-## About
+Tired of farming blind in the Black Zone? OpenRadar shows you resources, mobs, and players around you, right in your
+browser.
 
-**OpenRadar** is a real-time radar tool for **Albion Online** that provides situational awareness without game injection. Track players, resources, enemies, and events with a clean, customizable web interface.
-
-### v2.0 Highlights
-
-#### Backend
-- **Native Go Backend** - Single binary (~95 MB) with all assets embedded
-- **No External Dependencies** - Just Npcap (Windows) or libpcap (Linux)
-- **Massive Size Reduction** - From ~500 MB (Node.js) to ~95 MB
-- **Faster Startup** - No runtime extraction needed
-- **No Injection** - Lower risk of detection/banning
-
-#### UI
-- **Modern Dark Theme** - Tailwind CSS v4 with custom color palette
-- **HTMX Navigation** - Seamless page transitions without reload
-- **Dynamic Radar** - Adjustable size (300-800px) and zoom (0.5x-2.0x)
-- **Player Color Coding** - Green (passive), Orange (faction), Red (hostile)
-- **TUI Dashboard** - Real-time stats in terminal
-
----
-
-## Screenshots
-
-<table>
-  <tr>
-    <td><img src="docs/images/radar_2.png" alt="Radar with entities" width="400"></td>
-    <td><img src="docs/images/radar_3.png" alt="Radar zoomed" width="400"></td>
-  </tr>
-  <tr>
-    <td align="center"><em>Radar with detected entities</em></td>
-    <td align="center"><em>Radar with zoom controls</em></td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/settings.png" alt="Settings page" width="400"></td>
-    <td><img src="docs/images/resources.png" alt="Resources page" width="400"></td>
-  </tr>
-  <tr>
-    <td align="center"><em>Settings page</em></td>
-    <td align="center"><em>Resources filtering</em></td>
-  </tr>
-  <tr>
-    <td><img src="docs/images/overlay.png" alt="Overlay window" width="400"></td>
-    <td><img src="docs/images/OpenRadar.gif" alt="TUI Dashboard" width="400"></td>
-  </tr>
-  <tr>
-    <td align="center"><em>Floating overlay window</em></td>
-    <td align="center"><em>Terminal dashboard (TUI)</em></td>
-  </tr>
-</table>
-
----
-
-## Features
-
-### Player Tracking
-- Real-time position and movement
-- Health bars and equipment visualization
-- Mount status detection
-- Guild and alliance information
-
-### Resource Detection
-- **100% detection accuracy** - Validated with 3,698+ resources
-- **Harvestables**: Trees, ores, stone, fiber, hide (T1-T8 + enchantments .0-.3)
-- **Living Resources**: Animals and skinnable creatures (~2,800 types)
-- **Fishing spots**: All tiers with enchantment support
-
-### Enemy & Creature Tracking
-- **Color-coded threat classification**: Normal | Enchanted | Mini-Boss | Boss
-- 4,528 mobs catalogued with metadata
-- Real-time health tracking
-- Mist beasts detection
-
-### Points of Interest
-- Treasure chests (common, uncommon, rare, legendary)
-- Dungeons (solo/group, static/random, corrupted)
-- Mist portals with enchantment levels
+**How does it work?** The app listens to network traffic between your PC and Albion's servers, decodes the Photon
+protocol, and displays everything on a web-based radar. No client modification, no memory injection. Just passive
+reading.
 
 ---
 
@@ -96,57 +38,27 @@
 
 ### Windows
 
-1. **Install Npcap** (version 1.84+):
-   - [Official Download](https://npcap.com/) | [Direct Link v1.84](https://npcap.com/dist/npcap-1.84.exe)
-
-2. **Download & Run**:
-   - Get the latest release from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
-   - Extract and run `OpenRadar.exe`
-   - Select your network adapter (NOT 127.0.0.1)
-   - Open **http://localhost:5001** in your browser
+1. Install **[Npcap](https://npcap.com/#download)** (required for packet capture)
+2. Download `OpenRadar-windows-amd64.exe` from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
+3. Run it, pick your network adapter
+4. Open **http://localhost:5001** in your browser
+5. Launch Albion and start playing
 
 ### Linux
 
-1. **Install dependencies**:
-   ```bash
-   # Ubuntu/Debian
-   sudo apt-get install libpcap0.8 libcap2-bin
+```bash
+# Install libpcap
+sudo apt install libpcap0.8  # Debian/Ubuntu
 
-   # Fedora/RHEL
-   sudo dnf install libpcap libcap
+# Download and set permissions
+chmod +x OpenRadar-linux-amd64
+sudo setcap cap_net_raw=eip ./OpenRadar-linux-amd64
 
-   # Arch Linux
-   sudo pacman -S libpcap libcap
-   ```
+# Run
+./OpenRadar-linux-amd64
+```
 
-2. **Download & Make executable**:
-   ```bash
-   chmod +x OpenRadar-linux
-   ```
-
-3. **Grant capture permissions** (choose ONE option):
-
-   **Option A** - Run as root (simple):
-   ```bash
-   sudo ./OpenRadar-linux
-   ```
-
-   **Option B** - Grant capabilities (recommended, allows running as normal user):
-   ```bash
-   # Grant network capture capabilities to the executable
-   sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
-
-   # Verify capabilities were applied (optional)
-   getcap ./OpenRadar-linux
-
-   # Run as normal user
-   ./OpenRadar-linux
-   ```
-   > **Note**: Capabilities are removed if the file is modified or moved. Re-run `setcap` after updates.
-
-4. Open **http://localhost:5001** in your browser
-
-### Command-line Options
+### CLI Options
 
 ```bash
 OpenRadar -version       # Show version
@@ -156,136 +68,243 @@ OpenRadar -dev           # Development mode (read files from disk)
 
 ---
 
+## What It Detects
+
+### Production-Ready
+
+| What          | Coverage                                                                                          |
+|---------------|---------------------------------------------------------------------------------------------------|
+| **Resources** | 3,698 nodes validated. T1-T8, enchanted (.1 .2 .3), static and skinnable                          |
+| **Mobs**      | 4,528 catalogued. Color-coded: green (normal), purple (enchanted), orange (mini-boss), red (boss) |
+| **Players**   | Faction flags, hostile detection, zone-aware alerts                                               |
+| **Zones**     | 1,000+ zones mapped. Safe/Yellow/Red/Black detection drives threat logic                          |
+
+### Player Threat Detection
+
+| Status  | Color     | Description             |
+|---------|-----------|-------------------------|
+| Passive | `#00ff88` | Not flagged for PvP     |
+| Faction | `#ffa500` | Faction warfare flagged |
+| Hostile | `#ff0000` | Hostile (flagged 255)   |
+
+> **Alert System**: Screen flash + sound on hostile detection
+
+### Basic (Legacy)
+
+Dungeons and chests are detected but not yet refactored. Coming in v2.2:
+
+- **Dungeons**: Solo, Group, Corrupted, Hellgate entrances show on radar
+- **Chests**: Loot chests visible, rarity classification planned
+
+---
+
+## Radar Controls
+
+| Feature | Description                              |
+|---------|------------------------------------------|
+| Size    | 300px - 800px adjustable                 |
+| Zoom    | 0.5x - 2.0x magnification                |
+| Rings   | Distance indicators at 10m/20m intervals |
+| Zone    | Current zone name + PvP type indicator   |
+| Stats   | Player/resource/mob counts               |
+| Threat  | Red pulse border on hostile detection    |
+| PiP     | Picture-in-Picture floating window       |
+
+---
+
+## Features
+
+### Picture-in-Picture
+
+Playing fullscreen? Pop the radar into a floating window that stays on top. Native browser PiP, one click.
+
+### Zone-Aware Alerts
+
+The radar knows where you are. Safe zone? Quiet. Black Zone? Every player is a threat. Visual flash + audio alert when
+hostiles appear.
+
+### Self-Contained
+
+Fonts, icons, everything bundled. Once Albion connects, the radar works without internet.
+
+### Roadmap
+
+Check [TODO.md](docs/project/TODO.md) for what's coming:
+
+- v2.2: Dungeons, Chests, Mists, Fishing refactoring
+- Future: Native desktop app (Wails v3), squad mode, session heatmaps
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td><img src="docs/images/radar_1.png" alt="Radar" width="400"></td>
+    <td><img src="docs/images/radar_2.png" alt="Radar with entities" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Main radar view</em></td>
+    <td align="center"><em>Detecting resources and mobs</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/radar_3.png" alt="Radar zoomed" width="400"></td>
+    <td><img src="docs/images/pip.jpg" alt="Picture-in-Picture" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Zoom controls</em></td>
+    <td align="center"><em>PiP floating window</em></td>
+  </tr>
+  <tr>
+    <td><img src="docs/images/settings.png" alt="Settings" width="400"></td>
+    <td><img src="docs/images/resources.png" alt="Resources" width="400"></td>
+  </tr>
+  <tr>
+    <td align="center"><em>Settings page</em></td>
+    <td align="center"><em>Resource filtering</em></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/images/OpenRadar.gif" alt="TUI Dashboard" width="500"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><em>Terminal dashboard (TUI)</em></td>
+  </tr>
+</table>
+
+---
+
+## What's New in v2.1
+
+This release is all about polish. Memory leaks hunted down, every frame squeezed, the whole thing feels snappier.
+
+### Performance
+
+| Before               | After         |           |
+|----------------------|---------------|-----------|
+| 4 GB RAM after 30min | 500 MB stable | **-87%**  |
+| 1200 MB heap         | 20 MB heap    | **-98%**  |
+| 30-60 FPS            | 160+ FPS      | **+170%** |
+| 80ms GC pauses       | 12ms          | **-85%**  |
+
+Event listener leaks fixed, LRU caching for images, server-side WebSocket batching, client-side event coalescing. The
+radar now runs for hours without degradation.
+
+### UX Improvements
+
+- **SPA navigation**: No more page reloads. Click around, everything stays smooth
+- **PiP mode**: Native browser Picture-in-Picture, stays on top of your game
+- **Zone indicators**: See at a glance if you're in safe, yellow, red, or black zone
+- **Smarter alerts**: Only warns when there's actual danger
+- **Settings persistence**: Config survives refresh and navigation
+
+### Under the Hood
+
+- PageController orchestrates init/destroy cycles, no more orphan listeners
+- WebSocketManager with auto-reconnect and visibility handling
+- Image cache with LRU eviction (bye bye memory bloat)
+- Server-side event batching every 16ms
+- Client-side event coalescing for Move/Health updates
+- All CDN dependencies removed (fonts, icons, HTMX bundled locally)
+
+### Smaller Binary
+
+Asset optimization cuts embedded data massively:
+
+| Asset      | Before | After  | Reduction |
+|------------|--------|--------|-----------|
+| Game data  | 130 MB | 2.3 MB | **-98%**  |
+| Maps       | 50 MB  | ~25 MB | -50%      |
+| Item icons | 27 MB  | ~17 MB | -37%      |
+
+The 84 MB localization file? Gone. Minified JSONs keep only what the radar needs.
+
+**Total embedded: ~210 MB → ~45 MB**
+
+---
+
 ## For Developers
 
-### Prerequisites
+### Requirements
 
-| Tool       | Version | Notes                          |
-|------------|---------|--------------------------------|
-| **Go**     | 1.23+   | [Download](https://go.dev/dl/) |
-| **Npcap**  | 1.84+   | Windows only                   |
-| **libpcap**| Latest  | Linux only                     |
-| **Node.js**| 20+     | For data/build scripts only    |
-| **Docker** | Latest  | For Linux cross-compilation    |
+| Tool    | Version | Notes                  |
+|---------|---------|------------------------|
+| Go      | 1.25+   | Backend                |
+| Npcap   | 1.84+   | Windows packet capture 
+| libpcap | Latest  | Linux packet capture   |
+| Node.js | 20+     | Build scripts only     |
+| Docker  | Latest  | Linux cross-compile    |
 
-### Quick Setup
+### Quick Start
 
 ```bash
 git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
 cd Albion-Online-OpenRadar
 
-# Install Air for hot-reload (one time)
-make install-tools
-
-# Start development server
-make dev
+make run   # Run directly
+# or
+make dev   # Run with hot-reload (requires: make install-tools)
 ```
 
-Web interface available at **http://localhost:5001**.
-
-### Build Commands
+### Build
 
 ```bash
-make build-win        # Build Windows executable
-make build-linux      # Build Linux via Docker
-make build-all        # Build all platforms
-make all-in-one       # Complete release workflow
+make build-win        # Windows binary
+make build-linux      # Linux binary (via Docker)
+make release-snapshot # Full release build (both platforms)
 ```
 
 ### Project Structure
 
 ```
-OpenRadar/
-├── cmd/radar/        # Go entry point
+├── cmd/radar/        # Entry point + TUI
 ├── internal/         # Go packages
 │   ├── capture/      # Packet capture (pcap)
 │   ├── photon/       # Protocol parsing
-│   ├── server/       # HTTP & WebSocket servers
-│   └── logger/       # Structured logging
-├── web/              # Frontend assets (embedded)
-│   ├── images/
-│   ├── public/       # HTML, game data
-│   ├── scripts/      # JavaScript
-│   └── sounds/
+│   ├── server/       # HTTP + WebSocket
+│   └── templates/    # Go templates (.gohtml)
+├── web/              # Frontend (embedded in binary)
+│   ├── scripts/      # JavaScript modules
+│   ├── images/       # Maps, items, spells icons
+│   └── ao-bin-dumps/ # Game data (minified)
 ├── tools/            # Build & data scripts (Node.js)
-├── docs/             # Documentation
-├── embed.go          # Asset embedding
-├── go.mod            # Go modules
-└── Makefile          # Build system
+└── docs/             # Documentation
 ```
-
-### Useful Commands
-
-```bash
-make help             # Show all commands
-make check            # Verify dependencies
-make update-ao-data   # Update Albion game data
-make clean            # Clean build artifacts
-make lint             # Lint Go code
-```
-
----
-
-## Technical Details
-
-### Architecture
-
-- **Backend**: Native Go with embedded assets
-- **Frontend**: HTMX + Alpine.js + Tailwind CSS v4
-- **Templates**: Go html/template with SSR
-- **Protocol**: Photon Protocol16 deserialization
-- **Capture**: gopacket/pcap for packet capture
-
-### Ports
-
-| Port | Service   |
-|------|-----------|
-| 5001 | HTTP + WebSocket (`/ws`) |
-| 5056 | UDP (Albion traffic - captured) |
-
-### Performance Comparison
-
-| Metric | v1.x (Node.js) | v2.0 (Go) |
-|--------|----------------|-----------|
-| Binary size | ~100 MB | ~95 MB |
-| Assets | ~400 MB (separate) | Embedded |
-| Total | ~500 MB | ~95 MB |
-| Startup | Slower (extraction) | Instant |
 
 ---
 
 ## Documentation
 
-Full documentation available in [docs/README.md](docs/README.md).
+| Guide                                              | Description         |
+|----------------------------------------------------|---------------------|
+| [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md)              | Development setup   |
+| [RELEASE_2.0.0.md](docs/releases/RELEASE_2.0.0.md) | Version 2.0 changes |
+| [TODO.md](docs/project/TODO.md)                    | Roadmap             |
+| [docs/](docs/)                                     | Full documentation  |
 
-| Guide | Description |
-|-------|-------------|
-| [RELEASE_NOTES.md](RELEASE_NOTES.md) | Version 2.0 changes |
-| [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development guide |
-| [LOGGING.md](docs/technical/LOGGING.md) | Logging system |
+---
+
+## Known Limitations
+
+- **Player positions**: Albion encrypts movement data. Players are detected but can't be shown on radar.
+- **Some Black Zone maps**: Tiles for zone IDs 4000+ missing. Disable map background in settings as workaround.
+- **Resource charges**: May differ from actual due to server-side harvest bonuses.
 
 ---
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-**Standards**: ES modules (ESM), 2-space indentation, JSDoc comments, English only.
+Found a bug? Want to help? [Open an issue](https://github.com/Nouuu/Albion-Online-OpenRadar/issues) or submit a PR.
 
 ---
 
-## License & Credits
+## Credits
 
-**Current Maintainer**: [@Nouuu](https://github.com/Nouuu) (nospy)
+Built by [@Nouuu](https://github.com/Nouuu)
 
-**Original Project**: [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
-
-**Based on**: [QRadar](https://github.com/FashionFlora/Albion-Online-Radar-QRadar) by [@FashionFlora](https://github.com/FashionFlora)
+Based on [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
 
 ---
 
-**Disclaimer**: This tool is for educational purposes. Use at your own risk.
+<p align="center">
+  <sub>⚠️ For educational purposes. Use at your own risk.</sub>
+</p>

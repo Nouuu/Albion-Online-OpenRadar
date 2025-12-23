@@ -13,8 +13,8 @@ var Images embed.FS
 //go:embed all:web/scripts
 var Scripts embed.FS
 
-//go:embed all:web/public
-var Public embed.FS
+//go:embed all:web/ao-bin-dumps
+var Data embed.FS
 
 //go:embed all:web/sounds
 var Sounds embed.FS

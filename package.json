@@ -5,6 +5,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "css": "tailwindcss -i web/styles/input.css -o web/styles/tailwind.css --minify",
+    "css:watch": "tailwindcss -i web/styles/input.css -o web/styles/tailwind.css --watch",
+    "vendors:js": "cpy node_modules/lucide/dist/umd/lucide.min.js node_modules/htmx.org/dist/htmx.min.js web/scripts/vendors --flat",
+    "vendors:fonts": "cpy \"node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-{400,500}-normal.woff2\" \"node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-{400,500,700}-normal.woff2\" web/styles/fonts --flat",
+    "vendors": "npm run vendors:js && npm run vendors:fonts",
+    "build": "npm run css && npm run vendors",
     "update-data": "tsx tools/update-ao-data.ts --replace-existing",
     "download-icons": "tsx tools/download-and-optimize-item-icons.ts",
     "download-spells": "tsx tools/download-and-optimize-spell-icons.ts",
@@ -13,8 +19,9 @@
     "update-assets": "npm run update-data && npm run download-assets",
     "compress:data": "node tools/compress-game-data.js",
     "postbuild": "node tools/post-build.js",
-    "lint": "eslint web/scripts/ web/public/",
-    "lint:fix": "eslint web/scripts/ web/public/ --fix"
+    "lint": "eslint web/scripts/ internal/templates/ tools/",
+    "lint:fix": "eslint web/scripts/ internal/templates/ tools/ --fix",
+    "typecheck": "tsc --noEmit"
   },
   "author": "Nospy",
   "license": "ISC",
@@ -23,15 +30,26 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/space-grotesk": "^5.2.10",
+    "@tailwindcss/cli": "^4.0.0",
     "archiver": "^7.0.1",
+    "cpy-cli": "^6.0.0",
+    "daisyui": "^5.0.0",
     "eslint": "^9.39.1",
+    "eslint-plugin-html": "^8.1.3",
+    "eslint-plugin-import": "^2.32.0",
     "globals": "^16.5.0",
+    "htmx.org": "^2.0.8",
+    "lucide": "^0.562.0",
     "puppeteer": "^24.31.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "puppeteer-real-browser": "^1.4.4",
     "sharp": "^0.33.5",
+    "tailwindcss": "^4.0.0",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.50.0"
   }
 }

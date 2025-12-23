@@ -15,9 +15,9 @@
   },
   "StringFileInfo": {
     "FileDescription": "OpenRadar - Albion Online Radar",
-    "FileVersion": "feat/go-backend-a83fb611",
+    "FileVersion": "hotfix/resources-events-257ae635",
     "ProductName": "OpenRadar",
-    "ProductVersion": "feat/go-backend-a83fb611",
+    "ProductVersion": "hotfix/resources-events-257ae635",
     "LegalCopyright": "MIT License"
   },
   "IconPath": "../../web/images/favicon.ico"

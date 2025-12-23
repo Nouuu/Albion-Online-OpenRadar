@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	assets "github.com/nospy/albion-openradar"
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -208,7 +209,7 @@ func createHTTPServer(
 		serverPort,
 		assets.Images,
 		assets.Scripts,
-		assets.Public,
+		assets.Data,
 		assets.Sounds,
 		assets.Styles,
 		assets.Templates,
@@ -256,7 +257,7 @@ func (app *App) startServers() {
 }
 
 func (app *App) updateStats() {
-	ticker := time.NewTicker(500 * time.Millisecond)
+	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
 	for {
@@ -268,18 +269,28 @@ func (app *App) updateStats() {
 				var m runtime.MemStats
 				runtime.ReadMemStats(&m)
 
+				wsStats := app.wsHandler.Stats()
+				logStats := app.logger.GetStats()
 				app.program.Send(ui.StatsMsg{
-					Packets:    atomic.LoadUint64(&app.packetsProcessed),
-					Errors:     atomic.LoadUint64(&app.packetsErrors),
-					WsClients:  app.wsHandler.ClientCount(),
-					MemoryMB:   float64(m.Alloc) / 1024 / 1024,
-					Goroutines: runtime.NumGoroutine(),
+					Packets:       atomic.LoadUint64(&app.packetsProcessed),
+					Errors:        atomic.LoadUint64(&app.packetsErrors),
+					WsClients:     app.wsHandler.ClientCount(),
+					MemoryMB:      float64(m.Alloc) / 1024 / 1024,
+					MemorySysMB:   float64(m.Sys) / 1024 / 1024,
+					Goroutines:    runtime.NumGoroutine(),
+					WsBatches:     wsStats.BatchesSent,
+					WsMessages:    wsStats.MessagesSent,
+					WsQueueSize:   wsStats.MessagesQueue,
+					BytesReceived: app.capturer.BytesReceived(),
+					BytesSent:     wsStats.BytesSent,
+					LogEntries:    logStats.TotalEntries,
+					LogBatches:    logStats.TotalBatches,
+					LogBufferSize: logStats.BufferSize,
 				})
 
-				// Send status update
 				app.program.Send(ui.StatusMsg{
 					HTTPRunning:    atomic.LoadInt32(&app.httpRunning) == 1,
-					WSRunning:      app.wsHandler.ClientCount() >= 0, // WS is always running if server is up
+					WSRunning:      app.wsHandler.ClientCount() >= 0,
 					CaptureRunning: atomic.LoadInt32(&app.captureRunning) == 1,
 				})
 			}
@@ -313,11 +324,28 @@ func (app *App) processCommand(cmd *photon.Command) {
 		return
 	}
 
+	// DEBUG: Log command info to understand different paths
+	app.logger.Debug("CMD_CAPTURE", fmt.Sprintf("CmdType_%d_MsgType_%d", cmd.CommandType, cmd.MessageType), map[string]interface{}{
+		"commandType": cmd.CommandType,
+		"messageType": cmd.MessageType,
+		"channelID":   cmd.ChannelID,
+	}, nil)
+
 	switch cmd.MessageType {
 	case photon.MessageTypeEvent:
-		if event, err := photon.DeserializeEvent(cmd.Payload); err == nil {
-			app.wsHandler.BroadcastEvent(event)
+		event, err := photon.DeserializeEvent(cmd.Payload)
+		if err != nil {
+			app.logger.Warn("EVENT_ERROR", "DeserializeEvent_Failed", map[string]interface{}{
+				"error":       err.Error(),
+				"commandType": cmd.CommandType,
+			}, nil)
+			return
 		}
+		app.logger.Debug("EVENT_CAPTURE", fmt.Sprintf("Event_%d", event.Code), map[string]interface{}{
+			"code":       event.Code,
+			"paramCount": len(event.Parameters),
+		}, nil)
+		app.wsHandler.BroadcastEvent(event)
 	case photon.MessageTypeRequest:
 		if req, err := photon.DeserializeRequest(cmd.Payload); err == nil {
 			app.wsHandler.BroadcastRequest(req)
@@ -337,6 +365,7 @@ func (app *App) shutdown() {
 
 	app.cancel()
 	app.capturer.Close()
+	app.logger.Stop()
 
 	if err := app.httpServer.Shutdown(ctx); err != nil {
 		logger.PrintError("HTTP", "Shutdown error: %v", err)

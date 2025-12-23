@@ -1,0 +1,179 @@
+# golangci-lint v2 configuration for OpenRadar
+# Run: golangci-lint run
+# Docs: https://golangci-lint.run/docs/configuration/
+
+version: "2"
+
+run:
+  go: "1.25"
+  timeout: 5m
+  tests: true
+
+linters:
+  # Start from standard set
+  default: standard
+
+  # Additional linters to enable
+  enable:
+    - bodyclose       # Check HTTP response body is closed
+    - gocritic        # Opinionated linter with many checks
+    - gosec           # Security checks
+    - misspell        # Find spelling mistakes in comments
+    - nilerr          # Find code that returns nil error incorrectly
+    - unconvert       # Remove unnecessary type conversions
+    - unparam         # Report unused function parameters
+    - wastedassign    # Find wasted assignment statements
+
+  # Disable from standard set
+  disable:
+    - errchkjson      # Too strict for this project
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+      exclude-functions:
+        - io.Copy
+        - io/ioutil.ReadAll
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (net.Conn).Close
+        - (*github.com/gorilla/websocket.Conn).Close
+
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+
+    staticcheck:
+      checks:
+        - all
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+        - commentedOutCode
+        - builtinShadow    # min/max shadowing is fine in local scope
+        - singleCaseSwitch # Type switches with single case are fine
+        - unlambda         # Keep lambdas for template clarity
+        - paramTypeCombine # Not worth changing signatures
+
+    gosec:
+      excludes:
+        - G104  # Covered by errcheck
+        - G115  # Integer overflow (intentional in binary protocol parsing)
+        - G203  # HTML template functions (intentional for HTMX)
+        - G301  # Directory permissions (logs need to be accessible)
+        - G302  # File permissions (logs need to be readable)
+        - G304  # File path from tainted input (we control paths)
+        - G306  # File permissions for WriteFile (intentional)
+        - G401  # Weak crypto (not applicable)
+        - G501  # Import blacklist (not applicable)
+
+    unparam:
+      check-exported: false
+
+    misspell:
+      locale: US
+
+  exclusions:
+    # Use standard presets
+    presets:
+      - comments
+      - std-error-handling
+
+    # Generated files handling
+    generated: lax
+
+    # Warn about unused linter directives
+    warn-unused: true
+
+    # Custom rules
+    rules:
+      # Exclude some linters from running on tests
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+
+      # Exclude embed files
+      - path: embed_(dev|prod)\.go
+        linters:
+          - unused
+
+      # Ignore certain error checks in logger
+      - path: internal/logger/
+        linters:
+          - errcheck
+        text: "Error return value of"
+
+      # Websocket close errors can be safely ignored
+      - path: internal/server/websocket\.go
+        text: "Error return value of.*Close"
+        linters:
+          - errcheck
+
+      # Photon protocol intentionally continues on parse errors
+      - path: internal/photon/
+        linters:
+          - nilerr
+
+    # Skip directories
+    paths:
+      - vendor
+      - node_modules
+      - dist
+      - tmp
+      - work
+      - web
+      - tools
+      - docs
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+  settings:
+    gofmt:
+      simplify: true
+
+    goimports:
+      local-prefixes:
+        - github.com/nospy/albion-openradar
+
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - node_modules
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 10
+  uniq-by-line: true
+  fix: false
+
+output:
+  formats:
+    colored-line-number:
+      path: stdout
+  print-issued-lines: true
+  print-linter-name: true
+
+severity:
+  default: warning
+  rules:
+    - linters:
+        - errcheck
+      severity: error
+    - linters:
+        - gosec
+      severity: error

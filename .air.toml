@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 [build]
   # Use -tags dev to skip embedding assets (much faster builds)
   cmd = "go build -tags dev -o ./tmp/main.exe ./cmd/radar"
-  bin = "./tmp/main.exe"
+  entrypoint = "./tmp/main.exe"
   args_bin = ["-dev"]
   delay = 500
   include_ext = ["go", "toml"]

@@ -4,13 +4,14 @@ import (
 	"compress/gzip"
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/segmentio/encoding/json"
 
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/templates"
@@ -26,7 +27,7 @@ type HTTPServer struct {
 	// Filesystems (can be embed.FS or os.DirFS)
 	images  fs.FS
 	scripts fs.FS
-	public  fs.FS
+	data    fs.FS
 	sounds  fs.FS
 	styles  fs.FS
 	// Template engine
@@ -37,7 +38,7 @@ type HTTPServer struct {
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
 func NewHTTPServer(
 	port int,
-	images, scripts, public, sounds, styles, tmplFS embed.FS,
+	images, scripts, data, sounds, styles, tmplFS embed.FS,
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 	version string,
@@ -51,9 +52,9 @@ func NewHTTPServer(
 	if err != nil {
 		fmt.Printf("[HTTP] Warning: failed to load scripts: %v\n", err)
 	}
-	publicFS, err := fs.Sub(public, "web/public")
+	dataFS, err := fs.Sub(data, "web/ao-bin-dumps")
 	if err != nil {
-		fmt.Printf("[HTTP] Warning: failed to load public: %v\n", err)
+		fmt.Printf("[HTTP] Warning: failed to load data: %v\n", err)
 	}
 	soundsFS, err := fs.Sub(sounds, "web/sounds")
 	if err != nil {
@@ -78,7 +79,7 @@ func NewHTTPServer(
 		wsHandler: wsHandler,
 		images:    imagesFS,
 		scripts:   scriptsFS,
-		public:    publicFS,
+		data:      dataFS,
 		sounds:    soundsFS,
 		styles:    stylesFS,
 		tmpl:      tmpl,
@@ -105,7 +106,7 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 		wsHandler: wsHandler,
 		images:    os.DirFS(appDir + "/web/images"),
 		scripts:   os.DirFS(appDir + "/web/scripts"),
-		public:    os.DirFS(appDir + "/web/public"),
+		data:      os.DirFS(appDir + "/web/ao-bin-dumps"),
 		sounds:    os.DirFS(appDir + "/web/sounds"),
 		styles:    os.DirFS(appDir + "/web/styles"),
 		tmpl:      tmpl,
@@ -120,6 +121,8 @@ func (s *HTTPServer) setupRoutes() {
 	// Cache durations
 	imageCacheDuration := 24 * time.Hour
 	dataCacheDuration := 7 * 24 * time.Hour
+	scriptsCacheDuration := 1 * time.Hour
+	stylesCacheDuration := 1 * time.Hour
 
 	// WebSocket endpoint
 	if s.wsHandler != nil {
@@ -145,26 +148,22 @@ func (s *HTTPServer) setupRoutes() {
 		})
 	}
 
-	// Radar overlay
-	s.mux.HandleFunc("/radar-overlay", func(w http.ResponseWriter, r *http.Request) {
-		s.renderOverlay(w)
-	})
-
 	// Static file handlers with caching
-	// Images: cache 24h | ao-bin-dumps: cache 7 days (handled below)
+	// Items and Spells: serve fallback image if not found
+	s.mux.Handle("/images/Items/", s.fsHandlerWithFallback("/images/Items/", s.images, "Items", "_default.webp", imageCacheDuration))
+	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp", imageCacheDuration))
+	// Other images: standard handler (cache 24h)
 	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration, false))
-	// Scripts, pages: NO CACHE (for development)
-	s.mux.Handle("/scripts/", s.fsHandler("/scripts/", s.scripts, 0, true))
+	// Scripts: cache 1h + gzip
+	s.mux.Handle("/scripts/", s.gzipFSHandlerDirect("/scripts/", s.scripts, scriptsCacheDuration))
 	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0, false))
-	s.mux.Handle("/public/", s.fsHandler("/public/", s.public, 0, true))
-	s.mux.Handle("/pages/", s.fsHandlerSub("/pages/", s.public, "pages", 0, true))
-	// Styles: NO CACHE (for development)
-	s.mux.Handle("/styles/", s.fsHandler("/styles/", s.styles, 0, true))
+	// Styles: cache 1h + gzip
+	s.mux.Handle("/styles/", s.gzipFSHandlerDirect("/styles/", s.styles, stylesCacheDuration))
 
-	// ao-bin-dumps with gzip support
+	// ao-bin-dumps with gzip support (data FS is already the ao-bin-dumps directory)
 	s.mux.Handle(
 		"/ao-bin-dumps/",
-		s.gzipFSHandler("/ao-bin-dumps/", s.public, "ao-bin-dumps", dataCacheDuration),
+		s.gzipFSHandlerDirect("/ao-bin-dumps/", s.data, dataCacheDuration),
 	)
 
 	// API endpoints
@@ -184,8 +183,9 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 		"settings":   "Settings",
 	}
 	title := titles[page]
-	if title == "" {
-		title = strings.Title(page)
+	if title == "" && page != "" {
+		// Capitalize first letter
+		title = strings.ToUpper(page[:1]) + page[1:]
 	}
 
 	data := templates.NewPageData(page, "OpenRadar - "+title).WithVersion(s.version)
@@ -208,37 +208,8 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 	if err != nil {
 		s.logger.Error("http", "render", fmt.Sprintf("Failed to render page %s: %v", page, err), nil)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// renderOverlay renders the radar overlay template
-func (s *HTTPServer) renderOverlay(w http.ResponseWriter) {
-	data := templates.NewPageData("overlay", "OpenRadar - Radar Overlay").WithVersion(s.version)
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-
-	if err := s.tmpl.Render(w, "overlay/radar-overlay.gohtml", data); err != nil {
-		s.logger.Error("http", "render", fmt.Sprintf("Failed to render overlay: %v", err), nil)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
-}
-
-// serveFile serves a single file from fs.FS
-func (s *HTTPServer) serveFile(w http.ResponseWriter, _ *http.Request, fsys fs.FS, name string) {
-	data, err := fs.ReadFile(fsys, name)
-	if err != nil {
-		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	}
-	// Set content type and no-cache for HTML files
-	if strings.HasSuffix(name, ".html") {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-	}
-	_, _ = w.Write(data) // Error ignored: client disconnect is not recoverable
 }
 
 // setCacheHeaders sets Cache-Control and optional Vary headers
@@ -275,36 +246,45 @@ func (s *HTTPServer) fsHandler(
 	})
 }
 
-// fsHandlerSub creates a file server handler from a subdirectory of fs.FS
-func (s *HTTPServer) fsHandlerSub(
+// fsHandlerWithFallback serves files from fs.FS with a fallback image for missing files
+func (s *HTTPServer) fsHandlerWithFallback(
 	prefix string,
 	fsys fs.FS,
 	subdir string,
+	fallbackFile string,
 	cacheDuration time.Duration,
-	noCache bool,
 ) http.Handler {
-	subFS, err := fs.Sub(fsys, subdir)
-	if err != nil {
-		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
-		return http.NotFoundHandler()
-	}
-	return s.fsHandler(prefix, subFS, cacheDuration, noCache)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Extract filename from path
+		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
+		filePath := subdir + "/" + urlPath
+
+		// Try to read the requested file
+		data, err := fs.ReadFile(fsys, filePath)
+		if err != nil {
+			// File not found - serve fallback
+			fallbackPath := subdir + "/" + fallbackFile
+			data, err = fs.ReadFile(fsys, fallbackPath)
+			if err != nil {
+				http.NotFound(w, r)
+				return
+			}
+		}
+
+		// Set headers
+		setCacheHeaders(w, cacheDuration, false, "")
+		w.Header().Set("Content-Type", "image/webp")
+		_, _ = w.Write(data)
+	})
 }
 
-// gzipFSHandler serves files from fs.FS with gzip support
+// gzipFSHandlerDirect serves files directly from fs.FS with gzip support
 // It looks for pre-compressed .gz files first
-func (s *HTTPServer) gzipFSHandler(
+func (s *HTTPServer) gzipFSHandlerDirect(
 	prefix string,
 	fsys fs.FS,
-	subdir string,
 	cacheDuration time.Duration,
 ) http.Handler {
-	subFS, err := fs.Sub(fsys, subdir)
-	if err != nil {
-		fmt.Printf("[HTTP] Warning: failed to load subdirectory %s: %v\n", subdir, err)
-		return http.NotFoundHandler()
-	}
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
 		acceptsGzip := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
@@ -312,7 +292,7 @@ func (s *HTTPServer) gzipFSHandler(
 		// Try serving .gz file if client accepts gzip
 		if acceptsGzip {
 			gzPath := urlPath + ".gz"
-			if data, err := fs.ReadFile(subFS, gzPath); err == nil {
+			if data, err := fs.ReadFile(fsys, gzPath); err == nil {
 				w.Header().Set("Content-Encoding", "gzip")
 				setContentType(w, urlPath)
 				setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
@@ -322,7 +302,7 @@ func (s *HTTPServer) gzipFSHandler(
 		}
 
 		// Try serving original file
-		data, err := fs.ReadFile(subFS, urlPath)
+		data, err := fs.ReadFile(fsys, urlPath)
 		if err != nil {
 			http.NotFound(w, r)
 			return
@@ -347,6 +327,10 @@ func (s *HTTPServer) gzipFSHandler(
 // setContentType sets Content-Type header based on file extension
 func setContentType(w http.ResponseWriter, path string) {
 	switch {
+	case strings.HasSuffix(path, ".js"):
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	case strings.HasSuffix(path, ".css"):
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 	case strings.HasSuffix(path, ".json"):
 		w.Header().Set("Content-Type", "application/json")
 	case strings.HasSuffix(path, ".xml"):

@@ -106,7 +106,7 @@ OpenRadar/
 | Backend | Node.js + Express | Go native |
 | WebSocket | ws (port 5002) | gorilla/websocket (`/ws`) |
 | Templates | EJS | Go html/template |
-| UI Framework | - | HTMX + Alpine.js |
+| UI Framework | - | HTMX + Tailwind |
 | Styling | Custom CSS | Tailwind CSS v4 |
 | Distribution | ~500 MB | ~95 MB |
 

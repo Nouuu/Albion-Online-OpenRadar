@@ -1,32 +1,22 @@
 {{define "layouts/header.gohtml"}}
-<header class="flex items-center justify-between h-16 px-6 bg-surface border-b border-white/5">
-    <!-- Mobile Menu Button -->
-    <button
-        @click="mobileMenuOpen = true"
-        class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-overlay transition-colors md:hidden">
-        <i data-lucide="menu" class="w-6 h-6"></i>
+<header class="flex items-center justify-between h-14 px-4 bg-base-200/50 border-b border-base-content/[0.03]">
+    <button onclick="window.sidebar.openMobile()"
+        class="p-2 rounded-md text-base-content/60 hover:text-base-content hover:bg-base-content/5 transition-colors md:hidden">
+        <i data-lucide="menu" class="w-5 h-5" stroke-width="1.5"></i>
     </button>
 
-    <!-- Page Title (Mobile) -->
-    <h1 class="text-lg font-semibold text-white md:hidden">{{.Title}}</h1>
-
-    <!-- Spacer -->
+    <h1 class="text-sm font-medium text-base-content/80 md:hidden">{{.Title}}</h1>
     <div class="hidden md:block"></div>
 
-    <!-- Right Side Actions -->
-    <div class="flex items-center gap-4">
-        <!-- WebSocket Status Indicator -->
-        <div id="wsStatusIndicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-elevated border border-white/5 transition-all">
-            <span id="wsStatusDot" class="w-2 h-2 rounded-full bg-gray-500"></span>
-            <span id="wsStatusText" class="text-sm text-gray-400 font-medium hidden sm:inline">Connecting...</span>
+    <div class="flex items-center gap-3">
+        <div id="wsStatusIndicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-base-content/[0.02]">
+            <span id="wsStatusDot" class="status status-neutral"></span>
+            <span id="wsStatusText" class="text-xs text-base-content/50 hidden sm:inline">Connecting...</span>
         </div>
 
-        <!-- Open Overlay Button -->
-        <button onclick="window.open('/radar-overlay', 'OpenRadar Overlay', 'popup=yes,width=520,height=520,resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no')"
-           class="flex items-center gap-2 px-4 py-2 rounded-lg bg-accent/10 text-accent
-                  hover:bg-accent hover:text-void transition-all font-medium text-sm cursor-pointer">
-            <i data-lucide="external-link" class="w-4 h-4"></i>
-            <span class="hidden sm:inline">Open Overlay</span>
+        <button id="pipToggleBtn" class="btn btn-primary btn-sm" disabled style="display:none;">
+            <i id="pipIcon" data-lucide="picture-in-picture-2" class="w-4 h-4"></i>
+            <span id="pipText" class="hidden sm:inline">PiP Mode</span>
         </button>
     </div>
 </header>
@@ -36,61 +26,121 @@
     const dot = document.getElementById('wsStatusDot');
     const text = document.getElementById('wsStatusText');
     const indicator = document.getElementById('wsStatusIndicator');
-    const isRadarPage = '{{.Page}}' === 'radar';
+    const pipBtn = document.getElementById('pipToggleBtn');
+    const pipIcon = document.getElementById('pipIcon');
+    const pipText = document.getElementById('pipText');
 
-    // Hide indicator on non-radar pages (no WebSocket there)
-    if (!isRadarPage && indicator) {
-        indicator.style.display = 'none';
-        return;
+    function isOnRadarPage() {
+        const pageContent = document.getElementById('page-content');
+        return pageContent?.dataset?.page === 'radar';
+    }
+
+    function updateVisibility() {
+        const onRadar = isOnRadarPage();
+
+        // WS indicator
+        if (indicator) {
+            indicator.style.display = onRadar ? 'flex' : 'none';
+            if (onRadar) {
+                updateIndicator(window.wsConnectionStatus || 'disconnected');
+            }
+        }
+
+        // PiP button
+        if (pipBtn) {
+            const pipSupported = document.pictureInPictureEnabled === true;
+            pipBtn.style.display = (onRadar && pipSupported) ? 'flex' : 'none';
+            pipBtn.disabled = !onRadar || !window.pipManager;
+        }
     }
 
     function updateIndicator(status) {
         if (!dot || !text) return;
 
-        // Remove all state classes
-        dot.classList.remove('bg-success', 'bg-danger', 'bg-warning', 'bg-gray-500', 'animate-pulse');
-        text.classList.remove('text-gray-400', 'text-gray-300', 'text-danger', 'text-warning');
+        dot.classList.remove('status-success', 'status-error', 'status-warning', 'status-neutral', 'animate-pulse');
+        text.classList.remove('text-base-content/60', 'text-base-content/80', 'text-error', 'text-warning');
 
         switch(status) {
             case 'connected':
-                dot.classList.add('bg-success', 'animate-pulse');
+                dot.classList.add('status-success', 'animate-pulse');
                 text.textContent = 'Connected';
-                text.classList.add('text-gray-300');
+                text.classList.add('text-base-content/80');
                 break;
             case 'disconnected':
-                dot.classList.add('bg-danger');
+                dot.classList.add('status-error');
                 text.textContent = 'Disconnected';
-                text.classList.add('text-danger');
+                text.classList.add('text-error');
                 break;
             case 'connecting':
-                dot.classList.add('bg-warning', 'animate-pulse');
+                dot.classList.add('status-warning', 'animate-pulse');
                 text.textContent = 'Connecting...';
                 text.classList.add('text-warning');
                 break;
             default:
-                dot.classList.add('bg-gray-500');
-                text.textContent = 'Unknown';
-                text.classList.add('text-gray-400');
+                dot.classList.add('status-neutral');
+                text.textContent = 'Disconnected';
+                text.classList.add('text-base-content/60');
         }
     }
 
-    // Listen for status changes
-    document.addEventListener('wsStatusChange', (e) => {
-        updateIndicator(e.detail.status);
+    function updatePipButton(isActive) {
+        if (!pipBtn || !pipIcon || !pipText) return;
+
+        if (isActive) {
+            pipBtn.classList.remove('btn-primary');
+            pipBtn.classList.add('btn-secondary');
+            pipIcon.setAttribute('data-lucide', 'picture-in-picture');
+            pipText.textContent = 'Exit PiP';
+        } else {
+            pipBtn.classList.remove('btn-secondary');
+            pipBtn.classList.add('btn-primary');
+            pipIcon.setAttribute('data-lucide', 'picture-in-picture-2');
+            pipText.textContent = 'PiP Mode';
+        }
+        // Re-render lucide icon
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    // PiP button click handler
+    if (pipBtn) {
+        pipBtn.addEventListener('click', async () => {
+            if (window.pipManager) {
+                const isActive = await window.pipManager.toggle();
+                updatePipButton(isActive);
+            }
+        });
+    }
+
+    // Listen to PiP status changes (e.g., when user closes PiP window)
+    document.addEventListener('pipStatusChange', (e) => {
+        updatePipButton(e.detail.isActive);
     });
 
-    // Poll for status until connected (handles slow module loading)
-    let attempts = 0;
-    const checkStatus = setInterval(() => {
-        attempts++;
-        if (window.wsConnectionStatus) {
-            updateIndicator(window.wsConnectionStatus);
-            if (window.wsConnectionStatus === 'connected' || attempts > 20) {
-                clearInterval(checkStatus);
-            }
+    // Listen to WS status changes
+    document.addEventListener('wsStatusChange', (e) => {
+        if (isOnRadarPage()) updateIndicator(e.detail.status);
+    });
+
+    // Listen to PiP manager ready
+    document.addEventListener('pipManagerReady', () => {
+        if (pipBtn && isOnRadarPage()) {
+            pipBtn.disabled = false;
         }
-        if (attempts > 20) clearInterval(checkStatus); // Stop after 10 seconds
-    }, 500);
+    });
+
+    // Listen to HTMX page changes
+    document.body.addEventListener('htmx:afterSettle', (e) => {
+        if (e.detail.target?.id === 'page-content') {
+            updateVisibility();
+        }
+    });
+
+    // Initial visibility check (wait for DOM since header renders before #page-content)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateVisibility);
+    } else {
+        updateVisibility();
+    }
 })();
 </script>
 {{end}}
