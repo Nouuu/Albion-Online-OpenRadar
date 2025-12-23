@@ -19,9 +19,7 @@
   </a>
 </p>
 
-<p align="center">
-  https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
-</p>
+https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 
 ---
 
