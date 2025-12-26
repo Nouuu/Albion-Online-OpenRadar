@@ -18,20 +18,20 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
           cache: true
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - run: npm ci
 
       - name: Lint Go
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: latest
+          version: v2.7.2
 
       - name: Lint Frontend
         run: npm run lint
@@ -42,9 +42,9 @@ jobs:
       - name: Build Check (Linux)
         run: go build -o /dev/null ./cmd/radar
         env:
-          CGO_ENABLED: '0'
+          CGO_ENABLED: "0"
 
       - name: Build Check (Windows cross-compile)
         run: GOOS=windows GOARCH=amd64 go build -o /dev/null ./cmd/radar
         env:
-          CGO_ENABLED: '0'
+          CGO_ENABLED: "0"
