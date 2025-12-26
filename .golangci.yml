@@ -15,18 +15,18 @@ linters:
 
   # Additional linters to enable
   enable:
-    - bodyclose       # Check HTTP response body is closed
-    - gocritic        # Opinionated linter with many checks
-    - gosec           # Security checks
-    - misspell        # Find spelling mistakes in comments
-    - nilerr          # Find code that returns nil error incorrectly
-    - unconvert       # Remove unnecessary type conversions
-    - unparam         # Report unused function parameters
-    - wastedassign    # Find wasted assignment statements
+    - bodyclose # Check HTTP response body is closed
+    - gocritic # Opinionated linter with many checks
+    - gosec # Security checks
+    - misspell # Find spelling mistakes in comments
+    - nilerr # Find code that returns nil error incorrectly
+    - unconvert # Remove unnecessary type conversions
+    - unparam # Report unused function parameters
+    - wastedassign # Find wasted assignment statements
 
   # Disable from standard set
   disable:
-    - errchkjson      # Too strict for this project
+    - errchkjson # Too strict for this project
 
   settings:
     errcheck:
@@ -59,22 +59,22 @@ linters:
         - hugeParam
         - rangeValCopy
         - commentedOutCode
-        - builtinShadow    # min/max shadowing is fine in local scope
+        - builtinShadow # min/max shadowing is fine in local scope
         - singleCaseSwitch # Type switches with single case are fine
-        - unlambda         # Keep lambdas for template clarity
+        - unlambda # Keep lambdas for template clarity
         - paramTypeCombine # Not worth changing signatures
 
     gosec:
       excludes:
-        - G104  # Covered by errcheck
-        - G115  # Integer overflow (intentional in binary protocol parsing)
-        - G203  # HTML template functions (intentional for HTMX)
-        - G301  # Directory permissions (logs need to be accessible)
-        - G302  # File permissions (logs need to be readable)
-        - G304  # File path from tainted input (we control paths)
-        - G306  # File permissions for WriteFile (intentional)
-        - G401  # Weak crypto (not applicable)
-        - G501  # Import blacklist (not applicable)
+        - G104 # Covered by errcheck
+        - G115 # Integer overflow (intentional in binary protocol parsing)
+        - G203 # HTML template functions (intentional for HTMX)
+        - G301 # Directory permissions (logs need to be accessible)
+        - G302 # File permissions (logs need to be readable)
+        - G304 # File path from tainted input (we control paths)
+        - G306 # File permissions for WriteFile (intentional)
+        - G401 # Weak crypto (not applicable)
+        - G501 # Import blacklist (not applicable)
 
     unparam:
       check-exported: false
@@ -163,10 +163,15 @@ issues:
 
 output:
   formats:
-    colored-line-number:
+    text:
       path: stdout
-  print-issued-lines: true
-  print-linter-name: true
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+  sort-order:
+    - linter
+    - file
+  show-stats: false
 
 severity:
   default: warning
