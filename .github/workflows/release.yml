@@ -1,0 +1,239 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., 2.2.0)'
+        required: true
+        type: string
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  VERSION: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════
+  # Build Linux binary via Docker (CGO + libpcap)
+  # ═══════════════════════════════════════════════════════════════
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # ─── Prepare assets (same as .goreleaser.yml before.hooks) ───
+      - name: Update AO data
+        run: npx tsx tools/update-ao-data.ts --replace-existing
+
+      - name: Build CSS
+        run: npm run css
+
+      - name: Copy vendors
+        run: npm run vendors
+
+      - name: Compress game data
+        run: npx tsx tools/compress-game-data.ts web/ao-bin-dumps --delete-originals
+
+      # ─── Docker build with cache ───
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Linux binary
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.build
+          outputs: type=local,dest=dist-build
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ env.VERSION }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
+
+      - name: Rename binary
+        run: mv dist-build/OpenRadar-linux dist-build/OpenRadar-linux-amd64
+
+      - name: Upload Linux binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binary
+          path: dist-build/OpenRadar-linux-amd64
+          retention-days: 1
+
+  # ═══════════════════════════════════════════════════════════════
+  # Build Windows binary natively (CGO + Npcap SDK)
+  # ═══════════════════════════════════════════════════════════════
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # ─── Prepare assets ───
+      - name: Update AO data
+        run: npx tsx tools/update-ao-data.ts --replace-existing
+
+      - name: Build CSS
+        run: npm run css
+
+      - name: Copy vendors
+        run: npm run vendors
+
+      - name: Compress game data
+        run: npx tsx tools/compress-game-data.ts web/ao-bin-dumps --delete-originals
+
+      - run: go mod tidy
+
+      # ─── Windows resources (icon + version info) ───
+      - name: Install goversioninfo
+        run: go install github.com/josephspurrier/goversioninfo/cmd/goversioninfo@latest
+
+      - name: Generate version info
+        shell: pwsh
+        run: |
+          $version = "${{ env.VERSION }}"
+          $parts = $version -split '[.\-]'
+          $major = if ($parts[0] -match '^\d+$') { [int]$parts[0] } else { 0 }
+          $minor = if ($parts.Length -gt 1 -and $parts[1] -match '^\d+$') { [int]$parts[1] } else { 0 }
+          $patch = if ($parts.Length -gt 2 -and $parts[2] -match '^\d+$') { [int]$parts[2] } else { 0 }
+
+          $json = @{
+            FixedFileInfo = @{
+              FileVersion = @{ Major = $major; Minor = $minor; Patch = $patch; Build = 0 }
+              ProductVersion = @{ Major = $major; Minor = $minor; Patch = $patch; Build = 0 }
+            }
+            StringFileInfo = @{
+              FileDescription = "OpenRadar - Albion Online Radar"
+              FileVersion = $version
+              ProductName = "OpenRadar"
+              ProductVersion = $version
+              LegalCopyright = "MIT License"
+            }
+            IconPath = "../../web/images/favicon.ico"
+          } | ConvertTo-Json -Depth 10
+
+          $json | Out-File -FilePath cmd/radar/versioninfo.json -Encoding UTF8
+
+      - name: Generate Windows resources
+        run: goversioninfo -64
+        working-directory: cmd/radar
+
+      # ─── Build ───
+      - name: Build Windows binary
+        shell: pwsh
+        run: |
+          $env:CGO_ENABLED = "1"
+          $buildTime = Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ"
+          go build -ldflags="-s -w -X main.Version=${{ env.VERSION }} -X main.BuildTime=$buildTime" -o dist-build/OpenRadar-windows-amd64.exe ./cmd/radar
+
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-binary
+          path: dist-build/OpenRadar-windows-amd64.exe
+          retention-days: 1
+
+  # ═══════════════════════════════════════════════════════════════
+  # Assemble release artifacts and create GitHub Release (draft)
+  # ═══════════════════════════════════════════════════════════════
+  create-release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # ─── Download build artifacts ───
+      - name: Download Linux binary
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-binary
+          path: dist
+
+      - name: Download Windows binary
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-binary
+          path: dist
+
+      # ─── Generate READMEs ───
+      - name: Generate READMEs
+        run: npx tsx tools/generate-readmes.ts --output-dir=dist --version=${{ env.VERSION }}
+
+      # ─── Generate checksums ───
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum OpenRadar-linux-amd64 OpenRadar-windows-amd64.exe README-linux.txt README-windows.txt > checksums-sha256.txt
+
+      # ─── List final artifacts ───
+      - name: List artifacts
+        run: ls -la dist/
+
+      # ─── Create GitHub Release (draft) ───
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: "Release ${{ env.VERSION }}"
+          draft: true
+          generate_release_notes: true
+          files: |
+            dist/OpenRadar-linux-amd64
+            dist/OpenRadar-windows-amd64.exe
+            dist/README-linux.txt
+            dist/README-windows.txt
+            dist/checksums-sha256.txt
+          body: |
+            ## OpenRadar v${{ env.VERSION }}
+
+            Real-time radar for Albion Online.
+
+            ### Verification
+
+            ```bash
+            sha256sum -c checksums-sha256.txt
+            ```
+
+            ### Requirements
+
+            **Windows:** Windows 10/11 (64-bit), [Npcap 1.84+](https://npcap.com/)
+
+            **Linux:** libpcap (`apt install libpcap0.8`)
+
+            ---
+
+            **Note:** Edit this draft to add detailed release notes before publishing.
