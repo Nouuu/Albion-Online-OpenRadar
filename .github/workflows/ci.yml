@@ -28,6 +28,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Install libpcap (for CGO)
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
       - name: Lint Go
         uses: golangci/golangci-lint-action@v7
         with:
