@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Lint Go
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+
+      - name: Lint Frontend
+        run: npm run lint
+
+      - name: Test Go
+        run: go test -v ./...
+
+      - name: Build Check (Linux)
+        run: go build -o /dev/null ./cmd/radar
+        env:
+          CGO_ENABLED: '0'
+
+      - name: Build Check (Windows cross-compile)
+        run: GOOS=windows GOARCH=amd64 go build -o /dev/null ./cmd/radar
+        env:
+          CGO_ENABLED: '0'
