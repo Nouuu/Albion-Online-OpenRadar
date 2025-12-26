@@ -3,11 +3,11 @@ name: Release
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+*'
+      - "[0-9]+.[0-9]+.[0-9]+*"
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (e.g., 2.2.0)'
+        description: "Tag to release (e.g., 2.2.0)"
         required: true
         type: string
 
@@ -29,8 +29,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - run: npm ci
 
@@ -83,13 +83,13 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
+          go-version-file: "go.mod"
           cache: true
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - run: npm ci
 
@@ -172,8 +172,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - run: npm ci
 
@@ -203,37 +203,97 @@ jobs:
       - name: List artifacts
         run: ls -la dist/
 
+      # ─── Generate changelog from Conventional Commits ───
+      - name: Get previous tag
+        id: prev_tag
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ env.VERSION }}^ 2>/dev/null || echo "")
+          echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: $PREV_TAG"
+
+      - name: Generate release notes
+        run: |
+          PREV_TAG="${{ steps.prev_tag.outputs.tag }}"
+          VERSION="${{ env.VERSION }}"
+
+          if [ -z "$PREV_TAG" ]; then
+            RANGE="HEAD"
+            COMPARE_LINK=""
+          else
+            RANGE="${PREV_TAG}..HEAD"
+            COMPARE_LINK="**Full Changelog**: https://github.com/Nouuu/Albion-Online-OpenRadar/compare/${PREV_TAG}...${VERSION}"
+          fi
+
+          echo "Generating changelog for range: $RANGE"
+
+          # Get commits and categorize by Conventional Commits
+          FEATURES=$(git log $RANGE --pretty=format:"- %s" --grep="^feat" 2>/dev/null | sed 's/- feat[^:]*:/- /' || true)
+          FIXES=$(git log $RANGE --pretty=format:"- %s" --grep="^fix" 2>/dev/null | sed 's/- fix[^:]*:/- /' || true)
+          PERF=$(git log $RANGE --pretty=format:"- %s" --grep="^perf" 2>/dev/null | sed 's/- perf[^:]*:/- /' || true)
+
+          # Build release notes file
+          cat > release-notes.md << 'HEADER'
+          ## OpenRadar v${{ env.VERSION }}
+
+          Real-time radar for Albion Online.
+
+          HEADER
+
+          if [ -n "$FEATURES" ]; then
+            echo "### ✨ Features" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$FEATURES" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+
+          if [ -n "$FIXES" ]; then
+            echo "### 🐛 Bug Fixes" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$FIXES" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+
+          if [ -n "$PERF" ]; then
+            echo "### ⚡ Performance" >> release-notes.md
+            echo "" >> release-notes.md
+            echo "$PERF" >> release-notes.md
+            echo "" >> release-notes.md
+          fi
+
+          cat >> release-notes.md << EOF
+          ---
+
+          ### Verification
+
+          \`\`\`bash
+          sha256sum -c checksums-sha256.txt
+          \`\`\`
+
+          ### Requirements
+
+          **Windows:** Windows 10/11 (64-bit), [Npcap 1.84+](https://npcap.com/)
+
+          **Linux:** libpcap (\`apt install libpcap0.8\`)
+
+          ---
+
+          ${COMPARE_LINK}
+          EOF
+
+          echo "Generated release notes:"
+          cat release-notes.md
+
       # ─── Create GitHub Release (draft) ───
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
-          name: "Release ${{ env.VERSION }}"
+          name: "OpenRadar v${{ env.VERSION }}"
           draft: true
-          generate_release_notes: true
+          body_path: release-notes.md
           files: |
             dist/OpenRadar-linux-amd64
             dist/OpenRadar-windows-amd64.exe
             dist/README-linux.txt
             dist/README-windows.txt
             dist/checksums-sha256.txt
-          body: |
-            ## OpenRadar v${{ env.VERSION }}
-
-            Real-time radar for Albion Online.
-
-            ### Verification
-
-            ```bash
-            sha256sum -c checksums-sha256.txt
-            ```
-
-            ### Requirements
-
-            **Windows:** Windows 10/11 (64-bit), [Npcap 1.84+](https://npcap.com/)
-
-            **Linux:** libpcap (`apt install libpcap0.8`)
-
-            ---
-
-            **Note:** Edit this draft to add detailed release notes before publishing.
