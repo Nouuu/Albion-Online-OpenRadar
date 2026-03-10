@@ -10,7 +10,7 @@ LOGS.json
 diff_*.txt
 TYPEIDS_SUSPECTS.json
 .browser_opened
-
+AGENTS.md
 # =============================================================================
 # DOSSIER WORK (inclus dans git)
 # =============================================================================
@@ -26,6 +26,7 @@ work/
 # Serena MCP stocke ses memories ici - ne pas commit
 .serena/
 .claude/
+.github/*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
