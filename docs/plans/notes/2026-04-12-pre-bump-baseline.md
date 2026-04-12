@@ -179,6 +179,19 @@ actions/download-artifact@v4
 softprops/action-gh-release@v2
 ```
 
+## Post-capture corrections
+
+Two things were resolved immediately after the capture, outside the scope of Task 1:
+
+1. **golangci-lint local**: the stale `~/go/bin/golangci-lint.exe` (2.7.2 built with go1.25.5) was removed so `mise` takes over with `2.11.4` built with go1.26.1 (source: `mise.toml` pin `golangci-lint = "latest"`). After this, `golangci-lint run ./...` executes successfully and reports 4 pre-existing gosec issues that are acceptable for the Quick baseline definition ("exits 0 or with only acceptable diagnostics that pre-existed"):
+   - `internal/server/http.go:277` G705 XSS via taint analysis
+   - `internal/server/http.go:299` G705 XSS via taint analysis
+   - `internal/server/http.go:323` G705 XSS via taint analysis
+   - `internal/templates/engine.go:175` G122 symlink TOCTOU in filepath.Walk
+   These 4 gosec issues are the pre-bump lint state of record.
+
+2. **Working tree cleanup**: after `make all-in-one` failed on Docker, the `before.hooks` left the tree dirty (deleted `web/ao-bin-dumps/*.json`, created `.gz`, modified `go.sum`). Cleaned with `git checkout -- go.sum web/ao-bin-dumps/ && rm -f web/ao-bin-dumps/*.gz`. Tree now matches `af064cf6` (plus the four new plan files and the baseline note itself).
+
 ## Standard baseline results
 
 ### go build ./...
