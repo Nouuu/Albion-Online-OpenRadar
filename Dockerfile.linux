@@ -1,7 +1,7 @@
 # Dockerfile for Linux build
 # Usage: docker build -f Dockerfile.linux -o dist --build-arg VERSION=x.x.x .
 
-FROM golang:1.25-bookworm AS builder
+FROM golang:1.26-bookworm AS builder
 
 # Build arguments for version injection
 ARG VERSION=dev

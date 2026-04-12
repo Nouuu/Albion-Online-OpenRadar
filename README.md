@@ -13,7 +13,7 @@
     <img src="https://img.shields.io/github/v/release/Nouuu/Albion-Online-OpenRadar?style=flat-square&label=Download&color=7c3aed" alt="Download">
   </a>
   <img src="https://img.shields.io/badge/Windows%20%7C%20Linux-blue?style=flat-square" alt="Platform">
-  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
   <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/stargazers">
     <img src="https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=flat-square&color=yellow" alt="Stars">
   </a>
@@ -238,7 +238,7 @@ The 84 MB localization file? Gone. Minified JSONs keep only what the radar needs
 
 | Tool    | Version | Notes                  |
 |---------|---------|------------------------|
-| Go      | 1.25+   | Backend                |
+| Go      | 1.26+   | Backend                |
 | Npcap   | 1.84+   | Windows packet capture |
 | libpcap | Latest  | Linux packet capture   |
 | Node.js | 20+     | Build scripts only     |
