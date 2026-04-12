@@ -110,3 +110,8 @@ HELPER PACKAGE/
 /.serena/.gitignore
 /.serena/project.yml
 /cmd/radar/resource.syso
+
+# Claude-specific files (local only, never commit)
+/CLAUDE.md
+/docs/claude-resources/
+/docs/SESSION_BOOTSTRAP.md

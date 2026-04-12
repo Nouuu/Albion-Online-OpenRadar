@@ -1,7 +1,8 @@
-# 📑 In-Depth Analysis Report: DEATHEYE vs Current Implementation
+# DEATHEYE vs Current Implementation, Analysis Report
 
-> **Reference:** `work/data/albion-radar-deatheye-2pc/`  
-> **Focus:** Events, offsets, XML bases (items/harvestables/mobs), PvE strategy (T6+, living resources, dungeons, equipment/IP).
+> Reference: `work/data/albion-radar-deatheye-2pc/`.
+> Focus: events, offsets, XML bases (items/harvestables/mobs), PvE strategy (T6+, living resources, dungeons, equipment/IP).
+> Last verified against code: 2026-04-12.
 
 > This analysis **does not** cover player positions via Photon MITM. For encryption, XorCode, and the decision not to implement MITM, see `./PLAYER_POSITIONS_MITM.md`.
 

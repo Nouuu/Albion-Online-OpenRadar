@@ -1,4 +1,6 @@
-# Harvest Events - Technical Reference
+# Harvest Events, Technical Reference
+
+*Last verified against code: 2026-04-12*
 
 ## Current Implementation
 

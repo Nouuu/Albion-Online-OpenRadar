@@ -1,8 +1,9 @@
-# 📊 Logging & Debug System - OpenRadar v2.2
+# Logging and Debug System, OpenRadar v2.2
 
-> **Last update:** 2025-11-06  
-> **Version:** 2.2 (Refactored constants & centralized filtering)  
-> **Status:** ✅ Implemented and working
+> Last update: 2025-11-06.
+> Last verified against code: 2026-04-12.
+> Version: 2.2 (refactored constants, centralized filtering).
+> Status: implemented and working.
 
 ---
 

@@ -1,6 +1,7 @@
-# Player Detection & Display System
+# Player Detection and Display System
 
 *Last updated: 2025-12-13 (v2.0)*
+*Last verified against code: 2026-04-12*
 
 ## Overview
 

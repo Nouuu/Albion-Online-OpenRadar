@@ -1,7 +1,8 @@
 # Research: Player Position Detection via MITM Proxy
 
-**Date**: 2025-11-26  
-**Status**: ❌ Not implemented – AlbionRadar-style approach adopted
+Date: 2025-11-26.
+Status: not implemented. AlbionRadar-style approach adopted.
+Last verified against code: 2026-04-12.
 
 ---
 
