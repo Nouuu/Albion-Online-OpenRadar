@@ -15,7 +15,6 @@ type pcapStats struct {
 	events    map[byte]int
 	requests  map[byte]int
 	responses map[byte]int
-	fragments int
 }
 
 func replayPcap(t *testing.T, path string) pcapStats {

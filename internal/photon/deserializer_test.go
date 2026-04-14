@@ -161,11 +161,11 @@ func TestDeserialize_Dictionary_NestedOpRequest_NoBufferDesync(t *testing.T) {
 	// After the nested op, an outer sentinel byte must still be read cleanly.
 	payload := []byte{
 		typeByte, typeOperationRequest, // keyTC, valTC
-		0x01,                           // count=1
-		0x01,                           // key=1
-		0x07,                           // nested opCode=7
-		0x00,                           // nested parameter table count=0
-		0xAA,                           // sentinel trailing byte
+		0x01, // count=1
+		0x01, // key=1
+		0x07, // nested opCode=7
+		0x00, // nested parameter table count=0
+		0xAA, // sentinel trailing byte
 	}
 	buf := bytes.NewBuffer(payload)
 	got := deserialize(buf, typeDictionary).(map[interface{}]interface{})

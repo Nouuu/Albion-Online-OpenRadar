@@ -393,4 +393,3 @@ func deserializeTypedArray(buf *bytes.Buffer, elemType byte) interface{} {
 		return result
 	}
 }
-

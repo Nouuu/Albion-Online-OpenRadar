@@ -116,8 +116,8 @@ func TestPhotonParser_Fragment_Eviction(t *testing.T) {
 	buildIncompleteFragment := func(startSeq uint32) []byte {
 		fragHeader := make([]byte, fragmentHeaderLength)
 		binary.BigEndian.PutUint32(fragHeader[0:], startSeq)
-		binary.BigEndian.PutUint32(fragHeader[4:], 2)  // fragCount
-		binary.BigEndian.PutUint32(fragHeader[8:], 0)  // fragNum
+		binary.BigEndian.PutUint32(fragHeader[4:], 2)   // fragCount
+		binary.BigEndian.PutUint32(fragHeader[8:], 0)   // fragNum
 		binary.BigEndian.PutUint32(fragHeader[12:], 10) // totalLen
 		binary.BigEndian.PutUint32(fragHeader[16:], 0)  // fragOffset
 		return newSingleCommandPhotonPacket(cmdSendFragment,

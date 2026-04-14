@@ -21,8 +21,7 @@ func varintBytes(v uint32) []byte {
 func TestUpstream_OperationRequest_compactPath(t *testing.T) {
 	inner := []byte{0x02} // opCode
 	inner = append(inner, varintBytes(2)...)
-	inner = append(inner, 253, typeIntZero)
-	inner = append(inner, 8, typeString, 2, 'h', 'i')
+	inner = append(inner, 253, typeIntZero, 8, typeString, 2, 'h', 'i')
 
 	pkt := newReliableMessagePacket(msgRequest, inner)
 

@@ -113,11 +113,9 @@ func (p *PhotonParser) handleCommand(src []byte, offset int) (int, bool) {
 		}
 		offset += 4
 		cmdLen -= 4
-		newOffset, _ := p.handleSendReliable(src, offset, cmdLen)
-		return newOffset, true
+		return p.handleSendReliable(src, offset, cmdLen), true
 	case cmdSendReliable:
-		newOffset, _ := p.handleSendReliable(src, offset, cmdLen)
-		return newOffset, true
+		return p.handleSendReliable(src, offset, cmdLen), true
 	case cmdSendFragment:
 		return p.handleSendFragment(src, offset, cmdLen), true
 	default:
@@ -125,9 +123,9 @@ func (p *PhotonParser) handleCommand(src []byte, offset int) (int, bool) {
 	}
 }
 
-func (p *PhotonParser) handleSendReliable(src []byte, offset, cmdLen int) (int, bool) {
+func (p *PhotonParser) handleSendReliable(src []byte, offset, cmdLen int) int {
 	if cmdLen < 2 || !available(src, offset, cmdLen) {
-		return offset + cmdLen, false
+		return offset + cmdLen
 	}
 	offset++ // signalByte
 	msgType := src[offset]
@@ -135,14 +133,14 @@ func (p *PhotonParser) handleSendReliable(src []byte, offset, cmdLen int) (int, 
 	cmdLen -= 2
 
 	if !available(src, offset, cmdLen) {
-		return offset + cmdLen, false
+		return offset + cmdLen
 	}
 
 	if msgType == msgEncrypted {
 		if p.OnEncrypted != nil {
 			p.OnEncrypted()
 		}
-		return offset + cmdLen, true
+		return offset + cmdLen
 	}
 
 	data := src[offset : offset+cmdLen]
@@ -162,7 +160,7 @@ func (p *PhotonParser) handleSendReliable(src []byte, offset, cmdLen int) (int, 
 			p.OnEvent(ev)
 		}
 	}
-	return offset, true
+	return offset
 }
 
 func (p *PhotonParser) handleSendFragment(src []byte, offset, cmdLen int) int {
