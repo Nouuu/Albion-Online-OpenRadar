@@ -288,6 +288,10 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case LogMsg:
 		d.addLog(msg)
+		if !d.ready {
+			// unsized viewport → bubbles/viewport slice-bounds panic
+			return d, nil
+		}
 		d.viewport.SetContent(d.renderLogs())
 		if d.autoScroll {
 			d.viewport.GotoBottom()

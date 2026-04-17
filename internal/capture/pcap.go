@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -20,6 +21,8 @@ const (
 	AlbionPort  = 5056
 	SnapLen     = 65536
 	Promiscuous = false
+	// BlockForever deadlocks handle.Close() when idle; poll on timeout
+	ReadTimeout = 500 * time.Millisecond
 )
 
 // NetworkInterface represents a network interface with its details
@@ -155,7 +158,7 @@ func resolveAdapter(appDir, ipOverride string) (ip, device string, err error) {
 }
 
 func openDevice(device string) (*pcap.Handle, error) {
-	handle, err := pcap.OpenLive(device, SnapLen, Promiscuous, pcap.BlockForever)
+	handle, err := pcap.OpenLive(device, SnapLen, Promiscuous, ReadTimeout)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open device: %w", err)
 	}
