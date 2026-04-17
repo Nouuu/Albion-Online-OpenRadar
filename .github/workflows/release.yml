@@ -20,97 +20,80 @@ env:
   VERSION: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # Quality gate: lint + tests must pass before any build work starts.
-  # ---------------------------------------------------------------------------
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
 
-      - uses: actions/setup-go@v5
+      - name: Lint Go
+        uses: golangci/golangci-lint-action@v8
         with:
-          go-version-file: "go.mod"
-          cache: true
+          version: v2.7.2
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+      - name: Lint Frontend
+        run: npm run lint
 
-      - name: Install libpcap (CGO)
-        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
 
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-            | sh -s -- -b "$(go env GOPATH)/bin" v2.7.2
+      - name: Test Go
+        run: go test ./...
 
-      - run: npm ci
+      - name: Test Frontend
+        run: npm test
 
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
-
-  # ---------------------------------------------------------------------------
-  # Build both binaries on ubuntu-latest via `make all-in-one`
-  # (Linux native + Windows via Docker/mingw)
-  # ---------------------------------------------------------------------------
   build:
-    needs: lint-and-test
+    needs: [lint, test]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-go@v5
+      - uses: ./.github/actions/setup
         with:
-          go-version-file: "go.mod"
-          cache: true
+          fetch-depth: "0"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install libpcap (CGO)
-        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v3
 
       - name: Build all artifacts
         run: make all-in-one VERSION=${{ env.VERSION }}
 
-      - name: Upload dist artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
           retention-days: 1
 
-  # ---------------------------------------------------------------------------
-  # Rebuild the Windows .exe natively on windows-latest with goversioninfo
-  # to embed the icon + version metadata into the PE resource section.
-  # This replaces the Docker-built .exe with a cosmetically enhanced one.
-  # ---------------------------------------------------------------------------
   enhance-windows:
     needs: build
     runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-go@v5
         with:
           go-version-file: "go.mod"
           cache: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "lts/*"
           cache: "npm"
 
       - run: npm ci
@@ -163,34 +146,30 @@ jobs:
             -ldflags="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME}" \
             -o dist/OpenRadar-windows-amd64.exe ./cmd/radar
 
-      - name: Upload enhanced Windows binary
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: windows-enhanced
           path: dist/OpenRadar-windows-amd64.exe
           retention-days: 1
 
-  # ---------------------------------------------------------------------------
-  # Combine artifacts, regenerate checksums, create draft GitHub release.
-  # ---------------------------------------------------------------------------
   release:
     needs: [build, enhance-windows]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: dist
           path: dist
 
       - name: Overlay enhanced Windows .exe
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: windows-enhanced
           path: dist

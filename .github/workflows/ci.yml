@@ -10,34 +10,34 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  lint-and-test:
+  lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
 
-      - uses: actions/setup-go@v5
+      - name: Lint Go
+        uses: golangci/golangci-lint-action@v8
         with:
-          go-version-file: "go.mod"
-          cache: true
+          version: v2.7.2
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
+      - name: Lint Frontend
+        run: npm run lint
 
-      - name: Install libpcap (CGO)
-        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
 
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
-            | sh -s -- -b "$(go env GOPATH)/bin" v2.7.2
+      - name: Test Go
+        run: go test ./...
 
-      - run: npm ci
-
-      - name: Lint
-        run: make lint
-
-      - name: Test
-        run: make test
+      - name: Test Frontend
+        run: npm test

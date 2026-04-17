@@ -1,0 +1,33 @@
+name: Setup OpenRadar toolchain
+description: Checkout, Go, Node (LTS), libpcap, npm deps
+
+inputs:
+  fetch-depth:
+    description: Git history depth for checkout
+    required: false
+    default: "1"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: "go.mod"
+        cache: true
+
+    - uses: actions/setup-node@v6
+      with:
+        node-version: "lts/*"
+        cache: "npm"
+
+    - name: Install libpcap (CGO)
+      shell: bash
+      run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+    - name: Install npm dependencies
+      shell: bash
+      run: npm ci
