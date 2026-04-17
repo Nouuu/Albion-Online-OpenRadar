@@ -21,10 +21,45 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
+  # Quality gate: lint + tests must pass before any build work starts.
+  # ---------------------------------------------------------------------------
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install libpcap (CGO)
+        run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+            | sh -s -- -b "$(go env GOPATH)/bin" v2.11.4
+
+      - run: npm ci
+
+      - name: Lint
+        run: make lint
+
+      - name: Test
+        run: make test
+
+  # ---------------------------------------------------------------------------
   # Build both binaries on ubuntu-latest via `make all-in-one`
   # (Linux native + Windows via Docker/mingw)
   # ---------------------------------------------------------------------------
   build:
+    needs: lint-and-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +98,7 @@ jobs:
   # This replaces the Docker-built .exe with a cosmetically enhanced one.
   # ---------------------------------------------------------------------------
   enhance-windows:
-    needs: build
+    needs: lint-and-test
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
