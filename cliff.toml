@@ -1,15 +1,53 @@
-# Mirrors the changelog groups defined in the old .goreleaser.yml.
-# Consumed by `git-cliff --latest --output dist/RELEASE.md` in the Makefile.
+# Consumed by `git-cliff` in the Makefile and release.yml workflow.
+# Produces a medium-rich release body: header (title + intro), grouped
+# commits with emojis + commit links, and a footer (verification,
+# requirements, full changelog link).
 
 [changelog]
 header = ""
 body = """
-{% for group, commits in commits | group_by(attribute="group") %}
-## {{ group }}
-{% for commit in commits %}
-- {{ commit.message | split(pat="\\n") | first | trim }} ({{ commit.id | truncate(length=7, end="") }})
+{% set repo_url = "https://github.com/Nouuu/Albion-Online-OpenRadar" -%}
+
+{% if version -%}
+## OpenRadar v{{ version }}
+{%- else -%}
+## OpenRadar (Dry-run preview)
+{%- endif %}
+
+Real-time radar for Albion Online.
+
+{% for group, commits in commits | group_by(attribute="group") -%}
+{%- if group == "Features" -%}
+### ✨ Features
+{% elif group == "Bug fixes" -%}
+### 🐛 Bug Fixes
+{% elif group == "Performance" -%}
+### ⚡ Performance
+{% else -%}
+### {{ group }}
+{% endif %}
+{% for commit in commits -%}
+- {{ commit.message | split(pat="\\n") | first | trim }} ([{{ commit.id | truncate(length=7, end="") }}]({{ repo_url }}/commit/{{ commit.id }}))
 {% endfor %}
 {% endfor %}
+---
+
+### Verification
+
+```bash
+sha256sum -c checksums-sha256.txt
+```
+
+### Requirements
+
+**Windows:** Windows 10/11 (64-bit), [Npcap 1.87+](https://npcap.com/)
+
+**Linux:** libpcap (`apt install libpcap0.8`)
+
+---
+{% if previous.version and version -%}
+**Full Changelog**: {{ repo_url }}/compare/{{ previous.version }}...{{ version }}
+{%- endif %}
 """
 trim = true
 postprocessors = []

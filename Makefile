@@ -193,7 +193,7 @@ ifndef TAG
 endif
 	@echo "Building release $(TAG)..."
 	$(MAKE) all-in-one VERSION=$(TAG)
-	git-cliff --tag $(TAG) --config cliff.toml --output $(DIST)/RELEASE.md
+	git-cliff --unreleased --tag $(TAG) --config cliff.toml --output $(DIST)/RELEASE.md
 	git tag $(TAG)
 	git push origin $(TAG)
 	gh release create $(TAG) \
