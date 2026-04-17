@@ -79,12 +79,30 @@ a different layout. Validate visually in Task 22 (manual E2E).
 
 - No combat events (Cast*, Damage*) — single idle+harvest scenario
 - No JoinResponse (zone transit happened once; only real code 0 response
-  observed, 1 sample)
+  observed, 1 sample). Covered by `move_map_change.pcap` (see below).
 - Only 2 fragments in the capture — fragment reassembly exercised in
   `TestPhotonParser_Fragment_*` unit tests instead
 - `msg_type 132` (53 occurrences) and `130` (3) silently dropped — not event
   / request / response. Proximity to `msgEncrypted=131` suggests encrypted
   variants. Worth investigating when more captures arrive.
+
+## Router-contract fixture: `move_map_change.pcap`
+
+A 584-packet capture exercising the three operation codes the frontend
+router dispatches on. Under Protocol18 the wire `OperationCode` byte is
+always 1; the real code lives in `Parameters[253]` as `int16`. These are
+the counts observed across the fixture:
+
+| Kind     | Real code | Name            | Count | Key params                                   |
+|----------|-----------|-----------------|-------|----------------------------------------------|
+| request  | 22        | Move            | 79    | `[0]` int64 entity id, `[1]` `[]float32` src pos (len 2), `[3]` `[]float32` tgt pos |
+| response | 2         | JoinFinished    | 2     | `[8]` string mapId, `[9]` `[]float32` local player pos |
+| response | 41        | ChangeCluster   | 1     | `[0]` string new mapId                       |
+
+`TestLivePcap_RouterContract` in `internal/photon/live_pcap_test.go` pins
+these as minimum expectations. Drop new router-visible codes into the
+`cases` table there; add new fixtures with `tools/anonymize-pcap` before
+committing.
 
 ## How to regenerate this document
 
