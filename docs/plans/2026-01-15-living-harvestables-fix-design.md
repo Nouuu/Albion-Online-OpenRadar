@@ -1,5 +1,14 @@
 # Living Harvestables Bug Fix Design
 
+## Status 2026-04-18
+
+Both bugs pinned as `test.fails` in `web/scripts/handlers/HarvestablesHandler.test.js` after handlers-characterization merged:
+
+- **HARV-2** pins #30 and #32 (e0-gate blocks enchanted living spawn recovery).
+- **HARV-3** pins the re-gate logic bug in `HarvestUpdateEvent` (`isLiving=false` hardcoded, wrong `stringType` lookup).
+
+HARV-3 is routed through `2026-04-18-small-bug-cluster-design.md` as a one-liner. This plan focuses on HARV-2 (the e0-gate spawn recovery), which is the deeper structural change.
+
 ## Problem
 
 Living harvestables (animals like pigs, cows) require e0 enabled to show enchanted resources (e1-e4), even when e0 is disabled and e1+ are enabled.

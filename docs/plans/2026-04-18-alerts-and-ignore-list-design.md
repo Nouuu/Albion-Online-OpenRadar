@@ -2,13 +2,24 @@
 
 | Field | Value |
 |---|---|
-| Status | Active, queued after Protocol18 regressions |
+| Status | Active. #65 (PLAY-1) executable now. #36 (PLAY-2) requires #53 EventCodes refresh first to validate end-to-end. |
 | Created | 2026-04-18 |
 | Priority | Medium (user-facing, pre-existing plus community regression) |
-| Depends on | `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md` (safety net on PlayersHandler, successor to the superseded `2026-04-12-handlers-characterization-coverage-design.md` now archived) |
+| Depends on | `feat/handlers-characterization` merged (PLAY-1 `test.fails` pins #65, PLAY-2 `test.fails` pins #36). PLAY-2 validation additionally requires `2026-04-18-eventcodes-refresh-design.md` to land so `ChangeFlaggingFinished` dispatches. |
 | Blocks | None |
-| User action required | Minimal (in-game verification on a few zones) |
+| User action required | Minimal (in-game verification on a few zones). PLAY-2 end-to-end check only meaningful after #53 refresh. |
 | GitHub interaction | None during execution (standby) |
+
+## Status update 2026-04-18
+
+Characterization findings pinned the two bugs and surfaced a blocker for PLAY-2:
+
+- **PLAY-1 (#65)**: `test.fails` in `web/scripts/handlers/PlayersHandler.test.js` asserts alert fires for hostile in unknown zone. Root cause is `zonesDatabase.getPvpType(unknown)` falling back to `'safe'`. Independent of #53. Ship first.
+- **PLAY-2 (#36)**: `test.fails` pins that an ignored player still triggers alert on faction transition. However the secondary alert path (via `ChangeFlaggingFinished`) is currently dead code in production because `EventCodes.ChangeFlaggingFinished = 359` is stale (real value 363, ROUTER-2 pinned). Fix of PLAY-2 in this plan is correct but the end-to-end in-game validation only works after `2026-04-18-eventcodes-refresh-design.md` lands. The `test.fails` flip will work immediately at the unit-test level because tests call `updatePlayerFaction` directly.
+
+Ordering guidance:
+1. Land `2026-04-18-eventcodes-refresh-design.md` first so faction-change events actually dispatch in prod.
+2. Then land this plan. PLAY-2 can be validated in-game after the combined effect.
 
 ## Context
 

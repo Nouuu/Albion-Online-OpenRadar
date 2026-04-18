@@ -2,13 +2,20 @@
 
 | Field | Value |
 |---|---|
-| Status | Active, queued after handlers characterization |
+| Status | Active, scope narrowed to #57 (#52 deferred pending #58) |
 | Created | 2026-04-18 |
-| Priority | High (user-facing regressions introduced by PR #51) |
-| Depends on | `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md` (safety net, successor to the superseded `2026-04-12-handlers-characterization-coverage-design.md` now archived) |
+| Priority | High for #57 (isBZ lost post-Protocol18). #52 cannot be directionally resolved without #58. |
+| Depends on | `feat/handlers-characterization` merged (ROUTER-1 pinned as `test.fails` for #57; HarvestablesHandler vs MobsHandler tier divergence documented as `@characterization` for #52). |
 | Blocks | None |
-| User action required | Yes, live Albion capture for isBZ hashtable reverse |
+| User action required | No (pcap fixtures for isBZ already captured in `internal/photon/testdata/router/join-finished.json`, both zones observable once a second capture in a black zone lands). Optional targeted capture for #52 only after #58 ships. |
 | GitHub interaction | None during execution (standby) |
+
+## Status update 2026-04-18
+
+Characterization findings force a scope narrow:
+
+- **#57 isBZ**: ROUTER-1 `test.fails` in `web/scripts/core/EventRouter.test.js` already asserts the correct extraction. The captured `router/join-finished.json` fixture carries `Parameters[103] = {"5": 1409813048, "7": 56653070}` (non-zero hashtable). The isBZ sub-key can be reversed from a second capture in a confirmed black zone; the existing work gives the safe-zone reference. Fix this first.
+- **#52 Fiber tier**: diagnosis against real `mobs.min.json` confirmed the divergence. Server sends `Parameters[7]=3` for `T4_MOB_CRITTER_FIBER_SWAMP_GREEN` (mobId 529) while DB says `mob.lt=4`. Radar reportedly showed T5.1 (not T3 or T4) per issue description. Neither source matches the observed symptom. Without #58 (typeId debug overlay) we cannot nail which entity was seen and therefore cannot pick the correct value. Deferred.
 
 ## Context
 
@@ -33,16 +40,11 @@ Both require a diagnostic step before code change.
 
 ## Part A. #57 map.isBZ reverse engineering and fix
 
-### Step 1: Capture a pair of live sessions
+### Step 1: Capture a confirmed black-zone session (user action)
 
-User action. Capture two pcap traces:
+Safe-zone side is already captured: `internal/photon/testdata/router/join-finished.json` contains `Parameters[103] = {"5": 1409813048, "7": 56653070}` from the 2026-04-18 session (non-black zone).
 
-- `work/captures/2026-04-18-safe-zone.pcap`: login in a blue or yellow zone
-- `work/captures/2026-04-18-black-zone.pcap`: login in a black zone (any black zone entrance or port)
-
-Capture command: on Linux or WSL, `sudo tcpdump -i <iface> -w <path> 'udp port 5056'` during login, until the zone change response is visible.
-
-Feed each pcap to `tools/anonymize-pcap/` (from PR #64) to strip personal data. Store the anonymized versions in `internal/photon/testdata/`.
+Remaining capture: login in a black zone (black-zone entrance or outland port). Run through `tools/anonymize-pcap/` and `tools/photon-dump/` to produce a `router/join-finished-bz.json` fixture. Drop into `web/scripts/__fixtures__/ws/router/` and `internal/photon/testdata/router/`.
 
 ### Step 2: Decode JoinFinished params[103] from each
 
@@ -56,13 +58,23 @@ Edit `web/scripts/core/EventRouter.js` in the JoinMap handler (around lines 387 
 
 ### Step 4: Vitest test
 
-Add a test in `web/scripts/core/EventRouter.test.js` that exercises the `onResponse` path with a hand-crafted opResponse 2 message containing the hashtable shape for a black zone, asserts `map.isBZ === true`. Same for safe zone, asserts `false`.
+`ROUTER-1` already pinned in `web/scripts/core/EventRouter.test.js` asserts `map.isBZ` is extracted from `Parameters[103]` after a JoinMap response. Once the fix lands, flip ROUTER-1 `test.fails` to regular `test` with a `@verified` label. Add a second case using the new black-zone fixture asserting `map.isBZ === true`.
 
 ### Step 5: Commit
 
 Single commit `fix(zones): restore map.isBZ extraction post-Protocol18 (#57)`.
 
-## Part B. #52 living resource tier diagnostic and fix
+## Part B. #52 living resource tier (DEFERRED pending #58)
+
+Diagnosis against real `mobs.min.json` vs pcap fixtures already done (see `2026-04-18-handlers-characterization-completion.md`). The divergence is real but not directional. Without #58 (typeId debug overlay) the correct value is unknown. Once #58 ships and a targeted capture with overlay confirms which entity rendered at which tier, resume this part.
+
+Until then:
+- HarvestablesHandler vs MobsHandler tier divergence is encoded as `@characterization` in `HarvestablesHandler.test.js`.
+- HARV-1 (`mobileTypeId=-1` sentinel) is pinned by `test.fails` in the small bug cluster plan and addresses a different symptom.
+
+Original diagnostic text kept below for reference when the plan resumes.
+
+## Part B archive (original diagnostic text)
 
 ### Step 1: Reproduce with a targeted capture
 
