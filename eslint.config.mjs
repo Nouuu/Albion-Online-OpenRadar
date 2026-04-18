@@ -1,7 +1,7 @@
 import js from "@eslint/js";
 import globals from "globals";
 import html from "eslint-plugin-html";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import-x";
 import tseslint from "typescript-eslint";
 
 // Shared browser globals for front-end code
