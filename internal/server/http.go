@@ -274,6 +274,7 @@ func (s *HTTPServer) fsHandlerWithFallback(
 		// Set headers
 		setCacheHeaders(w, cacheDuration, false, "")
 		w.Header().Set("Content-Type", "image/webp")
+		//nolint:gosec // G705: data is read from embed.FS (compiled-in assets), not user-controlled.
 		_, _ = w.Write(data)
 	})
 }
@@ -296,6 +297,7 @@ func (s *HTTPServer) gzipFSHandlerDirect(
 				w.Header().Set("Content-Encoding", "gzip")
 				setContentType(w, urlPath)
 				setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
+				//nolint:gosec // G705: data is read from embed.FS (compiled-in assets), not user-controlled.
 				_, _ = w.Write(data)
 				return
 			}
@@ -320,6 +322,7 @@ func (s *HTTPServer) gzipFSHandlerDirect(
 			return
 		}
 
+		//nolint:gosec // G705: data is read from embed.FS (compiled-in assets), not user-controlled.
 		_, _ = w.Write(data)
 	})
 }

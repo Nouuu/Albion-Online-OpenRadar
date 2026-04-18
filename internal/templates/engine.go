@@ -172,6 +172,7 @@ func (e *Engine) reloadTemplates() error {
 			return nil
 		}
 
+		//nolint:gosec // G122: path is constrained to e.baseDir (developer-controlled), not an attacker-supplied filesystem.
 		content, err := os.ReadFile(path)
 		if err != nil {
 			return fmt.Errorf("failed to read template %s: %w", path, err)
