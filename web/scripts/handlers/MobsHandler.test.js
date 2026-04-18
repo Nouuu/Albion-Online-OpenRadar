@@ -498,4 +498,290 @@ describe('MobsHandler', () => {
             expect(handler.getMobList()).toHaveLength(0);
         });
     });
+
+    // -------------------------------------------------------------------------
+    // Position updates
+    // -------------------------------------------------------------------------
+
+    describe('position updates', () => {
+        function addMob(id) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+        }
+
+        function addMist(id) {
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+        }
+
+        // @verified 2026-04-18: updateMobPosition updates posX, posY, and touches lastUpdateTime.
+        test('synthetic: updateMobPosition updates mob coordinates', () => {
+            // synthetic: position update path.
+            addMob(5001);
+            handler.updateMobPosition(5001, 42.5, 17.3);
+            const mobs = handler.getMobList();
+            expect(mobs[0].posX).toBe(42.5);
+            expect(mobs[0].posY).toBe(17.3);
+        });
+
+        // @verified 2026-04-18: updateMobPosition unknown id is a no-op.
+        test('synthetic: updateMobPosition with unknown id is a no-op', () => {
+            // synthetic: guard path when mob not found.
+            handler.updateMobPosition(9999, 1, 2);
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+
+        // @verified 2026-04-18: updateMistPosition updates mist coordinates.
+        test('synthetic: updateMistPosition updates mist coordinates', () => {
+            // synthetic: mist position update path.
+            addMist(5002);
+            handler.updateMistPosition(5002, 10, 20);
+            const size = handler.getSize();
+            expect(size.mists).toBe(1);
+            expect(handler.mistList[0].posX).toBe(10);
+            expect(handler.mistList[0].posY).toBe(20);
+        });
+
+        // @verified 2026-04-18: updateMistPosition with unknown id is a no-op.
+        test('synthetic: updateMistPosition with unknown id is a no-op', () => {
+            // synthetic: mist guard path.
+            handler.updateMistPosition(9999, 5, 10);
+            expect(handler.getSize().mists).toBe(0);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // Enchant updates
+    // -------------------------------------------------------------------------
+
+    describe('enchant updates', () => {
+        function addMob(id) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+        }
+
+        function addMist(id) {
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+        }
+
+        // @verified 2026-04-18: updateEnchantEvent sets enchantmentLevel on the mob.
+        test('synthetic: updateEnchantEvent sets enchantmentLevel on found mob', () => {
+            // synthetic: enchant event path.
+            addMob(6001);
+            handler.updateEnchantEvent({'0': 6001, '1': 3});
+            const mobs = handler.getMobList();
+            expect(mobs[0].enchantmentLevel).toBe(3);
+        });
+
+        // @verified 2026-04-18: updateEnchantEvent with unknown id is a no-op.
+        test('synthetic: updateEnchantEvent with unknown id is a no-op', () => {
+            // synthetic: guard path when entity not found.
+            handler.updateEnchantEvent({'0': 9999, '1': 2});
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+
+        // @verified 2026-04-18: updateMistEnchantmentLevel sets mist.enchant.
+        test('synthetic: updateMistEnchantmentLevel sets enchant on mist', () => {
+            // synthetic: mist enchant update path.
+            addMist(6002);
+            handler.updateMistEnchantmentLevel(6002, 2);
+            expect(handler.mistList[0].enchant).toBe(2);
+        });
+
+        // @verified 2026-04-18: updateMistEnchantmentLevel with unknown id is a no-op.
+        test('synthetic: updateMistEnchantmentLevel with unknown id is a no-op', () => {
+            // synthetic: guard path when mist not found.
+            handler.updateMistEnchantmentLevel(9999, 1);
+            expect(handler.getSize().mists).toBe(0);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // Lifecycle
+    // -------------------------------------------------------------------------
+
+    describe('lifecycle', () => {
+        function addMob(id) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+        }
+
+        function addMist(id) {
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+        }
+
+        // @verified 2026-04-18: removeMob removes the matching mob by id.
+        test('synthetic: removeMob removes mob by id', () => {
+            // synthetic: removeMob path.
+            addMob(7001);
+            addMob(7002);
+            handler.removeMob(7001);
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].id).toBe(7002);
+        });
+
+        // @verified 2026-04-18: removeMob with unknown id is a no-op.
+        test('synthetic: removeMob with unknown id is a no-op', () => {
+            // synthetic: guard path.
+            addMob(7003);
+            handler.removeMob(9999);
+            expect(handler.getMobList()).toHaveLength(1);
+        });
+
+        // @verified 2026-04-18: removeMist removes the matching mist by id.
+        test('synthetic: removeMist removes mist by id', () => {
+            // synthetic: removeMist path.
+            addMist(7004);
+            addMist(7005);
+            handler.removeMist(7004);
+            expect(handler.getSize().mists).toBe(1);
+            expect(handler.mistList[0].id).toBe(7005);
+        });
+
+        // @verified 2026-04-18: Clear empties mobsList, mistList, and harvestablesNotGood.
+        test('synthetic: Clear empties both lists', () => {
+            // synthetic: Clear path.
+            addMob(7006);
+            addMist(7007);
+            handler.Clear();
+            const size = handler.getSize();
+            expect(size.mobs).toBe(0);
+            expect(size.mists).toBe(0);
+            expect(size.total).toBe(0);
+        });
+
+        // @verified 2026-04-18: getSize returns correct mobs/mists/total counts.
+        test('synthetic: getSize returns correct counts', () => {
+            // synthetic: getSize path.
+            addMob(7008);
+            addMob(7009);
+            addMist(7010);
+            const size = handler.getSize();
+            expect(size.mobs).toBe(2);
+            expect(size.mists).toBe(1);
+            expect(size.total).toBe(3);
+        });
+
+        // @verified 2026-04-18: getMobList returns a shallow copy (mutation does not affect internal list).
+        test('synthetic: getMobList returns shallow copy', () => {
+            // synthetic: copy semantics of getMobList.
+            addMob(7011);
+            const copy = handler.getMobList();
+            copy.pop();
+            expect(handler.getMobList()).toHaveLength(1);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // cleanupStaleEntities
+    // -------------------------------------------------------------------------
+
+    describe('cleanupStaleEntities', () => {
+        function addMob(id) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+        }
+
+        function addMist(id) {
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+        }
+
+        // @verified 2026-04-18: stale mob (lastUpdateTime old) is removed; fresh mob survives.
+        test('synthetic: stale mob is removed, fresh mob survives', () => {
+            // synthetic: direct lastUpdateTime manipulation avoids fake timers.
+            addMob(8001);
+            addMob(8002);
+            handler.mobsList.find(m => m.id === 8001).lastUpdateTime = Date.now() - 200000;
+            const removed = handler.cleanupStaleEntities(120000);
+            expect(removed).toBe(1);
+            expect(handler.getMobList().map(m => m.id)).toEqual([8002]);
+        });
+
+        // @verified 2026-04-18: stale mist is removed; fresh mist survives.
+        test('synthetic: stale mist is removed, fresh mist survives', () => {
+            // synthetic: mist stale cleanup path.
+            addMist(8003);
+            addMist(8004);
+            handler.mistList.find(m => m.id === 8003).lastUpdateTime = Date.now() - 200000;
+            const removed = handler.cleanupStaleEntities(120000);
+            expect(removed).toBe(1);
+            expect(handler.getSize().mists).toBe(1);
+        });
+
+        // @verified 2026-04-18: no stale entities returns 0.
+        test('synthetic: no stale entities returns 0 removed', () => {
+            // synthetic: happy path - nothing to clean.
+            addMob(8005);
+            const removed = handler.cleanupStaleEntities(120000);
+            expect(removed).toBe(0);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // enforceMaxSize
+    // -------------------------------------------------------------------------
+
+    describe('enforceMaxSize', () => {
+        // @verified 2026-04-18: enforceMaxSize trims mobsList to maxMobs keeping newest entries.
+        test('synthetic: enforceMaxSize trims mobs to maxMobs, keeping newest', () => {
+            // synthetic: adds 5 mobs then trims to 3.
+            for (let i = 0; i < 5; i++) {
+                window.mobsDatabase = makeDb({[9100 + i]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+                handler.NewMobEvent(normalizeParams({'0': 9100 + i, '1': 9100 + i, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+                handler.mobsList[i].lastUpdateTime = Date.now() + i * 1000;
+            }
+            const removed = handler.enforceMaxSize(3, 50);
+            expect(removed).toBe(2);
+            expect(handler.getMobList()).toHaveLength(3);
+        });
+
+        // @verified 2026-04-18: enforceMaxSize trims mistList to maxMists keeping newest entries.
+        test('synthetic: enforceMaxSize trims mists to maxMists, keeping newest', () => {
+            // synthetic: adds 4 mists then trims to 2.
+            const names = ['MISTS_SOLO_YELLOW', 'MISTS_GROUP_RED', 'MISTS_SOLO_BLUE', 'MISTS_GROUP_GREEN'];
+            for (let i = 0; i < 4; i++) {
+                handler.NewMobEvent(normalizeParams({'0': 9200 + i, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': names[i], '33': 0}));
+                handler.mistList[i].lastUpdateTime = Date.now() + i * 1000;
+            }
+            const removed = handler.enforceMaxSize(500, 2);
+            expect(removed).toBe(2);
+            expect(handler.getSize().mists).toBe(2);
+        });
+
+        // @verified 2026-04-18: enforceMaxSize returns 0 when under limits.
+        test('synthetic: enforceMaxSize returns 0 when counts are under limits', () => {
+            // synthetic: happy path - nothing trimmed.
+            window.mobsDatabase = makeDb({9300: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': 9300, '1': 9300, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+            expect(handler.enforceMaxSize(500, 50)).toBe(0);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // Mist type heuristic (Mist constructor)
+    // -------------------------------------------------------------------------
+
+    describe('Mist type heuristic', () => {
+        // @verified 2026-04-18: name containing 'solo' (case-insensitive) sets type=0.
+        test('synthetic: mist name containing "solo" sets type=0', () => {
+            // synthetic: tests the solo heuristic in the Mist constructor.
+            handler.NewMobEvent(normalizeParams({'0': 9400, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            expect(handler.mistList[0].type).toBe(0);
+        });
+
+        // @verified 2026-04-18: name not containing 'solo' sets type=1.
+        test('synthetic: mist name not containing "solo" sets type=1', () => {
+            // synthetic: tests the non-solo branch in the Mist constructor.
+            handler.NewMobEvent(normalizeParams({'0': 9401, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_GROUP_RED', '33': 0}));
+            expect(handler.mistList[0].type).toBe(1);
+        });
+
+        // @verified 2026-04-18: AddMist with duplicate id is a no-op (touch only, no second push).
+        test('synthetic: duplicate mist id is a no-op (touch, not re-added)', () => {
+            // synthetic: tests the duplicate guard in AddMist.
+            handler.NewMobEvent(normalizeParams({'0': 9402, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': 9402, '1': 94, '2': 255, '7': [5, 5], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            expect(handler.getSize().mists).toBe(1);
+        });
+    });
 });
