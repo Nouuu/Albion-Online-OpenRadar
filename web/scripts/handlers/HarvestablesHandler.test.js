@@ -387,25 +387,53 @@ describe('HarvestablesHandler', () => {
             expect(stored.charges).toBe(2);
         });
 
-        // Pinned: event 46 re-gate uses isLiving=false hardcoded AND reuses server typeNumber for stringType lookup.
-        // typeNumber=16 (Fiber critter) maps to HIDE via static harvestables DB (type 16-22 = HIDE range).
-        // Result: a living Fiber critter is re-gated as static Hide with enchant=2; entity is dropped when
-        // static Hide settings are all-false. A correct handler would not consult static settings for a living
-        // resource; it should gate on living Fiber settings instead.
-        // After fix, a living Fiber should not be dropped when only static settings are disabled.
-        test.fails('HarvestUpdateEvent preserves living Fiber when static settings are all disabled', async () => {
+        // @verified 2026-04-19: event 46 re-gate uses stored stringType + mobileTypeId; a living Fiber
+        // is no longer dropped when static Hide settings are disabled because the re-gate consults the
+        // living Fiber settings instead.
+        test('HarvestUpdateEvent preserves living Fiber when static settings are all disabled', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
             const msg = fx.messages.find(m => m.parameters['6'] === 529);
             const p = normalizeParams(msg.parameters);
             handler.newHarvestableObject(p[0], p);
             expect(handler.getHarvestableList().find(h => h.id === p[0])).toBeDefined();
 
-            // Disable all static resource settings; living Fiber should remain unaffected.
-            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+            // Static-only disablement: Static* keys false, Living* keys unchanged (all true).
+            settingsSync.getJSON.mockImplementation(key =>
+                typeof key === 'string' && key.startsWith('settingStatic') ? allFalseSettings : allTrueSettings
+            );
 
             handler.HarvestUpdateEvent({0: p[0], 1: p[10] ?? 3, 2: 2});
 
             expect(handler.getHarvestableList().find(h => h.id === p[0])).toBeDefined();
+        });
+
+        // @verified 2026-04-19: contract test, addHarvestable without mobileTypeId stores null.
+        test('synthetic contract: Harvestable defaults mobileTypeId to null when omitted', () => {
+            handler.addHarvestable(9001, 0, 4, 10, 20, 0, 3);
+            const stored = handler.getHarvestableList().find(e => e.id === 9001);
+            expect(stored).toBeDefined();
+            expect(stored.mobileTypeId).toBeNull();
+        });
+
+        // @verified 2026-04-19: pcap-composed regression, static resource re-gate still keeps the entity
+        // when its static settings are enabled. Ensures the stored-value refactor did not break the
+        // static path, which was working before HARV-3.
+        test('pcap-composed: static resource enchant re-gate keeps entity with static settings enabled', async () => {
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['0'] === 3203);
+            expect(msg, 'fixture should contain static id=3203').toBeDefined();
+            const p = normalizeParams(msg.parameters);
+            handler.newHarvestableObject(p[0], p);
+            const spawned = handler.getHarvestableList().find(h => h.id === 3203);
+            expect(spawned).toBeDefined();
+            expect(spawned.mobileTypeId).toBe(-1);
+
+            // Force an enchant change distinct from spawn enchant (p[11]=2) to trigger the re-gate.
+            handler.HarvestUpdateEvent({0: 3203, 1: p[10] ?? 1, 2: 3});
+
+            const stored = handler.getHarvestableList().find(h => h.id === 3203);
+            expect(stored).toBeDefined();
+            expect(stored.charges).toBe(3);
         });
     });
 

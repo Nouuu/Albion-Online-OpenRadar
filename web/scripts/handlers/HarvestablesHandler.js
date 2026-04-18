@@ -13,7 +13,7 @@ const HarvestableType =
 
 class Harvestable
 {
-    constructor(id, type, tier, posX, posY, charges, size, stringType = null)
+    constructor(id, type, tier, posX, posY, charges, size, stringType = null, mobileTypeId = null)
     {
         this.id = id;
         this.type = type;
@@ -26,10 +26,11 @@ class Harvestable
         this.charges = charges;
         this.size = size;
         this.stringType = stringType;
-        this.lastUpdateTime = Date.now(); // For stale entity cleanup
+        this.mobileTypeId = mobileTypeId;
+        this.lastUpdateTime = Date.now();
 
         window.logger?.info(CATEGORIES.HARVESTABLES, 'HarvestableCreated', {
-            id, type, stringType, tier, charges, size,
+            id, type, stringType, tier, charges, size, mobileTypeId,
             note: 'New Harvestable object created'
         });
     }
@@ -216,7 +217,7 @@ export class HarvestablesHandler
 
         if (!harvestable)
         {
-            const h = new Harvestable(id, type, tier, posX, posY, charges, size, stringType);
+            const h = new Harvestable(id, type, tier, posX, posY, charges, size, stringType, mobileTypeId);
             this.harvestableList.push(h);
 
             window.logger?.info(CATEGORIES.HARVESTABLES, 'HarvestableAdded', {
@@ -237,7 +238,6 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
-        // Guard identical to addHarvestable: -1, 65535, null all mean STATIC.
         const isLiving = mobileTypeId !== null && mobileTypeId !== 65535 && mobileTypeId !== -1;
 
         // Get resource type string
@@ -364,9 +364,10 @@ export class HarvestablesHandler
             });
             harvestable.charges = enchant;
 
-            // Re-check if should be displayed with new enchantment
-            const stringType = this.GetStringType(harvestable.type);
-            const isLiving = false;
+            const stringType = harvestable.stringType;
+            const mobileTypeId = harvestable.mobileTypeId;
+            const isLiving = mobileTypeId !== null && mobileTypeId !== undefined
+                && mobileTypeId !== 65535 && mobileTypeId !== -1;
 
             if (!this.shouldDisplayHarvestable(stringType, isLiving, harvestable.tier, enchant)) {
                 this.removeHarvestable(id);
