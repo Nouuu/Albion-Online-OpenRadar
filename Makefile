@@ -3,7 +3,7 @@
 #
 # Requirements:
 #   - GNU Make, bash (Git Bash on Windows)
-#   - Go 1.25+
+#   - Go 1.26+
 #   - Node 20+
 #   - Docker (only needed to build the non-native platform locally)
 #   - git, gh, git-cliff, golangci-lint (see `make install-tools`)
