@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -57,9 +59,10 @@ func readPayloads(t *testing.T, path string) [][]byte {
 	var out [][]byte
 	for {
 		data, _, err := r.ReadPacketData()
-		if err != nil {
+		if errors.Is(err, io.EOF) {
 			break
 		}
+		require.NoError(t, err)
 		pkt := gopacket.NewPacket(data, r.LinkType(), gopacket.Default)
 		udp, _ := pkt.Layer(layers.LayerTypeUDP).(*layers.UDP)
 		require.NotNil(t, udp)

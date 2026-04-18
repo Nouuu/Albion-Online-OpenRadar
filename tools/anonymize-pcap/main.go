@@ -162,6 +162,14 @@ func runWithOptions(in, out string, scrubs []string) error {
 	return nil
 }
 
+// scrubByte is the printable-ASCII filler used to pad scrubbed strings with a
+// same-length replacement. Keep as a single byte to preserve payload length.
+const scrubByte = 'X'
+
+// scrubPayload returns a new byte slice with every needle replaced by
+// same-length 'X' padding. Needles are applied in the order given; for
+// overlapping needles ("ab" before "abc") the earlier match wins and the
+// later needle may no longer match. ASCII only.
 func scrubPayload(payload []byte, needles []string) []byte {
 	if len(needles) == 0 {
 		return payload
@@ -171,7 +179,7 @@ func scrubPayload(payload []byte, needles []string) []byte {
 		if n == "" {
 			continue
 		}
-		pad := bytes.Repeat([]byte{'X'}, len(n))
+		pad := bytes.Repeat([]byte{scrubByte}, len(n))
 		out = bytes.ReplaceAll(out, []byte(n), pad)
 	}
 	return out
