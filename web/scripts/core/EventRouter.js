@@ -279,9 +279,7 @@ export function onEvent(Parameters) {
             playersHandler.updatePlayerFaction(Parameters[0], Parameters[1]);
             break;
 
-        // FIXME ops-drift: event code 590 is UpdateEnemyWarBannerActive upstream
-        // but this branch labels it "key_sync". Semantic divergence to investigate
-        // before substituting an EventCodes.X name. See docs/plans/notes/2026-04-18-handlers-characterization-coverage.md.
+        // upstream 590 = UpdateEnemyWarBannerActive; local dispatch labels it "key_sync", semantics diverge.
         case 590:
             window.logger?.debug(CATEGORIES.NETWORK, 'key_sync', {Parameters});
             break;
@@ -289,9 +287,7 @@ export function onEvent(Parameters) {
 }
 
 export function onRequest(Parameters) {
-    // 22 = OperationCodes.Move (current). 21 = pre-Protocol18 Move value, still
-    // observed in some traffic; upstream 21 is now GetShopTilesForCategory, so
-    // no cleanly-named constant exists for the legacy fallback.
+    // 22 = OperationCodes.Move. 21 = legacy pre-Protocol18 Move (upstream 21 is now GetShopTilesForCategory).
     if (Parameters[253] == 21 || Parameters[253] == OperationCodes.Move) {
         if (Array.isArray(Parameters[1]) && Parameters[1].length === 2) {
             updateLocalPlayerPosition(Parameters[1][0], Parameters[1][1]);
@@ -343,9 +339,7 @@ export function onResponse(Parameters, clearHandlersCallback) {
         return;
     }
 
-    // FIXME ops-drift: opcode 35 is InventoryStack upstream but this branch treats
-    // it as a map-change response. Semantic divergence; hardcoded until the branch
-    // is verified against a pcap response fixture.
+    // upstream 35 = InventoryStack; this branch treats it as a map-change response, semantics diverge.
     if (Parameters[253] == 35) {
         const newMapId = Parameters[0];
         const now = Date.now();
@@ -437,9 +431,7 @@ export function onResponse(Parameters, clearHandlersCallback) {
         }
 
         clearHandlersCallback();
-    // FIXME ops-drift: opcode 137 is ChangeGuildTax upstream but the inline comment
-    // below labels it "Character stats response". Dead handler today; divergence
-    // to investigate before substituting a named constant.
+    // upstream 137 = ChangeGuildTax; inline label says "character stats", branch appears dead.
     } else if (Parameters[253] == 137) {
         // Character stats response - not currently used
     }
