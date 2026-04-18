@@ -43,8 +43,8 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(p[2] + p[3]);
         });
 
-        // @suspect 2026-04-18: fixture messages with type="" (empty string) are dropped by the !type guard even though they carry valid coordinates and sizes. 3 of 5 pcap events are silently discarded. Falsy guard on empty string likely causes fishpool to not show. See bug #25 (FISH-1).
-        test('pcap-derived spawn: entries with type="" are dropped by !type guard (FISH-1)', async () => {
+        // @verified 2026-04-19: empty-string type is valid data (3 of 5 pcap events), guard narrowed to null/undefined so fishpools no longer get discarded.
+        test('pcap-derived spawn: entries with type="" are added (FISH-1 fixed)', async () => {
             const fx = await loadFixture('fishing', 'spawn');
             const emptyTypeMsgs = fx.messages.filter(m => m.parameters['4'] === '');
             expect(emptyTypeMsgs).toHaveLength(3);
@@ -53,7 +53,10 @@ describe('FishingHandler', () => {
                 handler.newFishEvent(normalizeParams(msg.parameters));
             }
 
-            expect(handler.fishes).toHaveLength(0);
+            expect(handler.fishes).toHaveLength(3);
+            for (const fish of handler.fishes) {
+                expect(fish.type).toBe('');
+            }
         });
 
         // @verified 2026-04-18: second event for the same id updates position and size in place without adding a new entry.
