@@ -18,14 +18,22 @@ type Scenario struct {
 	Limit       int             // max matches for this scenario (0 = 1)
 }
 
-// Event codes cross-referenced against web/scripts/utils/EventCodes.js and the
-// switch in web/scripts/core/EventRouter.js. Names follow the upstream source.
-// Per Rule 11 of CLAUDE.md, every literal is grounded in a reference.
+// Event codes cross-referenced against the authoritative upstream
+// work/data/AlbionOnline-StatisticsAnalysis/src/StatisticsAnalysisTool/Network/EventCodes.cs.
+// The local web/scripts/utils/EventCodes.js is STALE for event positions past
+// ~200: Albion inserted new events into the middle of the enum and shifted
+// later codes. This discrepancy is logged in docs/project/IMPROVEMENTS.md
+// and will surface as @suspect tests during handler characterization because
+// the frontend EventRouter.js switches on the outdated values.
+//
+// Per Rule 11 of CLAUDE.md, every literal is grounded in a reference. The
+// observed counts in docs/technical/PROTOCOL18_OBSERVED_CODES.md (from the
+// 2026-04-18 user capture) confirm these numbers against real game traffic.
 const (
 	evtNewCharacter          = 29  // NewCharacter, PlayersHandler.handleNewPlayerEvent
 	evtCharacterEquipment    = 90  // CharacterEquipmentChanged, PlayersHandler.updateItems
-	evtChangeFlaggingFinish  = 359 // ChangeFlaggingFinished, PlayersHandler.updatePlayerFaction
-	evtMounted               = 209 // Mounted, PlayersHandler.handleMountedPlayerEvent
+	evtChangeFlaggingFinish  = 363 // ChangeFlaggingFinished, PlayersHandler.updatePlayerFaction
+	evtMounted               = 211 // Mounted, PlayersHandler.handleMountedPlayerEvent
 
 	evtNewSimpleHarvestList  = 39  // NewSimpleHarvestableObjectList, HarvestablesHandler.newSimpleHarvestableObject
 	evtNewHarvestable        = 40  // NewHarvestableObject, HarvestablesHandler.newHarvestableObject
@@ -35,12 +43,12 @@ const (
 	evtNewMob                = 123 // NewMob, MobsHandler.NewMobEvent
 	evtMobChangeState        = 47  // MobChangeState, MobsHandler.updateEnchantEvent
 
-	evtNewLootChest          = 387 // NewLootChest, ChestsHandler.addChestEvent
-	evtNewFishingZone        = 355 // NewFishingZoneObject, FishingHandler.newFishEvent
-	evtFishingFinished       = 352 // FishingFinished, FishingHandler.fishingEnd
-	evtNewRandomDungeonExit  = 319 // NewRandomDungeonExit, DungeonsHandler.dungeonEvent
-	evtNewCagedObject        = 525 // NewCagedObject, WispCageHandler.newCageEvent
-	evtCagedObjectUpdate     = 526 // CagedObjectStateUpdated, WispCageHandler.cageOpenedEvent
+	evtNewLootChest          = 391 // NewLootChest, ChestsHandler.addChestEvent
+	evtNewFishingZone        = 359 // NewFishingZoneObject, FishingHandler.newFishEvent
+	evtFishingFinished       = 356 // FishingFinished, FishingHandler.fishingEnd
+	evtNewRandomDungeonExit  = 323 // NewRandomDungeonExit, DungeonsHandler.dungeonEvent
+	evtNewCagedObject        = 530 // NewCagedObject, WispCageHandler.newCageEvent
+	evtCagedObjectUpdate     = 531 // CagedObjectStateUpdated, WispCageHandler.cageOpenedEvent
 
 	// Operation codes on Parameters[253]. JoinFinished (opResponse 2) carries
 	// map.id at Parameters[8] and the isBZ hashtable at Parameters[103]

@@ -39,7 +39,7 @@ Net effect: rewrite the characterization scope end-to-end around real pcap fixtu
 | Fixture source | Real pcap upfront (approach B), not synthetic |
 | Extraction scope | Plan-forward (approach 2): cover characterization + Protocol18 regressions from same corpus |
 | Branch strategy | Merge PR #64 first, rebase `feat/revival`, PR `feat/revival` to main, cut `feat/handlers-characterization` from main (approach A) |
-| Extraction tool | New `cmd/photon-dump/` binary (approach Y) |
+| Extraction tool | New `tools/photon-dump/` binary (approach Y) |
 | PII policy | P1 baseline (match existing pcap convention), with minimal extension to `tools/anonymize-pcap/` to scrub local player name via `--scrub-string` |
 | Coverage principle | Cover every distinct variant observed in corpus (Rule 10 coverage principle), not one test per category |
 | Scenario target | 125-190 scenarios across 7 handlers + EventRouter, hard cap 220 |
@@ -56,7 +56,7 @@ capture.pcap (local, 25 min session, gitignored)
     v
 capture.anon.pcap (local, gitignored)
     |
-    | cmd/photon-dump -in capture.anon.pcap -out-go ... -out-js ...
+    | tools/photon-dump -in capture.anon.pcap -out-go ... -out-js ...
     v
 +---> internal/photon/testdata/<scenario>.pcap       (N small anonymized pcaps, committed, fed to Go tests)
 +---> web/scripts/__fixtures__/ws/<handler>/<scenario>.json  (N WS-level JSON, committed, fed to Vitest)
@@ -68,7 +68,7 @@ Add CLI flag `--scrub-string <value>` (repeatable). Byte-level search-and-replac
 
 Single commit: `feat(anonymize-pcap): add --scrub-string for local player name`.
 
-### `cmd/photon-dump/` new binary
+### `tools/photon-dump/` new binary
 
 CLI:
 ```
@@ -95,7 +95,7 @@ Two artifacts per matched scenario:
 
 Tests: unit tests on synthetic mini-pcaps (3-4 hand-crafted packets) verifying match + extraction logic produces expected files.
 
-Single commit: `feat(cmd/photon-dump): extract per-scenario fixtures from anonymized pcap`.
+Single commit: `feat(tools/photon-dump): extract per-scenario fixtures from anonymized pcap`.
 
 ### Scenarios unobservable in the corpus
 
@@ -162,7 +162,7 @@ Step 0d  Cut feat/handlers-characterization from main.
 ```
 Step 1  Tools
   Commit A : feat(anonymize-pcap): add --scrub-string
-  Commit B : feat(cmd/photon-dump): binary + scenario declarations + unit tests
+  Commit B : feat(tools/photon-dump): binary + scenario declarations + unit tests
   Commit C : docs(technical): add PROTOCOL18_OBSERVED_CODES.md via --inventory
 
 Step 2  Extract fixtures

@@ -4,7 +4,7 @@
 
 **Goal:** Build a retroactive safety net of Vitest tests covering the 7 detection handlers plus `EventRouter`, driven by fixtures extracted from a real 25-minute Photon capture, so that subsequent bug-fix plans can land on a green regression base.
 
-**Architecture:** Two new Go tools (`tools/anonymize-pcap` extension, `cmd/photon-dump` binary) turn a local `capture.pcap` into two committed corpora: per-scenario `.pcap` fragments under `internal/photon/testdata/` and per-scenario WS-level JSON under `web/scripts/__fixtures__/ws/`. Handler tests consume the JSON corpus, assert observable state via inline `vi.fn()` stubs, and carry explicit confidence labels (`@verified` / `@characterization` / `@suspect`) per Rule 10 of `CLAUDE.md`.
+**Architecture:** Two new Go tools (`tools/anonymize-pcap` extension, `tools/photon-dump` binary) turn a local `capture.pcap` into two committed corpora: per-scenario `.pcap` fragments under `internal/photon/testdata/` and per-scenario WS-level JSON under `web/scripts/__fixtures__/ws/`. Handler tests consume the JSON corpus, assert observable state via inline `vi.fn()` stubs, and carry explicit confidence labels (`@verified` / `@characterization` / `@suspect`) per Rule 10 of `CLAUDE.md`.
 
 **Tech Stack:** Go 1.26 with `gopacket/pcapgo`, `testify/require`. Vitest 4.x with happy-dom 20.x, co-located `.test.js`. Branch `feat/handlers-characterization` cut from up-to-date `main`.
 
@@ -19,13 +19,13 @@
 | `.gitignore` | Add `capture.pcap`, `capture.anon.pcap` to protect raw and anonymized full-session captures. |
 | `tools/anonymize-pcap/main.go` | Extended with `--scrub-string` flag (repeatable). |
 | `tools/anonymize-pcap/main_test.go` | New. Byte-replacement + pcap integrity unit tests. |
-| `cmd/photon-dump/main.go` | New. CLI entry, flag parsing, pipeline orchestration. |
-| `cmd/photon-dump/scenarios.go` | New. `Scenario` type and the declarative scenario list. |
-| `cmd/photon-dump/extract.go` | New. Matching and extraction logic. |
-| `cmd/photon-dump/inventory.go` | New. `--inventory` mode decoding plus census writer. |
-| `cmd/photon-dump/writer_pcap.go` | New. Per-scenario pcap fragment writer using `pcapgo`. |
-| `cmd/photon-dump/writer_json.go` | New. WS-level JSON writer aligned with `EventRouter.test.js` format. |
-| `cmd/photon-dump/*_test.go` | New. Unit tests on synthetic mini-pcaps for match + extract + write. |
+| `tools/photon-dump/main.go` | New. CLI entry, flag parsing, pipeline orchestration. |
+| `tools/photon-dump/scenarios.go` | New. `Scenario` type and the declarative scenario list. |
+| `tools/photon-dump/extract.go` | New. Matching and extraction logic. |
+| `tools/photon-dump/inventory.go` | New. `--inventory` mode decoding plus census writer. |
+| `tools/photon-dump/writer_pcap.go` | New. Per-scenario pcap fragment writer using `pcapgo`. |
+| `tools/photon-dump/writer_json.go` | New. WS-level JSON writer aligned with `EventRouter.test.js` format. |
+| `tools/photon-dump/*_test.go` | New. Unit tests on synthetic mini-pcaps for match + extract + write. |
 | `internal/photon/testdata/<handler>/<scenario>.pcap` | New. Small anonymized pcap fragments, one per scenario. Committed. |
 | `web/scripts/__fixtures__/ws/<handler>/<scenario>.json` | New. WS-level JSON consumed by Vitest tests. Committed. |
 | `web/scripts/__fixtures__/ws/README.md` | New. Fixture format reference for contributors. |
@@ -298,12 +298,12 @@ git commit -m "feat(anonymize-pcap): add --scrub-string flag for local player na
 ## Task 4: photon-dump scaffolding
 
 **Files:**
-- Create: `cmd/photon-dump/main.go`
-- Create: `cmd/photon-dump/scenarios.go`
+- Create: `tools/photon-dump/main.go`
+- Create: `tools/photon-dump/scenarios.go`
 
 - [ ] **Step 1: Write a minimal scaffold that compiles and exposes the flag surface**
 
-`cmd/photon-dump/main.go`:
+`tools/photon-dump/main.go`:
 
 ```go
 // photon-dump extracts per-scenario fixtures from an anonymized Photon pcap.
@@ -357,7 +357,7 @@ func main() {
 }
 ```
 
-`cmd/photon-dump/scenarios.go`:
+`tools/photon-dump/scenarios.go`:
 
 ```go
 package main
@@ -387,7 +387,7 @@ var scenarios []Scenario
 
 - [ ] **Step 2: Add stubs for the two run functions so main compiles**
 
-Create `cmd/photon-dump/extract.go`:
+Create `tools/photon-dump/extract.go`:
 
 ```go
 package main
@@ -399,7 +399,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 }
 ```
 
-Create `cmd/photon-dump/inventory.go`:
+Create `tools/photon-dump/inventory.go`:
 
 ```go
 package main
@@ -413,19 +413,19 @@ func runInventory(in, outPath string) error {
 
 - [ ] **Step 3: Verify it compiles**
 
-Run: `go build ./cmd/photon-dump/...`
+Run: `go build ./tools/photon-dump/...`
 Expected: exit 0, no output.
 
 - [ ] **Step 4: Verify help surface**
 
-Run: `go run ./cmd/photon-dump -h`
+Run: `go run ./tools/photon-dump -h`
 Expected: exit 2 (flag default for unknown `-h`), or the usage banner. Either is acceptable, we only check the binary launches.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): scaffold binary, flag surface, scenario type"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): scaffold binary, flag surface, scenario type"
 ```
 
 ---
@@ -433,7 +433,7 @@ git commit -m "feat(cmd/photon-dump): scaffold binary, flag surface, scenario ty
 ## Task 5: photon-dump pcap iteration, red
 
 **Files:**
-- Create: `cmd/photon-dump/extract_test.go`
+- Create: `tools/photon-dump/extract_test.go`
 
 - [ ] **Step 1: Write a failing test that exercises pcap iteration**
 
@@ -494,7 +494,7 @@ func TestIteratePcap_CountsUdpPayloads(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./cmd/photon-dump/... -run TestIteratePcap -v`
+Run: `go test ./tools/photon-dump/... -run TestIteratePcap -v`
 Expected: FAIL with `undefined: iteratePcap`.
 
 ---
@@ -502,11 +502,11 @@ Expected: FAIL with `undefined: iteratePcap`.
 ## Task 6: photon-dump pcap iteration, green
 
 **Files:**
-- Modify: `cmd/photon-dump/extract.go`
+- Modify: `tools/photon-dump/extract.go`
 
 - [ ] **Step 1: Implement iteratePcap**
 
-Replace the contents of `cmd/photon-dump/extract.go` with:
+Replace the contents of `tools/photon-dump/extract.go` with:
 
 ```go
 package main
@@ -557,14 +557,14 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 
 - [ ] **Step 2: Run tests to verify they pass**
 
-Run: `go test ./cmd/photon-dump/... -run TestIteratePcap -v`
+Run: `go test ./tools/photon-dump/... -run TestIteratePcap -v`
 Expected: `PASS: TestIteratePcap_CountsUdpPayloads`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): pcap UDP iteration helper"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): pcap UDP iteration helper"
 ```
 
 ---
@@ -572,8 +572,8 @@ git commit -m "feat(cmd/photon-dump): pcap UDP iteration helper"
 ## Task 7: photon-dump inventory mode
 
 **Files:**
-- Modify: `cmd/photon-dump/inventory.go`
-- Create: `cmd/photon-dump/inventory_test.go`
+- Modify: `tools/photon-dump/inventory.go`
+- Create: `tools/photon-dump/inventory_test.go`
 
 - [ ] **Step 1: Write a failing test for the census decoder**
 
@@ -620,12 +620,12 @@ func TestInventory_WritesCensusMarkdown(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./cmd/photon-dump/... -run TestInventory -v`
+Run: `go test ./tools/photon-dump/... -run TestInventory -v`
 Expected: FAIL with `runInventory: not implemented yet`.
 
 - [ ] **Step 3: Implement runInventory**
 
-Replace `cmd/photon-dump/inventory.go` with:
+Replace `tools/photon-dump/inventory.go` with:
 
 ```go
 package main
@@ -677,7 +677,7 @@ func runInventory(in, outPath string) error {
 
 	var sb strings.Builder
 	sb.WriteString("# Protocol18 Observed Codes\n\n")
-	sb.WriteString("Generated by `cmd/photon-dump --inventory`. One row per code, with count.\n\n")
+	sb.WriteString("Generated by `tools/photon-dump --inventory`. One row per code, with count.\n\n")
 	writeSection(&sb, "Event codes", events)
 	writeSection(&sb, "Operation requests", requests)
 	writeSection(&sb, "Operation responses", responses)
@@ -702,14 +702,14 @@ func writeSection(sb *strings.Builder, title string, m map[byte]int) {
 
 - [ ] **Step 4: Run tests to verify they pass**
 
-Run: `go test ./cmd/photon-dump/... -run TestInventory -v`
+Run: `go test ./tools/photon-dump/... -run TestInventory -v`
 Expected: `PASS: TestInventory_WritesCensusMarkdown`.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): --inventory mode, census markdown output"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): --inventory mode, census markdown output"
 ```
 
 ---
@@ -717,7 +717,7 @@ git commit -m "feat(cmd/photon-dump): --inventory mode, census markdown output"
 ## Task 8: Scenario matching core, red
 
 **Files:**
-- Create: `cmd/photon-dump/matcher_test.go`
+- Create: `tools/photon-dump/matcher_test.go`
 
 - [ ] **Step 1: Write a failing test for scenario matching on decoded events**
 
@@ -759,7 +759,7 @@ func TestMatchEvent_WithPredicate(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./cmd/photon-dump/... -run TestMatchEvent -v`
+Run: `go test ./tools/photon-dump/... -run TestMatchEvent -v`
 Expected: FAIL with `undefined: matchesEvent`.
 
 ---
@@ -767,7 +767,7 @@ Expected: FAIL with `undefined: matchesEvent`.
 ## Task 9: Scenario matching core, green
 
 **Files:**
-- Create: `cmd/photon-dump/matcher.go`
+- Create: `tools/photon-dump/matcher.go`
 
 - [ ] **Step 1: Implement matchesEvent, matchesRequest, matchesResponse**
 
@@ -810,14 +810,14 @@ func matchesWhere(where map[byte]func(v any) bool, params map[byte]any) bool {
 
 - [ ] **Step 2: Run tests to verify they pass**
 
-Run: `go test ./cmd/photon-dump/... -run TestMatchEvent -v`
+Run: `go test ./tools/photon-dump/... -run TestMatchEvent -v`
 Expected: both tests `PASS`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): scenario matcher for events, requests, responses"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): scenario matcher for events, requests, responses"
 ```
 
 ---
@@ -825,7 +825,7 @@ git commit -m "feat(cmd/photon-dump): scenario matcher for events, requests, res
 ## Task 10: Per-scenario pcap fragment writer, red
 
 **Files:**
-- Create: `cmd/photon-dump/writer_pcap_test.go`
+- Create: `tools/photon-dump/writer_pcap_test.go`
 
 - [ ] **Step 1: Write a failing test**
 
@@ -877,7 +877,7 @@ func TestWritePcapFragment_RoundTrip(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./cmd/photon-dump/... -run TestWritePcapFragment -v`
+Run: `go test ./tools/photon-dump/... -run TestWritePcapFragment -v`
 Expected: FAIL with `undefined: writePcapFragment`.
 
 ---
@@ -885,7 +885,7 @@ Expected: FAIL with `undefined: writePcapFragment`.
 ## Task 11: Per-scenario pcap fragment writer, green
 
 **Files:**
-- Create: `cmd/photon-dump/writer_pcap.go`
+- Create: `tools/photon-dump/writer_pcap.go`
 
 - [ ] **Step 1: Implement writePcapFragment**
 
@@ -947,14 +947,14 @@ func writePcapFragment(path string, packets [][]byte) error {
 
 - [ ] **Step 2: Run tests to verify they pass**
 
-Run: `go test ./cmd/photon-dump/... -run TestWritePcapFragment -v`
+Run: `go test ./tools/photon-dump/... -run TestWritePcapFragment -v`
 Expected: `PASS: TestWritePcapFragment_RoundTrip`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): pcap fragment writer"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): pcap fragment writer"
 ```
 
 ---
@@ -962,7 +962,7 @@ git commit -m "feat(cmd/photon-dump): pcap fragment writer"
 ## Task 12: WS-level JSON fixture writer, red
 
 **Files:**
-- Create: `cmd/photon-dump/writer_json_test.go`
+- Create: `tools/photon-dump/writer_json_test.go`
 
 - [ ] **Step 1: Write a failing test that asserts the format consumed by EventRouter.test.js**
 
@@ -1007,7 +1007,7 @@ func TestWriteJSONFixture_Shape(t *testing.T) {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./cmd/photon-dump/... -run TestWriteJSONFixture -v`
+Run: `go test ./tools/photon-dump/... -run TestWriteJSONFixture -v`
 Expected: FAIL with `undefined: FixtureMessage` and `undefined: writeJSONFixture`.
 
 ---
@@ -1015,7 +1015,7 @@ Expected: FAIL with `undefined: FixtureMessage` and `undefined: writeJSONFixture
 ## Task 13: WS-level JSON fixture writer, green
 
 **Files:**
-- Create: `cmd/photon-dump/writer_json.go`
+- Create: `tools/photon-dump/writer_json.go`
 - Create: `web/scripts/__fixtures__/ws/README.md`
 
 - [ ] **Step 1: Implement writeJSONFixture**
@@ -1092,21 +1092,21 @@ One JSON file per handler scenario, consumed by Vitest tests under
 
 ## Generation
 
-Fixtures are produced by `cmd/photon-dump`. Hand-written fixtures carry a
+Fixtures are produced by `tools/photon-dump`. Hand-written fixtures carry a
 `synthetic` marker in the consuming test header comment; extracted fixtures
 carry `pcap-derived <fragment-path>`.
 ```
 
 - [ ] **Step 3: Run tests to verify they pass**
 
-Run: `go test ./cmd/photon-dump/... -run TestWriteJSONFixture -v`
+Run: `go test ./tools/photon-dump/... -run TestWriteJSONFixture -v`
 Expected: `PASS: TestWriteJSONFixture_Shape`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add cmd/photon-dump/ web/scripts/__fixtures__/
-git commit -m "feat(cmd/photon-dump): WS-level JSON fixture writer and schema doc"
+git add tools/photon-dump/ web/scripts/__fixtures__/
+git commit -m "feat(tools/photon-dump): WS-level JSON fixture writer and schema doc"
 ```
 
 ---
@@ -1114,7 +1114,7 @@ git commit -m "feat(cmd/photon-dump): WS-level JSON fixture writer and schema do
 ## Task 14: runExtract wiring, red
 
 **Files:**
-- Create: `cmd/photon-dump/extract_wiring_test.go`
+- Create: `tools/photon-dump/extract_wiring_test.go`
 
 - [ ] **Step 1: Write a failing integration test on a mini-pcap**
 
@@ -1165,7 +1165,7 @@ Note: `Code: -1` is a sentinel meaning "first event of any code". The wiring in 
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `go test ./cmd/photon-dump/... -run TestRunExtract -v`
+Run: `go test ./tools/photon-dump/... -run TestRunExtract -v`
 Expected: FAIL with `runExtract: scenario matching not implemented yet`.
 
 ---
@@ -1173,7 +1173,7 @@ Expected: FAIL with `runExtract: scenario matching not implemented yet`.
 ## Task 15: runExtract wiring, green
 
 **Files:**
-- Modify: `cmd/photon-dump/extract.go`
+- Modify: `tools/photon-dump/extract.go`
 
 - [ ] **Step 1: Replace runExtract with the real pipeline**
 
@@ -1340,14 +1340,14 @@ func stringifyParams(params map[byte]any) map[string]any {
 
 - [ ] **Step 2: Run tests to verify they pass**
 
-Run: `go test ./cmd/photon-dump/... -v`
+Run: `go test ./tools/photon-dump/... -v`
 Expected: every test in the package `PASS`, including `TestRunExtract_ProducesBothArtifacts`.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): runExtract pipeline, pcap + JSON per scenario"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): runExtract pipeline, pcap + JSON per scenario"
 ```
 
 ---
@@ -1355,7 +1355,7 @@ git commit -m "feat(cmd/photon-dump): runExtract pipeline, pcap + JSON per scena
 ## Task 16: Declare the scenario catalog
 
 **Files:**
-- Modify: `cmd/photon-dump/scenarios.go`
+- Modify: `tools/photon-dump/scenarios.go`
 
 - [ ] **Step 1: Populate the scenarios slice with the design targets**
 
@@ -1417,14 +1417,14 @@ Any code marked "verify at CP1" is an `@suspect` assumption. The inventory run a
 
 - [ ] **Step 2: Verify compile**
 
-Run: `go build ./cmd/photon-dump/...`
+Run: `go build ./tools/photon-dump/...`
 Expected: exit 0.
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add cmd/photon-dump/
-git commit -m "feat(cmd/photon-dump): declarative scenario catalog"
+git add tools/photon-dump/
+git commit -m "feat(tools/photon-dump): declarative scenario catalog"
 ```
 
 ---
@@ -1445,7 +1445,7 @@ Expected: `N packets read, N anonymized packets written to capture.anon.pcap`. B
 - [ ] **Step 2: Run inventory**
 
 ```bash
-go run ./cmd/photon-dump -in capture.anon.pcap -inventory docs/technical/PROTOCOL18_OBSERVED_CODES.md
+go run ./tools/photon-dump -in capture.anon.pcap -inventory docs/technical/PROTOCOL18_OBSERVED_CODES.md
 ```
 
 Expected: markdown file created, containing "## Event codes", "## Operation requests", "## Operation responses".
@@ -1466,7 +1466,7 @@ Wait for user go/no-go before proceeding to Task 18.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add docs/technical/PROTOCOL18_OBSERVED_CODES.md cmd/photon-dump/scenarios.go
+git add docs/technical/PROTOCOL18_OBSERVED_CODES.md tools/photon-dump/scenarios.go
 git commit -m "docs(technical): protocol18 observed code census; ratify scenario catalog"
 ```
 
@@ -1481,7 +1481,7 @@ git commit -m "docs(technical): protocol18 observed code census; ratify scenario
 - [ ] **Step 1: Run extraction**
 
 ```bash
-go run ./cmd/photon-dump -in capture.anon.pcap -out-go internal/photon/testdata -out-js web/scripts/__fixtures__/ws
+go run ./tools/photon-dump -in capture.anon.pcap -out-go internal/photon/testdata -out-js web/scripts/__fixtures__/ws
 ```
 
 Expected: non-zero pcap fragments under `internal/photon/testdata/<handler>/` and JSON fixtures under `web/scripts/__fixtures__/ws/<handler>/` for every ratified scenario.
@@ -2108,7 +2108,7 @@ git push -u origin feat/handlers-characterization
 ```bash
 gh pr create --title "test(handlers): retroactive characterization safety net" --body "$(cat <<'EOF'
 ## Summary
-- New `cmd/photon-dump` binary extracts per-scenario pcap fragments and WS-level JSON fixtures from a real Photon capture.
+- New `tools/photon-dump` binary extracts per-scenario pcap fragments and WS-level JSON fixtures from a real Photon capture.
 - Extended `tools/anonymize-pcap` with `--scrub-string` for local player name scrubbing.
 - Vitest test files cover the 7 detection handlers plus EventRouter dispatch, with explicit `@verified` / `@characterization` / `@suspect` labels per Rule 10.
 - No production handler code modified. `@suspect` tests cross-link to `docs/project/IMPROVEMENTS.md`.
@@ -2137,7 +2137,7 @@ If the extraction pipeline produces fragile fixtures and we need to restart from
 
 1. Delete `internal/photon/testdata/<handler>/` subdirectories (keep root-level fragments from PR #51/#64).
 2. Delete `web/scripts/__fixtures__/ws/<handler>/` subdirectories.
-3. Regenerate with `go run ./cmd/photon-dump ...` against the new `capture.anon.pcap`.
-4. Do not delete `cmd/photon-dump/` or `tools/anonymize-pcap/`; they stay.
+3. Regenerate with `go run ./tools/photon-dump ...` against the new `capture.anon.pcap`.
+4. Do not delete `tools/photon-dump/` or `tools/anonymize-pcap/`; they stay.
 
 Rule 8 applies to every retry: the extraction pipeline itself carries tests, so regeneration does not invalidate the tooling.
