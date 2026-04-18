@@ -45,14 +45,18 @@ Archived to `docs/archive/completed-plans/`:
 - `2026-04-12-release-cicd-automation-design.md` (superseded, banner inside)
 - `2026-04-12-photon-event-codes-refresh-design.md` (superseded, banner inside)
 - `2026-04-14-photon-protocol18-port.md` (completed, merged as PR #51)
+- `2026-04-12-handlers-characterization-coverage-design.md` (superseded later on 2026-04-18 by brainstorm output `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md`, banner inside)
 
 Active in `docs/plans/`:
 
-- `2026-04-12-handlers-characterization-coverage-design.md` (patched, first in queue)
 - `2026-04-18-protocol18-regressions-design.md` (new, fixes issues #52 and #57)
 - `2026-04-18-alerts-and-ignore-list-design.md` (new, fixes issues #36 and #65)
 - `2026-01-15-living-harvestables-fix-design.md` (unchanged, still valid)
 - `2026-04-12-assets-refresh-design.md` (unchanged, still valid)
+
+Sidecar (brainstorm output awaiting `superpowers:writing-plans`):
+
+- `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md` (supersedes the archived handlers-characterization plan, top of execution queue once turned into a plan)
 
 Deferred:
 

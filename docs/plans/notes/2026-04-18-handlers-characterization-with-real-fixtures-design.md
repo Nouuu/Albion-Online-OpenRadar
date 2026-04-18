@@ -1,4 +1,4 @@
-# Handlers Characterization With Real Fixtures — Design
+# Handlers Characterization With Real Fixtures Design
 
 | Field | Value |
 |---|---|

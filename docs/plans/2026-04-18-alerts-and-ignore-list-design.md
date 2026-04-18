@@ -5,7 +5,7 @@
 | Status | Active, queued after Protocol18 regressions |
 | Created | 2026-04-18 |
 | Priority | Medium (user-facing, pre-existing plus community regression) |
-| Depends on | `2026-04-12-handlers-characterization-coverage-design.md` (safety net on PlayersHandler) |
+| Depends on | `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md` (safety net on PlayersHandler, successor to the superseded `2026-04-12-handlers-characterization-coverage-design.md` now archived) |
 | Blocks | None |
 | User action required | Minimal (in-game verification on a few zones) |
 | GitHub interaction | None during execution (standby) |

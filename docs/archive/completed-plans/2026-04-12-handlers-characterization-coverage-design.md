@@ -1,26 +1,19 @@
 # Handlers Characterization Coverage Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
-> **PATCHED on 2026-04-18 after parallel work realignment.**
+> **STATUS: SUPERSEDED on 2026-04-18**
 >
-> Infrastructure tasks (Vitest install, config, first test) are **done** as a side effect of PR #51 (Protocol18 port):
+> The scope of this plan was rescoped during the 2026-04-18 brainstorm session. The successor design is `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md`, which will be turned into an active implementation plan via `superpowers:writing-plans`.
 >
-> - `vitest.config.js` exists at repo root, uses `happy-dom` environment, include pattern `web/scripts/**/*.test.js`
-> - `package.json` has `"test": "vitest run"`, `"test:watch"`, `"test:coverage"`
-> - First frontend test already co-located at `web/scripts/core/EventRouter.test.js` (11 tests, acts as reference template)
-> - Stubs pattern is inline `vi.fn()` per test, not a shared setup file
+> Differences from this plan:
 >
-> Consequences for this plan:
+> - Fixtures are derived from a real 25-minute Photon capture via a new `cmd/photon-dump/` binary, not synthetic fixtures derived from reading the Go parser.
+> - Coverage expanded to all 7 detection handlers (Players, Harvestables, Mobs, Chests, Dungeons, Fishing, WispCage) plus EventRouter routing. Original scope was 3 handlers.
+> - Scenario budget pushed from 30 to 125-190, capped at 220, driven by observed variants in the capture corpus.
+> - Stop-and-discuss protocol formalized as Rule 10 of CLAUDE.md.
+> - Infrastructure tasks (Vitest + happy-dom) are already satisfied by PR #51, no install step.
+> - Test location is co-located `.test.js` next to source (PR #51 pattern), not `web/scripts/__tests__/`.
 >
-> - **Delete original Tasks 1 to 7 (infrastructure).** They are already satisfied.
-> - **Change test location convention.** Tests are co-located next to the source they cover (for example `HarvestablesHandler.test.js` sits next to `HarvestablesHandler.js`). Drop the `web/scripts/__tests__/handlers/` structure.
-> - **Drop jsdom.** Use `happy-dom` to match project convention.
-> - **Keep the scenario count and labels** (`@verified` / `@characterization` / `@suspect`).
-> - **Stop-and-discuss rule** on suspected bugs still applies.
-> - **Fixtures location:** create `web/scripts/__fixtures__/ws/<handler>/<scenario>.json` when needed. Do not put fixtures next to the source file.
->
-> Re-number tasks below: new Task 1 is the former Task 8 (Read PlayersHandler), tasks are renumbered -7. Total tasks goes from 42 to 35.
+> The body of this plan is kept for historical record only. Do not execute. Task references to `internal/photon/protocol16.go`, `jsdom`, `web/scripts/__tests__/`, and the Handoff reference to `2026-04-12-photon-event-codes-refresh-design.md` are all stale.
 
 | Field | Value |
 |---|---|

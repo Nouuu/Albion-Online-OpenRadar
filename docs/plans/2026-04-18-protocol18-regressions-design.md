@@ -5,7 +5,7 @@
 | Status | Active, queued after handlers characterization |
 | Created | 2026-04-18 |
 | Priority | High (user-facing regressions introduced by PR #51) |
-| Depends on | `2026-04-12-handlers-characterization-coverage-design.md` (safety net) |
+| Depends on | `docs/plans/notes/2026-04-18-handlers-characterization-with-real-fixtures-design.md` (safety net, successor to the superseded `2026-04-12-handlers-characterization-coverage-design.md` now archived) |
 | Blocks | None |
 | User action required | Yes, live Albion capture for isBZ hashtable reverse |
 | GitHub interaction | None during execution (standby) |
