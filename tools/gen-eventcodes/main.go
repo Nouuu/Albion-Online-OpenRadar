@@ -35,18 +35,43 @@ func main() {
 }
 
 func run() error {
+	root, err := findRepoRoot()
+	if err != nil {
+		return err
+	}
 	for _, s := range specs {
-		if err := generate(s); err != nil {
+		if err := generate(root, s); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func generate(s spec) error {
-	raw, err := os.ReadFile(filepath.Clean(s.Source))
+// findRepoRoot walks up from the current working directory looking for a
+// go.mod file. That lets `go generate` invoke the generator from any package
+// directory while keeping spec paths repo-relative.
+func findRepoRoot() (string, error) {
+	dir, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("read source %s: %w", s.Source, err)
+		return "", err
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir, nil
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("go.mod not found above %s", dir)
+		}
+		dir = parent
+	}
+}
+
+func generate(root string, s spec) error {
+	sourcePath := filepath.Join(root, filepath.FromSlash(s.Source))
+	raw, err := os.ReadFile(sourcePath)
+	if err != nil {
+		return fmt.Errorf("read source %s: %w", sourcePath, err)
 	}
 
 	entryRe := regexp.MustCompile(`^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:\s*(\d+)\s*,?\s*$`)
@@ -85,13 +110,13 @@ func generate(s spec) error {
 	}
 	fmt.Fprintln(&out, ")")
 
-	target := filepath.Clean(s.Target)
-	if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
-		return fmt.Errorf("mkdir %s: %w", filepath.Dir(target), err)
+	targetPath := filepath.Join(root, filepath.FromSlash(s.Target))
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0o755); err != nil {
+		return fmt.Errorf("mkdir %s: %w", filepath.Dir(targetPath), err)
 	}
-	if err := os.WriteFile(target, out.Bytes(), 0o644); err != nil {
-		return fmt.Errorf("write target %s: %w", target, err)
+	if err := os.WriteFile(targetPath, out.Bytes(), 0o644); err != nil {
+		return fmt.Errorf("write target %s: %w", targetPath, err)
 	}
-	fmt.Printf("wrote %d constants to %s\n", len(entries), target)
+	fmt.Printf("wrote %d constants to %s\n", len(entries), targetPath)
 	return nil
 }

@@ -26,6 +26,7 @@ DIST := dist
 .PHONY: help dev run css css-watch vendors test lint lint-fix clean \
         install-tools assets restore-assets refresh-assets \
         update-ao-data download-icons download-spells download-map \
+        refresh-codes gen-codes \
         build-linux build-windows readmes checksums all-in-one \
         release release-dry-run
 
@@ -56,6 +57,11 @@ help: ## Display help
 	@echo "  download-spells   Download + optimize spell icons"
 	@echo "  download-map      Download + optimize world map (Puppeteer)"
 	@echo "  refresh-assets    Run all of the above sequentially"
+	@echo ""
+	@echo "Protocol codes (single source of truth):"
+	@echo "  refresh-codes     Fetch upstream EventCodes.cs + OperationCodes.cs,"
+	@echo "                    regen JS + Go mirrors"
+	@echo "  gen-codes         Regen Go mirrors from current JS files (no fetch)"
 	@echo ""
 	@echo "Release:"
 	@echo "  release-dry-run   all-in-one + generate dist/RELEASE.md (no tag, no GH call)"
@@ -134,6 +140,26 @@ download-map: ## Refresh world map (web/images/map/)
 refresh-assets: update-ao-data download-icons download-spells download-map ## Refresh all network-sourced assets
 	@echo ""
 	@echo "All assets refreshed. Review changes with 'git status' before committing."
+
+# ============================================================================
+# Protocol codes (Albion EventCodes + OperationCodes, single source of truth)
+#
+# Upstream is the StatisticsAnalysis GitHub master. The JS files under
+# web/scripts/utils/ are the committed source of truth; the Go packages under
+# internal/photon/{eventcodes,operationcodes}/ are generated mirrors.
+# ============================================================================
+
+gen-codes: ## Regen Go mirrors from current JS files (no fetch)
+	go generate ./internal/photon/eventcodes/...
+	@echo ""
+	@echo "Go mirrors regenerated. Run 'make test' to verify."
+
+refresh-codes: ## Fetch upstream, regen JS + Go mirrors
+	npx tsx tools/refresh-codes.ts
+	$(MAKE) gen-codes
+	@echo ""
+	@echo "Protocol codes refreshed. Review with 'git diff web/scripts/utils/ internal/photon/'"
+	@echo "then 'make test' to catch dispatch regressions."
 
 # ============================================================================
 # Build
