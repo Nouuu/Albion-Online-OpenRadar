@@ -21,8 +21,8 @@ Living counter. Updated on every test commit. Archived at plan completion.
 | FishingHandler | 8 | 0 | 2 | 10 |
 | DungeonsHandler | 19 | 0 | 0 | 19 |
 | WispCageHandler | 9 | 0 | 0 | 9 |
-| EventRouter | 11 (PR #51) | 0 | 0 | 11 |
-| **Total** | **196** | **7** | **6** | **209** |
+| EventRouter | 36 | 12 | 1 | 49 |
+| **Total** | **221** | **19** | **7** | **247** |
 
 ## Open `@suspect` register
 
@@ -31,6 +31,8 @@ Living counter. Updated on every test commit. Archived at plan completion.
 - **PLAY-2** (issue #36) PlayersHandler.triggerHostileAlert has no ignore-list check. A player in `alreadyIgnoredPlayers` still triggers the sound alert when their faction changes to 255 in a red zone. Pinned by `synthetic PLAY-2: ignored player still triggers alert on faction change in red zone` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **CHEST-1** ChestsHandler.addChestEvent assumes Parameters[3] is always a string; crashes with TypeError when undefined. Pinned by `synthetic: addChestEvent with Parameters[3]=undefined throws TypeError` in `ChestsHandler.test.js`.
 - **FISH-1** (issue #25) FishingHandler.newFishEvent drops events where Parameters[4] is an empty string `""` because `!type` treats `""` as falsy. In the pcap corpus 3 of 5 spawn events carry `type=""` with valid coordinates and are silently discarded. Likely root of fishpool not showing. Pinned by `pcap-derived spawn: entries with type="" are dropped by !type guard` in `FishingHandler.test.js`. Fix candidate: replace `!type` with `type === null || type === undefined`.
+
+- **ROUTER-1** (issue #57) EventRouter.onResponse opcode 2 (JoinMap) does not extract `isBZ` from `Parameters[103]` hashtable. Post-Protocol18 the field is `{"5": ..., "7": ...}` (non-zero). Current code leaves `map.isBZ` at its prior value. Pinned by `@suspect ROUTER-1: isBZ not derived from params[103] hashtable in JoinMap response` in `EventRouter.test.js`. Fix design: `2026-04-18-protocol18-regressions-design.md`.
 
 ## Decisions log
 
