@@ -65,14 +65,21 @@ describe('ChestsHandler', () => {
             expect(() => handler.addChestEvent(p)).not.toThrow();
         });
 
-        // CHEST-2: pinned bug, handler stores chestName only and drops the rarity/type fields (Parameters[5], Parameters[18], Parameters[23]).
-        // Issue #29 reports drawing colour confusion; root cause at handler layer is that rarity is never persisted.
-        test.fails('pcap-derived spawn preserves Parameters[5] rarity on the stored Chest entity', async () => {
+        // @verified 2026-04-19: rarity persisted from Parameters[5] on the stored Chest entity (#29 handler-layer root cause).
+        test('pcap-derived spawn preserves Parameters[5] rarity on the stored Chest entity', async () => {
             const fx = await loadFixture('chests', 'spawn');
             const p = normalizeParams(fx.messages[0].parameters);
             handler.addChestEvent(p);
             const stored = handler.chestsList[0];
             expect(stored.rarity).toBe(p[5]);
+        });
+
+        // @verified 2026-04-19: contract test, addChest without rarity defaults to null on the stored Chest entity.
+        test('synthetic contract: addChest without rarity defaults to null', () => {
+            handler.addChest(42, 0, 0, 'any-chest');
+            const stored = handler.chestsList.find(c => c.id === 42);
+            expect(stored).toBeDefined();
+            expect(stored.rarity).toBeNull();
         });
     });
 

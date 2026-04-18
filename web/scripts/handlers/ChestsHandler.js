@@ -1,11 +1,12 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 
 class Chest {
-    constructor(id, posX, posY, name) {
+    constructor(id, posX, posY, name, rarity = null) {
         this.id = id;
         this.posX = posX;
         this.posY = posY;
         this.chestName = name;
+        this.rarity = rarity;
         this.hX = 0;
         this.hY = 0;
         this.lastUpdateTime = Date.now();
@@ -21,13 +22,13 @@ export class ChestsHandler {
         this.chestsList = [];
     }
 
-    addChest(id, posX, posY, name) {
+    addChest(id, posX, posY, name, rarity = null) {
         const existing = this.chestsList.find(chest => chest.id === id);
         if (existing) {
             existing.touch();
             return;
         }
-        const h = new Chest(id, posX, posY, name);
+        const h = new Chest(id, posX, posY, name, rarity);
         this.chestsList.push(h);
     }
 
@@ -71,10 +72,11 @@ export class ChestsHandler {
         const chestId = Parameters[0];
         const chestsPosition = Parameters[1];
         let chestName = Parameters[3];
+        const rarity = Parameters[5] ?? null;
 
         if (typeof chestName === 'string' && chestName.toLowerCase().includes("mist")) {
             chestName = Parameters[4];
         }
-        this.addChest(chestId, chestsPosition[0], chestsPosition[1], chestName);
+        this.addChest(chestId, chestsPosition[0], chestsPosition[1], chestName, rarity);
     }
 }

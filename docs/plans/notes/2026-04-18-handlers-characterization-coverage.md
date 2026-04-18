@@ -19,12 +19,12 @@ Living counter. Updated on every test commit. Archived at plan completion.
 | PlayersHandler | 37 | 2 | 2 | 41 |
 | HarvestablesHandler | 44 | 7 | 2 | 53 |
 | MobsHandler | 59 | 3 | 0 | 62 |
-| ChestsHandler | 11 | 0 | 1 | 12 |
+| ChestsHandler | 13 | 0 | 0 | 13 |
 | FishingHandler | 9 | 0 | 1 | 10 |
 | DungeonsHandler | 19 | 0 | 0 | 19 |
 | WispCageHandler | 9 | 0 | 0 | 9 |
 | EventRouter | 36 | 0 | 11 | 47 |
-| **Total** | **223** | **14** | **18** | **255** |
+| **Total** | **225** | **14** | **17** | **256** |
 
 ## Open observations register
 
@@ -38,7 +38,6 @@ Issue #52 (living Fiber tier mismatch) is NOT a `test.fails` because direction i
 - **HARV-3** HarvestUpdateEvent re-gate uses `isLiving=false` hardcoded and `GetStringType(harvestable.type)` with static typeNumber. Living Fiber critter (typeNumber=16) resolves to HIDE, so re-gate checks static Hide settings. Entity is removed when all static settings are disabled. Pinned by `test.fails('HarvestUpdateEvent preserves living Fiber when static settings are all disabled')`. After fix: re-gate should use the stored stringType and isLiving flag, not recompute them from typeNumber.
 - **PLAY-1** (issue #65) PlayersHandler.handleNewPlayerEvent does not fire alert for hostile in unknown zone. `zonesDatabase.getPvpType(unknown)` falls back to 'safe'; `isPlayerThreat(255, 'safe')` returns false; alert gate skipped. Pinned by `synthetic hostile in unknown zone: alert should fire but does not` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **PLAY-2** (issue #36) PlayersHandler.triggerHostileAlert has no ignore-list check. A player in `alreadyIgnoredPlayers` still triggers the sound alert when their faction changes to 255 in a red zone. Pinned by `synthetic PLAY-2: ignored player still triggers alert on faction change in red zone` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
-- **CHEST-2** (issue #29 root cause at handler layer) ChestsHandler stores only id/pos/chestName on the Chest entity. Rarity (Parameters[5]) and related fields (Parameters[18], Parameters[23]) are discarded. The drawing layer cannot resolve chest colour because the data was never persisted. Pinned by `test.fails('pcap-derived spawn preserves Parameters[5] rarity on the stored Chest entity')` in `ChestsHandler.test.js`. Fix candidate: add rarity field to Chest class and populate from Parameters[5].
 - **ROUTER-1** (issue #57) EventRouter.onResponse opcode 2 (JoinMap) does not extract `isBZ` from `Parameters[103]` hashtable. Post-Protocol18 the field is `{"5": ..., "7": ...}` (non-zero). Current code leaves `map.isBZ` at its prior value. Pinned by `test.fails('ROUTER-1: onResponse JoinMap extracts isBZ from params[103] hashtable')` in `EventRouter.test.js`. Fix design: `2026-04-18-protocol18-regressions-design.md`.
 
 - **ROUTER-2** (issue #53) EventCodes.ChangeFlaggingFinished stale (local 359, real 363). Router case 359 never fires for real game events carrying P[252]=363. Pinned by two `test.fails` in `EventRouter.test.js`. Will flip to pass when `EventCodes.js` is refreshed.
