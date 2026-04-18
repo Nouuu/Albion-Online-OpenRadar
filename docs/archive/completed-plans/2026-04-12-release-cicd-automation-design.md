@@ -1,16 +1,32 @@
 # Release CI/CD Automation Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task by task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **STATUS: SUPERSEDED on 2026-04-18**
+>
+> This plan was obsoleted by parallel work done by the user from another machine, in particular:
+>
+> - **PR #61 (merged 2026-04-17) dropped GoReleaser** in favor of a cross-platform Makefile with direct `docker build -f Dockerfile.linux` / `Dockerfile.windows` and a `release TAG=x.y.z` target that invokes `gh release create --draft`. The entire Part B of this plan (goreleaser-driven release job) no longer applies.
+> - **Dependency bumps absorbed on feat/revival** via commits `cc2b85b4`, `7a779e7c`, `ec239d27`, `e3c75b8c`, `e66c591d`. Part A of this plan (bumps in paced layers) is effectively done.
+> - **Test gate is already in place** in `.github/workflows/release.yml` (lint + test jobs before build).
+> - **`git-cliff`** replaces the goreleaser changelog block for release notes.
+>
+> Remaining items that were not addressed by the parallel work and may be picked up in a small follow-up plan:
+>
+> - Tag validation (ancestor-of-main check) in the release workflow
+> - `workflow_dispatch` `dry_run` input in the release workflow
+> - SLSA build provenance via `actions/attest-build-provenance`
+>
+> This plan is kept in `docs/archive/` as a historical record. Do not execute as-is.
 
 | Field | Value |
 |---|---|
-| Status | Active, queued first |
+| Status | **SUPERSEDED** (see banner above) |
 | Created | 2026-04-12 |
-| Priority | High (unblocks reliable releases) |
-| Depends on | None |
-| Blocks | All subsequent plans (they rely on CI runs and fresh deps) |
-| User action required | Minimal (dry-run review at the end) |
-| GitHub interaction | None during execution (standby), final dry-run uses workflow_dispatch only |
+| Archived | 2026-04-18 |
+| Priority | N/A |
+| Depends on | N/A |
+| Blocks | N/A |
+| User action required | N/A |
+| GitHub interaction | N/A |
 
 **Goal:** Bump all dependencies (Go, npm, Docker base, GitHub Actions, tooling) to their current stable versions, then refactor the release CI workflow to use goreleaser as the single source of truth with a test gate, tag validation, dry-run path, and SLSA provenance, while keeping the release draft flag so manual publishing stays a deliberate step.
 
