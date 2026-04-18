@@ -11,8 +11,7 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
-// writePcapFragment writes an isolated pcap containing the given raw packet
-// bytes, each wrapped in a minimal Ethernet/IPv4/UDP frame. Creates parent dirs.
+// writePcapFragment wraps each payload in a minimal Eth/IPv4/UDP frame; parent dirs created.
 func writePcapFragment(path string, packets [][]byte) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("mkdir: %w", err)

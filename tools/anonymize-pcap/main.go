@@ -1,10 +1,7 @@
-// Rewrite MACs/IPs/timestamps in a pcap, preserve UDP payloads.
-// Optional --scrub-string <value> (repeatable): ASCII byte-level replacement
-// with same-length 'X' padding inside UDP payloads. Use to remove the local
-// player name before committing anonymized fragments.
+// Rewrite MACs, IPs, timestamps in a pcap. Optional --scrub-string (repeatable)
+// ASCII-replaces matches in UDP payloads with same-length 'X' padding.
 //
-// Usage:
-//   go run ./tools/anonymize-pcap <input.pcap> <output.pcap> [--scrub-string name]...
+// Usage: go run ./tools/anonymize-pcap <input.pcap> <output.pcap> [--scrub-string name]...
 package main
 
 import (
@@ -137,8 +134,7 @@ func runWithOptions(in, out string, scrubs []string) error {
 
 		buf := gopacket.NewSerializeBuffer()
 		opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
-		// SerializeLayers (not SerializePacket) so that the modified udp.Payload
-		// is used as the payload, rather than the original parsed Payload layer.
+		// SerializeLayers picks up the mutated udp.Payload; SerializePacket would reuse the original parsed layer.
 		if err := gopacket.SerializeLayers(buf, opts, eth, ip4, udp, gopacket.Payload(udp.Payload)); err != nil {
 			return fmt.Errorf("serialize: %w", err)
 		}
@@ -162,14 +158,9 @@ func runWithOptions(in, out string, scrubs []string) error {
 	return nil
 }
 
-// scrubByte is the printable-ASCII filler used to pad scrubbed strings with a
-// same-length replacement. Keep as a single byte to preserve payload length.
 const scrubByte = 'X'
 
-// scrubPayload returns a new byte slice with every needle replaced by
-// same-length 'X' padding. Needles are applied in the order given; for
-// overlapping needles ("ab" before "abc") the earlier match wins and the
-// later needle may no longer match. ASCII only.
+// scrubPayload applies needles in order; overlapping matches resolve by first match wins. ASCII only.
 func scrubPayload(payload []byte, needles []string) []byte {
 	if len(needles) == 0 {
 		return payload

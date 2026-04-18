@@ -11,9 +11,7 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
-// iteratePcap reads every packet in the pcap and invokes fn with the UDP payload.
-// Non-UDP packets are skipped silently. io.EOF terminates iteration cleanly;
-// other read errors propagate as-is.
+// iteratePcap calls fn on each UDP payload; non-UDP packets are skipped.
 func iteratePcap(path string, fn func(payload []byte) error) error {
 	f, err := os.Open(path)
 	if err != nil {

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// writeMiniPcap emits N UDP packets with given payloads (port 5056 both ways).
 func writeMiniPcap(t *testing.T, path string, payloads [][]byte) {
 	t.Helper()
 	f, err := os.Create(path)

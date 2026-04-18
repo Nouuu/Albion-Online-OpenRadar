@@ -7,9 +7,7 @@ import (
 	"path/filepath"
 )
 
-// FixtureMessage is one WS-level Photon message as consumed by EventRouter.
-// Kind maps directly to EventRouter.onEvent/onRequest/onResponse dispatch.
-// Parameters uses string keys for JSON stability; tests convert as needed.
+// Parameters keys are decimal strings for JSON stability.
 type FixtureMessage struct {
 	Kind       string         `json:"kind"`
 	Parameters map[string]any `json:"parameters"`

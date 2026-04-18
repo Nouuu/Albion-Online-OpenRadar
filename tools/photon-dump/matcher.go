@@ -23,9 +23,7 @@ func matchesResponse(m MatchCriteria, r *photon.OperationResponse) bool {
 	return matchesWhere(m.Where, r.Parameters)
 }
 
-// matchesWhere returns true if every predicate in where holds for params.
-// A missing key fails the match; a present value whose predicate returns false
-// fails the match. An empty where map is a wildcard (returns true).
+// matchesWhere is a wildcard when where is empty; otherwise every predicate must hold.
 func matchesWhere(where map[byte]func(v any) bool, params map[byte]interface{}) bool {
 	for k, pred := range where {
 		v, ok := params[k]

@@ -7,10 +7,8 @@ import (
 	"github.com/nospy/albion-openradar/internal/photon"
 )
 
-// runExtract iterates the anonymized pcap, matches each decoded message
-// against the scenario list, and writes per-scenario pcap + JSON artifacts.
-// A scenario matches at most once unless Scenario.Limit > 1.
-// The sentinel Match.Code == -1 means "any code of the given kind".
+// runExtract matches decoded messages against scenarios and writes per-scenario
+// pcap + JSON artifacts. Match.Code == -1 is a wildcard for the given kind.
 func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 	type hit struct {
 		raw     []byte
@@ -27,9 +25,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 		return 1
 	}
 
-	// Track the most recent raw UDP payload so callbacks know which packet
-	// produced the decoded message. The parser invokes callbacks synchronously
-	// from ReceivePacket, so this single-variable snapshot is safe.
+	// parser callbacks fire synchronously from ReceivePacket, so a single snapshot suffices.
 	var currentRaw []byte
 
 	parser := photon.NewPhotonParser(

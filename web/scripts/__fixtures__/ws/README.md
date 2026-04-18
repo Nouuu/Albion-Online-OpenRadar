@@ -24,6 +24,6 @@ One JSON file per handler scenario, consumed by Vitest tests under
 
 ## Generation
 
-Fixtures are produced by `cmd/photon-dump`. Hand-written fixtures carry a
+Fixtures are produced by `tools/photon-dump`. Hand-written fixtures carry a
 `synthetic` marker in the consuming test header comment; extracted fixtures
 carry `pcap-derived <fragment-path>`.

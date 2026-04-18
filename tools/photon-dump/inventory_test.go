@@ -10,7 +10,6 @@ import (
 )
 
 func TestInventory_WritesCensusMarkdown(t *testing.T) {
-	// Uses an existing committed pcap from PR #51/#64 as a real-world input.
 	in := filepath.Join("..", "..", "internal", "photon", "testdata", "generic_events.pcap")
 	if _, err := os.Stat(in); err != nil {
 		t.Skip("generic_events.pcap missing, run from repo root")
