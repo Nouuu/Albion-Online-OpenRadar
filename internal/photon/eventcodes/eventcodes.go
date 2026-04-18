@@ -3,7 +3,7 @@
 package eventcodes
 
 // Constants are untyped so they can be compared against byte, int, or any
-// integer type a consumer uses to hold the Albion event code.
+// integer type a consumer uses to hold the Albion code.
 const (
 	Unused = 0
 	Leave = 1

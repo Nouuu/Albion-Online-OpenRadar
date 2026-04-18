@@ -2,6 +2,7 @@
 // Extracted from Utils.js during Phase 1B refactor
 
 import {EventCodes} from '../utils/EventCodes.js';
+import {OperationCodes} from '../utils/OperationCodes.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 // Map change debouncing
@@ -278,6 +279,9 @@ export function onEvent(Parameters) {
             playersHandler.updatePlayerFaction(Parameters[0], Parameters[1]);
             break;
 
+        // FIXME ops-drift: event code 590 is UpdateEnemyWarBannerActive upstream
+        // but this branch labels it "key_sync". Semantic divergence to investigate
+        // before substituting an EventCodes.X name. See docs/plans/notes/2026-04-18-handlers-characterization-coverage.md.
         case 590:
             window.logger?.debug(CATEGORIES.NETWORK, 'key_sync', {Parameters});
             break;
@@ -285,7 +289,10 @@ export function onEvent(Parameters) {
 }
 
 export function onRequest(Parameters) {
-    if (Parameters[253] == 21 || Parameters[253] == 22) {
+    // 22 = OperationCodes.Move (current). 21 = pre-Protocol18 Move value, still
+    // observed in some traffic; upstream 21 is now GetShopTilesForCategory, so
+    // no cleanly-named constant exists for the legacy fallback.
+    if (Parameters[253] == 21 || Parameters[253] == OperationCodes.Move) {
         if (Array.isArray(Parameters[1]) && Parameters[1].length === 2) {
             updateLocalPlayerPosition(Parameters[1][0], Parameters[1][1]);
             window.logger?.debug(CATEGORIES.PLAYERS, 'Operation21_LocalPlayer', {lpX, lpY});
@@ -305,7 +312,7 @@ export function onRequest(Parameters) {
 }
 
 export function onResponse(Parameters, clearHandlersCallback) {
-    if (Parameters[253] == 41) {
+    if (Parameters[253] == OperationCodes.ChangeCluster) {
         const newMapId = Parameters[0];
         if (typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
             const previousMapId = map.id;
@@ -336,6 +343,9 @@ export function onResponse(Parameters, clearHandlersCallback) {
         return;
     }
 
+    // FIXME ops-drift: opcode 35 is InventoryStack upstream but this branch treats
+    // it as a map-change response. Semantic divergence; hardcoded until the branch
+    // is verified against a pcap response fixture.
     if (Parameters[253] == 35) {
         const newMapId = Parameters[0];
         const now = Date.now();
@@ -384,7 +394,7 @@ export function onResponse(Parameters, clearHandlersCallback) {
         }
     }
     // All data on the player joining the map (us)
-    else if (Parameters[253] == 2) {
+    else if (Parameters[253] == OperationCodes.Join) {
         // Decode position from Buffer or Array
         if (Parameters[9] && Parameters[9].type === 'Buffer') {
             const uint8Array = new Uint8Array(Parameters[9].data);
@@ -427,6 +437,9 @@ export function onResponse(Parameters, clearHandlersCallback) {
         }
 
         clearHandlersCallback();
+    // FIXME ops-drift: opcode 137 is ChangeGuildTax upstream but the inline comment
+    // below labels it "Character stats response". Dead handler today; divergence
+    // to investigate before substituting a named constant.
     } else if (Parameters[253] == 137) {
         // Character stats response - not currently used
     }

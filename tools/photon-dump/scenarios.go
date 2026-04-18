@@ -1,6 +1,9 @@
 package main
 
-import "github.com/nospy/albion-openradar/internal/photon/eventcodes"
+import (
+	"github.com/nospy/albion-openradar/internal/photon/eventcodes"
+	"github.com/nospy/albion-openradar/internal/photon/operationcodes"
+)
 
 type MatchCriteria struct {
 	Kind  string
@@ -16,14 +19,6 @@ type Scenario struct {
 	CorrelateBy byte
 	Limit       int
 }
-
-// Operation codes live in upstream OperationCodes.cs, not yet centralized.
-// Tracked as a follow-up to the EventCodes.js single-source-of-truth migration.
-const (
-	opMoveRequest   = 22
-	opJoinFinished  = 2
-	opChangeCluster = 41
-)
 
 var scenarios = []Scenario{
 	{Name: "players/spawn", Handler: "players", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewCharacter}, Limit: 8},
@@ -46,7 +41,7 @@ var scenarios = []Scenario{
 	{Name: "wispcage/spawn", Handler: "wispcage", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewCagedObject}, Limit: 3},
 	{Name: "wispcage/opened", Handler: "wispcage", Match: MatchCriteria{Kind: "event", Code: eventcodes.CagedObjectStateUpdated}, Limit: 2},
 
-	{Name: "router/join-finished", Handler: "router", Match: MatchCriteria{Kind: "response", Code: opJoinFinished}, Limit: 2},
-	{Name: "router/change-cluster", Handler: "router", Match: MatchCriteria{Kind: "response", Code: opChangeCluster}, Limit: 4},
-	{Name: "router/move-request", Handler: "router", Match: MatchCriteria{Kind: "request", Code: opMoveRequest}, Limit: 5},
+	{Name: "router/join-finished", Handler: "router", Match: MatchCriteria{Kind: "response", Code: operationcodes.Join}, Limit: 2},
+	{Name: "router/change-cluster", Handler: "router", Match: MatchCriteria{Kind: "response", Code: operationcodes.ChangeCluster}, Limit: 4},
+	{Name: "router/move-request", Handler: "router", Match: MatchCriteria{Kind: "request", Code: operationcodes.Move}, Limit: 5},
 }

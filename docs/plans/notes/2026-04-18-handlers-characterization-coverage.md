@@ -42,4 +42,14 @@ Issue #52 (living Fiber tier mismatch) is NOT a `test.fails` because direction i
 ## Decisions log
 
 - CP1 (T17): scenario catalog ratified against inventory. Local `EventCodes.js` stale versus upstream StatisticsAnalysis; catalog uses upstream values (issues #53, #54 already track this). Fixture corpus committed covers 16 of 19 declared scenarios. Missing: `fishing/finished`, `wispcage/spawn`, `wispcage/opened` (not observable in this capture).
-- 2026-04-18 EventCodes refresh: `EventCodes.js` aligned to upstream StatisticsAnalysis master fetch. 452 value mismatches updated, 15 unreferenced legacy names dropped (Carriable/Journal/AntiCheat/RedZoneCluster/DebugMobInfo families), 61 new upstream names added. ROUTER-2..9 flipped from `test.fails` to verified. Wisp cage synthetic values corrected: 531/532 (from prior vendored copy) to 530/531 (fresh upstream). Note: `tools/photon-dump/scenarios.go` still hardcodes 531/532 for wisp cage filtering, follow-up required if that tool drifts from runtime behavior.
+- 2026-04-18 EventCodes refresh: `EventCodes.js` aligned to upstream StatisticsAnalysis master fetch. 452 value mismatches updated, 15 unreferenced legacy names dropped (Carriable/Journal/AntiCheat/RedZoneCluster/DebugMobInfo families), 61 new upstream names added. ROUTER-2..9 flipped from `test.fails` to verified. Wisp cage synthetic values corrected: 531/532 (from prior vendored copy) to 530/531 (fresh upstream).
+- 2026-04-18 single-source-of-truth migration: `internal/photon/eventcodes` + `internal/photon/operationcodes` Go packages generated from the JS files via `tools/gen-eventcodes`. `photon-dump/scenarios.go` and `internal/photon/events.go` now import from the packages. `EventRouter.js` imports `OperationCodes` for clean-mapping opcodes (2, 22, 41).
+
+## Open ops-drift register (JS literals kept intentionally)
+
+Four call sites still hardcode the numeric code because the upstream name for that value does not match the local handler semantics. Keeping the literal plus a `FIXME ops-drift` comment is more honest than substituting a misleading upstream name. Each needs pcap-backed investigation before substitution.
+
+- **OPS-1** `EventRouter.js onEvent case 590`: upstream `UpdateEnemyWarBannerActive`, local handler logs as `key_sync`. Event, not operation, but same drift class. Dead-looking handler (only logs). Investigate what upstream 590 actually is in current game traffic.
+- **OPS-2** `EventRouter.js onRequest Parameters[253] == 21`: pre-Protocol18 Move opcode. Upstream 21 is now `GetShopTilesForCategory`. Kept as legacy fallback alongside the P18 value `OperationCodes.Move = 22`. Verify whether current game traffic still sends 21 as Move.
+- **OPS-3** `EventRouter.js onResponse Parameters[253] == 35`: treated as map-change response with debounce. Upstream 35 is `InventoryStack`. Needs pcap response fixture to verify the true opcode behind the map-change path.
+- **OPS-4** `EventRouter.js onResponse Parameters[253] == 137`: inline comment says "Character stats response - not currently used". Upstream 137 is `ChangeGuildTax`. Probably dead branch; confirm and remove.
