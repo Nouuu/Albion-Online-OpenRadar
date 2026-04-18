@@ -399,4 +399,103 @@ describe('MobsHandler', () => {
             expect(mobs[0].type).toBe(EnemyType.MiniBoss);
         });
     });
+
+    // -------------------------------------------------------------------------
+    // Health update paths
+    // -------------------------------------------------------------------------
+
+    describe('updateMobHealth (event 6)', () => {
+        function addMob(id, maxHealth = 500) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': maxHealth, '33': 0}));
+        }
+
+        // @verified 2026-04-18: valid currentHP normalizes health proportionally.
+        test('synthetic: valid currentHP normalizes health to (currentHP/maxHealth)*255', () => {
+            // synthetic: direct test of the HP normalization formula.
+            addMob(2001, 500);
+            handler.updateMobHealth({'0': 2001, '2': -100, '3': 250});
+            const mobs = handler.getMobList();
+            expect(mobs[0].health).toBe(Math.round((250 / 500) * 255));
+        });
+
+        // @verified 2026-04-18: currentHP=undefined removes mob (death path).
+        test('synthetic: currentHP=undefined removes mob (death)', () => {
+            // synthetic: tests the death detection branch (parameters[3] undefined).
+            addMob(2002);
+            handler.updateMobHealth({'0': 2002, '2': -600, '3': undefined});
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+
+        // @verified 2026-04-18: currentHP<=0 removes mob (death path).
+        test('synthetic: currentHP<=0 removes mob (death)', () => {
+            // synthetic: tests the <= 0 branch of the death check.
+            addMob(2003);
+            handler.updateMobHealth({'0': 2003, '2': -1000, '3': 0});
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+
+        // @verified 2026-04-18: unknown id is no-op (not a mob, likely player).
+        test('synthetic: unknown id in updateMobHealth is a no-op', () => {
+            // synthetic: tests early-return when mob not found.
+            handler.updateMobHealth({'0': 9999, '2': -100, '3': 200});
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+    });
+
+    describe('updateMobHealthRegen (event 91)', () => {
+        function addMob(id) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': 500, '33': 0}));
+        }
+
+        // @verified 2026-04-18: sets mob.health directly to parameters[2].
+        test('synthetic: sets mob.health = parameters[2] directly', () => {
+            // synthetic: regen event writes normalized HP value directly.
+            addMob(3001);
+            handler.updateMobHealthRegen({'0': 3001, '2': 128, '3': 255});
+            const mobs = handler.getMobList();
+            expect(mobs[0].health).toBe(128);
+        });
+
+        // @verified 2026-04-18: unknown id is a no-op.
+        test('synthetic: unknown id in updateMobHealthRegen is a no-op', () => {
+            // synthetic: no crash when mob not found.
+            handler.updateMobHealthRegen({'0': 9999, '2': 100, '3': 255});
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+    });
+
+    describe('updateMobHealthBulk (event 7)', () => {
+        function addMob(id, maxHealth = 500) {
+            window.mobsDatabase = makeDb({[id]: {isHarvestable: false, category: 'standard', uniqueName: 'MOB', tier: 4}});
+            handler.NewMobEvent(normalizeParams({'0': id, '1': id, '2': 200, '7': [0, 0], '13': maxHealth, '33': 0}));
+        }
+
+        // @characterization 2026-04-18: bulk update uses parameters[0] as the single mob id for all entries.
+        test('synthetic: bulk update with single mob id updates health for that mob', () => {
+            // synthetic: tests the bulk path with one entry.
+            addMob(4001, 500);
+            handler.updateMobHealthBulk({'0': 4001, '1': [1000], '2': [-50], '3': [400]});
+            const mobs = handler.getMobList();
+            expect(mobs[0].health).toBe(Math.round((400 / 500) * 255));
+        });
+
+        // @verified 2026-04-18: non-array parameters[3] causes early return (no crash, no change).
+        test('synthetic: non-array parameters[3] returns early without updating', () => {
+            // synthetic: tests the guard clause for non-array bulk input.
+            addMob(4002);
+            const before = handler.getMobList()[0].health;
+            handler.updateMobHealthBulk({'0': 4002, '1': [1000], '2': [-50], '3': 400});
+            expect(handler.getMobList()[0].health).toBe(before);
+        });
+
+        // @verified 2026-04-18: bulk currentHP=0 removes the mob (death via updateMobHealth).
+        test('synthetic: bulk entry with currentHP=0 removes mob', () => {
+            // synthetic: death via bulk path.
+            addMob(4003);
+            handler.updateMobHealthBulk({'0': 4003, '1': [1000], '2': [-9999], '3': [0]});
+            expect(handler.getMobList()).toHaveLength(0);
+        });
+    });
 });
