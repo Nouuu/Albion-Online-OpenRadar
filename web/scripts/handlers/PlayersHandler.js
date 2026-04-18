@@ -97,6 +97,7 @@ export class PlayersHandler {
     }
 
     updateItems(id, Parameters) {
+        // eslint-disable-next-line no-useless-assignment
         let items = null;
         try {
             items = Parameters[2];

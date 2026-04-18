@@ -98,6 +98,7 @@ export class DungeonsHandler
         }
 
         const lowerCaseName = name.toLowerCase(name);
+        // eslint-disable-next-line no-useless-assignment
         let dungeonType = undefined;
 
         // Corrupted dungeons have "solo" in their names
