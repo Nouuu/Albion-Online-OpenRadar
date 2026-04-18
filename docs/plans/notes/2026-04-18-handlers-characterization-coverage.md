@@ -23,8 +23,8 @@ Living counter. Updated on every test commit. Archived at plan completion.
 | FishingHandler | 9 | 0 | 1 | 10 |
 | DungeonsHandler | 19 | 0 | 0 | 19 |
 | WispCageHandler | 9 | 0 | 0 | 9 |
-| EventRouter | 36 | 0 | 11 | 47 |
-| **Total** | **228** | **14** | **16** | **258** |
+| EventRouter | 46 | 0 | 1 | 47 |
+| **Total** | **238** | **14** | **6** | **258** |
 
 ## Open observations register
 
@@ -39,22 +39,7 @@ Issue #52 (living Fiber tier mismatch) is NOT a `test.fails` because direction i
 - **PLAY-2** (issue #36) PlayersHandler.triggerHostileAlert has no ignore-list check. A player in `alreadyIgnoredPlayers` still triggers the sound alert when their faction changes to 255 in a red zone. Pinned by `synthetic PLAY-2: ignored player still triggers alert on faction change in red zone` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **ROUTER-1** (issue #57) EventRouter.onResponse opcode 2 (JoinMap) does not extract `isBZ` from `Parameters[103]` hashtable. Post-Protocol18 the field is `{"5": ..., "7": ...}` (non-zero). Current code leaves `map.isBZ` at its prior value. Pinned by `test.fails('ROUTER-1: onResponse JoinMap extracts isBZ from params[103] hashtable')` in `EventRouter.test.js`. Fix design: `2026-04-18-protocol18-regressions-design.md`.
 
-- **ROUTER-2** (issue #53) EventCodes.ChangeFlaggingFinished stale (local 359, real 363). Router case 359 never fires for real game events carrying P[252]=363. Pinned by two `test.fails` in `EventRouter.test.js`. Will flip to pass when `EventCodes.js` is refreshed.
-
-- **ROUTER-3** (issue #53) EventCodes.Mounted stale (local 209, real 211). Router case 209 never fires for real game events carrying P[252]=211. Pinned by `test.fails` in `EventRouter.test.js`.
-
-- **ROUTER-4** (issue #53) EventCodes.NewRandomDungeonExit stale (local 319, real 323). Router case 319 never fires for real game events carrying P[252]=323. Pinned by `test.fails` in `EventRouter.test.js`.
-
-- **ROUTER-5** (issue #53) EventCodes.NewLootChest stale (local 387, real 391). Router case 387 never fires for real game events carrying P[252]=391. Pinned by `test.fails` in `EventRouter.test.js`.
-
-- **ROUTER-6** (issue #53) EventCodes.NewFishingZoneObject stale (local 355, real 359). Router case 355 never fires for real game events carrying P[252]=359. Pinned by two `test.fails` in `EventRouter.test.js`.
-
-- **ROUTER-7** (issue #53) EventCodes.FishingFinished stale (local 352, real 356). Router case 352 never fires for real game events carrying P[252]=356. Pinned by `test.fails` in `EventRouter.test.js`.
-
-- **ROUTER-8** (issue #53) EventCodes.NewCagedObject stale (local 525, upstream 531). Router case 525 never fires for real game events carrying P[252]=531. Pinned by `test.fails` in `EventRouter.test.js`.
-
-- **ROUTER-9** (issue #53) EventCodes.CagedObjectStateUpdated stale (local 526, upstream 532). Router case 526 never fires for real game events carrying P[252]=532. Pinned by `test.fails` in `EventRouter.test.js`.
-
 ## Decisions log
 
 - CP1 (T17): scenario catalog ratified against inventory. Local `EventCodes.js` stale versus upstream StatisticsAnalysis; catalog uses upstream values (issues #53, #54 already track this). Fixture corpus committed covers 16 of 19 declared scenarios. Missing: `fishing/finished`, `wispcage/spawn`, `wispcage/opened` (not observable in this capture).
+- 2026-04-18 EventCodes refresh: `EventCodes.js` aligned to upstream StatisticsAnalysis master fetch. 452 value mismatches updated, 15 unreferenced legacy names dropped (Carriable/Journal/AntiCheat/RedZoneCluster/DebugMobInfo families), 61 new upstream names added. ROUTER-2..9 flipped from `test.fails` to verified. Wisp cage synthetic values corrected: 531/532 (from prior vendored copy) to 530/531 (fresh upstream). Note: `tools/photon-dump/scenarios.go` still hardcodes 531/532 for wisp cage filtering, follow-up required if that tool drifts from runtime behavior.

@@ -396,11 +396,11 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent ChangeFlaggingFinished (359 local / 363 upstream)
+    // onEvent ChangeFlaggingFinished (363)
     // -------------------------------------------------------------------------
     describe('onEvent ChangeFlaggingFinished', () => {
-        // Pinned: EventCodes.ChangeFlaggingFinished is stale (local 359, real 363). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes ChangeFlaggingFinished (P[252]=363) to playersHandler.updatePlayerFaction', async () => {
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
+        test('onEvent routes ChangeFlaggingFinished (P[252]=363) to playersHandler.updatePlayerFaction', async () => {
             // pcap-derived: players/faction-change.json message[0], P[252]=363
             const fix = await loadFixture('players', 'faction-change');
             const p = normalizeParams(fix.messages[0].parameters);
@@ -410,8 +410,8 @@ describe('EventRouter', () => {
             expect(handlers.playersHandler.updatePlayerFaction).toHaveBeenCalledWith(p[0], p[1]);
         });
 
-        // Pinned: second pcap variant (different player id). Same stale dispatch. Cross-link: issue #53.
-        test.fails('onEvent routes ChangeFlaggingFinished second variant (P[252]=363) to updatePlayerFaction', async () => {
+        // @verified 2026-04-18: second pcap variant, dispatch verified after EventCodes refresh.
+        test('onEvent routes ChangeFlaggingFinished second variant (P[252]=363) to updatePlayerFaction', async () => {
             // pcap-derived: players/faction-change.json message[1], P[252]=363
             const fix = await loadFixture('players', 'faction-change');
             const p = normalizeParams(fix.messages[1].parameters);
@@ -423,11 +423,11 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent Mounted (209 local / 211 upstream)
+    // onEvent Mounted (211)
     // -------------------------------------------------------------------------
     describe('onEvent Mounted', () => {
-        // Pinned: EventCodes.Mounted is stale (local 209, real 211). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes Mounted (P[252]=211) to playersHandler.handleMountedPlayerEvent', async () => {
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
+        test('onEvent routes Mounted (P[252]=211) to playersHandler.handleMountedPlayerEvent', async () => {
             // pcap-derived: players/mounted.json message[0], P[252]=211
             const fix = await loadFixture('players', 'mounted');
             const p = normalizeParams(fix.messages[0].parameters);
@@ -612,11 +612,11 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewRandomDungeonExit (319 local / 323 upstream)
+    // onEvent NewRandomDungeonExit (323)
     // -------------------------------------------------------------------------
     describe('onEvent NewRandomDungeonExit', () => {
-        // Pinned: EventCodes.NewRandomDungeonExit is stale (local 319, real 323). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes NewRandomDungeonExit (P[252]=323) to dungeonsHandler.dungeonEvent', async () => {
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
+        test('onEvent routes NewRandomDungeonExit (P[252]=323) to dungeonsHandler.dungeonEvent', async () => {
             // pcap-derived: dungeons/spawn.json message[0], P[252]=323
             const fix = await loadFixture('dungeons', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
@@ -628,11 +628,11 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewLootChest (387 local / 391 upstream)
+    // onEvent NewLootChest (391)
     // -------------------------------------------------------------------------
     describe('onEvent NewLootChest', () => {
-        // Pinned: EventCodes.NewLootChest is stale (local 387, real 391). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes NewLootChest (P[252]=391) to chestsHandler.addChestEvent', async () => {
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
+        test('onEvent routes NewLootChest (P[252]=391) to chestsHandler.addChestEvent', async () => {
             // pcap-derived: chests/spawn.json message[0], P[252]=391
             const fix = await loadFixture('chests', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
@@ -644,11 +644,11 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewFishingZoneObject (355 local / 359 upstream)
+    // onEvent NewFishingZoneObject (359)
     // -------------------------------------------------------------------------
     describe('onEvent NewFishingZoneObject', () => {
-        // Pinned: EventCodes.NewFishingZoneObject is stale (local 355, real 359). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes NewFishingZoneObject (P[252]=359) to fishingHandler.newFishEvent', async () => {
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
+        test('onEvent routes NewFishingZoneObject (P[252]=359) to fishingHandler.newFishEvent', async () => {
             // pcap-derived: fishing/spawn.json message[0], P[252]=359
             const fix = await loadFixture('fishing', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
@@ -658,8 +658,8 @@ describe('EventRouter', () => {
             expect(handlers.fishingHandler.newFishEvent).toHaveBeenCalledWith(p);
         });
 
-        // Pinned: FishingNodeFish variant (P[252]=359). Same stale dispatch. Cross-link: issue #53.
-        test.fails('onEvent routes NewFishingZoneObject FishingNodeFish variant (P[252]=359) to newFishEvent', async () => {
+        // @verified 2026-04-18: FishingNodeFish variant, dispatch verified after EventCodes refresh.
+        test('onEvent routes NewFishingZoneObject FishingNodeFish variant (P[252]=359) to newFishEvent', async () => {
             // pcap-derived: fishing/spawn.json message[2], P[252]=359
             const fix = await loadFixture('fishing', 'spawn');
             const p = normalizeParams(fix.messages[2].parameters);
@@ -671,12 +671,12 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent FishingFinished (352 local / 356 upstream)
+    // onEvent FishingFinished (356)
     // -------------------------------------------------------------------------
     describe('onEvent FishingFinished', () => {
-        // Pinned: EventCodes.FishingFinished is stale (local 352, real 356). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes FishingFinished (P[252]=356) to fishingHandler.fishingEnd', () => {
-            // synthetic: no fishingEnd fixture in corpus; real upstream value is 356
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
+        test('onEvent routes FishingFinished (P[252]=356) to fishingHandler.fishingEnd', () => {
+            // synthetic: no fishingEnd fixture in corpus; upstream value is 356
             const p = {0: 999, 252: 356};
 
             EventRouter.onEvent(p);
@@ -686,23 +686,23 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewCagedObject (525 local / 531 upstream) + CagedObjectStateUpdated (526 local / 532 upstream)
+    // onEvent NewCagedObject (530) + CagedObjectStateUpdated (531)
     // -------------------------------------------------------------------------
     describe('onEvent WispCage', () => {
-        // Pinned: EventCodes.NewCagedObject is stale (local 525, upstream 531). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes NewCagedObject (P[252]=531) to wispCageHandler.newCageEvent', () => {
-            // synthetic: no wispcage fixture in corpus; upstream value is 531
-            const p = {0: 777, 252: 531};
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch.
+        test('onEvent routes NewCagedObject (P[252]=530) to wispCageHandler.newCageEvent', () => {
+            // synthetic: no wispcage fixture in corpus; upstream value is 530
+            const p = {0: 777, 252: 530};
 
             EventRouter.onEvent(p);
 
             expect(handlers.wispCageHandler.newCageEvent).toHaveBeenCalledWith(p);
         });
 
-        // Pinned: EventCodes.CagedObjectStateUpdated is stale (local 526, upstream 532). Dispatch fails until EventCodes.js is refreshed (#53).
-        test.fails('onEvent routes CagedObjectStateUpdated (P[252]=532) to wispCageHandler.cageOpenedEvent', () => {
-            // synthetic: no wispcage-opened fixture in corpus; upstream value is 532
-            const p = {0: 777, 252: 532};
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch.
+        test('onEvent routes CagedObjectStateUpdated (P[252]=531) to wispCageHandler.cageOpenedEvent', () => {
+            // synthetic: no wispcage-opened fixture in corpus; upstream value is 531
+            const p = {0: 777, 252: 531};
 
             EventRouter.onEvent(p);
 
