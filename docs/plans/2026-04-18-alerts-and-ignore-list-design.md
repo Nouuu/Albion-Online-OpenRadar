@@ -36,17 +36,19 @@ Both bugs touch the same gate, in the same file. Fixing them together makes sens
 
 ### Step 1: Confirm the gate and path
 
-Read `web/scripts/handlers/PlayersHandler.js` around lines 92 to 174 (per triage):
+Read `web/scripts/handlers/PlayersHandler.js` (verified against current code, lines 88 to 295):
 
-- `isPlayerThreat(faction, pvpType)` at lines 92 to 97
-- Alert trigger at lines 157 to 174
-- Zone pvp lookup via `zonesDatabase.getPvpType(mapId)`
+- `isPlayerThreat(faction, pvpType)` at lines 92 to 97.
+- **Primary alert trigger** (on new player spawn) at lines 158 to 175 inside `handleNewPlayerEvent`: flash `setTimeout` path guarded by `settingFlash`, sound `audio.play()` path guarded by `settingSound`. Both gated by `isThreat && mapId`.
+- **Secondary alert trigger** at lines 271 to 295: `triggerHostileAlert(player)`, fired from `updatePlayerFaction` (line 266) when a known player transitions to hostile. Same flash and sound blocks, symmetric to the primary path.
+- `alreadyIgnoredPlayers` cleared at line 254 inside `Clear()`.
+- Zone pvp lookup via `zonesDatabase.getPvpType(window.currentMapId)` at lines 143 and 272.
 
 Confirm:
 
-- Where is the ignore list stored? Likely `window.settingsSync.getJSON('ignoredPlayers')` or similar. Grep for `ignoreList`, `ignoredPlayers`, `alreadyIgnoredPlayers`.
-- Where is it cleared? Triage mentioned line 253 clears `alreadyIgnoredPlayers`.
+- Where is the ignore list stored? Grep for `ignoreList`, `ignoredPlayers`, `alreadyIgnoredPlayers`. Determine the exact storage key (probably `window.settingsSync.getJSON('ignoredPlayers')`) before writing the gate.
 - How does the UI expose the ignore list? (Not scope, but identify so the fix matches user expectation.)
+- Note: **both alert triggers** (lines 158 to 175 AND lines 275 to 287) must go through the new ignore-list and unknown-zone gates. A fix to only one leaves the other regressing.
 
 ### Step 2: Confirm the safe-default behavior
 

@@ -78,7 +78,12 @@ Write or reuse a Go test harness that reads the pcap, filters event 40 (`NewHarv
 
 ### Step 3: Trace the frontend handler
 
-Read `web/scripts/handlers/HarvestablesHandler.js:158-214` (per triage pointer). The logic:
+Read `web/scripts/handlers/HarvestablesHandler.js`:
+- Entry point `newHarvestableObject(id, Parameters)` at line 384 (called by EventRouter on event 40, NewHarvestableObject).
+- It decodes parameters and delegates to `addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)` at line 158, where the living-vs-static discrimination and tier resolution live.
+- Companion path: `HarvestUpdateEvent(Parameters)` at line 326 (event 46) for size and enchant updates on existing harvestables.
+
+The living-resource tier logic in `addHarvestable`:
 
 ```javascript
 const isLiving = mobileTypeId !== null && mobileTypeId !== 65535;
