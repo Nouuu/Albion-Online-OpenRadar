@@ -15,18 +15,18 @@ Living counter. Updated on every test commit. Archived at plan completion.
 | Handler | `@verified` | `@characterization` | `@suspect` | Total |
 |---|---:|---:|---:|---:|
 | PlayersHandler | 0 | 0 | 0 | 0 |
-| HarvestablesHandler | 0 | 0 | 0 | 0 |
+| HarvestablesHandler | 1 | 0 | 1 | 2 |
 | MobsHandler | 0 | 0 | 0 | 0 |
 | ChestsHandler | 0 | 0 | 0 | 0 |
 | FishingHandler | 0 | 0 | 0 | 0 |
 | DungeonsHandler | 0 | 0 | 0 | 0 |
 | WispCageHandler | 0 | 0 | 0 | 0 |
 | EventRouter | 11 (PR #51) | 0 | 0 | 11 |
-| **Total** | **11** | **0** | **0** | **11** |
+| **Total** | **12** | **0** | **1** | **13** |
 
 ## Open `@suspect` register
 
-None yet. See `docs/project/IMPROVEMENTS.md` for cross-links.
+- **HARV-1** HarvestablesHandler.addHarvestable isLiving gate misses mobileTypeId=-1 sentinel. Current code: `isLiving = mobileTypeId !== null && mobileTypeId !== 65535`. Observed in pcap: static resources arrive with mobileTypeId=-1 (likely int16 decode of 0xFFFF). Effect: static resources routed through MobsDatabase.getResourceInfo(-1) before falling back. Pinned by `pcap-derived: static spawn with mobileTypeId=-1 is currently flagged as living` in `HarvestablesHandler.test.js`. Fix candidate: extend guard to `mobileTypeId !== -1`, or canonicalize in the Go parser.
 
 ## Decisions log
 
