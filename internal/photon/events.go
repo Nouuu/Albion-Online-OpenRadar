@@ -3,6 +3,8 @@ package photon
 import (
 	"encoding/binary"
 	"math"
+
+	"github.com/nospy/albion-openradar/internal/photon/eventcodes"
 )
 
 func PostProcessEvent(event *EventData) {
@@ -15,7 +17,7 @@ func PostProcessEvent(event *EventData) {
 	if _, ok := event.Parameters[252]; !ok {
 		event.Parameters[252] = event.Code
 	}
-	if event.Code == 3 {
+	if event.Code == eventcodes.Move {
 		extractMovePositions(event.Parameters)
 	}
 }
