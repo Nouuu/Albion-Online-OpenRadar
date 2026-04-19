@@ -260,16 +260,16 @@ export function onEvent(Parameters) {
             chestsHandler.addChestEvent(Parameters);
             break;
 
+        case EventCodes.NewMistsWispSpawn:
+            mistsWispHandler?.newWispEvent(Parameters);
+            break;
+
         case EventCodes.NewCagedObject:
             wispCageHandler.newCageEvent(Parameters);
             break;
 
         case EventCodes.CagedObjectStateUpdated:
             wispCageHandler.cageOpenedEvent(Parameters);
-            break;
-
-        case EventCodes.NewMistsWispSpawn:
-            mistsWispHandler?.newWispEvent(Parameters);
             break;
 
         case EventCodes.NewFishingZoneObject:

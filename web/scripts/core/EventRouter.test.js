@@ -324,7 +324,7 @@ describe('EventRouter', () => {
     // onEvent Leave (1)
     // -------------------------------------------------------------------------
     describe('onEvent Leave', () => {
-        // @verified 2026-04-18: Leave fans out remove calls to all seven handlers
+        // @verified 2026-04-20: Leave fans out remove calls to all eight handlers
         test('Leave event removes entity from all handlers', () => {
             EventRouter.onEvent({0: 42, 252: EventCodes.Leave});
 
@@ -335,6 +335,7 @@ describe('EventRouter', () => {
             expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
             expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
             expect(handlers.wispCageHandler.removeCage).toHaveBeenCalledWith(42);
+            expect(handlers.mistsWispHandler.removeWisp).toHaveBeenCalledWith(42);
         });
     });
 
