@@ -204,10 +204,7 @@ export class MobsDrawing extends DrawingUtils
         /* Mist portals */
         for (const mistsOne of mists)
         {
-            if (settingsSync.getBool("settingMistE"+mistsOne.enchant))
-            {
-                continue;
-            }
+            if (!settingsSync.getBool("settingMistE" + mistsOne.enchant)) continue;
 
             if (settingsSync.getBool("settingMistSolo") && mistsOne.type == 0 || settingsSync.getBool("settingMistDuo") && mistsOne.type == 1)
             {
