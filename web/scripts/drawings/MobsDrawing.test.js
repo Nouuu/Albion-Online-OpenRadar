@@ -1,5 +1,8 @@
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
+// pcap-derived: none
+// synthetic: mist entity constructed for gate isolation
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
@@ -23,6 +26,7 @@ describe('MobsDrawing mist rendering', () => {
         ctx = {};
     });
 
+    // @verified 2026-04-19: mist rendered when settingMistE0=true AND settingMistSolo=true (gate passes).
     test('MIST-1: MISTS_SOLO_YELLOW with settingMistE0=true and settingMistSolo=true renders mist_0', () => {
         settingsSync.getBool.mockImplementation(key => true);
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
@@ -34,6 +38,7 @@ describe('MobsDrawing mist rendering', () => {
         );
     });
 
+    // @verified 2026-04-19: enchant gate correctly skips mist when settingMistE0=false.
     test('MIST-1: settingMistE0=false skips the mist render', () => {
         settingsSync.getBool.mockImplementation(key => key !== 'settingMistE0');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
@@ -43,6 +48,7 @@ describe('MobsDrawing mist rendering', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
+    // @verified 2026-04-19: solo type gate skips render when settingMistSolo=false regardless of enchant.
     test('MIST-1: settingMistSolo=false skips solo mist even with E0=true', () => {
         settingsSync.getBool.mockImplementation(key => key !== 'settingMistSolo');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
