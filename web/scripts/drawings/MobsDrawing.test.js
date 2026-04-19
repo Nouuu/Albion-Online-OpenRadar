@@ -28,7 +28,7 @@ describe('MobsDrawing mist rendering', () => {
 
     // @verified 2026-04-19: mist rendered when settingMistE0=true AND settingMistSolo=true (gate passes).
     test('MIST-1: MISTS_SOLO_YELLOW with settingMistE0=true and settingMistSolo=true renders mist_0', () => {
-        settingsSync.getBool.mockImplementation(key => true);
+        settingsSync.getBool.mockImplementation(() => true);
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
 
         drawing.invalidate(ctx, [], [mist]);
