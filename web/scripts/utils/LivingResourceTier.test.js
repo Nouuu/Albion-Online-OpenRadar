@@ -72,4 +72,9 @@ describe('getLivingHarvestTier', () => {
     test('undefined mob returns 0', () => {
         expect(getLivingHarvestTier(undefined)).toBe(0);
     });
+
+    // Regex boundary: DEAD must not match UNDEAD substring
+    test('mob with l field and UNDEAD in uniqueName applies tier shift (not treated as DEAD)', () => {
+        expect(getLivingHarvestTier({u: 'T5_MOB_BOSS_UNDEAD', t: 5, l: 'HIDE'})).toBe(4);
+    });
 });

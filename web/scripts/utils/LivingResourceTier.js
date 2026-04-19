@@ -25,7 +25,7 @@ export function getLivingHarvestTier(mob) {
     if (!mob) return 0;
     const combatTier = mob.t ?? 0;
     if (!mob.l) return combatTier;
-    if (/DYNAMIC|DEAD/.test(mob.u ?? '')) return combatTier;
+    if (/DYNAMIC|_DEAD/.test(mob.u ?? '')) return combatTier;
     const minTier = MIN_TIER_BY_TYPE[mob.l] ?? 1;
     return Math.max(minTier, combatTier - 1);
 }
