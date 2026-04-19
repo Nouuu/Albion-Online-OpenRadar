@@ -51,7 +51,8 @@ describe('EventRouter', () => {
             chestsHandler: {removeChest: vi.fn(), addChestEvent: vi.fn()},
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
-            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()}
+            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
+            mistsWispHandler: {newWispEvent: vi.fn(), removeWisp: vi.fn()}
         };
 
         map = {id: -1, hX: 0, hY: 0, isBZ: false};
@@ -624,6 +625,20 @@ describe('EventRouter', () => {
             EventRouter.onEvent(p);
 
             expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(p);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // onEvent NewMistsWispSpawn (523)
+    // -------------------------------------------------------------------------
+    describe('onEvent NewMistsWispSpawn', () => {
+        test('MIST-3: onEvent routes NewMistsWispSpawn (P[252]=523) to mistsWispHandler.newWispEvent', () => {
+            // synthetic: no pcap fixture for event 523 mists wisp spawn
+            const p = {0: 67, 1: [172.5, 15.5], 2: 90, 252: 523};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.mistsWispHandler.newWispEvent).toHaveBeenCalledWith(p);
         });
     });
 

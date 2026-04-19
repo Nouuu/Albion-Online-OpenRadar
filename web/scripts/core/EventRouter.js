@@ -144,7 +144,7 @@ export function onEvent(Parameters) {
 
     const {
         playersHandler, mobsHandler, harvestablesHandler, chestsHandler,
-        dungeonsHandler, fishingHandler, wispCageHandler
+        dungeonsHandler, fishingHandler, wispCageHandler, mistsWispHandler
     } = handlers;
 
     switch (eventCode) {
@@ -156,6 +156,7 @@ export function onEvent(Parameters) {
             chestsHandler.removeChest(id);
             fishingHandler.removeFish(id);
             wispCageHandler.removeCage(id);
+            mistsWispHandler?.removeWisp(id);
             break;
 
         case EventCodes.Move:
@@ -265,6 +266,10 @@ export function onEvent(Parameters) {
 
         case EventCodes.CagedObjectStateUpdated:
             wispCageHandler.cageOpenedEvent(Parameters);
+            break;
+
+        case EventCodes.NewMistsWispSpawn:
+            mistsWispHandler?.newWispEvent(Parameters);
             break;
 
         case EventCodes.NewFishingZoneObject:
