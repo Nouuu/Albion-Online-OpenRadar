@@ -146,6 +146,13 @@ export class RadarRenderer {
             );
         }
 
+        if (this.handlers.mistsWispHandler && this.drawings.mistsWispDrawing) {
+            this.drawings.mistsWispDrawing.interpolate(
+                this.handlers.mistsWispHandler.wispList,
+                this.lpX, this.lpY, t
+            );
+        }
+
         if (this.handlers.fishingHandler && this.drawings.fishingDrawing) {
             this.drawings.fishingDrawing.interpolate(
                 this.handlers.fishingHandler.fishes,
@@ -251,6 +258,13 @@ export class RadarRenderer {
                 this.drawings.wispCageDrawing.draw(
                     context,
                     this.handlers.wispCageHandler.cages
+                );
+            }
+
+            if (this.drawings.mistsWispDrawing && this.handlers.mistsWispHandler) {
+                this.drawings.mistsWispDrawing.invalidate(
+                    context,
+                    this.handlers.mistsWispHandler.wispList
                 );
             }
 
