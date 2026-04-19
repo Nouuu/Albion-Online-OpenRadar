@@ -91,7 +91,8 @@ function initializeRadarRenderer() {
             chestsHandler: handlers.chests,
             dungeonsHandler: handlers.dungeons,
             wispCageHandler: handlers.wispCage,
-            fishingHandler: handlers.fishing
+            fishingHandler: handlers.fishing,
+            mistsWispHandler: handlers.mistsWisp
         },
         drawings: {
             mapsDrawing: drawings.maps,
@@ -101,7 +102,8 @@ function initializeRadarRenderer() {
             chestsDrawing: drawings.chests,
             dungeonsDrawing: drawings.dungeons,
             wispCageDrawing: drawings.wispCage,
-            fishingDrawing: drawings.fishing
+            fishingDrawing: drawings.fishing,
+            mistsWispDrawing: drawings.mistsWisp
         },
         drawingUtils
     });
