@@ -285,12 +285,11 @@ describe('HarvestablesHandler', () => {
             expect(harv.tier).toBe(4);
         });
 
-        // @characterization 2026-04-18: MobsHandler and HarvestablesHandler store different tiers for Fiber critter mobId=529.
-        // Divergence pending #58 overlay to resolve ground truth.
-        test('characterization: MobsHandler vs HarvestablesHandler store different tiers for Fiber critter mobId=529', async () => {
+        // @verified 2026-04-19: MobsHandler and HarvestablesHandler converge on harvest tier for Fiber critter mobId=529.
+        // MobsHandler uses getLivingHarvestTier rule (max(3, 4-1) = 3); HarvestablesHandler uses server Parameters[7]=3.
+        test('MobsHandler and HarvestablesHandler agree on harvest tier 3 for Fiber critter mobId=529', async () => {
             const mobsHandler = new MobsHandler();
 
-            // Build minimal NewMobEvent parameters for mobId=529 (typeId is the MobsHandler param[1])
             const mobParams = {
                 0: 8403,
                 1: 529,
@@ -310,17 +309,14 @@ describe('HarvestablesHandler', () => {
             const harv = handler.getHarvestableList()[0];
             expect(mob).toBeDefined();
             expect(harv).toBeDefined();
-            // Both exist but report different tiers for the same creature.
-            // Real DB entry: T3_MOB_CRITTER_FIBER_SWAMP_GREEN, lt=4.
-            // MobsHandler uses DB lt=4; HarvestablesHandler uses server Parameters[7]=3.
-            expect(mob.tier).toBe(4);
+            expect(mob.tier).toBe(3);
             expect(harv.tier).toBe(3);
-            expect(mob.tier).not.toBe(harv.tier);
+            expect(mob.tier).toBe(harv.tier);
         });
 
-        // @characterization 2026-04-18: MobsHandler and HarvestablesHandler store different tiers for Fiber critter mobId=531.
-        // Divergence pending #58 overlay to resolve ground truth.
-        test('characterization: MobsHandler vs HarvestablesHandler store different tiers for Fiber critter mobId=531', async () => {
+        // @verified 2026-04-19: MobsHandler and HarvestablesHandler converge on harvest tier for Fiber critter mobId=531.
+        // MobsHandler uses getLivingHarvestTier rule (max(3, 5-1) = 4); HarvestablesHandler uses server Parameters[7]=4.
+        test('MobsHandler and HarvestablesHandler agree on harvest tier 4 for Fiber critter mobId=531', async () => {
             const mobsHandler = new MobsHandler();
 
             const mobParams = {
@@ -342,11 +338,9 @@ describe('HarvestablesHandler', () => {
             const harv = handler.getHarvestableList()[0];
             expect(mob).toBeDefined();
             expect(harv).toBeDefined();
-            // Real DB entry: T4_MOB_CRITTER_FIBER_SWAMP_RED, lt=5.
-            // MobsHandler uses DB lt=5; HarvestablesHandler uses server Parameters[7]=4.
-            expect(mob.tier).toBe(5);
+            expect(mob.tier).toBe(4);
             expect(harv.tier).toBe(4);
-            expect(mob.tier).not.toBe(harv.tier);
+            expect(mob.tier).toBe(harv.tier);
         });
     });
 
