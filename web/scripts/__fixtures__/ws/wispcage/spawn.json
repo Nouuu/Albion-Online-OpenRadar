@@ -1,0 +1,48 @@
+{
+  "scenario": "spawn.json",
+  "handler": "wispcage",
+  "messages": [
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 1340,
+        "1": 2,
+        "2": [
+          -138.5,
+          -277.5
+        ],
+        "252": 530,
+        "4": "SHARED_FILL_CAGE_WISP_UNDEAD_A",
+        "5": 2
+      }
+    },
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 1348,
+        "1": 2,
+        "2": [
+          -80.5,
+          -268.5
+        ],
+        "252": 530,
+        "4": "SHARED_FILL_CAGE_WISP_UNDEAD_A",
+        "5": 2
+      }
+    },
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 1382,
+        "1": 2,
+        "2": [
+          9.5,
+          -289.5
+        ],
+        "252": 530,
+        "4": "SHARED_FILL_CAGE_WISP_UNDEAD_A",
+        "5": 2
+      }
+    }
+  ]
+}

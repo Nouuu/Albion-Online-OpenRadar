@@ -689,17 +689,18 @@ describe('EventRouter', () => {
     // onEvent NewCagedObject (530) + CagedObjectStateUpdated (531)
     // -------------------------------------------------------------------------
     describe('onEvent WispCage', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch.
-        test('onEvent routes NewCagedObject (P[252]=530) to wispCageHandler.newCageEvent', () => {
-            // synthetic: no wispcage fixture in corpus; upstream value is 530
-            const p = {0: 777, 252: 530};
+        // @verified 2026-04-19: pcap-derived from capture-70 confirms P[252]=530 in real traffic. Dispatch routes to newCageEvent.
+        test('onEvent routes NewCagedObject (P[252]=530) to wispCageHandler.newCageEvent', async () => {
+            // pcap-derived: wispcage/spawn.json message[0], P[252]=530
+            const fix = await loadFixture('wispcage', 'spawn');
+            const p = normalizeParams(fix.messages[0].parameters);
 
             EventRouter.onEvent(p);
 
             expect(handlers.wispCageHandler.newCageEvent).toHaveBeenCalledWith(p);
         });
 
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch.
+        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch. Capture-70 has no CagedObjectStateUpdated events so this stays synthetic.
         test('onEvent routes CagedObjectStateUpdated (P[252]=531) to wispCageHandler.cageOpenedEvent', () => {
             // synthetic: no wispcage-opened fixture in corpus; upstream value is 531
             const p = {0: 777, 252: 531};

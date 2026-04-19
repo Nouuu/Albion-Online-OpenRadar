@@ -1,6 +1,8 @@
-// synthetic: no wispcage events observed in capture corpus; all tests use inline parameter objects
+// pcap-derived fixture: web/scripts/__fixtures__/ws/wispcage/spawn.json (capture-70, 2026-04-19)
+// synthetic: other tests use inline parameter objects for gate and dedup coverage
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
+import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
@@ -21,7 +23,31 @@ describe('WispCageHandler', () => {
         handler = new WispCageHandler();
     });
 
-    describe('newCageEvent (event 531)', () => {
+    describe('newCageEvent (event 530)', () => {
+        // @characterization 2026-04-19: real pcap shape (capture-70) is P[2]=position array, P[4]=cage name, P[1]=scalar, P[5]=int. Current handler reads P[1] (scalar) as position array, P[2] (position) as name, and gates on P[4] (defined) so the cage is dropped. No cage appears on the radar.
+        test('pcap-derived spawn: current handler drops cage because Parameters[4] is always defined in real traffic', async () => {
+            const fx = await loadFixture('wispcage', 'spawn');
+            const p = normalizeParams(fx.messages[0].parameters);
+
+            handler.newCageEvent(p);
+
+            expect(handler.cages).toHaveLength(0);
+        });
+
+        // WISP-1: pinned bug, real spawn should add a cage with name from Parameters[4] and position from Parameters[2].
+        test.fails('pcap-derived spawn: cage is added with name from Parameters[4] and position from Parameters[2]', async () => {
+            const fx = await loadFixture('wispcage', 'spawn');
+            const p = normalizeParams(fx.messages[0].parameters);
+
+            handler.newCageEvent(p);
+
+            expect(handler.cages).toHaveLength(1);
+            expect(handler.cages[0].id).toBe(p[0]);
+            expect(handler.cages[0].posX).toBe(p[2][0]);
+            expect(handler.cages[0].posY).toBe(p[2][1]);
+            expect(handler.cages[0].name).toBe(p[4]);
+        });
+
         // @verified 2026-04-18: settingCage=false and Parameters[4]=undefined passes the inverted gate; cage is added to list.
         test('synthetic: newCageEvent with settingCage=false and Parameters[4]=undefined adds cage', () => {
             handler.newCageEvent({0: 1, 1: [10, 20], 2: 'CageA', 4: undefined});

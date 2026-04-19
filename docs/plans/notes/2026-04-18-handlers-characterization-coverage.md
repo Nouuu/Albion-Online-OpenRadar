@@ -22,9 +22,9 @@ Living counter. Updated on every test commit. Archived at plan completion.
 | ChestsHandler | 13 | 0 | 0 | 13 |
 | FishingHandler | 9 | 0 | 1 | 10 |
 | DungeonsHandler | 19 | 0 | 0 | 19 |
-| WispCageHandler | 9 | 0 | 0 | 9 |
+| WispCageHandler | 9 | 1 | 1 | 11 |
 | EventRouter | 46 | 0 | 1 | 47 |
-| **Total** | **238** | **14** | **6** | **258** |
+| **Total** | **238** | **15** | **7** | **260** |
 
 ## Open observations register
 
@@ -38,12 +38,14 @@ Issue #52 (living Fiber tier mismatch) is NOT a `test.fails` because direction i
 - **PLAY-1** (issue #65) PlayersHandler.handleNewPlayerEvent does not fire alert for hostile in unknown zone. `zonesDatabase.getPvpType(unknown)` falls back to 'safe'; `isPlayerThreat(255, 'safe')` returns false; alert gate skipped. Pinned by `synthetic hostile in unknown zone: alert should fire but does not` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **PLAY-2** (issue #36) PlayersHandler.triggerHostileAlert has no ignore-list check. A player in `alreadyIgnoredPlayers` still triggers the sound alert when their faction changes to 255 in a red zone. Pinned by `synthetic PLAY-2: ignored player still triggers alert on faction change in red zone` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **ROUTER-1** (issue #57) EventRouter.onResponse opcode 2 (JoinMap) does not extract `isBZ` from `Parameters[103]` hashtable. Post-Protocol18 the field is `{"5": ..., "7": ...}` (non-zero). Current code leaves `map.isBZ` at its prior value. Pinned by `test.fails('ROUTER-1: onResponse JoinMap extracts isBZ from params[103] hashtable')` in `EventRouter.test.js`. Fix design: `2026-04-18-protocol18-regressions-design.md`.
+- **WISP-1** (issues #24 #69) WispCageHandler.newCageEvent reads position from `Parameters[1]` and name from `Parameters[2]`, but real game traffic (capture-70, event 530) has position at `Parameters[2]` and cage name at `Parameters[4]`. The inverted gate `Parameters[4] != undefined` then rejects every real spawn because the name is always defined. Result: no cage ever appears on the radar. Pinned by `test.fails('pcap-derived spawn: cage is added with name from Parameters[4] and position from Parameters[2]')` in `WispCageHandler.test.js`.
 
 ## Decisions log
 
 - CP1 (T17): scenario catalog ratified against inventory. Local `EventCodes.js` stale versus upstream StatisticsAnalysis; catalog uses upstream values (issues #53, #54 already track this). Fixture corpus committed covers 16 of 19 declared scenarios. Missing: `fishing/finished`, `wispcage/spawn`, `wispcage/opened` (not observable in this capture).
 - 2026-04-18 EventCodes refresh: `EventCodes.js` aligned to upstream StatisticsAnalysis master fetch. 452 value mismatches updated, 15 unreferenced legacy names dropped (Carriable/Journal/AntiCheat/RedZoneCluster/DebugMobInfo families), 61 new upstream names added. ROUTER-2..9 flipped from `test.fails` to verified. Wisp cage synthetic values corrected: 531/532 (from prior vendored copy) to 530/531 (fresh upstream).
 - 2026-04-18 single-source-of-truth migration: `internal/photon/eventcodes` + `internal/photon/operationcodes` Go packages generated from the JS files via `tools/gen-eventcodes`. `photon-dump/scenarios.go` and `internal/photon/events.go` now import from the packages. `EventRouter.js` imports `OperationCodes` for clean-mapping opcodes (2, 22, 41).
+- 2026-04-19 capture-70 extraction: added `wispcage/spawn` fixture (WS-level JSON + anonymized pcap fragment). Confirms NewCagedObject=530 in real traffic and exposes WISP-1 handler bug (Parameters[1]/[2]/[4] indexing). Fixing gaps listed in CP1 decisions: `wispcage/spawn` now closed; `fishing/finished` and `wispcage/opened` still not observable (no end-of-fishing events in capture-70, no cage-open events either).
 
 ## Open ops-drift register (JS literals kept intentionally)
 
