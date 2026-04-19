@@ -26,19 +26,22 @@ export class WispCageHandler
         this.cages = [];
     }
 
-    newCageEvent(Parameters)
-    {
-        if (settingsSync.getBool('settingCage') || Parameters[4] != undefined) return;
+    newCageEvent(parameters) {
+        if (settingsSync.getBool('settingCage')) return;
 
-        const id = Parameters[0];
+        const id = parameters[0];
+        const position = parameters[2];
+        const name = parameters[4];
 
-        const existing = this.cages.find(cage => cage.id === id);
+        if (id === undefined || position === undefined) return;
+
+        const existing = this.cages.find(c => c.id === id);
         if (existing) {
             existing.touch();
             return;
         }
 
-        this.cages.push(new Cage(Parameters[0], Parameters[1][0], Parameters[1][1], Parameters[2]));
+        this.cages.push(new Cage(id, position[0], position[1], name));
     }
 
     cageOpenedEvent(Parameters)

@@ -24,18 +24,8 @@ describe('WispCageHandler', () => {
     });
 
     describe('newCageEvent (event 530)', () => {
-        // @characterization 2026-04-19: real pcap shape (capture-70) is P[2]=position array, P[4]=cage name, P[1]=scalar, P[5]=int. Current handler reads P[1] (scalar) as position array, P[2] (position) as name, and gates on P[4] (defined) so the cage is dropped. No cage appears on the radar.
-        test('pcap-derived spawn: current handler drops cage because Parameters[4] is always defined in real traffic', async () => {
-            const fx = await loadFixture('wispcage', 'spawn');
-            const p = normalizeParams(fx.messages[0].parameters);
-
-            handler.newCageEvent(p);
-
-            expect(handler.cages).toHaveLength(0);
-        });
-
-        // WISP-1: pinned bug, real spawn should add a cage with name from Parameters[4] and position from Parameters[2].
-        test.fails('pcap-derived spawn: cage is added with name from Parameters[4] and position from Parameters[2]', async () => {
+        // @verified 2026-04-19: real pcap spawn (capture-70) adds a cage with name from Parameters[4] and position from Parameters[2].
+        test('pcap-derived spawn: cage is added with name from Parameters[4] and position from Parameters[2]', async () => {
             const fx = await loadFixture('wispcage', 'spawn');
             const p = normalizeParams(fx.messages[0].parameters);
 
@@ -48,9 +38,9 @@ describe('WispCageHandler', () => {
             expect(handler.cages[0].name).toBe(p[4]);
         });
 
-        // @verified 2026-04-18: settingCage=false and Parameters[4]=undefined passes the inverted gate; cage is added to list.
-        test('synthetic: newCageEvent with settingCage=false and Parameters[4]=undefined adds cage', () => {
-            handler.newCageEvent({0: 1, 1: [10, 20], 2: 'CageA', 4: undefined});
+        // @verified 2026-04-19: settingCage=false; cage is added using Parameters[2] as position and Parameters[4] as name.
+        test('synthetic: newCageEvent with settingCage=false adds cage from Parameters[2] and Parameters[4]', () => {
+            handler.newCageEvent({0: 1, 1: 42, 2: [10, 20], 4: 'CageA', 5: 7});
 
             expect(handler.cages).toHaveLength(1);
             expect(handler.cages[0].id).toBe(1);
@@ -59,32 +49,39 @@ describe('WispCageHandler', () => {
             expect(handler.cages[0].name).toBe('CageA');
         });
 
-        // @verified 2026-04-18: settingCage=true triggers the inverted gate; cage is not added.
-        test('synthetic: newCageEvent with settingCage=true returns early (inverted gate)', () => {
+        // @verified 2026-04-19: settingCage=true causes early return; cage is not added.
+        test('synthetic: newCageEvent with settingCage=true returns early', () => {
             settingsSync.getBool.mockReturnValue(true);
 
-            handler.newCageEvent({0: 2, 1: [0, 0], 2: 'CageB', 4: undefined});
+            handler.newCageEvent({0: 2, 1: 0, 2: [0, 0], 4: 'CageB'});
 
             expect(handler.cages).toHaveLength(0);
         });
 
-        // @verified 2026-04-18: Parameters[4] defined (not undefined) triggers the inverted gate; cage is not added.
-        test('synthetic: newCageEvent with Parameters[4] defined returns early', () => {
-            handler.newCageEvent({0: 3, 1: [0, 0], 2: 'CageC', 4: 99});
+        // @verified 2026-04-19: id undefined causes early return; cage is not added.
+        test('synthetic: newCageEvent with id undefined returns early', () => {
+            handler.newCageEvent({0: undefined, 2: [0, 0], 4: 'CageC'});
 
             expect(handler.cages).toHaveLength(0);
         });
 
-        // @verified 2026-04-18: second newCageEvent with same id calls touch on existing cage and does not add a second entry.
+        // @verified 2026-04-19: position undefined causes early return; cage is not added.
+        test('synthetic: newCageEvent with position undefined returns early', () => {
+            handler.newCageEvent({0: 3, 2: undefined, 4: 'CageC'});
+
+            expect(handler.cages).toHaveLength(0);
+        });
+
+        // @verified 2026-04-19: second newCageEvent with same id calls touch on existing cage and does not add a second entry.
         test('synthetic: dedup by id calls touch on existing cage', () => {
-            handler.newCageEvent({0: 4, 1: [5, 6], 2: 'CageD', 4: undefined});
+            handler.newCageEvent({0: 4, 1: 0, 2: [5, 6], 4: 'CageD'});
             expect(handler.cages).toHaveLength(1);
 
             const cage = handler.cages[0];
             const originalTime = cage.lastUpdateTime;
             cage.lastUpdateTime = originalTime - 5000;
 
-            handler.newCageEvent({0: 4, 1: [7, 8], 2: 'CageD', 4: undefined});
+            handler.newCageEvent({0: 4, 1: 0, 2: [7, 8], 4: 'CageD'});
 
             expect(handler.cages).toHaveLength(1);
             expect(handler.cages[0].lastUpdateTime).toBeGreaterThanOrEqual(originalTime - 5000);
