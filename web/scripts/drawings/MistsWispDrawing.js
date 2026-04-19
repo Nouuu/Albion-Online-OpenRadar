@@ -15,7 +15,7 @@ export class MistsWispDrawing extends DrawingUtils {
 
         for (const w of wisps) {
             const p = this.transformPoint(w.hX, w.hY);
-            this.DrawCustomImage(ctx, p.x, p.y, 'wisp_sign', 'Resources', 20);
+            this.DrawCustomImage(ctx, p.x, p.y, 'mist_0', 'Resources', 20);
 
             if (showId) {
                 this.drawText(p.x, p.y + this.getScaledSize(18), w.id.toString(), ctx);

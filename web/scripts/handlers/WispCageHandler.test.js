@@ -95,7 +95,7 @@ describe('WispCageHandler', () => {
         });
     });
 
-    describe('cageOpenedEvent (event 532)', () => {
+    describe('cageOpenedEvent (event 531)', () => {
         // @verified 2026-04-18: settingCage=false causes cageOpenedEvent to return early; cage is not removed.
         test('synthetic: cageOpenedEvent with settingCage=false returns early without removing', () => {
             handler.cages.push({id: 10, posX: 0, posY: 0, name: 'X', hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});

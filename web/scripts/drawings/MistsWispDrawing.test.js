@@ -37,14 +37,14 @@ describe('MistsWispDrawing', () => {
     });
 
     // @verified 2026-04-19: settingWispSpawn=true renders wisp_sign image at transformed point.
-    test('renders wisp_sign image when settingWispSpawn is true', () => {
+    test('renders mist_0 fallback image when settingWispSpawn is true', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingWispSpawn');
         const wisp = {id: 42, hX: 10, hY: 20};
 
         drawing.invalidate(ctx, [wisp]);
 
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(
-            ctx, 10, 20, 'wisp_sign', 'Resources', 20
+            ctx, 10, 20, 'mist_0', 'Resources', 20
         );
     });
 
