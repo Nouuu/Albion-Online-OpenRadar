@@ -56,6 +56,7 @@ function cleanupStaleEntities() {
     const cleanedPlayers = handlers.players?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedMobs = handlers.mobs?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    handlers.mistsWisp?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE);
 
     const activePlayerIds = new Set(handlers.players?.getFilteredPlayers?.().map(p => p.id) || []);
     const cleanedRenderCache = PlayerListRenderer.cleanupStaleCache(activePlayerIds);

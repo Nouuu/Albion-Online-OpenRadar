@@ -634,8 +634,18 @@ describe('EventRouter', () => {
     // -------------------------------------------------------------------------
     describe('onEvent NewMistsWispSpawn', () => {
         test('MIST-3: onEvent routes NewMistsWispSpawn (P[252]=523) to mistsWispHandler.newWispEvent', () => {
-            // synthetic: no pcap fixture for event 523 mists wisp spawn
+            // synthetic: isolated dispatch test; pcap fixture coverage in MistsWispHandler.test.js
             const p = {0: 67, 1: [172.5, 15.5], 2: 90, 252: 523};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.mistsWispHandler.newWispEvent).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-04-19: pcap-derived event 523 dispatches the first fixture message to MistsWispHandler.newWispEvent with the full parameter object.
+        test('pcap-derived: onEvent routes fixture event 523 to mistsWispHandler.newWispEvent', async () => {
+            const fix = await loadFixture('mists-wisp', 'spawn');
+            const p = normalizeParams(fix.messages[0].parameters);
 
             EventRouter.onEvent(p);
 
