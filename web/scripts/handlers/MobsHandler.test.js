@@ -202,6 +202,57 @@ describe('MobsHandler', () => {
             expect(mobs[0].tier).toBe(6);
         });
 
+        // @verified 2026-04-19: typeId=649 (T4_MOB_CRITTER_WOOD_MISTS_GREEN). WOOD_CRITTER, floor=3.
+        // Rule: max(3, 4-1) = 3. Validates Wood family parity with other living resources.
+        test('pcap-derived spawn (living-tier): Wood Mists critter typeId=649 rendered with harvest tier 3', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 649);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
+            expect(mobs[0].name).toBe('Log');
+            expect(mobs[0].tier).toBe(3);
+        });
+
+        // @verified 2026-04-19: typeId=650 (T5_MOB_CRITTER_WOOD_MISTS_GREEN). Server event 40 Parameters[7]=4.
+        // Rule: max(3, 5-1) = 4. Wood family matches Fiber pattern.
+        test('pcap-derived spawn (living-tier): Wood Mists critter typeId=650 rendered with harvest tier 4', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 650);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
+            expect(mobs[0].name).toBe('Log');
+            expect(mobs[0].tier).toBe(4);
+        });
+
+        // @verified 2026-04-19: typeId=651 (T6_MOB_CRITTER_WOOD_MISTS_GREEN). WOOD_CRITTER.
+        // Rule: max(3, 6-1) = 5.
+        test('pcap-derived spawn (living-tier): Wood Mists critter typeId=651 rendered with harvest tier 5', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 651);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
+            expect(mobs[0].name).toBe('Log');
+            expect(mobs[0].tier).toBe(5);
+        });
+
         // @verified 2026-04-18: hostile camp mob typeId=2067 (T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE).
         // Real DB: l=SILVERCOINS (not harvestable), category=camp -> EnemyType.Enemy.
         test('pcap-derived spawn: hostile mob typeId=2067 category=camp adds as Enemy', async () => {

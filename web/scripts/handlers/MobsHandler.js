@@ -256,7 +256,7 @@ export class MobsHandler {
                 let prefix;
                 if (resourceType === 'Fiber' || resourceType === 'fiber') prefix = 'fsp';
                 else if (resourceType === 'Hide' || resourceType === 'hide') prefix = 'hsp';
-                else if (resourceType === 'Wood' || resourceType === 'Logs') prefix = 'wsp';
+                else if (resourceType === 'Log' || resourceType === 'Wood' || resourceType === 'Logs') prefix = 'wsp';
                 else if (resourceType === 'Ore' || resourceType === 'ore') prefix = 'osp';
                 else if (resourceType === 'Rock' || resourceType === 'rock') prefix = 'rsp';
                 const settingKey = getResourceStorageKey(prefix, 'Living');
