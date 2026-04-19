@@ -84,9 +84,9 @@ describe('MobsHandler', () => {
             expect(mobs[0].tier).toBe(5);
         });
 
-        // @verified 2026-04-18: typeId=422 (T2_MOB_HIDE_SWAMP_SNAKE, real DB lt=2).
-        // Real DB: type=Hide, tier=2, isHarvestable=true -> LivingSkinnable.
-        test('pcap-derived spawn: living Hide mob typeId=422 tier=2 adds as LivingSkinnable', async () => {
+        // @verified 2026-04-19: typeId=422 (T2_MOB_HIDE_SWAMP_SNAKE). Server event 40 Parameters[7]=1.
+        // Rule: LIVING HIDE, max(1, 2-1) = 1. Combat tier 2 shifts to harvest tier 1.
+        test('pcap-derived spawn: living Hide mob typeId=422 rendered with harvest tier 1', async () => {
             const fx = await loadFixture('mobs', 'spawn');
             const msg = fx.messages.find(m => m.parameters['1'] === 422);
             expect(msg).toBeDefined();
@@ -97,16 +97,31 @@ describe('MobsHandler', () => {
             const mobs = handler.getMobList();
             expect(mobs).toHaveLength(1);
             expect(mobs[0].type).toBe(EnemyType.LivingSkinnable);
-            expect(mobs[0].tier).toBe(2);
+            expect(mobs[0].tier).toBe(1);
         });
 
-        // @characterization 2026-04-18: typeId=529 (T4_MOB_CRITTER_FIBER_SWAMP_GREEN, real DB lt=4, type=Fiber).
-        // Real DB: l=FIBER_CRITTER, type=Fiber, tier=4, isHarvestable=true.
-        // Handler classifies: type !== 'Hide' -> LivingHarvestable (not LivingSkinnable).
-        // Previous mock wrongly returned type='Hide', causing wrong LivingSkinnable classification.
-        test('pcap-derived spawn: Fiber critter typeId=529 adds as LivingHarvestable with tier=4', async () => {
+        // @verified 2026-04-19: typeId=529 (T4_MOB_CRITTER_FIBER_SWAMP_GREEN). Server event 40 Parameters[7]=3.
+        // Rule: LIVING FIBER_CRITTER (floor=3), max(3, 4-1) = 3. Combat tier 4 shifts to harvest tier 3.
+        test('pcap-derived spawn: Fiber critter typeId=529 rendered with harvest tier 3', async () => {
             const fx = await loadFixture('mobs', 'spawn');
             const msg = fx.messages.find(m => m.parameters['1'] === 529);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
+            expect(mobs[0].name).toBe('Fiber');
+            expect(mobs[0].tier).toBe(3);
+        });
+
+        // @verified 2026-04-19: typeId=531 (T5_MOB_CRITTER_FIBER_SWAMP_RED). Server event 40 Parameters[7]=4.
+        // Rule: LIVING FIBER_CRITTER, max(3, 5-1) = 4. Combat tier 5 shifts to harvest tier 4.
+        test('pcap-derived spawn: Fiber critter typeId=531 rendered with harvest tier 4', async () => {
+            const fx = await loadFixture('mobs', 'spawn');
+            const msg = fx.messages.find(m => m.parameters['1'] === 531);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -119,13 +134,45 @@ describe('MobsHandler', () => {
             expect(mobs[0].tier).toBe(4);
         });
 
-        // @characterization 2026-04-18: typeId=531 (T5_MOB_CRITTER_FIBER_SWAMP_RED, real DB lt=5, type=Fiber).
-        // Real DB: l=FIBER_CRITTER, type=Fiber, tier=5, isHarvestable=true.
-        // Handler classifies: type !== 'Hide' -> LivingHarvestable.
-        // Previous mock wrongly returned type='Hide', causing wrong LivingSkinnable classification.
-        test('pcap-derived spawn: Fiber critter typeId=531 adds as LivingHarvestable with tier=5', async () => {
-            const fx = await loadFixture('mobs', 'spawn');
-            const msg = fx.messages.find(m => m.parameters['1'] === 531);
+        // @verified 2026-04-19: typeId=373 (T5_MOB_HIDE_MISTS_OWL). User confirmed game tooltip T4.
+        // Rule: LIVING HIDE, max(1, 5-1) = 4.
+        test('pcap-derived spawn (living-tier): Hide Mists owl typeId=373 rendered with harvest tier 4', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 373);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingSkinnable);
+            expect(mobs[0].name).toBe('Hide');
+            expect(mobs[0].tier).toBe(4);
+        });
+
+        // @verified 2026-04-19: typeId=374 (T6_MOB_HIDE_MISTS_HOUND). User confirmed game tooltip T5.
+        // Rule: LIVING HIDE, max(1, 6-1) = 5.
+        test('pcap-derived spawn (living-tier): Hide Mists hound typeId=374 rendered with harvest tier 5', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 374);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingSkinnable);
+            expect(mobs[0].name).toBe('Hide');
+            expect(mobs[0].tier).toBe(5);
+        });
+
+        // @verified 2026-04-19: typeId=532 (T5_MOB_CRITTER_FIBER_SWAMP_DEAD). Server event 40 Parameters[7]=5.
+        // Rule: DEAD variant preserves combat tier 5, no shift.
+        test('pcap-derived spawn (living-tier): Fiber DEAD typeId=532 preserves combat tier 5', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 532);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -136,6 +183,23 @@ describe('MobsHandler', () => {
             expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
             expect(mobs[0].name).toBe('Fiber');
             expect(mobs[0].tier).toBe(5);
+        });
+
+        // @verified 2026-04-19: typeId=534 (T6_MOB_CRITTER_FIBER_SWAMP_DEAD). DEAD variant.
+        // Rule: DEAD preserves combat tier 6.
+        test('pcap-derived spawn (living-tier): Fiber DEAD typeId=534 preserves combat tier 6', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 534);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
+            expect(mobs[0].name).toBe('Fiber');
+            expect(mobs[0].tier).toBe(6);
         });
 
         // @verified 2026-04-18: hostile camp mob typeId=2067 (T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE).
