@@ -187,7 +187,7 @@ export class MobsHandler {
         if (dbInfo && dbInfo.isHarvestable) {
             mob.tier = getLivingHarvestTier({
                 u: dbInfo.uniqueName,
-                t: dbInfo.tier,
+                t: dbInfo.combatTier,
                 l: dbInfo.lootType,
             }) || 0;
             mob.name = dbInfo.type;
@@ -197,7 +197,8 @@ export class MobsHandler {
             window.logger?.debug(CATEGORIES.MOBS, 'MobsDatabaseMatch', {
                 typeId,
                 type: dbInfo.type,
-                combatTier: dbInfo.tier,
+                combatTier: dbInfo.combatTier,
+                lootTier: dbInfo.tier,
                 harvestTier: mob.tier,
                 uniqueName: dbInfo.uniqueName,
                 assignedEnemyType: this.getEnemyTypeName(mob.type)
