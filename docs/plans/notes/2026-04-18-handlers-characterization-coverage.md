@@ -17,15 +17,15 @@ Living counter. Updated on every test commit. Archived at plan completion.
 | Handler | `@verified` | `@characterization` | `test.fails` | Total |
 |---|---:|---:|---:|---:|
 | PlayersHandler | 37 | 2 | 2 | 41 |
-| HarvestablesHandler | 47 | 7 | 1 | 55 |
-| MobsHandler | 63 | 3 | 0 | 66 |
+| HarvestablesHandler | 49 | 5 | 1 | 55 |
+| MobsHandler | 67 | 1 | 0 | 68 |
 | ChestsHandler | 13 | 0 | 0 | 13 |
 | FishingHandler | 9 | 0 | 1 | 10 |
 | DungeonsHandler | 26 | 0 | 0 | 26 |
 | WispCageHandler | 11 | 0 | 0 | 11 |
 | MistsWispDrawing | 8 | 0 | 0 | 8 |
 | EventRouter | 44 | 0 | 1 | 45 |
-| **Total** | **258** | **12** | **5** | **275** |
+| **Total** | **264** | **8** | **5** | **277** |
 
 ## Open observations register
 
@@ -60,9 +60,6 @@ Living counter. Updated on every test commit. Archived at plan completion.
 
     Next step: pcap capture covering the four rarity levels across the main chest families (Mists, Avalon, FactionWarfare, open world dungeon) to identify the real rarity parameter index. Out of scope for PR #78.
 
-### #52 tracked as `@characterization` pending ground truth
-
-Issue #52 (living Fiber tier mismatch) is NOT a `test.fails` because direction is unresolved. Server `Parameters[7]` and DB `mob.lt` diverge for Fiber critters only (Hide agrees). Observed on radar vs in-game tooltip per #52 description does not match either value. Resolution requires #58 (typeId debug overlay) to capture the offending entity directly. Until then, two `@characterization` tests in `HarvestablesHandler.test.js` document the divergence between MobsHandler and HarvestablesHandler for mobId=529 and mobId=531.
 
 ## Open `test.fails` register
 
@@ -81,6 +78,7 @@ Issue #52 (living Fiber tier mismatch) is NOT a `test.fails` because direction i
 - 2026-04-18 EventCodes refresh: `EventCodes.js` aligned to upstream StatisticsAnalysis master fetch. 452 value mismatches updated, 15 unreferenced legacy names dropped (Carriable/Journal/AntiCheat/RedZoneCluster/DebugMobInfo families), 61 new upstream names added. ROUTER-2..9 flipped from `test.fails` to verified. Wisp cage synthetic values corrected: 531/532 (from prior vendored copy) to 530/531 (fresh upstream).
 - 2026-04-18 single-source-of-truth migration: `internal/photon/eventcodes` + `internal/photon/operationcodes` Go packages generated from the JS files via `tools/gen-eventcodes`. `photon-dump/scenarios.go` and `internal/photon/events.go` now import from the packages. `EventRouter.js` imports `OperationCodes` for clean-mapping opcodes (2, 22, 41).
 - 2026-04-19 capture-70 extraction: added `wispcage/spawn` fixture (WS-level JSON + anonymized pcap fragment). Confirms NewCagedObject=530 in real traffic and exposes WISP-1 handler bug (Parameters[1]/[2]/[4] indexing). Fixing gaps listed in CP1 decisions: `wispcage/spawn` now closed; `fishing/finished` and `wispcage/opened` still not observable (no end-of-fishing events in capture-70, no cage-open events either).
+- 2026-04-19 #52 living resource tier mismatch resolved. Root-cause investigation on capture-70 showed server `Parameters[7]` in event 40 (NewHarvestableObject) matches the game tooltip exactly for all 9 observed living resource cases. Upstream `@tier` in `mobs.json` is the combat tier, distinct from the harvest tier the game displays. Derived rule: for LIVING non-DYNAMIC/non-DEAD mobs, `harvest_tier = max(min_tier[Loot.Harvestable.@type], combat_tier - 1)`. For DYNAMIC and DEAD variants, preserve combat tier. Implemented as pure function `getLivingHarvestTier` in `web/scripts/utils/LivingResourceTier.js` with hardcoded 20-entry min-tier map, wired into `MobsHandler.AddEnemy` via adapter. 20 unit tests + 7 MobsHandler integration tests + 2 flipped HarvestablesHandler convergence tests (mobIds 529, 531 now agree across both handlers). Fixes #52.
 
 ## Open ops-drift register (JS literals kept intentionally)
 
