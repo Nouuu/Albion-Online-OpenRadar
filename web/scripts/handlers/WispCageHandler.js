@@ -27,7 +27,7 @@ export class WispCageHandler
     }
 
     newCageEvent(parameters) {
-        if (settingsSync.getBool('settingCage')) return;
+        if (!settingsSync.getBool('settingCage')) return;
 
         const id = parameters[0];
         const position = parameters[2];
@@ -46,7 +46,7 @@ export class WispCageHandler
 
     cageOpenedEvent(Parameters)
     {
-        if (settingsSync.getBool('settingCage')) return;
+        if (!settingsSync.getBool('settingCage')) return;
 
         const id = Parameters[0];
 

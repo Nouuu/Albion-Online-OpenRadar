@@ -6,7 +6,7 @@ import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
-        getBool: vi.fn(() => false),
+        getBool: vi.fn(() => true),
     },
 }));
 
@@ -18,13 +18,13 @@ describe('WispCageHandler', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        settingsSync.getBool.mockReturnValue(false);
+        settingsSync.getBool.mockReturnValue(true);
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
         handler = new WispCageHandler();
     });
 
     describe('newCageEvent (event 530)', () => {
-        // @verified 2026-04-19: real pcap spawn (capture-70) adds a cage per message with name from Parameters[4] and position from Parameters[2].
+        // @verified 2026-04-19: settingCage=true; real pcap spawn (capture-70) adds a cage per message with name from Parameters[4] and position from Parameters[2].
         test('pcap-derived spawn: cages are added with name from Parameters[4] and position from Parameters[2]', async () => {
             const fx = await loadFixture('wispcage', 'spawn');
             expect(fx.messages.length).toBeGreaterThan(0);
@@ -45,8 +45,8 @@ describe('WispCageHandler', () => {
             }
         });
 
-        // @verified 2026-04-19: settingCage=false; cage is added using Parameters[2] as position and Parameters[4] as name.
-        test('synthetic: newCageEvent with settingCage=false adds cage from Parameters[2] and Parameters[4]', () => {
+        // @verified 2026-04-19: settingCage=true; cage is added using Parameters[2] as position and Parameters[4] as name.
+        test('synthetic: newCageEvent with settingCage=true adds cage from Parameters[2] and Parameters[4]', () => {
             handler.newCageEvent({0: 1, 1: 42, 2: [10, 20], 4: 'CageA', 5: 7});
 
             expect(handler.cages).toHaveLength(1);
@@ -56,9 +56,9 @@ describe('WispCageHandler', () => {
             expect(handler.cages[0].name).toBe('CageA');
         });
 
-        // @verified 2026-04-19: settingCage=true causes early return; cage is not added.
-        test('synthetic: newCageEvent with settingCage=true returns early', () => {
-            settingsSync.getBool.mockReturnValue(true);
+        // @verified 2026-04-19: settingCage=false causes early return; cage is not added.
+        test('synthetic: newCageEvent with settingCage=false returns early', () => {
+            settingsSync.getBool.mockReturnValue(false);
 
             handler.newCageEvent({0: 2, 1: 0, 2: [0, 0], 4: 'CageB'});
 
@@ -96,18 +96,18 @@ describe('WispCageHandler', () => {
     });
 
     describe('cageOpenedEvent (event 532)', () => {
-        // @verified 2026-04-18: settingCage=true causes cageOpenedEvent to return early; cage is not removed.
-        test('synthetic: cageOpenedEvent with settingCage=true returns early without removing', () => {
+        // @verified 2026-04-18: settingCage=false causes cageOpenedEvent to return early; cage is not removed.
+        test('synthetic: cageOpenedEvent with settingCage=false returns early without removing', () => {
             handler.cages.push({id: 10, posX: 0, posY: 0, name: 'X', hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
-            settingsSync.getBool.mockReturnValue(true);
+            settingsSync.getBool.mockReturnValue(false);
 
             handler.cageOpenedEvent({0: 10});
 
             expect(handler.cages).toHaveLength(1);
         });
 
-        // @verified 2026-04-18: cageOpenedEvent with settingCage=false and matching id removes the cage.
-        test('synthetic: cageOpenedEvent with matching id and settingCage=false removes cage', () => {
+        // @verified 2026-04-18: cageOpenedEvent with settingCage=true and matching id removes the cage.
+        test('synthetic: cageOpenedEvent with matching id and settingCage=true removes cage', () => {
             handler.cages.push({id: 11, posX: 0, posY: 0, name: 'Y', hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
 
             handler.cageOpenedEvent({0: 11});
