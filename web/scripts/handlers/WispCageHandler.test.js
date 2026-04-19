@@ -24,18 +24,25 @@ describe('WispCageHandler', () => {
     });
 
     describe('newCageEvent (event 530)', () => {
-        // @verified 2026-04-19: real pcap spawn (capture-70) adds a cage with name from Parameters[4] and position from Parameters[2].
-        test('pcap-derived spawn: cage is added with name from Parameters[4] and position from Parameters[2]', async () => {
+        // @verified 2026-04-19: real pcap spawn (capture-70) adds a cage per message with name from Parameters[4] and position from Parameters[2].
+        test('pcap-derived spawn: cages are added with name from Parameters[4] and position from Parameters[2]', async () => {
             const fx = await loadFixture('wispcage', 'spawn');
-            const p = normalizeParams(fx.messages[0].parameters);
+            expect(fx.messages.length).toBeGreaterThan(0);
 
-            handler.newCageEvent(p);
+            for (const msg of fx.messages) {
+                const p = normalizeParams(msg.parameters);
+                handler.newCageEvent(p);
+            }
 
-            expect(handler.cages).toHaveLength(1);
-            expect(handler.cages[0].id).toBe(p[0]);
-            expect(handler.cages[0].posX).toBe(p[2][0]);
-            expect(handler.cages[0].posY).toBe(p[2][1]);
-            expect(handler.cages[0].name).toBe(p[4]);
+            expect(handler.cages).toHaveLength(fx.messages.length);
+            for (let i = 0; i < fx.messages.length; i++) {
+                const p = normalizeParams(fx.messages[i].parameters);
+                const cage = handler.cages.find(c => c.id === p[0]);
+                expect(cage).toBeDefined();
+                expect(cage.posX).toBe(p[2][0]);
+                expect(cage.posY).toBe(p[2][1]);
+                expect(cage.name).toBe(p[4]);
+            }
         });
 
         // @verified 2026-04-19: settingCage=false; cage is added using Parameters[2] as position and Parameters[4] as name.
@@ -72,19 +79,19 @@ describe('WispCageHandler', () => {
             expect(handler.cages).toHaveLength(0);
         });
 
-        // @verified 2026-04-19: second newCageEvent with same id calls touch on existing cage and does not add a second entry.
+        // @verified 2026-04-19: second newCageEvent with same id calls touch on existing cage and advances lastUpdateTime.
         test('synthetic: dedup by id calls touch on existing cage', () => {
             handler.newCageEvent({0: 4, 1: 0, 2: [5, 6], 4: 'CageD'});
             expect(handler.cages).toHaveLength(1);
 
             const cage = handler.cages[0];
-            const originalTime = cage.lastUpdateTime;
-            cage.lastUpdateTime = originalTime - 5000;
+            cage.lastUpdateTime = cage.lastUpdateTime - 5000;
+            const preTouchTime = cage.lastUpdateTime;
 
             handler.newCageEvent({0: 4, 1: 0, 2: [7, 8], 4: 'CageD'});
 
             expect(handler.cages).toHaveLength(1);
-            expect(handler.cages[0].lastUpdateTime).toBeGreaterThanOrEqual(originalTime - 5000);
+            expect(handler.cages[0].lastUpdateTime).toBeGreaterThan(preTouchTime);
         });
     });
 
