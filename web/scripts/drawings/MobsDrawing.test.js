@@ -22,8 +22,10 @@ describe('MobsDrawing mist rendering', () => {
         drawing.DrawCustomImage = vi.fn();
         drawing.transformPoint = vi.fn((x, y) => ({x, y}));
         drawing.interpolateEntity = vi.fn();
+        drawing.drawTextItems = vi.fn();
         drawing.getScaledSize = vi.fn(s => s);
-        ctx = {};
+        drawing.getScaledFontSize = vi.fn(s => s);
+        ctx = {font: '', measureText: vi.fn(() => ({width: 10}))};
     });
 
     // @verified 2026-04-19: mist rendered when settingMistE0=true AND settingMistSolo=true (gate passes).
@@ -56,5 +58,27 @@ describe('MobsDrawing mist rendering', () => {
         drawing.invalidate(ctx, [], [mist]);
 
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-04-21: settingWispSpawnDebugID=true draws the entity id below a rendered mist with grey color.
+    test('MIST-1: settingWispSpawnDebugID=true draws id text below the mist', () => {
+        settingsSync.getBool.mockImplementation(() => true);
+        const mist = {id: 436764, hX: 10, hY: 20, type: 0, enchant: 1};
+
+        drawing.invalidate(ctx, [], [mist]);
+
+        expect(drawing.drawTextItems).toHaveBeenCalledWith(
+            expect.any(Number), 46, '436764', ctx, '10px', '#CCCCCC'
+        );
+    });
+
+    // @verified 2026-04-21: settingWispSpawnDebugID=false suppresses the id text.
+    test('MIST-1: settingWispSpawnDebugID=false does not draw id text', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingWispSpawnDebugID');
+        const mist = {id: 436764, hX: 10, hY: 20, type: 0, enchant: 1};
+
+        drawing.invalidate(ctx, [], [mist]);
+
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
     });
 });

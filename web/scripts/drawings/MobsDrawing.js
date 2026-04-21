@@ -202,6 +202,9 @@ export class MobsDrawing extends DrawingUtils
         }
 
         /* Mist portals */
+        const showMistId = settingsSync.getBool('settingWispSpawnDebugID');
+        const mistIdFontSize = `${this.getScaledFontSize(10, 7)}px`;
+        const mistIdOffset = this.getScaledSize(26);
         for (const mistsOne of mists)
         {
             if (!settingsSync.getBool("settingMistE" + mistsOne.enchant)) continue;
@@ -211,6 +214,13 @@ export class MobsDrawing extends DrawingUtils
                 // Change image folder
                 const point = this.transformPoint(mistsOne.hX, mistsOne.hY);
                 this.DrawCustomImage(ctx, point.x, point.y, "mist_" + mistsOne.enchant, "Resources", 21);
+
+                if (showMistId && mistsOne.id !== undefined) {
+                    const idText = mistsOne.id.toString();
+                    ctx.font = `${mistIdFontSize} ${this.fontFamily}`;
+                    const idWidth = ctx.measureText(idText).width;
+                    this.drawTextItems(point.x - idWidth / 2, point.y + mistIdOffset, idText, ctx, mistIdFontSize, '#CCCCCC');
+                }
             }
         }
     }
