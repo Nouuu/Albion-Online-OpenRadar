@@ -22,8 +22,10 @@ describe('MistsWispDrawing', () => {
         drawing.transformPoint = vi.fn((x, y) => ({x, y}));
         drawing.interpolateEntity = vi.fn();
         drawing.drawText = vi.fn();
+        drawing.drawTextItems = vi.fn();
         drawing.getScaledSize = vi.fn(s => s);
-        ctx = {};
+        drawing.getScaledFontSize = vi.fn((s) => s);
+        ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
     });
 
     // @verified 2026-04-19: master gate settingWispSpawn=false skips all render calls.
@@ -48,7 +50,7 @@ describe('MistsWispDrawing', () => {
         );
     });
 
-    // @verified 2026-04-19: debug overlay settingWispSpawnDebugID=true draws id as text below the wisp.
+    // @verified 2026-04-20: debug overlay settingWispSpawnDebugID=true draws id as text below the wisp with explicit grey color.
     test('renders debug ID text when settingWispSpawnDebugID is true', () => {
         settingsSync.getBool.mockImplementation(key =>
             key === 'settingWispSpawn' || key === 'settingWispSpawnDebugID');
@@ -56,17 +58,19 @@ describe('MistsWispDrawing', () => {
 
         drawing.invalidate(ctx, [wisp]);
 
-        expect(drawing.drawText).toHaveBeenCalledWith(10, 38, '42', ctx);
+        expect(drawing.drawTextItems).toHaveBeenCalledWith(
+            expect.any(Number), 46, '42', ctx, '10px', '#CCCCCC'
+        );
     });
 
-    // @verified 2026-04-19: settingWispSpawnDebugID=false suppresses the text overlay.
+    // @verified 2026-04-20: settingWispSpawnDebugID=false suppresses the text overlay.
     test('does not render debug ID when settingWispSpawnDebugID is false', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingWispSpawn');
         const wisp = {id: 42, hX: 10, hY: 20};
 
         drawing.invalidate(ctx, [wisp]);
 
-        expect(drawing.drawText).not.toHaveBeenCalled();
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
     });
 
     // @verified 2026-04-19: interpolate delegates to interpolateEntity per wisp in the collection.
