@@ -177,6 +177,7 @@ export async function initRadar() {
         window.harvestablesHandler = handlers.harvestables;
         window.mobsHandler = handlers.mobs;
         window.playersHandler = handlers.players;
+        window.handlers = handlers;
 
         EventRouter.init({
             handlers: {
@@ -299,6 +300,7 @@ export function destroyRadar() {
     window.harvestablesHandler = null;
     window.mobsHandler = null;
     window.playersHandler = null;
+    window.handlers = null;
     window.radarRenderer = null;
 
     PlayerListRenderer.reset();
