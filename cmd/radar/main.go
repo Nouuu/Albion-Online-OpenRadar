@@ -324,6 +324,16 @@ func (app *App) onPhotonEvent(event *photon.EventData) {
 		"code":       realCode,
 		"paramCount": len(event.Parameters),
 	}, nil)
+	// Diagnostic: log every Mists-related event (518-540) at TUI level so we can see
+	// what fires at Mists entry, with Parameters[2]/[3]/[4] which carry the cluster id
+	// and entry flag on event 519 MistsPlayerJoinedInfo.
+	if code, ok := realCode.(int); ok && code >= 518 && code <= 540 {
+		logger.PrintInfo("PKT", "EVT mists code=%d p2=%v(%T) p3=%v(%T) p4=%v(%T)",
+			code,
+			event.Parameters[2], event.Parameters[2],
+			event.Parameters[3], event.Parameters[3],
+			event.Parameters[4], event.Parameters[4])
+	}
 	app.wsHandler.BroadcastEvent(event)
 }
 
@@ -334,6 +344,14 @@ func (app *App) onPhotonRequest(req *photon.OperationRequest) {
 
 func (app *App) onPhotonResponse(resp *photon.OperationResponse) {
 	photon.PostProcessResponse(resp)
+	// Diagnostic: log every response opcode with a summary of key params so we can
+	// see whether Mists-entry op 2 Join and op 41 ChangeCluster responses reach the
+	// broadcast layer at all, and in what shape.
+	logger.PrintInfo("PKT", "RESP op=%d retCode=%d p0=%v(%T) p8=%v(%T) paramCount=%d",
+		resp.OperationCode, resp.ReturnCode,
+		resp.Parameters[0], resp.Parameters[0],
+		resp.Parameters[8], resp.Parameters[8],
+		len(resp.Parameters))
 	app.wsHandler.BroadcastResponse(resp)
 }
 
