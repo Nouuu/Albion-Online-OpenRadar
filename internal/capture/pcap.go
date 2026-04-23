@@ -22,7 +22,7 @@ const (
 	SnapLen     = 65536
 	Promiscuous = false
 	// BlockForever deadlocks handle.Close() when idle; poll on timeout
-	ReadTimeout = 500 * time.Millisecond
+	ReadTimeout = 100 * time.Millisecond
 )
 
 // NetworkInterface represents a network interface with its details
