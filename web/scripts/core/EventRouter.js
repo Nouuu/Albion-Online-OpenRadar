@@ -117,6 +117,20 @@ export function onEvent(Parameters) {
     const id = parseInt(Parameters[0]);
     const eventCode = Parameters[252];
 
+    // Temporary diagnostic: log every Mists-related event at INFO/MAP so it shows even when
+    // the console is filtered to MAP category. Covers 518-540 which spans all known Mists events
+    // (entry, exit, wisp spawn, cage, border, dungeon exit, entrance data).
+    if (eventCode >= 518 && eventCode <= 540) {
+        window.logger?.info(CATEGORIES.MAP, 'mists_event_observed', {
+            eventCode,
+            id,
+            p2: Parameters[2],
+            p3: Parameters[3],
+            p4: Parameters[4],
+            paramKeys: Object.keys(Parameters).sort((a, b) => +a - +b).join(',')
+        });
+    }
+
     // Raw packet logging
     window.logger?.debug(CATEGORIES.NETWORK, `Event_${eventCode}`, {
         id,
