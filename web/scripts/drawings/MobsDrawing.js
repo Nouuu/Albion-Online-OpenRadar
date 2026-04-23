@@ -195,8 +195,6 @@ export class MobsDrawing extends DrawingUtils
                 this.drawTextItems(point.x - badgeWidth / 2, point.y + currentYOffset, badgeText, ctx, fontSize10, "#FF69B4");
             }
         }
-
-        // Feu follet (MISTS_* named mobs) rendering is delegated to MistsWispDrawing.
     }
 
     /**

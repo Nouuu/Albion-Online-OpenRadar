@@ -203,13 +203,6 @@ describe('DungeonsHandler', () => {
     });
 
     describe('MISTS portals (SHARED_MIST_WISP_PORTAL_MOB)', () => {
-        // Live pcap evidence: MISTS_SOLO_YELLOW event 323 carries params[6]=2
-        // as a variant/seed constant. Params[8] is the actual zone rarity
-        // (0=Common matched "Commun", 1=Uncommon matched "Peu commun"). The
-        // name suffix "YELLOW" is the PvP zone type, not the rarity.
-        // dungeonEvent resolves enchant = params[8] for MISTS names before
-        // calling addDungeon, so tests pass the rarity directly.
-
         // @verified 2026-04-23: dungeonEvent picks Parameters[8] (rarity) over Parameters[6] (variant) for MISTS portals.
         test('MIST-6: dungeonEvent on MISTS_SOLO_YELLOW uses Parameters[8] as enchant, not Parameters[6]', () => {
             handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 6: 2, 8: 0, 252: 323});

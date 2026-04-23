@@ -85,15 +85,7 @@ export class DungeonsHandler
         const id = parameters[0];
         const position = parameters[1];
         const name = parameters[3];
-        // Parameters[8] is the enchant (0-4) across every dungeon family
-        // observed in live traffic: MISTS (0 for Common, 1 for Uncommon),
-        // T6_MORGANA (2), T6_UNDEAD / T6_KEEPER / T5_PORTAL_ROYAL_SOLO /
-        // CORRUPTED_SOLO_NONLETHAL (all 0 for unenchanted). Parameters[6]
-        // used to be read here but is a dungeon type/variant id (2 for
-        // MISTS_SOLO_YELLOW, 37-39 for CORRUPTED, 229 for T5_PORTAL_ROYAL,
-        // 276 for T6_KEEPER, 310 for T6_UNDEAD, 327 for T6_MORGANA) and
-        // caused every non-MISTS group dungeon to be filtered out because
-        // settingDungeonE<big-number> never exists.
+        // Parameters[8] is the enchant (0-4); Parameters[6] is a type/variant id.
         const enchant = parameters[8] ?? 0;
 
         this.addDungeon(id, position[0], position[1], name, enchant);
@@ -111,11 +103,7 @@ export class DungeonsHandler
         // eslint-disable-next-line no-useless-assignment
         let dungeonType = undefined;
 
-        // MISTS portals (spawned after a feu follet is approached). Checked
-        // before "solo" because MISTS_SOLO_<COLOR> would otherwise fall into
-        // the Dungeon solo branch and be filtered by the wrong settings.
-        // `enchant` here is Parameters[8] (zone rarity) resolved in
-        // dungeonEvent, not Parameters[6] (variant/seed).
+        // MISTS portals route through the Mists settings, not Dungeon settings.
         if (upperCaseName.startsWith("MISTS_"))
         {
             const isSolo = upperCaseName.includes("_SOLO_");

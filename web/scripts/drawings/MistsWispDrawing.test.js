@@ -1,5 +1,4 @@
 // synthetic: mist entities constructed to cover filter gates and debug overlay.
-// Data source: handlers.mobs.mistList (feu follets from NewMob event 123 with MISTS_* name).
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
