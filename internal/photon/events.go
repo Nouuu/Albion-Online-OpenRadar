@@ -46,14 +46,24 @@ func PostProcessResponse(resp *OperationResponse) {
 	}
 }
 
-// Move byte array layout: [mode(1), header(8), posX float32 LE, posY float32 LE, ...].
 // Mobs/resources send mode=3 with 30 bytes; players send mode=3 too but with
-// XOR-encrypted floats (garbage without the XorCode, left as-is).
+// XOR-encrypted floats that decode to NaN/Inf without the XorCode. Skip those
+// so json.Marshal downstream does not reject the whole WebSocket batch.
 func extractMovePositions(params map[byte]interface{}) {
 	raw, ok := params[1].(ByteArray)
 	if !ok || len(raw) < 17 {
 		return
 	}
-	params[4] = math.Float32frombits(binary.LittleEndian.Uint32(raw[9:13]))
-	params[5] = math.Float32frombits(binary.LittleEndian.Uint32(raw[13:17]))
+	x := math.Float32frombits(binary.LittleEndian.Uint32(raw[9:13]))
+	y := math.Float32frombits(binary.LittleEndian.Uint32(raw[13:17]))
+	if !isFiniteFloat32(x) || !isFiniteFloat32(y) {
+		return
+	}
+	params[4] = x
+	params[5] = y
+}
+
+func isFiniteFloat32(f float32) bool {
+	f64 := float64(f)
+	return !math.IsNaN(f64) && !math.IsInf(f64, 0)
 }

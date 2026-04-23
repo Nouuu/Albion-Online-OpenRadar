@@ -71,6 +71,32 @@ func TestPostProcessEvent_Move_LivePcapSamples(t *testing.T) {
 	}
 }
 
+func TestPostProcessEvent_Move_SkipsNaNAndInf(t *testing.T) {
+	cases := []struct {
+		name string
+		bits [2]uint32
+	}{
+		{"NaN both", [2]uint32{0x7fc00000, 0x7fc00000}},
+		{"NaN posX only", [2]uint32{0x7fc00000, math.Float32bits(12.5)}},
+		{"NaN posY only", [2]uint32{math.Float32bits(12.5), 0x7fc00000}},
+		{"+Inf posX", [2]uint32{0x7f800000, math.Float32bits(12.5)}},
+		{"-Inf posY", [2]uint32{math.Float32bits(12.5), 0xff800000}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			raw := make([]byte, 17)
+			binary.LittleEndian.PutUint32(raw[9:], tc.bits[0])
+			binary.LittleEndian.PutUint32(raw[13:], tc.bits[1])
+			ev := &EventData{Code: 3, Parameters: map[byte]interface{}{1: ByteArray(raw)}}
+			PostProcessEvent(ev)
+			_, hasX := ev.Parameters[4]
+			_, hasY := ev.Parameters[5]
+			require.False(t, hasX, "params[4] must be absent when a coord is NaN/Inf")
+			require.False(t, hasY, "params[5] must be absent when a coord is NaN/Inf")
+		})
+	}
+}
+
 func TestPostProcessEvent_Move_InjectsPositions(t *testing.T) {
 	ev := &EventData{
 		Code: 3,
