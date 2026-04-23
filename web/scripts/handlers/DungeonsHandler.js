@@ -1,6 +1,5 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../utils/SettingsSync.js";
-import {extractMistsRarity} from "./MobsHandler.js";
 
 const DungeonType =
 {
@@ -86,7 +85,16 @@ export class DungeonsHandler
         const id = parameters[0];
         const position = parameters[1];
         const name = parameters[3];
-        const enchant = parameters[6];
+        // Parameters[8] is the enchant (0-4) across every dungeon family
+        // observed in live traffic: MISTS (0 for Common, 1 for Uncommon),
+        // T6_MORGANA (2), T6_UNDEAD / T6_KEEPER / T5_PORTAL_ROYAL_SOLO /
+        // CORRUPTED_SOLO_NONLETHAL (all 0 for unenchanted). Parameters[6]
+        // used to be read here but is a dungeon type/variant id (2 for
+        // MISTS_SOLO_YELLOW, 37-39 for CORRUPTED, 229 for T5_PORTAL_ROYAL,
+        // 276 for T6_KEEPER, 310 for T6_UNDEAD, 327 for T6_MORGANA) and
+        // caused every non-MISTS group dungeon to be filtered out because
+        // settingDungeonE<big-number> never exists.
+        const enchant = parameters[8] ?? 0;
 
         this.addDungeon(id, position[0], position[1], name, enchant);
     }
@@ -102,23 +110,21 @@ export class DungeonsHandler
         const lowerCaseName = name.toLowerCase();
         // eslint-disable-next-line no-useless-assignment
         let dungeonType = undefined;
-        // Parameters[6] on MISTS portals is a variant/seed (constant 2 for
-        // every MISTS_SOLO_YELLOW observed). Use the name suffix instead.
-        let resolvedEnchant = enchant;
 
         // MISTS portals (spawned after a feu follet is approached). Checked
         // before "solo" because MISTS_SOLO_<COLOR> would otherwise fall into
         // the Dungeon solo branch and be filtered by the wrong settings.
+        // `enchant` here is Parameters[8] (zone rarity) resolved in
+        // dungeonEvent, not Parameters[6] (variant/seed).
         if (upperCaseName.startsWith("MISTS_"))
         {
-            resolvedEnchant = extractMistsRarity(name);
             const isSolo = upperCaseName.includes("_SOLO_");
 
             if (isSolo) {
-                if (!settingsSync.getBool("settingMistSolo") || !settingsSync.getBool("settingMistE" + resolvedEnchant)) return;
+                if (!settingsSync.getBool("settingMistSolo") || !settingsSync.getBool("settingMistE" + enchant)) return;
                 dungeonType = DungeonType.Solo;
             } else {
-                if (!settingsSync.getBool("settingMistDuo") || !settingsSync.getBool("settingMistE" + resolvedEnchant)) return;
+                if (!settingsSync.getBool("settingMistDuo") || !settingsSync.getBool("settingMistE" + enchant)) return;
                 dungeonType = DungeonType.Group;
             }
         }
@@ -153,7 +159,7 @@ export class DungeonsHandler
             dungeonType = DungeonType.Group;
         }
 
-        const d = new Dungeon(id, posX, posY, name, dungeonType, resolvedEnchant);
+        const d = new Dungeon(id, posX, posY, name, dungeonType, enchant);
         this.dungeonList.push(d);
     }
 

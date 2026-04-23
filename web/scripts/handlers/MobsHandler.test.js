@@ -12,7 +12,7 @@ vi.mock('../utils/SettingsSync.js', () => ({
     },
 }));
 
-const {MobsHandler, EnemyType, extractMistsRarity} = await import('./MobsHandler.js');
+const {MobsHandler, EnemyType} = await import('./MobsHandler.js');
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 
 const allTrueSettings = {
@@ -781,36 +781,13 @@ describe('MobsHandler', () => {
             expect(handler.getSize().mists).toBe(1);
         });
 
-        // @verified 2026-04-23: MISTS rarity is extracted from the name colour suffix, not Parameters[33] (which pcap evidence shows is always 0).
-        test('MIST-6: AddMist derives enchant from name suffix, ignoring Parameters[33]', () => {
-            handler.NewMobEvent(normalizeParams({'0': 9410, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_BLUE', '33': 0}));
-            expect(handler.mistList[0].enchant).toBe(2);
+        // @verified 2026-04-23: feu follet rarity arrives via Parameters[33] at live time; pcap fixtures only sample Common so fixture value stays 0, but live evidence confirms the path is correct (user sees green mist_1 for Peu commun wisps).
+        test('MIST-6: AddMist forwards Parameters[33] to Mist.enchant', () => {
+            handler.NewMobEvent(normalizeParams({'0': 9410, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            expect(handler.mistList[0].enchant).toBe(0);
 
-            handler.NewMobEvent(normalizeParams({'0': 9411, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_GREEN', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': 9411, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 1}));
             expect(handler.mistList[1].enchant).toBe(1);
-
-            handler.NewMobEvent(normalizeParams({'0': 9412, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_GOLD', '33': 0}));
-            expect(handler.mistList[2].enchant).toBe(4);
-        });
-    });
-
-    describe('extractMistsRarity', () => {
-        // @verified 2026-04-23: Albion Mists colour suffix to rarity mapping (YELLOW=0, GREEN=1, BLUE=2, PURPLE=3, GOLD=4).
-        test('MIST-6: maps each known colour suffix to its rarity index', () => {
-            expect(extractMistsRarity('MISTS_SOLO_YELLOW')).toBe(0);
-            expect(extractMistsRarity('MISTS_SOLO_GREEN')).toBe(1);
-            expect(extractMistsRarity('MISTS_SOLO_BLUE')).toBe(2);
-            expect(extractMistsRarity('MISTS_SOLO_PURPLE')).toBe(3);
-            expect(extractMistsRarity('MISTS_SOLO_GOLD')).toBe(4);
-            expect(extractMistsRarity('MISTS_DUO_BLUE')).toBe(2);
-        });
-
-        // @verified 2026-04-23: unknown suffix or missing name defaults to rarity 0 (Common).
-        test('MIST-6: unknown suffix or empty name defaults to 0', () => {
-            expect(extractMistsRarity('MISTS_SOLO_UNKNOWN')).toBe(0);
-            expect(extractMistsRarity('')).toBe(0);
-            expect(extractMistsRarity(null)).toBe(0);
-            expect(extractMistsRarity(undefined)).toBe(0);
         });
     });
 });

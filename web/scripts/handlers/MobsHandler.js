@@ -16,29 +16,6 @@ export const EnemyType =
         Events: 9,
     };
 
-const MISTS_RARITY_BY_COLOR = {
-    YELLOW: 0,
-    GREEN: 1,
-    BLUE: 2,
-    PURPLE: 3,
-    GOLD: 4,
-};
-
-/**
- * Extract MISTS zone rarity (0-4) from MISTS_* entity name suffix.
- * Cross-ref: Triky313 ClusterInfo.GetMistsRarity; Albion Mists zones encode
- * rarity in the colour suffix (YELLOW=Common, GREEN=Uncommon, BLUE=Rare,
- * PURPLE=Epic, GOLD=Legendary). Real data shows Parameters[33] is always 0
- * and Parameters[6] on dungeon portals carries a different value (variant
- * or seed), so the name suffix is the reliable source.
- */
-export function extractMistsRarity(name) {
-    if (!name) return 0;
-    const match = /_([A-Z]+)$/.exec(name.toUpperCase());
-    if (!match) return 0;
-    return MISTS_RARITY_BY_COLOR[match[1]] ?? 0;
-}
-
 class Mob {
     constructor(id, typeId, posX, posY, health, maxHealth, enchantmentLevel, rarity) {
         this.id = id;
@@ -493,16 +470,13 @@ export class MobsHandler {
         return [...this.mobsList];
     }
 
-    AddMist(id, posX, posY, name, _enchantIgnored) {
-        // Parameters[33] (_enchantIgnored) is always 0 for MISTS_* entities.
-        // The rarity is encoded in the name suffix (YELLOW/GREEN/BLUE/PURPLE/GOLD).
-        const rarity = extractMistsRarity(name);
+    AddMist(id, posX, posY, name, enchant) {
         const existing = this.mistList.find(m => m.id === id);
         if (existing) {
             existing.touch();
             return;
         }
-        this.mistList.push(new Mist(id, posX, posY, name, rarity));
+        this.mistList.push(new Mist(id, posX, posY, name, enchant));
     }
 
     removeMist(id) {
