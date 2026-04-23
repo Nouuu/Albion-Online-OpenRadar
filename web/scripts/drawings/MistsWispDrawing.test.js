@@ -51,7 +51,7 @@ describe('MistsWispDrawing', () => {
         );
     });
 
-    // @verified 2026-04-23: enchant filter gate — settingMistE0=false skips an E0 feu follet.
+    // @verified 2026-04-23: enchant filter gate. settingMistE0=false skips an E0 feu follet.
     test('MIST-1: settingMistE0=false skips the E0 feu follet', () => {
         settingsSync.getBool.mockImplementation(key => key !== 'settingMistE0');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
@@ -61,7 +61,7 @@ describe('MistsWispDrawing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-23: type filter gate — settingMistSolo=false skips a solo feu follet even with E0 on.
+    // @verified 2026-04-23: type filter gate. settingMistSolo=false skips a solo feu follet even with E0 on.
     test('MIST-1: settingMistSolo=false skips solo feu follet', () => {
         settingsSync.getBool.mockImplementation(key => key !== 'settingMistSolo');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
