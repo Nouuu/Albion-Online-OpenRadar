@@ -289,6 +289,12 @@ export function onEvent(Parameters) {
             // the cluster identifier ("@MISTS@<guid>" for a Mists instance, plain Royal index otherwise).
             // Parameters[3]=true flags the local player's Mists entry; without it the event is a status
             // update that must not change map.id.
+            window.logger?.debug(CATEGORIES.MAP, 'event_519_received', {
+                p2: Parameters[2],
+                p3: Parameters[3],
+                p4: Parameters[4],
+                allParameters: Parameters
+            });
             const newMapId = Parameters[2];
             if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
                 const previousMapId = map.id;
