@@ -267,11 +267,22 @@ func (app *App) updateStats() {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
+	pcapStatsTick := 0
+	const pcapStatsEvery = 30 // seconds
+
 	for {
 		select {
 		case <-app.ctx.Done():
 			return
 		case <-ticker.C:
+			pcapStatsTick++
+			if pcapStatsTick >= pcapStatsEvery && app.capturer != nil {
+				pcapStatsTick = 0
+				if s, err := app.capturer.Stats(); err == nil && s != nil {
+					logger.PrintInfo("PKT", "kernel stats: received=%d dropped=%d ifdropped=%d",
+						s.PacketsReceived, s.PacketsDropped, s.PacketsIfDropped)
+				}
+			}
 			if app.program != nil {
 				var m runtime.MemStats
 				runtime.ReadMemStats(&m)

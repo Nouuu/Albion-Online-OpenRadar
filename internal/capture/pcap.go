@@ -124,6 +124,17 @@ func (c *Capturer) BytesReceived() uint64 {
 	return atomic.LoadUint64(&c.bytesReceived)
 }
 
+// Stats returns libpcap's kernel-level capture statistics: packets received
+// by the filter, packets dropped because the kernel ring buffer was full, and
+// packets dropped by the network interface before the filter saw them.
+// Returns nil if the handle is closed or stats are unavailable.
+func (c *Capturer) Stats() (*pcap.Stats, error) {
+	if c.handle == nil {
+		return nil, nil
+	}
+	return c.handle.Stats()
+}
+
 // resolveAdapter gets the IP and device name, with retry logic
 func resolveAdapter(appDir, ipOverride string) (ip, device string, err error) {
 	ip, err = getAdapterIP(appDir, ipOverride)
