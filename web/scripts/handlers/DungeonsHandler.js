@@ -1,5 +1,6 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../utils/SettingsSync.js";
+import {extractMistsRarity} from "./MobsHandler.js";
 
 const DungeonType =
 {
@@ -97,14 +98,34 @@ export class DungeonsHandler
             return;
         }
 
-        const lowerCaseName = name.toLowerCase(name);
+        const upperCaseName = name.toUpperCase();
+        const lowerCaseName = name.toLowerCase();
         // eslint-disable-next-line no-useless-assignment
         let dungeonType = undefined;
+        // Parameters[6] on MISTS portals is a variant/seed (constant 2 for
+        // every MISTS_SOLO_YELLOW observed). Use the name suffix instead.
+        let resolvedEnchant = enchant;
 
+        // MISTS portals (spawned after a feu follet is approached). Checked
+        // before "solo" because MISTS_SOLO_<COLOR> would otherwise fall into
+        // the Dungeon solo branch and be filtered by the wrong settings.
+        if (upperCaseName.startsWith("MISTS_"))
+        {
+            resolvedEnchant = extractMistsRarity(name);
+            const isSolo = upperCaseName.includes("_SOLO_");
+
+            if (isSolo) {
+                if (!settingsSync.getBool("settingMistSolo") || !settingsSync.getBool("settingMistE" + resolvedEnchant)) return;
+                dungeonType = DungeonType.Solo;
+            } else {
+                if (!settingsSync.getBool("settingMistDuo") || !settingsSync.getBool("settingMistE" + resolvedEnchant)) return;
+                dungeonType = DungeonType.Group;
+            }
+        }
         // Corrupted dungeons have "solo" in their names
         // So check before solo to avoid problems
         // "CORRUPTED_SOLO"
-        if (lowerCaseName.includes("corrupted")) // corrupt
+        else if (lowerCaseName.includes("corrupted")) // corrupt
         {
             // Test if corrupt checkbox
             if (!settingsSync.getBool("settingDungeonCorrupted")) return;
@@ -132,7 +153,7 @@ export class DungeonsHandler
             dungeonType = DungeonType.Group;
         }
 
-        const d = new Dungeon(id, posX, posY, name, dungeonType, enchant);
+        const d = new Dungeon(id, posX, posY, name, dungeonType, resolvedEnchant);
         this.dungeonList.push(d);
     }
 

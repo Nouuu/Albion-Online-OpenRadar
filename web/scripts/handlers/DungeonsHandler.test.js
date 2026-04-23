@@ -202,6 +202,85 @@ describe('DungeonsHandler', () => {
         });
     });
 
+    describe('MISTS portals (SHARED_MIST_WISP_PORTAL_MOB)', () => {
+        // pcap-live evidence: MISTS_SOLO_YELLOW event 323 always carries
+        // params[6]=2 (a variant/seed constant), not the zone rarity.
+        // Rarity is encoded in the name suffix (YELLOW=Common, GREEN=Uncommon,
+        // BLUE=Rare, PURPLE=Epic, GOLD=Legendary).
+
+        // @verified 2026-04-23: MISTS_SOLO_YELLOW extracts enchant 0 from the name suffix, overriding params[6]=2.
+        test('MIST-6: MISTS_SOLO_YELLOW uses rarity from name suffix, not params[6]', () => {
+            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 2);
+
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].enchant).toBe(0);
+            expect(handler.dungeonList[0].drawName).toBe('dungeon_0');
+        });
+
+        // @verified 2026-04-23: each MISTS colour maps to its expected rarity index.
+        test('MIST-6: colour suffix to rarity mapping (YELLOW=0, GREEN=1, BLUE=2, PURPLE=3, GOLD=4)', () => {
+            const cases = [
+                ['MISTS_SOLO_YELLOW', 0],
+                ['MISTS_SOLO_GREEN', 1],
+                ['MISTS_SOLO_BLUE', 2],
+                ['MISTS_SOLO_PURPLE', 3],
+                ['MISTS_SOLO_GOLD', 4],
+            ];
+            for (const [name, expectedRarity] of cases) {
+                handler = new DungeonsHandler();
+                handler.addDungeon(1, 0, 0, name, 999);
+                expect(handler.dungeonList[0].enchant).toBe(expectedRarity);
+                expect(handler.dungeonList[0].drawName).toBe('dungeon_' + expectedRarity);
+            }
+        });
+
+        // @verified 2026-04-23: settingMistSolo=false drops MISTS solo portal.
+        test('MIST-6: settingMistSolo=false drops MISTS_SOLO portal', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingMistSolo');
+
+            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 2);
+
+            expect(handler.dungeonList).toHaveLength(0);
+        });
+
+        // @verified 2026-04-23: settingMistE<rarity>=false drops MISTS portal matching that rarity.
+        test('MIST-6: settingMistE0=false drops YELLOW (Common) MISTS portal', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingMistE0');
+
+            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 2);
+
+            expect(handler.dungeonList).toHaveLength(0);
+        });
+
+        // @verified 2026-04-23: MISTS portal is NOT filtered by settingDungeonSolo (decoupled from standard dungeons).
+        test('MIST-6: settingDungeonSolo=false does NOT drop MISTS_SOLO portal', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonSolo');
+
+            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 2);
+
+            expect(handler.dungeonList).toHaveLength(1);
+        });
+
+        // @verified 2026-04-23: MISTS_DUO_<COLOR> maps to Group type (DungeonType.Group=1) and uses settingMistDuo.
+        test('MIST-6: MISTS_DUO_GREEN routes to Group type gated by settingMistDuo', () => {
+            handler.addDungeon(1, 0, 0, 'MISTS_DUO_GREEN', 2);
+
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].type).toBe(1);
+            expect(handler.dungeonList[0].enchant).toBe(1);
+            expect(handler.dungeonList[0].drawName).toBe('group_1');
+        });
+
+        // @verified 2026-04-23: settingMistDuo=false drops MISTS duo portal.
+        test('MIST-6: settingMistDuo=false drops MISTS_DUO portal', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingMistDuo');
+
+            handler.addDungeon(1, 0, 0, 'MISTS_DUO_GREEN', 2);
+
+            expect(handler.dungeonList).toHaveLength(0);
+        });
+    });
+
     describe('Clear', () => {
         // @verified 2026-04-18: Clear empties dungeonList.
         test('synthetic: Clear empties dungeonList', () => {
