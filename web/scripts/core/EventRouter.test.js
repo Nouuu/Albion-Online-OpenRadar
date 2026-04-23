@@ -51,8 +51,7 @@ describe('EventRouter', () => {
             chestsHandler: {removeChest: vi.fn(), addChestEvent: vi.fn()},
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
-            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
-            mistsWispHandler: {newWispEvent: vi.fn(), removeWisp: vi.fn()}
+            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()}
         };
 
         map = {id: -1, hX: 0, hY: 0, isBZ: false};
@@ -324,7 +323,7 @@ describe('EventRouter', () => {
     // onEvent Leave (1)
     // -------------------------------------------------------------------------
     describe('onEvent Leave', () => {
-        // @verified 2026-04-20: Leave fans out remove calls to all eight handlers
+        // @verified 2026-04-23: Leave fans out remove calls to all seven handlers
         test('Leave event removes entity from all handlers', () => {
             EventRouter.onEvent({0: 42, 252: EventCodes.Leave});
 
@@ -335,7 +334,6 @@ describe('EventRouter', () => {
             expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
             expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
             expect(handlers.wispCageHandler.removeCage).toHaveBeenCalledWith(42);
-            expect(handlers.mistsWispHandler.removeWisp).toHaveBeenCalledWith(42);
         });
     });
 
@@ -626,30 +624,6 @@ describe('EventRouter', () => {
             EventRouter.onEvent(p);
 
             expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(p);
-        });
-    });
-
-    // -------------------------------------------------------------------------
-    // onEvent NewMistsWispSpawn (523)
-    // -------------------------------------------------------------------------
-    describe('onEvent NewMistsWispSpawn', () => {
-        test('MIST-3: onEvent routes NewMistsWispSpawn (P[252]=523) to mistsWispHandler.newWispEvent', () => {
-            // synthetic: isolated dispatch test; pcap fixture coverage in MistsWispHandler.test.js
-            const p = {0: 67, 1: [172.5, 15.5], 2: 90, 252: 523};
-
-            EventRouter.onEvent(p);
-
-            expect(handlers.mistsWispHandler.newWispEvent).toHaveBeenCalledWith(p);
-        });
-
-        // @verified 2026-04-19: pcap-derived event 523 dispatches the first fixture message to MistsWispHandler.newWispEvent with the full parameter object.
-        test('pcap-derived: onEvent routes fixture event 523 to mistsWispHandler.newWispEvent', async () => {
-            const fix = await loadFixture('mists-wisp', 'spawn');
-            const p = normalizeParams(fix.messages[0].parameters);
-
-            EventRouter.onEvent(p);
-
-            expect(handlers.mistsWispHandler.newWispEvent).toHaveBeenCalledWith(p);
         });
     });
 

@@ -120,7 +120,6 @@ export class RadarRenderer {
         if (this.handlers.mobsHandler && this.drawings.mobsDrawing) {
             this.drawings.mobsDrawing.interpolate(
                 this.handlers.mobsHandler.mobsList,
-                this.handlers.mobsHandler.mistList,
                 this.lpX, this.lpY, t
             );
         }
@@ -146,9 +145,9 @@ export class RadarRenderer {
             );
         }
 
-        if (this.handlers.mistsWispHandler && this.drawings.mistsWispDrawing) {
+        if (this.handlers.mobsHandler && this.drawings.mistsWispDrawing) {
             this.drawings.mistsWispDrawing.interpolate(
-                this.handlers.mistsWispHandler.wispList,
+                this.handlers.mobsHandler.mistList,
                 this.lpX, this.lpY, t
             );
         }
@@ -235,8 +234,7 @@ export class RadarRenderer {
             if (this.drawings.mobsDrawing && this.handlers.mobsHandler) {
                 this.drawings.mobsDrawing.invalidate(
                     context,
-                    this.handlers.mobsHandler.mobsList,
-                    this.handlers.mobsHandler.mistList
+                    this.handlers.mobsHandler.mobsList
                 );
             }
 
@@ -261,10 +259,10 @@ export class RadarRenderer {
                 );
             }
 
-            if (this.drawings.mistsWispDrawing && this.handlers.mistsWispHandler) {
+            if (this.drawings.mistsWispDrawing && this.handlers.mobsHandler) {
                 this.drawings.mistsWispDrawing.invalidate(
                     context,
-                    this.handlers.mistsWispHandler.wispList
+                    this.handlers.mobsHandler.mistList
                 );
             }
 

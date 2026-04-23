@@ -5,20 +5,15 @@ import settingsSync from "../utils/SettingsSync.js";
 
 export class MobsDrawing extends DrawingUtils
 {
-    interpolate(mobs, mists, lpX, lpY, t)
+    interpolate(mobs, lpX, lpY, t)
     {
         for (const mobOne of mobs)
         {
             this.interpolateEntity(mobOne, lpX, lpY, t);
         }
-
-        for (const mistOne of mists)
-        {
-            this.interpolateEntity(mistOne, lpX, lpY, t);
-        }
     }
 
-    invalidate(ctx, mobs, mists)
+    invalidate(ctx, mobs)
     {
         // Note: cluster detection & drawing is handled centrally in Utils.render (merged static + living resources)
 
@@ -201,18 +196,7 @@ export class MobsDrawing extends DrawingUtils
             }
         }
 
-        /* Mist portals */
-        for (const mistsOne of mists)
-        {
-            if (!settingsSync.getBool("settingMistE" + mistsOne.enchant)) continue;
-
-            if (settingsSync.getBool("settingMistSolo") && mistsOne.type == 0 || settingsSync.getBool("settingMistDuo") && mistsOne.type == 1)
-            {
-                // Change image folder
-                const point = this.transformPoint(mistsOne.hX, mistsOne.hY);
-                this.DrawCustomImage(ctx, point.x, point.y, "mist_" + mistsOne.enchant, "Resources", 21);
-            }
-        }
+        // Feu follet (MISTS_* named mobs) rendering is delegated to MistsWispDrawing.
     }
 
     /**
