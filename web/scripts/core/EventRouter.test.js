@@ -145,6 +145,54 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
+    // onEvent MistsPlayerJoinedInfo (event 519)
+    // -------------------------------------------------------------------------
+    describe('onEvent MistsPlayerJoinedInfo', () => {
+        // @verified 2026-04-23: pcap-derived. Event 519 with Parameters[2]="@MISTS@<guid>" and
+        // Parameters[3]=true sets map.id to the Mists instance identifier and notifies the renderer.
+        // capture_78.pcap message[1], @MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434.
+        test('MIST-7: pcap-derived Mists entry sets map.id from Parameters[2]', async () => {
+            const fix = await loadFixture('mists', 'player-joined-info');
+            const entry = fix.messages.find(m => m.parameters['3'] === true);
+            const p = normalizeParams(entry.parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(map.id).toBe('@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434');
+            expect(radarRenderer.setMap).toHaveBeenCalledWith(map);
+        });
+
+        // @verified 2026-04-23: the first pcap message has Parameters[2]="0212" (Royal cluster) with no
+        // Parameters[3] flag. Must NOT overwrite map.id (not a Mists entry, just session info).
+        test('MIST-7: event 519 without Parameters[3] flag does not update map.id', async () => {
+            const fix = await loadFixture('mists', 'player-joined-info');
+            map.id = '0212';
+            const msg = fix.messages[0];
+            const p = normalizeParams(msg.parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(map.id).toBe('0212');
+            expect(radarRenderer.setMap).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-04-23: idempotent. Re-firing event 519 for the same Mists instance does not
+        // re-trigger setMap.
+        test('MIST-7: re-firing event 519 for same instance does not re-notify renderer', () => {
+            map.id = '@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434';
+            EventRouter.onEvent({
+                0: 1,
+                252: 519,
+                2: '@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434',
+                3: true,
+                4: '0212'
+            });
+
+            expect(radarRenderer.setMap).not.toHaveBeenCalled();
+        });
+    });
+
+    // -------------------------------------------------------------------------
     // onResponse JoinMap (opcode 2)
     // -------------------------------------------------------------------------
     describe('onResponse JoinMap', () => {

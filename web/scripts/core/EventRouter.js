@@ -283,6 +283,40 @@ export function onEvent(Parameters) {
         case 590:
             window.logger?.debug(CATEGORIES.NETWORK, 'key_sync', {Parameters});
             break;
+
+        case EventCodes.MistsPlayerJoinedInfo: {
+            // Mists instance entry arrives as event 519, NOT as op 2 or op 41. Parameters[2] carries
+            // the cluster identifier ("@MISTS@<guid>" for a Mists instance, plain Royal index otherwise).
+            // Parameters[3]=true flags the local player's Mists entry; without it the event is a status
+            // update that must not change map.id.
+            const newMapId = Parameters[2];
+            if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
+                const previousMapId = map.id;
+                map.id = newMapId;
+                window.currentMapId = map.id;
+                lastMapChangeTime = Date.now();
+                radarRenderer?.setMap?.(map);
+
+                try {
+                    sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
+                        mapId: map.id,
+                        hX: map.hX,
+                        hY: map.hY,
+                        isBZ: map.isBZ,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {
+                    window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', {error: e?.message});
+                }
+
+                window.logger?.info(CATEGORIES.MAP, 'MistsPlayerJoinedInfo', {
+                    previousMapId,
+                    newMapId: map.id,
+                    originCluster: Parameters[4]
+                });
+            }
+            break;
+        }
     }
 }
 

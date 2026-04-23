@@ -44,4 +44,6 @@ var scenarios = []Scenario{
 	{Name: "router/join-finished", Handler: "router", Match: MatchCriteria{Kind: "response", Code: operationcodes.Join}, Limit: 2},
 	{Name: "router/change-cluster", Handler: "router", Match: MatchCriteria{Kind: "response", Code: operationcodes.ChangeCluster}, Limit: 4},
 	{Name: "router/move-request", Handler: "router", Match: MatchCriteria{Kind: "request", Code: operationcodes.Move}, Limit: 5},
+
+	{Name: "mists/player-joined-info", Handler: "mists", Match: MatchCriteria{Kind: "event", Code: 519}, Limit: 5},
 }
