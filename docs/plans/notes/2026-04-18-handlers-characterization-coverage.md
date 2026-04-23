@@ -37,6 +37,28 @@ Living counter. Updated on every test commit. Archived at plan completion.
 - **MIST-3** (closed 2026-04-23) Runtime evidence confirmed the feu follet lives in `MobsHandler.mistList` (NewMob event 123 with `MISTS_*` name), not in event 523. `MistsWispHandler` was removed along with its test file, fixture (`ws/mists-wisp/spawn.json`), and EventRouter routing for 523. Rendering moved to `MistsWispDrawing` which reads from `MobsHandler.mistList` and applies `settingMistSolo/Duo + settingMistE0..E4 + settingWispSpawnDebugID`. Events 518/519 semantics still unknown (distinct entity, deferred).
 - **MIST-4** Multi-repo cross-reference (2026-04-20) against ao-data/albiondata-client (master iota confirms 523/530/531), Triky313/AlbionOnline-StatisticsAnalysis (EventCodes.cs same), and pxlbit228/albion-radar-deatheye-2pc (offsets.json) revealed : (a) rarity for Mists zones lives in the `ChangeCluster` operation response `Parameters[3]` byte array, last byte = MistsRarity index 0-4 (Common/Uncommon/Rare/Epic/Legendary) per Triky313 `ClusterInfo.GetMistsRarity` and `ChangeClusterResponse.cs`. Requires a Mists-zone capture with opcode 41 response to fixture, then plumb into a cluster-level rarity that MistsWispDrawing could consume. (b) deatheye treats `Parameters[5]` on event 530 NewCagedObject as an "already freed" guard (skip when `=="2"`). Our capture-70 fixture has `P[5]=2` on all 3 cages, which may mean those cages were already freed at capture time and the handler adds phantoms. Needs a Mists capture with live+freed cages to resolve.
 - **MIST-5** (closed 2026-04-23) Asset question moot after the MIST-3 refactor: feu follets render with `mist_<enchant>.webp` (same bubble images used previously for mist portals), matching the in-game appearance observed by the user. No distinct `wisp_sign.webp` needed; enchant-coloured bubbles are the correct visual.
+- **MIST-7** (opened 2026-04-23) Mists instance map not detected. Live diagnostic logs showed `EventRouter.onResponse` never receives an op 2 Join nor an op 41 ChangeCluster when entering a Mists (confirmed across several entries at 23:36-23:42 in a fresh session). Extracting events from `capture_78.pcap` with a temporary scenario bump revealed:
+    - Event 519 `MistsPlayerJoinedInfo` fires on every Mists entry: `Parameters[2]` = cluster id (`"@MISTS@<guid>"` for Mists, `"0212"` for Royal origin state), `Parameters[3]=true` for Mists entries, `Parameters[4]` = origin Royal cluster.
+    - Event 518 `NewMistsImmediateReturnExit` fires on ImmediateReturn exits. Matches the op 472 `MistsUseImmediateReturnExit` responses observed in the live browser logs.
+    - `EventRouter.onEvent` has no case for 518, 519, 520 (`NewMistsStaticEntrance`) or 529 (`MistsEntranceDataChanged`). The Mists instance identifier reaches the frontend but nothing consumes it.
+    Out of scope for PR #78 (detection layer). Follow-up PR required. Extraction done with `photon-dump` + ad-hoc scenarios for codes 518/519/520/529 over `capture_78.pcap` (not committed as fixture yet).
+
+### CHEST register (2026-04-23)
+
+- **CHEST-1** (issue #29 reopened) `ChestsHandler.addChestEvent` reads `Parameters[5]` as rarity but the observed values do not match the upstream `lootchests.xml` rarity range (-1 to 3, standard=0/uncommon=1/rare=2/legendary=3). Runtime evidence:
+
+    | Chest name | Parameters[5] | Parameters[23] | paramCount |
+    |---|---:|---:|---:|
+    | `MISTS_GREEN_LOOTCHEST_TREASURE_MOBCAMP_02` (chestId 2149) | 4 | 4 | 18 |
+    | `MISTS_GREEN_LOOTCHEST_TREASURE_MOBCAMP_02` (chestId 1955) | 4 | 4 | 18 |
+    | `SWAMP_RED_LOOTCHEST_DYNAMIC_CAMP_KEEPER_SMALL` (fixture) | 4 | 4 | 18 |
+    | `LOOTCHEST_FACTIONWARFARE_SMALL` (chestId 238706) | 8 | 8 | 23 |
+
+    Parameters[5] varies by chest family (4 for dungeon/mists-treasure, 8 for FactionWarfare) and never lands in 0-3. FACTION chests carry extra fields that the other families do not: `Parameters[8]` Buffer (416 bytes, probably loot table), `Parameters[13]` future timestamp (despawn?), `Parameters[16]=200000` (silver value?), `Parameters[15]=1.5295` float (multiplier?).
+
+    Additionally, `ChestsDrawing.invalidate` does not consume the stored rarity at all. It branches on substring matches in `chestName` (`green`/`blue`/`rare`/`legendary`). For MISTS chests the substring `GREEN` is the PvP zone tag (same confusion resolved in MIST-6 for mist portals), not the rarity. Two bugs stacked: a rarity field read from the wrong parameter AND a drawing that ignores the field.
+
+    Next step: pcap capture covering the four rarity levels across the main chest families (Mists, Avalon, FactionWarfare, open world dungeon) to identify the real rarity parameter index. Out of scope for PR #78.
 
 ### #52 tracked as `@characterization` pending ground truth
 
