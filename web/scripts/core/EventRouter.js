@@ -117,20 +117,6 @@ export function onEvent(Parameters) {
     const id = parseInt(Parameters[0]);
     const eventCode = Parameters[252];
 
-    // Temporary diagnostic: log every Mists-related event at INFO/MAP so it shows even when
-    // the console is filtered to MAP category. Covers 518-540 which spans all known Mists events
-    // (entry, exit, wisp spawn, cage, border, dungeon exit, entrance data).
-    if (eventCode >= 518 && eventCode <= 540) {
-        window.logger?.info(CATEGORIES.MAP, 'mists_event_observed', {
-            eventCode,
-            id,
-            p2: Parameters[2],
-            p3: Parameters[3],
-            p4: Parameters[4],
-            paramKeys: Object.keys(Parameters).sort((a, b) => +a - +b).join(',')
-        });
-    }
-
     // Raw packet logging
     window.logger?.debug(CATEGORIES.NETWORK, `Event_${eventCode}`, {
         id,
@@ -299,16 +285,11 @@ export function onEvent(Parameters) {
             break;
 
         case EventCodes.MistsPlayerJoinedInfo: {
-            // Mists instance entry arrives as event 519, NOT as op 2 or op 41. Parameters[2] carries
-            // the cluster identifier ("@MISTS@<guid>" for a Mists instance, plain Royal index otherwise).
-            // Parameters[3]=true flags the local player's Mists entry; without it the event is a status
-            // update that must not change map.id.
-            window.logger?.debug(CATEGORIES.MAP, 'event_519_received', {
-                p2: Parameters[2],
-                p3: Parameters[3],
-                p4: Parameters[4],
-                allParameters: Parameters
-            });
+            // Defensive handler. Parameters[2] carries the cluster identifier
+            // ("@MISTS@<guid>" for a Mists instance); Parameters[3]=true flags the
+            // local player's entry. Current Protocol18 announces Mists entry via op
+            // 2 Join with Parameters[8]="@MISTS@<guid>" instead, so this case rarely
+            // fires with p3=true in live; kept in case the server reverts or changes.
             const newMapId = Parameters[2];
             if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
                 const previousMapId = map.id;
@@ -362,12 +343,6 @@ export function onRequest(Parameters) {
 }
 
 export function onResponse(Parameters, clearHandlersCallback) {
-    window.logger?.debug(CATEGORIES.MAP, 'onResponse_entry', {
-        opCode: Parameters[253],
-        p0: Parameters[0],
-        p8: Parameters[8],
-        p8Type: typeof Parameters[8]
-    });
     if (Parameters[253] == OperationCodes.ChangeCluster) {
         const newMapId = Parameters[0];
         if (typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
