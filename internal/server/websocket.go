@@ -96,6 +96,13 @@ func (ws *WebSocketHandler) flushBatch() {
 	msg := &WSBatchMessage{Type: "batch", Messages: batch}
 	data, err := json.Marshal(msg)
 	if err != nil {
+		logger.PrintWarn("WS", "batch marshal failed: %v (batch size=%d, DROPPED)", err, msgCount)
+		// Try to identify which message failed by marshaling each one individually.
+		for i, m := range batch {
+			if _, err := json.Marshal(m); err != nil {
+				logger.PrintWarn("WS", "  offending message[%d]: %v (type=%T, value=%+v)", i, err, m, m)
+			}
+		}
 		return
 	}
 
