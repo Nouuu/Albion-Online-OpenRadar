@@ -308,6 +308,12 @@ export function onRequest(Parameters) {
 }
 
 export function onResponse(Parameters, clearHandlersCallback) {
+    window.logger?.debug(CATEGORIES.MAP, 'onResponse_entry', {
+        opCode: Parameters[253],
+        p0: Parameters[0],
+        p8: Parameters[8],
+        p8Type: typeof Parameters[8]
+    });
     if (Parameters[253] == OperationCodes.ChangeCluster) {
         const newMapId = Parameters[0];
         if (typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
