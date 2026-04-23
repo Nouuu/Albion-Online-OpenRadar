@@ -205,10 +205,6 @@ export async function initRadar() {
                     EventRouter.onEvent(params);
                     break;
                 case 'response':
-                    // preserveSession=true so the mapId written to sessionStorage inside the
-                    // Join/ChangeCluster branches survives the very same response flow. Without
-                    // this, F5 during an active session loses the current map until the player
-                    // crosses a cluster boundary again.
                     EventRouter.onResponse(params, () => clearHandlers(true));
                     break;
             }

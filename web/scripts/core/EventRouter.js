@@ -285,11 +285,6 @@ export function onEvent(Parameters) {
             break;
 
         case EventCodes.MistsPlayerJoinedInfo: {
-            // Defensive handler. Parameters[2] carries the cluster identifier
-            // ("@MISTS@<guid>" for a Mists instance); Parameters[3]=true flags the
-            // local player's entry. Current Protocol18 announces Mists entry via op
-            // 2 Join with Parameters[8]="@MISTS@<guid>" instead, so this case rarely
-            // fires with p3=true in live; kept in case the server reverts or changes.
             const newMapId = Parameters[2];
             if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
                 const previousMapId = map.id;

@@ -7,11 +7,8 @@ import (
 	"github.com/segmentio/encoding/json"
 )
 
-// Hashtable mirrors Photon Protocol18's hashtable and dictionary types.
-// Go's json encoder cannot marshal map[interface{}]interface{}; custom
-// MarshalJSON stringifies every key so the JSON output is a plain
-// object. Without this, the entire WebSocket batch is dropped whenever
-// a response contains a hashtable parameter (e.g. Join op=2 Parameters[103]).
+// Hashtable serializes with stringified keys; json.Marshal does not accept
+// map[interface{}]interface{}.
 type Hashtable map[interface{}]interface{}
 
 func (h Hashtable) MarshalJSON() ([]byte, error) {

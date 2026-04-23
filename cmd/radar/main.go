@@ -318,11 +318,6 @@ func (app *App) updateStats() {
 }
 
 func (app *App) handlePacket(payload []byte) {
-	// Parsing failures and encrypted rejections are counted in their dedicated
-	// callbacks (onPhotonParseError, onPhotonEncrypted) so encrypted traffic no
-	// longer inflates the "Parsing errors" counter. A ReceivePacket that returns
-	// false without firing either callback is a pre-header-length reject and is
-	// harmless to ignore here.
 	if app.photonParser.ReceivePacket(payload) {
 		atomic.AddUint64(&app.packetsProcessed, 1)
 	}
