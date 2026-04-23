@@ -142,11 +142,11 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList).toHaveLength(0);
         });
 
-        // @verified 2026-04-18: settingDungeonE<enchant>=false for solo drops insertion even when settingDungeonSolo=true.
-        test('synthetic: settingDungeonE229=false for solo at enchant 229 drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonE229');
+        // @verified 2026-04-23: settingDungeonE<enchant>=false for solo drops insertion even when settingDungeonSolo=true.
+        test('synthetic: settingDungeonE0=false for solo at enchant 0 drops insertion', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonE0');
 
-            handler.addDungeon(12, 0, 0, 'T5_PORTAL_ROYAL_SOLO', 229);
+            handler.addDungeon(12, 0, 0, 'T5_PORTAL_ROYAL_SOLO', 0);
 
             expect(handler.dungeonList).toHaveLength(0);
         });
@@ -169,11 +169,11 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList).toHaveLength(0);
         });
 
-        // @verified 2026-04-18: settingDungeonE<enchant>=false for group drops insertion even when settingDungeonDuo=true.
-        test('synthetic: settingDungeonE327=false for group at enchant 327 drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonE327');
+        // @verified 2026-04-23: settingDungeonE<enchant>=false for group drops insertion even when settingDungeonDuo=true.
+        test('synthetic: settingDungeonE2=false for group at enchant 2 drops insertion', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonE2');
 
-            handler.addDungeon(15, 0, 0, 'T5_MORGANA', 327);
+            handler.addDungeon(15, 0, 0, 'T5_MORGANA', 2);
 
             expect(handler.dungeonList).toHaveLength(0);
         });
