@@ -289,14 +289,7 @@ func TestDeserializeRequest_OpMove_PostPatch(t *testing.T) {
 	require.Equal(t, byte(22), req.Parameters[253])
 }
 
-// MIST-MARSHAL-1: Protocol18 Join and ChangeCluster responses carry
-// hashtables at Parameters[103] (observed live: Join op=2 paramCount=95,
-// response broadcast via websocket.go flushBatch). Without a custom
-// MarshalJSON for the hashtable, json.Marshal fails with
-// "unsupported type: map[interface {}]interface {}" and the WebSocket
-// batch is silently dropped, so the JS frontend never receives the
-// Mists Join response. This test reproduces the marshal failure
-// scenario end-to-end (deserialize real bytes -> marshal JSON).
+// Regression: Parameters[103] hashtable must not break json.Marshal.
 func TestMarshalJoinResponse_HashtableAtParam103(t *testing.T) {
 	payload := []byte{
 		0x02,

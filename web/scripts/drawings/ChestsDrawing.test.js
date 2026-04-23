@@ -24,7 +24,7 @@ describe('ChestsDrawing', () => {
         ctx = {};
     });
 
-    // @verified 2026-04-23: setting key is settingChestGreen (no stray 's'). Regression guard for fix 893a6884.
+    // @verified 2026-04-23: setting key is settingChestGreen.
     test('settingChestGreen=true with standard chestName renders green asset', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingChestGreen');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_STANDARD_01'};
@@ -34,7 +34,7 @@ describe('ChestsDrawing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'green', 'Resources', 35);
     });
 
-    // @verified 2026-04-23: setting key is settingChestBlue (no stray 's').
+    // @verified 2026-04-23: setting key is settingChestBlue.
     test('settingChestBlue=true with uncommon chestName renders blue asset', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingChestBlue');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_UNCOMMON_02'};
@@ -44,7 +44,7 @@ describe('ChestsDrawing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'blue', 'Resources', 35);
     });
 
-    // @verified 2026-04-23: setting key is settingChestPurple (no stray 's').
+    // @verified 2026-04-23: setting key is settingChestPurple.
     test('settingChestPurple=true with rare chestName renders rare asset', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingChestPurple');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_RARE_03'};
@@ -54,7 +54,7 @@ describe('ChestsDrawing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'rare', 'Resources', 35);
     });
 
-    // @verified 2026-04-23: setting key is settingChestYellow (no stray 's').
+    // @verified 2026-04-23: setting key is settingChestYellow.
     test('settingChestYellow=true with legendary chestName renders legendary asset', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingChestYellow');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_LEGENDARY_04'};

@@ -164,9 +164,6 @@ func TestLivePcap_MoveHeavy(t *testing.T) {
 	stats := replayPcap(t, fixturePath(t, "move_heavy.pcap"))
 	require.GreaterOrEqual(t, stats.events[3], 100,
 		"expected many Move events, saw %v", stats.events)
-	// PostProcessEvent injects posX/posY at [4]/[5] for mob Move events.
-	// Player Move events have XOR-encrypted positions that decode to NaN/Inf
-	// and are dropped to keep json.Marshal from failing on the whole batch.
 	require.True(t, stats.hasRouterOp("event", 3, 4, 5),
 		"at least one Move event must carry finite Parameters[4] and [5]")
 }
