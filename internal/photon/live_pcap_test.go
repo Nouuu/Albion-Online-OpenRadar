@@ -130,22 +130,6 @@ func (s pcapStats) hasRouterOp(kind string, realCode int, requiredKeys ...byte) 
 	return false
 }
 
-func (s pcapStats) allCarry(kind string, realCode int, requiredKeys ...byte) bool {
-	matched := 0
-	for _, op := range s.ops[kind] {
-		if op.realCode != realCode {
-			continue
-		}
-		matched++
-		for _, k := range requiredKeys {
-			if !op.paramKeys[k] {
-				return false
-			}
-		}
-	}
-	return matched > 0
-}
-
 func fixturePath(t *testing.T, name string) string {
 	t.Helper()
 	path := filepath.Join("testdata", name)
