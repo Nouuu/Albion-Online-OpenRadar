@@ -346,9 +346,14 @@ func (app *App) onPhotonResponse(resp *photon.OperationResponse) {
 	photon.PostProcessResponse(resp)
 	// Diagnostic: log every response opcode with a summary of key params so we can
 	// see whether Mists-entry op 2 Join and op 41 ChangeCluster responses reach the
-	// broadcast layer at all, and in what shape.
-	logger.PrintInfo("PKT", "RESP op=%d retCode=%d p0=%v(%T) p8=%v(%T) paramCount=%d",
-		resp.OperationCode, resp.ReturnCode,
+	// broadcast layer at all, and in what shape. The Albion opcode lives in
+	// Parameters[253] after PostProcessResponse, not resp.OperationCode (which is
+	// the Photon wire byte and is usually the same value but printing both helps
+	// surface any divergence).
+	logger.PrintInfo("PKT", "RESP wire=%d albionOp=%v(%T) retCode=%d p0=%v(%T) p8=%v(%T) paramCount=%d",
+		resp.OperationCode,
+		resp.Parameters[253], resp.Parameters[253],
+		resp.ReturnCode,
 		resp.Parameters[0], resp.Parameters[0],
 		resp.Parameters[8], resp.Parameters[8],
 		len(resp.Parameters))
