@@ -1,6 +1,26 @@
 package photon
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/segmentio/encoding/json"
+)
+
+// Hashtable mirrors Photon Protocol18's hashtable and dictionary types.
+// Go's json encoder cannot marshal map[interface{}]interface{}; custom
+// MarshalJSON stringifies every key so the JSON output is a plain
+// object. Without this, the entire WebSocket batch is dropped whenever
+// a response contains a hashtable parameter (e.g. Join op=2 Parameters[103]).
+type Hashtable map[interface{}]interface{}
+
+func (h Hashtable) MarshalJSON() ([]byte, error) {
+	out := make(map[string]interface{}, len(h))
+	for k, v := range h {
+		out[fmt.Sprintf("%v", k)] = v
+	}
+	return json.Marshal(out)
+}
 
 // ByteArray serializes as {"type":"Buffer","data":[...]} because the web
 // front-end parses byte arrays assuming the Node.js Buffer shape.

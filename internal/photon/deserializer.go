@@ -119,7 +119,7 @@ func deserializeCustom(buf *bytes.Buffer, gpType byte) interface{} {
 	return ByteArray(data)
 }
 
-func deserializeDictionary(buf *bytes.Buffer) map[interface{}]interface{} {
+func deserializeDictionary(buf *bytes.Buffer) Hashtable {
 	keyTC, err := buf.ReadByte()
 	if err != nil {
 		return nil
@@ -132,7 +132,7 @@ func deserializeDictionary(buf *bytes.Buffer) map[interface{}]interface{} {
 	if count < 0 || count > maxArraySize || count > buf.Len() {
 		return nil
 	}
-	out := make(map[interface{}]interface{}, count)
+	out := make(Hashtable, count)
 	for i := 0; i < count && buf.Len() > 0; i++ {
 		kt := keyTC
 		if kt == 0 {
@@ -159,7 +159,7 @@ func deserializeDictionary(buf *bytes.Buffer) map[interface{}]interface{} {
 	return out
 }
 
-func deserializeHashtable(buf *bytes.Buffer) map[interface{}]interface{} {
+func deserializeHashtable(buf *bytes.Buffer) Hashtable {
 	return deserializeDictionary(buf)
 }
 func deserializeObjectArray(buf *bytes.Buffer) interface{} {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
 
@@ -135,7 +136,7 @@ func TestDeserialize_Dictionary_Typed(t *testing.T) {
 		0x02, 0x78, 0x56,
 	}
 	buf := bytes.NewBuffer(payload)
-	got := deserialize(buf, typeDictionary).(map[interface{}]interface{})
+	got := deserialize(buf, typeDictionary).(Hashtable)
 	require.Len(t, got, 2)
 	require.Equal(t, int16(0x1234), got[byte(1)])
 	require.Equal(t, int16(0x5678), got[byte(2)])
@@ -152,7 +153,7 @@ func TestDeserialize_Dictionary_Dynamic(t *testing.T) {
 		0x02, 'h', 'i',
 	}
 	buf := bytes.NewBuffer(payload)
-	got := deserialize(buf, typeDictionary).(map[interface{}]interface{})
+	got := deserialize(buf, typeDictionary).(Hashtable)
 	require.Equal(t, "hi", got[byte(0x2a)])
 }
 
@@ -168,7 +169,7 @@ func TestDeserialize_Dictionary_NestedOpRequest_NoBufferDesync(t *testing.T) {
 		0xAA, // sentinel trailing byte
 	}
 	buf := bytes.NewBuffer(payload)
-	got := deserialize(buf, typeDictionary).(map[interface{}]interface{})
+	got := deserialize(buf, typeDictionary).(Hashtable)
 	require.Len(t, got, 1)
 	// After reading the dict, the trailing sentinel must still be in the buffer.
 	require.Equal(t, 1, buf.Len())
@@ -183,7 +184,7 @@ func TestDeserialize_Hashtable_SameAsDict(t *testing.T) {
 		0x07, 0x08,
 	}
 	buf := bytes.NewBuffer(payload)
-	got := deserialize(buf, typeHashtable).(map[interface{}]interface{})
+	got := deserialize(buf, typeHashtable).(Hashtable)
 	require.Equal(t, byte(0x08), got[byte(0x07)])
 }
 
@@ -288,6 +289,46 @@ func TestDeserializeRequest_OpMove_PostPatch(t *testing.T) {
 	require.Equal(t, byte(22), req.Parameters[253])
 }
 
+// MIST-MARSHAL-1: Protocol18 Join and ChangeCluster responses carry
+// hashtables at Parameters[103] (observed live: Join op=2 paramCount=95,
+// response broadcast via websocket.go flushBatch). Without a custom
+// MarshalJSON for the hashtable, json.Marshal fails with
+// "unsupported type: map[interface {}]interface {}" and the WebSocket
+// batch is silently dropped, so the JS frontend never receives the
+// Mists Join response. This test reproduces the marshal failure
+// scenario end-to-end (deserialize real bytes -> marshal JSON).
+func TestMarshalJoinResponse_HashtableAtParam103(t *testing.T) {
+	payload := []byte{
+		0x02,
+		0x00, 0x00,
+		typeNull,
+		0x02,
+		0x08, typeString, 0x08, '@', 'M', 'I', 'S', 'T', 'S', '@', 'x',
+		0x67, typeHashtable,
+		typeByte, typeByte,
+		0x02,
+		0x05, 0x01,
+		0x07, 0x00,
+	}
+
+	resp, err := DeserializeResponse(payload)
+	require.NoError(t, err)
+	PostProcessResponse(resp)
+
+	msg := map[string]interface{}{
+		"code": "response",
+		"dictionary": map[string]interface{}{
+			"operationCode": resp.OperationCode,
+			"returnCode":    resp.ReturnCode,
+			"debugMessage":  resp.DebugMessage,
+			"parameters":    resp.Parameters,
+		},
+	}
+
+	_, err = json.Marshal(msg)
+	require.NoError(t, err, "marshal must succeed; hashtable at Parameters[103] needs a JSON-safe shape")
+}
+
 func TestDeserializeResponse_JoinMap_PostPatch(t *testing.T) {
 	payload := []byte{
 		0x02,
@@ -312,7 +353,7 @@ func TestDeserializeResponse_JoinMap_PostPatch(t *testing.T) {
 	require.Equal(t, int16(0), resp.ReturnCode)
 	require.Equal(t, []float32{100.0, 200.0}, resp.Parameters[9])
 
-	ht, ok := resp.Parameters[103].(map[interface{}]interface{})
+	ht, ok := resp.Parameters[103].(Hashtable)
 	require.True(t, ok, "params[103] must be a hashtable, got %T", resp.Parameters[103])
 	require.Equal(t, byte(1), ht[byte(5)])
 	require.Equal(t, byte(0), ht[byte(7)])
