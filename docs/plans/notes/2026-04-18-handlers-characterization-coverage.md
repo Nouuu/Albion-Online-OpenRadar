@@ -18,14 +18,14 @@ Living counter. Updated on every test commit. Archived at plan completion.
 |---|---:|---:|---:|---:|
 | PlayersHandler | 37 | 2 | 2 | 41 |
 | HarvestablesHandler | 49 | 5 | 1 | 55 |
-| MobsHandler | 67 | 1 | 0 | 68 |
+| MobsHandler | 69 | 1 | 0 | 131 |
 | ChestsHandler | 13 | 0 | 0 | 13 |
 | FishingHandler | 9 | 0 | 1 | 10 |
 | DungeonsHandler | 26 | 0 | 0 | 26 |
 | WispCageHandler | 11 | 0 | 0 | 11 |
 | MistsWispDrawing | 8 | 0 | 0 | 8 |
 | EventRouter | 44 | 0 | 1 | 45 |
-| **Total** | **264** | **8** | **5** | **277** |
+| **Total** | **266** | **8** | **5** | **340** |
 
 ## Open observations register
 
@@ -59,7 +59,6 @@ Living counter. Updated on every test commit. Archived at plan completion.
     Additionally, `ChestsDrawing.invalidate` does not consume the stored rarity at all. It branches on substring matches in `chestName` (`green`/`blue`/`rare`/`legendary`). For MISTS chests the substring `GREEN` is the PvP zone tag (same confusion resolved in MIST-6 for mist portals), not the rarity. Two bugs stacked: a rarity field read from the wrong parameter AND a drawing that ignores the field.
 
     Next step: pcap capture covering the four rarity levels across the main chest families (Mists, Avalon, FactionWarfare, open world dungeon) to identify the real rarity parameter index. Out of scope for PR #78.
-
 
 ## Open `test.fails` register
 
