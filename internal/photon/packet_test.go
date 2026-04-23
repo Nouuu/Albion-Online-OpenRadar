@@ -161,8 +161,46 @@ func TestPhotonParser_EncryptedFlag(t *testing.T) {
 		0, 0, 0, 0,
 	}
 	called := false
+	parseErrCalled := false
 	p := NewPhotonParser(nil, nil, nil)
 	p.OnEncrypted = func() { called = true }
+	p.OnParseError = func(string, int) { parseErrCalled = true }
 	require.False(t, p.ReceivePacket(payload))
 	require.True(t, called)
+	// Encrypted path must NOT fire OnParseError: encryption is not a parsing failure.
+	require.False(t, parseErrCalled, "encrypted packet must not count as a parsing error")
+}
+
+// Short payload (below Photon header length of 12 bytes) triggers OnParseError,
+// not OnEncrypted. This is the path that hits the "Parsing errors" counter
+// with no matching "Encrypted traffic seen" increment.
+func TestPhotonParser_ShortPayload_FiresOnParseError(t *testing.T) {
+	payload := []byte{0x01, 0x02, 0x03}
+	var reason string
+	var gotLen int
+	p := NewPhotonParser(nil, nil, nil)
+	p.OnParseError = func(r string, l int) { reason = r; gotLen = l }
+	require.False(t, p.ReceivePacket(payload))
+	require.Contains(t, reason, "photon header")
+	require.Equal(t, 3, gotLen)
+}
+
+// A packet with a valid header but a command that cannot be parsed (cmdLen
+// overflowing the payload) triggers OnParseError through the handleCommand
+// failure path, again with OnEncrypted untouched.
+func TestPhotonParser_BadCommand_FiresOnParseError(t *testing.T) {
+	payload := []byte{
+		0x00, 0x00,
+		0x00, 0x01,
+		0, 0, 0, 0,
+		0, 0, 0, 0,
+		cmdSendReliable, 0, 0, 0,
+		0xff, 0xff, 0xff, 0xff,
+		0, 0, 0, 0,
+	}
+	var reason string
+	p := NewPhotonParser(nil, nil, nil)
+	p.OnParseError = func(r string, _ int) { reason = r }
+	require.False(t, p.ReceivePacket(payload))
+	require.Contains(t, reason, "handleCommand")
 }

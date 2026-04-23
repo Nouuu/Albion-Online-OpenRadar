@@ -43,10 +43,11 @@ type segmentedPackage struct {
 type PhotonParser struct {
 	pendingSegments map[uint32]*segmentedPackage
 
-	OnEvent     func(*EventData)
-	OnRequest   func(*OperationRequest)
-	OnResponse  func(*OperationResponse)
-	OnEncrypted func()
+	OnEvent      func(*EventData)
+	OnRequest    func(*OperationRequest)
+	OnResponse   func(*OperationResponse)
+	OnEncrypted  func()
+	OnParseError func(reason string, payloadLen int)
 }
 
 func NewPhotonParser(
@@ -64,6 +65,9 @@ func NewPhotonParser(
 
 func (p *PhotonParser) ReceivePacket(payload []byte) bool {
 	if len(payload) < photonHeaderLength {
+		if p.OnParseError != nil {
+			p.OnParseError("payload shorter than photon header", len(payload))
+		}
 		return false
 	}
 	offset := 2 // skip peerId
@@ -84,6 +88,9 @@ func (p *PhotonParser) ReceivePacket(payload []byte) bool {
 		var ok bool
 		offset, ok = p.handleCommand(payload, offset)
 		if !ok {
+			if p.OnParseError != nil {
+				p.OnParseError("handleCommand failed", len(payload))
+			}
 			return false
 		}
 	}

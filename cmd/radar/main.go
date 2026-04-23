@@ -194,6 +194,7 @@ func newApp(
 		app.onPhotonResponse,
 	)
 	app.photonParser.OnEncrypted = app.onPhotonEncrypted
+	app.photonParser.OnParseError = app.onPhotonParseError
 
 	app.capturer.OnPacket(app.handlePacket)
 
@@ -317,15 +318,22 @@ func (app *App) updateStats() {
 }
 
 func (app *App) handlePacket(payload []byte) {
-	if !app.photonParser.ReceivePacket(payload) {
-		atomic.AddUint64(&app.packetsErrors, 1)
-		errCount := atomic.LoadUint64(&app.packetsErrors)
-		if errCount%100 == 1 {
-			logger.PrintWarn("PKT", "Parsing errors: %d", errCount)
-		}
-		return
+	// Parsing failures and encrypted rejections are counted in their dedicated
+	// callbacks (onPhotonParseError, onPhotonEncrypted) so encrypted traffic no
+	// longer inflates the "Parsing errors" counter. A ReceivePacket that returns
+	// false without firing either callback is a pre-header-length reject and is
+	// harmless to ignore here.
+	if app.photonParser.ReceivePacket(payload) {
+		atomic.AddUint64(&app.packetsProcessed, 1)
 	}
-	atomic.AddUint64(&app.packetsProcessed, 1)
+}
+
+func (app *App) onPhotonParseError(reason string, payloadLen int) {
+	n := atomic.AddUint64(&app.packetsErrors, 1)
+	if n%100 == 1 {
+		logger.PrintWarn("PKT", "Parsing errors: %d (last reason: %s, payload len: %d)",
+			n, reason, payloadLen)
+	}
 }
 
 func (app *App) onPhotonEvent(event *photon.EventData) {
