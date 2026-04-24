@@ -55,15 +55,17 @@ function cleanupStaleEntities() {
     const cleanedPlayers = handlers.players?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedMobs = handlers.mobs?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const cleanedFishing = handlers.fishing?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
 
     const activePlayerIds = new Set(handlers.players?.getFilteredPlayers?.().map(p => p.id) || []);
     const cleanedRenderCache = PlayerListRenderer.cleanupStaleCache(activePlayerIds);
 
-    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedRenderCache) {
+    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedFishing || cleanedRenderCache) {
         window.logger?.debug(CATEGORIES.SYSTEM, 'StaleEntityCleanup', {
             players: cleanedPlayers,
             mobs: cleanedMobs,
             harvestables: cleanedHarvestables,
+            fishing: cleanedFishing,
             renderCache: cleanedRenderCache
         });
     }
