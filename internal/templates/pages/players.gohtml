@@ -88,6 +88,14 @@
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors md:col-span-2">
+                    <input type="checkbox" id="settingFlashDangerousPlayer" class="checkbox checkbox-error">
+                    <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
+                    <div class="tooltip" data-tip="Draws a red pulsating border around the radar while hostile players are detected.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
             </div>
         </div>
     </div>
@@ -183,7 +191,7 @@
             };
 
             ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
-                "settingSound", "settingFlash", "settingPassivePlayers", "settingFactionPlayers",
+                "settingSound", "settingFlash", "settingFlashDangerousPlayer", "settingPassivePlayers", "settingFactionPlayers",
                 "settingDangerousPlayers"].forEach(bindCheckbox);
 
             const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
