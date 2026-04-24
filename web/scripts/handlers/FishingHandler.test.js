@@ -81,8 +81,8 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(9);
         });
 
-        // @verified 2026-04-18: settingShowFish=false causes newFishEvent to return early; nothing added.
-        test('synthetic: settingShowFish=false skips spawn', () => {
+        // @verified 2026-04-24: settingFishing=false causes newFishEvent to return early; nothing added.
+        test('synthetic: settingFishing=false skips spawn', () => {
             settingsSync.getBool.mockReturnValue(false);
 
             handler.newFishEvent({0: 1, 1: [0, 0], 2: 5, 3: 0, 4: 'FishingNodeFish'});
@@ -124,8 +124,8 @@ describe('FishingHandler', () => {
             expect(handler.fishes).toHaveLength(1);
         });
 
-        // @verified 2026-04-18: fishingEnd with settingShowFish=false returns early; fish is not removed.
-        test('synthetic: fishingEnd with settingShowFish=false does not remove fish', () => {
+        // @verified 2026-04-24: fishingEnd with settingFishing=false returns early; fish is not removed.
+        test('synthetic: fishingEnd with settingFishing=false does not remove fish', () => {
             handler.fishes.push({id: 55, posX: 0, posY: 0, type: 'FishingNodeFish', sizeSpawned: 1, sizeLeftToSpawn: 0, totalSize: 1, hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
             settingsSync.getBool.mockReturnValue(false);
 

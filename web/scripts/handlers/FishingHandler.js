@@ -31,7 +31,7 @@ export class FishingHandler
 
     newFishEvent(Parameters)
     {
-        if (settingsSync.getBool("settingShowFish") === false) return;
+        if (settingsSync.getBool("settingFishing") === false) return;
 
         const id = Parameters[0];
         const type = Parameters[4];
@@ -74,7 +74,7 @@ export class FishingHandler
 
     fishingEnd(Parameters)
     {
-        if (settingsSync.getBool("settingShowFish") === false) return;
+        if (settingsSync.getBool("settingFishing") === false) return;
 
         window.logger?.debug(CATEGORIES.FISHING, 'fishing_end', {
             parameters: Parameters
