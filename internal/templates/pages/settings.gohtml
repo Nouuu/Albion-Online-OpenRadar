@@ -270,24 +270,6 @@
                 </div>
             </div>
 
-            <!-- RAW Packet Debug (Warning box) -->
-            <div class="mt-4 p-3 rounded-lg bg-warning/10 border border-warning/20">
-                <h4 class="text-xs font-semibold text-warning mb-2 flex items-center gap-2">
-                    <i data-lucide="alert-triangle" class="w-4 h-4"></i>
-                    RAW Packet Debug (Very Verbose)
-                </h4>
-                <div class="flex flex-wrap gap-4">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="settingDebugRawPacketsConsole" class="checkbox checkbox-warning checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Console</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" id="settingDebugRawPacketsServer" class="checkbox checkbox-warning checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Server</span>
-                    </label>
-                </div>
-            </div>
-
             <!-- Export -->
             <div class="mt-4 flex items-center gap-4">
                 <button id="downloadLogsBtn" class="btn btn-primary btn-sm">
@@ -402,8 +384,6 @@
             // Console & Server settings
             bindCheckbox("settingLogToConsole");
             bindCheckbox("settingLogToServer");
-            bindCheckbox("settingDebugRawPacketsConsole");
-            bindCheckbox("settingDebugRawPacketsServer");
 
             // WebSocket performance (default: enabled)
             if (settingsSync.get("settingWsCoalescing") === null) settingsSync.setBool("settingWsCoalescing", true);
