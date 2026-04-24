@@ -29,6 +29,7 @@ class Mob {
         this.tier = 0;
         this.type = EnemyType.Enemy;
         this.name = null;
+        this.uniqueName = null;         // Raw uniqueName from MobsDatabase; used at render to detect _DEAD carcasses.
         this.category = null;           // Mob category from database (boss, miniboss, champion, etc.)
         this.namelocatag = null;        // Localization tag for translated name
         this.exp = 0;
@@ -189,6 +190,7 @@ export class MobsHandler {
             }) || 0;
             mob.name = dbInfo.type;
             mob.type = dbInfo.type === 'Hide' ? EnemyType.LivingSkinnable : EnemyType.LivingHarvestable;
+            mob.uniqueName = dbInfo.uniqueName || null;
             hasKnownInfo = true;
 
             window.logger?.debug(CATEGORIES.MOBS, 'MobsDatabaseMatch', {
@@ -207,6 +209,7 @@ export class MobsHandler {
             mob.tier = dbInfo.tier || 0;   // Store tier for hostile mobs
             mob.category = dbInfo.category || null;  // Store category for badge display
             mob.namelocatag = dbInfo.namelocatag || null;  // Store localization tag for translated name
+            mob.uniqueName = dbInfo.uniqueName || null;
             hasKnownInfo = true;
 
             window.logger?.debug(CATEGORIES.MOBS, 'HostileMobMatch', {

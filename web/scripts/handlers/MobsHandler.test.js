@@ -543,6 +543,72 @@ describe('MobsHandler', () => {
     });
 
     // -------------------------------------------------------------------------
+    // HARV-3 : uniqueName propagation for DEAD detection at render time
+    // -------------------------------------------------------------------------
+
+    describe('HARV-3 uniqueName propagation', () => {
+        // @verified 2026-04-24: typeId=534 is T6_MOB_CRITTER_FIBER_SWAMP_DEAD in the real DB (mobs grid #393-404).
+        // MobsDrawing needs uniqueName to detect dead critters and route them to the static filter.
+        test('DEAD critter typeId=534 propagates uniqueName ending with _DEAD onto the mob', async () => {
+            const fx = await loadFixture('mobs', 'living-tier');
+            const msg = fx.messages.find(m => m.parameters['1'] === 534);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].uniqueName).toMatch(/_DEAD$/);
+        });
+
+        // @verified 2026-04-24: typeId=529 is T4_MOB_CRITTER_FIBER_SWAMP_GREEN (live variant, no _DEAD suffix).
+        // Live critters must preserve their uniqueName so MobsDrawing keeps routing them to the living filter.
+        test('live Fiber critter typeId=529 propagates uniqueName without _DEAD suffix', async () => {
+            const fx = await loadFixture('mobs', 'spawn');
+            const msg = fx.messages.find(m => m.parameters['1'] === 529);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].uniqueName).toBeTruthy();
+            expect(mobs[0].uniqueName).not.toMatch(/_DEAD$/);
+        });
+
+        // @verified 2026-04-24: typeId=424 is T3_MOB_DYNAMIC_HIDE_SWAMP_GIANTTOAD (live DYNAMIC Hide).
+        // Hide has no _DEAD variants in the DB; live DYNAMIC hide mobs must stay on the living filter path.
+        test('live Hide typeId=424 (DYNAMIC) propagates uniqueName without _DEAD suffix', async () => {
+            const fx = await loadFixture('mobs', 'spawn');
+            const msg = fx.messages.find(m => m.parameters['1'] === 424);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].uniqueName).toBeTruthy();
+            expect(mobs[0].uniqueName).not.toMatch(/_DEAD$/);
+        });
+
+        // @verified 2026-04-24: hostile non-harvestable mob also receives uniqueName (single code path in AddEnemy).
+        // Ensures the propagation is not scoped to harvestable branch only.
+        test('hostile mob also propagates uniqueName from MobsDatabase', () => {
+            vi.spyOn(dbs.mobsDatabase, 'getMobInfo').mockReturnValueOnce({isHarvestable: false, category: 'standard', uniqueName: 'T5_MOB_MORGANA_SWORDSMAN', tier: 5});
+            const p = normalizeParams({'0': 95001, '1': 95001, '2': 255, '7': [0, 0], '13': 500, '33': 0});
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].uniqueName).toBe('T5_MOB_MORGANA_SWORDSMAN');
+        });
+    });
+
+    // -------------------------------------------------------------------------
     // _getEnemyTypeFromCategory heuristics (all synthetic)
     // Uses vi.spyOn to inject synthetic dbInfo without replacing the real DB.
     // -------------------------------------------------------------------------
