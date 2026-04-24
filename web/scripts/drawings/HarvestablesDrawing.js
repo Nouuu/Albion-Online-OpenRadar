@@ -1,6 +1,7 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
 import settingsSync from "../utils/SettingsSync.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
+import {shouldRenderLivingResource} from '../utils/LivingResourceFilter.js';
 
 export class HarvestablesDrawing extends DrawingUtils  {
     interpolate(harvestables, lpX, lpY, t) {
@@ -17,6 +18,20 @@ export class HarvestablesDrawing extends DrawingUtils  {
         for (const harvestableOne of harvestables)
         {
             if (harvestableOne.size <= 0) continue;
+
+            const mobileTypeId = harvestableOne.mobileTypeId;
+            const isLiving = mobileTypeId !== null && mobileTypeId !== undefined
+                && mobileTypeId !== 65535 && mobileTypeId !== -1;
+            if (isLiving) {
+                const entity = {
+                    name: harvestableOne.stringType,
+                    tier: harvestableOne.tier,
+                    enchantmentLevel: harvestableOne.charges,
+                };
+                if (!shouldRenderLivingResource(entity, key => settingsSync.getJSON(key))) {
+                    continue;
+                }
+            }
 
             let draw = undefined;
 
