@@ -308,6 +308,24 @@ export class RadarRenderer {
         this.renderZoneInfo(ctx);
         this.renderStatsBox(ctx);
         this.renderThreatBorder(ctx);
+        this.renderFlashOverlay(ctx);
+    }
+
+    renderFlashOverlay(ctx) {
+        if (!settingsSync.getBool('settingFlash')) return;
+        const handler = this.handlers.playersHandler;
+        if (!handler?.lastFlashAt) return;
+
+        const duration = handler.FLASH_DURATION_MS || 300;
+        const elapsed = performance.now() - handler.lastFlashAt;
+        if (elapsed < 0 || elapsed > duration) return;
+
+        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+        const alpha = 0.6 * (1 - elapsed / duration);
+        ctx.save();
+        ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.restore();
     }
 
     /**

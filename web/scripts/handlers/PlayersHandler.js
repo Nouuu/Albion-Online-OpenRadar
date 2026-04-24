@@ -87,6 +87,18 @@ export class PlayersHandler {
         this.playersList = [];
         this.localPlayer = new Player();
         this.audio = new Audio('/sounds/player.mp3');
+        this.lastFlashAt = 0;           // performance.now() of the last threat flash; read by RadarRenderer to mirror the full-screen flash on the radar overlay.
+        this.FLASH_DURATION_MS = 300;
+    }
+
+    triggerScreenFlash() {
+        this.lastFlashAt = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        if (typeof document === 'undefined') return;
+        const flash = document.createElement('div');
+        flash.className = 'fixed inset-0 bg-error/60 pointer-events-none z-[9999] transition-opacity duration-300';
+        document.body.appendChild(flash);
+        requestAnimationFrame(() => { flash.style.opacity = '0'; });
+        setTimeout(() => flash.remove(), this.FLASH_DURATION_MS);
     }
 
     isPlayerThreat(faction, pvpType) {
@@ -156,13 +168,7 @@ export class PlayersHandler {
         });
 
         if (isThreat && mapId && settingsSync.getBool('settingFlash')) {
-            const flash = document.createElement('div');
-            flash.className = 'fixed inset-0 bg-error/60 pointer-events-none z-[9999] transition-opacity duration-300';
-            document.body.appendChild(flash);
-            requestAnimationFrame(() => {
-                flash.style.opacity = '0';
-            });
-            setTimeout(() => flash.remove(), 300);
+            this.triggerScreenFlash();
         }
 
         if (isThreat && mapId && settingsSync.getBool('settingSound')) {
@@ -273,11 +279,7 @@ export class PlayersHandler {
         if (!this.isPlayerThreat(player.faction, pvpType)) return;
 
         if (settingsSync.getBool('settingFlash')) {
-            const flash = document.createElement('div');
-            flash.className = 'fixed inset-0 bg-error/60 pointer-events-none z-[9999] transition-opacity duration-300';
-            document.body.appendChild(flash);
-            requestAnimationFrame(() => flash.style.opacity = '0');
-            setTimeout(() => flash.remove(), 300);
+            this.triggerScreenFlash();
         }
 
         if (settingsSync.getBool('settingSound')) {

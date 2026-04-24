@@ -542,6 +542,21 @@ describe('PlayersHandler', () => {
         });
     });
 
+    describe('triggerScreenFlash', () => {
+        // @verified 2026-04-24: triggerScreenFlash stamps lastFlashAt so RadarRenderer can mirror the alert on the radar overlay.
+        test('synthetic: triggerScreenFlash sets lastFlashAt to a recent timestamp', () => {
+            const before = performance.now();
+            handler.triggerScreenFlash();
+            expect(handler.lastFlashAt).toBeGreaterThanOrEqual(before);
+        });
+
+        // @verified 2026-04-24: triggerScreenFlash appends a DOM overlay visible to the full-viewport flash.
+        test('synthetic: triggerScreenFlash appends bg-error/60 div to body', () => {
+            handler.triggerScreenFlash();
+            expect(document.body.querySelectorAll('.bg-error\\/60').length).toBeGreaterThanOrEqual(1);
+        });
+    });
+
     describe('getThreatPlayers (zone-aware threat list)', () => {
         // @verified 2026-04-24: safe zone yields zero threats regardless of faction.
         test('synthetic: safe zone returns no threats', () => {
