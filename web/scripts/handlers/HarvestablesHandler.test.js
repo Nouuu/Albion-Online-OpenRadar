@@ -358,11 +358,8 @@ describe('HarvestablesHandler', () => {
             expect(spy).not.toHaveBeenCalledWith(-1);
         });
 
-        // Pinned: living Fiber spawned with charges=0 while setting e0 off is skipped;
-        // subsequent event 46 cannot recover the entity.
-        // After fix, enchanted living resources should appear when their enchant setting is enabled
-        // regardless of the e0 state at spawn time.
-        test.fails('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2', async () => {
+        // @verified 2026-04-19: living Fiber/Hide with e0 off appears after event 46 enchant update (#32 fix).
+        test('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2', async () => {
             settingsSync.getJSON.mockImplementation(key => {
                 if (key === 'settingLivingFiberEnchants') return withE0Off();
                 return allTrueSettings;
@@ -407,6 +404,48 @@ describe('HarvestablesHandler', () => {
             const stored = handler.getHarvestableList().find(e => e.id === 9001);
             expect(stored).toBeDefined();
             expect(stored.mobileTypeId).toBeNull();
+        });
+
+        // @verified 2026-04-19: living harvestable spawn with charges=0 stays in list when e0 setting is off (#32).
+        // Before fix: shouldDisplayHarvestable dropped it at spawn, event 46 could not recover.
+        test('HARV-2: living fiber spawn with charges=0 is kept in list even when e0 setting is off', async () => {
+            settingsSync.getJSON.mockImplementation(key => {
+                if (key === 'settingLivingFiberEnchants') {
+                    return {e0: Array(8).fill(false), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+                }
+                return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            });
+
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 531);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+            p[11] = 0;
+
+            handler.newHarvestableObject(p[0], p);
+
+            const list = handler.getHarvestableList();
+            expect(list).toHaveLength(1);
+            expect(list[0].charges).toBe(0);
+        });
+
+        // @verified 2026-04-19: HarvestUpdateEvent mutates charges without removing entity even when new enchant setting is off (#32).
+        test('HARV-2: HarvestUpdateEvent mutates charges without removing entity when setting for new enchant is off', async () => {
+            settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)});
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 531);
+            const p = normalizeParams(msg.parameters);
+            p[11] = 0;
+            handler.newHarvestableObject(p[0], p);
+            expect(handler.getHarvestableList()).toHaveLength(1);
+
+            settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(false), e3: Array(8).fill(true), e4: Array(8).fill(true)});
+
+            handler.HarvestUpdateEvent({0: p[0], 1: 5, 2: 2});
+
+            const list = handler.getHarvestableList();
+            expect(list).toHaveLength(1);
+            expect(list[0].charges).toBe(2);
         });
 
         // @verified 2026-04-19: pcap-composed regression, static resource re-gate still keeps the entity
@@ -578,15 +617,15 @@ describe('HarvestablesHandler', () => {
             expect(e.charges).toBe(2);
         });
 
-        // @characterization 2026-04-18: current code calls shouldDisplayHarvestable after enchant update;
-        // if settings gate returns false, entity is removed.
-        test('synthetic: enchant update triggers re-gate, entity removed when settings block new enchant', () => {
+        // @verified 2026-04-24: post-enchant re-gate removed in #32 fix; entity is never dropped
+        // by HarvestUpdateEvent on enchant change. Filter is applied at render time instead.
+        test('synthetic: enchant update does not remove entity even when settings block new enchant', () => {
             seedHarvestable(9001, 3, 0);
             settingsSync.getJSON.mockReturnValue(allFalseSettings);
 
             handler.HarvestUpdateEvent({0: 9001, 1: 2, 2: 1});
 
-            expect(handler.getSize()).toBe(0);
+            expect(handler.getSize()).toBe(1);
         });
 
         // @verified 2026-04-18: newSize===undefined triggers removal of the entity.

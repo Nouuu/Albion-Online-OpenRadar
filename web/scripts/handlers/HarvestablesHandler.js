@@ -87,6 +87,7 @@ export class HarvestablesHandler
      * @returns {boolean} - True if should be displayed
      */
     shouldDisplayHarvestable(stringType, isLiving, tier, charges) {
+        if (isLiving) return true;
         // Map resource type to settings key suffix
         const settingsMap = {
             [HarvestableType.Fiber]: 'Fiber',
@@ -355,7 +356,7 @@ export class HarvestablesHandler
             harvestable.size = newSize;
         }
 
-        // Update enchantment if provided and different
+        // Update enchantment if provided and different (filter applied at render, not here)
         if (enchant !== undefined && enchant !== harvestable.charges) {
             window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_EnchantmentUpdate', {
                 id,
@@ -363,15 +364,6 @@ export class HarvestablesHandler
                 newEnchant: enchant
             });
             harvestable.charges = enchant;
-
-            const stringType = harvestable.stringType;
-            const mobileTypeId = harvestable.mobileTypeId;
-            const isLiving = mobileTypeId !== null && mobileTypeId !== undefined
-                && mobileTypeId !== 65535 && mobileTypeId !== -1;
-
-            if (!this.shouldDisplayHarvestable(stringType, isLiving, harvestable.tier, enchant)) {
-                this.removeHarvestable(id);
-            }
         }
     }
 
