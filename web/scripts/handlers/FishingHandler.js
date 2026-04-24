@@ -45,6 +45,11 @@ export class FishingHandler
         const posX = coor[0];
         const posY = coor[1];
 
+        window.logger?.debug(CATEGORIES.FISHING, 'fish_spawn', {
+            id, type, posX, posY, sizeSpawned, sizeLeftToSpawn,
+            total: sizeSpawned + sizeLeftToSpawn
+        });
+
         this.upsertFish(
             id,
             posX,
