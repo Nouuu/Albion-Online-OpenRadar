@@ -43,10 +43,7 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(p[2] + p[3]);
         });
 
-        // @verified 2026-04-24: empty-string type entries are phantom/zone-level broadcasts, not real pools.
-        // Live session log session_2026-04-24T19-35-04 showed every type="" entry has total=15 and is placed
-        // on land; real pools carry FishingNodeFish (total=1), FishingNodeSwarm (total=5), or FishingNodeChest
-        // (total=1). Reverting the FISH-1 narrowing: empty type is now filtered out again.
+        // @verified 2026-04-24: empty-string type entries are phantom zone broadcasts, not real pools; filter drops them.
         test('pcap-derived spawn: entries with type="" are filtered out', async () => {
             const fx = await loadFixture('fishing', 'spawn');
             const emptyTypeMsgs = fx.messages.filter(m => m.parameters['4'] === '');

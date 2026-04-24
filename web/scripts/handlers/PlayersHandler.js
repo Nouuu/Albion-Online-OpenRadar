@@ -87,7 +87,7 @@ export class PlayersHandler {
         this.playersList = [];
         this.localPlayer = new Player();
         this.audio = new Audio('/sounds/player.mp3');
-        this.lastFlashAt = 0;           // performance.now() of the last threat flash; read by RadarRenderer to mirror the full-screen flash on the radar overlay.
+        this.lastFlashAt = 0;
         this.FLASH_DURATION_MS = 300;
     }
 

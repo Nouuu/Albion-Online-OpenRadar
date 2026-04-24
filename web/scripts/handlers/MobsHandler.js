@@ -38,7 +38,7 @@ class Mob {
         this.tier = 0;
         this.type = EnemyType.Enemy;
         this.name = null;
-        this.identified = false;        // True when name and dbInfo came from MobsDatabase; used by render-time filter for "Show Unmanaged Enemies".
+        this.identified = false;
         this.category = null;           // Mob category from database (boss, miniboss, champion, etc.)
         this.namelocatag = null;        // Localization tag for translated name
         this.exp = 0;
