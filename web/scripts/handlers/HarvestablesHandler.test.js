@@ -409,7 +409,7 @@ describe('HarvestablesHandler', () => {
         });
 
         // @verified 2026-04-19: living harvestable spawn with charges=0 stays in list when e0 setting is off (#32).
-        // Before fix: shouldDisplayHarvestable dropped it at spawn, event 46 could not recover.
+        // Before the render-time filter move, the spawn-time enchant gate dropped it and event 46 could not recover.
         test('HARV-2: living fiber spawn with charges=0 is kept in list even when e0 setting is off', async () => {
             settingsSync.getJSON.mockImplementation(key => {
                 if (key === 'settingLivingFiberEnchants') {

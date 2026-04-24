@@ -18,14 +18,18 @@ Living counter. Updated on every test commit. Archived at plan completion.
 |---|---:|---:|---:|---:|
 | PlayersHandler | 37 | 2 | 0 | 41 |
 | HarvestablesHandler | 56 | 4 | 0 | 60 |
-| MobsHandler | 77 | 1 | 0 | 78 |
+| MobsHandler | 73 | 1 | 0 | 74 |
 | ChestsHandler | 13 | 0 | 0 | 13 |
 | FishingHandler | 10 | 0 | 0 | 10 |
 | DungeonsHandler | 28 | 0 | 0 | 28 |
 | WispCageHandler | 11 | 0 | 0 | 11 |
 | MistsWispDrawing | 9 | 0 | 0 | 9 |
 | EventRouter | 49 | 3 | 1 | 53 |
-| **Total** | **290** | **10** | **1** | **303** |
+| LivingResourceFilter | 29 | 0 | 0 | 29 |
+| HarvestablesDrawing | 10 | 0 | 0 | 10 |
+| MobsDrawing | 9 | 0 | 0 | 9 |
+| RadarRenderer | 6 | 0 | 0 | 6 |
+| **Total** | **340** | **10** | **1** | **351** |
 
 ## Open observations register
 
@@ -78,7 +82,7 @@ Living counter. Updated on every test commit. Archived at plan completion.
 - 2026-04-19 capture-70 extraction: added `wispcage/spawn` fixture (WS-level JSON + anonymized pcap fragment). Confirms NewCagedObject=530 in real traffic and exposes WISP-1 handler bug (Parameters[1]/[2]/[4] indexing). Fixing gaps listed in CP1 decisions: `wispcage/spawn` now closed; `fishing/finished` and `wispcage/opened` still not observable (no end-of-fishing events in capture-70, no cage-open events either).
 - 2026-04-19 #32 living resource enchant filter moved from spawn to render time. MobsHandler and HarvestablesHandler no longer drop living resources at spawn when the user has the corresponding e<n>[tier-1] setting off. Pure function `shouldRenderLivingResource` in `web/scripts/utils/LivingResourceFilter.js` is called by `MobsDrawing.invalidate` and `HarvestablesDrawing.invalidate` to filter per-frame. Dead scaffolding `MobsHandler.harvestablesNotGood` removed (4 reads, 0 writes). HARV-2 closed. Issues #30 and #32 resolved. Superseded design doc `2026-01-15-living-harvestables-fix-design.md` moved to `docs/archive/completed-plans/`.
 - 2026-04-19 #52 living resource tier mismatch resolved. Root-cause investigation on capture-70 showed server `Parameters[7]` in event 40 (NewHarvestableObject) matches the game tooltip exactly for all 9 observed living resource cases. Upstream `@tier` in `mobs.json` is the combat tier, distinct from the harvest tier the game displays. Derived rule: for LIVING non-DYNAMIC/non-DEAD mobs, `harvest_tier = max(min_tier[Loot.Harvestable.@type], combat_tier - 1)`. For DYNAMIC and DEAD variants, preserve combat tier. Implemented as pure function `getLivingHarvestTier` in `web/scripts/utils/LivingResourceTier.js` with hardcoded 20-entry min-tier map, wired into `MobsHandler.AddEnemy` via adapter. 20 unit tests + 7 MobsHandler integration tests + 2 flipped HarvestablesHandler convergence tests (mobIds 529, 531 now agree across both handlers). Fixes #52.
-- 2026-04-24 #32 taxonomy extension. HARV-3: DEAD critter carcasses (uniqueName matches `/_DEAD$/`) were gated by `settingLiving{Family}Enchants` which surfaced the moment the user had Living e0 off and Static e0 on. HARV-4: Hide carcasses and batch-spawn harvestables in harvestableList had no render-time filter (mobileTypeId!=null entries were early-returned as always-visible, mobileTypeId=null was filtered at spawn). Unified under "any static physical object on the map uses Static filter" principle. `LivingResourceFilter.js` gained `shouldRenderStaticResource` and a shared `resolveSettingsCell`. `Mob.uniqueName` is now propagated from dbInfo. `MobsDrawing.invalidate` picks static when `/_DEAD$/` matches. `HarvestablesHandler` lost its spawn-time filter (`shouldDisplayHarvestable` helper and call sites removed). `HarvestablesDrawing.invalidate` always applies static. +33 tests across LivingResourceFilter, MobsHandler, MobsDrawing, HarvestablesHandler, HarvestablesDrawing. Closes HARV-3 and HARV-4.
+- 2026-04-24 #32 taxonomy extension (final). Initial HARV-3/HARV-4 design routed DEAD critter carcasses through the Static filter on the assumption that a carcass is a physically static object; user live-test rejected this and confirmed that any entity with critter origin (alive or carcass) must stay on Living. Final routing: `mobsList` LivingHarvestable/LivingSkinnable entries always consult `shouldRenderLivingResource`; `harvestableList` entries consult `shouldRenderStaticResource` when `mobileTypeId` is a pure-static sentinel (null, -1, 65535) and `shouldRenderLivingResource` otherwise. `LivingResourceFilter.js` exports both functions via shared `resolveSettingsCell`. `HarvestablesHandler` lost its spawn-time filter (`shouldDisplayHarvestable` helper and `harvestablesNotGood` scaffolding removed). Dev-mode HTTP cache disabled for `/scripts/` and `/styles/` so F5 suffices during iteration. Closes HARV-4; HARV-3 is closed as superseded by the final routing decision with no behavioural change.
 
 ## Open ops-drift register (JS literals kept intentionally)
 

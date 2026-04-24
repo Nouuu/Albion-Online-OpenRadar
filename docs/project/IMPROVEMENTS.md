@@ -118,6 +118,7 @@ This document summarizes the features implemented in OpenRadar v2.0.x.
 - Removed accordion.js (DaisyUI handles)
 - Removed tooltips.css (DaisyUI handles)
 - ESLint configured for underscore-prefixed vars
+- TODO: replace `window.EnemyType` reads in `RadarRenderer._collectClusterCandidates` and `MobsDrawing.invalidate` with the ESM `import {EnemyType}` already in scope (pre-ESM-migration artefact, noted during PR #82 review).
 
 ### SPA Navigation & Lifecycle (v2.1.0)
 

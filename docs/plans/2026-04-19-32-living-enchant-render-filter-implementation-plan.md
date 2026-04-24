@@ -1,5 +1,7 @@
 # #32 Living resource enchant filter at render time Implementation Plan
 
+> **Status 2026-04-24:** implementation complete on `feat/32-living-enchant-render-filter` (PR #82). The amended design in `2026-04-19-32-living-enchant-render-filter-design.md` is the source of truth for the final routing rule (DEAD carcass routes through Living, not Static, per user live-test). Moves to `docs/archive/completed-plans/` when PR #82 merges.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix issue #32 (living resources require e0 on to show enchanted variants) by moving the enchant/tier filter from spawn-time to render-time.

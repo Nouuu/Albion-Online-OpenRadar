@@ -1,20 +1,22 @@
 # #32 Living resource enchant filter at render time : design
 
-**Date** : 2026-04-19 (amendment 2026-04-24)
+**Date** : 2026-04-19 (amendments 2026-04-24)
 **Issue** : [#32](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/32) (also [#30](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/30))
 **Branche** : `feat/32-living-enchant-render-filter` (based on `feat/52-living-tier-mismatch` PR #77)
-**Scope** : living resources render-time filter + DEAD carcass static routing + static resources render-time filter.
-**Register entry** : HARV-2, HARV-3, HARV-4 (all closed by this PR)
+**Scope** : living resources render-time filter + static resources render-time filter (symmetric).
+**Register entry** : HARV-2, HARV-4 (closed by this PR)
 
 ---
 
 ## Amendment 2026-04-24 : expanded scope
 
-Live smoke test on the original #32 fix revealed two additional defects sharing the same class: entities that are physically static on the map but were gated by the Living filter key.
+Live smoke test on the original #32 fix revealed an additional defect sharing the same class: static harvestable entities (batch-spawn, Hide carcasses stored as harvestables) were gated at spawn time instead of render time, so settings toggles required re-detection to take effect.
 
-1. **HARV-3 : dead critters filtered by living settings**. When a Fiber/Log/Ore/Rock critter dies, the server spawns a new `NewMob` with a `_DEAD` uniqueName (e.g. `T6_MOB_CRITTER_FIBER_SWAMP_DEAD`). These arrive in `mobsList` as `LivingHarvestable`/`LivingSkinnable` and were gated by `settingLiving{Family}Enchants`. User checked `settingStaticHideEnchants` T6 e0 on and living T6 e0 off, expected to see the corpse, saw nothing.
+1. **HARV-4 : Hide carcass and batch-spawn harvestables lack render-time filter**. HarvestablesHandler spawn filter blocked static entities and the `shouldDisplayHarvestable` early-return for `isLiving=true` kept carcasses always visible (or always hidden) regardless of settings. User wanted the same instant toggle UX that #32 introduced for living mobs.
 
-2. **HARV-4 : Hide carcass and batch-spawn harvestables lack render-time filter**. HarvestablesHandler spawn filter blocked static entities and the `shouldDisplayHarvestable` early-return for `isLiving=true` kept carcasses always visible (or always hidden) regardless of settings. User wanted the same instant toggle UX that #32 introduced for living mobs.
+### Amendment 2026-04-24 (second revision) : DEAD critter routing reverted to Living
+
+Initial design (HARV-3) proposed routing `mobsList` entries with `uniqueName` matching `/_DEAD$/` through the Static filter, on the assumption that a carcass is a physically static object and belongs to the Static settings key. User live-test rejected this: even after a kill the in-game entity keeps the critter identity and the user categorises it as a Living resource in the settings UI. Final rule: any entity that came through `mobsList` as `LivingHarvestable`/`LivingSkinnable` is routed through the Living filter regardless of `_DEAD` suffix. HARV-3 register entry is closed without a behavioural change; the only surviving artefact is the `MobsDrawing` unification on `shouldRenderLivingResource`.
 
 ### Unified taxonomy (post-amendment)
 
@@ -22,29 +24,30 @@ Render-time routing rule:
 
 | Source list | Discriminator | Filter |
 |-------------|---------------|--------|
-| `mobsList` type = LivingHarvestable/LivingSkinnable | `uniqueName` matches `/_DEAD$/` | **Static** |
-| `mobsList` type = LivingHarvestable/LivingSkinnable | `uniqueName` does not match `_DEAD` | **Living** |
+| `mobsList` type = LivingHarvestable/LivingSkinnable | any `uniqueName` (incl. `_DEAD`) | **Living** |
 | `mobsList` other types (Enemy/Boss/Drone/…) | | unchanged |
-| `harvestableList` (all entries, any `mobileTypeId`) | | **Static** |
+| `harvestableList` entry with pure-static sentinel `mobileTypeId` (null, -1, 65535) | | **Static** |
+| `harvestableList` entry with critter-origin `mobileTypeId` (real typeId) | | **Living** |
 
-Principle : "moving alive creature = Living filter ; static physical object on the map = Static filter". Corpses, batch-spawn sentinels, and Hide carcasses all belong to the second bucket.
+Principle : "critter-origin entity (alive or carcass) = Living filter ; pure static resource node on the map (tree, rock, fiber plant) = Static filter". The `mobileTypeId` sentinel on `harvestableList` encodes the distinction without needing a separate DB lookup.
 
 ### Architecture changes on top of the original design
 
-- `LivingResourceFilter.js` now exports both `shouldRenderLivingResource` and `shouldRenderStaticResource`. Shared resolver `resolveSettingsCell` keeps the two paths DRY.
-- `MobsHandler.AddEnemy` propagates `dbInfo.uniqueName` onto `mob.uniqueName` (initialized to `null` on the `Mob` constructor). Enables render-time detection without a second DB lookup.
-- `MobsDrawing.invalidate` picks `shouldRenderStaticResource` when `mob.uniqueName` matches `/_DEAD$/`, otherwise `shouldRenderLivingResource`.
+- `LivingResourceFilter.js` exports both `shouldRenderLivingResource` and `shouldRenderStaticResource`. Shared resolver `resolveSettingsCell` keeps the two paths DRY.
+- `MobsDrawing.invalidate` always calls `shouldRenderLivingResource` on `LivingHarvestable`/`LivingSkinnable` entries (DEAD carcasses included).
 - `HarvestablesHandler.addHarvestable` and `UpdateHarvestable` drop the `shouldDisplayHarvestable` call entirely; the helper and the `getResourceStorageKey`/`settingsSync` imports are removed.
-- `HarvestablesDrawing.invalidate` always applies `shouldRenderStaticResource`. The `isLiving` branch is gone.
+- `HarvestablesDrawing.invalidate` picks `shouldRenderStaticResource` when `mobileTypeId` is the pure-static sentinel, otherwise `shouldRenderLivingResource`.
 
 ### Success criteria (amended)
 
 Original success criteria remain. Add:
 
-- Live smoke on the user's scenario: unchecking `settingLivingHideEnchants.e0` while `settingStaticHideEnchants.e0` stays on must render the corpse after kill.
-- Instant toggle: check/uncheck any static settings checkbox and entities appear/disappear within one render frame (no spawn re-detection required).
+- Live smoke on the user's scenario: unchecking `settingLivingHideEnchants.e0` while `settingStaticHideEnchants.e0` stays on must render the live critter; killing it and unchecking `settingLivingFiberEnchants.T5.e0` hides the carcass, unchecking `settingStatic*` has no effect on carcasses.
+- Instant toggle: check/uncheck any static or living settings checkbox and entities appear/disappear within one render frame (no spawn re-detection required).
 
 ---
+
+> **Historical note (2026-04-24)**: the sections below describe the original #32 design before HARV-3/HARV-4 were discovered and before the DEAD-carcass routing was reverted to Living. They are preserved for context. The authoritative routing rule is the table in the Amendment block above, not the Solution section below.
 
 ## Goal
 
