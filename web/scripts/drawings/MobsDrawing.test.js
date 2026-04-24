@@ -102,3 +102,109 @@ describe('MobsDrawing living resource filter at render', () => {
         expect(drawing.drawFilledCircle).toHaveBeenCalled();
     });
 });
+
+describe('MobsDrawing DEAD critter static filter routing', () => {
+    let drawing;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        drawing = new MobsDrawing();
+        drawing.DrawCustomImage = vi.fn();
+        drawing.transformPoint = vi.fn((x, y) => ({x, y}));
+        drawing.interpolateEntity = vi.fn();
+        drawing.drawTextItems = vi.fn();
+        drawing.drawFilledCircle = vi.fn();
+        drawing.drawDistanceIndicator = vi.fn();
+        drawing.drawHealthBar = vi.fn();
+        drawing.getEnemyColor = vi.fn(() => '#ffffff');
+        drawing.getEnemyTypeName = vi.fn(() => 'unknown');
+        drawing.getScaledSize = vi.fn(s => s);
+        drawing.getScaledFontSize = vi.fn(s => s);
+        ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
+        settingsSync.getBool.mockReturnValue(true);
+    });
+
+    function deadFiberMob({tier = 6, enchant = 0} = {}) {
+        return {
+            id: 5, typeId: 534, hX: 10, hY: 20, tier,
+            enchantmentLevel: enchant, name: 'Fiber',
+            type: EnemyType.LivingHarvestable,
+            uniqueName: 'T6_MOB_CRITTER_FIBER_SWAMP_DEAD',
+            getCurrentHP: () => 100, maxHealth: 100,
+        };
+    }
+
+    function liveFiberMob({tier = 4, enchant = 0} = {}) {
+        return {
+            id: 6, typeId: 529, hX: 10, hY: 20, tier,
+            enchantmentLevel: enchant, name: 'Fiber',
+            type: EnemyType.LivingHarvestable,
+            uniqueName: 'T4_MOB_CRITTER_FIBER_SWAMP_GREEN',
+            getCurrentHP: () => 100, maxHealth: 100,
+        };
+    }
+
+    // @verified 2026-04-24: DEAD critter carcass gated by static settings, not living.
+    // Scenario: user unchecks Living e0 but keeps Static e0 on; carcass must still render.
+    test('DEAD Fiber T6 e0 renders when settingStaticFiberEnchants.e0 is on and Living is off', () => {
+        settingsSync.getJSON.mockImplementation(key => {
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            return null;
+        });
+        drawing.invalidate(ctx, [deadFiberMob()], []);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_6_0', 'Resources', 40);
+    });
+
+    // @verified 2026-04-24: DEAD carcass ignored when static off, even if Living on.
+    test('DEAD Fiber T6 e0 is skipped when Static off, Living on (static filter wins)', () => {
+        settingsSync.getJSON.mockImplementation(key => {
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            return null;
+        });
+        drawing.invalidate(ctx, [deadFiberMob()], []);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-04-24: live critter unchanged by DEAD routing; still gated by living settings.
+    test('live Fiber T4 e0 renders when Living on (not Static); living path preserved', () => {
+        settingsSync.getJSON.mockImplementation(key => {
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            return null;
+        });
+        drawing.invalidate(ctx, [liveFiberMob()], []);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_4_0', 'Resources', 40);
+    });
+
+    // @verified 2026-04-24: live critter blocked when Living off, even if Static on (no cross-talk).
+    test('live Fiber T4 e0 is skipped when Living off (Static on has no effect on live)', () => {
+        settingsSync.getJSON.mockImplementation(key => {
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            return null;
+        });
+        drawing.invalidate(ctx, [liveFiberMob()], []);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-04-24: DEAD carcass with enchant received after spawn (e2) rendered under Static e2 on.
+    test('DEAD Fiber T7 e2 renders via settingStaticFiberEnchants.e2[6]=true', () => {
+        settingsSync.getJSON.mockImplementation(key => {
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, false, false, false, true, false], e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            if (key === 'settingLivingFiberEnchants') return null;
+            return null;
+        });
+        const dead = {
+            id: 7, typeId: 535, hX: 10, hY: 20, tier: 7,
+            enchantmentLevel: 2, name: 'Fiber',
+            type: EnemyType.LivingHarvestable,
+            uniqueName: 'T7_MOB_CRITTER_FIBER_SWAMP_DEAD',
+            getCurrentHP: () => 100, maxHealth: 100,
+        };
+        drawing.invalidate(ctx, [dead], []);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_7_2', 'Resources', 40);
+    });
+});
