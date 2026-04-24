@@ -1,5 +1,4 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../utils/SettingsSync.js";
 
 class Fish
 {

@@ -1,5 +1,4 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
-import settingsSync from '../utils/SettingsSync.js';
 import {getLivingHarvestTier} from '../utils/LivingResourceTier.js';
 
 export const EnemyType =
