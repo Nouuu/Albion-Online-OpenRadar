@@ -2,7 +2,7 @@ import {DrawingUtils} from "../utils/DrawingUtils.js";
 import {EnemyType} from "../handlers/MobsHandler.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../utils/SettingsSync.js";
-import {shouldRenderLivingResource, shouldRenderStaticResource} from "../utils/LivingResourceFilter.js";
+import {shouldRenderLivingResource} from "../utils/LivingResourceFilter.js";
 
 export class MobsDrawing extends DrawingUtils
 {
@@ -33,9 +33,7 @@ export class MobsDrawing extends DrawingUtils
             if (mobOne.type == EnemyType.LivingSkinnable || mobOne.type == EnemyType.LivingHarvestable)
             {
                 isLivingResource = true;
-                const isDead = /_DEAD$/.test(mobOne.uniqueName ?? '');
-                const filterFn = isDead ? shouldRenderStaticResource : shouldRenderLivingResource;
-                if (!filterFn(mobOne, key => settingsSync.getJSON(key))) {
+                if (!shouldRenderLivingResource(mobOne, key => settingsSync.getJSON(key))) {
                     continue;
                 }
                 // Only set imageName if mob has been identified (has name from mobinfo or cross-ref)

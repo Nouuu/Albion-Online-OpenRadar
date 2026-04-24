@@ -23,18 +23,12 @@ export class HarvestablesDrawing extends DrawingUtils  {
             const isPureStatic = mobileTypeId === null || mobileTypeId === undefined
                 || mobileTypeId === -1 || mobileTypeId === 65535;
 
-            let useStatic = isPureStatic;
-            if (!isPureStatic) {
-                const mobInfo = window.mobsDatabase?.getMobInfo?.(mobileTypeId);
-                useStatic = /_DEAD$/.test(mobInfo?.uniqueName ?? '');
-            }
-
             const filterEntity = {
                 name: harvestableOne.stringType,
                 tier: harvestableOne.tier,
                 enchantmentLevel: harvestableOne.charges,
             };
-            const filterFn = useStatic ? shouldRenderStaticResource : shouldRenderLivingResource;
+            const filterFn = isPureStatic ? shouldRenderStaticResource : shouldRenderLivingResource;
             if (!filterFn(filterEntity, key => settingsSync.getJSON(key))) {
                 continue;
             }

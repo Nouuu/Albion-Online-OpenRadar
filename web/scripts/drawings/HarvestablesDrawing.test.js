@@ -164,19 +164,18 @@ describe('HarvestablesDrawing render-time routing', () => {
     });
 
     // -------------------------------------------------------------------------
-    // Dead critter carcass path: mobileTypeId references a _DEAD mob -> Static filter
+    // Dead critter carcass path: user live-test 2026-04-24 confirmed _DEAD entities
+    // should stay on the Living filter like the live variant. Only pure static
+    // harvestables (mobileTypeId=-1/null/65535) go to the Static filter.
     // -------------------------------------------------------------------------
 
-    // @verified 2026-04-24: synthetic Parameters matching capture-70 event 40 shape for typeId=532
-    // (T5_MOB_CRITTER_FIBER_SWAMP_DEAD). Committed fixture is capped at 25 messages and does not
-    // contain a DEAD variant; full capture-70 pcap extraction confirmed 4 occurrences of 532.
-    // Real mobsDatabase resolves uniqueName and the _DEAD$ regex routes to the Static filter.
-    test('full-flow: dead Fiber carcass mobileTypeId=532 renders under Static filter', () => {
+    // @verified 2026-04-24: dead Fiber carcass routes through Living since it has a valid mobileTypeId.
+    test('full-flow: dead Fiber carcass mobileTypeId=532 renders under Living filter', () => {
         const p = {0: 9001, 5: 11, 6: 532, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingStaticFiberEnchants') return allTrue();
-            if (key === 'settingLivingFiberEnchants') return allFalse();
+            if (key === 'settingLivingFiberEnchants') return allTrue();
+            if (key === 'settingStaticFiberEnchants') return allFalse();
             return null;
         });
 
@@ -187,13 +186,13 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: dead Fiber carcass skipped when Static off even if Living is on.
-    test('full-flow: dead Fiber carcass mobileTypeId=532 skipped when Static off, Living on', () => {
+    // @verified 2026-04-24: dead Fiber carcass skipped when Living off even if Static is on.
+    test('full-flow: dead Fiber carcass mobileTypeId=532 skipped when Living off, Static on', () => {
         const p = {0: 9001, 5: 11, 6: 532, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingStaticFiberEnchants') return allFalse();
-            if (key === 'settingLivingFiberEnchants') return allTrue();
+            if (key === 'settingLivingFiberEnchants') return allFalse();
+            if (key === 'settingStaticFiberEnchants') return allTrue();
             return null;
         });
 

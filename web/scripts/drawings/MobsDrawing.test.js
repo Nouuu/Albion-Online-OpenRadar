@@ -103,7 +103,7 @@ describe('MobsDrawing living resource filter at render', () => {
     });
 });
 
-describe('MobsDrawing DEAD critter static filter routing', () => {
+describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead critters stay Living)', () => {
     let drawing;
     let ctx;
 
@@ -145,23 +145,24 @@ describe('MobsDrawing DEAD critter static filter routing', () => {
         };
     }
 
-    // @verified 2026-04-24: DEAD critter carcass gated by static settings, not living.
-    // Scenario: user unchecks Living e0 but keeps Static e0 on; carcass must still render.
-    test('DEAD Fiber T6 e0 renders when settingStaticFiberEnchants.e0 is on and Living is off', () => {
+    // @verified 2026-04-24: user live-test confirmed DEAD critters must be controlled by Living,
+    // not Static. Same semantic as live critters. Reason: in-game the carcass keeps the critter
+    // identity and the user categorises it as a Living entity in the settings UI.
+    test('DEAD Fiber T6 e0 renders when settingLivingFiberEnchants.e0 is on (Static has no effect)', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
-            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
             return null;
         });
         drawing.invalidate(ctx, [deadFiberMob()], []);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_6_0', 'Resources', 40);
     });
 
-    // @verified 2026-04-24: DEAD carcass ignored when static off, even if Living on.
-    test('DEAD Fiber T6 e0 is skipped when Static off, Living on (static filter wins)', () => {
+    // @verified 2026-04-24: DEAD carcass skipped when Living is off even if Static is on.
+    test('DEAD Fiber T6 e0 is skipped when Living off, Static on (Static cannot rescue a living-routed entity)', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
-            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
             return null;
         });
         drawing.invalidate(ctx, [deadFiberMob()], []);
@@ -190,11 +191,11 @@ describe('MobsDrawing DEAD critter static filter routing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: DEAD carcass with enchant received after spawn (e2) rendered under Static e2 on.
-    test('DEAD Fiber T7 e2 renders via settingStaticFiberEnchants.e2[6]=true', () => {
+    // @verified 2026-04-24: DEAD carcass with enchant received after spawn (e2) rendered via Living filter.
+    test('DEAD Fiber T7 e2 renders via settingLivingFiberEnchants.e2[6]=true', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingStaticFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, false, false, false, true, false], e3: Array(8).fill(false), e4: Array(8).fill(false)};
-            if (key === 'settingLivingFiberEnchants') return null;
+            if (key === 'settingLivingFiberEnchants') return {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, false, false, false, true, false], e3: Array(8).fill(false), e4: Array(8).fill(false)};
+            if (key === 'settingStaticFiberEnchants') return null;
             return null;
         });
         const dead = {
