@@ -1,6 +1,4 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../utils/SettingsSync.js";
-import {getResourceStorageKey} from "../utils/ResourcesHelper.js";
 
 const HarvestableType =
 {
@@ -78,85 +76,6 @@ export class HarvestablesHandler
         }
     }
 
-    /**
-     * Helper method to check if a harvestable should be displayed based on settings
-     * @param {string} stringType - Resource type (Fiber, Hide, Log, Ore, Rock)
-     * @param {boolean} isLiving - Is living resource (vs static)
-     * @param {number} tier - Resource tier (1-8)
-     * @param {number} charges - Enchantment level (0-4)
-     * @returns {boolean} - True if should be displayed
-     */
-    shouldDisplayHarvestable(stringType, isLiving, tier, charges) {
-        if (isLiving) return true;
-        // Map resource type to settings key suffix
-        const settingsMap = {
-            [HarvestableType.Fiber]: 'Fiber',
-            [HarvestableType.Hide]: 'Hide',
-            [HarvestableType.Log]: 'Wood',
-            [HarvestableType.Ore]: 'Ore',
-            [HarvestableType.Rock]: 'Rock'
-        };
-
-        const resourceType = settingsMap[stringType];
-        if (!resourceType) return false;
-
-        // 🔍 Phase 4: Validate with HarvestablesDatabase if available
-        if (window.harvestablesDatabase?.isLoaded) {
-            // Convert HarvestableType to database resource type (WOOD, ROCK, etc.)
-            const resourceTypeMap = {
-                [HarvestableType.Log]: 'WOOD',
-                [HarvestableType.Rock]: 'ROCK',
-                [HarvestableType.Fiber]: 'FIBER',
-                [HarvestableType.Hide]: 'HIDE',
-                [HarvestableType.Ore]: 'ORE'
-            };
-
-            const dbResourceType = resourceTypeMap[stringType];
-            if (dbResourceType) {
-                const isValid = window.harvestablesDatabase.isValidResource(dbResourceType, tier, charges);
-
-                // 🔍 DETAILED DEBUG: Log ALL validation checks
-                window.logger?.debug(CATEGORIES.HARVESTABLES, 'ValidationCheck', {
-                    stringType,
-                    dbResourceType,
-                    tier,
-                    enchant: charges,
-                    isLiving,
-                    isValid,
-                    validationKey: `${dbResourceType}-${tier}-${charges}`,
-                    note: isValid ? 'OK' : 'FILTERED - Not in database'
-                });
-
-                if (!isValid) {
-                    window.logger?.debug(CATEGORIES.HARVESTABLES, 'InvalidResourceCombination', {
-                        stringType,
-                        dbResourceType,
-                        tier,
-                        enchant: charges,
-                        isLiving,
-                        validationKey: `${dbResourceType}-${tier}-${charges}`,
-                        note: 'Not found in harvestables.json - RESOURCE FILTERED'
-                    });
-                    return false; // Don't display invalid resources
-                }
-            }
-        }
-
-        let prefix;
-        if (resourceType === 'Fiber' || resourceType === 'fiber') prefix = 'fsp';
-        else if (resourceType === 'Hide' || resourceType === 'hide') prefix = 'hsp';
-        else if (resourceType === 'Wood' || resourceType === 'Logs') prefix = 'wsp';
-        else if (resourceType === 'Ore' || resourceType === 'ore') prefix = 'osp';
-        else if (resourceType === 'Rock' || resourceType === 'rock') prefix = 'rsp';
-
-        let type = isLiving ? 'Living' : 'Static';
-
-        const settingKey = getResourceStorageKey(prefix, type);
-
-        return settingsSync.getJSON(settingKey)?.[`e${charges}`][tier - 1] === true;
-    }
-
-
     addHarvestable(id, type, tier, posX, posY, charges, size, mobileTypeId = null)
     {
         // Determine resource type: living (animals/creatures) vs static.
@@ -200,19 +119,6 @@ export class HarvestablesHandler
             databaseLoaded: window.harvestablesDatabase?.isLoaded ?? false,
             databaseValid: databaseValidation
         });
-
-        // 🎯 Check if this harvestable should be displayed based on settings
-        if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
-            window.logger?.debug(CATEGORIES.HARVESTABLES, 'FilteredBySettings', {
-                id,
-                stringType,
-                tier,
-                enchant: charges,
-                isLiving,
-                reason: 'settings_disabled_or_invalid_resource'
-            });
-            return;
-        }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
 
@@ -276,19 +182,6 @@ export class HarvestablesHandler
             databaseLoaded: window.harvestablesDatabase?.isLoaded ?? false,
             databaseValid: databaseValidation
         });
-
-        // 🎯 Check if this harvestable should be displayed based on settings
-        if (!this.shouldDisplayHarvestable(stringType, isLiving, tier, charges)) {
-            window.logger?.debug(CATEGORIES.HARVESTABLES, 'FilteredByUpdate', {
-                id,
-                stringType,
-                tier,
-                enchant: charges,
-                isLiving,
-                reason: 'settings_disabled_or_invalid_resource'
-            });
-            return;
-        }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
 

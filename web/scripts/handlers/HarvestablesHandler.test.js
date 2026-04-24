@@ -195,8 +195,9 @@ describe('HarvestablesHandler', () => {
             expect(handler.getHarvestableList()[0].charges).toBe(2);
         });
 
-        // @verified 2026-04-18: settings gate false for tier/enchant blocks entity creation.
-        test('synthetic: settings off for tier/enchant filters entity, list stays empty', () => {
+        // @verified 2026-04-24: HARV-4, spawn-time filter removed; entities always land in the list.
+        // Render-time filter (HarvestablesDrawing) is now the only gate so checkbox toggles are instant.
+        test('HARV-4: settings off for tier/enchant no longer blocks spawn, entity lands in list', () => {
             settingsSync.getJSON.mockReturnValue(allFalseSettings);
 
             const p = {
@@ -206,7 +207,8 @@ describe('HarvestablesHandler', () => {
 
             handler.newHarvestableObject(p[0], p);
 
-            expect(handler.getHarvestableList()).toHaveLength(0);
+            expect(handler.getHarvestableList()).toHaveLength(1);
+            expect(handler.getHarvestableList()[0].id).toBe(9999);
         });
 
         // @verified 2026-04-18: Parameters[11] undefined defaults charges to 0.
@@ -446,6 +448,46 @@ describe('HarvestablesHandler', () => {
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
             expect(list[0].charges).toBe(2);
+        });
+
+        // @verified 2026-04-24: HARV-4, carcass with mobileTypeId!=null no longer filtered at spawn.
+        // The former isLiving=true early-return is gone; Hide carcasses always land in the list and
+        // the static filter at HarvestablesDrawing decides visibility.
+        test('HARV-4: Hide carcass mobileTypeId=424 spawns with all static settings off still lands in list', async () => {
+            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 424);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.newHarvestableObject(p[0], p);
+
+            const stored = handler.getHarvestableList().find(h => h.id === p[0]);
+            expect(stored).toBeDefined();
+            expect(stored.mobileTypeId).toBe(424);
+        });
+
+        // @verified 2026-04-24: HARV-4, batch-spawn (event 38) also bypasses settings filter at spawn.
+        test('HARV-4: newSimpleHarvestableObject batch ignores settings at spawn, all entities land in list', async () => {
+            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+            const fx = await loadFixture('harvestables', 'batch-spawn');
+            const p = normalizeParams(fx.messages[0].parameters);
+            const ids = p[0];
+
+            handler.newSimpleHarvestableObject(p);
+
+            expect(handler.getHarvestableList()).toHaveLength(ids.length);
+        });
+
+        // @verified 2026-04-24: HARV-4, UpdateHarvestable path also ignores settings at spawn.
+        test('HARV-4: UpdateHarvestable on new id with all settings off still creates entity', () => {
+            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+
+            handler.UpdateHarvestable(7777, 14, 4, 10, 20, 1, 3, -1);
+
+            const stored = handler.getHarvestableList().find(h => h.id === 7777);
+            expect(stored).toBeDefined();
+            expect(stored.charges).toBe(1);
         });
 
         // @verified 2026-04-19: pcap-composed regression, static resource re-gate still keeps the entity
