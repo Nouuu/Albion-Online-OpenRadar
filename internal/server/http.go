@@ -33,6 +33,7 @@ type HTTPServer struct {
 	// Template engine
 	tmpl    *templates.Engine
 	version string
+	devMode bool
 }
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
@@ -111,6 +112,7 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 		styles:    os.DirFS(appDir + "/web/styles"),
 		tmpl:      tmpl,
 		version:   version,
+		devMode:   true,
 	}
 	s.setupRoutes()
 	return s, nil
@@ -118,11 +120,16 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 
 // setupRoutes configures all HTTP routes
 func (s *HTTPServer) setupRoutes() {
-	// Cache durations
+	// Cache durations. Dev mode disables scripts/styles caching so JS/CSS edits
+	// reach the browser on the next request without a 1h HTTP cache window.
 	imageCacheDuration := 24 * time.Hour
 	dataCacheDuration := 7 * 24 * time.Hour
 	scriptsCacheDuration := 1 * time.Hour
 	stylesCacheDuration := 1 * time.Hour
+	if s.devMode {
+		scriptsCacheDuration = 0
+		stylesCacheDuration = 0
+	}
 
 	// WebSocket endpoint
 	if s.wsHandler != nil {
