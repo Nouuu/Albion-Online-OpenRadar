@@ -81,13 +81,13 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(9);
         });
 
-        // @verified 2026-04-24: settingFishing=false causes newFishEvent to return early; nothing added.
-        test('synthetic: settingFishing=false skips spawn', () => {
+        // @verified 2026-04-24: settingFishing=false no longer gates spawn; filter is applied at render so toggles take effect instantly.
+        test('synthetic: settingFishing=false still adds pool to list (render-time filter only)', () => {
             settingsSync.getBool.mockReturnValue(false);
 
             handler.newFishEvent({0: 1, 1: [0, 0], 2: 5, 3: 0, 4: 'FishingNodeFish'});
 
-            expect(handler.fishes).toHaveLength(0);
+            expect(handler.fishes).toHaveLength(1);
         });
 
         // @verified 2026-04-18: missing Parameters[4] (null) is falsy; newFishEvent returns early.
@@ -124,14 +124,14 @@ describe('FishingHandler', () => {
             expect(handler.fishes).toHaveLength(1);
         });
 
-        // @verified 2026-04-24: fishingEnd with settingFishing=false returns early; fish is not removed.
-        test('synthetic: fishingEnd with settingFishing=false does not remove fish', () => {
+        // @verified 2026-04-24: fishingEnd now removes fish regardless of settingFishing, mirroring the render-time filter migration.
+        test('synthetic: fishingEnd removes fish even when settingFishing=false', () => {
             handler.fishes.push({id: 55, posX: 0, posY: 0, type: 'FishingNodeFish', sizeSpawned: 1, sizeLeftToSpawn: 0, totalSize: 1, hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
             settingsSync.getBool.mockReturnValue(false);
 
             handler.fishingEnd({0: 55});
 
-            expect(handler.fishes).toHaveLength(1);
+            expect(handler.fishes).toHaveLength(0);
         });
     });
 

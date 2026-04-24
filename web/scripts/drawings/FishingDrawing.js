@@ -13,6 +13,7 @@ export class FishingDrawing extends DrawingUtils
 
     draw(ctx, fishes)
     {
+        if (!settingsSync.getBool("settingFishing")) return;
         const showCount = settingsSync.getBool("settingResourceCount");
         for (const fish of fishes)
         {
