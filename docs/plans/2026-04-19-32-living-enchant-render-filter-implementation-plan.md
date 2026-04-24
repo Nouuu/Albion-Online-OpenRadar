@@ -12,6 +12,29 @@
 
 ---
 
+## Amendment 2026-04-24 : expanded scope HARV-3 + HARV-4
+
+Live smoke surfaced two sibling defects. Scope grew by six tasks that share the same branch.
+
+### Additional files
+
+- `web/scripts/utils/LivingResourceFilter.js` : add `shouldRenderStaticResource` and shared `resolveSettingsCell`.
+- `web/scripts/utils/LivingResourceFilter.test.js` : +11 tests for the static variant.
+- `web/scripts/handlers/MobsHandler.js` : `mob.uniqueName` propagation in both AddEnemy branches.
+- `web/scripts/handlers/MobsHandler.test.js` : HARV-3 describe block (4 tests) covering DEAD/live critter/DYNAMIC Hide/hostile.
+- `web/scripts/drawings/MobsDrawing.js` : pick `shouldRenderStaticResource` when `mob.uniqueName` matches `/_DEAD$/`.
+- `web/scripts/drawings/MobsDrawing.test.js` : +5 tests for the DEAD routing.
+- `web/scripts/handlers/HarvestablesHandler.js` : drop `shouldDisplayHarvestable` helper and both call sites; drop `settingsSync` and `getResourceStorageKey` imports.
+- `web/scripts/handlers/HarvestablesHandler.test.js` : flip the "settings off blocks spawn" test, add HARV-4 trio (carcass, batch, UpdateHarvestable).
+- `web/scripts/drawings/HarvestablesDrawing.js` : drop `isLiving` branch, always call `shouldRenderStaticResource`.
+- `web/scripts/drawings/HarvestablesDrawing.test.js` : rewritten suite, 14 tests including pcap-derived Hide toad mobileTypeId=424.
+
+### Expected outcome
+
+`npm test` green, +33 tests on top of the original #32 coverage, no new characterization entries. User-facing behaviour: checking `settingStatic{Family}Enchants` gates any map-static entity (true static resource, batch-spawn sentinel, Hide carcass, DEAD critter carcass). Living settings gate only alive moving mobs. Checkbox toggles are instant, no spawn re-detection required.
+
+---
+
 ## File structure
 
 ### Create
