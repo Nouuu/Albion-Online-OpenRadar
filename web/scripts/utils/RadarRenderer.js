@@ -425,15 +425,15 @@ export class RadarRenderer {
 
         if (threats.length === 0) return;
 
-        const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5;
+        const pulse = Math.sin(Date.now() / 140) * 0.35 + 0.6;
         const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
 
         ctx.save();
         ctx.shadowColor = `rgba(255, 50, 50, ${pulse})`;
-        ctx.shadowBlur = 12;
-        ctx.strokeStyle = `rgba(255, 50, 50, ${pulse * 0.8})`;
-        ctx.lineWidth = 3;
-        ctx.strokeRect(2, 2, canvasSize - 4, canvasSize - 4);
+        ctx.shadowBlur = 24;
+        ctx.strokeStyle = `rgba(255, 50, 50, ${pulse})`;
+        ctx.lineWidth = 5;
+        ctx.strokeRect(3, 3, canvasSize - 6, canvasSize - 6);
         ctx.restore();
     }
 
