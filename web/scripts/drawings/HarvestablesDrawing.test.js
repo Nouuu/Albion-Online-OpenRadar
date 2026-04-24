@@ -73,4 +73,12 @@ describe('HarvestablesDrawing living filter at render', () => {
         drawing.invalidate(ctx, [staticHarvestable({tier: 5, charges: 2})]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 30, 40, 'fiber_5_2', 'Resources', 40);
     });
+
+    // @verified 2026-04-24: batch-spawn static (mobileTypeId=null) is not subject to the living filter.
+    test('static Fiber with mobileTypeId=null (event 38 batch) is not filtered by living filter', () => {
+        settingsSync.getJSON.mockReturnValue(null);
+        const entity = {id: 3, hX: 5, hY: 5, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: null, type: 11};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 5, 5, 'fiber_4_0', 'Resources', 40);
+    });
 });
