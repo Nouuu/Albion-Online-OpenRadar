@@ -48,6 +48,11 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
+                if (settingsSync.getBool("settingShowMinimumHealthEnemies")) {
+                    const threshold = settingsSync.getNumber("settingTextMinimumHealthEnemies", 0);
+                    if ((mobOne.maxHealth ?? 0) < threshold) continue;
+                }
+
                 // Use color-coded circles for hostile mobs (not images)
                 // imageName stays undefined to trigger the colored circle rendering below
                 // The color is determined by mob.type (Enemy=green, EnchantedEnemy=purple, MiniBoss=orange, Boss=red)
