@@ -479,6 +479,67 @@ describe('MobsHandler', () => {
                 expect(mobs[0].tier).toBe(expectedTier);
             }
         );
+
+        // -------------------------------------------------------------------------
+        // HARV-2 / issue #32 : enchant filter moved from spawn to render
+        // -------------------------------------------------------------------------
+
+        // @verified 2026-04-19: mob spawn with enchant=0 must add to mobsList even if user has e0 disabled.
+        // Before fix: filter at spawn dropped the mob, updateEnchantEvent could not recover it.
+        test('HARV-2: living Hide mob spawns with enchant=0 into mobsList regardless of settings', () => {
+            const e0OffSettings = {
+                e0: Array(8).fill(false),
+                e1: Array(8).fill(true),
+                e2: Array(8).fill(true),
+                e3: Array(8).fill(true),
+                e4: Array(8).fill(true),
+            };
+            settingsSync.getJSON.mockReturnValue(e0OffSettings);
+            const p = normalizeParams({'0': 91000, '1': 373, '2': 255, '7': [0, 0], '13': 1000, '33': 0});
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].typeId).toBe(373);
+            expect(mobs[0].enchantmentLevel).toBe(0);
+        });
+
+        // @verified 2026-04-19: updateEnchantEvent mutates enchant on existing mob, entity survives spawn-filter gap.
+        test('HARV-2: updateEnchantEvent mutates enchantmentLevel on mob already in mobsList', () => {
+            settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)});
+            const spawnParams = normalizeParams({'0': 91500, '1': 373, '2': 255, '7': [0, 0], '13': 1000, '33': 0});
+            handler.NewMobEvent(spawnParams);
+            expect(handler.getMobList()).toHaveLength(1);
+
+            handler.updateEnchantEvent({0: 91500, 1: 2});
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].enchantmentLevel).toBe(2);
+        });
+
+        // @verified 2026-04-19: spawn-then-update sequence survives when user has only e2 checked.
+        // This is the real-world scenario issue #32 describes.
+        test('HARV-2: spawn e0 + user e0=off + update to e2 yields mob with e=2 in mobsList', () => {
+            const e0OffOnlyE2On = {
+                e0: Array(8).fill(false),
+                e1: Array(8).fill(false),
+                e2: Array(8).fill(true),
+                e3: Array(8).fill(false),
+                e4: Array(8).fill(false),
+            };
+            settingsSync.getJSON.mockReturnValue(e0OffOnlyE2On);
+            const spawnParams = normalizeParams({'0': 92000, '1': 373, '2': 255, '7': [0, 0], '13': 1000, '33': 0});
+            handler.NewMobEvent(spawnParams);
+
+            handler.updateEnchantEvent({0: 92000, 1: 2});
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].enchantmentLevel).toBe(2);
+            expect(mobs[0].tier).toBe(4);
+        });
     });
 
     // -------------------------------------------------------------------------
