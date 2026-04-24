@@ -287,9 +287,12 @@ describe('HarvestablesHandler', () => {
             expect(harv.tier).toBe(4);
         });
 
-        // @verified 2026-04-19: MobsHandler and HarvestablesHandler converge on harvest tier for Fiber critter mobId=529.
-        // MobsHandler uses getLivingHarvestTier rule (max(3, 4-1) = 3); HarvestablesHandler uses server Parameters[7]=3.
-        test('MobsHandler and HarvestablesHandler agree on harvest tier 3 for Fiber critter mobId=529', async () => {
+        // @characterization 2026-04-24: with the new MISTS-only shift rule, MobsHandler preserves combat
+        // tier for SWAMP critters while HarvestablesHandler still reads server Parameters[7] (harvest tier,
+        // one below combat). Handlers now DIVERGE. User-confirmed truth for typeId=529 Dryade is T4 combat
+        // = what MobsDrawing surfaces; HarvestablesDrawing renders via Parameters[7]=3 which is the loot
+        // tier a server event carries. Treated as characterization until we can unify the two paths.
+        test('characterization: handlers diverge on harvest tier for Fiber critter mobId=529 (mob=4, harv=3)', async () => {
             const mobsHandler = new MobsHandler();
 
             const mobParams = {
@@ -311,14 +314,13 @@ describe('HarvestablesHandler', () => {
             const harv = handler.getHarvestableList()[0];
             expect(mob).toBeDefined();
             expect(harv).toBeDefined();
-            expect(mob.tier).toBe(3);
+            expect(mob.tier).toBe(4);
             expect(harv.tier).toBe(3);
-            expect(mob.tier).toBe(harv.tier);
         });
 
-        // @verified 2026-04-19: MobsHandler and HarvestablesHandler converge on harvest tier for Fiber critter mobId=531.
-        // MobsHandler uses getLivingHarvestTier rule (max(3, 5-1) = 4); HarvestablesHandler uses server Parameters[7]=4.
-        test('MobsHandler and HarvestablesHandler agree on harvest tier 4 for Fiber critter mobId=531', async () => {
+        // @characterization 2026-04-24: same divergence for mobId=531 (Dryade de chanvre T5 per user live).
+        // MobsHandler = 5 (combat tier preserved). HarvestablesHandler = 4 (server Parameters[7]).
+        test('characterization: handlers diverge on harvest tier for Fiber critter mobId=531 (mob=5, harv=4)', async () => {
             const mobsHandler = new MobsHandler();
 
             const mobParams = {
@@ -340,9 +342,8 @@ describe('HarvestablesHandler', () => {
             const harv = handler.getHarvestableList()[0];
             expect(mob).toBeDefined();
             expect(harv).toBeDefined();
-            expect(mob.tier).toBe(4);
+            expect(mob.tier).toBe(5);
             expect(harv.tier).toBe(4);
-            expect(mob.tier).toBe(harv.tier);
         });
     });
 
