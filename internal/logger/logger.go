@@ -49,7 +49,7 @@ type Logger struct {
 func New(logsDir string) *Logger {
 	l := &Logger{
 		logsDir:          logsDir,
-		enabled:          true,
+		enabled:          false,
 		sessionStartTime: time.Now(),
 		buffer:           make([]interface{}, 0, MaxBufferSize),
 		stopFlush:        make(chan struct{}),
