@@ -16,16 +16,16 @@ Living counter. Updated on every test commit. Archived at plan completion.
 
 | Handler | `@verified` | `@characterization` | `test.fails` | Total |
 |---|---:|---:|---:|---:|
-| PlayersHandler | 37 | 2 | 2 | 41 |
-| HarvestablesHandler | 49 | 5 | 1 | 55 |
-| MobsHandler | 69 | 1 | 0 | 131 |
+| PlayersHandler | 37 | 2 | 0 | 41 |
+| HarvestablesHandler | 53 | 4 | 0 | 57 |
+| MobsHandler | 73 | 1 | 0 | 74 |
 | ChestsHandler | 13 | 0 | 0 | 13 |
-| FishingHandler | 9 | 0 | 1 | 10 |
-| DungeonsHandler | 26 | 0 | 0 | 26 |
+| FishingHandler | 10 | 0 | 0 | 10 |
+| DungeonsHandler | 28 | 0 | 0 | 28 |
 | WispCageHandler | 11 | 0 | 0 | 11 |
-| MistsWispDrawing | 8 | 0 | 0 | 8 |
-| EventRouter | 44 | 0 | 1 | 45 |
-| **Total** | **266** | **8** | **5** | **340** |
+| MistsWispDrawing | 9 | 0 | 0 | 9 |
+| EventRouter | 49 | 3 | 1 | 53 |
+| **Total** | **283** | **10** | **1** | **296** |
 
 ## Open observations register
 
@@ -62,7 +62,6 @@ Living counter. Updated on every test commit. Archived at plan completion.
 
 ## Open `test.fails` register
 
-- **HARV-2** (issue #30/#32) HarvestablesHandler e0-gate blocks living Fiber spawned with charges=0; subsequent event 46 enchant update cannot recover the entity. Pinned by `test.fails('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2')`. After fix: entity should appear when its specific enchant setting is enabled, regardless of e0 at spawn time.
 - **PLAY-1** (issue #65) PlayersHandler.handleNewPlayerEvent does not fire alert for hostile in unknown zone. `zonesDatabase.getPvpType(unknown)` falls back to 'safe'; `isPlayerThreat(255, 'safe')` returns false; alert gate skipped. Pinned by `synthetic hostile in unknown zone: alert should fire but does not` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **PLAY-2** (issue #36) PlayersHandler.triggerHostileAlert has no ignore-list check. A player in `alreadyIgnoredPlayers` still triggers the sound alert when their faction changes to 255 in a red zone. Pinned by `synthetic PLAY-2: ignored player still triggers alert on faction change in red zone` in `PlayersHandler.test.js`. Fix lives in `2026-04-18-alerts-and-ignore-list-design.md`.
 - **ROUTER-1** (issue #57) EventRouter.onResponse opcode 2 (JoinMap) does not extract `isBZ` from `Parameters[103]` hashtable. Post-Protocol18 the field is `{"5": ..., "7": ...}` (non-zero). Current code leaves `map.isBZ` at its prior value. Pinned by `test.fails('ROUTER-1: onResponse JoinMap extracts isBZ from params[103] hashtable')` in `EventRouter.test.js`. Fix design: `2026-04-18-protocol18-regressions-design.md`.
@@ -77,6 +76,7 @@ Living counter. Updated on every test commit. Archived at plan completion.
 - 2026-04-18 EventCodes refresh: `EventCodes.js` aligned to upstream StatisticsAnalysis master fetch. 452 value mismatches updated, 15 unreferenced legacy names dropped (Carriable/Journal/AntiCheat/RedZoneCluster/DebugMobInfo families), 61 new upstream names added. ROUTER-2..9 flipped from `test.fails` to verified. Wisp cage synthetic values corrected: 531/532 (from prior vendored copy) to 530/531 (fresh upstream).
 - 2026-04-18 single-source-of-truth migration: `internal/photon/eventcodes` + `internal/photon/operationcodes` Go packages generated from the JS files via `tools/gen-eventcodes`. `photon-dump/scenarios.go` and `internal/photon/events.go` now import from the packages. `EventRouter.js` imports `OperationCodes` for clean-mapping opcodes (2, 22, 41).
 - 2026-04-19 capture-70 extraction: added `wispcage/spawn` fixture (WS-level JSON + anonymized pcap fragment). Confirms NewCagedObject=530 in real traffic and exposes WISP-1 handler bug (Parameters[1]/[2]/[4] indexing). Fixing gaps listed in CP1 decisions: `wispcage/spawn` now closed; `fishing/finished` and `wispcage/opened` still not observable (no end-of-fishing events in capture-70, no cage-open events either).
+- 2026-04-19 #32 living resource enchant filter moved from spawn to render time. MobsHandler and HarvestablesHandler no longer drop living resources at spawn when the user has the corresponding e<n>[tier-1] setting off. Pure function `shouldRenderLivingResource` in `web/scripts/utils/LivingResourceFilter.js` is called by `MobsDrawing.invalidate` and `HarvestablesDrawing.invalidate` to filter per-frame. Dead scaffolding `MobsHandler.harvestablesNotGood` removed (4 reads, 0 writes). HARV-2 closed. Issues #30 and #32 resolved. Superseded design doc `2026-01-15-living-harvestables-fix-design.md` moved to `docs/archive/completed-plans/`.
 - 2026-04-19 #52 living resource tier mismatch resolved. Root-cause investigation on capture-70 showed server `Parameters[7]` in event 40 (NewHarvestableObject) matches the game tooltip exactly for all 9 observed living resource cases. Upstream `@tier` in `mobs.json` is the combat tier, distinct from the harvest tier the game displays. Derived rule: for LIVING non-DYNAMIC/non-DEAD mobs, `harvest_tier = max(min_tier[Loot.Harvestable.@type], combat_tier - 1)`. For DYNAMIC and DEAD variants, preserve combat tier. Implemented as pure function `getLivingHarvestTier` in `web/scripts/utils/LivingResourceTier.js` with hardcoded 20-entry min-tier map, wired into `MobsHandler.AddEnemy` via adapter. 20 unit tests + 7 MobsHandler integration tests + 2 flipped HarvestablesHandler convergence tests (mobIds 529, 531 now agree across both handlers). Fixes #52.
 
 ## Open ops-drift register (JS literals kept intentionally)
