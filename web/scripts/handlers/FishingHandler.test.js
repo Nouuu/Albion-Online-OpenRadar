@@ -43,20 +43,20 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(p[2] + p[3]);
         });
 
-        // @verified 2026-04-19: empty-string type is valid data (3 of 5 pcap events), guard narrowed to null/undefined so fishpools no longer get discarded.
-        test('pcap-derived spawn: entries with type="" are added (FISH-1 fixed)', async () => {
+        // @verified 2026-04-24: empty-string type entries are phantom/zone-level broadcasts, not real pools.
+        // Live session log session_2026-04-24T19-35-04 showed every type="" entry has total=15 and is placed
+        // on land; real pools carry FishingNodeFish (total=1), FishingNodeSwarm (total=5), or FishingNodeChest
+        // (total=1). Reverting the FISH-1 narrowing: empty type is now filtered out again.
+        test('pcap-derived spawn: entries with type="" are filtered out', async () => {
             const fx = await loadFixture('fishing', 'spawn');
             const emptyTypeMsgs = fx.messages.filter(m => m.parameters['4'] === '');
-            expect(emptyTypeMsgs).toHaveLength(3);
+            expect(emptyTypeMsgs.length).toBeGreaterThan(0);
 
             for (const msg of emptyTypeMsgs) {
                 handler.newFishEvent(normalizeParams(msg.parameters));
             }
 
-            expect(handler.fishes).toHaveLength(3);
-            for (const fish of handler.fishes) {
-                expect(fish.type).toBe('');
-            }
+            expect(handler.fishes).toHaveLength(0);
         });
 
         // @verified 2026-04-18: second event for the same id updates position and size in place without adding a new entry.

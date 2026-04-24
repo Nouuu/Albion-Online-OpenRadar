@@ -39,7 +39,7 @@ export class FishingHandler
         const sizeSpawned = Parameters[2];
         const sizeLeftToSpawn = Parameters[3];
 
-        if (type === null || type === undefined) return;
+        if (!type) return;
         if (!coor) return;
 
         const posX = coor[0];
