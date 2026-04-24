@@ -1,6 +1,5 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import settingsSync from '../utils/SettingsSync.js';
-import {getResourceStorageKey} from "../utils/ResourcesHelper.js";
 import {getLivingHarvestTier} from '../utils/LivingResourceTier.js';
 
 export const EnemyType =
@@ -86,7 +85,6 @@ export class MobsHandler {
     constructor() {
         this.mobsList = [];
         this.mistList = [];
-        this.harvestablesNotGood = [];
     }
 
     /**
@@ -171,7 +169,6 @@ export class MobsHandler {
 
     AddEnemy(id, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity) {
         if (this.mobsList.some(m => m.id === id)) return;
-        if (this.harvestablesNotGood.some(m => m.id === id)) return;
 
         // Fix for fort/dungeon NPCs spawning with low HP value (params[2]=5)
         // If healthNormalized is very low (< 10), it's likely a spawn default value, not real HP
@@ -249,24 +246,6 @@ export class MobsHandler {
             mob.enchantmentLevel = this.calculateEnchantment(enchant);
         }
 
-        // Filter living resources based on user settings
-        if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
-            if (mob.tier > 0 && mob.name) {
-                const resourceType = mob.name;
-                let prefix;
-                if (resourceType === 'Fiber' || resourceType === 'fiber') prefix = 'fsp';
-                else if (resourceType === 'Hide' || resourceType === 'hide') prefix = 'hsp';
-                else if (resourceType === 'Log' || resourceType === 'Wood' || resourceType === 'Logs') prefix = 'wsp';
-                else if (resourceType === 'Ore' || resourceType === 'ore') prefix = 'osp';
-                else if (resourceType === 'Rock' || resourceType === 'rock') prefix = 'rsp';
-                const settingKey = getResourceStorageKey(prefix, 'Living');
-
-                if (!settingsSync.getJSON(settingKey)?.[`e${mob.enchantmentLevel}`][mob.tier - 1]) {
-                    return;
-                }
-            }
-        }
-
         // Filter enemies based on user settings
         if (mob.type >= EnemyType.Enemy && mob.type <= EnemyType.Boss) {
             // If enemy is not identified (no name from mobinfo), check "Show Unmanaged Enemies" setting
@@ -310,7 +289,6 @@ export class MobsHandler {
     removeMob(id) {
         const before = this.mobsList.length;
         this.mobsList = this.mobsList.filter(m => m.id !== id);
-        this.harvestablesNotGood = this.harvestablesNotGood.filter(x => x.id !== id);
         const after = this.mobsList.length;
 
         // 🐛 DEBUG (filtered by categoryMobs setting) - Detailed mob removal
@@ -335,7 +313,7 @@ export class MobsHandler {
     updateEnchantEvent(parameters) {
         const mobId = parameters[0];
         const enchantmentLevel = parameters[1];
-        const found = this.mobsList.find(m => m.id === mobId) || this.harvestablesNotGood.find(m => m.id === mobId);
+        const found = this.mobsList.find(m => m.id === mobId);
         if (found) {
             found.enchantmentLevel = enchantmentLevel;
             found.touch();
@@ -508,7 +486,6 @@ export class MobsHandler {
     Clear() {
         this.mobsList = [];
         this.mistList = [];
-        this.harvestablesNotGood = [];
     }
 
     /**

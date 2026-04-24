@@ -195,8 +195,9 @@ describe('HarvestablesHandler', () => {
             expect(handler.getHarvestableList()[0].charges).toBe(2);
         });
 
-        // @verified 2026-04-18: settings gate false for tier/enchant blocks entity creation.
-        test('synthetic: settings off for tier/enchant filters entity, list stays empty', () => {
+        // @verified 2026-04-24: HARV-4, spawn-time filter removed; entities always land in the list.
+        // Render-time filter (HarvestablesDrawing) is now the only gate so checkbox toggles are instant.
+        test('HARV-4: settings off for tier/enchant no longer blocks spawn, entity lands in list', () => {
             settingsSync.getJSON.mockReturnValue(allFalseSettings);
 
             const p = {
@@ -206,7 +207,8 @@ describe('HarvestablesHandler', () => {
 
             handler.newHarvestableObject(p[0], p);
 
-            expect(handler.getHarvestableList()).toHaveLength(0);
+            expect(handler.getHarvestableList()).toHaveLength(1);
+            expect(handler.getHarvestableList()[0].id).toBe(9999);
         });
 
         // @verified 2026-04-18: Parameters[11] undefined defaults charges to 0.
@@ -358,11 +360,8 @@ describe('HarvestablesHandler', () => {
             expect(spy).not.toHaveBeenCalledWith(-1);
         });
 
-        // Pinned: living Fiber spawned with charges=0 while setting e0 off is skipped;
-        // subsequent event 46 cannot recover the entity.
-        // After fix, enchanted living resources should appear when their enchant setting is enabled
-        // regardless of the e0 state at spawn time.
-        test.fails('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2', async () => {
+        // @verified 2026-04-19: living Fiber/Hide with e0 off appears after event 46 enchant update (#32 fix).
+        test('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2', async () => {
             settingsSync.getJSON.mockImplementation(key => {
                 if (key === 'settingLivingFiberEnchants') return withE0Off();
                 return allTrueSettings;
@@ -407,6 +406,88 @@ describe('HarvestablesHandler', () => {
             const stored = handler.getHarvestableList().find(e => e.id === 9001);
             expect(stored).toBeDefined();
             expect(stored.mobileTypeId).toBeNull();
+        });
+
+        // @verified 2026-04-19: living harvestable spawn with charges=0 stays in list when e0 setting is off (#32).
+        // Before the render-time filter move, the spawn-time enchant gate dropped it and event 46 could not recover.
+        test('HARV-2: living fiber spawn with charges=0 is kept in list even when e0 setting is off', async () => {
+            settingsSync.getJSON.mockImplementation(key => {
+                if (key === 'settingLivingFiberEnchants') {
+                    return {e0: Array(8).fill(false), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+                }
+                return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+            });
+
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 531);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+            p[11] = 0;
+
+            handler.newHarvestableObject(p[0], p);
+
+            const list = handler.getHarvestableList();
+            expect(list).toHaveLength(1);
+            expect(list[0].charges).toBe(0);
+        });
+
+        // @verified 2026-04-19: HarvestUpdateEvent mutates charges without removing entity even when new enchant setting is off (#32).
+        test('HARV-2: HarvestUpdateEvent mutates charges without removing entity when setting for new enchant is off', async () => {
+            settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)});
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 531);
+            const p = normalizeParams(msg.parameters);
+            p[11] = 0;
+            handler.newHarvestableObject(p[0], p);
+            expect(handler.getHarvestableList()).toHaveLength(1);
+
+            settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(false), e3: Array(8).fill(true), e4: Array(8).fill(true)});
+
+            handler.HarvestUpdateEvent({0: p[0], 1: 5, 2: 2});
+
+            const list = handler.getHarvestableList();
+            expect(list).toHaveLength(1);
+            expect(list[0].charges).toBe(2);
+        });
+
+        // @verified 2026-04-24: HARV-4, carcass with mobileTypeId!=null no longer filtered at spawn.
+        // The former isLiving=true early-return is gone; Hide carcasses always land in the list and
+        // the static filter at HarvestablesDrawing decides visibility.
+        test('HARV-4: Hide carcass mobileTypeId=424 spawns with all static settings off still lands in list', async () => {
+            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+            const fx = await loadFixture('harvestables', 'single-spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 424);
+            expect(msg).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            handler.newHarvestableObject(p[0], p);
+
+            const stored = handler.getHarvestableList().find(h => h.id === p[0]);
+            expect(stored).toBeDefined();
+            expect(stored.mobileTypeId).toBe(424);
+        });
+
+        // @verified 2026-04-24: HARV-4, batch-spawn (event 38) also bypasses settings filter at spawn.
+        test('HARV-4: newSimpleHarvestableObject batch ignores settings at spawn, all entities land in list', async () => {
+            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+            const fx = await loadFixture('harvestables', 'batch-spawn');
+            const p = normalizeParams(fx.messages[0].parameters);
+            const ids = p[0];
+
+            handler.newSimpleHarvestableObject(p);
+
+            expect(handler.getHarvestableList()).toHaveLength(ids.length);
+        });
+
+        // @verified 2026-04-24: HARV-4, UpdateHarvestable path also ignores settings at spawn.
+        test('HARV-4: UpdateHarvestable on new id with all settings off still creates entity', () => {
+            settingsSync.getJSON.mockReturnValue(allFalseSettings);
+
+            handler.UpdateHarvestable(7777, 14, 4, 10, 20, 1, 3, -1);
+
+            const stored = handler.getHarvestableList().find(h => h.id === 7777);
+            expect(stored).toBeDefined();
+            expect(stored.charges).toBe(1);
         });
 
         // @verified 2026-04-19: pcap-composed regression, static resource re-gate still keeps the entity
@@ -578,15 +659,15 @@ describe('HarvestablesHandler', () => {
             expect(e.charges).toBe(2);
         });
 
-        // @characterization 2026-04-18: current code calls shouldDisplayHarvestable after enchant update;
-        // if settings gate returns false, entity is removed.
-        test('synthetic: enchant update triggers re-gate, entity removed when settings block new enchant', () => {
+        // @verified 2026-04-24: post-enchant re-gate removed in #32 fix; entity is never dropped
+        // by HarvestUpdateEvent on enchant change. Filter is applied at render time instead.
+        test('synthetic: enchant update does not remove entity even when settings block new enchant', () => {
             seedHarvestable(9001, 3, 0);
             settingsSync.getJSON.mockReturnValue(allFalseSettings);
 
             handler.HarvestUpdateEvent({0: 9001, 1: 2, 2: 1});
 
-            expect(handler.getSize()).toBe(0);
+            expect(handler.getSize()).toBe(1);
         });
 
         // @verified 2026-04-18: newSize===undefined triggers removal of the entity.

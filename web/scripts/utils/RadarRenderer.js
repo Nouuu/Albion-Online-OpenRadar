@@ -2,6 +2,7 @@ import {CanvasManager} from './CanvasManager.js';
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
+import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 
 export class RadarRenderer {
     constructor(dependencies) {
@@ -192,12 +193,7 @@ export class RadarRenderer {
 
             if (!this.cachedClusters || timeSinceLastUpdate > this.CLUSTER_UPDATE_INTERVAL) {
                 try {
-                    const staticList = this.handlers.harvestablesHandler?.harvestableList || [];
-                    const livingList = (this.handlers.mobsHandler?.mobsList || []).filter(mob =>
-                        mob.type === window.EnemyType?.LivingHarvestable ||
-                        mob.type === window.EnemyType?.LivingSkinnable
-                    );
-                    const merged = staticList.concat(livingList);
+                    const merged = this._collectClusterCandidates();
 
                     this.cachedClusters = this.drawingUtils.detectClusters(
                         merged,
@@ -441,6 +437,23 @@ export class RadarRenderer {
         ctx.lineWidth = 3;
         ctx.strokeRect(2, 2, canvasSize - 4, canvasSize - 4);
         ctx.restore();
+    }
+
+    _collectClusterCandidates() {
+        const getSetting = key => settingsSync.getJSON(key);
+        const staticList = (this.handlers.harvestablesHandler?.harvestableList || []).filter(h => {
+            const entity = {name: h.stringType, tier: h.tier, enchantmentLevel: h.charges};
+            const isPureStatic = h.mobileTypeId === null || h.mobileTypeId === undefined
+                || h.mobileTypeId === -1 || h.mobileTypeId === 65535;
+            return isPureStatic
+                ? shouldRenderStaticResource(entity, getSetting)
+                : shouldRenderLivingResource(entity, getSetting);
+        });
+        const livingList = (this.handlers.mobsHandler?.mobsList || [])
+            .filter(mob => mob.type === window.EnemyType?.LivingHarvestable
+                || mob.type === window.EnemyType?.LivingSkinnable)
+            .filter(mob => shouldRenderLivingResource(mob, getSetting));
+        return staticList.concat(livingList);
     }
 }
 
