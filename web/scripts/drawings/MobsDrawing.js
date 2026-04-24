@@ -6,6 +6,11 @@ import {shouldRenderLivingResource} from "../utils/LivingResourceFilter.js";
 
 export class MobsDrawing extends DrawingUtils
 {
+    constructor() {
+        super();
+        this.lastVisibleCount = 0;
+    }
+
     interpolate(mobs, lpX, lpY, t)
     {
         for (const mobOne of mobs)
@@ -17,6 +22,7 @@ export class MobsDrawing extends DrawingUtils
     invalidate(ctx, mobs)
     {
         // Note: cluster detection & drawing is handled centrally in Utils.render (merged static + living resources)
+        this.lastVisibleCount = 0;
 
         for (const mobOne of mobs)
         {
@@ -56,7 +62,7 @@ export class MobsDrawing extends DrawingUtils
                 }
 
                 if (settingsSync.getBool("settingShowMinimumHealthEnemies")) {
-                    const threshold = settingsSync.getNumber("settingTextMinimumHealthEnemies", 0);
+                    const threshold = settingsSync.getNumber("settingTextMinimumHealthEnemies", 2100);
                     if ((mobOne.maxHealth ?? 0) < threshold) continue;
                 }
 
@@ -99,6 +105,8 @@ export class MobsDrawing extends DrawingUtils
 
                 drawId = settingsSync.getBool("settingEnemiesID");
             }
+
+            this.lastVisibleCount++;
 
             if (imageName !== undefined && imageFolder !== undefined)
                 this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, 40); // Size scaled in DrawCustomImage

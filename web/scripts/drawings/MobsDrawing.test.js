@@ -97,9 +97,10 @@ describe('MobsDrawing living resource filter at render', () => {
     // @verified 2026-04-24: hostile enemy (non-living) is not subject to living filter; circle rendering path.
     test('hostile enemy (non-living) is not subject to living filter', () => {
         settingsSync.getJSON.mockReturnValue(null);
+        settingsSync.getBool.mockImplementation(key => key !== 'settingShowMinimumHealthEnemies');
         const hostile = {
             id: 2, typeId: 2067, hX: 10, hY: 20, tier: 5, enchantmentLevel: 0,
-            name: 'T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE',
+            name: 'T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE', identified: true,
             type: EnemyType.Enemy,
             getCurrentHP: () => 100, maxHealth: 100,
         };
@@ -339,7 +340,7 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
 
     // @verified 2026-04-24: identified EnchantedEnemy is drawn when settingEnchantedEnemy is on.
     test('identified EnchantedEnemy with settingEnchantedEnemy=true is drawn', () => {
-        settingsSync.getBool.mockImplementation(() => true);
+        settingsSync.getBool.mockImplementation(key => key !== 'settingShowMinimumHealthEnemies');
         drawing.invalidate(ctx, [hostile({type: EnemyType.EnchantedEnemy})]);
         expect(drawing.drawFilledCircle).toHaveBeenCalled();
     });
@@ -363,5 +364,25 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         settingsSync.getBool.mockImplementation(key => key !== 'settingShowEventEnemies');
         drawing.invalidate(ctx, [hostile({type: EnemyType.Events, identified: true})]);
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-04-24: lastVisibleCount reflects only mobs that passed the render gates.
+    test('lastVisibleCount counts only rendered mobs after filters', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy');
+        const kept = hostile({id: 1, type: EnemyType.Enemy});
+        const dropped = hostile({id: 2, type: EnemyType.Boss});
+        drawing.invalidate(ctx, [kept, dropped]);
+        expect(drawing.lastVisibleCount).toBe(1);
+    });
+
+    // @verified 2026-04-24: lastVisibleCount resets at the start of every invalidate.
+    test('lastVisibleCount resets on each invalidate call', () => {
+        settingsSync.getBool.mockImplementation(() => false);
+        drawing.invalidate(ctx, [hostile({id: 1})]);
+        expect(drawing.lastVisibleCount).toBe(0);
+
+        settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
+        drawing.invalidate(ctx, [hostile({id: 2})]);
+        expect(drawing.lastVisibleCount).toBe(1);
     });
 });

@@ -224,4 +224,26 @@ describe('HarvestablesDrawing render-time routing', () => {
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 1, 2, `${imagePrefix}_3_1`, 'Resources', 40);
     });
+
+    // @verified 2026-04-24: lastVisibleCount reflects only harvestables passing the render gate.
+    test('lastVisibleCount counts only rendered harvestables after filters', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        const kept = {id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const dropped = {id: 2, hX: 3, hY: 4, size: 3, tier: 4, charges: 0, stringType: 'Hide', mobileTypeId: -1, type: 20};
+
+        drawing.invalidate(ctx, [kept, dropped]);
+
+        expect(drawing.lastVisibleCount).toBe(1);
+    });
+
+    // @verified 2026-04-24: lastVisibleCount resets on each invalidate call.
+    test('lastVisibleCount resets on each invalidate call', () => {
+        settingsSync.getJSON.mockReturnValue(allFalse());
+        drawing.invalidate(ctx, [{id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        expect(drawing.lastVisibleCount).toBe(0);
+
+        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        expect(drawing.lastVisibleCount).toBe(1);
+    });
 });

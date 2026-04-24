@@ -4,6 +4,11 @@ import {CATEGORIES} from "../constants/LoggerConstants.js";
 import {shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
 
 export class HarvestablesDrawing extends DrawingUtils  {
+    constructor() {
+        super();
+        this.lastVisibleCount = 0;
+    }
+
     interpolate(harvestables, lpX, lpY, t) {
         for (const harvestableOne of harvestables) {
             this.interpolateEntity(harvestableOne, lpX, lpY, t);
@@ -14,6 +19,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
     {
         // Clusters are detected and drawn centrally in Utils.render when overlayCluster is enabled
         // (to merge static harvestables and living resources into the same clustering pass)
+        this.lastVisibleCount = 0;
 
         for (const harvestableOne of harvestables)
         {
@@ -97,6 +103,8 @@ export class HarvestablesDrawing extends DrawingUtils  {
             }
 
             const point = this.transformPoint(harvestableOne.hX, harvestableOne.hY);
+
+            this.lastVisibleCount++;
 
             // Draw resource icon (same size as living resources)
             this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 40);

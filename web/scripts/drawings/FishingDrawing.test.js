@@ -57,4 +57,18 @@ describe('FishingDrawing render-time filter', () => {
         drawing.draw(ctx, [makePool({id: 1, sizeSpawned: 3, total: 5})]);
         expect(drawing.drawText).toHaveBeenCalledWith(10, 38, '3/5', ctx);
     });
+
+    // @verified 2026-04-24: lastVisibleCount reflects rendered pools; zero when settingFishing is off.
+    test('lastVisibleCount is zero when settingFishing is off', () => {
+        settingsSync.getBool.mockImplementation(() => false);
+        drawing.draw(ctx, [makePool({id: 1}), makePool({id: 2})]);
+        expect(drawing.lastVisibleCount).toBe(0);
+    });
+
+    // @verified 2026-04-24: lastVisibleCount equals rendered pool count when settingFishing is on.
+    test('lastVisibleCount equals rendered pool count when settingFishing is on', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingFishing');
+        drawing.draw(ctx, [makePool({id: 1}), makePool({id: 2}), makePool({id: 3})]);
+        expect(drawing.lastVisibleCount).toBe(3);
+    });
 });

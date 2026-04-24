@@ -400,8 +400,8 @@ export class RadarRenderer {
      */
     renderStatsBox(ctx) {
         const playerCount = this.handlers.playersHandler?.getFilteredPlayers?.()?.length ?? 0;
-        const resourceCount = this.handlers.harvestablesHandler?.harvestableList?.length || 0;
-        const mobCount = this.handlers.mobsHandler?.mobsList?.length || 0;
+        const resourceCount = this.drawings.harvestablesDrawing?.lastVisibleCount ?? 0;
+        const mobCount = this.drawings.mobsDrawing?.lastVisibleCount ?? 0;
 
         const stats = [];
         if (settingsSync.getBool('settingShowPlayers')) {
