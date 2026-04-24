@@ -351,22 +351,24 @@ describe('MobsHandler', () => {
             expect(handler.getSize().mobs).toBe(0);
         });
 
-        // @verified 2026-04-18: settingNormalEnemy=false gates out identified Enemy-type mobs.
-        test('synthetic: settingNormalEnemy=false prevents identified Enemy from being added', () => {
-            // synthetic: typeId=2067 is a known camp mob -> Enemy; settingNormalEnemy=false blocks it.
+        // @verified 2026-04-24: enemy filters moved to render; spawn always stores, and mob.identified pins the db-match state for the render gate.
+        test('synthetic: settingNormalEnemy=false no longer blocks spawn, mob lands with identified=true', () => {
             settingsSync.getBool.mockImplementation((key) => key !== 'settingNormalEnemy');
             const p = normalizeParams({'0': 8005, '1': 2067, '2': 255, '7': [0, 0], '13': 500, '33': 0});
             handler.NewMobEvent(p);
-            expect(handler.getMobList()).toHaveLength(0);
+            const list = handler.getMobList();
+            expect(list).toHaveLength(1);
+            expect(list[0].identified).toBe(true);
         });
 
-        // @verified 2026-04-18: settingShowUnmanagedEnemies=false gates out unknown (no-db) mobs.
-        test('synthetic: settingShowUnmanagedEnemies=false prevents unknown mob from being added', () => {
-            // synthetic: typeId=9999 out of range -> unknown mob; setting gates it out.
+        // @verified 2026-04-24: unknown mob also always spawns with identified=false so the render gate can use settingShowUnmanagedEnemies.
+        test('synthetic: settingShowUnmanagedEnemies=false no longer blocks spawn, unknown mob lands with identified=false', () => {
             settingsSync.getBool.mockImplementation((key) => key !== 'settingShowUnmanagedEnemies');
             const p = normalizeParams({'0': 8006, '1': 9999, '2': 255, '7': [0, 0], '13': 500, '33': 0});
             handler.NewMobEvent(p);
-            expect(handler.getMobList()).toHaveLength(0);
+            const list = handler.getMobList();
+            expect(list).toHaveLength(1);
+            expect(list[0].identified).toBe(false);
         });
 
         // @verified 2026-04-18: two distinct mist spawns both land in mistList.

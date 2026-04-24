@@ -16,6 +16,16 @@ export const EnemyType =
         Events: 9,
     };
 
+export function getSettingNameForEnemyType(type) {
+    switch (type) {
+        case EnemyType.Enemy: return 'settingNormalEnemy';
+        case EnemyType.EnchantedEnemy: return 'settingEnchantedEnemy';
+        case EnemyType.MiniBoss: return 'settingMiniBossEnemy';
+        case EnemyType.Boss: return 'settingBossEnemy';
+        default: return null;
+    }
+}
+
 class Mob {
     constructor(id, typeId, posX, posY, health, maxHealth, enchantmentLevel, rarity) {
         this.id = id;
@@ -29,6 +39,7 @@ class Mob {
         this.tier = 0;
         this.type = EnemyType.Enemy;
         this.name = null;
+        this.identified = false;        // True when name and dbInfo came from MobsDatabase; used by render-time filter for "Show Unmanaged Enemies".
         this.category = null;           // Mob category from database (boss, miniboss, champion, etc.)
         this.namelocatag = null;        // Localization tag for translated name
         this.exp = 0;
@@ -246,42 +257,7 @@ export class MobsHandler {
             mob.enchantmentLevel = this.calculateEnchantment(enchant);
         }
 
-        // Filter enemies based on user settings
-        if (mob.type >= EnemyType.Enemy && mob.type <= EnemyType.Boss) {
-            // If enemy is not identified (no name from mobinfo), check "Show Unmanaged Enemies" setting
-            if (!mob.name || !hasKnownInfo) {
-                if (settingsSync.getBool('settingShowUnmanagedEnemies') === false) {
-                    return; // Skip unidentified enemies if setting is disabled
-                }
-            } else {
-                // For identified enemies, filter by their specific level (Normal, Enchanted, MiniBoss, Boss)
-                // Note: MediumEnemy completely removed - not aligned with game data categories
-                const settingName = this._getSettingNameForEnemyType(mob.type);
-                if (settingName && settingsSync.getBool(settingName) === false) {
-                    return; // Skip if this enemy level is disabled
-                }
-            }
-        }
-
-        // Filter drones based on user settings
-        if (mob.type === EnemyType.Drone) {
-            if (!settingsSync.getBool('settingAvaloneDrones')) {
-                return;
-            }
-        }
-
-        // Filter mist bosses based on user settings
-        if (mob.type === EnemyType.MistBoss) {
-            // Mist bosses have individual toggles, but if we don't know which one it is, show it
-            // The specific filtering is done in MobsDrawing based on mob name
-        }
-
-        // Filter event enemies based on user settings
-        if (mob.type === EnemyType.Events) {
-            if (!settingsSync.getBool('settingShowEventEnemies')) {
-                return;
-            }
-        }
+        mob.identified = !!mob.name && hasKnownInfo;
 
         this.mobsList.push(mob);
     }
@@ -592,18 +568,7 @@ export class MobsHandler {
      * @private
      */
     _getSettingNameForEnemyType(type) {
-        switch(type) {
-            case EnemyType.Enemy:
-                return 'settingNormalEnemy';
-            case EnemyType.EnchantedEnemy:
-                return 'settingEnchantedEnemy';
-            case EnemyType.MiniBoss:
-                return 'settingMiniBossEnemy';
-            case EnemyType.Boss:
-                return 'settingBossEnemy';
-            default:
-                return null;
-        }
+        return getSettingNameForEnemyType(type);
     }
 
     /**

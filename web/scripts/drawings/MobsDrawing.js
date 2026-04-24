@@ -1,5 +1,5 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
-import {EnemyType} from "../handlers/MobsHandler.js";
+import {EnemyType, getSettingNameForEnemyType} from "../handlers/MobsHandler.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../utils/SettingsSync.js";
 import {shouldRenderLivingResource} from "../utils/LivingResourceFilter.js";
@@ -48,6 +48,13 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
+                if (!mobOne.identified) {
+                    if (settingsSync.getBool("settingShowUnmanagedEnemies") === false) continue;
+                } else {
+                    const settingName = getSettingNameForEnemyType(mobOne.type);
+                    if (settingName && settingsSync.getBool(settingName) === false) continue;
+                }
+
                 if (settingsSync.getBool("settingShowMinimumHealthEnemies")) {
                     const threshold = settingsSync.getNumber("settingTextMinimumHealthEnemies", 0);
                     if ((mobOne.maxHealth ?? 0) < threshold) continue;
@@ -61,6 +68,8 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type == EnemyType.Drone)
             {
+                if (!settingsSync.getBool("settingAvaloneDrones")) continue;
+
                 // Use color-coded circles for drones (not images)
                 // imageName stays undefined to trigger the colored circle rendering below
 
@@ -79,6 +88,8 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type == EnemyType.Events)
             {
+                if (!settingsSync.getBool("settingShowEventEnemies")) continue;
+
                 // Only set imageName if mob has been identified (has name from mobinfo)
                 // Otherwise leave undefined and fallback blue circle will be drawn
                 if (mobOne.name) {
