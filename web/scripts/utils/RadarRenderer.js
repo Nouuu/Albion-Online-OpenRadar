@@ -421,11 +421,9 @@ export class RadarRenderer {
     renderThreatBorder(ctx) {
         if (!settingsSync.getBool('settingFlashDangerousPlayer')) return;
 
-        const hostilePlayers = this.handlers.playersHandler?.getFilteredPlayers?.()?.filter(
-            p => p.isHostile?.()
-        ) || [];
+        const threats = this.handlers.playersHandler?.getThreatPlayers?.() || [];
 
-        if (hostilePlayers.length === 0) return;
+        if (threats.length === 0) return;
 
         const pulse = Math.sin(Date.now() / 150) * 0.3 + 0.5;
         const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;

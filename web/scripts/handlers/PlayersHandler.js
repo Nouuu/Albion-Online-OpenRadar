@@ -383,4 +383,9 @@ export class PlayersHandler {
             passive: filtered.filter(p => p.isPassive())
         };
     }
+
+    getThreatPlayers() {
+        const pvpType = zonesDatabase.getPvpType(window.currentMapId);
+        return this.playersList.filter(p => this.isPlayerThreat(p.faction, pvpType));
+    }
 }

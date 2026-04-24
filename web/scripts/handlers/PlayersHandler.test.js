@@ -541,4 +541,34 @@ describe('PlayersHandler', () => {
             expect(buckets.hostile.map(p => p.id)).toContain(3);
         });
     });
+
+    describe('getThreatPlayers (zone-aware threat list)', () => {
+        // @verified 2026-04-24: safe zone yields zero threats regardless of faction.
+        test('synthetic: safe zone returns no threats', () => {
+            zonesDatabase.getPvpType.mockReturnValue('safe');
+            handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+
+            expect(handler.getThreatPlayers()).toHaveLength(0);
+        });
+
+        // @verified 2026-04-24: red zone returns only faction=255 players.
+        test('synthetic: red zone returns faction=255 only', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+
+            const threats = handler.getThreatPlayers();
+            expect(threats).toHaveLength(1);
+            expect(threats[0].id).toBe(2);
+        });
+
+        // @verified 2026-04-24: black zone returns every player regardless of faction (fix for Pulsating Border bug).
+        test('synthetic: black zone returns passive AND hostile as threats', () => {
+            zonesDatabase.getPvpType.mockReturnValue('black');
+            handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+
+            expect(handler.getThreatPlayers()).toHaveLength(2);
+        });
+    });
 });
