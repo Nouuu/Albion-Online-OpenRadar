@@ -1,4 +1,4 @@
-# Issue #83 — LAN connect + minimal mobile responsive
+# Issue #83: LAN connect + minimal mobile responsive
 
 **Date**: 2026-04-25
 **Issue**: https://github.com/Nouuu/Albion-Online-OpenRadar/issues/83
@@ -27,7 +27,7 @@ A second, related concern: even if the WebSocket connects, the page layout was b
 - No mobile-specific UX (touch gestures, PWA, offline mode).
 - No performance optimisation for mobile devices.
 
-## Sub-project A — LAN connect
+## Sub-project A: LAN connect
 
 ### A.1 Dynamic WebSocket URL
 
@@ -72,7 +72,7 @@ Stub `location` via `Object.defineProperty(window, 'location', ...)` per test. T
 
 Recommendation: refactor to `export function buildWsUrl(loc = window.location)` for testability. The module then calls `buildWsUrl()` at connect time.
 
-## Sub-project B — Minimal mobile responsive
+## Sub-project B: Minimal mobile responsive
 
 ### B.1 Audit (Step 1)
 
