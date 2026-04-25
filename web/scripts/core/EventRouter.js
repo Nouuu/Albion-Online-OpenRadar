@@ -38,6 +38,86 @@ function updateLocalPlayerPosition(x, y) {
     radarRenderer?.setLocalPlayerPosition?.(lpX, lpY);
 }
 
+function persistMapToSession() {
+    try {
+        sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
+            mapId: map.id,
+            hX: map.hX,
+            hY: map.hY,
+            isBZ: map.isBZ,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', {error: e?.message});
+    }
+}
+
+function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
+    const previousMapId = map.id;
+    map.id = newMapId;
+    window.currentMapId = map.id;
+    lastMapChangeTime = Date.now();
+    syncMapIsBZ();
+    radarRenderer?.setMap?.(map);
+    persistMapToSession();
+    window.logger?.info(CATEGORIES.MAP, logEvent, {
+        previousMapId,
+        newMapId: map.id,
+        ...extraLogFields
+    });
+}
+
+function decodeJoinPosition(p9) {
+    if (p9 && p9.type === 'Buffer') {
+        const dataView = new DataView(new Uint8Array(p9.data).buffer);
+        updateLocalPlayerPosition(dataView.getFloat32(0, true), dataView.getFloat32(4, true));
+        window.logger?.info(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_BufferDecoded', {lpX, lpY});
+        return;
+    }
+    if (Array.isArray(p9)) {
+        updateLocalPlayerPosition(p9[0], p9[1]);
+        window.logger?.info(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_Array', {lpX, lpY});
+        return;
+    }
+    window.logger?.error(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_UnknownFormat', {
+        param9: p9,
+        param9Type: typeof p9
+    });
+}
+
+function handleChangeClusterResponse(Parameters, clearHandlersCallback) {
+    const newMapId = Parameters[0];
+    if (typeof newMapId !== 'string' || newMapId.length === 0 || newMapId === map.id) {
+        return;
+    }
+    applyMapChange(newMapId, 'ChangeClusterResponse');
+    clearHandlersCallback();
+}
+
+function handleLegacyMapChangeResponse(Parameters) {
+    const newMapId = Parameters[0];
+    const now = Date.now();
+    const timeSinceLastChange = now - lastMapChangeTime;
+    if (timeSinceLastChange < MAP_CHANGE_DEBOUNCE_MS && map.id !== -1) {
+        window.logger?.debug(CATEGORIES.MAP, 'MapChangeDebounced', {
+            currentMapId: map.id,
+            newMapId,
+            timeSinceLastChange
+        });
+        return;
+    }
+    if (newMapId === map.id) return;
+    applyMapChange(newMapId, 'MapChanged');
+}
+
+function handleJoinResponse(Parameters, clearHandlersCallback) {
+    decodeJoinPosition(Parameters[9]);
+    if (typeof Parameters[8] === 'string' && Parameters[8].length > 0) {
+        applyMapChange(Parameters[8], 'MapChangedFromJoinMap');
+    }
+    clearHandlersCallback();
+}
+
 // Helper function to get event name (for debugging)
 function getEventName(eventCode) {
     const eventNames = {
@@ -289,30 +369,7 @@ export function onEvent(Parameters) {
         case EventCodes.MistsPlayerJoinedInfo: {
             const newMapId = Parameters[2];
             if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
-                const previousMapId = map.id;
-                map.id = newMapId;
-                window.currentMapId = map.id;
-                lastMapChangeTime = Date.now();
-                syncMapIsBZ();
-                radarRenderer?.setMap?.(map);
-
-                try {
-                    sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
-                        mapId: map.id,
-                        hX: map.hX,
-                        hY: map.hY,
-                        isBZ: map.isBZ,
-                        timestamp: Date.now()
-                    }));
-                } catch (e) {
-                    window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', {error: e?.message});
-                }
-
-                window.logger?.info(CATEGORIES.MAP, 'MistsPlayerJoinedInfo', {
-                    previousMapId,
-                    newMapId: map.id,
-                    originCluster: Parameters[4]
-                });
+                applyMapChange(newMapId, 'MistsPlayerJoinedInfo', {originCluster: Parameters[4]});
             }
             break;
         }
@@ -342,134 +399,16 @@ export function onRequest(Parameters) {
 
 export function onResponse(Parameters, clearHandlersCallback) {
     if (Parameters[253] == OperationCodes.ChangeCluster) {
-        const newMapId = Parameters[0];
-        if (typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
-            const previousMapId = map.id;
-            map.id = newMapId;
-            window.currentMapId = map.id;
-            lastMapChangeTime = Date.now();
-            syncMapIsBZ();
-            radarRenderer?.setMap?.(map);
-
-            try {
-                sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
-                    mapId: map.id,
-                    hX: map.hX,
-                    hY: map.hY,
-                    isBZ: map.isBZ,
-                    timestamp: Date.now()
-                }));
-            } catch (e) {
-                window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', {error: e?.message});
-            }
-
-            window.logger?.info(CATEGORIES.MAP, 'ChangeClusterResponse', {
-                previousMapId,
-                newMapId: map.id
-            });
-
-            clearHandlersCallback();
-        }
+        handleChangeClusterResponse(Parameters, clearHandlersCallback);
         return;
     }
-
     // upstream 35 = InventoryStack; this branch treats it as a map-change response, semantics diverge.
     if (Parameters[253] == 35) {
-        const newMapId = Parameters[0];
-        const now = Date.now();
-        const timeSinceLastChange = now - lastMapChangeTime;
-
-        // Debounce: Ignore rapid map changes
-        if (timeSinceLastChange < MAP_CHANGE_DEBOUNCE_MS && map.id !== -1) {
-            window.logger?.debug(CATEGORIES.MAP, 'MapChangeDebounced', {
-                currentMapId: map.id,
-                newMapId,
-                timeSinceLastChange
-            });
-            return;
-        }
-
-        // Skip if same map ID
-        if (newMapId === map.id) {
-            return;
-        }
-
-        const previousMapId = map.id;
-        map.id = newMapId;
-        lastMapChangeTime = now;
-        window.currentMapId = map.id;
-        syncMapIsBZ();
-
-        window.logger?.info(CATEGORIES.MAP, 'MapChanged', {
-            previousMapId,
-            newMapId: map.id
-        });
-
-        if (radarRenderer) {
-            radarRenderer.setMap(map);
-        }
-
-        // Save to sessionStorage
-        try {
-            sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
-                mapId: map.id,
-                hX: map.hX,
-                hY: map.hY,
-                isBZ: map.isBZ,
-                timestamp: Date.now()
-            }));
-        } catch (e) {
-            window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', {error: e?.message});
-        }
+        handleLegacyMapChangeResponse(Parameters);
+        return;
     }
-    // All data on the player joining the map (us)
-    else if (Parameters[253] == OperationCodes.Join) {
-        // Decode position from Buffer or Array
-        if (Parameters[9] && Parameters[9].type === 'Buffer') {
-            const uint8Array = new Uint8Array(Parameters[9].data);
-            const dataView = new DataView(uint8Array.buffer);
-            updateLocalPlayerPosition(dataView.getFloat32(0, true), dataView.getFloat32(4, true));
-            window.logger?.info(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_BufferDecoded', {lpX, lpY});
-        } else if (Array.isArray(Parameters[9])) {
-            updateLocalPlayerPosition(Parameters[9][0], Parameters[9][1]);
-            window.logger?.info(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_Array', {lpX, lpY});
-        } else {
-            window.logger?.error(CATEGORIES.PLAYERS, 'OnResponse_JoinMap_UnknownFormat', {
-                param9: Parameters[9],
-                param9Type: typeof Parameters[9]
-            });
-        }
-
-        if (typeof Parameters[8] === 'string' && Parameters[8].length > 0) {
-            const previousMapId = map.id;
-            map.id = Parameters[8];
-            window.currentMapId = map.id;
-            lastMapChangeTime = Date.now();
-            syncMapIsBZ();
-            radarRenderer?.setMap?.(map);
-
-            try {
-                sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
-                    mapId: map.id,
-                    hX: map.hX,
-                    hY: map.hY,
-                    isBZ: map.isBZ,
-                    timestamp: Date.now()
-                }));
-            } catch (e) {
-                window.logger?.warn(CATEGORIES.MAP, 'SessionStorageFailed', {error: e?.message});
-            }
-
-            window.logger?.info(CATEGORIES.MAP, 'MapChangedFromJoinMap', {
-                previousMapId,
-                newMapId: map.id
-            });
-        }
-
-        clearHandlersCallback();
-    // upstream 137 = ChangeGuildTax; inline label says "character stats", branch appears dead.
-    } else if (Parameters[253] == 137) {
-        // Character stats response - not currently used
+    if (Parameters[253] == OperationCodes.Join) {
+        handleJoinResponse(Parameters, clearHandlersCallback);
     }
 }
 
