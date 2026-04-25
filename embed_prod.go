@@ -10,7 +10,8 @@ import "embed"
 //go:embed all:web/images
 var Images embed.FS
 
-// No `all:` so Go embed skips _*.test.js and __fixtures__/.
+// Scripts omits `all:` so Go embed skips _*.test.js and __fixtures__/.
+//
 //go:embed web/scripts
 var Scripts embed.FS
 
