@@ -60,7 +60,7 @@ export default [
 
     // Vitest test files (co-located under web/scripts/)
     {
-        files: ["web/scripts/**/*.test.js"],
+        files: ["web/scripts/**/_*.test.js"],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: "module",
