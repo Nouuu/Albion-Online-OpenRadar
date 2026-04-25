@@ -89,11 +89,13 @@ type Dashboard struct {
 	restartRequested bool
 
 	// Static info
-	version   string
-	serverURL string
-	wsURL     string
-	mode      string
-	adapterIP string
+	version      string
+	serverURL    string
+	wsURL        string
+	lanServerURL string
+	lanWsURL     string
+	mode         string
+	adapterIP    string
 
 	// Status indicators
 	httpRunning    bool
@@ -163,7 +165,7 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 	ti.Placeholder = "Search logs..."
 	ti.CharLimit = 50
 
-	return Dashboard{
+	d := Dashboard{
 		version:          version,
 		serverURL:        fmt.Sprintf("http://localhost:%d", port),
 		wsURL:            fmt.Sprintf("ws://localhost:%d/ws", port),
@@ -180,6 +182,11 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 		logFilter:        LevelAll,
 		searchInput:      ti,
 	}
+	if adapterIP != "" && adapterIP != "127.0.0.1" {
+		d.lanServerURL = fmt.Sprintf("http://%s:%d", adapterIP, port)
+		d.lanWsURL = fmt.Sprintf("ws://%s:%d/ws", adapterIP, port)
+	}
+	return d
 }
 
 // RestartRequested returns true if user requested a restart
@@ -489,9 +496,14 @@ func (d *Dashboard) renderHeader() string {
 	mode := ModeStyle.Render(fmt.Sprintf("Mode: %s", d.mode))
 	adapter := TimestampStyle.Render(fmt.Sprintf("Adapter: %s", d.adapterIP))
 
-	// URLs
-	httpURL := URLStyle.Render(d.serverURL)
-	wsURL := URLStyle.Render(d.wsURL)
+	httpLine := d.serverURL
+	wsLine := d.wsURL
+	if d.lanServerURL != "" {
+		httpLine = httpLine + "  |  " + d.lanServerURL + " (LAN)"
+		wsLine = wsLine + "  |  " + d.lanWsURL
+	}
+	httpURL := URLStyle.Render(httpLine)
+	wsURL := URLStyle.Render(wsLine)
 
 	// Started time
 	startedAt := TimestampStyle.Render(fmt.Sprintf("Started: %s", d.startTime.Format("15:04:05")))

@@ -2,8 +2,8 @@
 // Extracted from Utils.js during Phase 1B refactor
 
 import {CATEGORIES} from '../constants/LoggerConstants.js';
+import {buildWsUrl} from '../utils/wsUrl.js';
 
-const WS_URL = 'ws://localhost:5001/ws';
 const MAX_RECONNECT_DELAY = 30000;
 const INITIAL_RECONNECT_DELAY = 1000;
 
@@ -102,7 +102,7 @@ export function connect() {
     cleanupSocket();
 
     window.logger?.debug(CATEGORIES.NETWORK, 'WebSocketConnecting', {});
-    socket = new WebSocket(WS_URL);
+    socket = new WebSocket(buildWsUrl());
     socket.addEventListener('open', onSocketOpen);
     socket.addEventListener('close', onSocketClose);
     socket.addEventListener('error', onSocketError);

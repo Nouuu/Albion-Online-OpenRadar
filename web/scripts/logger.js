@@ -1,5 +1,6 @@
 import {CATEGORY_SETTINGS, LOG_LEVELS} from './constants/LoggerConstants.js';
 import settingsSync from './utils/SettingsSync.js';
+import {buildWsUrl} from './utils/wsUrl.js';
 
 let socket = null;
 let socketConnected = false;
@@ -156,7 +157,7 @@ function cleanupLoggerSocket() {
 function connectLoggerWebSocket() {
     cleanupLoggerSocket();
     try {
-        socket = new WebSocket('ws://localhost:5001/ws');
+        socket = new WebSocket(buildWsUrl());
         socket.addEventListener('open', onLoggerSocketOpen);
         socket.addEventListener('close', onLoggerSocketClose);
         socket.addEventListener('error', onLoggerSocketError);

@@ -301,8 +301,7 @@ export class RadarRenderer {
         const ctx = this.contexts.uiCanvas;
         if (!ctx) return;
 
-        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
-        ctx.clearRect(0, 0, canvasSize, canvasSize);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         this.renderDistanceRings(ctx);
         this.renderZoneInfo(ctx);
@@ -320,11 +319,10 @@ export class RadarRenderer {
         const elapsed = performance.now() - handler.lastFlashAt;
         if (elapsed < 0 || elapsed > duration) return;
 
-        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
         const alpha = 0.6 * (1 - elapsed / duration);
         ctx.save();
         ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`;
-        ctx.fillRect(0, 0, canvasSize, canvasSize);
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.restore();
     }
 
@@ -332,10 +330,11 @@ export class RadarRenderer {
      * Render distance rings centered on player
      */
     renderDistanceRings(ctx) {
-        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+        const canvasSize = ctx.canvas.width;
         const center = canvasSize / 2;
         const distances = [10, 20];
-        const zoomLevel = settingsSync.getFloat('settingRadarZoom') || 1.0;
+        const isSmall = typeof window !== 'undefined' && window.innerWidth < 640;
+        const zoomLevel = isSmall ? 0.9 : (settingsSync.getFloat('settingRadarZoom') || 1.0);
         const pixelsPerMeter = (canvasSize / 60) * zoomLevel;
 
         ctx.save();
@@ -379,15 +378,18 @@ export class RadarRenderer {
         };
         const style = pvpStyles[pvpType] || pvpStyles.safe;
 
+        const scale = Math.min(1, ctx.canvas.width / 500);
+        const fontPx = Math.max(8, Math.round(11 * scale));
+        const boxH = Math.round(22 * scale) + 4;
         const zoneText = `${zoneName}${tier ? ` (${tier})` : ''} ${style.icon}`;
-        ctx.font = 'bold 11px monospace';
+        ctx.font = `bold ${fontPx}px monospace`;
         const textWidth = ctx.measureText(zoneText).width;
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(10, 10, textWidth + 16, 22);
+        ctx.fillRect(10, 10, textWidth + 16, boxH);
         ctx.strokeStyle = style.color;
         ctx.lineWidth = 1;
-        ctx.strokeRect(10, 10, textWidth + 16, 22);
+        ctx.strokeRect(10, 10, textWidth + 16, boxH);
 
         ctx.fillStyle = style.color;
         ctx.textAlign = 'left';
@@ -410,10 +412,18 @@ export class RadarRenderer {
         stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
         stats.push({ emoji: '👾', count: mobCount, label: 'mobs', color: '#ff6b6b' });
 
-        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
-        const boxWidth = 135;
-        const lineHeight = 14;
-        const boxHeight = 8 + stats.length * lineHeight + 8;
+        const canvasSize = ctx.canvas.width;
+        const scale = Math.min(1, canvasSize / 500);
+        const fontPx = Math.max(8, Math.round(11 * scale));
+        const lineHeight = Math.max(11, Math.round(14 * scale));
+        const padX = Math.max(4, Math.round(8 * scale));
+        const padY = Math.max(4, Math.round(8 * scale));
+
+        ctx.font = `bold ${fontPx}px monospace`;
+        const labels = stats.map(s => `${s.emoji} ${s.count} ${s.label}`);
+        const maxTextWidth = labels.reduce((m, t) => Math.max(m, ctx.measureText(t).width), 0);
+        const boxWidth = Math.ceil(maxTextWidth) + padX * 2;
+        const boxHeight = padY + stats.length * lineHeight + padY;
         const boxX = canvasSize - boxWidth - 10;
         const boxY = 10;
 
@@ -423,13 +433,12 @@ export class RadarRenderer {
         ctx.lineWidth = 1;
         ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
-        ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
 
         stats.forEach((stat, index) => {
             ctx.fillStyle = stat.color;
-            ctx.fillText(`${stat.emoji} ${stat.count} ${stat.label}`, boxX + 8, boxY + 8 + index * lineHeight);
+            ctx.fillText(labels[index], boxX + padX, boxY + padY + index * lineHeight);
         });
     }
 
@@ -444,7 +453,7 @@ export class RadarRenderer {
         if (threats.length === 0) return;
 
         const pulse = Math.sin(Date.now() / 140) * 0.35 + 0.6;
-        const canvasSize = settingsSync.getNumber('settingCanvasSize') || 500;
+        const canvasSize = ctx.canvas.width;
 
         ctx.save();
         ctx.shadowColor = `rgba(255, 50, 50, ${pulse})`;
