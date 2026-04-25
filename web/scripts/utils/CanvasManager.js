@@ -1,6 +1,23 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 
+export function clampForViewport(size, canvas) {
+    const isSmall = (typeof window !== 'undefined' ? window.innerWidth : 9999) < 640;
+    const container = canvas?.parentElement;
+    const cardBody = container?.parentElement;
+    const refWidth = innerWidthOf(cardBody) ?? (typeof window !== 'undefined' ? window.innerWidth : size);
+    const margin = isSmall ? 0 : 20;
+    return Math.min(size, Math.max(200, refWidth - margin));
+}
+
+function innerWidthOf(el) {
+    if (!el || typeof getComputedStyle !== 'function') return null;
+    const cs = getComputedStyle(el);
+    const pl = parseFloat(cs.paddingLeft) || 0;
+    const pr = parseFloat(cs.paddingRight) || 0;
+    return el.clientWidth - pl - pr;
+}
+
 export class CanvasManager {
     constructor() {
         this.canvases = {};
@@ -29,16 +46,10 @@ export class CanvasManager {
 
             this.canvases[id] = canvas;
             this.contexts[id] = canvas.getContext('2d');
-
-            // Apply canvas properties (dynamic size from settings)
-            const size = settingsSync.getNumber('settingCanvasSize') || 500;
-            canvas.width = size;
-            canvas.height = size;
         });
 
         this.setupOurPlayerCanvas();
 
-        // Remove previous listener if exists (prevent accumulation)
         if (this._onCanvasSizeChanged) {
             window.removeEventListener('canvasSizeChanged', this._onCanvasSizeChanged);
         }
@@ -72,9 +83,7 @@ export class CanvasManager {
 
         contextOurPlayer.clearRect(0, 0, ourPlayerCanvas.width, ourPlayerCanvas.height);
 
-        // Draw blue dot for local player at dynamic center
-        const size = settingsSync.getNumber('settingCanvasSize') || 500;
-        const center = size / 2;
+        const center = ourPlayerCanvas.width / 2;
         contextOurPlayer.fillStyle = 'blue';
         contextOurPlayer.beginPath();
         contextOurPlayer.arc(center, center, 5, 0, 2 * Math.PI);

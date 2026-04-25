@@ -89,11 +89,13 @@ type Dashboard struct {
 	restartRequested bool
 
 	// Static info
-	version   string
-	serverURL string
-	wsURL     string
-	mode      string
-	adapterIP string
+	version      string
+	serverURL    string
+	wsURL        string
+	lanServerURL string
+	lanWsURL     string
+	mode         string
+	adapterIP    string
 
 	// Status indicators
 	httpRunning    bool
@@ -163,7 +165,7 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 	ti.Placeholder = "Search logs..."
 	ti.CharLimit = 50
 
-	return Dashboard{
+	d := Dashboard{
 		version:          version,
 		serverURL:        fmt.Sprintf("http://localhost:%d", port),
 		wsURL:            fmt.Sprintf("ws://localhost:%d/ws", port),
@@ -180,6 +182,11 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 		logFilter:        LevelAll,
 		searchInput:      ti,
 	}
+	if adapterIP != "" && adapterIP != "127.0.0.1" {
+		d.lanServerURL = fmt.Sprintf("http://%s:%d", adapterIP, port)
+		d.lanWsURL = fmt.Sprintf("ws://%s:%d/ws", adapterIP, port)
+	}
+	return d
 }
 
 // RestartRequested returns true if user requested a restart
@@ -500,7 +507,15 @@ func (d *Dashboard) renderHeader() string {
 	tabs := d.renderTabs()
 
 	left := lipgloss.JoinVertical(lipgloss.Left, title, mode, adapter, startedAt)
-	right := lipgloss.JoinVertical(lipgloss.Right, status, httpURL, wsURL, "")
+	rightLines := []string{status, httpURL, wsURL}
+	if d.lanServerURL != "" {
+		rightLines = append(rightLines,
+			URLStyle.Render(d.lanServerURL+" (LAN)"),
+			URLStyle.Render(d.lanWsURL),
+		)
+	}
+	rightLines = append(rightLines, "")
+	right := lipgloss.JoinVertical(lipgloss.Right, rightLines...)
 
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)

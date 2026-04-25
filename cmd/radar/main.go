@@ -263,6 +263,9 @@ func (app *App) startServers() {
 		logger.PrintSuccess("HTTP", "Server: http://%s:%d  (LAN)", app.adapterIP, serverPort)
 	}
 	logger.PrintSuccess("WS", "WebSocket: ws://localhost:%d/ws", serverPort)
+	if app.adapterIP != "" && app.adapterIP != "127.0.0.1" {
+		logger.PrintSuccess("WS", "WebSocket: ws://%s:%d/ws  (LAN)", app.adapterIP, serverPort)
+	}
 	logger.PrintInfo("PKT", "Listening for Albion packets on UDP port 5056...")
 	logger.PrintInfo("NET", "Adapter: %s", app.adapterIP)
 }

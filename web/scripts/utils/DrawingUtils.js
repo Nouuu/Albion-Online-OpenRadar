@@ -13,10 +13,20 @@ export class DrawingUtils {
         this.images = [];
     }
 
-    getZoomLevel() { return settingsSync.getFloat('settingRadarZoom') || 1.0; }
-    getScaledSize(baseSize) { return baseSize * this.getZoomLevel(); }
-    getScaledFontSize(baseFontSize, minFontSize = 7) { return Math.max(minFontSize, baseFontSize * this.getZoomLevel()); }
-    getCanvasSize() { return settingsSync.getNumber('settingCanvasSize') || 500; }
+    getZoomLevel() {
+        if (typeof window !== 'undefined' && window.innerWidth < 640) return 0.9;
+        return settingsSync.getFloat('settingRadarZoom') || 1.0;
+    }
+    getCanvasScale() { return this.getCanvasSize() / 500; }
+    getScaledSize(baseSize) { return baseSize * this.getZoomLevel() * this.getCanvasScale(); }
+    getScaledFontSize(baseFontSize, minFontSize = 7) { return Math.max(minFontSize, baseFontSize * this.getZoomLevel() * this.getCanvasScale()); }
+    getCanvasSize() {
+        if (typeof document !== 'undefined') {
+            const c = document.getElementById('drawCanvas');
+            if (c?.width) return c.width;
+        }
+        return settingsSync.getNumber('settingCanvasSize') || 500;
+    }
     getCanvasCenter() { return this.getCanvasSize() / 2; }
 
     drawFilledCircle(context, x, y, radius, color) {

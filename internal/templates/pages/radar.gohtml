@@ -3,7 +3,7 @@
 /* Player cards grid: max columns based on visible sections */
 /* 1 section: max 2 cards per row, but switch to 1 col earlier (min 400px per card) */
 [data-sections="1"] .player-cards {
-    grid-template-columns: repeat(auto-fill, minmax(max(400px, calc((100% - 0.75rem) / 2)), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, max(400px, calc((100% - 0.75rem) / 2))), 1fr));
 }
 /* 2-3 sections: 1 card per row */
 [data-sections="2"] .player-cards,
@@ -14,15 +14,15 @@
 <div class="space-y-4">
     <!-- Canvas Section -->
     <div class="card bg-base-200">
-        <div class="card-body p-4">
+        <div class="card-body p-2 sm:p-4">
             <div id="canvasContainer" class="relative mx-auto" style="width: 520px; height: 520px;">
-                <canvas class="ttcan absolute top-0 left-0 m-2.5 border-2 border-base-content/10 rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
-                <canvas class="ttcan absolute top-0 left-0 m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
-                <canvas class="ttcan absolute top-0 left-0 m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
-                <canvas class="ttcan absolute top-0 left-0 m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5 border-2 border-base-content/10 rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
+                <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
             </div>
             <!-- Controls - flex wrap for responsive -->
-            <div class="flex flex-wrap items-center gap-4 mt-3 mx-2.5 text-sm">
+            <div class="flex flex-wrap items-center gap-4 mt-3 mx-0 sm:mx-2.5 text-sm">
                 <!-- Display toggles -->
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-base-content/50">Display:</span>
@@ -40,16 +40,16 @@
                     </label>
                 </div>
                 <!-- Zoom control -->
-                <div class="flex items-center gap-2">
+                <div class="hidden sm:flex items-center gap-2">
                     <span class="text-xs text-base-content/50">Zoom:</span>
                     <button id="zoomOut" class="btn btn-ghost btn-xs">−</button>
-                    <input type="range" id="settingRadarZoom" min="0.5" max="2" step="0.1" value="1" class="range range-primary range-xs w-24">
+                    <input type="range" id="settingRadarZoom" min="0.3" max="3" step="0.1" value="1" class="range range-primary range-xs w-24">
                     <button id="zoomIn" class="btn btn-ghost btn-xs">+</button>
                     <span id="zoomValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
                     <button id="zoomReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
                 </div>
                 <!-- Size control -->
-                <div class="flex items-center gap-2">
+                <div class="hidden sm:flex items-center gap-2">
                     <span class="text-xs text-base-content/50">Size:</span>
                     <button id="sizeDown" class="btn btn-ghost btn-xs">−</button>
                     <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="range range-primary range-xs w-24">
@@ -91,9 +91,9 @@
             <div id="playersListContainer" class="mt-4">
                 <!-- Flex container: sections share space equally, wrap on small screens -->
                 <!-- data-sections set by JS: controls card grid columns -->
-                <div id="playersList" class="flex flex-wrap gap-4" data-sections="0">
+                <div id="playersList" class="flex flex-col sm:flex-row sm:flex-wrap gap-4" data-sections="0">
                     <!-- Hostile Section -->
-                    <div id="playersHostile" class="hidden flex-1 min-w-[280px]">
+                    <div id="playersHostile" class="hidden flex-1 min-w-0 sm:min-w-[280px]">
                         <div class="flex items-center gap-2 pb-2 mb-3 border-b border-error/20">
                             <span class="text-sm font-medium text-error">Hostiles</span>
                             <span id="hostileCount" class="text-xs text-base-content/50">(0)</span>
@@ -102,7 +102,7 @@
                     </div>
 
                     <!-- Faction Section -->
-                    <div id="playersFaction" class="hidden flex-1 min-w-[280px]">
+                    <div id="playersFaction" class="hidden flex-1 min-w-0 sm:min-w-[280px]">
                         <div class="flex items-center gap-2 pb-2 mb-3 border-b border-info/20">
                             <span class="text-sm font-medium text-info">Faction</span>
                             <span id="factionCount" class="text-xs text-base-content/50">(0)</span>
@@ -111,7 +111,7 @@
                     </div>
 
                     <!-- Passive Section -->
-                    <div id="playersPassive" class="hidden flex-1 min-w-[280px]">
+                    <div id="playersPassive" class="hidden flex-1 min-w-0 sm:min-w-[280px]">
                         <div class="flex items-center gap-2 pb-2 mb-3 border-b border-success/20">
                             <span class="text-sm font-medium text-success">Passive</span>
                             <span id="passiveCount" class="text-xs text-base-content/50">(0)</span>
@@ -197,7 +197,7 @@ window.onGlobalsReady(function() {
     }
 
     function setZoom(value) {
-        value = Math.max(0.5, Math.min(2, value));
+        value = Math.max(0.3, Math.min(3, value));
         settingsSync.setFloat('settingRadarZoom', value);
         updateZoomDisplay(value);
     }
@@ -225,32 +225,53 @@ window.onGlobalsReady(function() {
         if (sizeSlider) sizeSlider.value = size;
     }
 
+    function innerWidth(el) {
+        if (!el) return window.innerWidth;
+        const cs = getComputedStyle(el);
+        const pl = parseFloat(cs.paddingLeft) || 0;
+        const pr = parseFloat(cs.paddingRight) || 0;
+        return el.clientWidth - pl - pr;
+    }
+
+    function clampForViewport(size) {
+        const isSmall = window.innerWidth < 640;
+        const parent = canvasContainer?.parentElement;
+        const margin = isSmall ? 0 : 20;
+        const cap = Math.max(200, innerWidth(parent) - margin);
+        return Math.min(size, cap);
+    }
+
     function setCanvasSize(size) {
         size = Math.max(300, Math.min(800, size));
         settingsSync.setNumber('settingCanvasSize', size);
 
-        // Update container (size + 20px padding for margin)
-        const containerSize = size + 20;
+        const renderSize = clampForViewport(size);
+        const isSmall = window.innerWidth < 640;
+        const containerSize = renderSize + (isSmall ? 0 : 20);
         if (canvasContainer) {
             canvasContainer.style.width = `${containerSize}px`;
             canvasContainer.style.height = `${containerSize}px`;
         }
 
-        // Update all canvas elements
         canvases.forEach(canvas => {
-            canvas.width = size;
-            canvas.height = size;
+            canvas.width = renderSize;
+            canvas.height = renderSize;
         });
 
         updateSizeDisplay(size);
 
-        // Trigger re-render event for RadarRenderer
-        window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size } }));
+        window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size: renderSize } }));
     }
 
-    // Initialize canvas size
     const initialSize = settingsSync.getNumber('settingCanvasSize') || 500;
     setCanvasSize(initialSize);
+
+    function reapplyOnResize() {
+        const persisted = settingsSync.getNumber('settingCanvasSize') || 500;
+        setCanvasSize(persisted);
+    }
+    window.addEventListener('resize', reapplyOnResize);
+    cleanup.push(() => window.removeEventListener('resize', reapplyOnResize));
 
     addListener(sizeSlider, 'input', () => setCanvasSize(parseInt(sizeSlider.value)));
     addListener(sizeUp, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) + 50));
