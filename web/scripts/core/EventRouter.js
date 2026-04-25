@@ -4,6 +4,12 @@
 import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
+import zonesDatabase from '../data/ZonesDatabase.js';
+
+function syncMapIsBZ() {
+    if (!map) return;
+    map.isBZ = zonesDatabase.isBlackZone(map.id);
+}
 
 // Map change debouncing
 const MAP_CHANGE_DEBOUNCE_MS = 4000;
@@ -75,10 +81,6 @@ export function setRadarRenderer(renderer) {
     radarRenderer = renderer;
 }
 
-export function setMap(mapRef) {
-    map = mapRef;
-}
-
 export function getLocalPlayerPosition() {
     return {x: lpX, y: lpY};
 }
@@ -99,7 +101,7 @@ export function restoreMapFromSession() {
                 map.id = data.mapId;
                 map.hX = data.hX || 0;
                 map.hY = data.hY || 0;
-                map.isBZ = data.isBZ || false;
+                syncMapIsBZ();
                 window.currentMapId = map.id;
 
                 window.logger?.info(CATEGORIES.MAP, 'MapRestoredFromSession', {
@@ -291,6 +293,7 @@ export function onEvent(Parameters) {
                 map.id = newMapId;
                 window.currentMapId = map.id;
                 lastMapChangeTime = Date.now();
+                syncMapIsBZ();
                 radarRenderer?.setMap?.(map);
 
                 try {
@@ -345,6 +348,7 @@ export function onResponse(Parameters, clearHandlersCallback) {
             map.id = newMapId;
             window.currentMapId = map.id;
             lastMapChangeTime = Date.now();
+            syncMapIsBZ();
             radarRenderer?.setMap?.(map);
 
             try {
@@ -394,6 +398,7 @@ export function onResponse(Parameters, clearHandlersCallback) {
         map.id = newMapId;
         lastMapChangeTime = now;
         window.currentMapId = map.id;
+        syncMapIsBZ();
 
         window.logger?.info(CATEGORIES.MAP, 'MapChanged', {
             previousMapId,
@@ -440,6 +445,7 @@ export function onResponse(Parameters, clearHandlersCallback) {
             map.id = Parameters[8];
             window.currentMapId = map.id;
             lastMapChangeTime = Date.now();
+            syncMapIsBZ();
             radarRenderer?.setMap?.(map);
 
             try {

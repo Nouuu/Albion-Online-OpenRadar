@@ -1,7 +1,19 @@
-import {describe, test, expect, beforeEach, vi} from 'vitest';
+import {describe, test, expect, beforeAll, beforeEach, vi} from 'vitest';
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {dirname, join} from 'node:path';
 import * as EventRouter from './EventRouter.js';
 import {EventCodes} from '../utils/EventCodes.js';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
+import zonesDatabase from '../data/ZonesDatabase.js';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const zonesJsonPath = join(here, '..', '..', 'ao-bin-dumps', 'zones.json');
+
+beforeAll(() => {
+    zonesDatabase.zones = JSON.parse(readFileSync(zonesJsonPath, 'utf8'));
+    zonesDatabase.loaded = true;
+});
 
 describe('EventRouter', () => {
     let handlers;
@@ -233,19 +245,33 @@ describe('EventRouter', () => {
             expect(clearHandlers).toHaveBeenCalledTimes(1);
         });
 
-        // Pinned: ROUTER-1 (issue #57). EventRouter.onResponse opcode 2 does not extract isBZ from
-        // params[103] hashtable. Post-Protocol18: {"5": 1409813048, "7": 56653070} is non-zero.
-        // Fix design: 2026-04-18-protocol18-regressions-design.md.
-        test.fails('ROUTER-1: onResponse JoinMap extracts isBZ from params[103] hashtable', async () => {
-            // pcap-derived: router/join-finished.json message[0]
-            // params[103] = {"5": 1409813048, "7": 56653070}
-            const fix = await loadFixture('router', 'join-finished');
+        // @verified 2026-04-25: closes ROUTER-1 / #57. JoinMap derives map.isBZ from zonesDatabase.
+        // pcap-derived: router/join-finished-bz.json from capture-57 (Thetford Portal -> Widemoor Delta).
+        test('opcode 2 leaves map.isBZ false for safe params[8]', async () => {
+            const fix = await loadFixture('router', 'join-finished-bz');
             const p = normalizeParams(fix.messages[0].parameters);
 
             EventRouter.onResponse(p, clearHandlers);
 
-            // When fixed, map.isBZ must reflect the non-zero hashtable (true or derived value).
-            expect(map.isBZ).not.toBe(false);
+            expect(map.id).toBe('0301');
+            expect(map.isBZ).toBe(false);
+        });
+
+        test('opcode 2 sets map.isBZ true for black-zone params[8]', async () => {
+            const fix = await loadFixture('router', 'join-finished-bz');
+            const p = normalizeParams(fix.messages[1].parameters);
+
+            EventRouter.onResponse(p, clearHandlers);
+
+            expect(map.id).toBe('0317');
+            expect(map.isBZ).toBe(true);
+        });
+
+        test('opcode 2 unknown map id leaves map.isBZ false', () => {
+            EventRouter.onResponse({253: 2, 8: 'UNKNOWN_ZONE', 9: [0, 0]}, clearHandlers);
+
+            expect(map.id).toBe('UNKNOWN_ZONE');
+            expect(map.isBZ).toBe(false);
         });
 
         // @verified 2026-04-18: second pcap JoinFinished message updates position from array
@@ -321,6 +347,32 @@ describe('EventRouter', () => {
 
             expect(map.id).toBe('0007');
             expect(clearHandlers).toHaveBeenCalledTimes(1);
+        });
+
+        // @verified 2026-04-25: ChangeCluster derives map.isBZ from new zone id (#57).
+        // pcap-derived: router/change-cluster-bz.json from capture-57.
+        test('opcode 41 sets map.isBZ true when entering black zone', async () => {
+            const fix = await loadFixture('router', 'change-cluster-bz');
+            const p = normalizeParams(fix.messages[0].parameters);
+            map.id = 'previous-map';
+
+            EventRouter.onResponse(p, clearHandlers);
+
+            expect(map.id).toBe('0317');
+            expect(map.isBZ).toBe(true);
+        });
+
+        test('opcode 41 clears map.isBZ when leaving black zone for safe city', async () => {
+            const fix = await loadFixture('router', 'change-cluster-bz');
+            const pBz = normalizeParams(fix.messages[0].parameters);
+            const pSafe = normalizeParams(fix.messages[2].parameters);
+
+            EventRouter.onResponse(pBz, clearHandlers);
+            expect(map.isBZ).toBe(true);
+
+            EventRouter.onResponse(pSafe, clearHandlers);
+            expect(map.id).toBe('0000');
+            expect(map.isBZ).toBe(false);
         });
     });
 
@@ -800,6 +852,46 @@ describe('EventRouter', () => {
             }).not.toThrow();
 
             expect(allHandlerCalls()).toHaveLength(0);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // restoreMapFromSession (#57)
+    // -------------------------------------------------------------------------
+    describe('restoreMapFromSession', () => {
+        // @verified 2026-04-25: derives isBZ from saved mapId, ignores stale persisted value (#57)
+        test('overrides stale persisted isBZ with zonesDatabase lookup on restore', () => {
+            sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
+                mapId: '0317',
+                hX: 100,
+                hY: 200,
+                isBZ: false,
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMapFromSession();
+
+            expect(map.id).toBe('0317');
+            expect(map.isBZ).toBe(true);
+
+            sessionStorage.clear();
+        });
+
+        test('restores safe zone with isBZ false', () => {
+            sessionStorage.setItem('lastMapDisplayed', JSON.stringify({
+                mapId: '0000',
+                hX: 0,
+                hY: 0,
+                isBZ: true,
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMapFromSession();
+
+            expect(map.id).toBe('0000');
+            expect(map.isBZ).toBe(false);
+
+            sessionStorage.clear();
         });
     });
 });
