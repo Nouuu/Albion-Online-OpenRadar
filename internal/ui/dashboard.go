@@ -496,8 +496,6 @@ func (d *Dashboard) renderHeader() string {
 	mode := ModeStyle.Render(fmt.Sprintf("Mode: %s", d.mode))
 	adapter := TimestampStyle.Render(fmt.Sprintf("Adapter: %s", d.adapterIP))
 
-	// URLs (LAN URL appended on same line when adapter is non-loopback,
-	// keeps the right column at a fixed 4 lines so headerHeight stays valid)
 	httpLine := d.serverURL
 	wsLine := d.wsURL
 	if d.lanServerURL != "" {
