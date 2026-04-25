@@ -496,9 +496,16 @@ func (d *Dashboard) renderHeader() string {
 	mode := ModeStyle.Render(fmt.Sprintf("Mode: %s", d.mode))
 	adapter := TimestampStyle.Render(fmt.Sprintf("Adapter: %s", d.adapterIP))
 
-	// URLs
-	httpURL := URLStyle.Render(d.serverURL)
-	wsURL := URLStyle.Render(d.wsURL)
+	// URLs (LAN URL appended on same line when adapter is non-loopback,
+	// keeps the right column at a fixed 4 lines so headerHeight stays valid)
+	httpLine := d.serverURL
+	wsLine := d.wsURL
+	if d.lanServerURL != "" {
+		httpLine = httpLine + "  |  " + d.lanServerURL + " (LAN)"
+		wsLine = wsLine + "  |  " + d.lanWsURL
+	}
+	httpURL := URLStyle.Render(httpLine)
+	wsURL := URLStyle.Render(wsLine)
 
 	// Started time
 	startedAt := TimestampStyle.Render(fmt.Sprintf("Started: %s", d.startTime.Format("15:04:05")))
@@ -507,15 +514,7 @@ func (d *Dashboard) renderHeader() string {
 	tabs := d.renderTabs()
 
 	left := lipgloss.JoinVertical(lipgloss.Left, title, mode, adapter, startedAt)
-	rightLines := []string{status, httpURL, wsURL}
-	if d.lanServerURL != "" {
-		rightLines = append(rightLines,
-			URLStyle.Render(d.lanServerURL+" (LAN)"),
-			URLStyle.Render(d.lanWsURL),
-		)
-	}
-	rightLines = append(rightLines, "")
-	right := lipgloss.JoinVertical(lipgloss.Right, rightLines...)
+	right := lipgloss.JoinVertical(lipgloss.Right, status, httpURL, wsURL, "")
 
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
