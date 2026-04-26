@@ -3,6 +3,7 @@ package capture
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 )
@@ -137,6 +138,7 @@ func (m *Manager) State() State {
 			StartedAt:   mc.startedAt,
 		})
 	}
+	sort.Slice(out.Active, func(i, j int) bool { return out.Active[i].Name < out.Active[j].Name })
 	if len(out.Active) == 0 {
 		out.Status = StatusAwaiting
 	} else {

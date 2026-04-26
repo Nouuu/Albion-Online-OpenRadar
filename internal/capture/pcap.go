@@ -68,6 +68,7 @@ func (c *Capturer) OnPacket(h PacketHandler) { c.onPacket = h }
 
 func (c *Capturer) Start() error {
 	if c.handle == nil {
+		// stub-mode for tests: block until cancellation, no real pcap source.
 		<-c.ctx.Done()
 		return c.ctx.Err()
 	}
