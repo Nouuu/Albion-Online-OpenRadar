@@ -72,8 +72,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].tier).toBe(3);
         });
 
-        // @verified 2026-04-26: living Hide mob typeId=424 exposes its DB uniqueName for diagnostic overlay.
-        // After OFFSET=16 fix: wire 424 -> idx 408 = T3_MOB_HIDE_SWAMP_GIANTTOAD (combat tier 3).
+        // @verified 2026-04-26: typeId=424 -> T3_MOB_HIDE_SWAMP_GIANTTOAD; uniqueName exposed for overlay.
         test('pcap-derived spawn: living Hide mob typeId=424 stores DB uniqueName for overlay', async () => {
             const fx = await loadFixture('mobs', 'spawn');
             const msg = fx.messages.find(m => m.parameters['1'] === 424);
@@ -86,11 +85,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T3_MOB_HIDE_SWAMP_GIANTTOAD');
         });
 
-        // @verified 2026-04-26: regression test for issue #92 (typeId OFFSET drift).
-        // Wire typeId 526 emits a T5 fiber critter (HP 1367, "Esprit mur du marais" in-game).
-        // Cross-validated across 6469 NewMob events in 8 pcaps and 5889 events in 47 logs:
-        // wire 526 unambiguously matches DB idx 510 = T5_MOB_CRITTER_FIBER (combat T5, hp=1367)
-        // at OFFSET=16. The radar must display the combat tier T5, not T6 (old buggy behavior).
+        // @verified 2026-04-26: wire 526 (hp=1367) -> T5_MOB_CRITTER_FIBER, combat tier 5.
         test('issue #92: wire typeId 526 resolves to T5_MOB_CRITTER_FIBER with combat tier 5', () => {
             const p = normalizeParams({'0': 99526, '1': 526, '2': 255, '7': [0, 0], '13': 1367, '33': 0});
 
@@ -104,10 +99,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T5_MOB_CRITTER_FIBER');
         });
 
-        // @verified 2026-04-26: regression test for issue #92.
-        // Wire 535 emits a T6 fiber DEAD-variant critter (HP 1564, "Dryade feuille d'ambre" T6 in-game).
-        // Old buggy behavior: OFFSET=15 -> T7_FIBER_SWAMP_DEAD, DEAD branch preserves combat -> displayed T7.
-        // Correct: OFFSET=16 -> T6_MOB_CRITTER_FIBER_SWAMP_DEAD, displayed T6.
+        // @verified 2026-04-26: wire 535 (hp=1564) -> T6_MOB_CRITTER_FIBER_SWAMP_DEAD, combat tier 6.
         test('issue #92: wire typeId 535 resolves to T6_MOB_CRITTER_FIBER_SWAMP_DEAD with combat tier 6', () => {
             const p = normalizeParams({'0': 99535, '1': 535, '2': 255, '7': [0, 0], '13': 1564, '33': 0});
 
@@ -121,10 +113,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T6_MOB_CRITTER_FIBER_SWAMP_DEAD');
         });
 
-        // @verified 2026-04-26: regression test for issue #92.
-        // Wire 374 emits a T5 hide MISTS owl (HP 1094, server-confirmed). Old behavior at OFFSET=15
-        // looked up T6_HIDE_MISTS_HOUND, then t-1 shift displayed T5 by accidental compensation.
-        // After fix: OFFSET=16 -> T5_HIDE_MISTS_OWL directly, no shift needed.
+        // @verified 2026-04-26: wire 374 (hp=1094) -> T5_MOB_HIDE_MISTS_OWL, combat tier 5.
         test('issue #92: wire typeId 374 resolves to T5_MOB_HIDE_MISTS_OWL with combat tier 5', () => {
             const p = normalizeParams({'0': 99374, '1': 374, '2': 255, '7': [0, 0], '13': 1094, '33': 0});
 
@@ -150,10 +139,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].tier).toBe(5);
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=422 -> idx 406 = T1_MOB_HIDE_SWAMP_TOAD,
-        // combat tier 1 (HP-anchored: wire payload sends hp=20, DB hp=20 at idx 406).
-        // Pre-fix at OFFSET=15 the lookup landed on T2_MOB_HIDE_SWAMP_SNAKE and the
-        // legacy `t-1` rule produced 1 by accidental compensation.
+        // @verified 2026-04-26: wire 422 (hp=20) -> T1_MOB_HIDE_SWAMP_TOAD.
         test('pcap-derived spawn: living Hide mob typeId=422 rendered with harvest tier 1', async () => {
             const fx = await loadFixture('mobs', 'spawn');
             const msg = fx.messages.find(m => m.parameters['1'] === 422);
@@ -169,8 +155,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T1_MOB_HIDE_SWAMP_TOAD');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=529 -> idx 513 = T3_MOB_CRITTER_FIBER_SWAMP_RED,
-        // combat tier 3, HP=856.
+        // @verified 2026-04-26: wire 529 -> T3_MOB_CRITTER_FIBER_SWAMP_RED.
         test('pcap-derived spawn: Fiber critter typeId=529 rendered with harvest tier 3', async () => {
             const fx = await loadFixture('mobs', 'spawn');
             const msg = fx.messages.find(m => m.parameters['1'] === 529);
@@ -187,8 +172,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T3_MOB_CRITTER_FIBER_SWAMP_RED');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=531 -> idx 515 = T4_MOB_CRITTER_FIBER_SWAMP_RED,
-        // combat tier 4, HP=1203.
+        // @verified 2026-04-26: wire 531 -> T4_MOB_CRITTER_FIBER_SWAMP_RED.
         test('pcap-derived spawn: Fiber critter typeId=531 rendered with harvest tier 4', async () => {
             const fx = await loadFixture('mobs', 'spawn');
             const msg = fx.messages.find(m => m.parameters['1'] === 531);
@@ -205,8 +189,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T4_MOB_CRITTER_FIBER_SWAMP_RED');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=373 -> idx 357 = T4_MOB_HIDE_MISTS_GIANTSTAG,
-        // combat tier 4, HP=1143 (cross-validated against pcap wire HP).
+        // @verified 2026-04-26: wire 373 (hp=1143) -> T4_MOB_HIDE_MISTS_GIANTSTAG.
         test('pcap-derived spawn (living-tier): Hide Mists giantstag typeId=373 rendered with harvest tier 4', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 373);
@@ -223,8 +206,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T4_MOB_HIDE_MISTS_GIANTSTAG');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=374 -> idx 358 = T5_MOB_HIDE_MISTS_OWL,
-        // combat tier 5, HP=1094 (cross-validated against pcap wire HP).
+        // @verified 2026-04-26: wire 374 (hp=1094) -> T5_MOB_HIDE_MISTS_OWL.
         test('pcap-derived spawn (living-tier): Hide Mists owl typeId=374 rendered with harvest tier 5', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 374);
@@ -241,9 +223,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T5_MOB_HIDE_MISTS_OWL');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=532 -> idx 516 = T5_MOB_CRITTER_FIBER_SWAMP_RED,
-        // combat tier 5. The wire HP 1367 disambiguates from the SWAMP_DEAD variant
-        // sharing the same fingerprint.
+        // @verified 2026-04-26: wire 532 -> T5_MOB_CRITTER_FIBER_SWAMP_RED.
         test('pcap-derived spawn (living-tier): Fiber Swamp typeId=532 rendered with harvest tier 5', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 532);
@@ -260,8 +240,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T5_MOB_CRITTER_FIBER_SWAMP_RED');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=534 -> idx 518 = T6_MOB_CRITTER_FIBER_SWAMP_RED,
-        // combat tier 6, HP=1564.
+        // @verified 2026-04-26: wire 534 (hp=1564) -> T6_MOB_CRITTER_FIBER_SWAMP_RED.
         test('pcap-derived spawn (living-tier): Fiber Swamp typeId=534 rendered with harvest tier 6', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 534);
@@ -278,8 +257,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T6_MOB_CRITTER_FIBER_SWAMP_RED');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=649 -> idx 633 = T3_MOB_CRITTER_WOOD_MISTS_GREEN,
-        // combat tier 3, l=WOOD_CRITTER (handler maps Wood to 'Log').
+        // @verified 2026-04-26: wire 649 -> T3_MOB_CRITTER_WOOD_MISTS_GREEN.
         test('pcap-derived spawn (living-tier): Wood Mists critter typeId=649 rendered with harvest tier 3', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 649);
@@ -296,8 +274,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T3_MOB_CRITTER_WOOD_MISTS_GREEN');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=650 -> idx 634 = T4_MOB_CRITTER_WOOD_MISTS_GREEN,
-        // combat tier 4.
+        // @verified 2026-04-26: wire 650 -> T4_MOB_CRITTER_WOOD_MISTS_GREEN.
         test('pcap-derived spawn (living-tier): Wood Mists critter typeId=650 rendered with harvest tier 4', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 650);
@@ -314,8 +291,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T4_MOB_CRITTER_WOOD_MISTS_GREEN');
         });
 
-        // @verified 2026-04-26 (issue #92): typeId=651 -> idx 635 = T5_MOB_CRITTER_WOOD_MISTS_GREEN,
-        // combat tier 5, HP=1641.
+        // @verified 2026-04-26: wire 651 (hp=1641) -> T5_MOB_CRITTER_WOOD_MISTS_GREEN.
         test('pcap-derived spawn (living-tier): Wood Mists critter typeId=651 rendered with harvest tier 5', async () => {
             const fx = await loadFixture('mobs', 'living-tier');
             const msg = fx.messages.find(m => m.parameters['1'] === 651);
@@ -332,18 +308,9 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T5_MOB_CRITTER_WOOD_MISTS_GREEN');
         });
 
-        // -------------------------------------------------------------------------
-        // ROADS_VETERAN / ROADS_ELITE coverage (issue #92)
-        // -------------------------------------------------------------------------
-        // These families were absent from the legacy MIN_TIER_BY_TYPE table in
-        // LivingResourceTier.js and silently received the default `?? 1` floor.
-        // Pre-fix at OFFSET=15 the lookup landed on a sibling DB row (off-by-one)
-        // and the legacy `t-1` shift produced a tier that happened to be one off
-        // for both alive and DEAD/VETERAN/ELITE branches. Post-fix, OFFSET=16
-        // resolves the correct entry and the no-shift rule returns combat tier.
+        // ROADS_VETERAN / ROADS_ELITE coverage.
 
-        // @verified 2026-04-26 (issue #92): wire 581 -> idx 565 = T6_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN,
-        // l=HIDE_CRITTER_ROADS_VETERAN, combat tier 6, HP=3674.
+        // @verified 2026-04-26: wire 581 -> T6_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN.
         test('roads veteran: wire 581 resolves to T6_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN with tier 6', () => {
             const p = normalizeParams({'0': 99581, '1': 581, '2': 255, '7': [0, 0], '13': 3674, '33': 0});
             handler.NewMobEvent(p);
@@ -355,8 +322,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T6_MOB_CRITTER_HIDE_MISTCOUGAR_VETERAN');
         });
 
-        // @verified 2026-04-26 (issue #92): wire 586 -> idx 570 = T6_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE,
-        // l=HIDE_CRITTER_ROADS_ELITE, combat tier 6, HP=7906.
+        // @verified 2026-04-26: wire 586 -> T6_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE.
         test('roads elite: wire 586 resolves to T6_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE with tier 6', () => {
             const p = normalizeParams({'0': 99586, '1': 586, '2': 255, '7': [0, 0], '13': 7906, '33': 0});
             handler.NewMobEvent(p);
@@ -368,8 +334,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T6_MOB_CRITTER_HIDE_MISTCOUGAR_ELITE');
         });
 
-        // @verified 2026-04-26 (issue #92): wire 641 -> idx 625 = T6_MOB_CRITTER_FIBER_ROADS_VETERAN,
-        // l=FIBER_CRITTER_ROADS_VETERAN, combat tier 6, HP=4592.
+        // @verified 2026-04-26: wire 641 -> T6_MOB_CRITTER_FIBER_ROADS_VETERAN.
         test('roads veteran: wire 641 resolves to T6_MOB_CRITTER_FIBER_ROADS_VETERAN with tier 6', () => {
             const p = normalizeParams({'0': 99641, '1': 641, '2': 255, '7': [0, 0], '13': 4592, '33': 0});
             handler.NewMobEvent(p);
@@ -381,8 +346,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T6_MOB_CRITTER_FIBER_ROADS_VETERAN');
         });
 
-        // @verified 2026-04-26 (issue #92): wire 648 -> idx 632 = T8_MOB_CRITTER_FIBER_ROADS_ELITE,
-        // l=FIBER_CRITTER_ROADS_ELITE, combat tier 8, HP=14688.
+        // @verified 2026-04-26: wire 648 -> T8_MOB_CRITTER_FIBER_ROADS_ELITE.
         test('roads elite: wire 648 resolves to T8_MOB_CRITTER_FIBER_ROADS_ELITE with tier 8', () => {
             const p = normalizeParams({'0': 99648, '1': 648, '2': 255, '7': [0, 0], '13': 14688, '33': 0});
             handler.NewMobEvent(p);
@@ -394,7 +358,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T8_MOB_CRITTER_FIBER_ROADS_ELITE');
         });
 
-        // @verified 2026-04-26 (issue #92): wire 624 -> idx 608 = T4_MOB_CRITTER_ORE_ROADS_VETERAN.
+        // @verified 2026-04-26: wire 624 -> T4_MOB_CRITTER_ORE_ROADS_VETERAN.
         test('roads veteran: wire 624 resolves to T4_MOB_CRITTER_ORE_ROADS_VETERAN with tier 4', () => {
             const p = normalizeParams({'0': 99624, '1': 624, '2': 255, '7': [0, 0], '13': 3970, '33': 0});
             handler.NewMobEvent(p);
@@ -406,7 +370,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T4_MOB_CRITTER_ORE_ROADS_VETERAN');
         });
 
-        // @verified 2026-04-26 (issue #92): wire 616 -> idx 600 = T6_MOB_CRITTER_ROCK_ROADS_ELITE.
+        // @verified 2026-04-26: wire 616 -> T6_MOB_CRITTER_ROCK_ROADS_ELITE.
         test('roads elite: wire 616 resolves to T6_MOB_CRITTER_ROCK_ROADS_ELITE with tier 6', () => {
             const p = normalizeParams({'0': 99616, '1': 616, '2': 255, '7': [0, 0], '13': 9883, '33': 0});
             handler.NewMobEvent(p);
@@ -418,7 +382,7 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T6_MOB_CRITTER_ROCK_ROADS_ELITE');
         });
 
-        // @verified 2026-04-26 (issue #92): wire 603 -> idx 587 = T8_MOB_CRITTER_WOOD_ROADS_ELITE.
+        // @verified 2026-04-26: wire 603 -> T8_MOB_CRITTER_WOOD_ROADS_ELITE.
         test('roads elite: wire 603 resolves to T8_MOB_CRITTER_WOOD_ROADS_ELITE with tier 8', () => {
             const p = normalizeParams({'0': 99603, '1': 603, '2': 255, '7': [0, 0], '13': 17625, '33': 0});
             handler.NewMobEvent(p);
@@ -559,18 +523,8 @@ describe('MobsHandler', () => {
             expect(handler.getSize().mists).toBe(mists.length);
         });
 
-        // -------------------------------------------------------------------------
-        // Synthetic coverage grid : every family x tier x variant via real mobs DB
-        // -------------------------------------------------------------------------
-        // @verified 2026-04-26: validates the wire->DB->display chain end-to-end
-        // for 62 cells (5 families x T1..T8 x LIVING/DYNAMIC/DEAD where present
-        // in DB) under OFFSET=16 and the no-shift harvest-tier rule (issue #92).
-        //
-        // Each row holds the wire typeId computed as `mobsDatabase.idx + 16` for a
-        // canonical uniqueName picked from upstream mobs.xml. Synthetic NewMob
-        // parameters go through the real mobsDatabase lookup and through the
-        // MobsHandler filter; expectedTier is the combat tier from the resolved
-        // entry, never a derived shift.
+        // @verified 2026-04-26: 62 cells covering family x tier x variant.
+        // Wire typeId = canonical uniqueName idx + OFFSET (16). Expected tier = combat tier.
 
         const LIVING_COVERAGE = [
             ['Fiber', 3, 'LIVING', 528, 'Fiber', EnemyType.LivingHarvestable, 3],

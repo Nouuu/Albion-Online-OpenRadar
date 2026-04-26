@@ -24,19 +24,8 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class MobsDatabase {
-    /**
-     * OFFSET between mobs.json array index and server TypeID.
-     *
-     * Cross-validated 2026-04-26 against 6469 NewMob events from 8 pcaps and
-     * 5889 events from 47 session logs (issue #92). Across 295 unambiguous wire
-     * HP to DB resolutions, every single one matches at OFFSET=16. Zero outliers.
-     *
-     * HP-verified anchor: wire 422 (game emits hp=20) -> idx 406 =
-     * T1_MOB_HIDE_SWAMP_TOAD (DB hp=20). Before this fix, OFFSET=15 placed wire
-     * 422 on T2_MOB_HIDE_SWAMP_SNAKE (DB hp=400), inconsistent with the wire.
-     * The previous LivingResourceTier `t-1` shift hid the drift on living
-     * non-DYNAMIC/non-DEAD critters; DEAD/DYNAMIC variants exposed it.
-     */
+    // Anchor: wire 422 (hp=20) -> idx 406 = T1_MOB_HIDE_SWAMP_TOAD.
+    // Re-verify with tools/offset-validate after each DB refresh.
     static OFFSET = 16;
 
     constructor() {

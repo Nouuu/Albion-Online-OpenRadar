@@ -293,9 +293,6 @@ export class HarvestablesHandler
             allParameters: allParams40
         });
 
-        // Diagnostic: when the harvestable is a critter corpse, cross-check the
-        // server-emitted tier (Param[7]) against the DB lookup at the current
-        // OFFSET. A delta surfaces a mismapped OFFSET or a wrong shift rule.
         const isCritterCorpse = mobileTypeId !== null
             && mobileTypeId !== 65535
             && mobileTypeId !== -1
@@ -309,8 +306,7 @@ export class HarvestablesHandler
                 dbLootTier: dbInfo?.tier ?? null,
                 dbUniqueName: dbInfo?.uniqueName ?? null,
                 dbLootType: dbInfo?.lootType ?? null,
-                tierDelta: dbInfo ? (tier - (dbInfo.combatTier ?? 0)) : null,
-                note: 'serverTier is authoritative; non-zero tierDelta means OFFSET/shift mismatch'
+                tierDelta: dbInfo ? (tier - (dbInfo.combatTier ?? 0)) : null
             });
         }
 
