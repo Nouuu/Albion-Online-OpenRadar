@@ -30,9 +30,10 @@ export class NetworkSettingsHandler {
         const activeNames = new Set((this.state?.captureInterfaces ?? []).map(c => c.name));
         const banner = this.renderBanner();
         const rows = this.interfaces.map(i => this.renderRow(i, activeNames.has(i.name))).join('');
-        const lan = (this.state?.lanAddresses ?? []).map(a =>
-            `<li><a data-lan-url href="http://${a}:5001/" target="_blank" class="link link-primary">http://${a}:5001/</a></li>`
-        ).join('');
+        const lan = (this.state?.lanAddresses ?? []).map(a => {
+            const safe = escapeHTML(a);
+            return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary">http://${safe}:5001/</a></li>`;
+        }).join('');
         this.container.innerHTML = `
             ${banner}
             <h3 class="text-base font-semibold mt-2">Capture interfaces</h3>
@@ -62,11 +63,11 @@ export class NetworkSettingsHandler {
         const label = BADGE_LABEL[iface.category] ?? BADGE_LABEL.other;
         const unavail = iface.isAvailable ? '' : ' <span class="opacity-60">(unavailable)</span>';
         return `
-            <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${iface.name}">
+            <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${escapeHTML(iface.name)}">
                 <input type="checkbox" class="checkbox checkbox-sm" ${checked ? 'checked' : ''} ${iface.isAvailable ? '' : 'disabled'}>
                 <span class="badge badge-outline">${badge} ${label}</span>
                 <span class="flex-1">${escapeHTML(iface.description || iface.name)}${unavail}</span>
-                <span class="opacity-60 text-sm">${iface.address || ''}</span>
+                <span class="opacity-60 text-sm">${escapeHTML(iface.address || '')}</span>
             </label>
         `;
     }
@@ -82,9 +83,9 @@ export class NetworkSettingsHandler {
     }
 
     updateApplyState() {
-        const selected = this.selectedNames();
+        const selected = [...this.selectedNames()].sort();
         const current = (this.state?.captureInterfaces ?? []).map(c => c.name).sort();
-        const same = JSON.stringify([...selected].sort()) === JSON.stringify(current);
+        const same = selected.length === current.length && selected.every((n, i) => n === current[i]);
         const btn = this.container.querySelector('[data-action="apply"]');
         if (btn) btn.disabled = same;
     }
@@ -95,26 +96,40 @@ export class NetworkSettingsHandler {
     }
 
     async apply() {
-        const names = this.selectedNames();
-        const res = await fetch('/api/network/interfaces', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({names}),
-        });
-        if (!res.ok) {
-            const txt = await res.text();
-            window.toast?.error?.(`Apply failed: ${txt}`);
-            return;
+        const btn = this.container.querySelector('[data-action="apply"]');
+        if (btn?.disabled) return;
+        if (btn) btn.disabled = true;
+        try {
+            const names = this.selectedNames();
+            const res = await fetch('/api/network/interfaces', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({names}),
+            });
+            if (!res.ok) {
+                const txt = await res.text();
+                window.toast?.error?.(`Apply failed: ${txt}`);
+                if (btn) btn.disabled = false;
+                return;
+            }
+            window.toast?.success?.('Capture interfaces updated.');
+            await this.load();
+        } catch (err) {
+            window.toast?.error?.(`Network error: ${err.message ?? err}`);
+            if (btn) btn.disabled = false;
         }
-        window.toast?.success?.('Capture interfaces updated.');
-        await this.load();
     }
 
     async refresh() {
-        const r = await fetch('/api/network/refresh', {method: 'POST'});
-        if (r.ok) {
-            this.interfaces = await r.json();
-            this.render();
+        try {
+            const r = await fetch('/api/network/refresh', {method: 'POST'});
+            if (!r.ok) {
+                window.toast?.error?.('Refresh failed.');
+                return;
+            }
+            await this.load();
+        } catch (err) {
+            window.toast?.error?.(`Refresh error: ${err.message ?? err}`);
         }
     }
 }

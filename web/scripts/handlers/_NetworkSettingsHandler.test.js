@@ -127,4 +127,100 @@ describe('NetworkSettingsHandler', () => {
 
         expect(container.textContent).toMatch(/Capturing on 2 interface/i);
     });
+
+    test('apply enables when current is non-empty and user clears selection', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ([
+                    {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+                ]),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'}),
+            });
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        let btn = container.querySelector('[data-action="apply"]');
+        expect(btn.disabled).toBe(true);
+
+        container.querySelector('[data-iface="a"] input').click();
+        btn = container.querySelector('[data-action="apply"]');
+        expect(btn.disabled).toBe(false);
+    });
+
+    test('apply shows error toast on backend 400', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => [
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: false, isAvailable: true},
+            ]})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})})
+            .mockResolvedValueOnce({ok: false, status: 400, text: async () => 'unknown interface names: [zzz]'});
+
+        const errorToast = vi.fn();
+        window.toast = {error: errorToast, success: vi.fn()};
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+        container.querySelector('[data-iface="a"] input').click();
+        await h.apply();
+
+        expect(errorToast).toHaveBeenCalledWith(expect.stringContaining('unknown interface names'));
+    });
+
+    test('apply handles network failure (fetch throws)', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => [
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: false, isAvailable: true},
+            ]})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})})
+            .mockRejectedValueOnce(new Error('connection refused'));
+
+        const errorToast = vi.fn();
+        window.toast = {error: errorToast, success: vi.fn()};
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+        container.querySelector('[data-iface="a"] input').click();
+        await h.apply();
+
+        expect(errorToast).toHaveBeenCalledWith(expect.stringContaining('connection refused'));
+    });
+
+    test('refresh refetches both endpoints', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => []})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})})
+            .mockResolvedValueOnce({ok: true, json: async () => null})
+            .mockResolvedValueOnce({ok: true, json: async () => [
+                {name: 'new', description: 'Brand new iface', address: '10.0.0.99', category: 'ethernet', isPersisted: false, isAvailable: true},
+            ]})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: ['10.0.0.99'], status: 'awaiting_interfaces'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+        await h.refresh();
+
+        const rows = container.querySelectorAll('[data-iface]');
+        expect(rows.length).toBe(1);
+        expect(container.querySelector('[data-iface="new"]')).toBeTruthy();
+    });
+
+    test('escapes html in interface description', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => [
+                {name: 'evil', description: '<script>alert(1)</script>', address: '<img>', category: 'wifi', isPersisted: false, isAvailable: true},
+            ]})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        expect(container.innerHTML).not.toContain('<script>alert(1)</script>');
+        expect(container.innerHTML).not.toContain('<img>');
+        expect(container.textContent).toContain('alert(1)');
+    });
 });
