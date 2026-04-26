@@ -165,6 +165,15 @@ export class MobsDrawing extends DrawingUtils
                 currentYOffset += offset12; // Move down for next element
             }
 
+            // Display DB uniqueName for living resources (diagnostic overlay)
+            if (isLivingResource && settingsSync.getBool("settingLivingResourcesName") && mobOne.uniqueName) {
+                const nameText = mobOne.uniqueName;
+                ctx.font = `${fontSize9} ${this.fontFamily}`;
+                const nameWidth = ctx.measureText(nameText).width;
+                this.drawTextItems(point.x - nameWidth / 2, point.y + currentYOffset, nameText, ctx, fontSize9, "#FFD700");
+                currentYOffset += offset12;
+            }
+
             // Display Tier (for hostile mobs only, not living resources)
             if (settingsSync.getBool("settingEnemiesTier") && mobOne.tier > 0 &&
                 mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {

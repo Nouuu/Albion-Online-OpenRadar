@@ -173,6 +173,14 @@
                     </div>
                 </label>
 
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingLivingResourcesName" class="checkbox checkbox-primary">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show DB Name</span>
+                    <div class="tooltip" data-tip="Display the DB uniqueName mapped from the wire typeId (debug, for offset/mapping verification).">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+
                 <hr class="border-base-content/10 my-4">
 
                 <p class="text-xs text-base-content/50">
@@ -298,6 +306,7 @@
             bindCheckbox("settingResourceClusters");
             bindCheckbox("settingLivingResourcesHealthBar");
             bindCheckbox("settingLivingResourcesID");
+            bindCheckbox("settingLivingResourcesName");
 
             bindNumber("settingClusterRadius", 30);
             bindNumber("settingClusterMinSize", 2);

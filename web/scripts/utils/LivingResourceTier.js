@@ -1,26 +1,11 @@
-const MIN_TIER_BY_TYPE = {
-    FIBER: 2,
-    HIDE: 1,
-    ORE: 2,
-    ROCK: 1,
-    WOOD: 1,
-    FIBER_CRITTER: 3,
-    HIDE_CRITTER: 3,
-    ORE_CRITTER: 3,
-    ROCK_CRITTER: 3,
-    WOOD_CRITTER: 3,
-    FIBER_CRITTER_ROADS: 4,
-    HIDE_CRITTER_ROADS: 4,
-    ORE_CRITTER_ROADS: 4,
-    ROCK_CRITTER_ROADS: 4,
-    WOOD_CRITTER_ROADS: 4,
-};
-
+// Issue #92 cross-validation (2026-04-26) confirmed that for every wire-observed
+// living mob, the upstream Loot.Harvestable @tier equals the combat @tier in
+// mobs.xml. The legacy `max(min_tier_floor, combat - 1)` shift was a coincidence
+// compensation for the OFFSET=15 drift in MobsDatabase: under the broken offset
+// the lookup landed one DB row too high, and t-1 cancelled the displacement on
+// living non-DYNAMIC/non-DEAD entries while DEAD/DYNAMIC branches surfaced it.
+// After OFFSET=16 (the HP-verified anchor), no shift is required: harvest tier
+// is the combat tier of the resolved DB entry.
 export function getLivingHarvestTier(mob) {
-    if (!mob) return 0;
-    const combatTier = mob.t ?? 0;
-    if (!mob.l) return combatTier;
-    if (/DYNAMIC|_DEAD/.test(mob.u ?? '')) return combatTier;
-    const minTier = MIN_TIER_BY_TYPE[mob.l] ?? 1;
-    return Math.max(minTier, combatTier - 1);
+    return mob?.t ?? 0;
 }

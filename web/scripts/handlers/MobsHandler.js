@@ -198,6 +198,7 @@ export class MobsHandler {
                 l: dbInfo.lootType,
             }) || 0;
             mob.name = dbInfo.type;
+            mob.uniqueName = dbInfo.uniqueName;
             mob.type = dbInfo.type === 'Hide' ? EnemyType.LivingSkinnable : EnemyType.LivingHarvestable;
             hasKnownInfo = true;
 
