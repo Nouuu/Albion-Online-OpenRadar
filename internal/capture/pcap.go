@@ -3,6 +3,7 @@ package capture
 import (
 	"context"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -28,15 +29,17 @@ type NetworkInterface struct {
 type PacketHandler func(payload []byte)
 
 type Capturer struct {
-	handle   *pcap.Handle
-	iface    NetworkInterface
-	onPacket PacketHandler
-	ctx      context.Context
-	cancel   context.CancelFunc
+	handle    *pcap.Handle
+	iface     NetworkInterface
+	onPacket  PacketHandler
+	ctx       context.Context
+	cancel    context.CancelFunc
+	closeOnce sync.Once
 
 	bytesReceived uint64
 }
 
+// captureFactory is overridable in tests; restore via t.Cleanup.
 var captureFactory = openLiveCapture
 
 func openLiveCapture(ctx context.Context, iface NetworkInterface) (*Capturer, error) {
@@ -75,13 +78,17 @@ func (c *Capturer) Start() error {
 	}
 }
 
+// Close cancels the read loop and closes the handle. Caller must serialize
+// against Start; Manager owns the locking.
 func (c *Capturer) Close() {
-	if c.cancel != nil {
-		c.cancel()
-	}
-	if c.handle != nil {
-		c.handle.Close()
-	}
+	c.closeOnce.Do(func() {
+		if c.cancel != nil {
+			c.cancel()
+		}
+		if c.handle != nil {
+			c.handle.Close()
+		}
+	})
 }
 
 func (c *Capturer) Iface() NetworkInterface { return c.iface }
