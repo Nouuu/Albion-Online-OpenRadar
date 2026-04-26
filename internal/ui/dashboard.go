@@ -527,14 +527,7 @@ func (d *Dashboard) renderHeader() string {
 
 	// Mode and capture interfaces
 	mode := ModeStyle.Render(fmt.Sprintf("Mode: %s", d.mode))
-	captureLine := "Capture: (awaiting)"
-	if len(d.captureInterfaces) > 0 {
-		parts := make([]string, 0, len(d.captureInterfaces))
-		for _, c := range d.captureInterfaces {
-			parts = append(parts, fmt.Sprintf("%s (%s)", c.Description, c.Address))
-		}
-		captureLine = "Capture: " + strings.Join(parts, ", ")
-	}
+	captureLine := "Capture: " + formatCaptureLine(d.captureInterfaces)
 	adapter := TimestampStyle.Render(captureLine)
 
 	httpLine := d.serverURL
@@ -805,7 +798,7 @@ func (d *Dashboard) renderConfigView() string {
 		cfgLine("Mode:", d.mode, ModeStyle),
 		cfgLine("HTTP URL:", d.serverURL, URLStyle),
 		cfgLine("WS URL:", d.wsURL, URLStyle),
-		cfgLine("Capture:", captureSummary(d.captureInterfaces), StatValueStyle),
+		cfgLine("Capture:", formatCaptureLine(d.captureInterfaces), StatValueStyle),
 		cfgLine("LAN:", strings.Join(d.lanAddresses, ", "), StatValueStyle),
 		"",
 		section("ℹ️", "About"),
@@ -957,7 +950,7 @@ func formatBytes(b uint64) string {
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
 
-func captureSummary(summaries []CaptureSummary) string {
+func formatCaptureLine(summaries []CaptureSummary) string {
 	if len(summaries) == 0 {
 		return "(awaiting)"
 	}
