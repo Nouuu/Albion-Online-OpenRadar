@@ -64,6 +64,10 @@ func openLiveCapture(ctx context.Context, iface NetworkInterface) (*Capturer, er
 func (c *Capturer) OnPacket(h PacketHandler) { c.onPacket = h }
 
 func (c *Capturer) Start() error {
+	if c.handle == nil {
+		<-c.ctx.Done()
+		return c.ctx.Err()
+	}
 	source := gopacket.NewPacketSource(c.handle, c.handle.LinkType())
 	for {
 		select {
