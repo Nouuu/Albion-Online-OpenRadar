@@ -155,6 +155,35 @@ func (a *NetworkAPI) handleRefresh(w http.ResponseWriter, _ *http.Request) {
 	a.handleList(w, nil)
 }
 
+// ComputeLANAddresses returns IPv4 RFC1918 host addresses bound to local
+// interfaces, used to print LAN URLs at startup and to populate /api/network/state.
+func ComputeLANAddresses() []string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return nil
+	}
+	rfc1918 := []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
+	out := make([]string, 0)
+	for _, a := range addrs {
+		ipnet, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip4 := ipnet.IP.To4()
+		if ip4 == nil {
+			continue
+		}
+		for _, cidr := range rfc1918 {
+			_, n, _ := net.ParseCIDR(cidr)
+			if n.Contains(ip4) {
+				out = append(out, ip4.String())
+				break
+			}
+		}
+	}
+	return out
+}
+
 func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)

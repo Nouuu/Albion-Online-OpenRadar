@@ -13,6 +13,7 @@ import (
 
 	"github.com/segmentio/encoding/json"
 
+	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/templates"
 )
@@ -31,9 +32,10 @@ type HTTPServer struct {
 	sounds  fs.FS
 	styles  fs.FS
 	// Template engine
-	tmpl    *templates.Engine
-	version string
-	devMode bool
+	tmpl       *templates.Engine
+	version    string
+	devMode    bool
+	networkAPI *NetworkAPI
 }
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
@@ -43,6 +45,9 @@ func NewHTTPServer(
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 	version string,
+	mgr NetworkManager,
+	allInterfaces []capture.NetworkInterface,
+	appDir string,
 ) (*HTTPServer, error) {
 	// Extract subdirectories from embed.FS (they include the folder path)
 	imagesFS, err := fs.Sub(images, "web/images")
@@ -86,12 +91,23 @@ func NewHTTPServer(
 		tmpl:      tmpl,
 		version:   version,
 	}
+	if mgr != nil {
+		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, ComputeLANAddresses)
+	}
 	s.setupRoutes()
 	return s, nil
 }
 
 // NewHTTPServerDev creates a new HTTP server reading from filesystem (dev mode)
-func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log *logger.Logger, version string) (*HTTPServer, error) {
+func NewHTTPServerDev(
+	port int,
+	appDir string,
+	wsHandler *WebSocketHandler,
+	log *logger.Logger,
+	version string,
+	mgr NetworkManager,
+	allInterfaces []capture.NetworkInterface,
+) (*HTTPServer, error) {
 	// Initialize template engine in dev mode (hot reload)
 	tmplDir := appDir + "/internal/templates"
 	tmpl, err := templates.NewEngineDev(tmplDir)
@@ -113,6 +129,9 @@ func NewHTTPServerDev(port int, appDir string, wsHandler *WebSocketHandler, log 
 		tmpl:      tmpl,
 		version:   version,
 		devMode:   true,
+	}
+	if mgr != nil {
+		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, ComputeLANAddresses)
 	}
 	s.setupRoutes()
 	return s, nil
@@ -175,6 +194,9 @@ func (s *HTTPServer) setupRoutes() {
 
 	// API endpoints
 	s.mux.HandleFunc("/api/settings/server-logs", s.handleServerLogs)
+	if s.networkAPI != nil {
+		s.networkAPI.Register(s.mux)
+	}
 }
 
 // renderPage renders a page template

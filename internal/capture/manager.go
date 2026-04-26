@@ -120,6 +120,18 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 	return nil
 }
 
+// BytesReceived sums per-handle bytes across active capturers.
+// pcap.Stats is not aggregated here; per-handle kernel stats are out of scope.
+func (m *Manager) BytesReceived() uint64 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var sum uint64
+	for _, mc := range m.active {
+		sum += mc.cap.BytesReceived()
+	}
+	return sum
+}
+
 func (m *Manager) State() State {
 	m.mu.Lock()
 	defer m.mu.Unlock()

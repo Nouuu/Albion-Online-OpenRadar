@@ -104,6 +104,19 @@ func TestManagerCloseTwiceSafe(t *testing.T) {
 	m.Close(context.Background())
 }
 
+func TestManagerBytesReceivedAggregates(t *testing.T) {
+	defer withStubFactory(t, nil)()
+	m := NewManager(context.Background())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}, {Name: "b", Device: "b"}}); err != nil {
+		t.Fatal(err)
+	}
+	if got := m.BytesReceived(); got != 0 {
+		t.Errorf("got %d, want 0", got)
+	}
+	m.Close(context.Background())
+}
+
 func TestManagerNoGoroutineLeak(t *testing.T) {
 	defer withStubFactory(t, nil)()
 

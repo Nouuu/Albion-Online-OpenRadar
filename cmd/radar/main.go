@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"runtime"
@@ -35,16 +36,16 @@ const (
 )
 
 type App struct {
-	ctx          context.Context
-	cancel       context.CancelFunc
-	wg           sync.WaitGroup
-	logger       *logger.Logger
-	httpServer   *server.HTTPServer
-	wsHandler    *server.WebSocketHandler
-	capturer     *capture.Capturer
-	photonParser *photon.PhotonParser
-	program      *tea.Program
-	adapterIP    string
+	ctx            context.Context
+	cancel         context.CancelFunc
+	wg             sync.WaitGroup
+	logger         *logger.Logger
+	httpServer     *server.HTTPServer
+	wsHandler      *server.WebSocketHandler
+	captureManager *capture.Manager
+	photonParser   *photon.PhotonParser
+	program        *tea.Program
+	adapterIP      string
 
 	// Packet statistics (atomic for thread safety)
 	packetsProcessed uint64
@@ -80,25 +81,46 @@ func runApp(cfg Config) bool {
 		exitWithError("Failed to get working directory", err)
 	}
 
-	// Initialize capture first (may prompt for interface selection)
-	// This happens BEFORE the dashboard starts
 	ctx, cancel := context.WithCancel(context.Background())
-	capturer, err := capture.New(ctx, appDir, cfg.ipAddr)
+
+	allIfaces, err := capture.EnumerateInterfaces()
 	if err != nil {
 		cancel()
-		exitWithError("Failed to create capturer", err)
+		exitWithError("Failed to enumerate interfaces", err)
 	}
 
-	// Create the app
-	app, err := newApp(appDir, cfg, ctx, cancel, capturer)
+	if _, mErr := capture.MigrateIPTxt(appDir, capture.ResolveByIP); mErr != nil {
+		logger.PrintWarn("NET", "ip.txt migration failed: %v", mErr)
+	}
+
+	cfgPersisted, _ := capture.ReadConfig(appDir)
+	target := resolvePersisted(cfgPersisted, allIfaces, cfg.ipAddr)
+	if len(target) == 0 {
+		target = autoPickDefaults(allIfaces)
+		if len(target) > 0 {
+			toPersist := make([]capture.PersistedInterface, 0, len(target))
+			for _, i := range target {
+				toPersist = append(toPersist, capture.PersistedInterface{Name: i.Name, Description: i.Description})
+			}
+			_ = capture.WriteConfig(appDir, capture.Config{CaptureInterfaces: toPersist})
+			logger.PrintInfo("NET", "Auto-selected %d interface(s). Change in /settings if needed.", len(target))
+		}
+	}
+
+	manager := capture.NewManager(ctx)
+
+	app, err := newApp(appDir, cfg, ctx, cancel, manager, allIfaces)
 	if err != nil {
 		cancel()
-		capturer.Close()
+		manager.Close(context.Background())
 		exitWithError("Failed to create app", err)
 	}
-	app.adapterIP = capturer.AdapterIP()
+	app.adapterIP = firstLANAddress()
 
-	// Create dashboard
+	if err := manager.Reconfigure(target); err != nil {
+		logger.PrintWarn("NET", "Some interfaces failed to open: %v", err)
+	}
+
 	dashboard := ui.NewDashboard(Version, serverPort, cfg.devMode, app.adapterIP)
 	app.program = tea.NewProgram(dashboard, tea.WithAltScreen())
 
@@ -170,23 +192,24 @@ func newApp(
 	cfg Config,
 	ctx context.Context,
 	cancel context.CancelFunc,
-	capturer *capture.Capturer,
+	manager *capture.Manager,
+	allIfaces []capture.NetworkInterface,
 ) (*App, error) {
 	log := logger.New("./logs")
 	wsHandler := server.NewWebSocketHandler(log)
 
-	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version)
+	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version, manager, allIfaces)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP server: %w", err)
 	}
 
 	app := &App{
-		ctx:        ctx,
-		cancel:     cancel,
-		logger:     log,
-		wsHandler:  wsHandler,
-		httpServer: httpServer,
-		capturer:   capturer,
+		ctx:            ctx,
+		cancel:         cancel,
+		logger:         log,
+		wsHandler:      wsHandler,
+		httpServer:     httpServer,
+		captureManager: manager,
 	}
 	app.photonParser = photon.NewPhotonParser(
 		app.onPhotonEvent,
@@ -196,7 +219,7 @@ func newApp(
 	app.photonParser.OnEncrypted = app.onPhotonEncrypted
 	app.photonParser.OnParseError = app.onPhotonParseError
 
-	app.capturer.OnPacket(app.handlePacket)
+	app.captureManager.OnPacket(app.handlePacket)
 
 	return app, nil
 }
@@ -207,10 +230,12 @@ func createHTTPServer(
 	wsHandler *server.WebSocketHandler,
 	log *logger.Logger,
 	version string,
+	mgr *capture.Manager,
+	allIfaces []capture.NetworkInterface,
 ) (*server.HTTPServer, error) {
 	if devMode {
 		logger.PrintInfo("MODE", "Development mode: reading files from disk")
-		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version)
+		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version, mgr, allIfaces)
 	}
 	logger.PrintInfo("MODE", "Production mode: using embedded assets")
 	return server.NewHTTPServer(
@@ -224,72 +249,54 @@ func createHTTPServer(
 		wsHandler,
 		log,
 		version,
+		mgr,
+		allIfaces,
+		appDir,
 	)
 }
 
 func (app *App) startServers() {
-	// Log startup messages
 	app.logger.PrintSessionInfo()
 	logger.PrintInfo("APP", "Starting servers...")
 
-	// Start HTTP server
-	app.wg.Add(1)
-	go func() {
-		defer app.wg.Done()
+	app.wg.Go(func() {
 		atomic.StoreInt32(&app.httpRunning, 1)
 		if err := app.httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
 			app.ctx.Err() == nil {
 			logger.PrintError("HTTP", "Error: %v", err)
 		}
 		atomic.StoreInt32(&app.httpRunning, 0)
-	}()
+	})
 
-	// Start packet capture
-	app.wg.Add(1)
-	go func() {
-		defer app.wg.Done()
-		atomic.StoreInt32(&app.captureRunning, 1)
-		if err := app.capturer.Start(); err != nil && app.ctx.Err() == nil {
-			logger.PrintError("CAP", "Error: %v", err)
-		}
-		atomic.StoreInt32(&app.captureRunning, 0)
-	}()
+	// Manager owns its own read-loop goroutines (started in Reconfigure).
+	atomic.StoreInt32(&app.captureRunning, 1)
 
-	// Give servers a moment to start
 	time.Sleep(100 * time.Millisecond)
 
 	logger.PrintSuccess("HTTP", "Server: http://localhost:%d", serverPort)
-	if app.adapterIP != "" && app.adapterIP != "127.0.0.1" {
-		logger.PrintSuccess("HTTP", "Server: http://%s:%d  (LAN)", app.adapterIP, serverPort)
+	for _, ip := range server.ComputeLANAddresses() {
+		logger.PrintSuccess("HTTP", "Server: http://%s:%d  (LAN)", ip, serverPort)
 	}
 	logger.PrintSuccess("WS", "WebSocket: ws://localhost:%d/ws", serverPort)
-	if app.adapterIP != "" && app.adapterIP != "127.0.0.1" {
-		logger.PrintSuccess("WS", "WebSocket: ws://%s:%d/ws  (LAN)", app.adapterIP, serverPort)
+	for _, ip := range server.ComputeLANAddresses() {
+		logger.PrintSuccess("WS", "WebSocket: ws://%s:%d/ws  (LAN)", ip, serverPort)
 	}
 	logger.PrintInfo("PKT", "Listening for Albion packets on UDP port 5056...")
-	logger.PrintInfo("NET", "Adapter: %s", app.adapterIP)
+	for _, s := range app.captureManager.State().Active {
+		logger.PrintInfo("NET", "Capturing on %s [%s]", s.Description, s.Address)
+	}
 }
 
 func (app *App) updateStats() {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
-	pcapStatsTick := 0
-	const pcapStatsEvery = 30 // seconds
-
 	for {
 		select {
 		case <-app.ctx.Done():
 			return
 		case <-ticker.C:
-			pcapStatsTick++
-			if pcapStatsTick >= pcapStatsEvery && app.capturer != nil {
-				pcapStatsTick = 0
-				if s, err := app.capturer.Stats(); err == nil && s != nil {
-					logger.PrintInfo("PKT", "kernel stats: received=%d dropped=%d ifdropped=%d",
-						s.PacketsReceived, s.PacketsDropped, s.PacketsIfDropped)
-				}
-			}
+			// TODO(#91): aggregate pcap.Stats across active capturers.
 			if app.program != nil {
 				var m runtime.MemStats
 				runtime.ReadMemStats(&m)
@@ -306,17 +313,18 @@ func (app *App) updateStats() {
 					WsBatches:     wsStats.BatchesSent,
 					WsMessages:    wsStats.MessagesSent,
 					WsQueueSize:   wsStats.MessagesQueue,
-					BytesReceived: app.capturer.BytesReceived(),
+					BytesReceived: app.captureManager.BytesReceived(),
 					BytesSent:     wsStats.BytesSent,
 					LogEntries:    logStats.TotalEntries,
 					LogBatches:    logStats.TotalBatches,
 					LogBufferSize: logStats.BufferSize,
 				})
 
+				captureActive := len(app.captureManager.State().Active) > 0
 				app.program.Send(ui.StatusMsg{
 					HTTPRunning:    atomic.LoadInt32(&app.httpRunning) == 1,
 					WSRunning:      app.wsHandler.ClientCount() >= 0,
-					CaptureRunning: atomic.LoadInt32(&app.captureRunning) == 1,
+					CaptureRunning: captureActive,
 				})
 			}
 		}
@@ -371,14 +379,13 @@ func (app *App) shutdown() {
 	defer cancel()
 
 	app.cancel()
-	app.capturer.Close()
+	app.captureManager.Close(ctx)
 	app.logger.Stop()
 
 	if err := app.httpServer.Shutdown(ctx); err != nil {
 		logger.PrintError("HTTP", "Shutdown error: %v", err)
 	}
 
-	// Wait for goroutines
 	done := make(chan struct{})
 	go func() {
 		app.wg.Wait()
@@ -391,4 +398,74 @@ func (app *App) shutdown() {
 	case <-ctx.Done():
 		logger.PrintWarn("APP", "Shutdown timed out")
 	}
+}
+
+// resolvePersisted maps a persisted (or CLI-overridden) selection to currently
+// available NetworkInterface entries. Returns nil if the override IP no longer
+// resolves; the caller falls back to autoPickDefaults.
+func resolvePersisted(cfg capture.Config, all []capture.NetworkInterface, ipOverride string) []capture.NetworkInterface {
+	if ipOverride != "" {
+		for _, i := range all {
+			if i.Address == ipOverride {
+				return []capture.NetworkInterface{i}
+			}
+		}
+		return nil
+	}
+	available := make(map[string]capture.NetworkInterface, len(all))
+	for _, i := range all {
+		available[i.Name] = i
+	}
+	out := make([]capture.NetworkInterface, 0, len(cfg.CaptureInterfaces))
+	for _, p := range cfg.CaptureInterfaces {
+		if i, ok := available[p.Name]; ok {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func autoPickDefaults(all []capture.NetworkInterface) []capture.NetworkInterface {
+	out := make([]capture.NetworkInterface, 0)
+	for _, i := range capture.RankCandidates(all) {
+		c := capture.Categorize(i.Name, i.Description)
+		if (c == capture.CategoryEthernet || c == capture.CategoryWiFi || c == capture.CategoryExitLag) && isRFC1918(i.Address) {
+			out = append(out, i)
+		}
+	}
+	return out
+}
+
+func isRFC1918(addr string) bool {
+	ip := net.ParseIP(addr)
+	if ip == nil {
+		return false
+	}
+	for _, cidr := range []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"} {
+		_, n, _ := net.ParseCIDR(cidr)
+		if n.Contains(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+// firstLANAddress returns the first RFC1918 IPv4 host address bound locally,
+// passed to the legacy single-IP TUI; Task 7 expands this to multi-interface.
+func firstLANAddress() string {
+	addrs, _ := net.InterfaceAddrs()
+	for _, a := range addrs {
+		ipnet, ok := a.(*net.IPNet)
+		if !ok {
+			continue
+		}
+		ip4 := ipnet.IP.To4()
+		if ip4 == nil {
+			continue
+		}
+		if isRFC1918(ip4.String()) {
+			return ip4.String()
+		}
+	}
+	return ""
 }
