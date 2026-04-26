@@ -44,7 +44,6 @@ type App struct {
 	captureManager *capture.Manager
 	photonParser   *photon.PhotonParser
 	program        *tea.Program
-	adapterIP      string
 
 	// Packet statistics (atomic for thread safety)
 	packetsProcessed uint64
@@ -113,14 +112,15 @@ func runApp(cfg Config) bool {
 		manager.Close(context.Background())
 		exitWithError("Failed to create app", err)
 	}
-	app.adapterIP = firstLANAddress()
 
 	if err := manager.Reconfigure(target); err != nil {
 		logger.PrintWarn("NET", "Some interfaces failed to open: %v", err)
 	}
 
-	dashboard := ui.NewDashboard(Version, serverPort, cfg.devMode, app.adapterIP)
+	dashboard := ui.NewDashboard(Version, serverPort, cfg.devMode, capture.LANAddresses(), nil)
 	app.program = tea.NewProgram(dashboard, tea.WithAltScreen())
+
+	app.startCaptureStatePoll()
 
 	// Track if restart was requested
 	restartRequested := false
@@ -431,12 +431,35 @@ func autoPickDefaults(all []capture.NetworkInterface) []capture.NetworkInterface
 	return out
 }
 
-// firstLANAddress returns the first RFC1918 IPv4 host address bound locally,
-// passed to the legacy single-IP TUI; Task 7 expands this to multi-interface.
-func firstLANAddress() string {
-	addrs := capture.LANAddresses()
-	if len(addrs) == 0 {
-		return ""
-	}
-	return addrs[0]
+// startCaptureStatePoll pushes a CaptureStateMsg to the TUI every 2s so
+// header and Config tab reflect live Manager state without coupling ui to capture.
+func (app *App) startCaptureStatePoll() {
+	app.wg.Go(func() {
+		t := time.NewTicker(2 * time.Second)
+		defer t.Stop()
+		for {
+			select {
+			case <-app.ctx.Done():
+				return
+			case <-t.C:
+				if app.program == nil {
+					continue
+				}
+				s := app.captureManager.State()
+				summaries := make([]ui.CaptureSummary, 0, len(s.Active))
+				for _, a := range s.Active {
+					summaries = append(summaries, ui.CaptureSummary{
+						Description: a.Description,
+						Address:     a.Address,
+						Category:    string(a.Category),
+					})
+				}
+				app.program.Send(ui.CaptureStateMsg{
+					Active:       summaries,
+					LanAddresses: capture.LANAddresses(),
+					Status:       string(s.Status),
+				})
+			}
+		}
+	})
 }

@@ -69,6 +69,20 @@ type StatusMsg struct {
 	CaptureRunning bool
 }
 
+// CaptureSummary mirrors internal/capture.CaptureSummary so internal/ui has no
+// dependency on internal/capture.
+type CaptureSummary struct {
+	Description string
+	Address     string
+	Category    string
+}
+
+type CaptureStateMsg struct {
+	Active       []CaptureSummary
+	LanAddresses []string
+	Status       string
+}
+
 type RestartMsg struct{}
 
 type TickMsg time.Time
@@ -95,7 +109,12 @@ type Dashboard struct {
 	lanServerURL string
 	lanWsURL     string
 	mode         string
-	adapterIP    string
+	port         int
+
+	// Capture interfaces and LAN addresses (sourced from Manager.State() poll)
+	captureInterfaces []CaptureSummary
+	lanAddresses      []string
+	captureStatus     string
 
 	// Status indicators
 	httpRunning    bool
@@ -155,7 +174,7 @@ type Dashboard struct {
 }
 
 // NewDashboard creates a new dashboard model
-func NewDashboard(version string, port int, devMode bool, adapterIP string) Dashboard {
+func NewDashboard(version string, port int, devMode bool, lanAddresses []string, captures []CaptureSummary) Dashboard {
 	mode := "Production"
 	if devMode {
 		mode = "Development"
@@ -166,25 +185,27 @@ func NewDashboard(version string, port int, devMode bool, adapterIP string) Dash
 	ti.CharLimit = 50
 
 	d := Dashboard{
-		version:          version,
-		serverURL:        fmt.Sprintf("http://localhost:%d", port),
-		wsURL:            fmt.Sprintf("ws://localhost:%d/ws", port),
-		mode:             mode,
-		adapterIP:        adapterIP,
-		startTime:        time.Now(),
-		logs:             make([]LogEntry, 0, maxLogs),
-		packetsHistory:   make([]uint64, 0, sparklineHistory),
-		memoryHistory:    make([]float64, 0, sparklineHistory),
-		memorySysHistory: make([]float64, 0, sparklineHistory),
-		wsBatchHistory:   make([]uint64, 0, sparklineHistory),
-		autoScroll:       true,
-		currentTab:       TabLogs,
-		logFilter:        LevelAll,
-		searchInput:      ti,
+		version:           version,
+		serverURL:         fmt.Sprintf("http://localhost:%d", port),
+		wsURL:             fmt.Sprintf("ws://localhost:%d/ws", port),
+		mode:              mode,
+		port:              port,
+		startTime:         time.Now(),
+		logs:              make([]LogEntry, 0, maxLogs),
+		packetsHistory:    make([]uint64, 0, sparklineHistory),
+		memoryHistory:     make([]float64, 0, sparklineHistory),
+		memorySysHistory:  make([]float64, 0, sparklineHistory),
+		wsBatchHistory:    make([]uint64, 0, sparklineHistory),
+		autoScroll:        true,
+		currentTab:        TabLogs,
+		logFilter:         LevelAll,
+		searchInput:       ti,
+		captureInterfaces: captures,
+		lanAddresses:      lanAddresses,
 	}
-	if adapterIP != "" && adapterIP != "127.0.0.1" {
-		d.lanServerURL = fmt.Sprintf("http://%s:%d", adapterIP, port)
-		d.lanWsURL = fmt.Sprintf("ws://%s:%d/ws", adapterIP, port)
+	if len(lanAddresses) > 0 && lanAddresses[0] != "127.0.0.1" {
+		d.lanServerURL = fmt.Sprintf("http://%s:%d", lanAddresses[0], port)
+		d.lanWsURL = fmt.Sprintf("ws://%s:%d/ws", lanAddresses[0], port)
 	}
 	return d
 }
@@ -356,6 +377,18 @@ func (d Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		d.wsRunning = msg.WSRunning
 		d.captureRunning = msg.CaptureRunning
 
+	case CaptureStateMsg:
+		d.captureInterfaces = msg.Active
+		d.lanAddresses = msg.LanAddresses
+		d.captureStatus = msg.Status
+		if len(msg.LanAddresses) > 0 && msg.LanAddresses[0] != "127.0.0.1" {
+			d.lanServerURL = fmt.Sprintf("http://%s:%d", msg.LanAddresses[0], d.port)
+			d.lanWsURL = fmt.Sprintf("ws://%s:%d/ws", msg.LanAddresses[0], d.port)
+		} else {
+			d.lanServerURL = ""
+			d.lanWsURL = ""
+		}
+
 	case TickMsg:
 		cmds = append(cmds, tickCmd())
 	}
@@ -492,9 +525,17 @@ func (d *Dashboard) renderHeader() string {
 	captureStatus := statusIndicator(d.captureRunning, "CAP")
 	status := fmt.Sprintf("%s %s %s", httpStatus, wsStatus, captureStatus)
 
-	// Mode and adapter
+	// Mode and capture interfaces
 	mode := ModeStyle.Render(fmt.Sprintf("Mode: %s", d.mode))
-	adapter := TimestampStyle.Render(fmt.Sprintf("Adapter: %s", d.adapterIP))
+	captureLine := "Capture: (awaiting)"
+	if len(d.captureInterfaces) > 0 {
+		parts := make([]string, 0, len(d.captureInterfaces))
+		for _, c := range d.captureInterfaces {
+			parts = append(parts, fmt.Sprintf("%s (%s)", c.Description, c.Address))
+		}
+		captureLine = "Capture: " + strings.Join(parts, ", ")
+	}
+	adapter := TimestampStyle.Render(captureLine)
 
 	httpLine := d.serverURL
 	wsLine := d.wsURL
@@ -764,7 +805,8 @@ func (d *Dashboard) renderConfigView() string {
 		cfgLine("Mode:", d.mode, ModeStyle),
 		cfgLine("HTTP URL:", d.serverURL, URLStyle),
 		cfgLine("WS URL:", d.wsURL, URLStyle),
-		cfgLine("Adapter:", d.adapterIP, StatValueStyle),
+		cfgLine("Capture:", captureSummary(d.captureInterfaces), StatValueStyle),
+		cfgLine("LAN:", strings.Join(d.lanAddresses, ", "), StatValueStyle),
 		"",
 		section("ℹ️", "About"),
 		cfgLine("", "OpenRadar - Albion Online", StatLabelStyle),
@@ -913,6 +955,17 @@ func formatBytes(b uint64) string {
 		exp++
 	}
 	return fmt.Sprintf("%.1f %cB", float64(b)/float64(div), "KMGTPE"[exp])
+}
+
+func captureSummary(summaries []CaptureSummary) string {
+	if len(summaries) == 0 {
+		return "(awaiting)"
+	}
+	parts := make([]string, 0, len(summaries))
+	for _, c := range summaries {
+		parts = append(parts, fmt.Sprintf("%s (%s)", c.Description, c.Address))
+	}
+	return strings.Join(parts, ", ")
 }
 
 func formatDuration(d time.Duration) string {
