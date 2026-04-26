@@ -42,6 +42,9 @@ type Capturer struct {
 // captureFactory is overridable in tests; restore via t.Cleanup.
 var captureFactory = openLiveCapture
 
+// findAllDevs is overridable in tests; restore via t.Cleanup.
+var findAllDevs = pcap.FindAllDevs
+
 func openLiveCapture(ctx context.Context, iface NetworkInterface) (*Capturer, error) {
 	handle, err := pcap.OpenLive(iface.Device, SnapLen, Promiscuous, ReadTimeout)
 	if err != nil {
@@ -120,7 +123,7 @@ func (c *Capturer) processPacket(p gopacket.Packet) {
 }
 
 func EnumerateInterfaces() ([]NetworkInterface, error) {
-	devs, err := pcap.FindAllDevs()
+	devs, err := findAllDevs()
 	if err != nil {
 		return nil, fmt.Errorf("list devices: %w", err)
 	}
