@@ -92,7 +92,7 @@ func NewHTTPServer(
 		version:   version,
 	}
 	if mgr != nil {
-		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, ComputeLANAddresses)
+		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
 	s.setupRoutes()
 	return s, nil
@@ -131,7 +131,7 @@ func NewHTTPServerDev(
 		devMode:   true,
 	}
 	if mgr != nil {
-		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, ComputeLANAddresses)
+		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
 	s.setupRoutes()
 	return s, nil

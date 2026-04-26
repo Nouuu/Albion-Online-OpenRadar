@@ -173,3 +173,15 @@ See [TODO.md](TODO.md) for roadmap and planned improvements.
 ---
 
 *Last update: 2026-04-12 - v2.1.0 (stabilization phase)*
+
+---
+
+## Post-#91 follow-ups (deferred)
+
+- **#91-followup-1 - NewHTTPServer config struct**: signature is at 10 params after #91. Refactor to `NewHTTPServer(cfg HTTPServerConfig)` to keep call site readable as Tasks 7/8 add more wiring. Estimate: 1h.
+
+- **#91-followup-2 - Aggregate pcap.Stats across handles**: the per-30s kernel-drop log line was removed in commit fedb2c4e (replaced by `// TODO(#91)` in `cmd/radar/main.go:updateStats`). Restore by adding `Manager.Stats() map[string]*pcap.Stats` and logging deltas. Required for in-prod debugging of capture loss. Estimate: 2h.
+
+- **#91-followup-3 - Bootstrap helpers test coverage**: `cmd/radar/main_test.go` covers resolvePersisted/autoPickDefaults; consider extracting to `internal/bootstrap` if a second binary needs the same flow. Until then, in-package tests suffice.
+
+- **#91-followup-4 - Manager.Reconfigure failure UX**: when all opens fail at boot, the warn-log is the only signal. The Settings page banner shows the awaiting state but a TUI banner would help headless users. Estimate: 30m.

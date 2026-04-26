@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"runtime"
@@ -53,8 +52,7 @@ type App struct {
 	packetsEncrypted uint64
 
 	// Server status (atomic for thread safety)
-	httpRunning    int32
-	captureRunning int32
+	httpRunning int32
 }
 
 func main() {
@@ -268,17 +266,14 @@ func (app *App) startServers() {
 		atomic.StoreInt32(&app.httpRunning, 0)
 	})
 
-	// Manager owns its own read-loop goroutines (started in Reconfigure).
-	atomic.StoreInt32(&app.captureRunning, 1)
-
 	time.Sleep(100 * time.Millisecond)
 
 	logger.PrintSuccess("HTTP", "Server: http://localhost:%d", serverPort)
-	for _, ip := range server.ComputeLANAddresses() {
+	for _, ip := range capture.LANAddresses() {
 		logger.PrintSuccess("HTTP", "Server: http://%s:%d  (LAN)", ip, serverPort)
 	}
 	logger.PrintSuccess("WS", "WebSocket: ws://localhost:%d/ws", serverPort)
-	for _, ip := range server.ComputeLANAddresses() {
+	for _, ip := range capture.LANAddresses() {
 		logger.PrintSuccess("WS", "WebSocket: ws://%s:%d/ws  (LAN)", ip, serverPort)
 	}
 	logger.PrintInfo("PKT", "Listening for Albion packets on UDP port 5056...")
@@ -429,43 +424,19 @@ func autoPickDefaults(all []capture.NetworkInterface) []capture.NetworkInterface
 	out := make([]capture.NetworkInterface, 0)
 	for _, i := range capture.RankCandidates(all) {
 		c := capture.Categorize(i.Name, i.Description)
-		if (c == capture.CategoryEthernet || c == capture.CategoryWiFi || c == capture.CategoryExitLag) && isRFC1918(i.Address) {
+		if (c == capture.CategoryEthernet || c == capture.CategoryWiFi || c == capture.CategoryExitLag) && capture.IsRFC1918(i.Address) {
 			out = append(out, i)
 		}
 	}
 	return out
 }
 
-func isRFC1918(addr string) bool {
-	ip := net.ParseIP(addr)
-	if ip == nil {
-		return false
-	}
-	for _, cidr := range []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"} {
-		_, n, _ := net.ParseCIDR(cidr)
-		if n.Contains(ip) {
-			return true
-		}
-	}
-	return false
-}
-
 // firstLANAddress returns the first RFC1918 IPv4 host address bound locally,
 // passed to the legacy single-IP TUI; Task 7 expands this to multi-interface.
 func firstLANAddress() string {
-	addrs, _ := net.InterfaceAddrs()
-	for _, a := range addrs {
-		ipnet, ok := a.(*net.IPNet)
-		if !ok {
-			continue
-		}
-		ip4 := ipnet.IP.To4()
-		if ip4 == nil {
-			continue
-		}
-		if isRFC1918(ip4.String()) {
-			return ip4.String()
-		}
+	addrs := capture.LANAddresses()
+	if len(addrs) == 0 {
+		return ""
 	}
-	return ""
+	return addrs[0]
 }
