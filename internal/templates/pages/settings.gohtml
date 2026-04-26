@@ -281,6 +281,17 @@
         </div>
     </div>
 
+    <!-- Network Settings -->
+    <div class="card bg-base-200">
+        <div class="card-body">
+            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
+                <i data-lucide="wifi" class="w-5 h-5 text-primary"></i>
+                Network
+            </h2>
+            <div id="network-section" class="text-base-content/80">Loading network configuration…</div>
+        </div>
+    </div>
+
     <!-- Danger Zone -->
     <div class="card bg-error/5 border border-error/20">
         <div class="card-body">
@@ -459,6 +470,19 @@
                 });
                 document.getElementById('modal-clearCache').close();
                 if (window.toast) window.toast.success('Cache cleared');
+            });
+
+            // Network section: dynamic interface selection
+            import('/scripts/handlers/NetworkSettingsHandler.js').then(({NetworkSettingsHandler}) => {
+                const networkContainer = document.getElementById('network-section');
+                if (networkContainer) {
+                    const networkHandler = new NetworkSettingsHandler(networkContainer);
+                    networkHandler.load();
+                    const networkPoll = setInterval(() => {
+                        if (!document.hidden) networkHandler.load();
+                    }, 5000);
+                    cleanup.push(() => clearInterval(networkPoll));
+                }
             });
         }
 
