@@ -90,3 +90,20 @@ func TestRankCandidates(t *testing.T) {
 		}
 	}
 }
+
+func TestRankCandidatesStableWithinCategory(t *testing.T) {
+	in := []NetworkInterface{
+		{Name: "first", Description: "Realtek PCIe GbE Family Controller"},
+		{Name: "second", Description: "Killer E2600 Gigabit Ethernet Controller"},
+	}
+	got := RankCandidates(in)
+	wantNames := []string{"first", "second"}
+	if len(got) != len(wantNames) {
+		t.Fatalf("got %d entries, want %d", len(got), len(wantNames))
+	}
+	for i, want := range wantNames {
+		if got[i].Name != want {
+			t.Errorf("position %d: name %q, want %q (stable input order broken)", i, got[i].Name, want)
+		}
+	}
+}

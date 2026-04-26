@@ -17,6 +17,7 @@ const (
 	CategoryOther    Category = "other"
 )
 
+// Order matters: Virtual first overrides Wi-Fi/Ethernet substrings; ExitLag before VPN.
 var categoryRules = []struct {
 	cat Category
 	re  *regexp.Regexp
