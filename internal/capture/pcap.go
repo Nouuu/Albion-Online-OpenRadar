@@ -27,9 +27,10 @@ const (
 
 // NetworkInterface represents a network interface with its details
 type NetworkInterface struct {
-	Name    string
-	Address string
-	Device  string
+	Name        string
+	Description string
+	Address     string
+	Device      string
 }
 
 // PacketHandler is called for each captured UDP payload
