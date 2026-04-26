@@ -31,37 +31,10 @@ func NewNetworkAPI(mgr NetworkManager, all []capture.NetworkInterface, appDir st
 }
 
 func (a *NetworkAPI) Register(mux *http.ServeMux) {
-	mux.Handle("/api/network/interfaces", a)
-	mux.Handle("/api/network/state", a)
-	mux.Handle("/api/network/refresh", a)
-}
-
-func (a *NetworkAPI) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/api/network/interfaces":
-		switch r.Method {
-		case http.MethodGet:
-			a.handleList(w, r)
-		case http.MethodPost:
-			a.handleSelect(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	case "/api/network/state":
-		if r.Method != http.MethodGet {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		a.handleState(w, r)
-	case "/api/network/refresh":
-		if r.Method != http.MethodPost {
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-		a.handleRefresh(w, r)
-	default:
-		http.NotFound(w, r)
-	}
+	mux.HandleFunc("GET /api/network/interfaces", a.handleList)
+	mux.HandleFunc("POST /api/network/interfaces", a.handleSelect)
+	mux.HandleFunc("GET /api/network/state", a.handleState)
+	mux.HandleFunc("POST /api/network/refresh", a.handleRefresh)
 }
 
 type ifaceRow struct {

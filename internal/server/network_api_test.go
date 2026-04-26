@@ -25,6 +25,12 @@ func (f *fakeManager) Reconfigure(t []capture.NetworkInterface) error {
 	return f.reconfErr
 }
 
+func newTestMux(api *NetworkAPI) *http.ServeMux {
+	mux := http.NewServeMux()
+	api.Register(mux)
+	return mux
+}
+
 func TestNetworkAPI_ListReturnsCategorized(t *testing.T) {
 	fm := &fakeManager{
 		allInterfaces: []capture.NetworkInterface{
@@ -36,9 +42,10 @@ func TestNetworkAPI_ListReturnsCategorized(t *testing.T) {
 		},
 	}
 	api := NewNetworkAPI(fm, fm.allInterfaces, "/tmp/notused", func() []string { return []string{"192.168.1.5"} })
+	mux := newTestMux(api)
 	req := httptest.NewRequest("GET", "/api/network/interfaces", nil)
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -64,12 +71,13 @@ func TestNetworkAPI_PostFromLoopback(t *testing.T) {
 	}
 	dir := t.TempDir()
 	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil })
+	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"x"}})
 	req := httptest.NewRequest("POST", "/api/network/interfaces", bytes.NewReader(body))
 	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != 200 {
 		t.Fatalf("loopback POST got %d, body=%s", rec.Code, rec.Body.String())
 	}
@@ -86,12 +94,13 @@ func TestNetworkAPI_PostFromLanRejected(t *testing.T) {
 	fm := &fakeManager{}
 	dir := t.TempDir()
 	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"x"}})
 	req := httptest.NewRequest("POST", "/api/network/interfaces", bytes.NewReader(body))
 	req.RemoteAddr = "192.168.1.42:5555"
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusForbidden {
 		t.Errorf("status %d, want 403", rec.Code)
 	}
@@ -108,9 +117,10 @@ func TestNetworkAPI_StateShape(t *testing.T) {
 		},
 	}
 	api := NewNetworkAPI(fm, nil, "/tmp", func() []string { return []string{"192.168.1.1"} })
+	mux := newTestMux(api)
 	req := httptest.NewRequest("GET", "/api/network/state", nil)
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != 200 {
 		t.Fatalf("status %d", rec.Code)
 	}
@@ -132,12 +142,13 @@ func TestNetworkAPI_PostUnknownNames(t *testing.T) {
 	}
 	dir := t.TempDir()
 	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil })
+	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"a", "unknown"}})
 	req := httptest.NewRequest("POST", "/api/network/interfaces", bytes.NewReader(body))
 	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status %d, want 400", rec.Code)
 	}
@@ -153,11 +164,12 @@ func TestNetworkAPI_PostMalformedBody(t *testing.T) {
 	fm := &fakeManager{}
 	dir := t.TempDir()
 	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	mux := newTestMux(api)
 
 	req := httptest.NewRequest("POST", "/api/network/interfaces", bytes.NewReader([]byte("{not json")))
 	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("status %d, want 400", rec.Code)
 	}
@@ -169,10 +181,11 @@ func TestNetworkAPI_PostMalformedBody(t *testing.T) {
 func TestNetworkAPI_RefreshGETIs405(t *testing.T) {
 	fm := &fakeManager{}
 	api := NewNetworkAPI(fm, nil, t.TempDir(), func() []string { return nil })
+	mux := newTestMux(api)
 
 	req := httptest.NewRequest("GET", "/api/network/refresh", nil)
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("status %d, want 405", rec.Code)
 	}
@@ -181,10 +194,11 @@ func TestNetworkAPI_RefreshGETIs405(t *testing.T) {
 func TestNetworkAPI_StatePOSTIs405(t *testing.T) {
 	fm := &fakeManager{}
 	api := NewNetworkAPI(fm, nil, t.TempDir(), func() []string { return nil })
+	mux := newTestMux(api)
 
 	req := httptest.NewRequest("POST", "/api/network/state", nil)
 	rec := httptest.NewRecorder()
-	api.ServeHTTP(rec, req)
+	mux.ServeHTTP(rec, req)
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("status %d, want 405", rec.Code)
 	}
@@ -197,30 +211,30 @@ func TestNetworkAPI_RefreshConcurrentSafe(t *testing.T) {
 		allInterfaces: []capture.NetworkInterface{{Name: "n1", Description: "Wi-Fi", Address: "10.0.0.1"}},
 	}
 	api := NewNetworkAPI(fm, fm.allInterfaces, t.TempDir(), func() []string { return nil })
+	mux := newTestMux(api)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			req := httptest.NewRequest("GET", "/api/network/interfaces", nil)
 			rec := httptest.NewRecorder()
-			api.ServeHTTP(rec, req)
+			mux.ServeHTTP(rec, req)
 			if rec.Code != http.StatusOK {
 				t.Errorf("list status %d", rec.Code)
 			}
 		}()
 	}
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		wg.Add(1)
-		go func(idx int) {
+		go func() {
 			defer wg.Done()
 			fresh := []capture.NetworkInterface{{Name: "mut", Description: "X", Address: "10.0.0.99"}}
 			api.mu.Lock()
 			api.all = fresh
 			api.mu.Unlock()
-			_ = idx
-		}(i)
+		}()
 	}
 	wg.Wait()
 }
