@@ -8,8 +8,10 @@ import (
 	"strings"
 )
 
-const configFilename = "network.json"
-const legacyIPFilename = "ip.txt"
+const (
+	configFilename   = "network.json"
+	legacyIPFilename = "ip.txt"
+)
 
 type PersistedInterface struct {
 	Name        string `json:"name"`
@@ -70,7 +72,10 @@ func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {
 		return false, nil
 	}
 	existing, err := ReadConfig(appDir)
-	if err == nil && len(existing.CaptureInterfaces) > 0 {
+	if err != nil {
+		return false, fmt.Errorf("read existing config before migration: %w", err)
+	}
+	if len(existing.CaptureInterfaces) > 0 {
 		_ = os.Remove(ipPath)
 		return false, nil
 	}

@@ -2,8 +2,10 @@ package capture
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -87,6 +89,135 @@ func TestMigrateNoIPTxt(t *testing.T) {
 	}
 	if migrated {
 		t.Error("expected migrated=false when no ip.txt")
+	}
+}
+
+func TestMigrateSkipsWhenConfigPopulated(t *testing.T) {
+	dir := t.TempDir()
+	cfg := Config{CaptureInterfaces: []PersistedInterface{{Name: `\Device\NPF_{Y}`, Description: "Existing"}}}
+	if err := WriteConfig(dir, cfg); err != nil {
+		t.Fatalf("WriteConfig: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	resolve := func(ip string) (PersistedInterface, error) {
+		t.Fatalf("resolver should not be called when config is already populated; got ip=%q", ip)
+		return PersistedInterface{}, nil
+	}
+	migrated, err := MigrateIPTxt(dir, resolve)
+	if err != nil {
+		t.Fatalf("MigrateIPTxt: %v", err)
+	}
+	if migrated {
+		t.Error("expected migrated=false when config is populated")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+		t.Errorf("ip.txt should be deleted, err=%v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if len(got.CaptureInterfaces) != 1 || got.CaptureInterfaces[0].Description != "Existing" {
+		t.Errorf("network.json should be unchanged, got %+v", got)
+	}
+}
+
+func TestMigrateEmptyIPTxt(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("  \n"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	resolve := func(ip string) (PersistedInterface, error) {
+		t.Fatalf("resolver should not be called for whitespace-only ip.txt; got ip=%q", ip)
+		return PersistedInterface{}, nil
+	}
+	migrated, err := MigrateIPTxt(dir, resolve)
+	if err != nil {
+		t.Fatalf("MigrateIPTxt: %v", err)
+	}
+	if migrated {
+		t.Error("expected migrated=false for empty ip.txt")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+		t.Errorf("ip.txt should be deleted, err=%v", err)
+	}
+}
+
+func TestMigrateNilResolverWithNonEmptyIPTxt(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	migrated, err := MigrateIPTxt(dir, nil)
+	if err == nil {
+		t.Fatal("expected error when resolver is nil and ip.txt has content")
+	}
+	if migrated {
+		t.Error("expected migrated=false")
+	}
+	if msg := err.Error(); !strings.Contains(msg, "no IP resolver") {
+		t.Errorf("error message %q should mention missing resolver", msg)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); err != nil {
+		t.Errorf("ip.txt should be preserved for retry, err=%v", err)
+	}
+}
+
+func TestMigrateResolverError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("10.0.0.1"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	resolverErr := errors.New("interface not found")
+	resolve := func(ip string) (PersistedInterface, error) {
+		return PersistedInterface{}, resolverErr
+	}
+	migrated, err := MigrateIPTxt(dir, resolve)
+	if err == nil {
+		t.Fatal("expected error when resolver fails")
+	}
+	if migrated {
+		t.Error("expected migrated=false")
+	}
+	if !errors.Is(err, resolverErr) {
+		t.Errorf("error chain should wrap resolver error, got %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+		t.Errorf("ip.txt should be deleted on resolver error, err=%v", err)
+	}
+}
+
+func TestMigrateMalformedConfigErrors(t *testing.T) {
+	dir := t.TempDir()
+	malformed := []byte("{not json")
+	if err := os.WriteFile(filepath.Join(dir, "network.json"), malformed, 0o644); err != nil {
+		t.Fatalf("WriteFile network.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	resolve := func(ip string) (PersistedInterface, error) {
+		t.Fatalf("resolver should not be called when config is malformed; got ip=%q", ip)
+		return PersistedInterface{}, nil
+	}
+	migrated, err := MigrateIPTxt(dir, resolve)
+	if err == nil {
+		t.Fatal("expected error when network.json is malformed")
+	}
+	if migrated {
+		t.Error("expected migrated=false")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); err != nil {
+		t.Errorf("ip.txt should be preserved for recovery, err=%v", err)
+	}
+	got, err := os.ReadFile(filepath.Join(dir, "network.json"))
+	if err != nil {
+		t.Fatalf("ReadFile network.json: %v", err)
+	}
+	if string(got) != string(malformed) {
+		t.Errorf("network.json should not be overwritten, got %q want %q", got, malformed)
 	}
 }
 
