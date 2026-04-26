@@ -189,4 +189,10 @@ See [docs/archive/](../archive/) for completed migration and refactoring plans.
 
 ---
 
+## Live validation pending
+
+- **#91 ExitLag free trial smoke** : after the dynamic capture interface PR lands, activate ExitLag's 3-day free trial and verify radar continuity in the four cases A/B/C/D documented in `docs/superpowers/specs/2026-04-26-dynamic-capture-interface-design.md`. If Case D (NDIS LWF swallows packets) materializes, open a follow-up issue for WFP-level capture investigation.
+
+---
+
 *End of Roadmap*
