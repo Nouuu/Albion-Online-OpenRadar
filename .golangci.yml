@@ -23,6 +23,19 @@ linters:
     - unconvert # Remove unnecessary type conversions
     - unparam # Report unused function parameters
     - wastedassign # Find wasted assignment statements
+    # Modernization (Go 1.22+ idioms)
+    - copyloopvar # 1.22 per-iteration loop var; flags x := x redundancy
+    - intrange # 1.22 range-over-int; flags for i := 0; i < N; i++
+    - usestdlibvars # forces http.MethodGet, http.StatusOK over literals
+    - perfsprint # flags slow fmt.Sprintf patterns
+    - usetesting # forces t.Setenv, t.TempDir, t.Context (1.25)
+    - tparallel # t.Parallel correctness
+    - thelper # t.Helper() in test helpers
+    - mirror # *Reader/*Writer type mirrors
+    - canonicalheader # canonical HTTP headers
+    - whitespace # leading/trailing whitespace cleanup
+    - exptostd # x/exp/maps,slices to stdlib
+    - testifylint # testify v1 to v2 migration patterns
 
   # Disable from standard set
   disable:

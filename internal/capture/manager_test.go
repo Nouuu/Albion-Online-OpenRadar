@@ -109,14 +109,12 @@ func TestManagerNoGoroutineLeak(t *testing.T) {
 
 	var workerStarted, workerExited atomic.Int32
 	prev := managerStartWorker
-	managerStartWorker = func(c *Capturer, wg *sync.WaitGroup, onError func(string, error)) {
+	managerStartWorker = func(c *Capturer, wg *sync.WaitGroup, _ func(string, error)) {
 		workerStarted.Add(1)
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			defer workerExited.Add(1)
 			<-c.ctx.Done()
-		}()
+		})
 	}
 	defer func() { managerStartWorker = prev }()
 

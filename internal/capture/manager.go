@@ -2,6 +2,7 @@ package capture
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -66,11 +67,11 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 	m.mu.Lock()
 	if m.closed {
 		m.mu.Unlock()
-		return fmt.Errorf("manager closed")
+		return errors.New("manager closed")
 	}
 	if m.onPacket == nil {
 		m.mu.Unlock()
-		return fmt.Errorf("OnPacket must be called before Reconfigure")
+		return errors.New("OnPacket must be called before Reconfigure")
 	}
 
 	desired := make(map[string]NetworkInterface, len(target))
@@ -182,11 +183,9 @@ func (m *Manager) Close(closeCtx context.Context) {
 }
 
 func startWorker(c *Capturer, wg *sync.WaitGroup, onError func(string, error)) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		if err := c.Start(); err != nil && err != context.Canceled {
 			onError(c.iface.Name, err)
 		}
-	}()
+	})
 }

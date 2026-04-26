@@ -55,6 +55,7 @@ func openLiveCapture(ctx context.Context, iface NetworkInterface) (*Capturer, er
 		handle.Close()
 		return nil, fmt.Errorf("set BPF filter on %q: %w", iface.Device, err)
 	}
+	//nolint:gosec // G118: cancel is stored on Capturer and invoked by Close().
 	cctx, cancel := context.WithCancel(ctx)
 	return &Capturer{
 		handle: handle,
