@@ -2,9 +2,11 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 )
@@ -18,6 +20,7 @@ type LANAddrFn func() []string
 
 type NetworkAPI struct {
 	mgr      NetworkManager
+	mu       sync.RWMutex
 	all      []capture.NetworkInterface
 	appDir   string
 	lanAddrs LANAddrFn
@@ -71,17 +74,22 @@ type ifaceRow struct {
 }
 
 func (a *NetworkAPI) handleList(w http.ResponseWriter, _ *http.Request) {
+	a.mu.RLock()
+	snapshot := make([]capture.NetworkInterface, len(a.all))
+	copy(snapshot, a.all)
+	a.mu.RUnlock()
+
 	persisted := make(map[string]bool)
 	cfg, _ := capture.ReadConfig(a.appDir)
 	for _, p := range cfg.CaptureInterfaces {
 		persisted[p.Name] = true
 	}
 	available := make(map[string]bool)
-	for _, i := range a.all {
+	for _, i := range snapshot {
 		available[i.Name] = true
 	}
-	rows := make([]ifaceRow, 0, len(a.all))
-	for _, i := range capture.RankCandidates(a.all) {
+	rows := make([]ifaceRow, 0, len(snapshot))
+	for _, i := range capture.RankCandidates(snapshot) {
 		rows = append(rows, ifaceRow{
 			Name:        i.Name,
 			Description: i.Description,
@@ -128,14 +136,24 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid body: "+err.Error(), http.StatusBadRequest)
 		return
 	}
+	a.mu.RLock()
+	available := make(map[string]capture.NetworkInterface, len(a.all))
+	for _, i := range a.all {
+		available[i.Name] = i
+	}
+	a.mu.RUnlock()
 	desired := make([]capture.NetworkInterface, 0, len(body.Names))
+	var unknown []string
 	for _, name := range body.Names {
-		for _, i := range a.all {
-			if i.Name == name {
-				desired = append(desired, i)
-				break
-			}
+		if i, ok := available[name]; ok {
+			desired = append(desired, i)
+		} else {
+			unknown = append(unknown, name)
 		}
+	}
+	if len(unknown) > 0 {
+		http.Error(w, fmt.Sprintf("unknown interface names: %v", unknown), http.StatusBadRequest)
+		return
 	}
 	if err := a.mgr.Reconfigure(desired); err != nil {
 		http.Error(w, "reconfigure: "+err.Error(), http.StatusInternalServerError)
@@ -158,7 +176,9 @@ func (a *NetworkAPI) handleRefresh(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, "enumerate: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+	a.mu.Lock()
 	a.all = fresh
+	a.mu.Unlock()
 	a.handleList(w, nil)
 }
 
