@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -518,7 +519,7 @@ func (d Dashboard) View() string {
 
 func (d *Dashboard) renderHeader() string {
 	// Title and status indicators
-	title := TitleStyle.Render(fmt.Sprintf("OpenRadar v%s", d.version))
+	title := TitleStyle.Render("OpenRadar v" + d.version)
 
 	httpStatus := statusIndicator(d.httpRunning, "HTTP")
 	wsStatus := statusIndicator(d.wsRunning, "WS")
@@ -526,7 +527,7 @@ func (d *Dashboard) renderHeader() string {
 	status := fmt.Sprintf("%s %s %s", httpStatus, wsStatus, captureStatus)
 
 	// Mode and capture interfaces
-	mode := ModeStyle.Render(fmt.Sprintf("Mode: %s", d.mode))
+	mode := ModeStyle.Render("Mode: " + d.mode)
 	captureLine := "Capture: " + formatCaptureLine(d.captureInterfaces)
 	adapter := TimestampStyle.Render(captureLine)
 
@@ -540,7 +541,7 @@ func (d *Dashboard) renderHeader() string {
 	wsURL := URLStyle.Render(wsLine)
 
 	// Started time
-	startedAt := TimestampStyle.Render(fmt.Sprintf("Started: %s", d.startTime.Format("15:04:05")))
+	startedAt := TimestampStyle.Render("Started: " + d.startTime.Format("15:04:05"))
 
 	// Tabs
 	tabs := d.renderTabs()
@@ -609,11 +610,11 @@ func (d *Dashboard) renderFooter() string {
 		StatLabelStyle.Render("Batch:"),
 		StatValueStyle.Render(fmt.Sprintf("%s/%s", formatNumber(d.wsBatches), formatNumber(d.wsMessages))),
 		StatLabelStyle.Render("WS:"),
-		StatValueStyle.Render(fmt.Sprintf("%d", d.wsClients)),
+		StatValueStyle.Render(strconv.Itoa(d.wsClients)),
 		StatLabelStyle.Render("Err:"),
 		StatValueStyle.Render(formatNumber(d.errors)),
 		StatLabelStyle.Render("Logs:"),
-		StatValueStyle.Render(fmt.Sprintf("%d", len(d.logs))),
+		StatValueStyle.Render(strconv.Itoa(len(d.logs))),
 	)
 
 	// Filter and scroll status
@@ -623,7 +624,7 @@ func (d *Dashboard) renderFooter() string {
 		scrollStr = " | " + ModeStyle.Render("PAUSED")
 	}
 	if d.searchQuery != "" {
-		scrollStr += " | " + URLStyle.Render(fmt.Sprintf("Search: %s", d.searchQuery))
+		scrollStr += " | " + URLStyle.Render("Search: "+d.searchQuery)
 	}
 	statusLine := filterStr + scrollStr
 
@@ -703,12 +704,12 @@ func (d *Dashboard) renderStatsView() string {
 		stat("Err rate:", fmt.Sprintf("%.2f%%", errorRate), d.getErrorColor(errorRate)),
 		"",
 		section("🔌", "WebSocket"),
-		stat("Clients:", fmt.Sprintf("%d", d.wsClients), ColorPrimary),
+		stat("Clients:", strconv.Itoa(d.wsClients), ColorPrimary),
 		stat("Batches:", formatNumber(d.wsBatches), ColorSuccess),
 		stat("Batch/s:", fmt.Sprintf("%.0f", batchesPerSec), ColorPrimary),
 		stat("Messages:", formatNumber(d.wsMessages), ColorSuccess),
 		stat("Avg/batch:", fmt.Sprintf("%.1f", avgMsgsPerBatch), ColorWarning),
-		stat("Queue:", fmt.Sprintf("%d", d.wsQueueSize), d.getQueueColor()),
+		stat("Queue:", strconv.Itoa(d.wsQueueSize), d.getQueueColor()),
 		"",
 		section("📡", "Traffic"),
 		stat("RX total:", formatBytes(d.bytesReceived), ColorPrimary),
@@ -734,7 +735,7 @@ func (d *Dashboard) renderStatsView() string {
 		section("📝", "Logging"),
 		stat("Entries:", formatNumber(d.logEntries), ColorSuccess),
 		stat("Batches:", formatNumber(d.logBatches), ColorPrimary),
-		stat("Buffer:", fmt.Sprintf("%d", d.logBufferSize), ColorWarning),
+		stat("Buffer:", strconv.Itoa(d.logBufferSize), ColorWarning),
 	}
 
 	colWidth := (d.width - 4) / 2
@@ -844,7 +845,7 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 	if len(data) > sparklineDisplayLen {
 		displayData = make([]T, sparklineDisplayLen)
 		ratio := float64(len(data)) / float64(sparklineDisplayLen)
-		for i := 0; i < sparklineDisplayLen; i++ {
+		for i := range sparklineDisplayLen {
 			// Average the values in each bucket
 			start := int(float64(i) * ratio)
 			end := int(float64(i+1) * ratio)
@@ -922,7 +923,7 @@ func avgVal[T uint64 | float64](data []T) float64 {
 }
 
 func formatNumber(n uint64) string {
-	str := fmt.Sprintf("%d", n)
+	str := strconv.FormatUint(n, 10)
 	if len(str) <= 3 {
 		return str
 	}

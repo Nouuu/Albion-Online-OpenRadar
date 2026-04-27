@@ -1,12 +1,14 @@
 // photon-dump extracts per-scenario fixtures from an anonymized Photon pcap.
 //
 // Produces two corpora:
-//   internal/photon/testdata/<handler>/<scenario>.pcap  (small anonymized pcap fragments)
-//   web/scripts/__fixtures__/ws/<handler>/<scenario>.json  (WS-level JSON for Vitest)
+//
+//	internal/photon/testdata/<handler>/<scenario>.pcap  (small anonymized pcap fragments)
+//	web/scripts/__fixtures__/ws/<handler>/<scenario>.json  (WS-level JSON for Vitest)
 //
 // Usage:
-//   photon-dump -in capture.anon.pcap -out-go internal/photon/testdata -out-js web/scripts/__fixtures__/ws
-//   photon-dump -in capture.anon.pcap -inventory docs/technical/PROTOCOL18_OBSERVED_CODES.md
+//
+//	photon-dump -in capture.anon.pcap -out-go internal/photon/testdata -out-js web/scripts/__fixtures__/ws
+//	photon-dump -in capture.anon.pcap -inventory docs/technical/PROTOCOL18_OBSERVED_CODES.md
 package main
 
 import (

@@ -184,7 +184,7 @@ func TestLivePcap_Fragments(t *testing.T) {
 	for _, n := range stats.responses {
 		decoded += n
 	}
-	require.Greater(t, decoded, 0,
+	require.Positive(t, decoded,
 		"expected at least one decoded message across fragments, saw events=%v", stats.events)
 }
 

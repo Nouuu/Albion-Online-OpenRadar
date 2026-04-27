@@ -3,9 +3,10 @@ package server
 import (
 	"testing"
 
-	"github.com/nospy/albion-openradar/internal/photon"
 	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nospy/albion-openradar/internal/photon"
 )
 
 // Locks the JSON wire shape broadcast to the web front-end. The front reads

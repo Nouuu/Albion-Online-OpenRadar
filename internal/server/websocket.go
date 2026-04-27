@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/segmentio/encoding/json"
+
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
-	"github.com/segmentio/encoding/json"
 )
 
 const (

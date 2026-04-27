@@ -283,9 +283,9 @@ func TestDeserializeRequest_OpMove_PostPatch(t *testing.T) {
 	require.Equal(t, byte(22), req.OperationCode)
 	require.Equal(t, int64(1000), req.Parameters[0])
 	require.Equal(t, []float32{10.5, 20.5}, req.Parameters[1])
-	require.Equal(t, float32(1.5), req.Parameters[2])
+	require.InEpsilon(t, float32(1.5), req.Parameters[2], 1e-6)
 	require.Equal(t, []float32{9.5, 19.5}, req.Parameters[3])
-	require.Equal(t, float32(5.5), req.Parameters[4])
+	require.InEpsilon(t, float32(5.5), req.Parameters[4], 1e-6)
 	require.Equal(t, byte(22), req.Parameters[253])
 }
 

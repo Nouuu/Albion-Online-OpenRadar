@@ -47,7 +47,7 @@ func buildFragmentedEventPackets(n int) [][]byte {
 	chunkSize := (total + n - 1) / n
 
 	packets := make([][]byte, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		start := i * chunkSize
 		end := start + chunkSize
 		if end > total {
@@ -123,7 +123,7 @@ func TestPhotonParser_Fragment_Eviction(t *testing.T) {
 		return newSingleCommandPhotonPacket(cmdSendFragment,
 			append(fragHeader, 0x00, 0x00, 0x00, 0x00, 0x00))
 	}
-	for i := uint32(0); i < uint32(maxPendingSegments+5); i++ {
+	for i := range uint32(maxPendingSegments + 5) {
 		p.ReceivePacket(buildIncompleteFragment(i))
 	}
 	require.LessOrEqual(t, len(p.pendingSegments), maxPendingSegments)

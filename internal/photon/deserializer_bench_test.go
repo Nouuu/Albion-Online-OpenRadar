@@ -22,7 +22,7 @@ func buildBenchMoveEventPayload() []byte {
 
 func BenchmarkDeserializeMoveEvent(b *testing.B) {
 	payload := buildBenchMoveEventPayload()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		ev, _ := DeserializeEvent(payload)
 		PostProcessEvent(ev)
 	}

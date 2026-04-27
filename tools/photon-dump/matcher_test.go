@@ -3,8 +3,9 @@ package main
 import (
 	"testing"
 
-	"github.com/nospy/albion-openradar/internal/photon"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nospy/albion-openradar/internal/photon"
 )
 
 func TestMatchEvent_CodeOnly(t *testing.T) {

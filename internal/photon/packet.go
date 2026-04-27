@@ -84,7 +84,7 @@ func (p *PhotonParser) ReceivePacket(payload []byte) bool {
 		return false
 	}
 
-	for i := 0; i < commandCount; i++ {
+	for range commandCount {
 		var ok bool
 		offset, ok = p.handleCommand(payload, offset)
 		if !ok {

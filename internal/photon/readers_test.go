@@ -68,11 +68,11 @@ func TestReadLEPrimitives(t *testing.T) {
 	})
 	t.Run("float32 one", func(t *testing.T) {
 		buf := bytes.NewBuffer([]byte{0x00, 0x00, 0x80, 0x3f})
-		require.Equal(t, float32(1.0), readFloat32(buf))
+		require.InEpsilon(t, float32(1.0), readFloat32(buf), 1e-6)
 	})
 	t.Run("float64 one", func(t *testing.T) {
 		buf := bytes.NewBuffer([]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f})
-		require.Equal(t, float64(1.0), readFloat64(buf))
+		require.InEpsilon(t, 1.0, readFloat64(buf), 1e-9)
 	})
 }
 
@@ -83,10 +83,10 @@ func TestReadString(t *testing.T) {
 
 func TestReadString_Empty(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{0x00})
-	require.Equal(t, "", readString(buf))
+	require.Empty(t, readString(buf))
 }
 
 func TestReadString_Truncated(t *testing.T) {
 	buf := bytes.NewBuffer([]byte{0x0a, 'h', 'i', '!'})
-	require.Equal(t, "", readString(buf))
+	require.Empty(t, readString(buf))
 }

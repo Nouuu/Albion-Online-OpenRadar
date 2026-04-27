@@ -375,14 +375,14 @@ func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		enabled := false
 		if s.logger != nil {
 			enabled = s.logger.IsEnabled()
 		}
 		_ = json.NewEncoder(w).Encode(map[string]bool{"enabled": enabled})
 
-	case "POST":
+	case http.MethodPost:
 		var req struct {
 			Enabled bool `json:"enabled"`
 		}

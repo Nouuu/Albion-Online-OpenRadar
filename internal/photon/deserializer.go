@@ -313,7 +313,7 @@ func deserializeTypedArray(buf *bytes.Buffer, elemType byte) interface{} {
 		packedBytes := (size + 7) / 8
 		packed := make([]byte, packedBytes)
 		_, _ = buf.Read(packed)
-		for i := 0; i < size; i++ {
+		for i := range result {
 			result[i] = (packed[i/8] & (1 << uint(i%8))) != 0
 		}
 		return result
