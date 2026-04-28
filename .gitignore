@@ -121,3 +121,4 @@ capture.pcap
 capture.anon.pcap
 capture-*.pcap
 capture_*.pcap
+/network.json
