@@ -17,6 +17,21 @@ describe('NetworkSettingsHandler', () => {
         vi.restoreAllMocks();
     });
 
+    test('renders ExitLag NDIS notice card', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => []})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        const notice = container.querySelector('[data-exitlag-notice]');
+        expect(notice).toBeTruthy();
+        expect(notice.textContent).toMatch(/ExitLag/);
+        expect(notice.textContent).toMatch(/Legacy/);
+        expect(notice.textContent).toMatch(/NDIS/);
+    });
+
     test('renders one row per interface with badge and current selection', async () => {
         globalThis.fetch
             .mockResolvedValueOnce({
