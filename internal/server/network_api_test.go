@@ -134,6 +134,30 @@ func TestNetworkAPI_StateShape(t *testing.T) {
 	if body["lanAddresses"] == nil {
 		t.Error("lanAddresses missing")
 	}
+	active, ok := body["captureInterfaces"].([]any)
+	if !ok || len(active) != 1 {
+		t.Fatalf("captureInterfaces shape: %T %v", body["captureInterfaces"], body["captureInterfaces"])
+	}
+	row, ok := active[0].(map[string]any)
+	if !ok {
+		t.Fatalf("captureInterfaces[0] not an object: %T", active[0])
+	}
+	for _, key := range []string{"name", "description", "address", "category"} {
+		if _, present := row[key]; !present {
+			t.Errorf("captureInterfaces[0] missing camelCase key %q (front-end reads c.name); got keys=%v", key, mapKeys(row))
+		}
+	}
+	if row["name"] != "x" {
+		t.Errorf("captureInterfaces[0].name=%v want %q", row["name"], "x")
+	}
+}
+
+func mapKeys(m map[string]any) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	return out
 }
 
 func TestNetworkAPI_PostUnknownNames(t *testing.T) {
