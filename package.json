@@ -28,7 +28,7 @@
   "author": "Nospy",
   "license": "ISC",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

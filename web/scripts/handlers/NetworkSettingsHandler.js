@@ -57,8 +57,10 @@ export class NetworkSettingsHandler {
                 <div class="flex flex-col gap-1">
                     <div class="font-semibold">Using ExitLag?</div>
                     <div class="text-sm">
-                        Open <strong>ExitLag &rarr; Settings &rarr; Advanced &rarr; Packet redirection method</strong>
-                        and select <strong>Legacy &mdash; NDIS</strong>.
+                        Open <strong>ExitLag &rarr; Settings &rarr; Advanced Options &rarr; Redirection method</strong>
+                        and select <strong>NDIS (legacy)</strong>.
+                    </div>
+                    <div class="text-sm">
                         The default WFP mode hides Albion's traffic from packet capture; the radar will see no packets.
                     </div>
                 </div>
