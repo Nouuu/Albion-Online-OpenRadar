@@ -10,7 +10,7 @@
     "vendors:js": "cpy node_modules/lucide/dist/umd/lucide.min.js node_modules/htmx.org/dist/htmx.min.js web/scripts/vendors --flat",
     "vendors:fonts": "cpy \"node_modules/@fontsource/jetbrains-mono/files/jetbrains-mono-latin-{400,500}-normal.woff2\" \"node_modules/@fontsource/space-grotesk/files/space-grotesk-latin-{400,500,700}-normal.woff2\" web/styles/fonts --flat",
     "vendors": "npm run vendors:js && npm run vendors:fonts",
-  "build": "npm run css && npm run vendors",
+    "build": "npm run css && npm run vendors",
     "update-data": "tsx tools/update-ao-data.ts --replace-existing",
     "download-icons": "tsx tools/download-and-optimize-item-icons.ts",
     "download-spells": "tsx tools/download-and-optimize-spell-icons.ts",
@@ -28,7 +28,7 @@
   "author": "Nospy",
   "license": "ISC",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -44,7 +44,7 @@
     "globals": "^17.5.0",
     "happy-dom": "^20.9.0",
     "htmx.org": "^2.0.10",
-    "lucide": "^1.11.0",
+    "lucide": "^1.12.0",
     "puppeteer": "^24.42.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
@@ -53,7 +53,7 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.0",
+    "typescript-eslint": "^8.59.1",
     "vitest": "^4.1.5"
   }
 }

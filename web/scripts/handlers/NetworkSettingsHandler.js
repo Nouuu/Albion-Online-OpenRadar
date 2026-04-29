@@ -36,6 +36,7 @@ export class NetworkSettingsHandler {
         }).join('');
         this.container.innerHTML = `
             ${banner}
+            ${this.renderExitLagNotice()}
             <h3 class="text-base font-semibold mt-2">Capture interfaces</h3>
             <p class="text-sm opacity-70 mb-2">Captured packets are merged across all checked interfaces. Tick at least one to start capture.</p>
             <div class="flex flex-col gap-1">${rows}</div>
@@ -48,6 +49,23 @@ export class NetworkSettingsHandler {
             <ul class="list-disc pl-5">${lan || '<li class="opacity-60">No LAN address detected.</li>'}</ul>
         `;
         this.bindEvents();
+    }
+
+    renderExitLagNotice() {
+        return `
+            <div class="alert alert-info mb-2" data-exitlag-notice>
+                <div class="flex flex-col gap-1">
+                    <div class="font-semibold">Using ExitLag?</div>
+                    <div class="text-sm">
+                        Open <strong>ExitLag &rarr; Settings &rarr; Advanced Options &rarr; Redirection method</strong>
+                        and select <strong>NDIS (legacy)</strong>.
+                    </div>
+                    <div class="text-sm">
+                        The default WFP mode hides Albion's traffic from packet capture; the radar will see no packets.
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     renderBanner() {

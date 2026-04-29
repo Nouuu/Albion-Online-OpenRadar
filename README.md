@@ -76,6 +76,17 @@ OpenRadar -ip X.X.X.X    # Skip adapter selection
 OpenRadar -dev           # Development mode (read files from disk)
 ```
 
+### Using ExitLag?
+
+ExitLag's default packet redirection method (WFP) intercepts Albion's traffic
+above the NDIS layer, so Npcap (and Wireshark, and OpenRadar) sees nothing.
+
+In ExitLag, open **Settings &rarr; Advanced &rarr; Packet redirection method**
+and select **Legacy &mdash; NDIS**. The radar will then capture normally on your
+physical adapter.
+
+![ExitLag settings screenshot](docs/images/exitlag.png)
+
 ---
 
 ## What It Detects

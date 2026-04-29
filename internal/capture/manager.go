@@ -17,11 +17,11 @@ const (
 )
 
 type CaptureSummary struct {
-	Name        string
-	Description string
-	Address     string
-	Category    Category
-	StartedAt   time.Time
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Address     string    `json:"address"`
+	Category    Category  `json:"category"`
+	StartedAt   time.Time `json:"startedAt"`
 }
 
 type State struct {
