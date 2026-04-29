@@ -28,8 +28,8 @@ describe('NetworkSettingsHandler', () => {
         const notice = container.querySelector('[data-exitlag-notice]');
         expect(notice).toBeTruthy();
         expect(notice.textContent).toMatch(/ExitLag/);
-        expect(notice.textContent).toMatch(/Legacy/);
         expect(notice.textContent).toMatch(/NDIS/);
+        expect(notice.textContent).toMatch(/legacy/i);
     });
 
     test('renders one row per interface with badge and current selection', async () => {

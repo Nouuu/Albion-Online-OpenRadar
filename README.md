@@ -85,6 +85,8 @@ In ExitLag, open **Settings &rarr; Advanced &rarr; Packet redirection method**
 and select **Legacy &mdash; NDIS**. The radar will then capture normally on your
 physical adapter.
 
+![ExitLag settings screenshot](docs/images/exitlag.png)
+
 ---
 
 ## What It Detects
