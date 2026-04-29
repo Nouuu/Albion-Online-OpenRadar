@@ -84,7 +84,7 @@ export class ZonesDatabase {
       name: `Mist of ${origin.name}`,
       type: "MISTS",
       pvpType: origin.pvpType,
-      tier: origin.tier,
+      tier: 0,
       file: origin.file,
       originZoneId: String(originZoneId),
     });
