@@ -215,8 +215,11 @@ describe('EventRouter', () => {
         });
 
         // @verified 2026-04-29: source: session log 2026-04-26T14-33-25.jsonl event 519
-        // @MISTS@9f9a62f3-... Parameters[4]="3316" (Battlebrae Flatland, BZ).
-        test('MIST-90: BZ Mist entry registers black-zone override and persists sessionStorage', () => {
+        // @MISTS@9f9a62f3-... fired while map.id was already a BZ. Override origin is taken
+        // from the previous map id, not Parameters[4] (which carries the joining player's origin).
+        test('MIST-90: event 519 entry from BZ registers black-zone override and persists sessionStorage', () => {
+            map.id = '3316';
+
             EventRouter.onEvent({
                 0: 1,
                 252: 519,
@@ -235,8 +238,9 @@ describe('EventRouter', () => {
         });
 
         // @verified 2026-04-29: pcap-derived. Source: fixture mists/player-joined-info.json
-        // message[1] @MISTS@a40183ea-... Parameters[4]="0212" (Bonepool Marsh, yellow Royal).
+        // message[1] @MISTS@a40183ea-... fired from a yellow Royal cluster (Bonepool Marsh "0212").
         test('MIST-90: yellow Royal Mist entry inherits yellow pvpType', async () => {
+            map.id = '0212';
             const fix = await loadFixture('mists', 'player-joined-info');
             const entry = fix.messages.find(m => m.parameters['3'] === true);
             const p = normalizeParams(entry.parameters);
@@ -262,7 +266,8 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-29: synthetic. Origin id absent from zones.json. Protects against
         // upstream zone additions not yet mirrored locally.
-        test('MIST-90: unknown origin does not persist sessionStorage', () => {
+        test('MIST-90: unknown previous map does not persist sessionStorage', () => {
+            map.id = '99999_unknown_zone';
             EventRouter.onEvent({
                 0: 1,
                 252: 519,
@@ -279,6 +284,7 @@ describe('EventRouter', () => {
         // @verified 2026-04-29: synthetic. ChangeClusterResponse with a non-Mist destination is
         // the standard Mist exit path observed in pcap captures.
         test('MIST-90: ChangeClusterResponse to non-Mist clears overrides and sessionStorage', () => {
+            map.id = '3316';
             EventRouter.onEvent({
                 0: 1,
                 252: 519,
@@ -297,8 +303,9 @@ describe('EventRouter', () => {
         });
 
         // @verified 2026-04-29: synthetic. Mist-to-Mist transition observed in session log
-        // 2026-04-26T18-04-27.jsonl (two consecutive @MISTS@ entries from the same origin "0210").
-        test('MIST-90: Mist-to-Mist transition replaces sessionStorage with the latest entry', () => {
+        // 2026-04-26T18-04-27.jsonl (consecutive @MISTS@ entries with the same BZ origin).
+        test('MIST-90: Mist-to-Mist transition keeps the BZ origin via override chaining', () => {
+            map.id = '3316';
             EventRouter.onEvent({
                 0: 1,
                 252: 519,
@@ -311,13 +318,13 @@ describe('EventRouter', () => {
                 252: 519,
                 2: '@MISTS@second',
                 3: true,
-                4: '0212'
+                4: '3316'
             });
 
-            expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('yellow');
+            expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('black');
             const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
             expect(persisted.mistMapId).toBe('@MISTS@second');
-            expect(persisted.originZoneId).toBe('0212');
+            expect(persisted.originZoneId).toBe('3316');
         });
 
         // @verified 2026-04-29: synthetic. Mirrors the F5 sequence (sessionStorage seeded by a
@@ -347,6 +354,61 @@ describe('EventRouter', () => {
 
             expect(() => EventRouter.restoreMistOverrideFromSession()).not.toThrow();
             expect(zonesDatabase.overrides.size).toBe(0);
+        });
+
+        // @verified 2026-04-29: source: session log 2026-04-29T19-23-39.jsonl, sequence
+        // 17:25:32 op 2 Join Parameters[8]="0344" then 17:26:11 op 2 Join
+        // Parameters[8]="@MISTS@b0676408-..." (no event 519 with Parameters[3]=true fired).
+        test('MIST-90: op 2 Join entry into Mist from BZ origin registers black-zone override', () => {
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '0344', 9: [0, 0]}, clearHandlers);
+            expect(map.id).toBe('0344');
+
+            EventRouter.onResponse({
+                253: OperationCodes.Join,
+                8: '@MISTS@b0676408-0f0f-4b0a-8207-3ebd0ad2664f',
+                9: [0, 0]
+            }, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@b0676408-0f0f-4b0a-8207-3ebd0ad2664f')).toBe('black');
+            expect(map.isBZ).toBe(true);
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted).toMatchObject({
+                mistMapId: '@MISTS@b0676408-0f0f-4b0a-8207-3ebd0ad2664f',
+                originZoneId: '0344'
+            });
+        });
+
+        // @verified 2026-04-29: synthetic. Mist-to-Mist transition via op 2 Join keeps the
+        // original BZ origin (looked up from the previous override's originZoneId).
+        test('MIST-90: Mist-to-Mist via op 2 Join inherits origin from previous Mist override', () => {
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '0344', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({
+                253: OperationCodes.Join,
+                8: '@MISTS@first',
+                9: [0, 0]
+            }, clearHandlers);
+            EventRouter.onResponse({
+                253: OperationCodes.Join,
+                8: '@MISTS@second',
+                9: [0, 0]
+            }, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('black');
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted.originZoneId).toBe('0344');
+        });
+
+        // @verified 2026-04-29: synthetic. Cold start (map.id === -1, no prior real zone)
+        // means no override can be inferred. Override stays unset until next ChangeCluster.
+        test('MIST-90: op 2 Join into Mist with no known previous map does not register override', () => {
+            EventRouter.onResponse({
+                253: OperationCodes.Join,
+                8: '@MISTS@x',
+                9: [0, 0]
+            }, clearHandlers);
+
+            expect(zonesDatabase.getZone('@MISTS@x')).toBeNull();
+            expect(sessionStorage.getItem('activeMistOverride')).toBeNull();
         });
     });
 

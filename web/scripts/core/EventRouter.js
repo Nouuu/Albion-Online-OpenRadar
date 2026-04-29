@@ -72,12 +72,26 @@ function clearMistOverridePersistence() {
     }
 }
 
+function resolveMistOriginId(previousMapId) {
+    if (typeof previousMapId !== 'string' || previousMapId.length === 0) return null;
+    if (!previousMapId.startsWith('@MISTS@')) return previousMapId;
+    const prevOverride = zonesDatabase.getZone(previousMapId);
+    return prevOverride && typeof prevOverride.originZoneId === 'string'
+        ? prevOverride.originZoneId
+        : null;
+}
+
 function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     const previousMapId = map.id;
     map.id = newMapId;
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
-    if (typeof newMapId !== 'string' || !newMapId.startsWith('@MISTS@')) {
+    if (typeof newMapId === 'string' && newMapId.startsWith('@MISTS@')) {
+        const originId = resolveMistOriginId(previousMapId);
+        if (originId && zonesDatabase.setMistOverride(newMapId, originId)) {
+            persistMistOverride(newMapId, originId);
+        }
+    } else {
         zonesDatabase.clearAllMistOverrides();
         clearMistOverridePersistence();
     }
@@ -411,12 +425,7 @@ export function onEvent(Parameters) {
         case EventCodes.MistsPlayerJoinedInfo: {
             const newMapId = Parameters[2];
             if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
-                const originId = Parameters[4];
-                if (typeof originId === 'string' && originId.length > 0
-                    && zonesDatabase.setMistOverride(newMapId, originId)) {
-                    persistMistOverride(newMapId, originId);
-                }
-                applyMapChange(newMapId, 'MistsPlayerJoinedInfo', {originCluster: originId});
+                applyMapChange(newMapId, 'MistsPlayerJoinedInfo', {originCluster: Parameters[4]});
             }
             break;
         }
