@@ -52,11 +52,35 @@ function persistMapToSession() {
     }
 }
 
+function persistMistOverride(mistMapId, originZoneId) {
+    try {
+        sessionStorage.setItem('activeMistOverride', JSON.stringify({
+            mistMapId,
+            originZoneId,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'MistOverridePersistFailed', {error: e?.message});
+    }
+}
+
+function clearMistOverridePersistence() {
+    try {
+        sessionStorage.removeItem('activeMistOverride');
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'MistOverrideClearFailed', {error: e?.message});
+    }
+}
+
 function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     const previousMapId = map.id;
     map.id = newMapId;
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
+    if (typeof newMapId !== 'string' || !newMapId.startsWith('@MISTS@')) {
+        zonesDatabase.clearAllMistOverrides();
+        clearMistOverridePersistence();
+    }
     syncMapIsBZ();
     radarRenderer?.setMap?.(map);
     persistMapToSession();
@@ -163,6 +187,24 @@ export function setRadarRenderer(renderer) {
 
 export function getLocalPlayerPosition() {
     return {x: lpX, y: lpY};
+}
+
+export function restoreMistOverrideFromSession() {
+    try {
+        const saved = sessionStorage.getItem('activeMistOverride');
+        if (!saved) return;
+        const data = JSON.parse(saved);
+        if (data && typeof data.mistMapId === 'string' && typeof data.originZoneId === 'string') {
+            zonesDatabase.setMistOverride(data.mistMapId, data.originZoneId);
+            window.logger?.info(CATEGORIES.MAP, 'MistOverrideRestored', {
+                mistMapId: data.mistMapId,
+                originZoneId: data.originZoneId,
+                age: Date.now() - (data.timestamp || 0)
+            });
+        }
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'MistOverrideRestoreFailed', {error: e?.message});
+    }
 }
 
 export function restoreMapFromSession() {
@@ -369,7 +411,12 @@ export function onEvent(Parameters) {
         case EventCodes.MistsPlayerJoinedInfo: {
             const newMapId = Parameters[2];
             if (Parameters[3] === true && typeof newMapId === 'string' && newMapId.length > 0 && newMapId !== map.id) {
-                applyMapChange(newMapId, 'MistsPlayerJoinedInfo', {originCluster: Parameters[4]});
+                const originId = Parameters[4];
+                if (typeof originId === 'string' && originId.length > 0
+                    && zonesDatabase.setMistOverride(newMapId, originId)) {
+                    persistMistOverride(newMapId, originId);
+                }
+                applyMapChange(newMapId, 'MistsPlayerJoinedInfo', {originCluster: originId});
             }
             break;
         }

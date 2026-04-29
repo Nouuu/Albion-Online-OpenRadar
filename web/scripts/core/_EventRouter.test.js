@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import * as EventRouter from './EventRouter.js';
 import {EventCodes} from '../utils/EventCodes.js';
+import {OperationCodes} from '../utils/OperationCodes.js';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
 
@@ -201,6 +202,151 @@ describe('EventRouter', () => {
             });
 
             expect(radarRenderer.setMap).not.toHaveBeenCalled();
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // Mist override lifecycle (#90)
+    // -------------------------------------------------------------------------
+    describe('Mist override lifecycle (#90)', () => {
+        beforeEach(() => {
+            sessionStorage.clear();
+            zonesDatabase.clearAllMistOverrides();
+        });
+
+        // @verified 2026-04-29: source: session log 2026-04-26T14-33-25.jsonl event 519
+        // @MISTS@9f9a62f3-... Parameters[4]="3316" (Battlebrae Flatland, BZ).
+        test('MIST-90: BZ Mist entry registers black-zone override and persists sessionStorage', () => {
+            EventRouter.onEvent({
+                0: 1,
+                252: 519,
+                2: '@MISTS@9f9a62f3-c9a8-418c-9ad0-440580332ab5',
+                3: true,
+                4: '3316'
+            });
+
+            expect(zonesDatabase.getPvpType('@MISTS@9f9a62f3-c9a8-418c-9ad0-440580332ab5')).toBe('black');
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted).toMatchObject({
+                mistMapId: '@MISTS@9f9a62f3-c9a8-418c-9ad0-440580332ab5',
+                originZoneId: '3316'
+            });
+            expect(typeof persisted.timestamp).toBe('number');
+        });
+
+        // @verified 2026-04-29: pcap-derived. Source: fixture mists/player-joined-info.json
+        // message[1] @MISTS@a40183ea-... Parameters[4]="0212" (Bonepool Marsh, yellow Royal).
+        test('MIST-90: yellow Royal Mist entry inherits yellow pvpType', async () => {
+            const fix = await loadFixture('mists', 'player-joined-info');
+            const entry = fix.messages.find(m => m.parameters['3'] === true);
+            const p = normalizeParams(entry.parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(zonesDatabase.getPvpType('@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434')).toBe('yellow');
+        });
+
+        // @verified 2026-04-29: synthetic. Mirrors the first message of the pcap fixture
+        // (Parameters[2]==Parameters[4], no [3] flag, presence info, not a Mist entry).
+        test('MIST-90: event 519 without Parameters[3] flag does not register override', () => {
+            EventRouter.onEvent({
+                0: 1,
+                252: 519,
+                2: '3316',
+                4: '3316'
+            });
+
+            expect(zonesDatabase.getZone('@MISTS@x')).toBeNull();
+            expect(sessionStorage.getItem('activeMistOverride')).toBeNull();
+        });
+
+        // @verified 2026-04-29: synthetic. Origin id absent from zones.json. Protects against
+        // upstream zone additions not yet mirrored locally.
+        test('MIST-90: unknown origin does not persist sessionStorage', () => {
+            EventRouter.onEvent({
+                0: 1,
+                252: 519,
+                2: '@MISTS@deadbeef',
+                3: true,
+                4: '99999_unknown_zone'
+            });
+
+            expect(zonesDatabase.getZone('@MISTS@deadbeef')).toBeNull();
+            expect(sessionStorage.getItem('activeMistOverride')).toBeNull();
+            expect(map.id).toBe('@MISTS@deadbeef');
+        });
+
+        // @verified 2026-04-29: synthetic. ChangeClusterResponse with a non-Mist destination is
+        // the standard Mist exit path observed in pcap captures.
+        test('MIST-90: ChangeClusterResponse to non-Mist clears overrides and sessionStorage', () => {
+            EventRouter.onEvent({
+                0: 1,
+                252: 519,
+                2: '@MISTS@x',
+                3: true,
+                4: '3316'
+            });
+            expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('black');
+            expect(sessionStorage.getItem('activeMistOverride')).not.toBeNull();
+
+            EventRouter.onResponse({253: OperationCodes.ChangeCluster, 0: '0317'}, clearHandlers);
+
+            expect(zonesDatabase.getZone('@MISTS@x')).toBeNull();
+            expect(sessionStorage.getItem('activeMistOverride')).toBeNull();
+            expect(map.id).toBe('0317');
+        });
+
+        // @verified 2026-04-29: synthetic. Mist-to-Mist transition observed in session log
+        // 2026-04-26T18-04-27.jsonl (two consecutive @MISTS@ entries from the same origin "0210").
+        test('MIST-90: Mist-to-Mist transition replaces sessionStorage with the latest entry', () => {
+            EventRouter.onEvent({
+                0: 1,
+                252: 519,
+                2: '@MISTS@first',
+                3: true,
+                4: '3316'
+            });
+            EventRouter.onEvent({
+                0: 2,
+                252: 519,
+                2: '@MISTS@second',
+                3: true,
+                4: '0212'
+            });
+
+            expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('yellow');
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted.mistMapId).toBe('@MISTS@second');
+            expect(persisted.originZoneId).toBe('0212');
+        });
+
+        // @verified 2026-04-29: synthetic. Mirrors the F5 sequence (sessionStorage seeded by a
+        // prior session, reload triggers restoreMistOverrideFromSession before init).
+        test('MIST-90: restoreMistOverrideFromSession reapplies persisted override on F5', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@x',
+                originZoneId: '3316',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('black');
+        });
+
+        // @verified 2026-04-29: synthetic. Cold start (no prior session).
+        test('MIST-90: restoreMistOverrideFromSession with empty sessionStorage is a no-op', () => {
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.overrides.size).toBe(0);
+        });
+
+        // @verified 2026-04-29: synthetic. Defensive against sessionStorage tampering or partial writes.
+        test('MIST-90: corrupted sessionStorage payload does not throw', () => {
+            sessionStorage.setItem('activeMistOverride', '{not-json');
+
+            expect(() => EventRouter.restoreMistOverrideFromSession()).not.toThrow();
+            expect(zonesDatabase.overrides.size).toBe(0);
         });
     });
 
