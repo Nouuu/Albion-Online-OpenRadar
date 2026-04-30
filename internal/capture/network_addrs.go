@@ -1,9 +1,10 @@
 package capture
 
-import "net"
+import (
+	"net"
+	"sort"
+)
 
-// rfc1918Nets is the parsed set of private IPv4 ranges defined in RFC 1918.
-// Parsed once at init to avoid re-parsing per call.
 var rfc1918Nets = func() []*net.IPNet {
 	cidrs := []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
 	out := make([]*net.IPNet, 0, len(cidrs))
@@ -16,9 +17,6 @@ var rfc1918Nets = func() []*net.IPNet {
 	return out
 }()
 
-// IsRFC1918 reports whether addr is a non-empty IPv4 string inside one of the
-// RFC 1918 private ranges (10/8, 172.16/12, 192.168/16). Loopback and link-local
-// addresses are excluded.
 func IsRFC1918(addr string) bool {
 	ip := net.ParseIP(addr)
 	if ip == nil {
@@ -36,27 +34,54 @@ func IsRFC1918(addr string) bool {
 	return false
 }
 
-// LANAddresses returns IPv4 RFC 1918 host addresses bound to local interfaces.
-// Used to print LAN URLs at startup and to populate /api/network/state.
+type lanCandidate struct {
+	name string
+	ip   string
+}
+
+func rankLANCandidates(in []lanCandidate) []string {
+	cp := make([]lanCandidate, len(in))
+	copy(cp, in)
+	sort.SliceStable(cp, func(i, j int) bool {
+		ci := Categorize(cp[i].name, "")
+		cj := Categorize(cp[j].name, "")
+		return categoryRank[ci] < categoryRank[cj]
+	})
+	out := make([]string, len(cp))
+	for i, c := range cp {
+		out[i] = c.ip
+	}
+	return out
+}
+
 func LANAddresses() []string {
-	addrs, err := net.InterfaceAddrs()
+	ifaces, err := net.Interfaces()
 	if err != nil {
 		return nil
 	}
-	out := make([]string, 0)
-	for _, a := range addrs {
-		ipnet, ok := a.(*net.IPNet)
-		if !ok {
+	cands := make([]lanCandidate, 0)
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
 			continue
 		}
-		ip4 := ipnet.IP.To4()
-		if ip4 == nil {
+		addrs, err := iface.Addrs()
+		if err != nil {
 			continue
 		}
-		s := ip4.String()
-		if IsRFC1918(s) {
-			out = append(out, s)
+		for _, a := range addrs {
+			ipnet, ok := a.(*net.IPNet)
+			if !ok {
+				continue
+			}
+			ip4 := ipnet.IP.To4()
+			if ip4 == nil {
+				continue
+			}
+			s := ip4.String()
+			if IsRFC1918(s) {
+				cands = append(cands, lanCandidate{name: iface.Name, ip: s})
+			}
 		}
 	}
-	return out
+	return rankLANCandidates(cands)
 }
