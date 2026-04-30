@@ -156,8 +156,8 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // 📊 Display enemy information below the mob (offsets scaled with zoom)
-            const offset36 = this.getScaledSize(36);
-            const offset26 = this.getScaledSize(26);
+            const offset36 = this.getMarkerSize(36);
+            const offset26 = this.getMarkerSize(26);
             const offset12 = this.getScaledSize(12);
             let currentYOffset = drawHealthBar ? offset36 : offset26; // Start position based on health bar presence
 

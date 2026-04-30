@@ -13,7 +13,7 @@ export class MistsWispDrawing extends DrawingUtils {
 
         const showId = settingsSync.getBool('settingWispSpawnDebugID');
         const fontSize = `${this.getScaledFontSize(10, 7)}px`;
-        const yOffset = this.getScaledSize(26);
+        const yOffset = this.getMarkerSize(26);
 
         for (const m of mists) {
             if (!settingsSync.getBool('settingMistE' + m.enchant)) continue;

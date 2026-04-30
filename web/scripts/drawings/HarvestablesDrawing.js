@@ -119,7 +119,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
             // Debug: TypeID display (offset scaled with zoom)
             if (settingsSync.getBool('livingResourcesID'))
-                this.drawText(point.x, point.y + this.getScaledSize(20), harvestableOne.type.toString(), ctx);
+                this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.type.toString(), ctx);
 
             // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
             if (settingsSync.getBool('settingResourceDistance')) {

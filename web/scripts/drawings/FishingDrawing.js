@@ -27,7 +27,7 @@ export class FishingDrawing extends DrawingUtils
 
             this.DrawCustomImage(ctx, point.x, point.y, "fish", "Resources", 18);
             if (showCount) {
-                this.drawText(point.x, point.y + this.getScaledSize(18), `${fish.sizeSpawned}/${fish.totalSize}`, ctx);
+                this.drawText(point.x, point.y + this.getMarkerSize(18), `${fish.sizeSpawned}/${fish.totalSize}`, ctx);
             }
             this.lastVisibleCount++;
         }

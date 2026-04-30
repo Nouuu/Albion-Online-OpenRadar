@@ -5,6 +5,7 @@ import {describe, test, expect, beforeEach, vi} from 'vitest';
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
+        getFloat: vi.fn(() => null),
     },
 }));
 

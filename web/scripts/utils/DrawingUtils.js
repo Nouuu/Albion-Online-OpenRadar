@@ -184,9 +184,9 @@ export class DrawingUtils {
         const rectHeight = this.getScaledSize(14);
         const radius = this.getScaledSize(4);
 
-        const offset8 = this.getScaledSize(8);
-        const offset6 = this.getScaledSize(6);
-        const offset20 = this.getScaledSize(20);
+        const offset8 = this.getMarkerSize(8);
+        const offset6 = this.getMarkerSize(6);
+        const offset20 = this.getMarkerSize(20);
 
         const positions = {
             'bottom-right': { x: x + offset8, y: y + offset6 },
@@ -248,8 +248,8 @@ export class DrawingUtils {
         const rectWidth = textWidth + (padding * 2);
         const rectHeight = this.getScaledSize(12);
         const radius = this.getScaledSize(3);
-        const rectX = x - rectWidth - this.getScaledSize(8);
-        const rectY = y - this.getScaledSize(20);
+        const rectX = x - rectWidth - this.getMarkerSize(8);
+        const rectY = y - this.getMarkerSize(20);
 
         let color;
         if (realDistance < 10) color = "rgba(0,200,0,0.85)";
@@ -288,7 +288,7 @@ export class DrawingUtils {
         const hpPercent = Math.max(0, Math.min(100, (currentHP / maxHP) * 100));
         const fillWidth = (width * hpPercent) / 100;
         const barX = x - width / 2;
-        const barY = y + this.getScaledSize(16);
+        const barY = y + this.getMarkerSize(16);
 
         ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
         ctx.fillRect(barX, barY, width, height);

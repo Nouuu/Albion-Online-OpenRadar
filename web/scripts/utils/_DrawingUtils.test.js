@@ -186,6 +186,65 @@ describe('DrawingUtils.getResourceCategoryColor', () => {
     });
 });
 
+describe('DrawingUtils icon-anchored overlays shift with iconSize', () => {
+    let utils;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        utils = new DrawingUtils();
+        utils.getZoomLevel = vi.fn(() => 1.0);
+        utils.getCanvasScale = vi.fn(() => 1.0);
+        ctx = {
+            save: vi.fn(),
+            restore: vi.fn(),
+            beginPath: vi.fn(),
+            moveTo: vi.fn(),
+            lineTo: vi.fn(),
+            quadraticCurveTo: vi.fn(),
+            closePath: vi.fn(),
+            fill: vi.fn(),
+            stroke: vi.fn(),
+            fillRect: vi.fn(),
+            strokeRect: vi.fn(),
+            fillText: vi.fn(),
+            createLinearGradient: vi.fn(() => ({addColorStop: vi.fn()})),
+            measureText: vi.fn(() => ({width: 12})),
+            font: '',
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 0,
+            shadowColor: '',
+            shadowBlur: 0,
+            textAlign: '',
+            textBaseline: '',
+        };
+    });
+
+    // @verified 2026-05-01: healthbar y-anchor scales with iconSize so it does not overlap the larger icon.
+    test('drawHealthBar barY shifts with iconSize multiplier', () => {
+        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        utils.drawHealthBar(ctx, 100, 100, 50, 100, 60, 10);
+
+        // First fillRect call is the bar background at y + getMarkerSize(16) = 100 + 32 = 132
+        expect(ctx.fillRect).toHaveBeenCalled();
+        const firstCall = ctx.fillRect.mock.calls[0];
+        expect(firstCall[1]).toBe(132);
+    });
+
+    // @verified 2026-05-01: count badge anchor offsets scale with iconSize so it sits next to the larger icon.
+    test('drawResourceCountBadge offsets scale with iconSize multiplier', () => {
+        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        utils.drawResourceCountBadge(ctx, 100, 100, 5, 'bottom-right');
+
+        // The rounded-rect path starts at moveTo(rectX + radius, rectY) where rectX = x + offset8 = 100 + 16 = 116
+        expect(ctx.moveTo).toHaveBeenCalled();
+        const firstMove = ctx.moveTo.mock.calls[0];
+        // rectX = 116 (was 108 with getScaledSize), so first moveTo x is 116 + radius
+        expect(firstMove[0]).toBeGreaterThan(115);
+    });
+});
+
 describe('DrawingUtils.drawResourceBadge', () => {
     let utils;
     let ctx;
