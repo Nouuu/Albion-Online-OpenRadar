@@ -62,7 +62,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
     });
 
     // @verified 2026-04-24: pure static fiber plant is skipped when Static is off, Living on has no effect.
@@ -82,7 +82,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
         const entity = {id: 2, hX: 5, hY: 5, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: null, type: 14};
         drawing.invalidate(ctx, [entity]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 5, 5, 'fiber_4_0', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 5, 5, 'fiber_4_0', 'Resources', 32);
     });
 
     // -------------------------------------------------------------------------
@@ -225,7 +225,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         );
         const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType: family, mobileTypeId: -1, type: typeNumber};
         drawing.invalidate(ctx, [entity]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 1, 2, `${imagePrefix}_3_1`, 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 1, 2, `${imagePrefix}_3_1`, 'Resources', 32);
     });
 
     // @verified 2026-04-24: lastVisibleCount reflects only harvestables passing the render gate.
@@ -260,7 +260,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getBool.mockReturnValue(false);
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
         expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
     });
 
@@ -270,7 +270,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
-        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 40, 'Fiber', 5, 2, false);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Fiber', 5, 2, false);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
@@ -286,7 +286,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
         const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType, mobileTypeId: -1, type: typeNumber};
         drawing.invalidate(ctx, [entity]);
-        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 1, 2, 40, expectedCategory, 3, 1, false);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 1, 2, 32, expectedCategory, 3, 1, false);
     });
 
     // @verified 2026-05-01: badge mode falls back to DrawCustomImage when getResourceCategory returns null.
@@ -317,7 +317,7 @@ describe('HarvestablesDrawing render-time routing', () => {
 
         expect(drawing.drawResourceBadge).toHaveBeenCalled();
         const call = drawing.drawResourceBadge.mock.calls[0];
-        expect(call[3]).toBe(40);                  // baseSize
+        expect(call[3]).toBe(32);                  // baseSize
         expect(call[4]).toBe('Fiber');             // category
         expect(typeof call[5]).toBe('number');     // tier
         expect(typeof call[6]).toBe('number');     // enchant

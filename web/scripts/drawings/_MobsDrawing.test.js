@@ -71,7 +71,7 @@ describe('MobsDrawing living resource filter at render', () => {
                 : null
         );
         drawing.invalidate(ctx, [livingMob({tier: 4, enchant: 2})]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_4_2', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_4_2', 'Resources', 32);
     });
 
     // @verified 2026-04-24: living Hide resolves via settingLivingHideEnchants correctly.
@@ -82,7 +82,7 @@ describe('MobsDrawing living resource filter at render', () => {
                 : null
         );
         drawing.invalidate(ctx, [livingMob({tier: 5, enchant: 3, name: 'Hide'})]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'hide_5_3', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'hide_5_3', 'Resources', 32);
     });
 
     // @verified 2026-04-24: tier-specific off still blocks even if enchant setting is on for other tiers.
@@ -120,7 +120,7 @@ describe('MobsDrawing living resource filter at render', () => {
         );
         settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
         drawing.invalidate(ctx, [livingMob({tier: 4, enchant: 2})]);
-        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 40, 'Fiber', 4, 2, true);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Fiber', 4, 2, true);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
@@ -134,7 +134,7 @@ describe('MobsDrawing living resource filter at render', () => {
         );
         settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
         drawing.invalidate(ctx, [livingMob({tier: 5, enchant: 3, name: 'Hide'})]);
-        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 40, 'Hide', 5, 3, true);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Hide', 5, 3, true);
     });
 
     // @verified 2026-05-01: badge mode falls back to DrawCustomImage when getResourceCategory returns null on a living mob.
@@ -229,7 +229,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         mobsHandler.NewMobEvent(p);
         drawing.invalidate(ctx, mobsHandler.getMobList(), []);
 
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_6_0', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_6_0', 'Resources', 32);
     });
 
     // @verified 2026-04-24: pcap-derived, Static filter has no effect on DEAD carcasses; turning Living off hides them.
@@ -256,7 +256,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         mobsHandler.NewMobEvent(p);
         drawing.invalidate(ctx, mobsHandler.getMobList(), []);
 
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_5_0', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_5_0', 'Resources', 32);
     });
 
     // @verified 2026-04-24: synthetic, carcass with post-spawn enchant is gated by the matching cell.
@@ -274,7 +274,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
             getCurrentHP: () => 100, maxHealth: 100,
         };
         drawing.invalidate(ctx, [dead]);
-        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_7_2', 'Resources', 40);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_7_2', 'Resources', 32);
     });
 });
 

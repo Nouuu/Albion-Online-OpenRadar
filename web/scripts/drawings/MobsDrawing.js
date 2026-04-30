@@ -111,13 +111,14 @@ export class MobsDrawing extends DrawingUtils
             if (imageName !== undefined && imageFolder !== undefined) {
                 const useBadge = isLivingResource && settingsSync.getBool('settingResourceColorBadges');
                 const category = useBadge ? this.getResourceCategory(mobOne.name) : null;
+                const baseSize = isLivingResource ? 32 : 40;
                 if (useBadge && category) {
                     this.drawResourceBadge(
-                        ctx, point.x, point.y, 40,
+                        ctx, point.x, point.y, baseSize,
                         category, mobOne.tier, mobOne.enchantmentLevel, true
                     );
                 } else {
-                    this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, 40);
+                    this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, baseSize);
                 }
             }
             else {

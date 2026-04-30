@@ -110,11 +110,11 @@ export class HarvestablesDrawing extends DrawingUtils  {
             const category = useBadge ? this.getResourceCategory(harvestableOne.stringType) : null;
             if (useBadge && category) {
                 this.drawResourceBadge(
-                    ctx, point.x, point.y, 40,
+                    ctx, point.x, point.y, 32,
                     category, harvestableOne.tier, harvestableOne.charges, false
                 );
             } else {
-                this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 40);
+                this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 32);
             }
 
             // Debug: TypeID display (offset scaled with zoom)
