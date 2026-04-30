@@ -294,12 +294,13 @@
     </div>
 
     <!-- Network Settings -->
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="wifi" class="w-5 h-5 text-primary"></i>
-                Network
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" id="collapse-network"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="wifi" class="w-5 h-5 text-primary"></i>
+            Network
+        </div>
+        <div class="collapse-content">
             <div id="network-section" class="text-base-content/80">Loading network configuration…</div>
         </div>
     </div>
@@ -355,6 +356,12 @@
             if (collapseLogging) {
                 collapseLogging.checked = settingsSync.getBool('collapse-settings-logging', false);
                 addListener(collapseLogging, 'change', () => settingsSync.setBool('collapse-settings-logging', collapseLogging.checked));
+            }
+
+            const collapseNetwork = document.getElementById('collapse-network');
+            if (collapseNetwork) {
+                collapseNetwork.checked = settingsSync.getBool('collapse-settings-network', false);
+                addListener(collapseNetwork, 'change', () => settingsSync.setBool('collapse-settings-network', collapseNetwork.checked));
             }
 
             // Log level dropdown
