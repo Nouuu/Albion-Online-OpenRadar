@@ -57,6 +57,15 @@
                     <span id="sizeValue" class="text-xs text-base-content/60 font-mono w-12">500px</span>
                     <button id="sizeReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
                 </div>
+                <!-- Icon Size control -->
+                <div class="hidden sm:flex items-center gap-2">
+                    <span class="text-xs text-base-content/50">Icons:</span>
+                    <button id="iconSizeDown" class="btn btn-ghost btn-xs">−</button>
+                    <input type="range" id="settingIconSize" min="0.5" max="2" step="0.1" value="1" class="range range-primary range-xs w-24">
+                    <button id="iconSizeUp" class="btn btn-ghost btn-xs">+</button>
+                    <span id="iconSizeValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
+                    <button id="iconSizeReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
+                </div>
             </div>
         </div>
     </div>
@@ -210,6 +219,32 @@ window.onGlobalsReady(function() {
     addListener(zoomIn, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) + 0.1));
     addListener(zoomOut, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) - 0.1));
     addListener(zoomReset, 'click', () => setZoom(1.0));
+
+    // Icon Size controls
+    const iconSizeSlider = document.getElementById('settingIconSize');
+    const iconSizeValue = document.getElementById('iconSizeValue');
+    const iconSizeUp = document.getElementById('iconSizeUp');
+    const iconSizeDown = document.getElementById('iconSizeDown');
+    const iconSizeReset = document.getElementById('iconSizeReset');
+
+    function updateIconSizeDisplay(value) {
+        if (iconSizeValue) iconSizeValue.textContent = `${Math.round(value * 100)}%`;
+        if (iconSizeSlider) iconSizeSlider.value = value;
+    }
+
+    function setIconSize(value) {
+        value = Math.max(0.5, Math.min(2, value));
+        settingsSync.setFloat('settingIconSize', value);
+        updateIconSizeDisplay(value);
+    }
+
+    const initialIconSize = settingsSync.getFloat('settingIconSize') || 1.0;
+    updateIconSizeDisplay(initialIconSize);
+
+    addListener(iconSizeSlider, 'input', () => setIconSize(parseFloat(iconSizeSlider.value)));
+    addListener(iconSizeUp, 'click', () => setIconSize((settingsSync.getFloat('settingIconSize') || 1.0) + 0.1));
+    addListener(iconSizeDown, 'click', () => setIconSize((settingsSync.getFloat('settingIconSize') || 1.0) - 0.1));
+    addListener(iconSizeReset, 'click', () => setIconSize(1.0));
 
     // Canvas Size controls
     const sizeSlider = document.getElementById('settingCanvasSize');

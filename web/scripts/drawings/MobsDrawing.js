@@ -125,7 +125,7 @@ export class MobsDrawing extends DrawingUtils
                     mobOne._debugLogged = true;
                 }
 
-                this.drawFilledCircle(ctx, point.x, point.y, this.getScaledSize(7), color);
+                this.drawFilledCircle(ctx, point.x, point.y, this.getMarkerSize(6), color);
             }
 
             // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)

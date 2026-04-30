@@ -10,6 +10,7 @@ vi.mock('../utils/SettingsSync.js', () => ({
         getBool: vi.fn(() => true),
         getJSON: vi.fn(() => null),
         getNumber: vi.fn((_k, d) => d ?? 0),
+        getFloat: vi.fn(() => null),
     },
 }));
 
@@ -36,6 +37,7 @@ describe('MobsDrawing living resource filter at render', () => {
         drawing.getEnemyColor = vi.fn(() => '#ffffff');
         drawing.getEnemyTypeName = vi.fn(() => 'unknown');
         drawing.getScaledSize = vi.fn(s => s);
+        drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
         settingsSync.getBool.mockReturnValue(true);
@@ -129,6 +131,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         drawing.getEnemyColor = vi.fn(() => '#ffffff');
         drawing.getEnemyTypeName = vi.fn(() => 'unknown');
         drawing.getScaledSize = vi.fn(s => s);
+        drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
         settingsSync.getBool.mockReturnValue(true);
@@ -236,6 +239,7 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHeal
         drawing.getEnemyColor = vi.fn(() => '#ffffff');
         drawing.getEnemyTypeName = vi.fn(() => 'unknown');
         drawing.getScaledSize = vi.fn(s => s);
+        drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
     });
@@ -316,6 +320,7 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         drawing.getEnemyColor = vi.fn(() => '#ffffff');
         drawing.getEnemyTypeName = vi.fn(() => 'unknown');
         drawing.getScaledSize = vi.fn(s => s);
+        drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
     });
@@ -384,5 +389,13 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
         drawing.invalidate(ctx, [hostile({id: 2})]);
         expect(drawing.lastVisibleCount).toBe(1);
+    });
+
+    // @verified 2026-05-01: hostile NPC marker uses getMarkerSize(6), tighter than the previous getScaledSize(7).
+    test('hostile NPC marker radius is getMarkerSize(6)', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
+        drawing.invalidate(ctx, [hostile({id: 1, type: EnemyType.Enemy})]);
+        expect(drawing.drawFilledCircle).toHaveBeenCalledWith(ctx, 10, 20, 6, expect.any(String));
+        expect(drawing.getMarkerSize).toHaveBeenCalledWith(6);
     });
 });

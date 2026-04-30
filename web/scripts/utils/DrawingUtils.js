@@ -17,8 +17,13 @@ export class DrawingUtils {
         if (typeof window !== 'undefined' && window.innerWidth < 640) return 0.9;
         return settingsSync.getFloat('settingRadarZoom') || 1.0;
     }
+    getIconSizeMultiplier() {
+        const v = settingsSync.getFloat('settingIconSize');
+        return v && !Number.isNaN(v) ? v : 1.0;
+    }
     getCanvasScale() { return this.getCanvasSize() / 500; }
     getScaledSize(baseSize) { return baseSize * this.getZoomLevel() * this.getCanvasScale(); }
+    getMarkerSize(baseSize) { return this.getScaledSize(baseSize) * this.getIconSizeMultiplier(); }
     getScaledFontSize(baseFontSize, minFontSize = 7) { return Math.max(minFontSize, baseFontSize * this.getZoomLevel() * this.getCanvasScale()); }
     getCanvasSize() {
         if (typeof document !== 'undefined') {
@@ -57,10 +62,10 @@ export class DrawingUtils {
         const folderR = (!folder) ? "" : folder + "/";
         const src = "/images/" + folderR + imageName + ".webp";
         const preloadedImage = imageCache.GetPreloadedImage(src, folder);
-        const scaledSize = this.getScaledSize(size);
+        const scaledSize = this.getMarkerSize(size);
 
         if (preloadedImage === null) {
-            this.drawFilledCircle(ctx, x, y, this.getScaledSize(10), "#4169E1");
+            this.drawFilledCircle(ctx, x, y, this.getMarkerSize(10), "#4169E1");
             return;
         }
 
