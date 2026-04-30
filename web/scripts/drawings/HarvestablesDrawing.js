@@ -106,8 +106,16 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
             this.lastVisibleCount++;
 
-            // Draw resource icon (same size as living resources)
-            this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 40);
+            const useBadge = settingsSync.getBool('settingResourceColorBadges');
+            const category = useBadge ? this.getResourceCategory(harvestableOne.stringType) : null;
+            if (useBadge && category) {
+                this.drawResourceBadge(
+                    ctx, point.x, point.y, 40,
+                    category, harvestableOne.tier, harvestableOne.charges, false
+                );
+            } else {
+                this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 40);
+            }
 
             // Debug: TypeID display (offset scaled with zoom)
             if (settingsSync.getBool('livingResourcesID'))

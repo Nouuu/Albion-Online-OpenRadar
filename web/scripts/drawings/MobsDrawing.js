@@ -108,8 +108,18 @@ export class MobsDrawing extends DrawingUtils
 
             this.lastVisibleCount++;
 
-            if (imageName !== undefined && imageFolder !== undefined)
-                this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, 40); // Size scaled in DrawCustomImage
+            if (imageName !== undefined && imageFolder !== undefined) {
+                const useBadge = isLivingResource && settingsSync.getBool('settingResourceColorBadges');
+                const category = useBadge ? this.getResourceCategory(mobOne.name) : null;
+                if (useBadge && category) {
+                    this.drawResourceBadge(
+                        ctx, point.x, point.y, 40,
+                        category, mobOne.tier, mobOne.enchantmentLevel, true
+                    );
+                } else {
+                    this.DrawCustomImage(ctx, point.x, point.y, imageName, imageFolder, 40);
+                }
+            }
             else {
                 // Color-coded circles by enemy type
                 const color = this.getEnemyColor(mobOne.type);

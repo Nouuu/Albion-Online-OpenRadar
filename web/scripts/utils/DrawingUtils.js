@@ -41,6 +41,68 @@ export class DrawingUtils {
         context.fill();
     }
 
+    getResourceCategory(name) {
+        if (typeof name !== 'string' || !name) return null;
+        const n = name.toLowerCase();
+        if (n.includes('fiber')) return 'Fiber';
+        if (n.includes('hide')) return 'Hide';
+        if (n.includes('wood') || n.includes('log')) return 'Wood';
+        if (n.includes('ore')) return 'Ore';
+        if (n.includes('rock')) return 'Rock';
+        return null;
+    }
+
+    getResourceCategoryColor(category) {
+        switch (category) {
+            case 'Fiber': return '#4CAF50';
+            case 'Hide':  return '#A1887F';
+            case 'Wood':  return '#8D6E63';
+            case 'Ore':   return '#42A5F5';
+            case 'Rock':  return '#9C27B0';
+            default:      return null;
+        }
+    }
+
+    drawResourceBadge(ctx, x, y, baseSize, category, tier, enchant, isLiving) {
+        const size = this.getMarkerSize(baseSize);
+        const color = this.getResourceCategoryColor(category) || '#4169E1';
+        const half = size / 2;
+
+        ctx.save();
+
+        ctx.fillStyle = color;
+        ctx.fillRect(x - half, y - half, size, size);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - half, y - half, size, size);
+
+        if (isLiving) {
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = Math.max(2, this.getMarkerSize(2));
+            ctx.strokeRect(x - half, y - half, size, size);
+        }
+
+        const tierFontSize = this.getMarkerSize(baseSize * 0.55);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.shadowColor = 'rgba(0,0,0,0.7)';
+        ctx.shadowBlur = 3;
+        ctx.font = `bold ${tierFontSize}px ${this.fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        if (enchant > 0) {
+            ctx.fillText(`T${tier}`, x - size * 0.12, y);
+            const enchantFontSize = this.getMarkerSize(baseSize * 0.30);
+            ctx.font = `bold ${enchantFontSize}px ${this.fontFamily}`;
+            ctx.fillText(`+${enchant}`, x + size * 0.28, y - size * 0.18);
+        } else {
+            ctx.fillText(`T${tier}`, x, y);
+        }
+
+        ctx.restore();
+    }
+
     lerp(a, b, t) { return a + (b - a) * t; }
 
     interpolateEntity(entity, lpX, lpY, t) {

@@ -95,6 +95,18 @@
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
+
+                <!-- Resource Color Badges -->
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" id="settingResourceColorBadges" class="checkbox checkbox-primary checkbox-sm">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
+                        <i data-lucide="palette" class="w-4 h-4 text-base-content/50"></i>
+                        Resource Color Badges
+                    </span>
+                    <div class="tooltip" data-tip="Replace resource icons with colored tier badges (better visibility). Living variants get a gold border.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
             </div>
 
             <!-- Cluster Settings (sub-section) -->
@@ -377,6 +389,7 @@
             // Resource overlay settings
             bindCheckbox("settingResourceCount");
             bindCheckbox("settingResourceDistance");
+            bindCheckbox("settingResourceColorBadges");
             bindCheckbox("settingResourceClusters");
             bindNumber("settingClusterRadius", 30);
             bindNumber("settingClusterMinSize", 2);

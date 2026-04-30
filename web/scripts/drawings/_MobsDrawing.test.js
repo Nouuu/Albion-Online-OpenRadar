@@ -40,7 +40,7 @@ describe('MobsDrawing living resource filter at render', () => {
         drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
-        settingsSync.getBool.mockReturnValue(true);
+        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
     });
 
     function livingMob({id = 1, tier = 4, enchant = 0, name = 'Fiber'} = {}) {
@@ -109,6 +109,63 @@ describe('MobsDrawing living resource filter at render', () => {
         drawing.invalidate(ctx, [hostile]);
         expect(drawing.drawFilledCircle).toHaveBeenCalled();
     });
+
+    // @verified 2026-05-01: settingResourceColorBadges=true on a living harvestable draws a badge with isLiving=true.
+    test('living Fiber e2 with settingResourceColorBadges=true draws a Fiber badge with gold border', () => {
+        drawing.drawResourceBadge = vi.fn();
+        settingsSync.getJSON.mockImplementation(key =>
+            key === 'settingLivingFiberEnchants'
+                ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, true, false, false, false, false], e3: Array(8).fill(false), e4: Array(8).fill(false)}
+                : null
+        );
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        drawing.invalidate(ctx, [livingMob({tier: 4, enchant: 2})]);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 40, 'Fiber', 4, 2, true);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-05-01: living Skinnable Hide with badges on routes to Hide category badge.
+    test('living Hide e3 LivingSkinnable with settingResourceColorBadges=true draws a Hide badge', () => {
+        drawing.drawResourceBadge = vi.fn();
+        settingsSync.getJSON.mockImplementation(key =>
+            key === 'settingLivingHideEnchants'
+                ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: [false, false, false, false, true, false, false, false], e4: Array(8).fill(false)}
+                : null
+        );
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        drawing.invalidate(ctx, [livingMob({tier: 5, enchant: 3, name: 'Hide'})]);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 40, 'Hide', 5, 3, true);
+    });
+
+    // @verified 2026-05-01: badge mode falls back to DrawCustomImage when getResourceCategory returns null on a living mob.
+    // Stub category resolution to null even though the living filter passes, to exercise the safety branch.
+    test('living mob badge mode falls back to DrawCustomImage when getResourceCategory returns null', () => {
+        drawing.drawResourceBadge = vi.fn();
+        drawing.getResourceCategory = vi.fn(() => null);
+        settingsSync.getJSON.mockImplementation(key =>
+            key === 'settingLivingFiberEnchants' ? {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)} : null
+        );
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        drawing.invalidate(ctx, [livingMob({tier: 4, enchant: 0})]);
+        expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
+        expect(drawing.DrawCustomImage).toHaveBeenCalled();
+    });
+
+    // @verified 2026-05-01: hostile NPC is unaffected by settingResourceColorBadges (badges apply to living harvestables only).
+    test('hostile NPC stays as colored circle even when settingResourceColorBadges=true', () => {
+        drawing.drawResourceBadge = vi.fn();
+        settingsSync.getJSON.mockReturnValue(null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges' || key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
+        const hostile = {
+            id: 2, typeId: 2067, hX: 10, hY: 20, tier: 5, enchantmentLevel: 0,
+            name: 'T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE', identified: true,
+            type: EnemyType.Enemy,
+            getCurrentHP: () => 100, maxHealth: 100,
+        };
+        drawing.invalidate(ctx, [hostile]);
+        expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
+        expect(drawing.drawFilledCircle).toHaveBeenCalled();
+    });
 });
 
 describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead critters stay Living)', () => {
@@ -134,7 +191,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
-        settingsSync.getBool.mockReturnValue(true);
+        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
         mobsHandler = new MobsHandler();
     });
 

@@ -125,3 +125,128 @@ describe('DrawingUtils.DrawCustomImage uses marker scaling', () => {
         expect(utils.drawFilledCircle).not.toHaveBeenCalled();
     });
 });
+
+describe('DrawingUtils.getResourceCategory', () => {
+    let utils;
+
+    beforeEach(() => {
+        utils = new DrawingUtils();
+    });
+
+    // @verified 2026-05-01: substring matching covers all 5 resource families.
+    test.each([
+        ['Fiber', 'Fiber'],
+        ['fiber_5_2', 'Fiber'],
+        ['Hide', 'Hide'],
+        ['hide_4_0', 'Hide'],
+        ['Wood', 'Wood'],
+        ['Log', 'Wood'],
+        ['Logs', 'Wood'],
+        ['log_6_3', 'Wood'],
+        ['Ore', 'Ore'],
+        ['ore_7_2', 'Ore'],
+        ['Rock', 'Rock'],
+        ['rock_3_1', 'Rock'],
+    ])('getResourceCategory(%j) returns %j', (input, expected) => {
+        expect(utils.getResourceCategory(input)).toBe(expected);
+    });
+
+    // @verified 2026-05-01: unknown names return null so call sites can fall back.
+    test('returns null for unknown names', () => {
+        expect(utils.getResourceCategory('mystery')).toBeNull();
+        expect(utils.getResourceCategory('')).toBeNull();
+        expect(utils.getResourceCategory(null)).toBeNull();
+        expect(utils.getResourceCategory(undefined)).toBeNull();
+        expect(utils.getResourceCategory(42)).toBeNull();
+    });
+});
+
+describe('DrawingUtils.getResourceCategoryColor', () => {
+    let utils;
+
+    beforeEach(() => {
+        utils = new DrawingUtils();
+    });
+
+    // @verified 2026-05-01: color mapping per spec (Fiber green, Hide tan, Wood brown, Ore blue, Rock purple).
+    test.each([
+        ['Fiber', '#4CAF50'],
+        ['Hide', '#A1887F'],
+        ['Wood', '#8D6E63'],
+        ['Ore', '#42A5F5'],
+        ['Rock', '#9C27B0'],
+    ])('getResourceCategoryColor(%j) returns %j', (category, expected) => {
+        expect(utils.getResourceCategoryColor(category)).toBe(expected);
+    });
+
+    // @verified 2026-05-01: unknown category returns null so call sites can fall back to default color.
+    test('returns null for unknown category', () => {
+        expect(utils.getResourceCategoryColor('Mystery')).toBeNull();
+        expect(utils.getResourceCategoryColor(null)).toBeNull();
+    });
+});
+
+describe('DrawingUtils.drawResourceBadge', () => {
+    let utils;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        utils = new DrawingUtils();
+        utils.getZoomLevel = vi.fn(() => 1.0);
+        utils.getCanvasScale = vi.fn(() => 1.0);
+        settingsSync.getFloat.mockReturnValue(null);
+        ctx = {
+            save: vi.fn(),
+            restore: vi.fn(),
+            fillRect: vi.fn(),
+            strokeRect: vi.fn(),
+            fillText: vi.fn(),
+            measureText: vi.fn(() => ({width: 12})),
+            font: '',
+            fillStyle: '',
+            strokeStyle: '',
+            lineWidth: 0,
+            shadowColor: '',
+            shadowBlur: 0,
+            textAlign: '',
+            textBaseline: '',
+        };
+    });
+
+    // @verified 2026-05-01: standard static badge fills the body and renders T<tier> text only.
+    test('static Fiber T6 e0 fills body and draws T6 text only', () => {
+        utils.drawResourceBadge(ctx, 100, 100, 40, 'Fiber', 6, 0, false);
+
+        expect(ctx.fillRect).toHaveBeenCalledWith(80, 80, 40, 40);
+        expect(ctx.fillText).toHaveBeenCalledTimes(1);
+        expect(ctx.fillText.mock.calls[0][0]).toBe('T6');
+        expect(ctx.strokeRect).toHaveBeenCalledTimes(1);
+    });
+
+    // @verified 2026-05-01: enchanted badge appends a +<enchant> suffix as a second text call.
+    test('enchanted Fiber T6 e2 draws both T6 and +2 text', () => {
+        utils.drawResourceBadge(ctx, 100, 100, 40, 'Fiber', 6, 2, false);
+
+        expect(ctx.fillText).toHaveBeenCalledTimes(2);
+        const texts = ctx.fillText.mock.calls.map(c => c[0]);
+        expect(texts).toContain('T6');
+        expect(texts).toContain('+2');
+    });
+
+    // @verified 2026-05-01: living variants draw an extra gold border on top of the standard one.
+    test('living variant adds an extra gold strokeRect on top of the standard border', () => {
+        utils.drawResourceBadge(ctx, 100, 100, 40, 'Fiber', 6, 0, true);
+
+        expect(ctx.strokeRect).toHaveBeenCalledTimes(2);
+    });
+
+    // @verified 2026-05-01: badge size obeys getMarkerSize so the icon-size slider scales it.
+    test('badge size respects getMarkerSize (iconSize multiplier)', () => {
+        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 1.5 : null);
+        utils.drawResourceBadge(ctx, 100, 100, 40, 'Fiber', 6, 0, false);
+
+        expect(ctx.fillRect).toHaveBeenCalledWith(70, 70, 60, 60);
+    });
+});
+

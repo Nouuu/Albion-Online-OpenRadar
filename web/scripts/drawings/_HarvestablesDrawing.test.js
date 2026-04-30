@@ -9,6 +9,7 @@ vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => false),
         getJSON: vi.fn(() => null),
+        getFloat: vi.fn(() => null),
     },
 }));
 
@@ -19,6 +20,7 @@ const settingsSync = (await import('../utils/SettingsSync.js')).default;
 function buildDrawing() {
     const drawing = new HarvestablesDrawing();
     drawing.DrawCustomImage = vi.fn();
+    drawing.drawResourceBadge = vi.fn();
     drawing.transformPoint = vi.fn((x, y) => ({x, y}));
     drawing.interpolateEntity = vi.fn();
     drawing.drawText = vi.fn();
@@ -27,6 +29,7 @@ function buildDrawing() {
     drawing.calculateDistance = vi.fn(() => 10);
     drawing.calculateRealResources = vi.fn(() => 5);
     drawing.getScaledSize = vi.fn(s => s);
+    drawing.getMarkerSize = vi.fn(s => s);
     return drawing;
 }
 
@@ -245,5 +248,79 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
         drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
         expect(drawing.lastVisibleCount).toBe(1);
+    });
+
+    // -------------------------------------------------------------------------
+    // Resource color badges toggle (settingResourceColorBadges)
+    // -------------------------------------------------------------------------
+
+    // @verified 2026-05-01: badges off (default) keeps the existing image rendering path.
+    test('settingResourceColorBadges=false renders the game icon as before', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getBool.mockReturnValue(false);
+        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 40);
+        expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-05-01: badges on routes static harvestables to drawResourceBadge with the correct category.
+    test('settingResourceColorBadges=true draws a Fiber badge with tier+enchant for static harvestable', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 40, 'Fiber', 5, 2, false);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-05-01: badge mode covers all 5 categories via getResourceCategory(stringType).
+    test.each([
+        ['Fiber', 14, 'settingStaticFiberEnchants', 'Fiber'],
+        ['Hide', 20, 'settingStaticHideEnchants', 'Hide'],
+        ['Log', 2, 'settingStaticWoodEnchants', 'Wood'],
+        ['Ore', 24, 'settingStaticOreEnchants', 'Ore'],
+        ['Rock', 8, 'settingStaticRockEnchants', 'Rock'],
+    ])('badge mode renders %s as category %s', (stringType, typeNumber, settingKey, expectedCategory) => {
+        settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType, mobileTypeId: -1, type: typeNumber};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 1, 2, 40, expectedCategory, 3, 1, false);
+    });
+
+    // @verified 2026-05-01: badge mode falls back to DrawCustomImage when getResourceCategory returns null.
+    // Stub category resolution to null even though stringType passes the static filter, to exercise the safety branch.
+    test('badge mode falls back to DrawCustomImage when getResourceCategory returns null', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        drawing.getResourceCategory = vi.fn(() => null);
+        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
+        expect(drawing.DrawCustomImage).toHaveBeenCalled();
+    });
+
+    // @verified 2026-05-01: pcap-derived full-flow test: real handler -> drawing chain produces a badge in badge mode.
+    test('pcap-derived full-flow: live Fiber critter renders as badge under settingResourceColorBadges', async () => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const msg = fx.messages.find(m => m.parameters['6'] === 529 && m.parameters['10'] > 0);
+        expect(msg).toBeDefined();
+        const p = normalizeParams(msg.parameters);
+
+        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingFiberEnchants' ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.drawResourceBadge).toHaveBeenCalled();
+        const call = drawing.drawResourceBadge.mock.calls[0];
+        expect(call[3]).toBe(40);                  // baseSize
+        expect(call[4]).toBe('Fiber');             // category
+        expect(typeof call[5]).toBe('number');     // tier
+        expect(typeof call[6]).toBe('number');     // enchant
+        expect(call[7]).toBe(false);               // static, not living
     });
 });
