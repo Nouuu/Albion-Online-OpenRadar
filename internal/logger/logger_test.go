@@ -143,6 +143,133 @@ func TestWriteLogs_MixedBatch_RoutesPerLevel(t *testing.T) {
 	}
 }
 
+func TestLog_ErrorWritesToErrorsEvenWhenDisabled(t *testing.T) {
+	dir := t.TempDir()
+	l := New(dir, false)
+	defer l.Stop()
+
+	l.Error("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Flush()
+
+	errLines := readErrorLines(t, dir)
+	if len(errLines) != 1 {
+		t.Fatalf("errors file: want 1 line, got %d", len(errLines))
+	}
+	if !strings.Contains(errLines[0], "CAT.ev") {
+		t.Fatalf("errors line: want CAT.ev, got %q", errLines[0])
+	}
+
+	sessionLines := readSessionLines(t, dir)
+	for _, line := range sessionLines {
+		if strings.Contains(line, "CAT") && strings.Contains(line, "ev") {
+			t.Fatalf("sessions file: unexpected CAT.ev entry when disabled: %q", line)
+		}
+	}
+}
+
+func TestLog_CriticalWritesToErrorsEvenWhenDisabled(t *testing.T) {
+	dir := t.TempDir()
+	l := New(dir, false)
+	defer l.Stop()
+
+	l.Critical("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Flush()
+
+	errLines := readErrorLines(t, dir)
+	if len(errLines) != 1 {
+		t.Fatalf("errors file: want 1 line, got %d", len(errLines))
+	}
+	if !strings.Contains(errLines[0], "CAT.ev") {
+		t.Fatalf("errors line: want CAT.ev, got %q", errLines[0])
+	}
+
+	sessionLines := readSessionLines(t, dir)
+	for _, line := range sessionLines {
+		if strings.Contains(line, "CAT") && strings.Contains(line, "ev") {
+			t.Fatalf("sessions file: unexpected CAT.ev entry when disabled: %q", line)
+		}
+	}
+}
+
+func TestLog_ErrorWhenEnabledHitsBothFiles(t *testing.T) {
+	dir := t.TempDir()
+	l := New(dir, true)
+	defer l.Stop()
+
+	l.Error("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Flush()
+
+	errLines := readErrorLines(t, dir)
+	if len(errLines) != 1 {
+		t.Fatalf("errors file: want 1 line, got %d", len(errLines))
+	}
+	if !strings.Contains(errLines[0], "CAT.ev") {
+		t.Fatalf("errors line: want CAT.ev, got %q", errLines[0])
+	}
+
+	sessionLines := readSessionLines(t, dir)
+	found := false
+	for _, line := range sessionLines {
+		if strings.Contains(line, "CAT") && strings.Contains(line, "ev") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("sessions file: want CAT.ev entry when enabled, got lines: %v", sessionLines)
+	}
+}
+
+func TestLog_CriticalWhenEnabledHitsBothFiles(t *testing.T) {
+	dir := t.TempDir()
+	l := New(dir, true)
+	defer l.Stop()
+
+	l.Critical("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Flush()
+
+	errLines := readErrorLines(t, dir)
+	if len(errLines) != 1 {
+		t.Fatalf("errors file: want 1 line, got %d", len(errLines))
+	}
+	if !strings.Contains(errLines[0], "CAT.ev") {
+		t.Fatalf("errors line: want CAT.ev, got %q", errLines[0])
+	}
+
+	sessionLines := readSessionLines(t, dir)
+	found := false
+	for _, line := range sessionLines {
+		if strings.Contains(line, "CAT") && strings.Contains(line, "ev") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("sessions file: want CAT.ev entry when enabled, got lines: %v", sessionLines)
+	}
+}
+
+func TestLog_InfoWhenDisabledWritesNothing(t *testing.T) {
+	dir := t.TempDir()
+	l := New(dir, false)
+	defer l.Stop()
+
+	l.Info("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Flush()
+
+	sessionLines := readSessionLines(t, dir)
+	for _, line := range sessionLines {
+		if strings.Contains(line, "CAT") && strings.Contains(line, "ev") {
+			t.Fatalf("sessions file: unexpected CAT.ev entry when disabled: %q", line)
+		}
+	}
+
+	errLines := readErrorLines(t, dir)
+	if len(errLines) != 0 {
+		t.Fatalf("errors file: want 0 lines, got %d: %v", len(errLines), errLines)
+	}
+}
+
 func readDebugLines(t *testing.T, dir string) []string {
 	t.Helper()
 	return readNonEmptyLinesFromDir(t, filepath.Join(dir, "debug"))

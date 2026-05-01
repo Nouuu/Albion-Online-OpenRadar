@@ -257,8 +257,8 @@ func (l *Logger) writeErrorLine(category, event string, data interface{}) {
 }
 
 func (l *Logger) Error(category, event string, data interface{}, context map[string]interface{}) {
-	l.Log("ERROR", category, event, data, context)
 	l.writeErrorLine("[SERVER] "+category, event, data)
+	l.Log("ERROR", category, event, data, context)
 }
 
 func (l *Logger) Debug(category, event string, data interface{}, context map[string]interface{}) {
@@ -274,6 +274,7 @@ func (l *Logger) Warn(category, event string, data interface{}, context map[stri
 }
 
 func (l *Logger) Critical(category, event string, data interface{}, context map[string]interface{}) {
+	l.writeErrorLine("[SERVER] "+category, event, data)
 	l.Log("CRITICAL", category, event, data, context)
 }
 
