@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -17,6 +18,8 @@ import (
 
 	"github.com/nospy/albion-openradar/internal/logger"
 )
+
+var reUnsafeFilename = regexp.MustCompile(`[^A-Za-z0-9_\-]`)
 
 const (
 	AlbionPort  = 5056
@@ -123,7 +126,17 @@ func (c *Capturer) Stats() (*pcap.Stats, error) {
 	return c.handle.Stats()
 }
 
-// StartRecording begins writing all packets to a new capture_<TS>.pcap in dir.
+// sanitizeIfaceName replaces characters not in [A-Za-z0-9_-] with underscores.
+// Returns "unknown" if the result is empty.
+func sanitizeIfaceName(name string) string {
+	s := reUnsafeFilename.ReplaceAllString(name, "_")
+	if s == "" {
+		return "unknown"
+	}
+	return s
+}
+
+// StartRecording begins writing all packets to a new capture_<TS>_<iface>.pcap in dir.
 // Returns an error if already recording or if the file cannot be created.
 func (c *Capturer) StartRecording(dir string) error {
 	c.recordMu.Lock()
@@ -137,7 +150,8 @@ func (c *Capturer) StartRecording(dir string) error {
 	}
 
 	ts := time.Now().Format("2006-01-02T15-04-05")
-	path := filepath.Join(dir, fmt.Sprintf("capture_%s.pcap", ts))
+	iface := sanitizeIfaceName(c.iface.Name)
+	path := filepath.Join(dir, fmt.Sprintf("capture_%s_%s.pcap", ts, iface))
 
 	f, err := os.Create(path)
 	if err != nil {

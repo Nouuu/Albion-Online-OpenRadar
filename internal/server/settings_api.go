@@ -9,13 +9,28 @@ import (
 	"github.com/nospy/albion-openradar/internal/logger"
 )
 
-type SettingsAPI struct {
-	appDir string
-	logger *logger.Logger
+// Recorder is the subset of capture.Manager used by SettingsAPI to control pcap recording.
+type Recorder interface {
+	StartRecording(dir string) error
+	StopRecording() error
+	IsRecording() bool
 }
 
-func NewSettingsAPI(appDir string, log *logger.Logger) *SettingsAPI {
-	return &SettingsAPI{appDir: appDir, logger: log}
+type SettingsAPI struct {
+	appDir     string
+	logger     *logger.Logger
+	recorder   Recorder
+	captureDir string
+}
+
+// NewSettingsAPI creates a SettingsAPI. recorder may be nil (recording calls are skipped).
+func NewSettingsAPI(appDir string, log *logger.Logger, recorder Recorder, captureDir string) *SettingsAPI {
+	return &SettingsAPI{
+		appDir:     appDir,
+		logger:     log,
+		recorder:   recorder,
+		captureDir: captureDir,
+	}
 }
 
 func (a *SettingsAPI) Register(mux *http.ServeMux) {
@@ -60,6 +75,23 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 
 	if patch.ServerLogsEnabled != nil && a.logger != nil {
 		a.logger.SetEnabled(*patch.ServerLogsEnabled)
+	}
+
+	if patch.PcapRecording != nil && a.recorder != nil {
+		if *patch.PcapRecording {
+			if err := a.recorder.StartRecording(a.captureDir); err != nil {
+				logger.PrintWarn("PKT", "pcap recording could not start: %v", err)
+				_ = capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
+					cfg.Logging.PcapRecording = false
+				})
+				http.Error(w, "pcap recording failed: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+		} else {
+			if err := a.recorder.StopRecording(); err != nil {
+				logger.PrintWarn("PKT", "pcap recording could not stop: %v", err)
+			}
+		}
 	}
 
 	writeJSON(w, http.StatusOK, newLogging)

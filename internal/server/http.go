@@ -47,6 +47,8 @@ func NewHTTPServer(
 	mgr NetworkManager,
 	allInterfaces []capture.NetworkInterface,
 	appDir string,
+	recorder Recorder,
+	captureDir string,
 ) (*HTTPServer, error) {
 	// Extract subdirectories from embed.FS (they include the folder path)
 	imagesFS, err := fs.Sub(images, "web/images")
@@ -93,7 +95,7 @@ func NewHTTPServer(
 	if mgr != nil {
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
-	s.settingsAPI = NewSettingsAPI(appDir, log)
+	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
 	s.setupRoutes()
 	return s, nil
 }
@@ -107,6 +109,8 @@ func NewHTTPServerDev(
 	version string,
 	mgr NetworkManager,
 	allInterfaces []capture.NetworkInterface,
+	recorder Recorder,
+	captureDir string,
 ) (*HTTPServer, error) {
 	// Initialize template engine in dev mode (hot reload)
 	tmplDir := appDir + "/internal/templates"
@@ -133,7 +137,7 @@ func NewHTTPServerDev(
 	if mgr != nil {
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
-	s.settingsAPI = NewSettingsAPI(appDir, log)
+	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
 	s.setupRoutes()
 	return s, nil
 }

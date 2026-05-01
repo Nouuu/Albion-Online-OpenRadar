@@ -5,17 +5,52 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
 )
 
+// fakeRecorder is an in-memory Recorder for tests.
+type fakeRecorder struct {
+	mu        sync.Mutex
+	recording bool
+	startErr  error
+	stopErr   error
+}
+
+func (r *fakeRecorder) StartRecording(_ string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.startErr != nil {
+		return r.startErr
+	}
+	r.recording = true
+	return nil
+}
+
+func (r *fakeRecorder) StopRecording() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.stopErr != nil {
+		return r.stopErr
+	}
+	r.recording = false
+	return nil
+}
+
+func (r *fakeRecorder) IsRecording() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.recording
+}
+
 func newSettingsTestMux(t *testing.T, dir string) (*http.ServeMux, *logger.Logger) {
 	t.Helper()
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
-	api := NewSettingsAPI(dir, log)
+	api := NewSettingsAPI(dir, log, nil, "")
 	mux := http.NewServeMux()
 	api.Register(mux)
 	return mux, log
@@ -191,5 +226,61 @@ func TestSettingsServerLogs_LegacyEndpointIsGone(t *testing.T) {
 		if rec.Code != http.StatusNotFound {
 			t.Errorf("%s /api/settings/server-logs: status %d, want 404", method, rec.Code)
 		}
+	}
+}
+
+func TestSettingsLogging_PostStartsRecording(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{PcapRecording: false},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	rec := &fakeRecorder{}
+	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200; body=%s", rr.Code, rr.Body.String())
+	}
+	if !rec.IsRecording() {
+		t.Error("recorder.IsRecording() == false after POST pcapRecording=true")
+	}
+}
+
+func TestSettingsLogging_PostStopsRecording(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	rec := &fakeRecorder{recording: true}
+	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	body, _ := json.Marshal(map[string]any{"pcapRecording": false})
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200; body=%s", rr.Code, rr.Body.String())
+	}
+	if rec.IsRecording() {
+		t.Error("recorder.IsRecording() == true after POST pcapRecording=false")
 	}
 }

@@ -146,3 +146,99 @@ func TestManagerNoGoroutineLeak(t *testing.T) {
 		t.Errorf("workerExited=%d, want %d (goroutine leak)", got, want)
 	}
 }
+
+func TestManager_StartRecording_PropagatesToActive(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(context.Background())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}}); err != nil {
+		t.Fatalf("Reconfigure: %v", err)
+	}
+
+	dir := t.TempDir()
+	if err := m.StartRecording(dir); err != nil {
+		t.Fatalf("StartRecording: %v", err)
+	}
+
+	m.mu.Lock()
+	mc := m.active["a"]
+	m.mu.Unlock()
+	if mc == nil {
+		t.Fatal("active capturer 'a' not found")
+	}
+	if !mc.cap.IsRecording() {
+		t.Error("capturer 'a' is not recording after Manager.StartRecording")
+	}
+
+	m.Close(context.Background())
+}
+
+func TestManager_StartRecording_AppliesToFutureCapturers(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(context.Background())
+	m.OnPacket(func([]byte) {})
+
+	dir := t.TempDir()
+	if err := m.StartRecording(dir); err != nil {
+		t.Fatalf("StartRecording before Reconfigure: %v", err)
+	}
+
+	if err := m.Reconfigure([]NetworkInterface{{Name: "b", Device: "b"}}); err != nil {
+		t.Fatalf("Reconfigure: %v", err)
+	}
+
+	m.mu.Lock()
+	mc := m.active["b"]
+	m.mu.Unlock()
+	if mc == nil {
+		t.Fatal("active capturer 'b' not found")
+	}
+	if !mc.cap.IsRecording() {
+		t.Error("capturer 'b' added after StartRecording is not recording")
+	}
+
+	m.Close(context.Background())
+}
+
+func TestManager_StopRecording_StopsAllActive(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(context.Background())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{
+		{Name: "c", Device: "c"},
+		{Name: "d", Device: "d"},
+	}); err != nil {
+		t.Fatalf("Reconfigure: %v", err)
+	}
+
+	dir := t.TempDir()
+	if err := m.StartRecording(dir); err != nil {
+		t.Fatalf("StartRecording: %v", err)
+	}
+
+	if err := m.StopRecording(); err != nil {
+		t.Fatalf("StopRecording: %v", err)
+	}
+
+	m.mu.Lock()
+	caps := make([]*Capturer, 0, len(m.active))
+	for _, mc := range m.active {
+		caps = append(caps, mc.cap)
+	}
+	m.mu.Unlock()
+
+	for _, c := range caps {
+		if c.IsRecording() {
+			t.Errorf("capturer %s is still recording after StopRecording", c.iface.Name)
+		}
+	}
+
+	if m.IsRecording() {
+		t.Error("Manager.IsRecording() still true after StopRecording")
+	}
+
+	m.Close(context.Background())
+}
