@@ -73,8 +73,8 @@ Architecture write-up: `docs/technical/LOGGING.md`.
 Audit of the settings page surface that uncovered several phantom toggles and out-of-sync gates:
 
 - Orphan keys aligned (`settingShowFish` -> `settingFishing`, etc.) so a checkbox actually controls the gate it claims to.
-- Screen Flash now mirrors on the radar canvas. Picture-in-Picture viewers see the alert too.
-- Pulsating Border is zone-aware. It fires on faction-flagged players in Black Zones, not just on hostile flag.
+- Screen Flash mirrored on the radar UI canvas in addition to the full-viewport DOM overlay. Users focused on the radar window or in Picture-in-Picture mode now see the alert.
+- Pulsating Border is zone-aware (fires on faction-flagged players in Black Zones, not just on hostile flag) AND draws on the radar UI canvas, so it shows on the overlay and in PiP just like Screen Flash. The pulsation itself is more visible too (wider amplitude, more blur, thicker stroke). The new `settingFlashDangerousPlayer` checkbox in the Alerts page exposes the toggle that previously had only render-side wiring.
 - Fishing and Enemy spawn gates moved from spawn-time drop to render-time filter, matching the resource path. Toggling a category mid-session no longer requires a teleport to refresh the radar.
 - Logger default is `enabled: false`. The frontend POSTs the persisted state on settings page load, so the gate is correct from the first event.
 
