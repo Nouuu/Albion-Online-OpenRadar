@@ -36,11 +36,11 @@ reading.
 
 ### Windows
 
-1. Install **[Npcap](https://npcap.com/#download)** (required for packet capture)
-2. Download `OpenRadar-windows-amd64.exe` from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases)
-3. Run it, pick your network adapter
-4. Open **http://localhost:5001** in your browser
-5. Launch Albion and start playing
+1. Install **[Npcap](https://npcap.com/#download)** (required for packet capture).
+2. Download `OpenRadar-windows-amd64.exe` from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases).
+3. Run it. The radar auto-selects your active LAN interfaces; the startup banner prints both the localhost URL and a `http://<your-lan-ip>:5001 (LAN)` URL when one is available.
+4. Open **http://localhost:5001** in your browser, or the LAN URL from a phone or second device on the same network.
+5. Launch Albion and start playing. To change which interfaces the radar listens on, open the **Settings -> Network** page.
 
 ### Linux
 
@@ -60,9 +60,11 @@ sudo setcap cap_net_raw=eip ./OpenRadar-linux-amd64
 
 ```bash
 OpenRadar -version       # Show version
-OpenRadar -ip X.X.X.X    # Skip adapter selection
+OpenRadar -ip X.X.X.X    # One-shot interface override by IP (does not write network.json)
 OpenRadar -dev           # Development mode (read files from disk)
 ```
+
+Persistent interface selection lives in `network.json` next to the binary. Edit it from the **Settings -> Network** page in the browser, or by hand for headless setups.
 
 ### Using ExitLag?
 
@@ -104,13 +106,19 @@ physical adapter.
 - **Feu follets** (wisp signs) shown before portals appear
 - **Wisp cages** detected inside Mists zones
 
+### Dungeons
+
+Solo, Group (Duo), Corrupted, and Hellgate filters all validated end to end in v2.2. Per-enchant filter E0-E4 works across every family. The `Parameters[8]` enchant fix unblocked five group families that were silently filtered out: T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL.
+
+### Fishing
+
+Spawns detected and rendered. Issue #25 closed in v2.2. End-of-fishing event 61 reaches the radar but is not yet visualized.
+
 ### Basic (Legacy)
 
-Dungeons and chests are on the radar but not fully refactored. Coming in v2.3:
+- **Chests**: shown on the radar, rarity is persisted on the entity but the drawing layer does not yet color-code by rarity (CHEST-1 follow-up).
 
-- **Dungeons**: per-type filter (Solo, Group, Corrupted, Hellgate, Avalonian)
-- **Chests**: rarity classification once the parameter source is identified
-- **Fishing**: end-of-fishing state and fishing zones
+Coming in v2.3: a Dungeons database for Avalonian and per-difficulty filters, chests rarity drawing-layer wiring, end-of-fishing visualization, Mists cluster id routing.
 
 ---
 
@@ -260,25 +268,28 @@ make dev   # Run with hot-reload (requires: make install-tools)
 ### Build
 
 ```bash
-make build-win        # Windows binary
+make build-windows    # Windows binary
 make build-linux      # Linux binary (via Docker)
-make release-snapshot # Full release build (both platforms)
+make all-in-one       # Both binaries + READMEs + checksums
+make release-dry-run  # Same plus a generated RELEASE.md for review
 ```
 
 ### Project Structure
 
 ```
-├── cmd/radar/        # Entry point + TUI
+├── cmd/radar/        # Entry point + flags
 ├── internal/         # Go packages
-│   ├── capture/      # Packet capture (pcap)
-│   ├── photon/       # Protocol parsing
-│   ├── server/       # HTTP + WebSocket
-│   └── templates/    # Go templates (.gohtml)
+│   ├── capture/      # Multi-interface manager + libpcap workers
+│   ├── photon/       # Protocol18 parser, event/op codes, fixtures
+│   ├── server/       # HTTP routes, WebSocket, network/settings APIs
+│   ├── ui/           # Bubble Tea TUI dashboard
+│   └── logger/       # JSONL structured logging
 ├── web/              # Frontend (embedded in binary)
-│   ├── scripts/      # JavaScript modules
+│   ├── scripts/      # JavaScript modules (handlers, drawings, utils)
 │   ├── images/       # Maps, items, spells icons
-│   └── ao-bin-dumps/ # Game data (minified)
-├── tools/            # Build & data scripts (Node.js)
+│   └── ao-bin-dumps/ # Game data (minified JSON)
+├── tools/            # Node.js + Go utilities (anonymize-pcap, photon-dump, gen-eventcodes, offset-validate)
+├── e2e/              # Playwright regression suite
 └── docs/             # Documentation
 ```
 
@@ -299,9 +310,9 @@ make release-snapshot # Full release build (both platforms)
 
 ## Known Limitations
 
-- **Player positions**: Albion encrypts movement data. Players are detected but can't be shown on radar.
-- **Some Black Zone maps**: Tiles for zone IDs 4000+ missing. Disable map background in settings as workaround.
-- **Resource charges**: May differ from actual due to server-side harvest bonuses.
+- **Player positions**: Albion encrypts movement data. Players are detected but their live positions cannot be shown on the radar without a Photon MITM proxy (out of scope). See `docs/technical/PLAYER_POSITIONS_MITM.md`.
+- **Some Black Zone maps**: tiles missing for zone IDs 4000+. Workaround: disable map background in settings.
+- **Event 46 unreliability**: `HarvestableChangeState` can skip size values or fire late depending on server batching. The radar reflects what the wire delivers; intermediate states the server skipped are unrecoverable.
 
 ---
 
