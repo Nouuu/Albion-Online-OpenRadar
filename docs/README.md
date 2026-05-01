@@ -31,4 +31,5 @@ Index of the documentation that ships with the repo.
 | Version | Notes |
 |---|---|
 | [v2.2.0](./releases/RELEASE_2.2.0.md) | Protocol18, Mists, multi-interface, logging coherence |
+| [v2.1.0](./releases/RELEASE_2.1.0.md) | Memory and performance, Picture-in-Picture, zone-aware alerts |
 | [v2.0.0](./releases/RELEASE_2.0.0.md) | Go backend, UI overhaul |

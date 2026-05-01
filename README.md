@@ -290,7 +290,8 @@ make release-snapshot # Full release build (both platforms)
 |---|---|
 | [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development setup, build system, testing |
 | [RELEASE_2.2.0.md](docs/releases/RELEASE_2.2.0.md) | What changed in v2.2 |
-| [RELEASE_2.0.0.md](docs/releases/RELEASE_2.0.0.md) | Older release notes |
+| [RELEASE_2.1.0.md](docs/releases/RELEASE_2.1.0.md) | Memory and performance, Picture-in-Picture |
+| [RELEASE_2.0.0.md](docs/releases/RELEASE_2.0.0.md) | Go backend, UI overhaul |
 | [TODO.md](docs/project/TODO.md) | Roadmap and open observations |
 | [docs/](docs/) | Full documentation index |
 
