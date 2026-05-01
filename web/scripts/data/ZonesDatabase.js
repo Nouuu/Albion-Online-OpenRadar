@@ -3,6 +3,7 @@ import { CATEGORIES } from "../constants/LoggerConstants.js";
 export class ZonesDatabase {
   constructor() {
     this.zones = {};
+    this.overrides = new Map();
     this.loaded = false;
     this.stats = {
       totalZones: 0,
@@ -62,11 +63,40 @@ export class ZonesDatabase {
   getZone(zoneId) {
     if (!zoneId) return null;
     const id = String(zoneId);
+    if (this.overrides.has(id)) return this.overrides.get(id);
     // Try exact match first (handles TNL-XXX, YOURNAME-HIDEOUT, etc.)
     if (this.zones[id]) return this.zones[id];
     // Fallback: try base ID for compound numeric IDs like "1234-5"
     const baseId = id.split("-")[0];
     return this.zones[baseId] || null;
+  }
+
+  setMistOverride(mistMapId, originZoneId) {
+    const origin = this.getZone(originZoneId);
+    if (!origin) {
+      window.logger?.warn(CATEGORIES.MAP, "MistOverrideUnknownOrigin", {
+        mistMapId,
+        originZoneId,
+      });
+      return false;
+    }
+    this.overrides.set(String(mistMapId), {
+      name: `Mist of ${origin.name}`,
+      type: "MISTS",
+      pvpType: origin.pvpType,
+      tier: 0,
+      file: origin.file,
+      originZoneId: String(originZoneId),
+    });
+    return true;
+  }
+
+  clearMistOverride(mapId) {
+    this.overrides.delete(String(mapId));
+  }
+
+  clearAllMistOverrides() {
+    this.overrides.clear();
   }
 
   getPvpType(zoneId) {

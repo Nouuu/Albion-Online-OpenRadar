@@ -190,6 +190,7 @@ export async function initRadar() {
             radarRenderer: null
         });
 
+        EventRouter.restoreMistOverrideFromSession();
         EventRouter.restoreMapFromSession();
 
         WebSocketManager.setMessageCallback((data) => {

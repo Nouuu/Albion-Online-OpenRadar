@@ -52,11 +52,49 @@ function persistMapToSession() {
     }
 }
 
+function persistMistOverride(mistMapId, originZoneId) {
+    try {
+        sessionStorage.setItem('activeMistOverride', JSON.stringify({
+            mistMapId,
+            originZoneId,
+            timestamp: Date.now()
+        }));
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'MistOverridePersistFailed', {error: e?.message});
+    }
+}
+
+function clearMistOverridePersistence() {
+    try {
+        sessionStorage.removeItem('activeMistOverride');
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'MistOverrideClearFailed', {error: e?.message});
+    }
+}
+
+function resolveMistOriginId(previousMapId) {
+    if (typeof previousMapId !== 'string' || previousMapId.length === 0) return null;
+    if (!previousMapId.startsWith('@MISTS@')) return previousMapId;
+    const prevOverride = zonesDatabase.getZone(previousMapId);
+    return prevOverride && typeof prevOverride.originZoneId === 'string'
+        ? prevOverride.originZoneId
+        : null;
+}
+
 function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     const previousMapId = map.id;
     map.id = newMapId;
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
+    if (typeof newMapId === 'string' && newMapId.startsWith('@MISTS@')) {
+        const originId = resolveMistOriginId(previousMapId);
+        if (originId && zonesDatabase.setMistOverride(newMapId, originId)) {
+            persistMistOverride(newMapId, originId);
+        }
+    } else {
+        zonesDatabase.clearAllMistOverrides();
+        clearMistOverridePersistence();
+    }
     syncMapIsBZ();
     radarRenderer?.setMap?.(map);
     persistMapToSession();
@@ -163,6 +201,24 @@ export function setRadarRenderer(renderer) {
 
 export function getLocalPlayerPosition() {
     return {x: lpX, y: lpY};
+}
+
+export function restoreMistOverrideFromSession() {
+    try {
+        const saved = sessionStorage.getItem('activeMistOverride');
+        if (!saved) return;
+        const data = JSON.parse(saved);
+        if (data && typeof data.mistMapId === 'string' && typeof data.originZoneId === 'string') {
+            zonesDatabase.setMistOverride(data.mistMapId, data.originZoneId);
+            window.logger?.info(CATEGORIES.MAP, 'MistOverrideRestored', {
+                mistMapId: data.mistMapId,
+                originZoneId: data.originZoneId,
+                age: Date.now() - (data.timestamp || 0)
+            });
+        }
+    } catch (e) {
+        window.logger?.warn(CATEGORIES.MAP, 'MistOverrideRestoreFailed', {error: e?.message});
+    }
 }
 
 export function restoreMapFromSession() {
