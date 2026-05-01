@@ -19,18 +19,6 @@
   </a>
 </p>
 
-> ### ⏸️ Project on pause
->
-> Hey. Taking a break from this for a while, personal health stuff.
->
-> I see the comments, the downloads, the messages. I built this for myself at first and seeing how many people actually use it is kind of wild. Thanks for that, really.
->
-> Haven't tested it in a while so if the game updated and things broke, I haven't seen it yet. I'll get back to it when I can.
->
-> Take care. ❤️
->
-> -- Nouuu
-
 https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 
 ---
@@ -110,12 +98,19 @@ physical adapter.
 
 > **Alert System**: Screen flash + sound on hostile detection
 
+### Mists
+
+- **Portals** (Solo, Duo) detected with rarity (Common, Uncommon, Rare, Epic, Legendary)
+- **Feu follets** (wisp signs) shown before portals appear
+- **Wisp cages** detected inside Mists zones
+
 ### Basic (Legacy)
 
-Dungeons and chests are detected but not yet refactored. Coming in v2.2:
+Dungeons and chests are on the radar but not fully refactored. Coming in v2.3:
 
-- **Dungeons**: Solo, Group, Corrupted, Hellgate entrances show on radar
-- **Chests**: Loot chests visible, rarity classification planned
+- **Dungeons**: per-type filter (Solo, Group, Corrupted, Hellgate, Avalonian)
+- **Chests**: rarity classification once the parameter source is identified
+- **Fishing**: end-of-fishing state and fishing zones
 
 ---
 
@@ -152,8 +147,8 @@ Fonts, icons, everything bundled. Once Albion connects, the radar works without 
 
 Check [TODO.md](docs/project/TODO.md) for what's coming:
 
-- v2.2: Dungeons, Chests, Mists, Fishing refactoring
-- Future: Native desktop app (Wails v3), squad mode, session heatmaps
+- v2.3: Dungeons database, Chests rarity, Fishing completion, Mists cluster routing
+- Future: squad mode, session heatmaps
 
 ---
 
@@ -194,52 +189,48 @@ Check [TODO.md](docs/project/TODO.md) for what's coming:
 
 ---
 
-## What's New in v2.1
+## What's New in v2.2
 
-This release is all about polish. Memory leaks hunted down, every frame squeezed, the whole thing feels snappier.
+The stabilization release. Game updates that broke prior builds are caught up, the capture path survives ExitLag and VPN toggles, and the logging system finally makes sense.
 
-### Performance
+### Game updates caught up
 
-| Before               | After         |           |
-|----------------------|---------------|-----------|
-| 4 GB RAM after 30min | 500 MB stable | **-87%**  |
-| 1200 MB heap         | 20 MB heap    | **-98%**  |
-| 30-60 FPS            | 160+ FPS      | **+170%** |
-| 80ms GC pauses       | 12ms          | **-85%**  |
+- **Protocol18 port**: deserializer rewritten with pcap-fixture-backed tests for every event the radar consumes.
+- **Mists detection**: portals, feu follets, and wisp cages back on the radar. Rarity reads from `Parameters[8]`, the same slot non-Mists dungeons use (which fixes Morgana, Keeper, Undead, Royal Solo while we are at it).
+- **Living harvest tier**: tier on the radar matches the in-game tooltip after a TypeID OFFSET=16 confirmation against 6469 pcap events.
 
-Event listener leaks fixed, LRU caching for images, server-side WebSocket batching, client-side event coalescing. The
-radar now runs for hours without degradation.
+### Network
 
-### UX Improvements
+- **Multi-interface capture**: listen on WiFi and Ethernet at the same time so an ExitLag or VPN toggle never silences the radar.
+- **ExitLag support**: NDIS LWF positioning understood; cases A, B, C covered.
+- **`network.json` config**: stable interface identifiers replace IP-keyed `ip.txt`. Migration runs once.
 
-- **SPA navigation**: No more page reloads. Click around, everything stays smooth
-- **PiP mode**: Native browser Picture-in-Picture, stays on top of your game
-- **Zone indicators**: See at a glance if you're in safe, yellow, red, or black zone
-- **Smarter alerts**: Only warns when there's actual danger
-- **Settings persistence**: Config survives refresh and navigation
+### LAN access
 
-### Under the Hood
+- **Dynamic WebSocket URL**: open `http://<host-ip>:5001` from a phone, the radar just works.
+- **Startup banner**: prints localhost and LAN URLs side by side.
+- **Mobile responsive baseline**: every page usable at 375x667 portrait without horizontal scroll.
 
-- PageController orchestrates init/destroy cycles, no more orphan listeners
-- WebSocketManager with auto-reconnect and visibility handling
-- Image cache with LRU eviction (bye bye memory bloat)
-- Server-side event batching every 16ms
-- Client-side event coalescing for Move/Health updates
-- All CDN dependencies removed (fonts, icons, HTMX bundled locally)
+### Logging and pcap
 
-### Smaller Binary
+- **Coherent log directories**: `logs/sessions/` for backend, `logs/debug/` for frontend, `logs/errors/` always-on, `logs/captures/` for pcap recording.
+- **In-process pcap recording**: gated by a UI toggle. No more `tcpdump` to debug a parser issue.
+- **Unified `/api/settings/logging` endpoint**: replaces the old single-toggle endpoint.
 
-Asset optimization cuts embedded data massively:
+### UI polish
 
-| Asset      | Before | After  | Reduction |
-|------------|--------|--------|-----------|
-| Game data  | 130 MB | 2.3 MB | **-98%**  |
-| Maps       | 50 MB  | ~25 MB | -50%      |
-| Item icons | 27 MB  | ~17 MB | -37%      |
+- **Resource icon size slider**: dense screens stay readable.
+- **Per-rarity color badges**: replaces the single-dot indicator.
+- **Collapsible network panel**: in the radar overlay.
+- **Mist instance pvpType**: inherits from the parent cluster, no more wrong "safe" tagging in Mists.
 
-The 84 MB localization file? Gone. Minified JSONs keep only what the radar needs.
+### Stability
 
-**Total embedded: ~210 MB → ~45 MB**
+- **Real-DB tests**: 351 frontend tests across 14 suites, loading `web/ao-bin-dumps/*.min.json` instead of mocks.
+- **Embed safety**: production binary cannot ship test files or fixtures.
+- **Shutdown reliability**: pcap close ordering reworked, no more goroutine polling a freed handle.
+
+For the full changelog see [RELEASE_2.2.0.md](docs/releases/RELEASE_2.2.0.md).
 
 ---
 
@@ -295,12 +286,13 @@ make release-snapshot # Full release build (both platforms)
 
 ## Documentation
 
-| Guide                                              | Description         |
-|----------------------------------------------------|---------------------|
-| [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md)              | Development setup   |
-| [RELEASE_2.0.0.md](docs/releases/RELEASE_2.0.0.md) | Version 2.0 changes |
-| [TODO.md](docs/project/TODO.md)                    | Roadmap             |
-| [docs/](docs/)                                     | Full documentation  |
+| Guide | Description |
+|---|---|
+| [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development setup, build system, testing |
+| [RELEASE_2.2.0.md](docs/releases/RELEASE_2.2.0.md) | What changed in v2.2 |
+| [RELEASE_2.0.0.md](docs/releases/RELEASE_2.0.0.md) | Older release notes |
+| [TODO.md](docs/project/TODO.md) | Roadmap and open observations |
+| [docs/](docs/) | Full documentation index |
 
 ---
 
