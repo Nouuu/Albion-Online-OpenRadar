@@ -1,476 +1,53 @@
-# DEATHEYE vs Current Implementation, Analysis Report
+# DEATHEYE comparison
 
-> Reference: `work/data/albion-radar-deatheye-2pc/`.
-> Focus: events, offsets, XML bases (items/harvestables/mobs), PvE strategy (T6+, living resources, dungeons, equipment/IP).
-> Last verified against code: 2026-04-12.
+Why OpenRadar diverged from DEATHEYE on architecture and what we kept from its design.
 
-> This analysis **does not** cover player positions via Photon MITM. For encryption, XorCode, and the decision not to implement MITM, see `./PLAYER_POSITIONS_MITM.md`.
+*Last verified against code: 2026-05-01.*
 
----
+## Two philosophies
 
-## 1. DEATHEYE Concept vs OpenRadar
+DEATHEYE is the canonical Albion radar. It used a Photon MITM proxy (Cryptonite) to decrypt every event and parsed full XML dumps for items, mobs, and harvestables. The result was a complete picture of the game state at the cost of a complex, detection-prone runtime.
 
-DEATHEYE is a previous project that:
+OpenRadar took the AlbionRadar route: passive pcap on UDP 5056, no MITM, no game traffic modification. The runtime is simpler and the threat model is lighter, but live player positions are not available (see `PLAYER_POSITIONS_MITM.md`).
 
-- Used Photon MITM (Cryptonite) to decrypt all network traffic.
-- Parsed XML dumps (`items.xml`, `mobs.xml`, `harvestables.xml`).
-- Built complete XML-based databases (items, mobs, harvestables).
-- Computed real **item power** (IP) from equipment.
+| Concern | DEATHEYE | OpenRadar |
+|---|---|---|
+| Capture | Photon MITM (Cryptonite) | passive pcap (gopacket, libpcap) |
+| Player positions | yes | no (XOR-encrypted, see MITM doc) |
+| Player spawn / identity | yes | yes |
+| Mobs / resources | yes | yes |
+| Harvestables (static) | yes | yes |
+| Living harvestables (critters) | yes | yes (post #52, #92) |
+| Item database | XML parse | JSON dumps (`web/ao-bin-dumps`) |
+| Item power | real values from XML | real values from `itemsDatabase` |
+| TypeID resolution | offset 16 | offset 16 (same anchor, see #92) |
+| Dungeon enchant source | `Parameters[8]` | `Parameters[8]` |
 
-OpenRadar is a lighter implementation that:
+## Lessons we kept
 
-- Does **not** use MITM (no Photon decryption).
-- Relies on official dumps + runtime logging.
-- Uses enriched logging to approximate/derive missing data.
+The ones that proved load-bearing once OpenRadar started shipping fixtures and tests:
 
-This document compares DEATHEYE’s approach with OpenRadar’s current implementation and proposes an upgrade path.
+1. **TypeID OFFSET=16 is the live anchor.** The radar tried OFFSET=15 for a long time and silently compensated the drift with a `t-1` shift on living non-DYNAMIC critters; that shift exposed itself as a bug on DEAD/DYNAMIC variants. Cross-validation against 6469 pcap NewMob events plus 5889 session-log events confirmed OFFSET=16 with zero outliers. The radar now reads `MobsDatabase.OFFSET = 16` and the tier rule reduces to the database `t` field.
+2. **Dungeon enchant lives in `Parameters[8]`.** Not `Parameters[6]`, which is a dungeon type/variant id. The same `Parameters[8]` slot carries Mists portal rarity. Live evidence on a "Peu commun" YELLOW portal (`Parameters[8]=1`) and a T6_MORGANA E2 dungeon (`Parameters[8]=2`) confirmed the slot. This fix unblocked every group dungeon family that had been silently filtered out (Morgana, Keeper, Undead, Royal Solo).
+3. **Item power comes from real XML values.** Approximations on item id ranges are not better than nothing: they are misleading. `itemsDatabase` parses the official dumps and exposes `getItemById(id)` with `itempower`, fed back into `PlayersHandler.getAverageItemPower`.
+4. **The TypeID namespace for items and mobs is separate.** A live capture can show id 358 as both a quest token (in `items.txt`) and a T1 Hide rabbit (in `MobsInfo.js`); they live in different lookup tables.
 
----
+## Lessons we did not adopt
 
-## 2. XML Databases in DEATHEYE
+- **MITM proxy.** Three to four weeks of work, increased detection risk, no PvE gain.
+- **XML parsing in the browser.** OpenRadar uses precomputed JSON minified dumps shipped under `web/ao-bin-dumps`. The build pipeline (`tools/update-ao-data`, `tools/optimize-icons`) turns the XML into the radar-relevant subset.
+- **Full mobs.xml import.** OpenRadar maintains `MobsInfo.js` as a runtime-collected database with the exact entries the radar needs. The `tools/` folder regenerates the JSON from upstream when the schema changes.
 
-### 2.1 Database Structure (DEATHEYE)
+## Files involved
 
-#### Items
+| File | Source of truth |
+|---|---|
+| `web/scripts/data/ItemsDatabase.js` | item id, name, tier, enchant, item power |
+| `web/scripts/data/MobsDatabase.js` | mob template, harvest type, OFFSET=16 anchor |
+| `web/scripts/data/HarvestablesDatabase.js` | static harvestable nodes |
+| `web/ao-bin-dumps/*.min.json` | precomputed JSONs |
+| `tools/update-ao-data/` | XML to JSON pipeline |
 
-- Source: `items.xml`.
-- Parsed into a normalized structure with:
-  - `@uniquename`
-  - `@tier`
-  - `@enchantmentlevel`
-  - `@itempower`
-  - Equipment slots, categories, etc.
+## Reference
 
-Used for:
-
-- Player equipment lookup.
-- Real item power (IP) calculation.
-- Gear score and build analysis.
-
-#### Mobs
-
-- Source: `mobs.xml`.
-- Contains:
-  - `@uniquename`
-  - `@tier`
-  - `@prefab`
-  - `@faction`
-  - `@hitpointsmax`
-  - `@abilitypower`
-  - Other attributes.
-
-Used for:
-
-- Living resources mapping.
-- HP validation.
-- Faction-based filters.
-
-#### Harvestables
-
-- Source: `harvestables.xml`.
-- Contains resource nodes (trees, ore, rock, fiber).
-- Defines:
-  - Tier.
-  - Base resource.
-  - Enchantment states.
-
-Used for:
-
-- Mapping harvestable nodes to item IDs.
-- Dungeon resource visualization.
-
----
-
-### 2.2 Current Implementation – Gaps
-
-In the current OpenRadar implementation (before upgrades):
-
-- No full XML database layer (only partial JSON.
-- `MobsInfo.js` manually populated from in-game collection.
-- Enchantment detection for living resources was initially buggy (see `ENCHANTMENTS.md`).
-- Dungeon enchantment offset was incorrect.
-- Player item power was based on crude approximations (using IDs rather than `itempower`).
-
----
-
-## 3. Harvestables & Living Resources
-
-### 3.1 Harvestables – Static TypeIDs
-
-From DEATHEYE + dumps, we can define **static** TypeIDs for harvestables:
-
-- Source: `harvestables.xml`.
-- Example:
-
-```javascript
-// Example partial content of harvestables-typeids.js
-// WOOD harvestables
-913,   // T1.0 - Rough Logs
-11734, // T2.0 - Novice Lumberjack's Trophy Journal (Full)
-5908,  // T4.1 - Adept's Lumberjack Backpack
-...
-```
-
-In OpenRadar:
-
-- `harvestables-typeids.js` is generated as a static reference.
-- **Note:** These are item IDs, not directly the resource nodes.
-
-### 3.2 Living Resources – Dynamic TypeIDs
-
-For **living resources** (Hide/Fiber mobs), TypeIDs are **server runtime** identifiers:
-
-- Not present as-is in `mobs.json` or `items.txt`.
-- Must be collected via in-game logging.
-
-Key conclusion:
-
-- Items and mobs have **separate** TypeID namespaces.
-
-Example collision:
-
-```text
-TypeID 358:
-  items.txt → QUESTITEM_EXP_TOKEN_D16_T6_EXP_HRD_KEEPER_MUSHROOM
-  MobsInfo.js (network) → T1 Rabbit (Hide)
-
-TypeID 421:
-  items.txt → QUESTITEM_EXP_TOKEN_D7_T6_EXP_HRD_MORGANA_TORTURER
-  MobsInfo.js (network) → T1 Rabbit variant
-
-⇒ Separate namespaces: items ≠ mobs.
-```
-
----
-
-## 4. Metadata Extraction (Without TypeIDs)
-
-### 4.1 What We Can Extract from Dumps
-
-**Source:** `mobs.json` + `randomspawnbehaviors.json` (official dumps).
-
-We can extract:
-
-- `@uniquename`
-- `@tier`
-- `@prefab`
-- `@faction`
-- `@hitpointsmax`
-
-Example metadata record:
-
-```javascript
-{
-  uniqueName: "MOB_RABBIT",
-  tier: 1,
-  prefab: "MOB_HIDE_RABBIT_01",
-  hp: 20,
-  faction: "RABBIT",
-  enchant: 0 // inferred from suffix or rarity
-}
-```
-
-**Result:** `living-resources-enhanced.json` (225 creatures) and `living-resources-reference.js` (JS module).
-
-### 4.2 Improvements Possible Without TypeIDs
-
-Given the extracted metadata, we can:
-
-1. **Validate HP**:
-   - Compare logged HP with expected HP per creature.
-   - Detect anomalies.
-
-2. **Enhance `MobsInfo.js`:**
-
-```javascript
-this.addItemWithMetadata(358, {
-  tier: 1,
-  enemyType: 1,
-  resourceType: "hide",
-  animal: "Rabbit",           // new
-  expectedHP: 20,              // new
-  prefab: "MOB_HIDE_RABBIT_01", // new
-  faction: "RABBIT"            // new
-});
-```
-
-3. **Infer Enchantment from Rarity:**
-
-- Use `rarity - baseRarity` to estimate `.0/.1/.2/.3/.4`.
-- See `ENCHANTMENTS.md` for full formula.
-
----
-
-## 5. Player Equipment & Item Power
-
-### 5.1 DEATHEYE Approach
-
-DEATHEYE:
-
-- Parsed `items.xml` to build a complete item database.
-- Mapped item IDs → `itempower`.
-- Calculated real item power (IP) for each slot.
-- Accounted for 2H weapons (double weight).
-
-### 5.2 Current OpenRadar Limitations (Before Upgrade)
-
-- Equipment detection present (IDs from Event 29).
-- No proper `items.xml`-based lookup.
-- "Item power" approximations based on ID ranges, not real values.
-
-### 5.3 Proposed Upgrade (Now Implemented in DEV Guide)
-
-Create an `ItemsDatabase`:
-
-```javascript
-class ItemsDatabase {
-  constructor() {
-    this.itemsById = {};
-    this.itemsByName = {};
-    this.loaded = false;
-  }
-
-  async load() {
-    if (this.loaded) return;
-
-    const response = await fetch('/ao-bin-dumps/items.xml');
-    const xmlText = await response.text();
-
-    // Parse XML (DOMParser or custom)
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'application/xml');
-
-    const items = xmlDoc.getElementsByTagName('item');
-
-    for (const item of items) {
-      const id = parseInt(item.getAttribute('id'), 10);
-      const name = item.getAttribute('uniquename');
-      const tier = parseInt(item.getAttribute('tier'), 10) || 0;
-      const enchant = parseInt(item.getAttribute('enchantmentlevel'), 10) || 0;
-      const itempower = parseFloat(item.getAttribute('itempower')) || 0;
-
-      const record = { id, name, tier, enchant, itempower };
-
-      this.itemsById[id] = record;
-      this.itemsByName[name] = record;
-    }
-
-    this.loaded = true;
-  }
-
-  getItemById(id) {
-    return this.itemsById[id] || null;
-  }
-
-  getItemByName(name) {
-    return this.itemsByName[name] || null;
-  }
-}
-
-export const itemsDatabase = new ItemsDatabase();
-```
-
-Use it in `PlayersHandler`:
-
-```javascript
-getAverageItemPower() {
-  if (!this.equipments || !Array.isArray(this.equipments)) {
-    return null;
-  }
-
-  const db = window.itemsDatabase || playersHandler?.itemsDatabase;
-  if (!db?.loaded) {
-    return null;
-  }
-
-  const combatSlots = [0, 1, 2, 3, 4];
-
-  let totalPower = 0;
-  let count = 0;
-
-  for (const slotIndex of combatSlots) {
-    const itemId = this.equipments[slotIndex];
-    if (!itemId || itemId <= 0) continue;
-
-    const item = db.getItemById(itemId);
-    if (item && item.itempower > 0) {
-      totalPower += item.itempower;
-      count++;
-    }
-  }
-
-  // Handle 2H weapon
-  const mainHandId = this.equipments[0];
-  if (mainHandId > 0) {
-    const mainHand = db.getItemById(mainHandId);
-    if (mainHand?.name.includes('2H')) {
-      totalPower += mainHand.itempower;
-      count++;
-    }
-  }
-
-  return count > 0 ? Math.round(totalPower / count) : null;
-}
-```
-
-See `docs/dev/DEV_GUIDE.md` for the detailed implementation plan.
-
----
-
-## 6. Critical Differences Summary
-
-| Feature               | DEATHEYE                               | Current (before upgrades)                     | Status | Priority |
-|-----------------------|----------------------------------------|-----------------------------------------------|--------|----------|
-| **TypeID Offset**     | `typeId - 15`                          | direct `typeId`                               | ❌      | 🔴 CRIT   |
-| **XML Database**      | Full parse of `harvestables/mobs/items`| Partial JSON only                             | ❌      | 🔴 CRIT   |
-| **Enchant Detection** | XML suffix parsing                     | `params[33]` unreliable                       | ❌      | 🔴 CRIT   |
-| **Living Resources**  | `MobInfo` lookup                       | Rarity calc buggy for Hide (fixed now)        | ❌      | 🟠 HIGH   |
-| **Dungeon Enchant**   | `parameters[8]`                        | `parameters[6]`                               | ❌      | 🟡 MED    |
-| **T6+ Tier**          | XML validation                         | Direct from game (buggy)                      | ❌      | 🟠 HIGH   |
-| **Player Equipment**  | `items.xml` lookup                     | Approximation on IDs                          | ❌      | 🟢 LOW    |
-| **Item Power**        | Real IP from XML                       | Nonsense (average of IDs)                     | ❌      | 🟢 LOW    |
-
----
-
-## 7. Implementation Plan (from DEATHEYE Learnings)
-
-### Phase 1: Quick Wins (5 min) – CRITICAL
-
-1. **Fix TypeID Offset**
-
-**File:** `scripts/Handlers/MobsHandler.js:481`
-
-```javascript
-// Change:
-const typeId = parseInt(parameters[1]);
-// To:
-const typeId = parseInt(parameters[1]) - 15; // APPLY OFFSET
-```
-
-Impact: fixes a large portion of T6+ detection issues.
-
-2. **Fix Dungeon Enchantment Offset**
-
-**File:** `scripts/Handlers/DungeonsHandler.js:85`
-
-```javascript
-// Change:
-const enchant = parameters[6];
-// To:
-const enchant = parameters[8]; // CORRECT OFFSET
-```
-
-Impact: solo dungeon enchantment becomes correct.
-
----
-
-### Phase 2: XML Databases (≈45 min) – HIGH PRIORITY
-
-1. **Copy `ao-bin-dumps` to public**
-
-```bash
-cp -r work/data/albion-radar-deatheye-2pc/ao-bin-dumps/ public/
-```
-
-Files used: `mobs.xml`, `harvestables.xml`, `items.xml`.
-
-2. **Create `MobsDatabase.js`**
-
-**File:** `scripts/Data/MobsDatabase.js`
-
-- Parse `mobs.xml`.
-- Extract tier, harvestableType, rarity (from suffix/name/rarity).
-- Expose `load()` and `getMobInfo(typeId)`.
-
-3. **Create `ItemsDatabase.js`**
-
-**File:** `scripts/Data/ItemsDatabase.js`
-
-- Parse `items.xml` with enchantments.
-- Generate lookup structures (as shown above).
-- Expose `load()`, `getItemById(id)`, `getItemByName(name)`.
-
-4. **Integration into Handlers**
-
-- **`MobsHandler.js`**:
-  - Load `MobsDatabase` at startup.
-  - Use `mobInfo.tier` and `mobInfo.rarity`.
-  - Fix living resource detection.
-
-- **`PlayersHandler.js`**:
-  - Load `ItemsDatabase` at startup.
-  - Fix `getAverageItemPower()` with real lookup.
-
----
-
-### Phase 3: Player Equipment & Item Power (≈30 min) – CURRENT FOCUS
-
-1. Create `ItemsDatabase.js`.
-2. Modify `PlayersHandler` to use it.
-3. Load items database at startup (`Utils.js`).
-4. Validate item power display (must be in 700–1400 range for T4–T8).
-
----
-
-### Phase 4: Testing & Validation (≈15 min)
-
-Tests:
-
-1. ✅ Player item power display (correct values vs game).
-2. ✅ T6+ resources detection (after Phase 2).
-3. ✅ Living resources enchantment (after rarity fix).
-4. ✅ Solo dungeons enchantment (after offset fix).
-
----
-
-## 8. Files to Create/Modify
-
-### New Files
-
-1. ✅ `scripts/Data/ItemsDatabase.js` – Phase 3 (player equipment).
-2. 🔜 `scripts/Data/MobsDatabase.js` – Phase 2 (future branch).
-3. 🔜 `scripts/Data/HarvestablesDatabase.js` – Phase 2 (future branch).
-
-### Modified Files
-
-1. ✅ `scripts/Handlers/PlayersHandler.js` – `getAverageItemPower()`.
-2. 🔜 `scripts/Handlers/MobsHandler.js` – TypeID offset + DB lookup.
-3. 🔜 `scripts/Handlers/DungeonsHandler.js` – enchant offset.
-4. ✅ `scripts/Utils/Utils.js` – load databases at startup.
-
-### Data
-
-1. ✅ `public/ao-bin-dumps/items.xml` – copy from `work/data/`.
-2. 🔜 `public/ao-bin-dumps/mobs.xml` – copy from `work/data/`.
-3. 🔜 `public/ao-bin-dumps/harvestables.xml` – copy from `work/data/`.
-
----
-
-## 9. Conclusion
-
-### Root Causes Summary
-
-1. **Missing TypeID offset (-15)** → mis-identified living resources.
-2. **No XML database** → no single source of truth for tier/enchant.
-3. **`params[33]` unreliable** → broken enchant detection for skinnables (fixed by rarity formula).
-4. **Dungeon offset wrong** → incorrect dungeon enchantment.
-5. **Item power calculation** → used item IDs instead of real `itempower`.
-
-### Expected Gains After Fixes
-
-| Metric                     | Before                | After Phase 1 | After Phase 2 | After Phase 3 |
-|----------------------------|-----------------------|---------------|---------------|---------------|
-| T6+ detection              | ~50%                  | ~75%          | 100%          | 100%          |
-| Living resources enchant   | ~20%                  | ~30%          | 100%          | 100%          |
-| Solo dungeons enchantment  | ~80%                  | 100%          | 100%          | 100%          |
-| Player item power          | 0% (gibberish)        | 0%            | 0%            | 100%          |
-
-### Next Steps
-
-- Implement and validate XML database layer for mobs and harvestables.
-- Finalize `ItemsDatabase`-based item power computation.
-- Keep logging/analysis tooling up to date with schema changes.
-
----
-
-_This analysis is the technical bridge between DEATHEYE’s full-XML architecture and the current OpenRadar implementation, and serves as a roadmap for closing critical gaps._
+DEATHEYE source: `Triky313/AlbionOnline-StatisticsAnalysis`, `pxlbit228/albion-radar-deatheye-2pc`, `ao-data/albiondata-client`. These remain the upstream sources OpenRadar checks against when the protocol drifts.

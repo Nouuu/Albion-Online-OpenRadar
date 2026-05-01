@@ -1,192 +1,68 @@
-# Player Detection and Display System
+# Player detection and display
 
-*Last updated: 2025-12-13 (v2.0)*
-*Last verified against code: 2026-04-12*
+How OpenRadar tracks and renders other players within the limits the Albion protocol allows.
+
+*Last verified against code: 2026-05-01.*
 
 ## Overview
 
-The player detection system tracks and displays other players on the radar in real time within the limits of the Albion protocol.
+Players are detected from `Event 29 NewCharacter`. Equipment, guild, alliance, faction flag, and health come from event parameters. Movement is tracked via `Event 3 Move`, with a constraint detailed in `PLAYER_POSITIONS_MITM.md`: player positions are XOR-encrypted by Albion. The radar can place player spawns based on the data the server sends, but absolute live positions during play require a Photon MITM proxy that is out of scope.
 
-### Related Documentation
-- [PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md) - Protocol encryption limits
-- [DEATHEYE_ANALYSIS.md](./DEATHEYE_ANALYSIS.md) - Technical comparison with DEATHEYE
+## Detection
 
----
+| Source | Outcome |
+|---|---|
+| Event 29 NewCharacter | spawn, name, guild, alliance, equipment ids, flag, initial health |
+| Event 3 Move | move signal (encrypted positions for players) |
+| Event 6 / 8 HealthUpdate | current health changes |
+| Event 90 EquipmentChanged | equipment id update |
 
-## Current Features (v2.0)
+## Display
 
-### Detection
-- Player detection via NewCharacter events (Event 29)
-- Equipment IDs captured from event parameters
-- Guild and alliance information
+| Flag id | Color | Meaning |
+|---|---|---|
+| 0 | green `#00ff88` | passive, not flagged for PvP |
+| 1-6 | orange `#ffa500` | faction warfare flagged |
+| 255 | red `#ff0000` | hostile |
 
-### Display
-- **Color-coded dots by type**:
-  - Green (#00ff88): Passive (flagId = 0)
-  - Orange (#ffa500): Faction (flagId = 1-6)
-  - Red (#FF0000): Hostile (flagId = 255)
-- Type filtering toggles (Passive/Faction/Hostile)
-- Master toggle to enable/disable all player display
-- Position interpolation for smooth movement
+Toggles: master "Show Players" plus per-flag filters (Passive, Faction, Hostile).
 
-### Alerts
-- Screen flash on hostile detection
-- Sound alert option
+## Alerts
 
----
+The threat alert pipeline lives in `PlayersHandler.triggerHostileAlert`. Two gates apply:
 
-## Known Limitations
+- The detected player is not in the local ignore list (matched by nickname, guild, or alliance).
+- The current zone PvP type is one where the alert should fire (zone-aware). The fallback for unknown zones treats them as `safe` to avoid spurious alerts; an open observation tracks zones where the lookup misses while a hostile is actually present.
 
-### Player Movement
-- Movement tracking is limited due to Albion's encryption
-- Event 3 (Move) works reliably for mobs but can be inconsistent for players
-- Precise absolute positions require MITM proxy (out of scope)
+When both gates pass, the player triggers screen flash and a sound alert if both options are enabled.
 
-See [PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md) for technical details.
-
----
-
-## Architecture (v2.0 - Go Backend)
-
-### File Structure
-
-```
-web/scripts/
-├── Handlers/
-│   └── PlayersHandler.js       # Detection, filtering, storage
-├── Drawings/
-│   └── PlayersDrawing.js       # Rendering on radar canvas
-└── Utils/
-    ├── SettingsSync.js         # Settings management
-    └── DrawingUtils.js         # Drawing utilities
-
-internal/templates/pages/
-└── players.gohtml              # UI controls for player settings
-```
-
-### Data Flow
-
-```
-Network Packet (Photon - port 5056)
-    ↓
-Go Backend (internal/photon/)
-    ├─ ParsePhotonPacket()
-    ├─ ProcessCommand()
-    └─ BroadcastEvent() via WebSocket
-    ↓
-WebSocket (ws://localhost:5001/ws)
-    ↓
-PlayersHandler.handleNewPlayerEvent(parameters)
-    ├─ Check: settings enabled?
-    ├─ Check: Player type filter?
-    ├─ Check: Ignore list?
-    └─ Add to playersInRange[]
-    ↓
-RadarRenderer (30 FPS)
-    ├─ PlayersDrawing.interpolate()
-    └─ PlayersDrawing.draw()
-```
-
----
-
-## Configuration
-
-### Settings (players.gohtml)
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Show Players | Master toggle | `false` |
-| Passive Players | Non-flagged (flagId=0) | `true` |
-| Faction Players | Faction warfare (1-6) | `true` |
-| Hostile Players | Red/hostile (255) | `true` |
-| Sound Alert | Play sound on detection | `false` |
-| Screen Flash | Red flash on detection | `false` |
-
-### Ignore Lists
-
-Players can be filtered by:
-- Player nickname (exact match)
-- Guild name (exact match)
-- Alliance name (exact match)
-
-Managed in the Ignore List page (`/ignorelist`).
-
----
-
-## Player Data Structure
+## Player record shape
 
 ```javascript
-const player = {
-  id: 12345,              // Unique player ID
-  nickname: 'PlayerName',  // Display name
-  guildName: 'GuildName',  // Guild (may be empty)
-  alliance: 'Alliance',    // Alliance (may be empty)
-  posX: 100.0,            // World X position
-  posY: 200.0,            // World Y position
-  hX: 120.5,              // Interpolated X (for radar)
-  hY: -45.2,              // Interpolated Y (for radar)
+{
+  id: 12345,
+  nickname: 'PlayerName',
+  guildName: 'GuildName',
+  alliance: 'Alliance',
+  posX: 100.0,
+  posY: 200.0,
+  hX: 120.5,           // interpolated for radar
+  hY: -45.2,
   currentHealth: 850,
   initialHealth: 1000,
-  items: [],              // Equipment item IDs
-  flagId: 0,              // 0=passive, 1-6=faction, 255=hostile
-  mounted: false          // Mount status
-};
+  items: [],            // equipment item ids
+  flagId: 0,            // 0 passive, 1-6 faction, 255 hostile
+  mounted: false,
+  lastUpdateTime: <ms>  // required for cleanup
+}
 ```
 
----
-
-## Future Improvements (Backlog)
-
-These features are planned but not yet implemented:
-
-- [ ] Nickname display option
-- [ ] Health bar overlay
-- [ ] Distance indicator (meters)
-- [ ] Guild/Alliance tags
-- [ ] Mount status indicator
-
-See [TODO.md](../project/TODO.md) for the full roadmap.
-
----
-
-## Troubleshooting
-
-### Players Not Showing
-
-1. Check "Show Players" is enabled in settings
-2. Check at least one type filter is enabled
-3. Check player isn't in ignore list
-4. Open browser console (F12) for debug logs
-
-### Players at Wrong Position
-
-1. This is a known limitation due to encryption
-2. Position data from Event 29 may be incomplete
-3. Movement updates (Event 3) can be inconsistent for players
-4. See [PLAYER_POSITIONS_MITM.md](./PLAYER_POSITIONS_MITM.md)
-
----
-
-## Code References
-
-### Key Files
+## Files
 
 | File | Purpose |
-|------|---------|
-| `web/scripts/Handlers/PlayersHandler.js` | Detection and filtering |
-| `web/scripts/Drawings/PlayersDrawing.js` | Radar rendering |
-| `internal/templates/pages/players.gohtml` | Settings UI |
-| `internal/photon/protocol16.go` | Event deserialization |
-
-### Drawing Patterns
-
-Follow existing patterns in:
-- `MobsDrawing.js` - Color coding by type
-- `DrawingUtils.js` - Health bars, distance calculation
-- `HarvestablesDrawing.js` - Icon rendering
-
----
-
-*For more information:*
-- [LOGGING.md](./LOGGING.md) - Debug logging system
-- [DEV_GUIDE.md](../dev/DEV_GUIDE.md) - Development setup
+|---|---|
+| `web/scripts/handlers/PlayersHandler.js` | detection, ignore list, alert gate, state |
+| `web/scripts/drawings/PlayersDrawing.js` | radar rendering, color coding |
+| `internal/templates/pages/players.gohtml` | settings UI |
+| `internal/templates/pages/ignorelist.gohtml` | ignore list management |
+| `internal/photon/events.go` | event 29 deserialization |

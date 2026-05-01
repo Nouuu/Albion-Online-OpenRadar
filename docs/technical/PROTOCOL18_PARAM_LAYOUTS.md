@@ -16,7 +16,7 @@ payload layouts.
   `params[252]`. Backend logs follow the same convention
   (`cmd/radar/main.go:onPhotonEvent`).
 
-## Dispatch byte 3 — Move
+## Dispatch byte 3: Move
 
 ```
 params[  0] int64            entity id
@@ -29,10 +29,10 @@ params[252] byte(3)          fallback-injected by PostProcessEvent (server omits
 **Notes:**
 - Mobs/resources: `params[1][0] == 3`, positions at offsets 9/13 are unencrypted.
 - Players: `params[1][0] == 3` too, but positions at offsets 9/13 are XOR-encrypted
-  with the KeySync `XorCode` (unreadable without MITM, cf. `PLAYER_POSITIONS_MITM.md`).
+  with the KeySync `XorCode`, unreadable without MITM (see `PLAYER_POSITIONS_MITM.md`).
 - Mode 4 (22-byte) never has positions; the `len(raw) < 17` guard handles it.
 
-## Dispatch byte 1 — Generic (real code in `params[252]`)
+## Dispatch byte 1: Generic (real code in `params[252]`)
 
 Representative layouts observed:
 
@@ -51,38 +51,22 @@ Representative layouts observed:
 | 40        | NewMob (probable)            | `params[8]` **`[]float32`** packed X/Y, `params[9]` `float32` scalar (rotation?) |
 | 91        | ?                            | `params[2..3,5]` float32, `params[6]` int64 |
 
-**⚠️ Frontend discrepancy (pre-existing, not caused by this port):**
+**Frontend layout note (real code 40):**
 
-`web/scripts/handlers/MobsHandler.js:124-125` reads:
-```js
-posX: parameters[8],
-posY: parameters[9],
-```
-
-For real code 40, `params[8]` is a **`[]float32` array** (packed X and Y
-together) and `params[9]` is a **scalar `float32`**. Assigning `parameters[8]`
-to `posX` would set it to the whole array, not a scalar number. This would
-mis-place every mob spawned via this event.
-
-Upstream `ao-data/albiondata-client@0.1.51` and
-`Triky313/AlbionOnline-StatisticsAnalysis@v8.7.0` both decode this wire shape
-identically (typed array of floats → native slice). The divergence is between
-the game server's wire format and the OpenRadar frontend's expectation, not
-between our port and the reference implementations.
-
-**Resolution path:** adjust `MobsHandler.js` to read positions from the
-`[]float32` array (something like `posX: parameters[8][0], posY: parameters[8][1]`),
-or verify which event code actually feeds the mob-add path and whether it has
-a different layout. Validate visually in Task 22 (manual E2E).
+`web/scripts/handlers/MobsHandler.js` reads positions from `parameters[8]` as a
+`[]float32` array of length 2 (packed X and Y), not as scalars. The current code
+unpacks `loc[0]` and `loc[1]` into `posX` and `posY` after a `normalizeNumber`
+guard. Upstream `ao-data/albiondata-client` and
+`Triky313/AlbionOnline-StatisticsAnalysis` decode the same wire shape.
 
 ## Gaps in this snapshot
 
-- No combat events (Cast*, Damage*) — single idle+harvest scenario
+- No combat events (Cast*, Damage*): single idle plus harvest scenario.
 - No JoinResponse (zone transit happened once; only real code 0 response
   observed, 1 sample). Covered by `move_map_change.pcap` (see below).
-- Only 2 fragments in the capture — fragment reassembly exercised in
-  `TestPhotonParser_Fragment_*` unit tests instead
-- `msg_type 132` (53 occurrences) and `130` (3) silently dropped — not event
+- Only 2 fragments in the capture; fragment reassembly is exercised in
+  `TestPhotonParser_Fragment_*` unit tests instead.
+- `msg_type 132` (53 occurrences) and `130` (3) silently dropped, not event
   / request / response. Proximity to `msgEncrypted=131` suggests encrypted
   variants. Worth investigating when more captures arrive.
 
