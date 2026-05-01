@@ -1,284 +1,113 @@
-# OpenRadar Development Guide (v2.0)
+# OpenRadar Development Guide
 
-> Technical reference for contributors working on OpenRadar's Go backend.
+Technical reference for contributors working on OpenRadar's Go backend and JavaScript frontend.
 
----
+*Last verified against code: 2026-05-01.*
 
-## 1. Architecture Overview
+## Architecture overview
 
-### 1.1 High-Level Structure
+OpenRadar is a single-binary Go application that:
 
-OpenRadar v2.0 is a native Go application that:
+- Captures Albion Online network packets (UDP 5056) via `gopacket` and libpcap, on one or more interfaces simultaneously.
+- Parses Photon Protocol18 packets into events, requests, and responses.
+- Sends parsed data to the browser via a WebSocket on `/ws`.
+- Serves a static SPA from embedded assets (`//go:embed`).
 
-- Captures Albion Online network packets (UDP 5056) using `gopacket/pcap`
-- Parses Photon Protocol16 packets into events, requests, and responses
-- Sends parsed data to the browser via WebSocket (`/ws`)
-- Serves a static SPA using embedded assets (`//go:embed`)
-
-### 1.2 Project Structure
+### Project structure
 
 ```
 OpenRadar/
-├── cmd/radar/
-│   └── main.go              # Entry point, App struct
+├── cmd/radar/                # Entry point, App struct, TUI dashboard wiring
 ├── internal/
-│   ├── capture/
-│   │   └── pcap.go          # Packet capture (gopacket)
-│   ├── photon/
-│   │   ├── packet.go        # Photon packet parsing
-│   │   ├── command.go       # Command parsing (reliable/unreliable)
-│   │   ├── protocol16.go    # Protocol16 deserializer
-│   │   ├── reader.go        # Binary reader utilities
-│   │   └── types.go         # Type constants
-│   ├── server/
-│   │   ├── http.go          # HTTP server + routes
-│   │   └── websocket.go     # WebSocket handler
-│   └── logger/
-│       └── logger.go        # JSONL structured logging
-├── web/                     # Frontend (embedded at build)
-│   ├── images/
-│   ├── scripts/             # JavaScript modules
-│   ├── public/              # HTML, game data (ao-bin-dumps)
-│   └── sounds/
-├── tools/                   # Build scripts (Node.js)
-├── embed.go                 # //go:embed directives
-├── go.mod
+│   ├── capture/              # Multi-interface manager + libpcap workers
+│   ├── photon/               # Protocol18 deserializer, event codes, fixtures
+│   ├── server/               # HTTP routes, WebSocket handler, settings APIs
+│   ├── ui/                   # Bubble Tea TUI dashboard
+│   └── logger/               # JSONL structured logging
+├── web/                      # Frontend (embedded at build)
+│   ├── scripts/              # JavaScript modules (handlers, drawings, utils)
+│   ├── images/               # Maps, items, spells icons
+│   ├── public/               # HTML, fonts
+│   └── ao-bin-dumps/         # Game data, minified
+├── tools/                    # Node.js utilities (asset refresh, generators)
+├── e2e/                      # Playwright regression suite
+├── embed.go                  # //go:embed directives
 └── Makefile
 ```
 
----
+## Getting started
 
-## 2. Getting Started
-
-### 2.1 Prerequisites
+### Prerequisites
 
 | Tool | Version | Notes |
-|------|---------|-------|
-| Go | 1.23+ | [Download](https://go.dev/dl/) |
-| Npcap | 1.84+ | Windows only |
-| libpcap | Latest | Linux: `apt install libpcap-dev` |
-| Node.js | 20+ | For build scripts only |
-| Docker | Latest | For Linux cross-compilation |
+|---|---|---|
+| Go | 1.26+ | go.mod pins `go 1.26` |
+| Npcap | 1.84+ | Windows packet capture |
+| libpcap | latest | Linux: `apt install libpcap-dev` |
+| Node.js | 20+ | tools and Vitest |
+| Docker | latest | Linux cross-compile |
 
-### 2.2 Quick Setup
+### Quick setup
 
 ```bash
 git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
 cd Albion-Online-OpenRadar
 
-# Install Air for hot-reload
-make install-tools
-
-# Start development server
-make dev
+make install-tools   # air, golangci-lint, git-cliff
+make assets          # CSS, vendors, gzip embeds
+make dev             # hot-reload via air
 ```
 
-### 2.3 Useful Commands
+Open `http://localhost:5001` in a browser. Launch Albion. Events should start flowing.
 
-```bash
-make help          # Show all commands
-make dev           # Hot-reload development
-make run           # Run without hot-reload
-make build-win     # Build Windows executable
-make build-linux   # Build Linux (Docker)
-make check         # Verify dependencies
-make lint          # Go vet
+### LAN access
+
+The radar is reachable from any device on the same LAN. The startup banner prints both URLs:
+
+```
+HTTP   Server: http://localhost:5001
+HTTP   Server: http://192.168.1.42:5001  (LAN)
+WS     WebSocket: ws://localhost:5001/ws
 ```
 
----
+The frontend builds the WebSocket URL from `window.location`, so a phone or second laptop loading `http://<server-ip>:5001` gets a working radar without configuration. The capture interface settings UI is loopback-only: `POST /api/network/interfaces` returns 403 if `req.RemoteAddr` is not local. A LAN visitor sees a read-only view.
 
-## 3. Backend Architecture
+## Build system
 
-### 3.1 Entry Point (`cmd/radar/main.go`)
+### Makefile targets
 
-The `App` struct centralizes all components:
+Common targets:
+
+| Target | Purpose |
+|---|---|
+| `make dev` | hot-reload via air |
+| `make run` | run without hot-reload |
+| `make test` | Go tests + Vitest |
+| `make lint` | golangci-lint v2 + ESLint |
+| `make lint-fix` | lint and auto-fix |
+| `make assets` | install deps, build CSS, copy vendors, gzip embeds |
+| `make restore-assets` | restore `web/ao-bin-dumps/*.json` from git, remove `*.gz` |
+| `make update-ao-data` | refresh game data from upstream |
+| `make refresh-assets` | refresh ao-data, icons, spells, map |
+| `make gen-codes` | regenerate Go event/op code mirrors from current JS |
+| `make refresh-codes` | fetch upstream, regenerate JS and Go mirrors |
+| `make build-linux` | Linux binary via Docker |
+| `make build-windows` | Windows `.exe` |
+| `make all-in-one` | full release artifacts (both binaries, READMEs, checksums) |
+| `make release-dry-run` | full build plus generated `RELEASE.md` for review |
+| `make release` | create a draft GitHub release (requires `TAG=x.y.z`) |
+| `make clean` | remove build artifacts |
+
+### Asset embedding
+
+`embed.go` wires the frontend into the Go binary:
 
 ```go
-type App struct {
-    ctx        context.Context
-    cancel     context.CancelFunc
-    wg         sync.WaitGroup
-    logger     *logger.Logger
-    httpServer *server.HTTPServer
-    wsHandler  *server.WebSocketHandler
-    capturer   *capture.Capturer
-}
-```
-
-**Flow:**
-1. Parse CLI flags (`-dev`, `-ip`, `-version`)
-2. Create logger, WebSocket handler, HTTP server
-3. Initialize packet capturer with IP selection
-4. Register packet handler callback
-5. Start servers in goroutines
-6. Wait for shutdown signal (Ctrl+C)
-7. Graceful shutdown with timeout
-
-### 3.2 Packet Capture (`internal/capture/`)
-
-Uses `gopacket/pcap` to capture UDP packets on port 5056.
-
-**Key functions:**
-- `New(ctx, appDir, ipOverride)` - Create capturer
-- `Start()` - Blocking capture loop
-- `OnPacket(handler)` - Register callback
-- `Close()` - Stop capture
-
-**IP Selection (priority order):**
-1. `-ip` CLI flag
-2. `ip.txt` file
-3. Interactive prompt
-
-### 3.3 Photon Protocol (`internal/photon/`)
-
-Parses Photon protocol used by Albion Online.
-
-**Files:**
-- `packet.go` - 12-byte Photon packet header
-- `command.go` - Command types (Reliable=6, Unreliable=7, Disconnect=4)
-- `protocol16.go` - Protocol16 type deserialization
-- `reader.go` - Binary reader with position tracking
-- `types.go` - Type codes and structs
-
-**Message types:**
-- `MessageTypeRequest = 2`
-- `MessageTypeResponse = 3`
-- `MessageTypeEvent = 4`
-
-**Special handling - Event 3 (Move):**
-```go
-// Positions are Little-Endian (unlike rest of protocol)
-if code == 3 {
-    pos0 := Float32LE(bytes[9:13])
-    pos1 := Float32LE(bytes[13:17])
-    params[4] = pos0  // X
-    params[5] = pos1  // Y
-}
-```
-
-### 3.4 HTTP Server (`internal/server/http.go`)
-
-Single server handling HTTP and WebSocket on port 5001.
-
-**Routes:**
-- `/` `/home` `/players` ... → SPA (`index.html`)
-- `/ws` → WebSocket upgrade
-- `/images/` `/scripts/` `/sounds/` → Static files
-- `/ao-bin-dumps/` → Game data (gzip support)
-- `/api/settings/server-logs` → Logging API
-
-**Production vs Dev mode:**
-- Production: Embedded assets (`embed.FS`)
-- Dev (`-dev`): Filesystem (`os.DirFS`)
-
-### 3.5 WebSocket Handler (`internal/server/websocket.go`)
-
-Manages client connections and broadcasts.
-
-**Features:**
-- Max 100 concurrent connections
-- Two-phase broadcast (RLock for send, Lock for cleanup)
-- Graceful close on shutdown
-
-**Message format:**
-```json
-{
-  "code": "event",
-  "dictionary": "{\"code\": 3, \"parameters\": {...}}"
-}
-```
-
----
-
-## 4. Frontend Architecture
-
-### 4.1 Overview
-
-Static SPA using HTMX for navigation and vanilla JS for state management.
-
-**Key files:**
-- `web/public/index.html` - Main SPA with all pages
-- `web/scripts/Utils/Utils.js` - WebSocket, handlers, rendering
-- `web/scripts/LoggerClient.js` - Client-side logging
-
-### 4.2 WebSocket Connection
-
-```javascript
-// Connects to ws://localhost:5001/ws
-socket = new WebSocket('ws://localhost:5001/ws');
-
-socket.addEventListener('message', (event) => {
-    const data = JSON.parse(event.data);
-    switch (data.code) {
-        case 'event': onEvent(data.dictionary.parameters); break;
-        case 'request': onRequest(data.dictionary.parameters); break;
-        case 'response': onResponse(data.dictionary.parameters); break;
-    }
-});
-```
-
-### 4.3 Handler Classes
-
-| Handler | Purpose |
-|---------|---------|
-| `PlayersHandler` | Player tracking, equipment, health |
-| `MobsHandler` | Mobs, living resources |
-| `HarvestablesHandler` | Static resources |
-| `ChestsHandler` | Treasure chests |
-| `DungeonsHandler` | Dungeon entrances |
-| `FishingHandler` | Fishing spots |
-| `WispCageHandler` | Wisp cages (mists) |
-
----
-
-## 5. Build System
-
-### 5.1 Makefile Targets
-
-```makefile
-# Development
-make dev           # Hot-reload with Air
-make run           # Direct run
-
-# Build
-make build-win     # Windows executable
-make build-linux   # Linux via Docker
-make build-all     # Both platforms
-
-# Release
-make all-in-one    # Complete workflow:
-                   #   1. Update AO data
-                   #   2. Compress game data
-                   #   3. Build all platforms
-                   #   4. Generate README
-                   #   5. Restore data
-```
-
-### 5.2 Version Management
-
-Version is centralized in `package.json`:
-
-```json
-{
-  "version": "2.0.0"
-}
-```
-
-Makefile reads it and injects via ldflags:
-```makefile
-VERSION := $(shell node -p "require('./package.json').version")
-LDFLAGS := -ldflags="-s -w -X main.Version=$(VERSION)"
-```
-
-### 5.3 Asset Embedding
-
-`embed.go` at project root:
-```go
-//go:embed web/images
-var Images embed.FS
-
 //go:embed web/scripts
 var Scripts embed.FS
+
+//go:embed web/images
+var Images embed.FS
 
 //go:embed web/public
 var Public embed.FS
@@ -287,119 +116,204 @@ var Public embed.FS
 var Sounds embed.FS
 ```
 
-### 5.4 Linux Permissions
+`embed_prod.go` is the production embed; `embed_dev.go` reads from disk when `-dev` is passed. The CI guard in `.github/workflows/ci.yml` rejects unprefixed `*.test.js` so the production binary cannot ship test artifacts. `embed_prod_test.go` walks the embed FS to confirm.
 
-For packet capture without root:
+### Linux capability
+
+Packet capture without root needs:
+
 ```bash
 sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
 ```
 
----
+## Backend internals
 
-## 6. Testing
+### Entry point (`cmd/radar/main.go`)
 
-### 6.1 Manual Testing
+`App` centralizes the runtime: logger, HTTP server, WebSocket handler, capture manager, TUI dashboard. Boot flow:
 
-1. Start dev server: `make dev`
-2. Open http://localhost:5001
-3. Launch Albion Online
-4. Verify events appear in browser console
+1. Parse CLI flags (`-dev`, `-ip`, `-version`).
+2. `capture.ReadConfig(appDir)` loads `network.json`. Migration from the legacy `ip.txt` runs once if present.
+3. `logger.New(logsDir, cfg.Logging.ServerLogsEnabled)` so the first events route correctly without waiting for the frontend.
+4. `capture.NewManager(ctx)` plus `manager.Reconfigure(target)` to open every selected interface.
+5. If `cfg.Logging.PcapRecording`, `manager.StartRecording(filepath.Join(logsDir, "captures"))`.
+6. HTTP server starts; WebSocket handler attaches.
+7. TUI dashboard renders the live state.
+8. Wait for SIGINT/SIGTERM. Graceful shutdown drains the wait group, closes handles after.
 
-### 6.2 Go Tests
+### Multi-interface capture (`internal/capture/`)
 
-```bash
-go test -v ./...
-go test -race ./...  # Race detector
+The manager owns an active capturer set keyed by interface name. `Reconfigure` adds and removes capturers in a single critical section, additions before removals so the radar never loses every handle during a swap. See `docs/technical/CAPTURE_INTERFACES.md` for the architecture, categorization rules, and ExitLag NDIS LWF behavior.
+
+### Photon parser (`internal/photon/`)
+
+| File | Purpose |
+|---|---|
+| `deserializer.go` | Protocol18 entry point |
+| `packet.go` | Photon packet header |
+| `events.go` | event, request, response post-processing |
+| `readers.go` | binary readers with position tracking |
+| `types.go`, `typecodes.go` | Protocol type constants and structs |
+| `eventcodes/` | Go mirror of `web/scripts/utils/EventCodes.js` (generated) |
+| `operationcodes/` | Go mirror of `web/scripts/utils/OperationCodes.js` (generated) |
+
+Event codes are JS-authored and Go-generated. Refresh flow:
+
+1. Fetch upstream raw URLs (never trust vendored copies).
+2. Update `web/scripts/utils/EventCodes.js` and `OperationCodes.js`.
+3. `make refresh-codes` regenerates the Go packages.
+4. `make test` to catch dispatch regressions.
+
+### HTTP server (`internal/server/http.go`)
+
+Single server on port 5001 handling both HTTP and WebSocket:
+
+| Route | Purpose |
+|---|---|
+| `/`, `/players`, `/resources`, ... | SPA pages (Go templates) |
+| `/ws` | WebSocket upgrade |
+| `/images/`, `/scripts/`, `/sounds/` | static assets |
+| `/ao-bin-dumps/` | precomputed game data, gzip support |
+| `/api/network/interfaces`, `/api/network/state`, `/api/network/refresh` | capture interface management |
+| `/api/settings/logging` | logging and pcap toggles |
+
+Production mode embeds assets; `-dev` mode reads from disk for hot iteration.
+
+### WebSocket (`internal/server/websocket.go`)
+
+Two-phase broadcast (RLock for send, Lock for cleanup), 100 client soft limit, graceful close on shutdown. Messages carry the dispatched code and the parameters object as JSON.
+
+## Frontend internals
+
+### SPA navigation
+
+HTMX swaps page partials without full reloads. `PageController.registerPage(name, {init, destroy})` orchestrates init/destroy cycles. Every handler installs listeners via `addListener(el, evt, fn)` and removes them on `destroy()` to prevent the listener leaks that bit the Jan 2026 churn.
+
+### WebSocket client
+
+`web/scripts/core/WebSocketManager.js` opens the connection. URL is built from `window.location`:
+
+```js
+const wsScheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WS_URL = `${wsScheme}//${location.host}/ws`;
 ```
 
-### 6.3 Linting
+This is what makes LAN access work without configuration. `WebSocketEventQueue.js` parses, coalesces hot events (Move 3, HealthUpdate 6, RegenerationHealth 91), and flushes on requestAnimationFrame.
+
+`EventRouter.js` dispatches each event on `Parameters[252]` to the matching handler. Operations dispatch on `Parameters[253]`.
+
+### Handlers and drawings
+
+See `CLAUDE.md` section 4bis for the templates and the files-by-feature table. Every handler stores entities in an Array accessed via `.find()`, never a Map. Every entity holds `lastUpdateTime`. Every handler has a `cleanupStaleEntities(maxAgeMs)`.
+
+### Settings persistence
+
+`localStorage` is the runtime store. The backend is the persisted source of truth for the network and logging settings:
+
+- `GET /api/network/state` populates the capture interface checkboxes on settings page load.
+- `GET /api/settings/logging` populates the logging and pcap recording checkboxes.
+- `POST` to either endpoint writes `network.json` atomically via `capture.MutateConfig` and applies the runtime change.
+
+## Testing
+
+### Go tests
 
 ```bash
-make lint           # Go vet
-make lint-frontend  # ESLint
+go test ./...
+go test -race ./...
 ```
 
----
+Real Photon payloads live in `internal/photon/testdata/` as small `.pcap` fragments. Tests read them via `gopacket` at test time and assert on decoded events.
 
-## 7. Common Tasks
+Capture procedure for new fixtures:
 
-### 7.1 Adding a New Event Handler
+1. `tcpdump -i <iface> -w capture.pcap 'udp port 5056'` during a live session.
+2. Anonymize via `tools/anonymize-pcap` (scrubs MAC, IP, timestamps, optional `--scrub-string` for the local player name).
+3. Extract per-scenario fragments via `tools/photon-dump` (outputs both pcap fragments and WS-level JSON fixtures matching EventRouter dispatch format).
+4. Commit the small anonymized fragment.
 
-1. Add event code to `web/scripts/Utils/EventCodes.js`
-2. Add handler in `onEvent()` switch in `Utils.js`
-3. Create/update handler class if needed
+### Frontend tests
 
-### 7.2 Updating Game Data
+Vitest 4.x with happy-dom 20.x (NOT jsdom). Tests are co-located next to source as `_<name>.test.js`. The underscore prefix is mandatory: `embed_prod.go` uses `//go:embed web/scripts` (without `all:`) so Go embed's default rule excludes `_*.test.js` from the production binary.
 
 ```bash
-make update-ao-data   # Download latest from AO dumps
+npm test
+npm run test:watch
+npm run test:coverage
 ```
 
-### 7.3 Adding a New API Endpoint
+Fixtures: `web/scripts/__fixtures__/ws/<handler>/<scenario>.json`, derived from real Photon captures via `tools/photon-dump`. Synthetic fixtures are allowed for scenarios not observable in the corpus (stale cleanup with `Date.now()` offset, settings injection).
 
-In `internal/server/http.go`:
+Real game data must back every test that touches the database layer. Load it via `web/scripts/__fixtures__/realDatabases.js` (`installRealDatabasesOnWindow()`). Mocked database answers hide the class of bugs where the mock lies in sync with a wrong assertion.
+
+### End-to-end
+
+Playwright lives at `e2e/`. The flow boots the Go binary, navigates to `localhost:5001`, verifies the page renders, the WebSocket connects, and an injected entity appears.
+
+## Common tasks
+
+### Add a new event handler
+
+1. Confirm the event code in upstream `EventCodes.cs`. Update `web/scripts/utils/EventCodes.js` if needed, run `make refresh-codes`.
+2. Write the failing test using a pcap-derived fixture under `web/scripts/__fixtures__/ws/<handler>/`.
+3. Implement the handler in `web/scripts/handlers/<X>Handler.js` following the skeleton in CLAUDE.md section 4bis.
+4. Add a case in `web/scripts/core/EventRouter.js` `onEvent`.
+5. Implement the drawing in `web/scripts/drawings/<X>Drawing.js`.
+6. Wire into `Utils.js` startup if the handler exposes a global.
+
+### Update game data
+
+```bash
+make update-ao-data       # JSON dumps from upstream
+make download-icons       # item icons
+make download-spells      # spell icons
+make download-map         # world map tiles
+make refresh-assets       # all of the above
+```
+
+### Add a new HTTP API
+
+In `internal/server/http.go` (or a sibling `*_api.go` file):
+
 ```go
-func (s *HTTPServer) setupRoutes() {
-    // ...
-    s.mux.HandleFunc("/api/my-endpoint", s.handleMyEndpoint)
-}
-
-func (s *HTTPServer) handleMyEndpoint(w http.ResponseWriter, r *http.Request) {
-    // Implementation
-}
+mux.HandleFunc("GET /api/my-endpoint", s.handleMyEndpoint)
 ```
 
----
+Use the Go 1.22+ method-pattern routing. Place the handler in a dedicated `<feature>_api.go` file when the surface goes beyond a single endpoint.
 
-## 8. Troubleshooting
+## Troubleshooting
 
-### 8.1 "No network interfaces found"
+### "No network interfaces found"
 
-- Windows: Install Npcap from https://npcap.com
-- Linux: Install libpcap-dev
+- Windows: install Npcap from https://npcap.com.
+- Linux: install `libpcap-dev`.
 
-### 8.2 "Permission denied" (Linux)
+### "Permission denied" (Linux)
 
 ```bash
 sudo setcap cap_net_raw,cap_net_admin=eip ./OpenRadar-linux
-# Or run with sudo
 ```
 
-### 8.3 WebSocket not connecting
+Or run with `sudo` (not recommended).
 
-Check browser console. Ensure connecting to `ws://localhost:5001/ws` (not port 5002).
+### Hot-reload not working
 
-### 8.4 Hot-reload not working
-
-Ensure Air is installed:
 ```bash
 go install github.com/air-verse/air@latest
 ```
 
----
+`make install-tools` covers air, golangci-lint, and git-cliff.
 
-## 9. Performance Notes
+### Live test shows no change after editing JS
 
-### 9.1 Binary Size
+Go embed serves the JS that was present at the last `go build`. Either run with `-dev` (reads from disk) or rebuild the binary.
 
-| Component | Size |
-|-----------|------|
-| Go binary | ~15 MB |
-| Embedded web/ | ~80 MB |
-| **Total** | **~95 MB** |
+### Phone on LAN cannot reach the radar
 
-vs Node.js v1.x: ~100 MB binary + ~400 MB assets = ~500 MB
+- Confirm Albion firewall rules allow inbound 5001 on the host.
+- Check the LAN URL printed by the startup banner; if `(LAN)` is missing, the adapter IP is not RFC1918 or not on a `wifi`/`ethernet` interface.
+- WebSocket URL is built from `window.location`, so a misrouted DNS or proxy can produce the symptom.
 
-### 9.2 Memory Usage
+## Performance notes
 
-Typical: 30-50 MB during gameplay.
-
-### 9.3 Concurrency
-
-- Packet processing: Single goroutine (callback)
-- WebSocket broadcast: RWMutex protected
-- HTTP: Go's built-in concurrency
-
----
-
-*Last update: 2025-12-12 - v2.0 Go Backend*
+The radar runs at 160+ FPS in modern browsers under typical load. Memory usage stays around 500 MB after long sessions thanks to image cache LRU eviction, event coalescing on hot paths, and the SPA destroy() discipline. The Go binary itself is around 15 MB; embedded assets bring the total to roughly 45 MB.
