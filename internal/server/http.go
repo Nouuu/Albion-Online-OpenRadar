@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/segmentio/encoding/json"
-
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/templates"
@@ -32,10 +30,11 @@ type HTTPServer struct {
 	sounds  fs.FS
 	styles  fs.FS
 	// Template engine
-	tmpl       *templates.Engine
-	version    string
-	devMode    bool
-	networkAPI *NetworkAPI
+	tmpl        *templates.Engine
+	version     string
+	devMode     bool
+	networkAPI  *NetworkAPI
+	settingsAPI *SettingsAPI
 }
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
@@ -94,6 +93,7 @@ func NewHTTPServer(
 	if mgr != nil {
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
+	s.settingsAPI = NewSettingsAPI(appDir, log)
 	s.setupRoutes()
 	return s, nil
 }
@@ -133,6 +133,7 @@ func NewHTTPServerDev(
 	if mgr != nil {
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
+	s.settingsAPI = NewSettingsAPI(appDir, log)
 	s.setupRoutes()
 	return s, nil
 }
@@ -193,7 +194,7 @@ func (s *HTTPServer) setupRoutes() {
 	)
 
 	// API endpoints
-	s.mux.HandleFunc("/api/settings/server-logs", s.handleServerLogs)
+	s.settingsAPI.Register(s.mux)
 	if s.networkAPI != nil {
 		s.networkAPI.Register(s.mux)
 	}
@@ -223,7 +224,7 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
 	// Check if this is an HTMX request (SPA navigation)
-	isHTMX := r.Header.Get("HX-Request") == "true"
+	isHTMX := r.Header.Get("Hx-Request") == "true"
 
 	var err error
 	if isHTMX {
@@ -367,39 +368,6 @@ func setContentType(w http.ResponseWriter, path string) {
 		w.Header().Set("Content-Type", "application/json")
 	case strings.HasSuffix(path, ".xml"):
 		w.Header().Set("Content-Type", "application/xml")
-	}
-}
-
-// handleServerLogs handles the server logs API
-func (s *HTTPServer) handleServerLogs(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	switch r.Method {
-	case http.MethodGet:
-		enabled := false
-		if s.logger != nil {
-			enabled = s.logger.IsEnabled()
-		}
-		_ = json.NewEncoder(w).Encode(map[string]bool{"enabled": enabled})
-
-	case http.MethodPost:
-		var req struct {
-			Enabled bool `json:"enabled"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, `{"error":"Invalid JSON"}`, http.StatusBadRequest)
-			return
-		}
-		if s.logger != nil {
-			s.logger.SetEnabled(req.Enabled)
-		}
-		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"success": true,
-			"enabled": s.logger != nil && s.logger.IsEnabled(),
-		})
-
-	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
