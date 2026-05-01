@@ -12,7 +12,7 @@
 | Players | working | faction detection, zone-aware alerts, ignore list, Mist instance pvpType inherits parent (#103) |
 | Zones | working | PvP type detection, threat logic |
 | Mists | working | portals, feu follets, wisp cages (see `docs/technical/MISTS_DETECTION.md`) |
-| Dungeons | working | per-enchant filters working across every family. Solo, Group, Corrupted, Hellgate plus the five group families unblocked by #78 (T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL). Per-type filter and a dungeons database stay open. |
+| Dungeons | working | per-type filters Solo, Group (Duo), Corrupted, Hellgate validated end to end. Per-enchant filters E0-E4 work across every family. Five group families unblocked by #78 (T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL). Avalonian dungeons, per-difficulty filters, and a dungeons database stay open. |
 | Chests | basic | rarity persisted on entity (#75); drawing-layer color resolution and rarity source slot still open |
 | Fishing | working | issue #25 closed via #73 + #85. Event 61 (end-of-fishing) logged but not visualized. |
 
@@ -20,7 +20,7 @@
 
 ### Detection completion
 
-- [ ] **Dungeons**: create `DungeonsDatabase.js` (types, tiers, difficulties), per-type filtering in settings, stale entity cleanup.
+- [ ] **Dungeons**: create `DungeonsDatabase.js` (types, tiers, difficulties) for Avalonian dungeons and per-difficulty filters. Per-type filters (Solo, Group, Corrupted, Hellgate) and per-enchant filters already work in v2.2.
 - [ ] **Chests**: rarity drawing-layer wiring (CHEST-2 stored the value at #75, drawing still does substring matches on `chestName`). Plus identify the real rarity source slot (CHEST-1): current `Parameters[5]` is 4 for Mists treasure, 8 for FactionWarfare, never lands in 0-3. Pcap capture across the four rarity levels needed before fixing.
 - [ ] **Fishing**: end-of-fishing state, fishing zones on the radar.
 - [ ] **Mists routing**: cases for events 518 (NewMistsImmediateReturnExit), 519 (MistsPlayerJoinedInfo), 520 (NewMistsStaticEntrance), 529 (MistsEntranceDataChanged) reach the frontend but no handler consumes them.

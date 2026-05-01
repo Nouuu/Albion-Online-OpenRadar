@@ -28,7 +28,7 @@ The enchant source for dungeons moved from `Parameters[6]` (a dungeon type id wi
 
 Live evidence covered both sides: a "Peu commun" `MISTS_SOLO_YELLOW` portal with `Parameters[8]=1` matches the in-game tooltip, a `T6_MORGANA` with `Parameters[8]=2` correctly maps to an E2 dungeon. The MISTS-specific branch in `addDungeon` is preserved so MISTS portals route through the Mists settings (`settingMistSolo/Duo` plus `settingMistE<enchant>`) instead of the Dungeon settings.
 
-Per-type filter (Solo, Group, Corrupted, Hellgate, Avalonian) and a dungeons database stay on the v2.3 backlog.
+Per-type filters validated end to end: Solo (`settingDungeonSolo`), Group (`settingDungeonDuo`), Corrupted (`settingDungeonCorrupted`), Hellgate (`settingDungeonHellgate`). Combined with the per-enchant filters E0-E4, the user can now narrow the dungeon view by both family and rarity. Avalonian dungeons, per-difficulty filters, and a dungeons database stay on the v2.3 backlog.
 
 ### Fishing closed (#73, #85, closes #25)
 
@@ -144,7 +144,7 @@ Bugs pinned by `test.fails` at the start of the cycle: HARV-1/2/3, PLAY-1/2, CHE
 | Mobs | working | OFFSET=16 confirmed, color-coded threat |
 | Players | working | faction detection, zone-aware alerts (Mist instances inherit parent pvpType post #103), ignore list |
 | Mists | working | portals, feu follets, wisp cages |
-| Dungeons | working | per-enchant filters working again across every family. Solo, Group, Corrupted, Hellgate plus the five group families that #78 unblocked: T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL. Per-type filter and a dungeon database stay on the v2.3 backlog. |
+| Dungeons | working | per-type filters Solo, Group (Duo), Corrupted, Hellgate validated end to end; per-enchant filters E0-E4 work across every family. Five group families unblocked by #78: T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL. Avalonian, per-difficulty filters, and a dungeon database stay on the v2.3 backlog. |
 | Chests | basic | rarity persisted on the entity (#75); drawing-layer color resolution and the rarity source slot itself are follow-ups |
 | Fishing | working | issue #25 closed via #73 (empty-string spawn type accepted) and #85 (render-time gate). Spawns detected and interpolated. Event 61 (end-of-fishing) is logged but not yet visualized; that is the only remaining gap. |
 
