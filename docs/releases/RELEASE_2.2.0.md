@@ -98,7 +98,7 @@ The spawn-time filter that dropped living resources when a setting was off has b
 - `Parameters[3]` type guard in `addChestEvent`: undefined or non-string values fall through cleanly (#72).
 - Re-gate reads the stored `mobileTypeId` instead of hardcoding `isLiving=false`. Living Fiber critters no longer drop when static Hide settings are disabled (#74, HARV-3).
 - Chest rarity persisted from `Parameters[5]` on the entity (#75, CHEST-2). The drawing layer does not yet consume it: rarity badge wiring is a follow-up. The source identification of the rarity slot itself stays open (CHEST-1).
-- `map.isBZ` derived from `zonesDatabase.getPvpType(mapId)` instead of attempting to parse the (now hashtable-shaped) `Parameters[103]` directly (#87, closes #57). `ROUTER-1` `test.fails` for direct hashtable parse remains as a follow-up.
+- Black Zone detection works again on every map transition (#87, closes #57). `Parameters[103]` shifted from a scalar to a hashtable in Protocol18 and the direct parse silently returned the wrong value, which let a player walk into a Black Zone without the radar flipping `map.isBZ` and arming the threat-alert pipeline. The fix derives `map.isBZ` from `zonesDatabase.getPvpType(mapId)`, which works on every join and zone change, not just Mist instances. The direct hashtable parse stays pinned by `ROUTER-1` `test.fails` as a follow-up.
 - Mists instance pvpType inherits from the parent cluster: a Mist clone keyed by `@MISTS@<guid>` carries the BZ/YZ classification of the cluster the player came from. Faction or hostile alarms fire correctly in BZ Mists; Yellow Royal Mists no longer trip the alarm (#103, closes #90). Override persisted to `sessionStorage`.
 
 ### LAN access (#88)
@@ -123,7 +123,7 @@ A minimal mobile responsive pass made every page usable at 375x667 portrait: no 
 
 ### Test harness (#68)
 
-351 frontend tests across 14 suites. The discipline is `@verified`, `@characterization`, `test.fails`: 252 verified, 10 characterization, 1 test.fails at the close of the cycle. 16 pcap-derived scenarios shipped, all PII-scrubbed. Tools added in the same PR:
+591 frontend tests across 22 suites at release time. The discipline introduced by #68 is `@verified`, `@characterization`, `test.fails`: most assertions are verified, characterization is reserved for observed behavior under directional uncertainty, and `test.fails` pins known bugs (CI green while broken, red when fixed). 16 pcap-derived scenarios shipped at #68, all PII-scrubbed; the corpus has grown with each subsequent fix PR. Tools added in the same PR:
 
 - `tools/anonymize-pcap`: scrubs MAC, IP, timestamps, optional `--scrub-string` for the local player name.
 - `tools/photon-dump`: extracts per-scenario fixtures from a live pcap, both as `.pcap` fragments and as WS-level JSON matching the EventRouter dispatch format.

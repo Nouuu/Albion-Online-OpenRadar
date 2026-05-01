@@ -41,6 +41,22 @@
 - [ ] Quality metrics dashboard.
 - [ ] Configuration file support beyond `network.json`.
 
+## Closed in v2.2
+
+For history. These were `test.fails` or open register entries that flipped to verified during the v2.2 cycle:
+
+- **HARV-1** (#71): `mobileTypeId === -1` now treated as static.
+- **HARV-3** (#74): re-gate reads stored `mobileTypeId` instead of hardcoded `isLiving=false`.
+- **HARV-4** (#82): living plus DEAD plus static render-time filter, superseded HARV-3 narrative.
+- **FISH-1** (#73): empty-string spawn type accepted, closing #25.
+- **CHEST-2** (#75): chest rarity persisted on the entity (drawing-layer wiring still on the v2.3 backlog).
+- **WISP-1** (#78): wisp cage parameter indexing corrected to `[0]/[2]/[4]`.
+- **MIST-1, MIST-3, MIST-5, MIST-6** (#78): inverted enchant filter, feu follet routing, asset reuse, dungeon enchant source.
+- **ROUTER-2..9** (#70): event code drift closed by the upstream sync.
+- **TIER-1** (#77, #93): living harvest tier rule, then OFFSET=16 confirmation, retiring the `t-1` shift.
+- **#90 Mist pvpType** (#103): Mist instances inherit parent cluster classification.
+- **#57 BZ derivation** (#87): `map.isBZ` from `zonesDatabase` instead of broken `Parameters[103]` parse.
+
 ## Open observations from PR cycles
 
 - **CHEST-1** (#29): rarity parameter source unidentified. `Parameters[5]` does not match the upstream 0-3 range across families: 4 for Mists treasure, 8 for FactionWarfare. Needs a multi-rarity pcap capture to find the real index.
