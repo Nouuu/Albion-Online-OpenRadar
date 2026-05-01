@@ -51,19 +51,6 @@
 
         window.__globalsReady = true;
         document.dispatchEvent(new CustomEvent('globalsReady'));
-
-        (async () => {
-            try {
-                const serverLogsEnabled = settingsSync.getBool("settingServerLogsEnabled");
-                await fetch('/api/settings/server-logs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enabled: serverLogsEnabled })
-                });
-            } catch (error) {
-                console.error('[Layout] Error syncing server logs:', error);
-            }
-        })();
     </script>
 
     <script type="module" src="/scripts/logger.js"></script>

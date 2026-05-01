@@ -18,8 +18,14 @@ type PersistedInterface struct {
 	Description string `json:"description"`
 }
 
+type LoggingConfig struct {
+	ServerLogsEnabled bool `json:"serverLogsEnabled"`
+	PcapRecording     bool `json:"pcapRecording"`
+}
+
 type Config struct {
 	CaptureInterfaces []PersistedInterface `json:"captureInterfaces"`
+	Logging           LoggingConfig        `json:"logging"`
 }
 
 func ReadConfig(appDir string) (Config, error) {
@@ -53,6 +59,16 @@ func WriteConfig(appDir string, cfg Config) error {
 		return fmt.Errorf("rename tmp: %w", err)
 	}
 	return nil
+}
+
+// MutateConfig reads the config, applies the mutator, and writes atomically.
+func MutateConfig(appDir string, mutate func(*Config)) error {
+	cfg, err := ReadConfig(appDir)
+	if err != nil {
+		return err
+	}
+	mutate(&cfg)
+	return WriteConfig(appDir, cfg)
 }
 
 type IPResolver func(ip string) (PersistedInterface, error)

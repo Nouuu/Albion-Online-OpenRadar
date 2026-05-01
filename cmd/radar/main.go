@@ -32,6 +32,7 @@ var (
 const (
 	serverPort      = 5001
 	shutdownTimeout = 10 * time.Second
+	pcapCaptureDir  = "./logs/captures"
 )
 
 type App struct {
@@ -106,7 +107,7 @@ func runApp(cfg Config) bool {
 
 	manager := capture.NewManager(ctx)
 
-	app, err := newApp(appDir, cfg, ctx, cancel, manager, allIfaces)
+	app, err := newApp(appDir, cfg, ctx, cancel, manager, allIfaces, cfgPersisted.Logging.ServerLogsEnabled)
 	if err != nil {
 		cancel()
 		manager.Close(context.Background())
@@ -115,6 +116,15 @@ func runApp(cfg Config) bool {
 
 	if err := manager.Reconfigure(target); err != nil {
 		logger.PrintWarn("NET", "Some interfaces failed to open: %v", err)
+	}
+
+	if cfgPersisted.Logging.PcapRecording {
+		if err := manager.StartRecording(pcapCaptureDir); err != nil {
+			logger.PrintWarn("PKT", "pcap recording could not start: %v", err)
+			_ = capture.MutateConfig(appDir, func(cfg *capture.Config) {
+				cfg.Logging.PcapRecording = false
+			})
+		}
 	}
 
 	dashboard := ui.NewDashboard(Version, serverPort, cfg.devMode, capture.LANAddresses(), nil)
@@ -192,8 +202,9 @@ func newApp(
 	cancel context.CancelFunc,
 	manager *capture.Manager,
 	allIfaces []capture.NetworkInterface,
+	serverLogsEnabled bool,
 ) (*App, error) {
-	log := logger.New("./logs")
+	log := logger.New("./logs", serverLogsEnabled)
 	wsHandler := server.NewWebSocketHandler(log)
 
 	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version, manager, allIfaces)
@@ -233,7 +244,7 @@ func createHTTPServer(
 ) (*server.HTTPServer, error) {
 	if devMode {
 		logger.PrintInfo("MODE", "Development mode: reading files from disk")
-		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version, mgr, allIfaces)
+		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version, mgr, allIfaces, mgr, pcapCaptureDir)
 	}
 	logger.PrintInfo("MODE", "Production mode: using embedded assets")
 	return server.NewHTTPServer(
@@ -250,6 +261,8 @@ func createHTTPServer(
 		mgr,
 		allIfaces,
 		appDir,
+		mgr,
+		pcapCaptureDir,
 	)
 }
 

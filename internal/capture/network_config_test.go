@@ -221,6 +221,101 @@ func TestMigrateMalformedConfigErrors(t *testing.T) {
 	}
 }
 
+func TestConfigLoggingRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	cfg := Config{
+		Logging: LoggingConfig{
+			ServerLogsEnabled: true,
+			PcapRecording:     true,
+		},
+	}
+	if err := WriteConfig(dir, cfg); err != nil {
+		t.Fatalf("WriteConfig: %v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if !got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled: got false, want true")
+	}
+	if !got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: got false, want true")
+	}
+}
+
+func TestConfigMissingLoggingKey(t *testing.T) {
+	dir := t.TempDir()
+	body := []byte(`{"captureInterfaces":[]}`)
+	if err := os.WriteFile(filepath.Join(dir, "network.json"), body, 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled: got true, want false (zero value)")
+	}
+	if got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: got true, want false (zero value)")
+	}
+}
+
+func TestConfigLoggingExplicitFalseRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	cfg := Config{
+		Logging: LoggingConfig{
+			ServerLogsEnabled: false,
+			PcapRecording:     false,
+		},
+	}
+	if err := WriteConfig(dir, cfg); err != nil {
+		t.Fatalf("WriteConfig: %v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled: got true, want false")
+	}
+	if got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: got true, want false")
+	}
+}
+
+func TestMutateConfig_PreservesUntouchedFields(t *testing.T) {
+	dir := t.TempDir()
+	seed := Config{
+		CaptureInterfaces: []PersistedInterface{{Name: "X", Description: "Y"}},
+		Logging:           LoggingConfig{ServerLogsEnabled: true, PcapRecording: true},
+	}
+	if err := WriteConfig(dir, seed); err != nil {
+		t.Fatalf("WriteConfig: %v", err)
+	}
+
+	if err := MutateConfig(dir, func(c *Config) {
+		c.Logging.PcapRecording = false
+	}); err != nil {
+		t.Fatalf("MutateConfig: %v", err)
+	}
+
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if len(got.CaptureInterfaces) != 1 || got.CaptureInterfaces[0].Name != "X" {
+		t.Errorf("CaptureInterfaces changed: %+v", got.CaptureInterfaces)
+	}
+	if !got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled was reset; MutateConfig must preserve untouched fields")
+	}
+	if got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: want false after mutation, got true")
+	}
+}
+
 func TestWriteConfigOverwritesAtomically(t *testing.T) {
 	dir := t.TempDir()
 	cfg1 := Config{CaptureInterfaces: []PersistedInterface{{Name: "A", Description: "First"}}}

@@ -7,6 +7,8 @@ import (
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/nospy/albion-openradar/internal/logger"
 )
 
 type Status string
@@ -35,12 +37,14 @@ var managerStartWorker = startWorker
 type Manager struct {
 	parentCtx context.Context
 
-	mu         sync.Mutex
-	active     map[string]*managedCapturer
-	wg         sync.WaitGroup
-	onPacket   PacketHandler
-	lastErrors map[string]string
-	closed     bool
+	mu               sync.Mutex
+	active           map[string]*managedCapturer
+	wg               sync.WaitGroup
+	onPacket         PacketHandler
+	lastErrors       map[string]string
+	closed           bool
+	recordingEnabled bool
+	recordingDir     string
 }
 
 type managedCapturer struct {
@@ -94,6 +98,11 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 		mc := &managedCapturer{cap: c, startedAt: time.Now(), cancel: c.cancel}
 		m.active[name] = mc
 		delete(m.lastErrors, name)
+		if m.recordingEnabled {
+			if rErr := c.StartRecording(m.recordingDir); rErr != nil {
+				m.lastErrors[name] = rErr.Error()
+			}
+		}
 		managerStartWorker(c, &m.wg, func(n string, e error) {
 			m.mu.Lock()
 			m.lastErrors[n] = e.Error()
@@ -118,6 +127,51 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 		return fmt.Errorf("partial open failures: %v", openErrs)
 	}
 	return nil
+}
+
+// StartRecording enables recording on all active capturers and on any future
+// ones added via Reconfigure. If a capturer fails to start, the error is
+// logged as a warning and the others continue.
+func (m *Manager) StartRecording(dir string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.recordingEnabled = true
+	m.recordingDir = dir
+	var firstErr error
+	for name, mc := range m.active {
+		if err := mc.cap.StartRecording(dir); err != nil {
+			logger.PrintWarn("PKT", "pcap recording could not start on %s: %v", name, err)
+			if firstErr == nil {
+				firstErr = fmt.Errorf("%s: %w", name, err)
+			}
+		}
+	}
+	return firstErr
+}
+
+// StopRecording disables recording on all active capturers.
+func (m *Manager) StopRecording() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.recordingEnabled = false
+	m.recordingDir = ""
+	var firstErr error
+	for name, mc := range m.active {
+		if err := mc.cap.StopRecording(); err != nil {
+			logger.PrintWarn("PKT", "pcap recording could not stop on %s: %v", name, err)
+			if firstErr == nil {
+				firstErr = fmt.Errorf("%s: %w", name, err)
+			}
+		}
+	}
+	return firstErr
+}
+
+// IsRecording reports whether the Manager has recording enabled.
+func (m *Manager) IsRecording() bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.recordingEnabled
 }
 
 // BytesReceived sums per-handle bytes across active capturers.

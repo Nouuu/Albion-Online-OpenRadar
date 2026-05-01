@@ -2,7 +2,11 @@ package capture
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -10,7 +14,12 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/pcapgo"
+
+	"github.com/nospy/albion-openradar/internal/logger"
 )
+
+var reUnsafeFilename = regexp.MustCompile(`[^A-Za-z0-9_\-]`)
 
 const (
 	AlbionPort  = 5056
@@ -37,6 +46,11 @@ type Capturer struct {
 	closeOnce sync.Once
 
 	bytesReceived uint64
+
+	recordMu          sync.Mutex
+	recordFile        *os.File
+	recordWriter      *pcapgo.Writer
+	recordWriteErrors uint64
 }
 
 // captureFactory is overridable in tests; restore via t.Cleanup.
@@ -94,6 +108,7 @@ func (c *Capturer) Close() {
 		if c.cancel != nil {
 			c.cancel()
 		}
+		c.StopRecording() //nolint:errcheck // file close error is non-actionable during shutdown
 		if c.handle != nil {
 			c.handle.Close()
 		}
@@ -111,7 +126,88 @@ func (c *Capturer) Stats() (*pcap.Stats, error) {
 	return c.handle.Stats()
 }
 
+// sanitizeIfaceName replaces characters not in [A-Za-z0-9_-] with underscores.
+// Returns "unknown" if the result is empty.
+func sanitizeIfaceName(name string) string {
+	s := reUnsafeFilename.ReplaceAllString(name, "_")
+	if s == "" {
+		return "unknown"
+	}
+	return s
+}
+
+// StartRecording begins writing all packets to a new capture_<TS>_<iface>.pcap in dir.
+// Returns an error if already recording or if the file cannot be created.
+func (c *Capturer) StartRecording(dir string) error {
+	c.recordMu.Lock()
+	defer c.recordMu.Unlock()
+
+	if c.recordWriter != nil {
+		return errors.New("recording already in progress")
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("create recording dir: %w", err)
+	}
+
+	ts := time.Now().Format("2006-01-02T15-04-05")
+	iface := sanitizeIfaceName(c.iface.Name)
+	path := filepath.Join(dir, fmt.Sprintf("capture_%s_%s.pcap", ts, iface))
+
+	f, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("create recording file: %w", err)
+	}
+
+	w := pcapgo.NewWriter(f)
+	var linkType layers.LinkType
+	if c.handle != nil {
+		linkType = c.handle.LinkType()
+	} else {
+		linkType = layers.LinkTypeEthernet
+	}
+	if err := w.WriteFileHeader(SnapLen, linkType); err != nil {
+		f.Close()
+		return fmt.Errorf("write pcap header: %w", err)
+	}
+
+	c.recordFile = f
+	c.recordWriter = w
+	return nil
+}
+
+// StopRecording flushes and closes the current recording. Returns nil if not recording.
+func (c *Capturer) StopRecording() error {
+	c.recordMu.Lock()
+	defer c.recordMu.Unlock()
+
+	if c.recordWriter == nil {
+		return nil
+	}
+	err := c.recordFile.Close()
+	c.recordFile = nil
+	c.recordWriter = nil
+	return err
+}
+
+// IsRecording reports whether a recording is currently active.
+func (c *Capturer) IsRecording() bool {
+	c.recordMu.Lock()
+	defer c.recordMu.Unlock()
+	return c.recordWriter != nil
+}
+
 func (c *Capturer) processPacket(p gopacket.Packet) {
+	c.recordMu.Lock()
+	if c.recordWriter != nil {
+		if err := c.recordWriter.WritePacket(p.Metadata().CaptureInfo, p.Data()); err != nil {
+			n := atomic.AddUint64(&c.recordWriteErrors, 1)
+			if n%100 == 1 {
+				logger.PrintWarn("PKT", "pcap recorder write error: %v", err)
+			}
+		}
+	}
+	c.recordMu.Unlock()
+
 	udpLayer := p.Layer(layers.LayerTypeUDP)
 	if udpLayer == nil {
 		return

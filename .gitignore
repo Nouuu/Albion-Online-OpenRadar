@@ -117,8 +117,5 @@ HELPER PACKAGE/
 /docs/SESSION_BOOTSTRAP.md
 
 # Local full-session Photon captures (never committed, always anonymized then split)
-capture.pcap
-capture.anon.pcap
-capture-*.pcap
-capture_*.pcap
+captures/
 /network.json
