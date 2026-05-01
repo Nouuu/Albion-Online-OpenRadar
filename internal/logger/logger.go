@@ -46,10 +46,10 @@ type Logger struct {
 	serverEntries uint64
 }
 
-func New(logsDir string) *Logger {
+func New(logsDir string, enabled bool) *Logger {
 	l := &Logger{
 		logsDir:          logsDir,
-		enabled:          false,
+		enabled:          enabled,
 		sessionStartTime: time.Now(),
 		buffer:           make([]interface{}, 0, MaxBufferSize),
 		stopFlush:        make(chan struct{}),

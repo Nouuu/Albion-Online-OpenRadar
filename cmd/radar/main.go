@@ -106,7 +106,7 @@ func runApp(cfg Config) bool {
 
 	manager := capture.NewManager(ctx)
 
-	app, err := newApp(appDir, cfg, ctx, cancel, manager, allIfaces)
+	app, err := newApp(appDir, cfg, ctx, cancel, manager, allIfaces, cfgPersisted.Logging.ServerLogsEnabled)
 	if err != nil {
 		cancel()
 		manager.Close(context.Background())
@@ -192,8 +192,9 @@ func newApp(
 	cancel context.CancelFunc,
 	manager *capture.Manager,
 	allIfaces []capture.NetworkInterface,
+	serverLogsEnabled bool,
 ) (*App, error) {
-	log := logger.New("./logs")
+	log := logger.New("./logs", serverLogsEnabled)
 	wsHandler := server.NewWebSocketHandler(log)
 
 	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version, manager, allIfaces)
