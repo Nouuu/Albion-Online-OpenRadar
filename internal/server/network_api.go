@@ -136,7 +136,9 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 	for _, i := range desired {
 		persisted = append(persisted, capture.PersistedInterface{Name: i.Name, Description: i.Description})
 	}
-	if err := capture.WriteConfig(a.appDir, capture.Config{CaptureInterfaces: persisted}); err != nil {
+	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
+		cfg.CaptureInterfaces = persisted
+	}); err != nil {
 		http.Error(w, "persist: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

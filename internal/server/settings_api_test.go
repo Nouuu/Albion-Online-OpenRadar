@@ -147,6 +147,39 @@ func TestSettingsLogging_PostInvalidJson(t *testing.T) {
 	}
 }
 
+func TestSettingsLogging_PostPreservesNetworkInterfaces(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		CaptureInterfaces: []capture.PersistedInterface{{Name: "X"}},
+		Logging:           capture.LoggingConfig{ServerLogsEnabled: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	mux, _ := newSettingsTestMux(t, dir)
+
+	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200; body=%s", rec.Code, rec.Body.String())
+	}
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Name != "X" {
+		t.Errorf("CaptureInterfaces changed: %+v", cfg.CaptureInterfaces)
+	}
+	if !cfg.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled was reset by partial POST")
+	}
+	if !cfg.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording not updated to true")
+	}
+}
+
 func TestSettingsServerLogs_LegacyEndpointIsGone(t *testing.T) {
 	dir := t.TempDir()
 	mux, _ := newSettingsTestMux(t, dir)

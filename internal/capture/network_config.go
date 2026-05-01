@@ -61,6 +61,16 @@ func WriteConfig(appDir string, cfg Config) error {
 	return nil
 }
 
+// MutateConfig reads the config, applies the mutator, and writes atomically.
+func MutateConfig(appDir string, mutate func(*Config)) error {
+	cfg, err := ReadConfig(appDir)
+	if err != nil {
+		return err
+	}
+	mutate(&cfg)
+	return WriteConfig(appDir, cfg)
+}
+
 type IPResolver func(ip string) (PersistedInterface, error)
 
 func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {

@@ -228,6 +228,42 @@ func TestNetworkAPI_StatePOSTIs405(t *testing.T) {
 	}
 }
 
+func TestNetworkSelect_PreservesLogging(t *testing.T) {
+	fm := &fakeManager{
+		allInterfaces: []capture.NetworkInterface{
+			{Name: "eth0", Description: "Ethernet", Address: "10.0.0.1"},
+		},
+	}
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{ServerLogsEnabled: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil })
+	mux := newTestMux(api)
+
+	body, _ := json.Marshal(map[string]any{"names": []string{"eth0"}})
+	req := httptest.NewRequest(http.MethodPost, "/api/network/interfaces", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d, body=%s", rec.Code, rec.Body.String())
+	}
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if !cfg.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled was reset by POST /api/network/interfaces")
+	}
+	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Name != "eth0" {
+		t.Errorf("CaptureInterfaces wrong: %+v", cfg.CaptureInterfaces)
+	}
+}
+
 // Proves the RWMutex fix: without it, concurrent reads of a.all while a writer
 // mutates the slice would race under -race.
 func TestNetworkAPI_RefreshConcurrentSafe(t *testing.T) {

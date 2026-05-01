@@ -44,20 +44,16 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg, err := capture.ReadConfig(a.appDir)
-	if err != nil {
-		http.Error(w, "read config: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if patch.ServerLogsEnabled != nil {
-		cfg.Logging.ServerLogsEnabled = *patch.ServerLogsEnabled
-	}
-	if patch.PcapRecording != nil {
-		cfg.Logging.PcapRecording = *patch.PcapRecording
-	}
-
-	if err := capture.WriteConfig(a.appDir, cfg); err != nil {
+	var newLogging capture.LoggingConfig
+	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
+		if patch.ServerLogsEnabled != nil {
+			cfg.Logging.ServerLogsEnabled = *patch.ServerLogsEnabled
+		}
+		if patch.PcapRecording != nil {
+			cfg.Logging.PcapRecording = *patch.PcapRecording
+		}
+		newLogging = cfg.Logging
+	}); err != nil {
 		http.Error(w, "write config: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -66,5 +62,5 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		a.logger.SetEnabled(*patch.ServerLogsEnabled)
 	}
 
-	writeJSON(w, http.StatusOK, cfg.Logging)
+	writeJSON(w, http.StatusOK, newLogging)
 }

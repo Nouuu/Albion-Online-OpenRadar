@@ -390,34 +390,43 @@
                 }
             };
 
-            // Fetch logging state from backend and hydrate settingsSync before binding the checkboxes.
-            try {
-                const resp = await fetch('/api/settings/logging');
-                if (resp.ok) {
-                    const data = await resp.json();
-                    settingsSync.setBool("settingServerLogsEnabled", data.serverLogsEnabled);
-                    settingsSync.setBool("settingPcapRecording", data.pcapRecording);
+            async function fetchBackendSettings(endpoint) {
+                try {
+                    const resp = await fetch(endpoint);
+                    if (!resp.ok) {
+                        console.warn(`[Settings] ${endpoint} returned ${resp.status}, falling back to localStorage`);
+                        return null;
+                    }
+                    return await resp.json();
+                } catch (err) {
+                    console.warn(`[Settings] ${endpoint} fetch failed:`, err);
+                    return null;
                 }
-            } catch (err) {
-                console.error('Error fetching logging settings:', err);
             }
 
-            function bindLoggingCheckbox(id, fieldName) {
+            function bindBackendCheckbox(id, endpoint, fieldName) {
                 const el = document.getElementById(id);
                 if (!el) return;
                 el.checked = settingsSync.getBool(id);
                 addListener(el, "change", async (e) => {
-                    settingsSync.setBool(id, e.target.checked);
+                    const checked = e.target.checked;
+                    settingsSync.setBool(id, checked);
                     try {
-                        await fetch('/api/settings/logging', {
+                        await fetch(endpoint, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({[fieldName]: e.target.checked})
+                            body: JSON.stringify({[fieldName]: checked})
                         });
                     } catch (err) {
-                        console.error('Error updating logging setting:', err);
+                        console.warn(`[Settings] POST ${endpoint} failed:`, err);
                     }
                 });
+            }
+
+            const loggingSettings = await fetchBackendSettings('/api/settings/logging');
+            if (loggingSettings) {
+                settingsSync.setBool("settingServerLogsEnabled", loggingSettings.serverLogsEnabled);
+                settingsSync.setBool("settingPcapRecording", loggingSettings.pcapRecording);
             }
 
             // Map display setting
@@ -452,8 +461,8 @@
             bindCheckbox("settingWsCoalescing");
             bindCheckbox("settingWsThrottling");
 
-            bindLoggingCheckbox("settingServerLogsEnabled", "serverLogsEnabled");
-            bindLoggingCheckbox("settingPcapRecording", "pcapRecording");
+            bindBackendCheckbox("settingServerLogsEnabled", "/api/settings/logging", "serverLogsEnabled");
+            bindBackendCheckbox("settingPcapRecording", "/api/settings/logging", "pcapRecording");
 
             // Download debug logs
             const downloadBtn = document.getElementById('downloadLogsBtn');
