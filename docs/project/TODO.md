@@ -12,9 +12,9 @@
 | Players | working | faction detection, zone-aware alerts, ignore list, Mist instance pvpType inherits parent (#103) |
 | Zones | working | PvP type detection, threat logic |
 | Mists | working | portals, feu follets, wisp cages (see `docs/technical/MISTS_DETECTION.md`) |
-| Dungeons | basic | every group family unblocked by `Parameters[8]` fix (#78); per-rarity filter still wants a database |
+| Dungeons | working | per-enchant filters working across every family. Solo, Group, Corrupted, Hellgate plus the five group families unblocked by #78 (T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL). Per-type filter and a dungeons database stay open. |
 | Chests | basic | rarity persisted on entity (#75); drawing-layer color resolution and rarity source slot still open |
-| Fishing | partial | empty-string type spawns accepted (#73); end-of-fishing event not in current corpus |
+| Fishing | working | issue #25 closed via #73 + #85. Event 61 (end-of-fishing) logged but not visualized. |
 
 ## v2.3 backlog
 
@@ -64,5 +64,5 @@
 ## Permanent limitations
 
 - **Player live positions**: encrypted via XOR with a KeySync `XorCode` itself wrapped by Photon AES. Out of scope without a MITM proxy. See `docs/technical/PLAYER_POSITIONS_MITM.md`.
-- **Resource charges**: server applies harvest bonuses that are not on the wire. Display can drift by a charge.
+- **Event 46 unreliability**: `HarvestableChangeState` occasionally skips size values or fires late depending on server batching. The radar reflects what the wire delivers; intermediate states the server skips are unrecoverable. Detail in `docs/technical/HARVEST_EVENTS.md`.
 - **Some Black Zone maps**: tiles missing for zone IDs 4000+. Workaround: disable the map background in settings.

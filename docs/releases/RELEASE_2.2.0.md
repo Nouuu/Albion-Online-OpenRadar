@@ -14,14 +14,30 @@ JS event codes and operation codes live in `web/scripts/utils/EventCodes.js` and
 
 ### Mists detection (#78, closes #24, #66, #69, #80)
 
-Four bugs fixed in one PR:
+Three Mists-side bugs fixed in the same PR:
 
 1. The `MobsDrawing` mist enchant filter was inverted: checking E0 hid mists instead of showing them. With every E0..E4 box ticked by default, every mist was hidden.
 2. `WispCageHandler` read the wrong parameter slots and rejected real events with a wrong `undefined` gate. Capture-70 corpus pinned the correct layout.
-3. Dungeon enchant source moved from `Parameters[6]` (a dungeon type id, values 2/37-39/229/276/310/327, never in 0-4) to `Parameters[8]` (the real 0-4 enchant). Side benefit: every group dungeon family that had been silently filtered out is back on the radar (`T6_MORGANA`, `T6_KEEPER`, `T6_UNDEAD`, `T5_PORTAL_ROYAL_SOLO`, `T6_PORTAL`).
-4. Photon hashtable marshal failure silently dropped Join responses (`Parameters[103]` shape changed in Protocol18 from scalar to `hashtable{5,7}`). A custom `MarshalJSON` fix on the hashtable type unblocks Mists instance map render.
+3. Photon hashtable marshal failure silently dropped Join responses (`Parameters[103]` shape changed in Protocol18 from scalar to `hashtable{5,7}`). A custom `MarshalJSON` fix on the hashtable type unblocks Mists instance map render.
 
 Architecture write-up: `docs/technical/MISTS_DETECTION.md`.
+
+### Dungeons restored across every family (#78)
+
+The enchant source for dungeons moved from `Parameters[6]` (a dungeon type id with values 2, 37-39, 229, 276, 310, 327, never in the 0-4 enchant range) to `Parameters[8]` (the real 0-4 enchant). The drawing-layer gate `settingDungeonE<n>` could never match the wrong values, so every group dungeon family was silently filtered out. After the fix, `T6_MORGANA`, `T6_KEEPER`, `T6_UNDEAD`, `T5_PORTAL_ROYAL_SOLO`, and `T6_PORTAL` are back on the radar with their correct enchant level.
+
+Live evidence covered both sides: a "Peu commun" `MISTS_SOLO_YELLOW` portal with `Parameters[8]=1` matches the in-game tooltip, a `T6_MORGANA` with `Parameters[8]=2` correctly maps to an E2 dungeon. The MISTS-specific branch in `addDungeon` is preserved so MISTS portals route through the Mists settings (`settingMistSolo/Duo` plus `settingMistE<enchant>`) instead of the Dungeon settings.
+
+Per-type filter (Solo, Group, Corrupted, Hellgate, Avalonian) and a dungeons database stay on the v2.3 backlog.
+
+### Fishing closed (#73, #85, closes #25)
+
+Two complementary fixes:
+
+- `FishingHandler.newFishEvent` rejected every spawn with an empty-string `type` because the guard was `if (!type) return`. Three of five fishpool spawns in the live corpus carry `type=""`. The guard is now `if (type === null || type === undefined) return`, which preserves the original intent (drop missing data) without silently discarding valid data (#73, FISH-1).
+- The `settingFishing` gate moved from spawn time to render time, so toggling fishing visibility takes effect on the next frame instead of waiting for new spawns (#85).
+
+Spawns are now detected, interpolated, and visualized. End-of-fishing (event 61) is logged but not yet drawn on the radar; that is the only remaining gap.
 
 ### Multi-interface capture (#94)
 
@@ -80,7 +96,6 @@ The spawn-time filter that dropped living resources when a setting was off has b
 
 - `mobileTypeId === -1` treated as static, since `-1` is the int16 decode of `0xFFFF` sentinel (#71, HARV-1).
 - `Parameters[3]` type guard in `addChestEvent`: undefined or non-string values fall through cleanly (#72).
-- Empty-string type accepted in `newFishEvent`: 3 of 5 fishpool spawns in the corpus carry an empty string, previously dropped silently (#73, FISH-1, hits #25).
 - Re-gate reads the stored `mobileTypeId` instead of hardcoding `isLiving=false`. Living Fiber critters no longer drop when static Hide settings are disabled (#74, HARV-3).
 - Chest rarity persisted from `Parameters[5]` on the entity (#75, CHEST-2). The drawing layer does not yet consume it: rarity badge wiring is a follow-up. The source identification of the rarity slot itself stays open (CHEST-1).
 - `map.isBZ` derived from `zonesDatabase.getPvpType(mapId)` instead of attempting to parse the (now hashtable-shaped) `Parameters[103]` directly (#87, closes #57). `ROUTER-1` `test.fails` for direct hashtable parse remains as a follow-up.
@@ -129,9 +144,9 @@ Bugs pinned by `test.fails` at the start of the cycle: HARV-1/2/3, PLAY-1/2, CHE
 | Mobs | working | OFFSET=16 confirmed, color-coded threat |
 | Players | working | faction detection, zone-aware alerts (Mist instances inherit parent pvpType post #103), ignore list |
 | Mists | working | portals, feu follets, wisp cages |
-| Dungeons | basic | shows on radar, every group family unblocked by `Parameters[8]` fix; per-rarity filter still wants a database |
+| Dungeons | working | per-enchant filters working again across every family. Solo, Group, Corrupted, Hellgate plus the five group families that #78 unblocked: T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL. Per-type filter and a dungeon database stay on the v2.3 backlog. |
 | Chests | basic | rarity persisted on the entity (#75); drawing-layer color resolution and the rarity source slot itself are follow-ups |
-| Fishing | partial | spawns no longer dropped on empty-string type (#73); end-of-fishing event not in current corpus |
+| Fishing | working | issue #25 closed via #73 (empty-string spawn type accepted) and #85 (render-time gate). Spawns detected and interpolated. Event 61 (end-of-fishing) is logged but not yet visualized; that is the only remaining gap. |
 
 ## Migration notes
 
@@ -144,8 +159,8 @@ Bugs pinned by `test.fails` at the start of the cycle: HARV-1/2/3, PLAY-1/2, CHE
 
 - Player live positions stay encrypted (XOR with a KeySync `XorCode` itself wrapped by Photon AES). Out of scope without a MITM proxy. See `docs/technical/PLAYER_POSITIONS_MITM.md`.
 - Some Black Zone map tiles missing for zone IDs 4000+. Workaround: disable the map background in settings.
-- Resource charges may differ from the actual count because the server applies harvest bonuses that are not on the wire.
+- Event 46 (`HarvestableChangeState`) occasionally skips size values (e.g. 3 -> 1) or fires late, depending on server batching and network conditions. The radar reflects whatever the wire delivers; intermediate states that the server skipped are unrecoverable. See `docs/technical/HARVEST_EVENTS.md`.
 
 ## What's next
 
-`docs/project/TODO.md` carries the v2.3 backlog. Priority: Dungeons database with per-type filter, Chests rarity source identification (CHEST-1) plus drawing-layer wiring, Fishing end-of-fishing event capture, Mists cluster id routing (events 518/519/520/529 reach the frontend but no handler consumes them).
+`docs/project/TODO.md` carries the v2.3 backlog. Priority: a dungeons database with per-type filter (Solo, Group, Corrupted, Hellgate, Avalonian), Chests rarity source identification (CHEST-1) plus drawing-layer wiring, end-of-fishing visualization (event 61), Mists cluster id routing (events 518/519/520/529 reach the frontend but no handler consumes them).
