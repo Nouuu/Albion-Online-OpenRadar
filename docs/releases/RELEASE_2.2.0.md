@@ -1,36 +1,41 @@
 # Release 2.2.0, Protocol18 + Mists + Multi-interface
 
-This release closes the stabilization phase that started in April 2026. The big rocks: a full Protocol18 port backed by pcap fixtures, Mists detection restored end to end, multi-interface capture (ExitLag, VPN, WiFi-to-Ethernet handoff), a coherent logging system with in-process pcap recording, LAN access, and a real test harness across 14 handler suites.
+This release closes the stabilization phase that started in April 2026. The big rocks: a full Protocol18 port with pcap-fixture-backed tests, Mists detection restored end to end, multi-interface capture (ExitLag, VPN, WiFi-to-Ethernet handoff), a coherent logging system with in-process pcap recording, LAN access from any device on the network, and a real test harness across 14 handler suites.
 
 ## Highlights
 
 ### Protocol18 port
 
-The deserializer was rewritten for Protocol18. Every Photon event type the radar consumes now ships with a pcap fixture in `internal/photon/testdata/` and a Go test that reads the fixture via `gopacket` and asserts on the decoded payload. The router contract is pinned: `EventRouter.onEvent` switches on `Parameters[252]`, `onRequest`/`onResponse` on `Parameters[253]`. JS event codes and operation codes live in `web/scripts/utils/EventCodes.js` and `OperationCodes.js`; Go mirrors regenerate via `make refresh-codes`.
+The deserializer was rewritten for Protocol18. Every Photon event type the radar consumes ships with a pcap fixture in `internal/photon/testdata/` and a Go test that reads the fixture via `gopacket` and asserts on the decoded payload. The router contract is pinned by a table-driven test (#64) on real codes: `Move (22)`, `JoinFinished (2)`, `ChangeCluster (41)`, with expected parameter keys.
 
-Drift hunting paid off: 452 value mismatches against upstream `StatisticsAnalysisTool` were collapsed in a single sync pass (#70). The positional enum (`Unused=0` then auto-incremented) is impossible to spot-check; we now diff the whole file every refresh.
+### Single source of truth for Albion codes (#70)
 
-### Mists detection
+JS event codes and operation codes live in `web/scripts/utils/EventCodes.js` and `OperationCodes.js`; Go mirrors regenerate via `make refresh-codes`. The sync pass surfaced 452 stale event-code values in the local copy versus upstream `StatisticsAnalysisTool`: 61 new names added, 15 legacy names dropped (Carriable, Journal, AntiCheat, RedZoneCluster, DebugMobInfo families). 540 operation codes imported with their own Go mirror. Eight `test.fails` (`ROUTER-2..9`) flipped to `@verified` after the sync. Four `OPS-1..4` literals retained in `EventRouter.js` with `FIXME ops-drift` comments because the upstream name does not match the local handler semantics; resolution requires pcap-backed investigation.
 
-Portals, feu follets, and wisp cages are back on the radar. Three fixes shipped together:
+### Mists detection (#78, closes #24, #66, #69, #80)
 
-- The `MobsDrawing` mist enchant filter was inverted: checking E0 hid mists instead of showing them. With every E0..E4 box ticked by default, every mist was hidden. One-line fix.
-- `WispCageHandler` was reading the wrong parameter slots (`[1]/[2]/[4]` vs the real layout) and rejecting every real event with a wrong `undefined` gate. Capture-70 corpus pinned the correct layout.
-- Dungeon enchant source moved from `Parameters[6]` (a dungeon type/variant id outside the 0-4 range) to `Parameters[8]`. Side benefit: every group dungeon family that had been silently filtered out is back on the radar (Morgana, Keeper, Undead, Royal Solo).
+Four bugs fixed in one PR:
+
+1. The `MobsDrawing` mist enchant filter was inverted: checking E0 hid mists instead of showing them. With every E0..E4 box ticked by default, every mist was hidden.
+2. `WispCageHandler` read the wrong parameter slots and rejected real events with a wrong `undefined` gate. Capture-70 corpus pinned the correct layout.
+3. Dungeon enchant source moved from `Parameters[6]` (a dungeon type id, values 2/37-39/229/276/310/327, never in 0-4) to `Parameters[8]` (the real 0-4 enchant). Side benefit: every group dungeon family that had been silently filtered out is back on the radar (`T6_MORGANA`, `T6_KEEPER`, `T6_UNDEAD`, `T5_PORTAL_ROYAL_SOLO`, `T6_PORTAL`).
+4. Photon hashtable marshal failure silently dropped Join responses (`Parameters[103]` shape changed in Protocol18 from scalar to `hashtable{5,7}`). A custom `MarshalJSON` fix on the hashtable type unblocks Mists instance map render.
 
 Architecture write-up: `docs/technical/MISTS_DETECTION.md`.
 
-### Multi-interface capture
+### Multi-interface capture (#94)
 
-Albion traffic can change route while the game runs: ExitLag toggle, VPN start, WiFi-to-Ethernet handoff. The radar now listens on every selected interface in parallel. The single-handle keyed by IP is gone.
+Albion traffic can change route while the game runs: ExitLag toggle, VPN start, WiFi-to-Ethernet handoff. The radar listens on every selected interface in parallel. The single-handle keyed by IP is gone.
 
-`internal/capture/manager.go` owns the active capturer set, diffs against the target on `Reconfigure`, opens new handles before closing old ones so the radar never has zero capturers during a swap. Persistence moved from `ip.txt` to `network.json` with stable `{name, description}` identifiers; the legacy file migrates once on first boot and is then deleted.
-
-Interfaces are categorized (WiFi, Ethernet, ExitLag, VPN, Virtual, Other) with a regex order that puts virtual NICs last. The settings UI surfaces the categorization with badges. `POST /api/network/interfaces` is loopback-only, so a phone on the LAN can read the state but cannot retarget the host's capture.
+`internal/capture/manager.go` owns the active capturer set, diffs against the target on `Reconfigure`, opens new handles before closing old ones so the radar never has zero capturers during a swap. Persistence moved from `ip.txt` to `network.json` with stable `{name, description}` identifiers; the legacy file migrates once on first boot and is then deleted. Interfaces are categorized (WiFi, Ethernet, ExitLag, VPN, Virtual, Other) with a regex order that puts virtual NICs last (#106 recovers this ordering after it was lost in a squash and adds three unit tests). The settings UI exposes the categorization with badges. `POST /api/network/interfaces` is loopback-only: a phone on the LAN can read the state but cannot retarget the host's capture.
 
 Architecture write-up: `docs/technical/CAPTURE_INTERFACES.md`.
 
-### Logging coherence and pcap recording
+### ExitLag support (#99)
+
+Capture survives ExitLag's NDIS Lightweight Filter in cases A, B, and C documented in `CAPTURE_INTERFACES.md`. The README explains how to switch ExitLag's packet redirection to "NDIS (Legacy)" so Npcap (and Wireshark) can see the traffic. Case D (LWF swallows packets entirely) would need WFP-level capture and is out of scope.
+
+### Logging coherence and pcap recording (#107)
 
 Backend and frontend logs no longer mix. Each output channel has a clear meaning:
 
@@ -41,25 +46,80 @@ Backend and frontend logs no longer mix. Each output channel has a clear meaning
 | Frontend | DEBUG/INFO/WARN | `logs/debug/` |
 | Frontend | ERROR/CRITICAL | `logs/debug/` plus `logs/errors/` |
 
-Configuration moved from `localStorage` to `network.json` so the backend boots with the correct gate state without waiting for the frontend to push a value. The unified `/api/settings/logging` endpoint handles both the server logs toggle and the new pcap recording toggle.
+Configuration moved from `localStorage` to `network.json` so the backend boots with the correct gate state without waiting for the frontend to push a value. A unified `/api/settings/logging` GET/POST endpoint replaces the old `/api/settings/server-logs`; the change is breaking for any client that still calls the old path (none in the wild).
 
-In-process pcap recording is gated by a UI toggle. `Capturer.StartRecording(dir)` writes a `capture_<timestamp>_<sanitized-iface>.pcap` per active interface. `pcapgo.Writer` keeps frame metadata so the output is replayable through `pcap.OpenOffline`. No more external `tcpdump` to debug a parser issue.
+In-process pcap recording is gated by a UI toggle. `Capturer.StartRecording(dir)` writes a `capture_<timestamp>_<sanitized-iface>.pcap` per active interface. `pcapgo.Writer` keeps frame metadata so the output is replayable through `pcap.OpenOffline`. No more external `tcpdump` to debug a parser issue. The PR also fixes a latent bug where `POST /api/network/interfaces` was wiping the `Logging` section of `network.json` because it wrote a fresh `Config{CaptureInterfaces: ...}` instead of merging via `MutateConfig`.
 
 Architecture write-up: `docs/technical/LOGGING.md`.
 
-### LAN access and mobile
+### Settings coherence (#85, closes #81, #65, #25)
 
-The frontend builds the WebSocket URL from `window.location` instead of `ws://localhost:5001/ws`. A phone or second laptop loading `http://<server-ip>:5001` gets a working radar without configuration. The startup banner prints the LAN URL alongside localhost when the host adapter has a routable IP.
+Audit of the settings page surface that uncovered several phantom toggles and out-of-sync gates:
+
+- Orphan keys aligned (`settingShowFish` -> `settingFishing`, etc.) so a checkbox actually controls the gate it claims to.
+- Screen Flash now mirrors on the radar canvas. Picture-in-Picture viewers see the alert too.
+- Pulsating Border is zone-aware. It fires on faction-flagged players in Black Zones, not just on hostile flag.
+- Fishing and Enemy spawn gates moved from spawn-time drop to render-time filter, matching the resource path. Toggling a category mid-session no longer requires a teleport to refresh the radar.
+- Logger default is `enabled: false`. The frontend POSTs the persisted state on settings page load, so the gate is correct from the first event.
+
+User test 2026-04-24 confirmed the four observable symptoms.
+
+### Living harvest tier (#77, closes #52)
+
+Living mob tiers on the radar match the in-game tooltip. The `getLivingHarvestTier` rule resolves the live tier as `max(min_tier(loot_type), combat_tier - 1)` for non-DYNAMIC, non-DEAD mobs; DYNAMIC and DEAD variants keep the combat tier. Validated against 9 pcap-derived examples and 4 user screenshots across the Hide and Fiber-critter families.
+
+### TypeID OFFSET fix (#93, closes #92)
+
+The earlier `t-1` shift on living non-DYNAMIC critters was a compensation for a TypeID OFFSET drift, not a game-tier rule. Validation against 6469 pcap NewMob events plus 5889 session-log events at OFFSET=16 returned zero outliers; the previous OFFSET=15 was a never-HP-verified deduction. The shift was retired, `MobsDatabase.OFFSET` is 16, and `getLivingHarvestTier` reduces to `mob.t`. The PR also ships diagnostic plumbing: `Show DB Name` overlay (`settingLivingResourcesName`), `CritterCorpseTierAudit` log, and the `tools/offset-validate` Go binary so the next DB refresh can re-anchor the offset in one command.
+
+### Render-time filter for living and DEAD (#82, closes #32, #30)
+
+The spawn-time filter that dropped living resources when a setting was off has been replaced by a per-frame render gate. Toggling a setting now affects display without waiting for new spawns. DEAD carcasses are explicitly routed through the Living filter (verified by user test 2026-04-24): a corpse is part of the same critter family as the alive variant, not a static node. `LivingResourceFilter.js` exports `shouldRenderLivingResource` and `shouldRenderStaticResource` via a shared `resolveSettingsCell`.
+
+### Static and edge fixes
+
+- `mobileTypeId === -1` treated as static, since `-1` is the int16 decode of `0xFFFF` sentinel (#71, HARV-1).
+- `Parameters[3]` type guard in `addChestEvent`: undefined or non-string values fall through cleanly (#72).
+- Empty-string type accepted in `newFishEvent`: 3 of 5 fishpool spawns in the corpus carry an empty string, previously dropped silently (#73, FISH-1, hits #25).
+- Re-gate reads the stored `mobileTypeId` instead of hardcoding `isLiving=false`. Living Fiber critters no longer drop when static Hide settings are disabled (#74, HARV-3).
+- Chest rarity persisted from `Parameters[5]` on the entity (#75, CHEST-2). The drawing layer does not yet consume it: rarity badge wiring is a follow-up. The source identification of the rarity slot itself stays open (CHEST-1).
+- `map.isBZ` derived from `zonesDatabase.getPvpType(mapId)` instead of attempting to parse the (now hashtable-shaped) `Parameters[103]` directly (#87, closes #57). `ROUTER-1` `test.fails` for direct hashtable parse remains as a follow-up.
+- Mists instance pvpType inherits from the parent cluster: a Mist clone keyed by `@MISTS@<guid>` carries the BZ/YZ classification of the cluster the player came from. Faction or hostile alarms fire correctly in BZ Mists; Yellow Royal Mists no longer trip the alarm (#103, closes #90). Override persisted to `sessionStorage`.
+
+### LAN access (#88)
+
+The frontend builds the WebSocket URL from `window.location` instead of `ws://localhost:5001/ws`. A phone or second laptop loading `http://<server-ip>:5001` gets a working radar without configuration. The startup banner prints the LAN URL alongside `localhost` when the host adapter has a routable RFC1918 IP. A `_WebSocketManager.test.js` covers the four URL shapes (localhost, RFC1918, https, no port).
 
 A minimal mobile responsive pass made every page usable at 375x667 portrait: no horizontal scrollbars, canvas readable, settings forms collapse correctly. Not a redesign, just a sanity baseline.
 
-### Living harvestable tier
+### UI polish (#105, closes #98)
 
-Living mob tiers on the radar match the in-game tooltip. The previous `t-1` shift was a compensation for a TypeID OFFSET drift; once OFFSET=16 was confirmed against 6469 pcap NewMob events plus 5889 session-log events with zero outliers, the shift was retired. The tier rule is now `mob.t` directly. Math write-up in `docs/technical/HARVEST_EVENTS.md`.
+- **Icon Size slider** (0.5x to 2.0x) scales markers and circles, not text or healthbars.
+- **Resource Color Badges** toggle replaces the single-dot indicator with a colored tier square per resource family (Fiber green, Hide tan, Wood brown, Ore blue, Rock purple), plus a gold border on living variants.
+- **Hostile NPC circle radius** tightened from 7 to 6 to match the visual weight of the new badges.
+- **Collapsible Network card** in the radar overlay; state persists across navigation.
 
-### Icon visibility
+### Stability and shutdown (#63)
 
-Resource icons now have a size slider, per-rarity color badges instead of a single dot, and a collapsible network panel in the radar overlay. Helps when the screen is dense.
+- `pcap.BlockForever` swapped for a 500 ms timeout so an idle close unblocks instead of hanging on a goroutine still polling.
+- Handle close ordering: cancel context, wait, only then close. libpcap is unsafe to close while `Read` is in flight.
+- TUI dashboard panic on first `LogMsg` arriving before `WindowSizeMsg` guarded: drop the log instead of calling `SetContent` on an unsized viewport.
+- Reproduced the original deadlock on 2.1.1 and confirmed clean exit on the fix.
+
+### Test harness (#68)
+
+351 frontend tests across 14 suites. The discipline is `@verified`, `@characterization`, `test.fails`: 252 verified, 10 characterization, 1 test.fails at the close of the cycle. 16 pcap-derived scenarios shipped, all PII-scrubbed. Tools added in the same PR:
+
+- `tools/anonymize-pcap`: scrubs MAC, IP, timestamps, optional `--scrub-string` for the local player name.
+- `tools/photon-dump`: extracts per-scenario fixtures from a live pcap, both as `.pcap` fragments and as WS-level JSON matching the EventRouter dispatch format.
+- `tools/gen-eventcodes`: regenerates Go mirrors from the JS source files.
+- `tools/offset-validate`: anchors the TypeID OFFSET against a fresh DB.
+
+Bugs pinned by `test.fails` at the start of the cycle: HARV-1/2/3, PLAY-1/2, CHEST-1/2, FISH-1, ROUTER-1..9. By release time, only PLAY-1, PLAY-2, ROUTER-1, and CHEST-1 remain open.
+
+### Embed safety (#86)
+
+17 test files renamed to `_*.test.js`. Go embed's default rule excludes `_*` so the production binary cannot ship test artifacts. Production binary trimmed by 347 KB. `embed_prod_test.go` walks the embed FS at test time and asserts no fixture or test file landed. CI guard rejects unprefixed `*.test.js`.
 
 ## Detection details
 
@@ -67,43 +127,25 @@ Resource icons now have a size slider, per-rarity color badges instead of a sing
 |---|---|---|
 | Resources | working | static and living, T1-T8, enchantments, render-time filter post #82 |
 | Mobs | working | OFFSET=16 confirmed, color-coded threat |
-| Players | working | faction detection, zone-aware alerts (PvP type inherited in Mist instances post #103), ignore list |
-| Mists | working | portals plus feu follets plus wisp cages |
-| Dungeons | basic | shows on radar, per-rarity filter unblocked by Parameters[8] fix |
-| Chests | basic | shows on radar, rarity slot still under investigation (CHEST-1) |
-| Fishing | partial | spots detected, end-of-fishing event not in current corpus |
-
-## Stability
-
-- Shutdown reliability: pcap close path no longer blocks on a goroutine still polling a freed handle (#63). Manager ordering: cancel context, drain the wait group, only then close handles.
-- Settings page: live filtering at render time replaced spawn-time filters that dropped data the user might want to see later (#85).
-- Embed safety: `embed_prod.go` excludes test files and fixtures from the production binary; a CI guard rejects unprefixed `*.test.js` (#86).
-- Real-DB tests: handler test suites load `web/ao-bin-dumps/*.min.json` instead of mocked database answers. Mocks that lie in sync with a wrong assertion no longer hide bugs (#68).
-
-## Tooling
-
-- `tools/anonymize-pcap`: scrubs MAC, IP, timestamps, optional `--scrub-string` for the local player name.
-- `tools/photon-dump`: extracts per-scenario fixtures from a live pcap, both as `.pcap` fragments and as WS-level JSON matching the EventRouter dispatch format.
-- `tools/gen-eventcodes`: regenerates Go mirrors from the JS source files.
-- `make refresh-codes`: fetches upstream, regenerates JS and Go.
-
-## Tests
-
-351 frontend tests across 14 suites (`@verified`, `@characterization`, `test.fails` pattern documented in CLAUDE.md). Go tests cover the deserializer, the multi-interface manager, the network and settings APIs, and the embed FS. End-to-end flow lives in `e2e/` (Playwright).
+| Players | working | faction detection, zone-aware alerts (Mist instances inherit parent pvpType post #103), ignore list |
+| Mists | working | portals, feu follets, wisp cages |
+| Dungeons | basic | shows on radar, every group family unblocked by `Parameters[8]` fix; per-rarity filter still wants a database |
+| Chests | basic | rarity persisted on the entity (#75); drawing-layer color resolution and the rarity source slot itself are follow-ups |
+| Fishing | partial | spawns no longer dropped on empty-string type (#73); end-of-fishing event not in current corpus |
 
 ## Migration notes
 
 - `ip.txt` is replaced by `network.json`. Migration runs once on first boot if `ip.txt` exists; the file is deleted afterwards.
 - `localStorage.settingServerLogsEnabled` is overwritten by the value from `network.json` on the first settings page load. The toggle state carries over without user action.
-- The `/api/settings/server-logs` endpoint is replaced by `/api/settings/logging`. Old single-toggle clients break; they are not in the wild.
-- `protocol16.go` is gone. The deserializer is a cluster of `deserializer.go`, `packet.go`, `events.go`, `readers.go`, `types.go`, `typecodes.go`.
+- The `/api/settings/server-logs` endpoint is replaced by `/api/settings/logging` (GET and POST). Old single-toggle clients break; none are in the wild.
+- `protocol16.go` is gone. The deserializer is now a cluster: `deserializer.go`, `packet.go`, `events.go`, `readers.go`, `types.go`, `typecodes.go`.
 
 ## Known limitations
 
-- Player live positions stay encrypted (XOR with a KeySync XorCode wrapped by Photon AES). Out of scope without a MITM proxy. See `docs/technical/PLAYER_POSITIONS_MITM.md`.
+- Player live positions stay encrypted (XOR with a KeySync `XorCode` itself wrapped by Photon AES). Out of scope without a MITM proxy. See `docs/technical/PLAYER_POSITIONS_MITM.md`.
 - Some Black Zone map tiles missing for zone IDs 4000+. Workaround: disable the map background in settings.
 - Resource charges may differ from the actual count because the server applies harvest bonuses that are not on the wire.
 
 ## What's next
 
-`docs/project/TODO.md` carries the v2.3 backlog. Priority: Dungeons database, Chests rarity source identification, Fishing completion, Mists cluster id routing (events 518/519/520/529 reach the frontend but no handler consumes them).
+`docs/project/TODO.md` carries the v2.3 backlog. Priority: Dungeons database with per-type filter, Chests rarity source identification (CHEST-1) plus drawing-layer wiring, Fishing end-of-fishing event capture, Mists cluster id routing (events 518/519/520/529 reach the frontend but no handler consumes them).

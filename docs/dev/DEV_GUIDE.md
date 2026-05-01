@@ -204,7 +204,52 @@ This is what makes LAN access work without configuration. `WebSocketEventQueue.j
 
 ### Handlers and drawings
 
-See `CLAUDE.md` section 4bis for the templates and the files-by-feature table. Every handler stores entities in an Array accessed via `.find()`, never a Map. Every entity holds `lastUpdateTime`. Every handler has a `cleanupStaleEntities(maxAgeMs)`.
+Every handler stores entities in an Array accessed via `.find()`, never a Map. Every entity holds `lastUpdateTime`. Every handler has a `cleanupStaleEntities(maxAgeMs)`.
+
+Handler skeleton:
+
+```js
+class XHandler {
+    constructor() { this.entityList = []; }
+    addEntity(id, ...) {
+        if (this.entityList.find(e => e.id === id)) return;
+        this.entityList.push(new Entity(id, ...));
+    }
+    cleanupStaleEntities(maxAgeMs = 120000) {
+        const now = Date.now();
+        this.entityList = this.entityList.filter(e => (now - e.lastUpdateTime) < maxAgeMs);
+    }
+}
+```
+
+Drawing skeleton: extends `DrawingUtils`. `interpolate(entities, lpX, lpY, t)` calls `interpolateEntity` per entry. `invalidate(ctx, entities)` reads settings via `settingsSync.getBool(...)` and draws via inherited `DrawCustomImage`, `drawFilledCircle`, `transformPoint`.
+
+Page registration: in the page gohtml `<script>`, import `registerPage` and `reinitCurrentPage` from `PageController`. Guard the registration with a `window._<name>Registered` flag to avoid double-register on SPA navigation. Call `window.onGlobalsReady(() => reinitCurrentPage())`.
+
+Imports:
+
+| What | Pattern |
+|---|---|
+| Singleton (`settingsSync`, `imageCache`) | `import settingsSync from './utils/SettingsSync.js'` (default) |
+| Class (`DrawingUtils`, `CATEGORIES`) | `import {DrawingUtils} from './utils/DrawingUtils.js'` (named) |
+| Logger | global `window.logger?.debug(CATEGORIES.X, 'event', {data})` |
+| Database | global `window.itemsDatabase`, `window.mobsDatabase`, `window.harvestablesDatabase` |
+
+Files by feature:
+
+| Feature | Handler | Drawing |
+|---|---|---|
+| Players | `PlayersHandler.js` | `PlayersDrawing.js` |
+| Mobs / living | `MobsHandler.js` | `MobsDrawing.js` |
+| Static resources | `HarvestablesHandler.js` | `HarvestablesDrawing.js` |
+| Chests | `ChestsHandler.js` | `ChestsDrawing.js` |
+| Dungeons | `DungeonsHandler.js` | `DungeonsDrawing.js` |
+| Fishing | `FishingHandler.js` | `FishingDrawing.js` |
+| Wisp cages | `WispCageHandler.js` | `WispCageDrawing.js` |
+| Mists feu follets | `MobsHandler.mistList` (shared) | `MistsWispDrawing.js` |
+| Network settings | `NetworkSettingsHandler.js` | (no drawing) |
+
+Canvas layers (`CanvasManager.js`): `mapCanvas` (background), `drawCanvas` (entities), `ourPlayerCanvas` (static blue dot), `uiCanvas` (zone, stats, threat border). Layer order is bottom to top.
 
 ### Settings persistence
 
@@ -256,7 +301,7 @@ Playwright lives at `e2e/`. The flow boots the Go binary, navigates to `localhos
 
 1. Confirm the event code in upstream `EventCodes.cs`. Update `web/scripts/utils/EventCodes.js` if needed, run `make refresh-codes`.
 2. Write the failing test using a pcap-derived fixture under `web/scripts/__fixtures__/ws/<handler>/`.
-3. Implement the handler in `web/scripts/handlers/<X>Handler.js` following the skeleton in CLAUDE.md section 4bis.
+3. Implement the handler in `web/scripts/handlers/<X>Handler.js` following the skeleton above.
 4. Add a case in `web/scripts/core/EventRouter.js` `onEvent`.
 5. Implement the drawing in `web/scripts/drawings/<X>Drawing.js`.
 6. Wire into `Utils.js` startup if the handler exposes a global.
