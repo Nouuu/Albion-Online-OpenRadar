@@ -146,6 +146,7 @@
             Logging
         </div>
         <div class="collapse-content">
+            <p class="text-xs text-base-content/60 mt-1 pb-2">Logs land in <code>logs/sessions/</code>, <code>logs/debug/</code>, <code>logs/errors/</code>. Errors are always saved on the backend side.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                 <!-- Log Level -->
                 <div>
@@ -174,11 +175,17 @@
                             <input type="checkbox" id="settingLogToConsole" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="terminal" class="w-4 h-4 text-base-content/50"></i>
                             <span class="text-base-content/80 text-sm group-hover:text-base-content">Browser Console (F12)</span>
+                            <div class="tooltip" data-tip="Print logs in the browser DevTools console.">
+                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            </div>
                         </label>
                         <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
                             <input type="checkbox" id="settingLogToServer" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="server" class="w-4 h-4 text-base-content/50"></i>
                             <span class="text-base-content/80 text-sm group-hover:text-base-content">Server Logs (JSONL)</span>
+                            <div class="tooltip" data-tip="Send frontend logs to the backend (saved to logs/debug/; errors go to logs/errors/ too).">
+                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            </div>
                         </label>
                     </div>
                 </div>
@@ -249,9 +256,21 @@
                         <input type="checkbox" id="settingServerLogsEnabled"
                                class="toggle toggle-primary toggle-sm">
                         <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
-                        <span class="text-base-content/80 text-sm group-hover:text-base-content">Server-side Recording</span>
+                        <span class="text-base-content/80 text-sm group-hover:text-base-content">Save Backend Logs</span>
                         <div class="tooltip"
-                             data-tip="Controls backend server logs written to logs/sessions/ directory.">
+                             data-tip="Save backend (Go) logs to logs/sessions/. Errors are always saved to logs/errors/.">
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                        </div>
+                    </label>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                        <input type="checkbox" id="settingPcapRecording"
+                               class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="circle-dot" class="w-4 h-4 text-base-content/50"></i>
+                        <span class="text-base-content/80 text-sm group-hover:text-base-content">Record Network Capture (pcap)</span>
+                        <div class="tooltip"
+                             data-tip="Record the raw network capture to logs/captures/. Useful for debugging without running tcpdump externally.">
                             <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                     </label>
