@@ -1,13 +1,56 @@
 package capture
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"os"
+	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcapgo"
 )
+
+func filepathGlob(t *testing.T, dir, pattern string) ([]string, error) {
+	t.Helper()
+	return filepath.Glob(filepath.Join(dir, pattern))
+}
+
+func assertSinglePayload(t *testing.T, path string, want []byte) {
+	t.Helper()
+	f, err := os.Open(path)
+	if err != nil {
+		t.Fatalf("open %s: %v", path, err)
+	}
+	defer f.Close()
+
+	reader, err := pcapgo.NewReader(f)
+	if err != nil {
+		t.Fatalf("pcapgo.NewReader on %s: %v", path, err)
+	}
+
+	src := gopacket.NewPacketSource(reader, reader.LinkType())
+	got := 0
+	for pkt := range src.Packets() {
+		got++
+		udp, ok := pkt.Layer(layers.LayerTypeUDP).(*layers.UDP)
+		if !ok {
+			t.Errorf("%s: packet %d has no UDP layer", path, got)
+			continue
+		}
+		if !bytes.Equal(udp.Payload, want) {
+			t.Errorf("%s: payload = %q, want %q", path, udp.Payload, want)
+		}
+	}
+	if got != 1 {
+		t.Errorf("%s recorded %d packets, want 1", path, got)
+	}
+}
 
 func newStubCapturer(iface NetworkInterface) *Capturer {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -198,6 +241,59 @@ func TestManager_StartRecording_AppliesToFutureCapturers(t *testing.T) {
 	if !mc.cap.IsRecording() {
 		t.Error("capturer 'b' added after StartRecording is not recording")
 	}
+
+	m.Close(context.Background())
+}
+
+// TestManager_StartRecording_MultiInterface_PerCapturerFiles confirms that
+// when multiple interfaces are selected, each Capturer writes to its own
+// pcap file with the sanitized interface name in the filename, and that
+// packets fed to one Capturer never appear in another's file.
+//
+// synthetic: stub Capturers (nil handle) plus in-process UDP packets.
+func TestManager_StartRecording_MultiInterface_PerCapturerFiles(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(context.Background())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{
+		{Name: "alpha", Device: "alpha"},
+		{Name: "beta", Device: "beta"},
+	}); err != nil {
+		t.Fatalf("Reconfigure: %v", err)
+	}
+
+	dir := t.TempDir()
+	if err := m.StartRecording(dir); err != nil {
+		t.Fatalf("StartRecording: %v", err)
+	}
+
+	m.mu.Lock()
+	alpha := m.active["alpha"].cap
+	beta := m.active["beta"].cap
+	m.mu.Unlock()
+
+	alphaPayload := []byte("from-alpha")
+	betaPayload := []byte("from-beta")
+	alpha.processPacket(buildUDPPacket(t, alphaPayload))
+	beta.processPacket(buildUDPPacket(t, betaPayload))
+
+	if err := m.StopRecording(); err != nil {
+		t.Fatalf("StopRecording: %v", err)
+	}
+
+	alphaMatches, _ := filepathGlob(t, dir, "capture_*_alpha.pcap")
+	betaMatches, _ := filepathGlob(t, dir, "capture_*_beta.pcap")
+
+	if len(alphaMatches) != 1 {
+		t.Fatalf("want 1 alpha capture file, got %d: %v", len(alphaMatches), alphaMatches)
+	}
+	if len(betaMatches) != 1 {
+		t.Fatalf("want 1 beta capture file, got %d: %v", len(betaMatches), betaMatches)
+	}
+
+	assertSinglePayload(t, alphaMatches[0], alphaPayload)
+	assertSinglePayload(t, betaMatches[0], betaPayload)
 
 	m.Close(context.Background())
 }

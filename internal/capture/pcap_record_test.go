@@ -152,6 +152,83 @@ func TestProcessPacket_WritesToRecorder(t *testing.T) {
 	}
 }
 
+// TestStartRecording_AfterStop_RecordsToNewFile verifies that toggling
+// recording off then on produces a second file that actually receives
+// packets. Reproduces the live regression where files created via the
+// API toggle contained only a 24-byte header.
+//
+// synthetic: packets are constructed in-process; no live Albion traffic needed.
+func TestStartRecording_AfterStop_RecordsToNewFile(t *testing.T) {
+	c := newCapturerFromOffline(t, photonFixture)
+	defer c.Close()
+
+	dir := t.TempDir()
+
+	if err := c.StartRecording(dir); err != nil {
+		t.Fatalf("first StartRecording: %v", err)
+	}
+	first := []byte("first-cycle")
+	c.processPacket(buildUDPPacket(t, first))
+	if err := c.StopRecording(); err != nil {
+		t.Fatalf("first StopRecording: %v", err)
+	}
+
+	// Sleep long enough that the next call produces a distinct timestamp filename.
+	time.Sleep(1100 * time.Millisecond)
+
+	if err := c.StartRecording(dir); err != nil {
+		t.Fatalf("second StartRecording: %v", err)
+	}
+	second := []byte("second-cycle")
+	c.processPacket(buildUDPPacket(t, second))
+	if err := c.StopRecording(); err != nil {
+		t.Fatalf("second StopRecording: %v", err)
+	}
+
+	matches, err := filepath.Glob(filepath.Join(dir, "capture_*.pcap"))
+	if err != nil {
+		t.Fatalf("Glob: %v", err)
+	}
+	if len(matches) != 2 {
+		t.Fatalf("want 2 capture files, got %d: %v", len(matches), matches)
+	}
+
+	wantedPayloads := map[string]bool{string(first): false, string(second): false}
+	for _, path := range matches {
+		f, err := os.Open(path)
+		if err != nil {
+			t.Fatalf("open %s: %v", path, err)
+		}
+		reader, err := pcapgo.NewReader(f)
+		if err != nil {
+			f.Close()
+			t.Fatalf("pcapgo.NewReader on %s: %v", path, err)
+		}
+		src := gopacket.NewPacketSource(reader, reader.LinkType())
+		count := 0
+		for pkt := range src.Packets() {
+			udp, ok := pkt.Layer(layers.LayerTypeUDP).(*layers.UDP)
+			if !ok {
+				continue
+			}
+			if _, exists := wantedPayloads[string(udp.Payload)]; exists {
+				wantedPayloads[string(udp.Payload)] = true
+			}
+			count++
+		}
+		f.Close()
+		if count != 1 {
+			t.Errorf("%s recorded %d packets, want 1", path, count)
+		}
+	}
+
+	for payload, found := range wantedPayloads {
+		if !found {
+			t.Errorf("payload %q not found in any recorded file", payload)
+		}
+	}
+}
+
 func TestClose_StopsRecording(t *testing.T) {
 	c := newCapturerFromOffline(t, photonFixture)
 
