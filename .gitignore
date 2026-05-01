@@ -11,19 +11,7 @@ diff_*.txt
 TYPEIDS_SUSPECTS.json
 .browser_opened
 
-# =============================================================================
-# DOSSIER WORK (inclus dans git)
-# =============================================================================
-# Le dossier work/ contient des scripts Python utilitaires et données de dev
-# SAUF ao-bin-dumps-master/ qui est trop volumineux (dumps officiels Albion)
-# =============================================================================
-
-work/
-
-# =============================================================================
-# MEMORIES ET CONFIGURATION SERENA
-# =============================================================================
-# Serena MCP stocke ses memories ici - ne pas commit
+# Local-only tooling and configuration
 .serena/
 .claude/
 
@@ -103,7 +91,7 @@ web/styles/tailwind.css
 ZIP PACKAGE/
 HELPER PACKAGE/
 
-# MEMORIES ET CONFIGURATION SERENA
+# Serena MCP local memories (kept out of git)
 /.serena/memories/project_summary.md
 /.serena/memories/style_and_conventions.md
 /.serena/memories/suggested_commands.md
@@ -113,8 +101,6 @@ HELPER PACKAGE/
 
 # Claude-specific files (local only, never commit)
 /CLAUDE.md
-/docs/claude-resources/
-/docs/SESSION_BOOTSTRAP.md
 
 # Local full-session Photon captures (never committed, always anonymized then split)
 captures/
