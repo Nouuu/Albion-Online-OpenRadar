@@ -29,15 +29,17 @@ type LogEntry struct {
 type Logger struct {
 	logsDir            string
 	currentSessionFile string
+	currentDebugFile   string
 	sessionStartTime   time.Time
 	enabled            bool
 	mu                 sync.Mutex
 
 	// Batching
-	buffer      []interface{}
-	bufferMu    sync.Mutex
-	flushTicker *time.Ticker
-	stopFlush   chan struct{}
+	serverBuffer []interface{}
+	clientBuffer []interface{}
+	bufferMu     sync.Mutex
+	flushTicker  *time.Ticker
+	stopFlush    chan struct{}
 
 	// Stats
 	totalEntries  uint64
@@ -51,7 +53,8 @@ func New(logsDir string, enabled bool) *Logger {
 		logsDir:          logsDir,
 		enabled:          enabled,
 		sessionStartTime: time.Now(),
-		buffer:           make([]interface{}, 0, MaxBufferSize),
+		serverBuffer:     make([]interface{}, 0, MaxBufferSize),
+		clientBuffer:     make([]interface{}, 0, MaxBufferSize),
 		stopFlush:        make(chan struct{}),
 	}
 	l.initializeDirectories()
@@ -123,18 +126,34 @@ func (l *Logger) createSessionFile() {
 		"sessions",
 		fmt.Sprintf("session_%s.jsonl", timestamp),
 	)
+	l.currentDebugFile = filepath.Join(
+		l.logsDir,
+		"debug",
+		fmt.Sprintf("front_%s.jsonl", timestamp),
+	)
 }
 
-// WriteLogs queues client logs for batched writing
+// WriteLogs queues client logs for batched writing and mirrors ERROR/CRITICAL synchronously.
 func (l *Logger) WriteLogs(logs []interface{}) {
 	if len(logs) == 0 {
 		return
 	}
 
+	for _, raw := range logs {
+		if m, ok := raw.(map[string]interface{}); ok {
+			level, _ := m["level"].(string)
+			if level == "ERROR" || level == "CRITICAL" {
+				category, _ := m["category"].(string)
+				event, _ := m["event"].(string)
+				l.writeErrorLine(category, event, m["data"])
+			}
+		}
+	}
+
 	l.bufferMu.Lock()
-	l.buffer = append(l.buffer, logs...)
+	l.clientBuffer = append(l.clientBuffer, logs...)
 	l.clientEntries += uint64(len(logs))
-	shouldFlush := len(l.buffer) >= MaxBufferSize
+	shouldFlush := len(l.clientBuffer) >= MaxBufferSize
 	l.bufferMu.Unlock()
 
 	if shouldFlush {
@@ -142,40 +161,57 @@ func (l *Logger) WriteLogs(logs []interface{}) {
 	}
 }
 
-// Flush writes buffered logs to file
+// Flush writes buffered logs to their respective files.
 func (l *Logger) Flush() {
 	l.bufferMu.Lock()
-	if len(l.buffer) == 0 {
+	serverBatch := l.serverBuffer
+	clientBatch := l.clientBuffer
+	if len(serverBatch) == 0 && len(clientBatch) == 0 {
 		l.bufferMu.Unlock()
 		return
 	}
-	batch := l.buffer
-	l.buffer = make([]interface{}, 0, MaxBufferSize)
+	l.serverBuffer = make([]interface{}, 0, MaxBufferSize)
+	l.clientBuffer = make([]interface{}, 0, MaxBufferSize)
 	l.bufferMu.Unlock()
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	f, err := os.OpenFile(l.currentSessionFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	for _, log := range batch {
-		line, err := json.Marshal(log)
-		if err != nil {
-			continue
+	if len(serverBatch) > 0 {
+		f, err := os.OpenFile(l.currentSessionFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err == nil {
+			for _, log := range serverBatch {
+				line, err := json.Marshal(log)
+				if err != nil {
+					continue
+				}
+				f.Write(line)
+				f.WriteString("\n")
+			}
+			f.Close()
 		}
-		f.Write(line)
-		f.WriteString("\n")
 	}
 
-	l.totalEntries += uint64(len(batch))
+	if len(clientBatch) > 0 {
+		f, err := os.OpenFile(l.currentDebugFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err == nil {
+			for _, log := range clientBatch {
+				line, err := json.Marshal(log)
+				if err != nil {
+					continue
+				}
+				f.Write(line)
+				f.WriteString("\n")
+			}
+			f.Close()
+		}
+	}
+
+	l.totalEntries += uint64(len(serverBatch) + len(clientBatch))
 	l.totalBatches++
 }
 
-// Log queues a server-side log entry
+// Log queues a server-side log entry.
 func (l *Logger) Log(level, category, event string, data interface{}, context map[string]interface{}) {
 	l.mu.Lock()
 	if !l.enabled {
@@ -199,18 +235,13 @@ func (l *Logger) Log(level, category, event string, data interface{}, context ma
 	}
 
 	l.bufferMu.Lock()
-	l.buffer = append(l.buffer, entry)
+	l.serverBuffer = append(l.serverBuffer, entry)
 	l.serverEntries++
 	l.bufferMu.Unlock()
 }
 
-func (l *Logger) Error(category, event string, data interface{}, context map[string]interface{}) {
-	l.Log("ERROR", category, event, data, context)
-
-	// Also write to dedicated error file immediately
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
+// writeErrorLine appends one line to the daily errors file.
+func (l *Logger) writeErrorLine(category, event string, data interface{}) {
 	date := time.Now().Format("2006-01-02")
 	errorFile := filepath.Join(l.logsDir, "errors", fmt.Sprintf("errors_%s.log", date))
 
@@ -223,6 +254,11 @@ func (l *Logger) Error(category, event string, data interface{}, context map[str
 	dataJSON, _ := json.Marshal(data)
 	line := fmt.Sprintf("[%s] %s.%s: %s\n", time.Now().UTC().Format(time.RFC3339), category, event, string(dataJSON))
 	f.WriteString(line)
+}
+
+func (l *Logger) Error(category, event string, data interface{}, context map[string]interface{}) {
+	l.Log("ERROR", category, event, data, context)
+	l.writeErrorLine("[SERVER] "+category, event, data)
 }
 
 func (l *Logger) Debug(category, event string, data interface{}, context map[string]interface{}) {
@@ -242,24 +278,29 @@ func (l *Logger) Critical(category, event string, data interface{}, context map[
 }
 
 type LogStats struct {
-	TotalEntries  uint64 `json:"totalEntries"`
-	TotalBatches  uint64 `json:"totalBatches"`
-	ClientEntries uint64 `json:"clientEntries"`
-	ServerEntries uint64 `json:"serverEntries"`
-	BufferSize    int    `json:"bufferSize"`
+	TotalEntries     uint64 `json:"totalEntries"`
+	TotalBatches     uint64 `json:"totalBatches"`
+	ClientEntries    uint64 `json:"clientEntries"`
+	ServerEntries    uint64 `json:"serverEntries"`
+	BufferSize       int    `json:"bufferSize"`
+	ServerBufferSize int    `json:"serverBufferSize"`
+	ClientBufferSize int    `json:"clientBufferSize"`
 }
 
 func (l *Logger) GetStats() LogStats {
 	l.bufferMu.Lock()
-	bufSize := len(l.buffer)
+	serverBufSize := len(l.serverBuffer)
+	clientBufSize := len(l.clientBuffer)
 	l.bufferMu.Unlock()
 
 	return LogStats{
-		TotalEntries:  l.totalEntries,
-		TotalBatches:  l.totalBatches,
-		ClientEntries: l.clientEntries,
-		ServerEntries: l.serverEntries,
-		BufferSize:    bufSize,
+		TotalEntries:     l.totalEntries,
+		TotalBatches:     l.totalBatches,
+		ClientEntries:    l.clientEntries,
+		ServerEntries:    l.serverEntries,
+		BufferSize:       serverBufSize + clientBufSize,
+		ServerBufferSize: serverBufSize,
+		ClientBufferSize: clientBufSize,
 	}
 }
 
