@@ -18,8 +18,14 @@ type PersistedInterface struct {
 	Description string `json:"description"`
 }
 
+type LoggingConfig struct {
+	ServerLogsEnabled bool `json:"serverLogsEnabled"`
+	PcapRecording     bool `json:"pcapRecording"`
+}
+
 type Config struct {
 	CaptureInterfaces []PersistedInterface `json:"captureInterfaces"`
+	Logging           LoggingConfig        `json:"logging"`
 }
 
 func ReadConfig(appDir string) (Config, error) {

@@ -221,6 +221,70 @@ func TestMigrateMalformedConfigErrors(t *testing.T) {
 	}
 }
 
+func TestConfigLoggingRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	cfg := Config{
+		Logging: LoggingConfig{
+			ServerLogsEnabled: true,
+			PcapRecording:     true,
+		},
+	}
+	if err := WriteConfig(dir, cfg); err != nil {
+		t.Fatalf("WriteConfig: %v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if !got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled: got false, want true")
+	}
+	if !got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: got false, want true")
+	}
+}
+
+func TestConfigMissingLoggingKey(t *testing.T) {
+	dir := t.TempDir()
+	body := []byte(`{"captureInterfaces":[]}`)
+	if err := os.WriteFile(filepath.Join(dir, "network.json"), body, 0o644); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled: got true, want false (zero value)")
+	}
+	if got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: got true, want false (zero value)")
+	}
+}
+
+func TestConfigLoggingExplicitFalseRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	cfg := Config{
+		Logging: LoggingConfig{
+			ServerLogsEnabled: false,
+			PcapRecording:     false,
+		},
+	}
+	if err := WriteConfig(dir, cfg); err != nil {
+		t.Fatalf("WriteConfig: %v", err)
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if got.Logging.ServerLogsEnabled {
+		t.Error("Logging.ServerLogsEnabled: got true, want false")
+	}
+	if got.Logging.PcapRecording {
+		t.Error("Logging.PcapRecording: got true, want false")
+	}
+}
+
 func TestWriteConfigOverwritesAtomically(t *testing.T) {
 	dir := t.TempDir()
 	cfg1 := Config{CaptureInterfaces: []PersistedInterface{{Name: "A", Description: "First"}}}
