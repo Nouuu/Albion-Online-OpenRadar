@@ -61,10 +61,6 @@
 - **`window.EnemyType` ESM cleanup**: `RadarRenderer._collectClusterCandidates` and `MobsDrawing.invalidate` still read from `window.EnemyType` instead of the ESM `import {EnemyType}` already in scope. Pre-ESM-migration artefact, low risk. Estimate: 30m.
 - **`/api/settings/server-logs` removal**: replaced by `/api/settings/logging` in v2.2 (#107). Old endpoint returns 404. No clients in the wild known to use the old path; no compatibility shim shipped. Note in case of future bug reports.
 
-## Live validation pending
-
-- **#91 ExitLag smoke**: ExitLag support shipped (#99) with the NDIS Legacy workaround documented in the README. The 3-day free trial smoke test on a real ExitLag account remains pending (user action). If Case D (NDIS LWF swallows packets) materializes, open a follow-up issue for WFP-level capture investigation.
-
 ## Permanent limitations
 
 - **Player live positions**: encrypted via XOR with a KeySync `XorCode` itself wrapped by Photon AES. Out of scope without a MITM proxy. See `docs/technical/PLAYER_POSITIONS_MITM.md`.
