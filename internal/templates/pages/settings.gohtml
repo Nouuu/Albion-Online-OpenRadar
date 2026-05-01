@@ -334,7 +334,7 @@
 
         let cleanup = [];
 
-        function initSettingsPage() {
+        async function initSettingsPage() {
             const settingsSync = window.settingsSync;
             cleanup = [];
 
@@ -390,6 +390,36 @@
                 }
             };
 
+            // Fetch logging state from backend and hydrate settingsSync before binding the checkboxes.
+            try {
+                const resp = await fetch('/api/settings/logging');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    settingsSync.setBool("settingServerLogsEnabled", data.serverLogsEnabled);
+                    settingsSync.setBool("settingPcapRecording", data.pcapRecording);
+                }
+            } catch (err) {
+                console.error('Error fetching logging settings:', err);
+            }
+
+            function bindLoggingCheckbox(id, fieldName) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.checked = settingsSync.getBool(id);
+                addListener(el, "change", async (e) => {
+                    settingsSync.setBool(id, e.target.checked);
+                    try {
+                        await fetch('/api/settings/logging', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({[fieldName]: e.target.checked})
+                        });
+                    } catch (err) {
+                        console.error('Error updating logging setting:', err);
+                    }
+                });
+            }
+
             // Map display setting
             bindCheckbox("settingShowMap");
 
@@ -422,24 +452,8 @@
             bindCheckbox("settingWsCoalescing");
             bindCheckbox("settingWsThrottling");
 
-            // Server-side logging (with API call)
-            const serverLogsEl = document.getElementById("settingServerLogsEnabled");
-            if (serverLogsEl) {
-                serverLogsEl.checked = settingsSync.getBool("settingServerLogsEnabled");
-                addListener(serverLogsEl, "change", async (e) => {
-                    const enabled = e.target.checked;
-                    settingsSync.setBool("settingServerLogsEnabled", enabled);
-                    try {
-                        await fetch('/api/settings/server-logs', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({enabled})
-                        });
-                    } catch (error) {
-                        console.error('Error updating server logs setting:', error);
-                    }
-                });
-            }
+            bindLoggingCheckbox("settingServerLogsEnabled", "serverLogsEnabled");
+            bindLoggingCheckbox("settingPcapRecording", "pcapRecording");
 
             // Download debug logs
             const downloadBtn = document.getElementById('downloadLogsBtn');
