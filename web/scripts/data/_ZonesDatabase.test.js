@@ -99,3 +99,46 @@ describe('ZonesDatabase mist overrides', () => {
         expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('yellow');
     });
 });
+
+describe('ZonesDatabase Avalon Roads pvpType', () => {
+    // @verified 2026-05-07: source: Albion Online wiki (Roads of Avalon page) and live capture
+    // 2026-05-07T13-08-37 op 2 Join mapId="TNL-013". zones.json tags TUNNEL_ROYAL as
+    // pvpType:"safe" but the wiki rule is that all Avalon Roads are full-loot PvP (black).
+    test('TUNNEL_ROYAL is forced to black despite zones.json safe tag', () => {
+        expect(zonesDatabase.getPvpType('TNL-013')).toBe('black');
+        expect(zonesDatabase.isBlackZone('TNL-013')).toBe(true);
+        expect(zonesDatabase.isSafeZone('TNL-013')).toBe(false);
+    });
+
+    // @verified 2026-05-07: same wiki rule. zones.json tags TUNNEL_ROYAL_RED as red, must be black.
+    test('TUNNEL_ROYAL_RED is forced to black despite zones.json red tag', () => {
+        expect(zonesDatabase.getPvpType('TNL-023')).toBe('black');
+        expect(zonesDatabase.isBlackZone('TNL-023')).toBe(true);
+        expect(zonesDatabase.isRedZone('TNL-023')).toBe(false);
+    });
+
+    // @verified 2026-05-07: Hideout interiors stay safe. Player-owned hideouts inside Avalon are
+    // not PvP zones; only the surrounding Roads are.
+    test('TUNNEL_HIDEOUT keeps safe pvpType', () => {
+        expect(zonesDatabase.getPvpType('TNL-151')).toBe('safe');
+        expect(zonesDatabase.isSafeZone('TNL-151')).toBe(true);
+    });
+
+    // @verified 2026-05-07: regression guard. TUNNEL_LOW already correctly black in zones.json,
+    // make sure the post-processor does not break the working entries.
+    test('TUNNEL_LOW remains black (regression guard)', () => {
+        expect(zonesDatabase.getPvpType('TNL-058')).toBe('black');
+    });
+
+    // @verified 2026-05-07: regression guard. TUNNEL_BLACK_LOW already black in zones.json.
+    test('TUNNEL_BLACK_LOW remains black (regression guard)', () => {
+        expect(zonesDatabase.getPvpType('TNL-031')).toBe('black');
+    });
+
+    // @verified 2026-05-07: regression guard. Non-tunnel zones keep their original pvpType.
+    test('non-tunnel zones unaffected by Avalon override', () => {
+        expect(zonesDatabase.getPvpType('1000')).toBe('safe');
+        expect(zonesDatabase.getPvpType('0212')).toBe('yellow');
+        expect(zonesDatabase.getPvpType('3316')).toBe('black');
+    });
+});

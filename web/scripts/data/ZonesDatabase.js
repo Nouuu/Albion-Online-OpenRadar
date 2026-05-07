@@ -65,10 +65,24 @@ export class ZonesDatabase {
     const id = String(zoneId);
     if (this.overrides.has(id)) return this.overrides.get(id);
     // Try exact match first (handles TNL-XXX, YOURNAME-HIDEOUT, etc.)
-    if (this.zones[id]) return this.zones[id];
-    // Fallback: try base ID for compound numeric IDs like "1234-5"
-    const baseId = id.split("-")[0];
-    return this.zones[baseId] || null;
+    let raw = this.zones[id];
+    if (!raw) {
+      // Fallback: try base ID for compound numeric IDs like "1234-5"
+      const baseId = id.split("-")[0];
+      raw = this.zones[baseId] || null;
+    }
+    return this._applyAvalonRoadsRule(raw);
+  }
+
+  // Roads of Avalon are full-loot PvP regardless of origin. zones.json tags TUNNEL_ROYAL
+  // and TUNNEL_ROYAL_RED as safe/red, contradicted by
+  // https://wiki.albiononline.com/wiki/Roads_of_Avalon.
+  _applyAvalonRoadsRule(zone) {
+    if (!zone) return null;
+    if (zone.type === "TUNNEL_ROYAL" || zone.type === "TUNNEL_ROYAL_RED") {
+      return { ...zone, pvpType: "black" };
+    }
+    return zone;
   }
 
   setMistOverride(mistMapId, originZoneId) {
