@@ -75,8 +75,7 @@ export class ZonesDatabase {
   }
 
   // Roads of Avalon are full-loot PvP regardless of origin. zones.json tags TUNNEL_ROYAL
-  // and TUNNEL_ROYAL_RED as safe/red, contradicted by
-  // https://wiki.albiononline.com/wiki/Roads_of_Avalon.
+  // and TUNNEL_ROYAL_RED as safe/red, overridden here.
   _applyAvalonRoadsRule(zone) {
     if (!zone) return null;
     if (zone.type === "TUNNEL_ROYAL" || zone.type === "TUNNEL_ROYAL_RED") {
