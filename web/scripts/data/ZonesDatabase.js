@@ -158,34 +158,21 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
-  _isValidBounds(b) {
-    return (
-      b &&
-      Array.isArray(b.min) && Array.isArray(b.max) &&
-      b.min.length === 2 && b.max.length === 2 &&
-      Number.isFinite(b.min[0]) && Number.isFinite(b.min[1]) &&
-      Number.isFinite(b.max[0]) && Number.isFinite(b.max[1])
+  getMapAssetExtent(zoneId) {
+    const a = this.getZone(zoneId)?.asset;
+    if (
+      !a ||
+      !Array.isArray(a.min) || !Array.isArray(a.max) ||
+      a.min.length !== 2 || a.max.length !== 2 ||
+      !Number.isFinite(a.min[0]) || !Number.isFinite(a.min[1]) ||
+      !Number.isFinite(a.max[0]) || !Number.isFinite(a.max[1])
+    ) {
+      return 825;
+    }
+    return 2 * Math.max(
+      Math.abs(a.min[0]), Math.abs(a.max[0]),
+      Math.abs(a.min[1]), Math.abs(a.max[1])
     );
-  }
-
-  _resolveBounds(zoneId) {
-    const zone = this.getZone(zoneId);
-    if (!zone) return null;
-    if (this._isValidBounds(zone.asset)) return zone.asset;
-    if (this._isValidBounds(zone.bounds)) return zone.bounds;
-    return null;
-  }
-
-  getMapBoundsSize(zoneId) {
-    const b = this._resolveBounds(zoneId);
-    if (!b) return [830, 830];
-    return [b.max[0] - b.min[0], b.max[1] - b.min[1]];
-  }
-
-  getMapBoundsCenter(zoneId) {
-    const b = this._resolveBounds(zoneId);
-    if (!b) return [0, 0];
-    return [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2];
   }
 }
 
