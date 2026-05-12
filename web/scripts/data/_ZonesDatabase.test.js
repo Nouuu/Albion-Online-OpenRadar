@@ -177,28 +177,53 @@ describe('ZonesDatabase map bounds', () => {
     });
 });
 
+describe('ZonesDatabase asset bounds prefer asset over minimap bounds', () => {
+    beforeAll(() => {
+        zonesDatabase.zones['TEST_ASSET_OVERRIDE'] = {
+            name: 'Test Asset Override', type: 'PLAYERCITY_BLACK_NOFURNITURE',
+            pvpType: 'safe', tier: 1, file: 'TEST_ASSET_OVERRIDE',
+            bounds: {min: [-100, -100], max: [100, 100]},
+            asset: {min: [-50, 20], max: [10, 80]}
+        };
+    });
+
+    // @verified 2026-05-12: synthetic. asset depicts a 60x60 area centered at (-20, 50),
+    // which differs from minimap bounds (200x200 centered at (0, 0)).
+    test('asset takes precedence over bounds for size', () => {
+        expect(zonesDatabase.getMapBoundsSize('TEST_ASSET_OVERRIDE')).toEqual([60, 60]);
+    });
+
+    // @verified 2026-05-12: synthetic. asset center is the midpoint of asset.min/max.
+    test('asset takes precedence over bounds for center', () => {
+        expect(zonesDatabase.getMapBoundsCenter('TEST_ASSET_OVERRIDE')).toEqual([-20, 50]);
+    });
+});
+
 describe('ZonesDatabase map bounds from real zones.json', () => {
-    // @verified 2026-05-12: regenerated zones.json. Live evidence on PR #120: Brecilien plaza 5001
-    // bounds = (-200,-200)..(200,200) per upstream cluster/world.json (-> 400x400, center (0,0)).
-    test('Brecilien plaza 5001 carries the upstream 400x400 centered bounds', () => {
-        expect(zonesDatabase.getMapBoundsSize('5001')).toEqual([400, 400]);
-        expect(zonesDatabase.getMapBoundsCenter('5001')).toEqual([0, 0]);
+    // @verified 2026-05-12: regenerated zones.json with asset overrides for known pre-generated
+    // sub-zones. Brecilien plaza 5001 asset (5001_CTY_MI_T1_NON template) = (-395,-205)..(155,245).
+    test('Brecilien plaza 5001 carries the asset 550x450 offset bounds from minimapgendata', () => {
+        expect(zonesDatabase.getMapBoundsSize('5001')).toEqual([550, 450]);
+        expect(zonesDatabase.getMapBoundsCenter('5001')).toEqual([-120, 20]);
     });
 
-    // @verified 2026-05-12: regenerated zones.json. Bank bounds = (-80,-160)..(90,10) per upstream.
-    test('Brecilien Bank 5002 carries the upstream 170x170 offset bounds', () => {
-        expect(zonesDatabase.getMapBoundsSize('5002')).toEqual([170, 170]);
-        expect(zonesDatabase.getMapBoundsCenter('5002')).toEqual([5, -75]);
+    // @verified 2026-05-12: regenerated zones.json. Brecilien Bank asset (Bank_Mists template)
+    // = (-285,-225)..(165,225). Differs strongly from minimapBounds (-80,-160)..(90,10).
+    test('Brecilien Bank 5002 carries the asset 450x450 offset bounds from minimapgendata', () => {
+        expect(zonesDatabase.getMapBoundsSize('5002')).toEqual([450, 450]);
+        expect(zonesDatabase.getMapBoundsCenter('5002')).toEqual([-60, 0]);
     });
 
-    // @verified 2026-05-12: regenerated zones.json. Brecilien main 5000 bounds = (-255,-355)..(445,345).
-    test('Brecilien main 5000 carries the upstream 700x700 offset bounds', () => {
-        expect(zonesDatabase.getMapBoundsSize('5000')).toEqual([700, 700]);
-        expect(zonesDatabase.getMapBoundsCenter('5000')).toEqual([95, -5]);
+    // @verified 2026-05-12: regenerated zones.json. Tetford Market asset (AuctionHouse_Thetford
+    // template) = (-35,45)..(35,115).
+    test('Tetford Market 0007 carries the asset 70x70 offset bounds from minimapgendata', () => {
+        expect(zonesDatabase.getMapBoundsSize('0007')).toEqual([70, 70]);
+        expect(zonesDatabase.getMapBoundsCenter('0007')).toEqual([0, 80]);
     });
 
-    // @verified 2026-05-12: regenerated zones.json. Outdoor T5 BZ near the legacy 825 baseline.
-    test('Battlebrae Flatland 3316 carries the upstream 830x830 centered bounds', () => {
+    // @verified 2026-05-12: regenerated zones.json. Outdoor BZ falls back to minimap bounds since
+    // no asset override exists yet for auto-generated clusters.
+    test('Battlebrae Flatland 3316 falls back to minimap bounds 830x830 centered', () => {
         expect(zonesDatabase.getMapBoundsSize('3316')).toEqual([830, 830]);
         expect(zonesDatabase.getMapBoundsCenter('3316')).toEqual([0, 0]);
     });
