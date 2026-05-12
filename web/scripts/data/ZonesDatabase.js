@@ -102,6 +102,7 @@ export class ZonesDatabase {
       pvpType: forcedPvpType || inheritedPvpType,
       tier: 0,
       file: origin.file,
+      size: origin.size,
       originZoneId: String(originZoneId),
     });
     return true;
@@ -154,6 +155,19 @@ export class ZonesDatabase {
 
   getZoneType(zoneId) {
     return this.getZone(zoneId)?.type || "";
+  }
+
+  getZoneSize(zoneId) {
+    const size = this.getZone(zoneId)?.size;
+    if (
+      Array.isArray(size) &&
+      size.length === 2 &&
+      Number.isFinite(size[0]) &&
+      Number.isFinite(size[1])
+    ) {
+      return [size[0], size[1]];
+    }
+    return [825, 825];
   }
 }
 
