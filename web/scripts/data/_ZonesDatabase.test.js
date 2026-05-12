@@ -194,88 +194,106 @@ describe('ZonesDatabase Avalon Roads pvpType', () => {
     });
 });
 
-describe('ZonesDatabase getZoneSize', () => {
+describe('ZonesDatabase map bounds', () => {
     beforeAll(() => {
-        zonesDatabase.zones['TEST_SMALL'] = {
-            name: 'Test Small', type: 'PLAYERCITY_SAFEAREA_NOFURNITURE',
-            pvpType: 'safe', tier: 1, file: 'TEST_SMALL', size: [450, 450]
+        zonesDatabase.zones['TEST_SMALL_CENTERED'] = {
+            name: 'Test Small Centered', type: 'PLAYERCITY_SAFEAREA_NOFURNITURE',
+            pvpType: 'safe', tier: 1, file: 'TEST_SMALL_CENTERED',
+            bounds: {min: [-200, -200], max: [200, 200]}
         };
-        zonesDatabase.zones['TEST_FULL'] = {
-            name: 'Test Full', type: 'OPENPVP_BLACK',
-            pvpType: 'black', tier: 6, file: 'TEST_FULL', size: [825, 825]
+        zonesDatabase.zones['TEST_SMALL_OFFSET'] = {
+            name: 'Test Small Offset', type: 'PLAYERCITY_BLACK_NOFURNITURE',
+            pvpType: 'safe', tier: 1, file: 'TEST_SMALL_OFFSET',
+            bounds: {min: [-80, -160], max: [90, 10]}
         };
-        zonesDatabase.zones['TEST_RECT'] = {
-            name: 'Test Rect', type: 'PLAYERCITY_BLACK',
-            pvpType: 'safe', tier: 1, file: 'TEST_RECT', size: [812, 1040]
+        zonesDatabase.zones['TEST_NO_BOUNDS'] = {
+            name: 'Test No Bounds', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_NO_BOUNDS'
         };
-        zonesDatabase.zones['TEST_NO_SIZE'] = {
-            name: 'Test No Size', type: 'OPENPVP_BLACK',
-            pvpType: 'black', tier: 6, file: 'TEST_NO_SIZE'
-        };
-        zonesDatabase.zones['TEST_BAD_SIZE'] = {
-            name: 'Test Bad Size', type: 'OPENPVP_BLACK',
-            pvpType: 'black', tier: 6, file: 'TEST_BAD_SIZE', size: ['oops', null]
+        zonesDatabase.zones['TEST_BAD_BOUNDS'] = {
+            name: 'Test Bad Bounds', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_BAD_BOUNDS',
+            bounds: {min: ['nope', null], max: [10, 10]}
         };
     });
 
-    // @verified 2026-05-12: synthetic. Brecilien Bank shape (450 x 450 per upstream world.json).
-    test('returns stored size for a small city sub-zone shape', () => {
-        expect(zonesDatabase.getZoneSize('TEST_SMALL')).toEqual([450, 450]);
+    // @verified 2026-05-12: synthetic. Brecilien plaza shape (bounds (-200,-200)..(200,200)).
+    test('centered bounds expose width derived from min/max', () => {
+        expect(zonesDatabase.getMapBoundsSize('TEST_SMALL_CENTERED')).toEqual([400, 400]);
     });
 
-    // @verified 2026-05-12: synthetic. Average outdoor cluster shape near the legacy 825 baseline.
-    test('returns stored size for a full-sized outdoor zone shape', () => {
-        expect(zonesDatabase.getZoneSize('TEST_FULL')).toEqual([825, 825]);
+    // @verified 2026-05-12: synthetic. Brecilien Bank shape (bounds (-80,-160)..(90,10)).
+    test('offset bounds expose width derived from min/max', () => {
+        expect(zonesDatabase.getMapBoundsSize('TEST_SMALL_OFFSET')).toEqual([170, 170]);
     });
 
-    // @verified 2026-05-12: synthetic. Brecilien main shape (812 x 1040 per upstream world.json).
-    test('returns stored rectangular size unchanged', () => {
-        expect(zonesDatabase.getZoneSize('TEST_RECT')).toEqual([812, 1040]);
+    // @verified 2026-05-12: synthetic. Centered bounds report (0, 0) center.
+    test('centered bounds report (0, 0) center', () => {
+        expect(zonesDatabase.getMapBoundsCenter('TEST_SMALL_CENTERED')).toEqual([0, 0]);
     });
 
-    // @verified 2026-05-12: synthetic. Older snapshots of zones.json predate the size field.
-    test('defaults to [825, 825] when the zone record carries no size field', () => {
-        expect(zonesDatabase.getZoneSize('TEST_NO_SIZE')).toEqual([825, 825]);
+    // @verified 2026-05-12: synthetic. Brecilien Bank shape: center at (5, -75) in cluster coords.
+    test('offset bounds report midpoint of min/max as center', () => {
+        expect(zonesDatabase.getMapBoundsCenter('TEST_SMALL_OFFSET')).toEqual([5, -75]);
+    });
+
+    // @verified 2026-05-12: synthetic. Outdoor average bounds = 830 game-units.
+    test('defaults to [830, 830] when the bounds field is missing', () => {
+        expect(zonesDatabase.getMapBoundsSize('TEST_NO_BOUNDS')).toEqual([830, 830]);
+    });
+
+    // @verified 2026-05-12: synthetic.
+    test('defaults to (0, 0) center when the bounds field is missing', () => {
+        expect(zonesDatabase.getMapBoundsCenter('TEST_NO_BOUNDS')).toEqual([0, 0]);
     });
 
     // @verified 2026-05-12: synthetic. Defensive fallback when an upstream dump emits malformed values.
-    test('defaults to [825, 825] when the size field is malformed', () => {
-        expect(zonesDatabase.getZoneSize('TEST_BAD_SIZE')).toEqual([825, 825]);
+    test('defaults to [830, 830] when the bounds field is malformed', () => {
+        expect(zonesDatabase.getMapBoundsSize('TEST_BAD_BOUNDS')).toEqual([830, 830]);
+    });
+
+    // @verified 2026-05-12: synthetic.
+    test('defaults to (0, 0) center when the bounds field is malformed', () => {
+        expect(zonesDatabase.getMapBoundsCenter('TEST_BAD_BOUNDS')).toEqual([0, 0]);
     });
 
     // @verified 2026-05-12: synthetic. Aligns with getZone(null) returning null.
-    test('defaults to [825, 825] for an unknown zone id', () => {
-        expect(zonesDatabase.getZoneSize('UNKNOWN_ZONE')).toEqual([825, 825]);
+    test('defaults to [830, 830] for an unknown zone id', () => {
+        expect(zonesDatabase.getMapBoundsSize('UNKNOWN_ZONE')).toEqual([830, 830]);
     });
 
-    // @verified 2026-05-12: synthetic. setMistOverride must propagate the origin zone size so the
-    // Mist clone behaves consistently with its origin cluster for any future map-rendering.
-    test('Mist override carries the origin zone size', () => {
+    // @verified 2026-05-12: synthetic. setMistOverride must propagate the origin bounds.
+    test('Mist override carries the origin map bounds', () => {
         zonesDatabase.clearAllMistOverrides();
-        zonesDatabase.setMistOverride('@MISTS@size-carry', 'TEST_SMALL');
-        expect(zonesDatabase.getZoneSize('@MISTS@size-carry')).toEqual([450, 450]);
+        zonesDatabase.setMistOverride('@MISTS@bounds-carry', 'TEST_SMALL_OFFSET');
+        expect(zonesDatabase.getMapBoundsSize('@MISTS@bounds-carry')).toEqual([170, 170]);
+        expect(zonesDatabase.getMapBoundsCenter('@MISTS@bounds-carry')).toEqual([5, -75]);
     });
 });
 
-describe('ZonesDatabase getZoneSize from real zones.json', () => {
-    // @verified 2026-05-12: regenerated zones.json. Live evidence in PR #120 session
-    // 2026-05-07 (Brecilien plaza misalignment).
-    test('Brecilien plaza 5001 carries the upstream 650 x 900 size', () => {
-        expect(zonesDatabase.getZoneSize('5001')).toEqual([650, 900]);
+describe('ZonesDatabase map bounds from real zones.json', () => {
+    // @verified 2026-05-12: regenerated zones.json. Live evidence on PR #120: Brecilien plaza 5001
+    // bounds = (-200,-200)..(200,200) per upstream cluster/world.json (-> 400x400, center (0,0)).
+    test('Brecilien plaza 5001 carries the upstream 400x400 centered bounds', () => {
+        expect(zonesDatabase.getMapBoundsSize('5001')).toEqual([400, 400]);
+        expect(zonesDatabase.getMapBoundsCenter('5001')).toEqual([0, 0]);
     });
 
-    // @verified 2026-05-12: regenerated zones.json.
-    test('Brecilien Bank 5002 carries the upstream 450 x 450 size', () => {
-        expect(zonesDatabase.getZoneSize('5002')).toEqual([450, 450]);
+    // @verified 2026-05-12: regenerated zones.json. Bank bounds = (-80,-160)..(90,10) per upstream.
+    test('Brecilien Bank 5002 carries the upstream 170x170 offset bounds', () => {
+        expect(zonesDatabase.getMapBoundsSize('5002')).toEqual([170, 170]);
+        expect(zonesDatabase.getMapBoundsCenter('5002')).toEqual([5, -75]);
     });
 
-    // @verified 2026-05-12: regenerated zones.json. Brecilien main is rectangular.
-    test('Brecilien main 5000 carries the upstream 812 x 1040 size', () => {
-        expect(zonesDatabase.getZoneSize('5000')).toEqual([812, 1040]);
+    // @verified 2026-05-12: regenerated zones.json. Brecilien main 5000 bounds = (-255,-355)..(445,345).
+    test('Brecilien main 5000 carries the upstream 700x700 offset bounds', () => {
+        expect(zonesDatabase.getMapBoundsSize('5000')).toEqual([700, 700]);
+        expect(zonesDatabase.getMapBoundsCenter('5000')).toEqual([95, -5]);
     });
 
     // @verified 2026-05-12: regenerated zones.json. Outdoor T5 BZ near the legacy 825 baseline.
-    test('Battlebrae Flatland 3316 carries the upstream 1042 x 1042 size', () => {
-        expect(zonesDatabase.getZoneSize('3316')).toEqual([1042, 1042]);
+    test('Battlebrae Flatland 3316 carries the upstream 830x830 centered bounds', () => {
+        expect(zonesDatabase.getMapBoundsSize('3316')).toEqual([830, 830]);
+        expect(zonesDatabase.getMapBoundsCenter('3316')).toEqual([0, 0]);
     });
 });

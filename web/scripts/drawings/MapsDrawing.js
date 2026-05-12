@@ -22,9 +22,13 @@ export class MapDrawing extends DrawingUtils
 
         const zoom = this.getZoomLevel();
         const scaleFactor = 4 * zoom;
-        const [width, height] = zonesDatabase.getZoneSize(curr_map.id);
-        const mapSize = Math.max(width, height);
-        this.DrawImageMap(ctx, curr_map.hX * scaleFactor, curr_map.hY * scaleFactor, curr_map.id.toString(), mapSize * scaleFactor, curr_map);
+        const id = curr_map.id.toString();
+        const [boundsW, boundsH] = zonesDatabase.getMapBoundsSize(id);
+        const [centerX, centerY] = zonesDatabase.getMapBoundsCenter(id);
+        const mapSize = Math.max(boundsW, boundsH);
+        const offsetX = (curr_map.hX - centerX) * scaleFactor;
+        const offsetY = (curr_map.hY + centerY) * scaleFactor;
+        this.DrawImageMap(ctx, offsetX, offsetY, id, mapSize * scaleFactor, curr_map);
     }
     DrawImageMap(ctx, x, y, imageName, size)
     {

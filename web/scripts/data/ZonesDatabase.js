@@ -102,7 +102,7 @@ export class ZonesDatabase {
       pvpType: forcedPvpType || inheritedPvpType,
       tier: 0,
       file: origin.file,
-      size: origin.size,
+      bounds: origin.bounds,
       originZoneId: String(originZoneId),
     });
     return true;
@@ -157,17 +157,30 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
-  getZoneSize(zoneId) {
-    const size = this.getZone(zoneId)?.size;
+  _resolveBounds(zoneId) {
+    const b = this.getZone(zoneId)?.bounds;
     if (
-      Array.isArray(size) &&
-      size.length === 2 &&
-      Number.isFinite(size[0]) &&
-      Number.isFinite(size[1])
+      b &&
+      Array.isArray(b.min) && Array.isArray(b.max) &&
+      b.min.length === 2 && b.max.length === 2 &&
+      Number.isFinite(b.min[0]) && Number.isFinite(b.min[1]) &&
+      Number.isFinite(b.max[0]) && Number.isFinite(b.max[1])
     ) {
-      return [size[0], size[1]];
+      return b;
     }
-    return [825, 825];
+    return null;
+  }
+
+  getMapBoundsSize(zoneId) {
+    const b = this._resolveBounds(zoneId);
+    if (!b) return [830, 830];
+    return [b.max[0] - b.min[0], b.max[1] - b.min[1]];
+  }
+
+  getMapBoundsCenter(zoneId) {
+    const b = this._resolveBounds(zoneId);
+    if (!b) return [0, 0];
+    return [(b.min[0] + b.max[0]) / 2, (b.min[1] + b.max[1]) / 2];
   }
 }
 
