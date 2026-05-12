@@ -76,11 +76,11 @@ describe('MapsDrawing per-zone bounds', () => {
         expect(tr[1]).toBeCloseTo(0, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Brecilien plaza shape (550x450 with center (-120, 20)
-    // per minimapgendata.json templatedata).
-    test('non-square plaza bounds draw image at W * sf x H * sf with center offset', () => {
+    // @verified 2026-05-12: synthetic. Non-square plaza shape (550x450) draws aspect-correct.
+    // Live evidence (PR #121, user feedback) confirmed the asset's pixel center maps to cluster
+    // (0, 0) regardless of the asymmetric vMin/vMax extent, so no center offset is applied.
+    test('non-square plaza bounds draw image at W * sf x H * sf with no center offset', () => {
         zonesDatabase.getMapBoundsSize.mockReturnValueOnce([550, 450]);
-        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([-120, 20]);
         const map = {id: '5001', hX: 0, hY: 0};
 
         drawing.draw(ctx, map);
@@ -89,32 +89,26 @@ describe('MapsDrawing per-zone bounds', () => {
         expect(drawCall[3]).toBeCloseTo(550 * 4, 6);
         expect(drawCall[4]).toBeCloseTo(450 * 4, 6);
         const tr = lastTranslate(ctx);
-        expect(tr[0]).toBeCloseTo(-120 * 4, 6);
-        expect(tr[1]).toBeCloseTo(20 * 4, 6);
+        expect(tr[0]).toBeCloseTo(0, 6);
+        expect(tr[1]).toBeCloseTo(0, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Brecilien Bank asset shape (450x450 with center (-60, 0)).
-    // Player at hX=0, hY=0. offsetX=(0 - -60)*4=240 -> translate X = -240.
-    // offsetY=(0 + 0)*4=0.
-    test('offset square bank-shape draws with horizontal asset-center shift', () => {
+    // @verified 2026-05-12: synthetic. Player movement translates by lpX * sf without any extra
+    // asset-center shift.
+    test('player movement translates by lpX*sf, lpY*sf only', () => {
         zonesDatabase.getMapBoundsSize.mockReturnValueOnce([450, 450]);
-        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([-60, 0]);
-        const map = {id: '5002', hX: 0, hY: 0};
+        const map = {id: '5002', hX: 50, hY: -30};
 
         drawing.draw(ctx, map);
 
-        const drawCall = ctx.drawImage.mock.calls[0];
-        expect(drawCall[3]).toBeCloseTo(450 * 4, 6);
-        expect(drawCall[4]).toBeCloseTo(450 * 4, 6);
         const tr = lastTranslate(ctx);
-        expect(tr[0]).toBeCloseTo(-(0 - -60) * 4, 6);
-        expect(tr[1]).toBeCloseTo((0 + 0) * 4, 6);
+        expect(tr[0]).toBeCloseTo(-50 * 4, 6);
+        expect(tr[1]).toBeCloseTo(-30 * 4, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Tetford Market asset shape (70x70 center (0, 80)).
-    test('tiny offset asset bounds compute the asset-center translation', () => {
+    // @verified 2026-05-12: synthetic. Tetford Market asset shape (70x70) draws at the asset size.
+    test('tiny asset bounds draw image at 70 * sf', () => {
         zonesDatabase.getMapBoundsSize.mockReturnValueOnce([70, 70]);
-        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([0, 80]);
         const map = {id: '0007', hX: 0, hY: 0};
 
         drawing.draw(ctx, map);
@@ -122,15 +116,11 @@ describe('MapsDrawing per-zone bounds', () => {
         const drawCall = ctx.drawImage.mock.calls[0];
         expect(drawCall[3]).toBeCloseTo(70 * 4, 6);
         expect(drawCall[4]).toBeCloseTo(70 * 4, 6);
-        const tr = lastTranslate(ctx);
-        expect(tr[0]).toBeCloseTo(0, 6);
-        expect(tr[1]).toBeCloseTo(80 * 4, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Zoom multiplier flows through W, H and offset uniformly.
-    test('zoom multiplier scales W, H, player offset and asset offset uniformly', () => {
+    // @verified 2026-05-12: synthetic. Zoom multiplier flows through W, H and player offset.
+    test('zoom multiplier scales W, H, and player offset uniformly', () => {
         zonesDatabase.getMapBoundsSize.mockReturnValueOnce([550, 450]);
-        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([-120, 20]);
         drawing.getZoomLevel.mockReturnValue(2.0);
         const map = {id: '5001', hX: 10, hY: -5};
 
@@ -140,8 +130,8 @@ describe('MapsDrawing per-zone bounds', () => {
         expect(drawCall[3]).toBeCloseTo(550 * 8, 6);
         expect(drawCall[4]).toBeCloseTo(450 * 8, 6);
         const tr = lastTranslate(ctx);
-        expect(tr[0]).toBeCloseTo(-(10 - -120) * 8, 6);
-        expect(tr[1]).toBeCloseTo((-5 + 20) * 8, 6);
+        expect(tr[0]).toBeCloseTo(-10 * 8, 6);
+        expect(tr[1]).toBeCloseTo(-5 * 8, 6);
     });
 
     // @verified 2026-05-12: synthetic. Negative id is the "no map" sentinel from MapH(-1) at boot.

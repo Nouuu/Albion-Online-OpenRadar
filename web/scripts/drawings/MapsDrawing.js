@@ -24,10 +24,7 @@ export class MapDrawing extends DrawingUtils
         const scaleFactor = 4 * zoom;
         const id = curr_map.id.toString();
         const [boundsW, boundsH] = zonesDatabase.getMapBoundsSize(id);
-        const [centerX, centerY] = zonesDatabase.getMapBoundsCenter(id);
-        const offsetX = (curr_map.hX - centerX) * scaleFactor;
-        const offsetY = (curr_map.hY + centerY) * scaleFactor;
-        this.DrawImageMap(ctx, offsetX, offsetY, id, boundsW * scaleFactor, boundsH * scaleFactor);
+        this.DrawImageMap(ctx, curr_map.hX * scaleFactor, curr_map.hY * scaleFactor, id, boundsW * scaleFactor, boundsH * scaleFactor);
     }
     DrawImageMap(ctx, x, y, imageName, drawWidth, drawHeight)
     {
