@@ -14,6 +14,7 @@ interface ZoneInfo {
     pvpType: PvpType;
     tier: number;
     file: string;
+    size?: [number, number];
 }
 
 // ============================================================================
@@ -353,13 +354,23 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
             const file = cluster['@file'] || '';
             const filename = file.replace('.cluster.xml', '');
 
-            zones[id] = {
+            const zone: ZoneInfo = {
                 name: displayName,
                 type: type,
                 pvpType: getPvpType(type),
                 tier: extractTier(file),
                 file: filename
             };
+
+            const sizeAttr = cluster['@size'];
+            if (typeof sizeAttr === 'string') {
+                const parts = sizeAttr.trim().split(/\s+/).map(parseFloat);
+                if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])) {
+                    zone.size = [parts[0], parts[1]];
+                }
+            }
+
+            zones[id] = zone;
         }
 
         fs.writeFileSync(outputPath, JSON.stringify(zones));

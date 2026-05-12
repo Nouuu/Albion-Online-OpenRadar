@@ -99,3 +99,89 @@ describe('ZonesDatabase mist overrides', () => {
         expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('yellow');
     });
 });
+
+describe('ZonesDatabase getZoneSize', () => {
+    beforeAll(() => {
+        zonesDatabase.zones['TEST_SMALL'] = {
+            name: 'Test Small', type: 'PLAYERCITY_SAFEAREA_NOFURNITURE',
+            pvpType: 'safe', tier: 1, file: 'TEST_SMALL', size: [450, 450]
+        };
+        zonesDatabase.zones['TEST_FULL'] = {
+            name: 'Test Full', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_FULL', size: [825, 825]
+        };
+        zonesDatabase.zones['TEST_RECT'] = {
+            name: 'Test Rect', type: 'PLAYERCITY_BLACK',
+            pvpType: 'safe', tier: 1, file: 'TEST_RECT', size: [812, 1040]
+        };
+        zonesDatabase.zones['TEST_NO_SIZE'] = {
+            name: 'Test No Size', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_NO_SIZE'
+        };
+        zonesDatabase.zones['TEST_BAD_SIZE'] = {
+            name: 'Test Bad Size', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_BAD_SIZE', size: ['oops', null]
+        };
+    });
+
+    // @verified 2026-05-12: synthetic. Brecilien Bank shape (450 x 450 per upstream world.json).
+    test('returns stored size for a small city sub-zone shape', () => {
+        expect(zonesDatabase.getZoneSize('TEST_SMALL')).toEqual([450, 450]);
+    });
+
+    // @verified 2026-05-12: synthetic. Average outdoor cluster shape near the legacy 825 baseline.
+    test('returns stored size for a full-sized outdoor zone shape', () => {
+        expect(zonesDatabase.getZoneSize('TEST_FULL')).toEqual([825, 825]);
+    });
+
+    // @verified 2026-05-12: synthetic. Brecilien main shape (812 x 1040 per upstream world.json).
+    test('returns stored rectangular size unchanged', () => {
+        expect(zonesDatabase.getZoneSize('TEST_RECT')).toEqual([812, 1040]);
+    });
+
+    // @verified 2026-05-12: synthetic. Older snapshots of zones.json predate the size field.
+    test('defaults to [825, 825] when the zone record carries no size field', () => {
+        expect(zonesDatabase.getZoneSize('TEST_NO_SIZE')).toEqual([825, 825]);
+    });
+
+    // @verified 2026-05-12: synthetic. Defensive fallback when an upstream dump emits malformed values.
+    test('defaults to [825, 825] when the size field is malformed', () => {
+        expect(zonesDatabase.getZoneSize('TEST_BAD_SIZE')).toEqual([825, 825]);
+    });
+
+    // @verified 2026-05-12: synthetic. Aligns with getZone(null) returning null.
+    test('defaults to [825, 825] for an unknown zone id', () => {
+        expect(zonesDatabase.getZoneSize('UNKNOWN_ZONE')).toEqual([825, 825]);
+    });
+
+    // @verified 2026-05-12: synthetic. setMistOverride must propagate the origin zone size so the
+    // Mist clone behaves consistently with its origin cluster for any future map-rendering.
+    test('Mist override carries the origin zone size', () => {
+        zonesDatabase.clearAllMistOverrides();
+        zonesDatabase.setMistOverride('@MISTS@size-carry', 'TEST_SMALL');
+        expect(zonesDatabase.getZoneSize('@MISTS@size-carry')).toEqual([450, 450]);
+    });
+});
+
+describe('ZonesDatabase getZoneSize from real zones.json', () => {
+    // @verified 2026-05-12: regenerated zones.json. Live evidence in PR #120 session
+    // 2026-05-07 (Brecilien plaza misalignment).
+    test('Brecilien plaza 5001 carries the upstream 650 x 900 size', () => {
+        expect(zonesDatabase.getZoneSize('5001')).toEqual([650, 900]);
+    });
+
+    // @verified 2026-05-12: regenerated zones.json.
+    test('Brecilien Bank 5002 carries the upstream 450 x 450 size', () => {
+        expect(zonesDatabase.getZoneSize('5002')).toEqual([450, 450]);
+    });
+
+    // @verified 2026-05-12: regenerated zones.json. Brecilien main is rectangular.
+    test('Brecilien main 5000 carries the upstream 812 x 1040 size', () => {
+        expect(zonesDatabase.getZoneSize('5000')).toEqual([812, 1040]);
+    });
+
+    // @verified 2026-05-12: regenerated zones.json. Outdoor T5 BZ near the legacy 825 baseline.
+    test('Battlebrae Flatland 3316 carries the upstream 1042 x 1042 size', () => {
+        expect(zonesDatabase.getZoneSize('3316')).toEqual([1042, 1042]);
+    });
+});
