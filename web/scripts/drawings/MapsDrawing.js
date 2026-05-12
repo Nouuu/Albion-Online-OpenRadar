@@ -25,14 +25,12 @@ export class MapDrawing extends DrawingUtils
         const id = curr_map.id.toString();
         const [boundsW, boundsH] = zonesDatabase.getMapBoundsSize(id);
         const [centerX, centerY] = zonesDatabase.getMapBoundsCenter(id);
-        const mapSize = Math.max(boundsW, boundsH);
         const offsetX = (curr_map.hX - centerX) * scaleFactor;
         const offsetY = (curr_map.hY + centerY) * scaleFactor;
-        this.DrawImageMap(ctx, offsetX, offsetY, id, mapSize * scaleFactor, curr_map);
+        this.DrawImageMap(ctx, offsetX, offsetY, id, boundsW * scaleFactor, boundsH * scaleFactor);
     }
-    DrawImageMap(ctx, x, y, imageName, size)
+    DrawImageMap(ctx, x, y, imageName, drawWidth, drawHeight)
     {
-        // Fill background => if no map image or corner to prevent glitch textures
         ctx.fillStyle = '#1a1c23';
         ctx.fillRect(0, 0, ctx.width, ctx.height);
 
@@ -58,7 +56,7 @@ export class MapDrawing extends DrawingUtils
             ctx.rotate(-0.785398);
             ctx.translate(-x, y);
 
-            ctx.drawImage(preloadedImage, -size/2, -size/2, size, size);
+            ctx.drawImage(preloadedImage, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
             ctx.restore();
         }
         else
