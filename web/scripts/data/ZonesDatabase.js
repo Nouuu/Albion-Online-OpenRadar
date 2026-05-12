@@ -103,6 +103,7 @@ export class ZonesDatabase {
       tier: 0,
       file: origin.file,
       bounds: origin.bounds,
+      asset: origin.asset,
       originZoneId: String(originZoneId),
     });
     return true;
@@ -157,17 +158,21 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
-  _resolveBounds(zoneId) {
-    const b = this.getZone(zoneId)?.bounds;
-    if (
+  _isValidBounds(b) {
+    return (
       b &&
       Array.isArray(b.min) && Array.isArray(b.max) &&
       b.min.length === 2 && b.max.length === 2 &&
       Number.isFinite(b.min[0]) && Number.isFinite(b.min[1]) &&
       Number.isFinite(b.max[0]) && Number.isFinite(b.max[1])
-    ) {
-      return b;
-    }
+    );
+  }
+
+  _resolveBounds(zoneId) {
+    const zone = this.getZone(zoneId);
+    if (!zone) return null;
+    if (this._isValidBounds(zone.asset)) return zone.asset;
+    if (this._isValidBounds(zone.bounds)) return zone.bounds;
     return null;
   }
 
