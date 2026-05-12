@@ -15,6 +15,7 @@ interface ZoneInfo {
     tier: number;
     file: string;
     bounds?: {min: [number, number], max: [number, number]};
+    asset?: {min: [number, number], max: [number, number]};
 }
 
 // ============================================================================
@@ -378,6 +379,9 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
             zones[id] = zone;
         }
 
+        const assetCount = await mergeAssetBoundsFromMinimapGenData(zones);
+        console.log(`   🖼️ Asset bounds resolved for ${assetCount} pre-rendered clusters`);
+
         fs.writeFileSync(outputPath, JSON.stringify(zones));
         console.log(`💾 Generated zones.json with ${Object.keys(zones).length} zones`);
 
@@ -392,6 +396,92 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
         console.error(`❌ Failed to parse world.json: ${error}`);
         return {success: false, zonesCount: 0};
     }
+}
+
+function parseVec2(raw: unknown): [number, number] | null {
+    if (typeof raw !== 'string') return null;
+    const parts = raw.trim().split(/\s+/).map(parseFloat);
+    if (parts.length !== 2 || !parts.every(Number.isFinite)) return null;
+    return [parts[0], parts[1]];
+}
+
+interface TemplateBounds {
+    min: [number, number];
+    max: [number, number];
+}
+
+const TEMPLATE_INSTANCE_REGEX = /<templateinstance\b[^>]*\bref="([^"]+)"[^>]*\bpos="([^"]+)"/s;
+
+async function mergeAssetBoundsFromMinimapGenData(zones: Record<string, ZoneInfo>): Promise<number> {
+    const minimapUrl = `${GITHUB_RAW_BASE}/minimapgendata.json`;
+    console.log('\n🗺️  Downloading minimapgendata.json...');
+    const minimapRes = await downloadFile(minimapUrl);
+    if (minimapRes.status !== DownloadStatus.SUCCESS || !minimapRes.buffer) {
+        console.warn(`⚠️ Failed to download minimapgendata.json: ${minimapRes.message}. Skipping asset bounds.`);
+        return 0;
+    }
+
+    let minimapData: any;
+    try {
+        minimapData = JSON.parse(minimapRes.buffer.toString('utf-8'));
+    } catch (e) {
+        console.warn(`⚠️ minimapgendata.json parse failed: ${e}. Skipping asset bounds.`);
+        return 0;
+    }
+
+    const templates = new Map<string, TemplateBounds>();
+    for (const t of minimapData?.minimapgendata?.templatedata?.temp ?? []) {
+        const min = parseVec2(t?.['@vMin']);
+        const max = parseVec2(t?.['@vMax']);
+        if (t?.['@name'] && min && max) {
+            templates.set(t['@name'], {min, max});
+        }
+    }
+
+    const preg: string[] = [];
+    for (const c of minimapData?.minimapgendata?.pregeneratedclustertextures?.cluster ?? []) {
+        if (c?.['@name']) preg.push(c['@name']);
+    }
+
+    const fileToId = new Map<string, string>();
+    for (const [zid, zone] of Object.entries(zones)) {
+        if (zone.file) fileToId.set(zone.file, zid);
+    }
+
+    const targets = preg.filter(name => fileToId.has(name));
+    console.log(`   ⏬ Fetching ${targets.length} cluster.xml files for asset bounds...`);
+
+    const concurrency = 16;
+    let resolved = 0;
+    let i = 0;
+    async function worker() {
+        while (true) {
+            const idx = i++;
+            if (idx >= targets.length) return;
+            const name = targets[idx];
+            const url = `${GITHUB_RAW_BASE}/cluster/${name}.cluster.xml`;
+            const res = await downloadFile(url);
+            if (res.status !== DownloadStatus.SUCCESS || !res.buffer) continue;
+            const xml = res.buffer.toString('utf-8');
+            const m = TEMPLATE_INSTANCE_REGEX.exec(xml);
+            if (!m) continue;
+            const ref = m[1];
+            const posParts = m[2].trim().split(/\s+/).map(parseFloat);
+            if (posParts.length < 3 || !posParts.slice(0, 3).every(Number.isFinite)) continue;
+            const tpl = templates.get(ref);
+            if (!tpl) continue;
+            const px = posParts[0], pz = posParts[2];
+            const assetMin: [number, number] = [tpl.min[0] + px, tpl.min[1] + pz];
+            const assetMax: [number, number] = [tpl.max[0] + px, tpl.max[1] + pz];
+            const zid = fileToId.get(name);
+            if (zid && zones[zid]) {
+                zones[zid].asset = {min: assetMin, max: assetMax};
+                resolved++;
+            }
+        }
+    }
+    await Promise.all(Array.from({length: concurrency}, () => worker()));
+    return resolved;
 }
 
 // ============================================================================
