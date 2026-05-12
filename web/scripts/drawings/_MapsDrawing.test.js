@@ -1,6 +1,6 @@
-// synthetic: ctx.drawImage call inspection. Per-zone size resolution is exercised via stubbed
-// zonesDatabase.getZoneSize - the actual upstream values for the same ids are covered in the
-// _ZonesDatabase.test.js suite that loads zones.json.
+// synthetic: ctx.drawImage and ctx.translate inspection. The map asset is drawn at the cluster's
+// minimapBounds extent and its center is translated to match the bounds midpoint in cluster coords.
+// Real-zone values for the same ids live in _ZonesDatabase.test.js.
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
@@ -20,7 +20,8 @@ vi.mock('../utils/ImageCache.js', () => ({
 
 vi.mock('../data/ZonesDatabase.js', () => ({
     default: {
-        getZoneSize: vi.fn(() => [825, 825]),
+        getMapBoundsSize: vi.fn(() => [830, 830]),
+        getMapBoundsCenter: vi.fn(() => [0, 0]),
     },
 }));
 
@@ -42,7 +43,12 @@ function buildCtx() {
     };
 }
 
-describe('MapsDrawing per-zone size', () => {
+function lastTranslate(ctx) {
+    const calls = ctx.translate.mock.calls;
+    return calls[calls.length - 1];
+}
+
+describe('MapsDrawing per-zone bounds', () => {
     let drawing;
     let ctx;
 
@@ -54,62 +60,86 @@ describe('MapsDrawing per-zone size', () => {
         ctx = buildCtx();
     });
 
-    // @verified 2026-05-12: synthetic. Legacy baseline 825 -> 825*4*1.0 = 3300 canvas pixels.
-    test('full-size square zone draws image at 825 * scaleFactor', () => {
-        zonesDatabase.getZoneSize.mockReturnValueOnce([825, 825]);
-        const map = {id: 1000, hX: 0, hY: 0};
+    // @verified 2026-05-12: synthetic. Default 830x830 bounds match the legacy outdoor baseline.
+    test('default bounds draw image at 830 * scaleFactor and apply no center offset', () => {
+        zonesDatabase.getMapBoundsSize.mockReturnValueOnce([830, 830]);
+        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([0, 0]);
+        const map = {id: '0212', hX: 0, hY: 0};
 
         drawing.draw(ctx, map);
 
-        const call = ctx.drawImage.mock.calls[0];
-        const drawnSize = call[3];
-        expect(drawnSize).toBeCloseTo(3300, 6);
-        expect(call[4]).toBeCloseTo(3300, 6);
+        const drawCall = ctx.drawImage.mock.calls[0];
+        expect(drawCall[3]).toBeCloseTo(3320, 6);
+        expect(drawCall[4]).toBeCloseTo(3320, 6);
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(0, 6);
+        expect(tr[1]).toBeCloseTo(0, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Brecilien Bank-shaped 450x450 -> 450*4 = 1800 canvas pixels,
-    // not the legacy 3300. Regression guard for the small sub-zone class.
-    test('small square sub-zone draws image at 450 * scaleFactor', () => {
-        zonesDatabase.getZoneSize.mockReturnValueOnce([450, 450]);
-        const map = {id: 5002, hX: 0, hY: 0};
+    // @verified 2026-05-12: synthetic. Brecilien plaza shape (400x400 centered).
+    test('centered small bounds draw at 400 * scaleFactor with no offset', () => {
+        zonesDatabase.getMapBoundsSize.mockReturnValueOnce([400, 400]);
+        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([0, 0]);
+        const map = {id: '5001', hX: 50, hY: -30};
 
         drawing.draw(ctx, map);
 
-        const call = ctx.drawImage.mock.calls[0];
-        expect(call[3]).toBeCloseTo(1800, 6);
-        expect(call[4]).toBeCloseTo(1800, 6);
+        const drawCall = ctx.drawImage.mock.calls[0];
+        expect(drawCall[3]).toBeCloseTo(1600, 6);
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(-50 * 4, 6);
+        expect(tr[1]).toBeCloseTo(-30 * 4, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Brecilien main shape 812x1040 -> max(W,H)=1040 -> 1040*4=4160.
-    // Keeps the image square; documented limitation in the design spec.
-    test('rectangular zone draws image at max(W,H) * scaleFactor', () => {
-        zonesDatabase.getZoneSize.mockReturnValueOnce([812, 1040]);
-        const map = {id: 5000, hX: 0, hY: 0};
+    // @verified 2026-05-12: synthetic. Brecilien Bank shape (170x170 with bounds center (5, -75)).
+    // Player at lpX=10, lpY=20 (hY = -lpY = -20). Image must be translated so bounds center (5, -75)
+    // lands at image origin: translate(-(hX - cx) * sf, (hY + cy) * sf) = (-(10-5)*4, (-20 + -75)*4)
+    // = (-20, -380).
+    test('offset small bounds apply center offset to the translation', () => {
+        zonesDatabase.getMapBoundsSize.mockReturnValueOnce([170, 170]);
+        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([5, -75]);
+        const map = {id: '5002', hX: 10, hY: -20};
 
         drawing.draw(ctx, map);
 
-        const call = ctx.drawImage.mock.calls[0];
-        expect(call[3]).toBeCloseTo(4160, 6);
-        expect(call[4]).toBeCloseTo(4160, 6);
+        const drawCall = ctx.drawImage.mock.calls[0];
+        expect(drawCall[3]).toBeCloseTo(170 * 4, 6);
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(-(10 - 5) * 4, 6);
+        expect(tr[1]).toBeCloseTo((-20 + -75) * 4, 6);
     });
 
-    // @verified 2026-05-12: synthetic. Zoom multiplier passes through both player position and map size
-    // so they stay aligned.
-    test('zoom multiplier scales both player position and map size consistently', () => {
-        zonesDatabase.getZoneSize.mockReturnValueOnce([450, 450]);
+    // @verified 2026-05-12: synthetic. Brecilien main shape (700x700 with bounds center (95, -5)).
+    // Player at hX=0, hY=0. With offsetX = (0 - 95) * 4 = -380 passed to DrawImageMap,
+    // the inner ctx.translate(-offsetX, offsetY) yields translate(380, -20).
+    test('offset rectangular-cluster bounds still use bounds center, not @size', () => {
+        zonesDatabase.getMapBoundsSize.mockReturnValueOnce([700, 700]);
+        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([95, -5]);
+        const map = {id: '5000', hX: 0, hY: 0};
+
+        drawing.draw(ctx, map);
+
+        const drawCall = ctx.drawImage.mock.calls[0];
+        expect(drawCall[3]).toBeCloseTo(700 * 4, 6);
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(95 * 4, 6);
+        expect(tr[1]).toBeCloseTo(-5 * 4, 6);
+    });
+
+    // @verified 2026-05-12: synthetic. Zoom multiplier flows through size and offset uniformly.
+    test('zoom multiplier scales size, player offset and bounds offset uniformly', () => {
+        zonesDatabase.getMapBoundsSize.mockReturnValueOnce([170, 170]);
+        zonesDatabase.getMapBoundsCenter.mockReturnValueOnce([5, -75]);
         drawing.getZoomLevel.mockReturnValue(2.0);
-        const map = {id: 5002, hX: 100, hY: 50};
+        const map = {id: '5002', hX: 10, hY: -20};
 
         drawing.draw(ctx, map);
 
-        // scaleFactor = 4 * 2.0 = 8
-        const translateCalls = ctx.translate.mock.calls;
-        const lastTranslate = translateCalls[translateCalls.length - 1];
-        expect(lastTranslate[0]).toBeCloseTo(-100 * 8, 6);
-        expect(lastTranslate[1]).toBeCloseTo(50 * 8, 6);
-
-        const call = ctx.drawImage.mock.calls[0];
-        expect(call[3]).toBeCloseTo(450 * 8, 6);
+        const drawCall = ctx.drawImage.mock.calls[0];
+        expect(drawCall[3]).toBeCloseTo(170 * 8, 6);
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(-(10 - 5) * 8, 6);
+        expect(tr[1]).toBeCloseTo((-20 + -75) * 8, 6);
     });
 
     // @verified 2026-05-12: synthetic. Negative id is the "no map" sentinel from MapH(-1) at boot.

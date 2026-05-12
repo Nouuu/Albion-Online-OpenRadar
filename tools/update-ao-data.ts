@@ -14,7 +14,7 @@ interface ZoneInfo {
     pvpType: PvpType;
     tier: number;
     file: string;
-    size?: [number, number];
+    bounds?: {min: [number, number], max: [number, number]};
 }
 
 // ============================================================================
@@ -362,11 +362,16 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
                 file: filename
             };
 
-            const sizeAttr = cluster['@size'];
-            if (typeof sizeAttr === 'string') {
-                const parts = sizeAttr.trim().split(/\s+/).map(parseFloat);
-                if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])) {
-                    zone.size = [parts[0], parts[1]];
+            const minAttr = cluster['@minimapBoundsMin'];
+            const maxAttr = cluster['@minimapBoundsMax'];
+            if (typeof minAttr === 'string' && typeof maxAttr === 'string') {
+                const mins = minAttr.trim().split(/\s+/).map(parseFloat);
+                const maxs = maxAttr.trim().split(/\s+/).map(parseFloat);
+                if (
+                    mins.length === 2 && maxs.length === 2 &&
+                    mins.every(Number.isFinite) && maxs.every(Number.isFinite)
+                ) {
+                    zone.bounds = {min: [mins[0], mins[1]], max: [maxs[0], maxs[1]]};
                 }
             }
 
