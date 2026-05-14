@@ -482,6 +482,14 @@ export function onEvent(Parameters) {
             }
             break;
         }
+
+        case EventCodes.NewMistsDungeonExit: {
+            const id = Parameters[0];
+            const pos = Parameters[2];
+            if (!Array.isArray(pos) || pos.length !== 2) break;
+            handlers.mistsDungeonHandler?.addPortal(id, pos[0], pos[1], Parameters[3]);
+            break;
+        }
     }
 }
 

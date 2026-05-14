@@ -64,7 +64,8 @@ describe('EventRouter', () => {
             chestsHandler: {removeChest: vi.fn(), addChestEvent: vi.fn()},
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
-            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()}
+            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
+            mistsDungeonHandler: {addPortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()}
         };
 
         map = {id: -1, hX: 0, hY: 0, isBZ: false};
@@ -1256,6 +1257,25 @@ describe('EventRouter', () => {
             EventRouter.reset();
 
             expect(EventRouter._debugGetLastActiveMistOverride()).toBeNull();
+        });
+    });
+
+    describe('MIST-119 NewMistsDungeonExit dispatch', () => {
+        // @verified 2026-05-14: pcap-derived dungeon-exit-spawn fixture (capture 19-38-46).
+        test('event 536 routes to mistsDungeonHandler.addPortal with id, position, rawParam3', async () => {
+            const fix = await loadFixture('mists', 'dungeon-exit-spawn');
+            const p = normalizeParams(fix.messages[0].parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.mistsDungeonHandler.addPortal).toHaveBeenCalledWith(p[0], p[2][0], p[2][1], p[3]);
+        });
+
+        // @verified 2026-05-14: synthetic guard. Missing position skips dispatch.
+        test('event 536 with missing position does not call addPortal', () => {
+            EventRouter.onEvent({0: 1, 252: 536, 3: 90});
+
+            expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });
     });
 });
