@@ -87,7 +87,6 @@ export class ZonesDatabase {
       tier: 0,
       file: origin.file,
       bounds: origin.bounds,
-      asset: origin.asset,
       originZoneId: String(originZoneId),
     });
     return true;

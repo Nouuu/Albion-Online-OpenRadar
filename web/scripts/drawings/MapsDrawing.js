@@ -32,6 +32,7 @@ export class MapDrawing extends DrawingUtils
     }
     DrawImageMap(ctx, x, y, imageName, drawWidth, drawHeight)
     {
+        // Fill background => if no map image or corner to prevent glitch textures
         ctx.fillStyle = '#1a1c23';
         ctx.fillRect(0, 0, ctx.width, ctx.height);
 
