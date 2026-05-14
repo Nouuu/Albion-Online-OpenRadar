@@ -98,6 +98,24 @@ describe('ZonesDatabase mist overrides', () => {
 
         expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('yellow');
     });
+
+    // @verified 2026-05-12: source captures A/C/D op 473 param[2] discriminant.
+    // Brecilien city origin (safe) with explicit pvpType override = black for lethal Mists.
+    test('setMistOverride accepts forcedPvpType overriding origin pvpType', () => {
+        const ok = zonesDatabase.setMistOverride('@MISTS@brec-letal', '5001', 'black');
+
+        expect(ok).toBe(true);
+        expect(zonesDatabase.getPvpType('@MISTS@brec-letal')).toBe('black');
+        expect(zonesDatabase.getZoneName('@MISTS@brec-letal')).toBe('Mist of Brecilien');
+    });
+
+    // @verified 2026-05-12: backward compatibility check.
+    test('setMistOverride without forcedPvpType keeps origin pvpType', () => {
+        const ok = zonesDatabase.setMistOverride('@MISTS@brec-default', '5001');
+
+        expect(ok).toBe(true);
+        expect(zonesDatabase.getPvpType('@MISTS@brec-default')).toBe('safe');
+    });
 });
 
 describe('ZonesDatabase Avalon Roads pvpType', () => {

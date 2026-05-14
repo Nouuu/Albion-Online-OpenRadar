@@ -84,7 +84,7 @@ export class ZonesDatabase {
     return zone;
   }
 
-  setMistOverride(mistMapId, originZoneId) {
+  setMistOverride(mistMapId, originZoneId, forcedPvpType) {
     const origin = this.getZone(originZoneId);
     if (!origin) {
       window.logger?.warn(CATEGORIES.MAP, "MistOverrideUnknownOrigin", {
@@ -96,7 +96,7 @@ export class ZonesDatabase {
     this.overrides.set(String(mistMapId), {
       name: `Mist of ${origin.name}`,
       type: "MISTS",
-      pvpType: origin.pvpType,
+      pvpType: forcedPvpType || origin.pvpType,
       tier: 0,
       file: origin.file,
       originZoneId: String(originZoneId),
