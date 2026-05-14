@@ -1102,4 +1102,38 @@ describe('EventRouter', () => {
             sessionStorage.clear();
         });
     });
+
+    // -------------------------------------------------------------------------
+    // MIST-117 op 473 discriminant onRequest
+    // -------------------------------------------------------------------------
+    describe('MIST-117 op 473 discriminant onRequest', () => {
+        // @verified 2026-05-12: capture 21-44-17 Mist#0 (Brecilien solo non-lethal).
+        // op 473 without param[2] caches a non-lethal pending choice.
+        test('onRequest op 473 without param[2] caches lethal=false', () => {
+            EventRouter.onRequest({0: 639142120646035908, 1: 8, 253: 473});
+
+            expect(EventRouter._debugGetPendingMistChoice()).toMatchObject({lethal: false});
+        });
+
+        // @verified 2026-05-12: capture 21-44-17 Mist#1 (solo lethal, param[2]=2).
+        test('onRequest op 473 with param[2]=2 caches lethal=true (solo lethal)', () => {
+            EventRouter.onRequest({0: 639142123857865908, 1: 8, 2: 2, 253: 473});
+
+            expect(EventRouter._debugGetPendingMistChoice()).toMatchObject({lethal: true});
+        });
+
+        // @verified 2026-05-12: capture 23-28-09 Mist#0 (duo lethal, param[2]=4).
+        test('onRequest op 473 with param[2]=4 caches lethal=true (duo lethal)', () => {
+            EventRouter.onRequest({0: 639142180996055908, 1: 8, 2: 4, 253: 473});
+
+            expect(EventRouter._debugGetPendingMistChoice()).toMatchObject({lethal: true});
+        });
+
+        // @verified 2026-05-12: synthetic guard. op 473 with param[1] != 8 ignored (not a Brecilien NPC interaction).
+        test('onRequest op 473 with param[1] != 8 ignored', () => {
+            EventRouter.onRequest({0: 999, 1: 99, 253: 473});
+
+            expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
+        });
+    });
 });

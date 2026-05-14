@@ -14,6 +14,7 @@ function syncMapIsBZ() {
 // Map change debouncing
 const MAP_CHANGE_DEBOUNCE_MS = 4000;
 let lastMapChangeTime = 0;
+let pendingMistChoice = null;
 
 // Local player position (relative coords)
 let lpX = 0.0;
@@ -201,6 +202,10 @@ export function setRadarRenderer(renderer) {
 
 export function getLocalPlayerPosition() {
     return {x: lpX, y: lpY};
+}
+
+export function _debugGetPendingMistChoice() {
+    return pendingMistChoice;
 }
 
 export function restoreMistOverrideFromSession() {
@@ -451,6 +456,17 @@ export function onRequest(Parameters) {
             });
         }
     }
+
+    if (Parameters[253] == OperationCodes.MistsUseStaticEntrance && Parameters[1] == 8) {
+        pendingMistChoice = {
+            ts: Date.now(),
+            lethal: Parameters[2] !== undefined,
+        };
+        window.logger?.info(CATEGORIES.MAP, 'MistChoicePending', {
+            lethal: pendingMistChoice.lethal,
+            mode: Parameters[2] ?? null,
+        });
+    }
 }
 
 export function onResponse(Parameters, clearHandlersCallback) {
@@ -474,6 +490,7 @@ export function reset() {
     window.lpX = 0;
     window.lpY = 0;
     lastMapChangeTime = 0;
+    pendingMistChoice = null;
 
     // Clear references to prevent memory leaks
     handlers = null;
