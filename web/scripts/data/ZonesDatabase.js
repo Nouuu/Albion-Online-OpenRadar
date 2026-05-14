@@ -159,19 +159,19 @@ export class ZonesDatabase {
   }
 
   getMapAssetExtent(zoneId) {
-    const a = this.getZone(zoneId)?.asset;
+    const b = this.getZone(zoneId)?.bounds;
     if (
-      !a ||
-      !Array.isArray(a.min) || !Array.isArray(a.max) ||
-      a.min.length !== 2 || a.max.length !== 2 ||
-      !Number.isFinite(a.min[0]) || !Number.isFinite(a.min[1]) ||
-      !Number.isFinite(a.max[0]) || !Number.isFinite(a.max[1])
+      !b ||
+      !Array.isArray(b.min) || !Array.isArray(b.max) ||
+      b.min.length !== 2 || b.max.length !== 2 ||
+      !Number.isFinite(b.min[0]) || !Number.isFinite(b.min[1]) ||
+      !Number.isFinite(b.max[0]) || !Number.isFinite(b.max[1])
     ) {
       return 825;
     }
     return 2 * Math.max(
-      Math.abs(a.min[0]), Math.abs(a.max[0]),
-      Math.abs(a.min[1]), Math.abs(a.max[1])
+      Math.abs(b.min[0]), Math.abs(b.max[0]),
+      Math.abs(b.min[1]), Math.abs(b.max[1])
     );
   }
 }
