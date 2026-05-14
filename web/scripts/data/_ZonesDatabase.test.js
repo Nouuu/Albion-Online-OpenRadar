@@ -102,96 +102,95 @@ describe('ZonesDatabase mist overrides', () => {
 
 describe('ZonesDatabase map asset extent', () => {
     beforeAll(() => {
-        zonesDatabase.zones['TEST_OFFSET_ASSET'] = {
-            name: 'Test Offset Asset', type: 'PLAYERCITY_BLACK_NOFURNITURE',
-            pvpType: 'safe', tier: 1, file: 'TEST_OFFSET_ASSET',
-            asset: {min: [-285, -225], max: [165, 225]}
+        zonesDatabase.zones['TEST_OFFSET_BOUNDS'] = {
+            name: 'Test Offset Bounds', type: 'PLAYERCITY_BLACK_NOFURNITURE',
+            pvpType: 'safe', tier: 1, file: 'TEST_OFFSET_BOUNDS',
+            bounds: {min: [-80, -160], max: [90, 10]}
         };
-        zonesDatabase.zones['TEST_TINY_NORTH_ASSET'] = {
-            name: 'Test Tiny North Asset', type: 'PLAYERCITY_SAFEAREA_NOFURNITURE',
-            pvpType: 'safe', tier: 1, file: 'TEST_TINY_NORTH_ASSET',
-            asset: {min: [-35, 45], max: [35, 115]}
+        zonesDatabase.zones['TEST_TINY_NORTH_BOUNDS'] = {
+            name: 'Test Tiny North Bounds', type: 'PLAYERCITY_SAFEAREA_NOFURNITURE',
+            pvpType: 'safe', tier: 1, file: 'TEST_TINY_NORTH_BOUNDS',
+            bounds: {min: [-55, 40], max: [45, 140]}
         };
-        zonesDatabase.zones['TEST_NO_ASSET'] = {
-            name: 'Test No Asset', type: 'OPENPVP_BLACK',
-            pvpType: 'black', tier: 6, file: 'TEST_NO_ASSET'
+        zonesDatabase.zones['TEST_NO_BOUNDS'] = {
+            name: 'Test No Bounds', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_NO_BOUNDS'
         };
-        zonesDatabase.zones['TEST_BAD_ASSET'] = {
-            name: 'Test Bad Asset', type: 'OPENPVP_BLACK',
-            pvpType: 'black', tier: 6, file: 'TEST_BAD_ASSET',
-            asset: {min: ['nope', null], max: [10, 10]}
+        zonesDatabase.zones['TEST_BAD_BOUNDS'] = {
+            name: 'Test Bad Bounds', type: 'OPENPVP_BLACK',
+            pvpType: 'black', tier: 6, file: 'TEST_BAD_BOUNDS',
+            bounds: {min: ['nope', null], max: [10, 10]}
         };
     });
 
-    // @verified 2026-05-13: synthetic. Bank_Mists shape: max abs = 285, so the asset (square)
-    // depicts ±285 game-units around cluster (0, 0) -> extent 570.
-    test('asset extent is 2 * max(|vMin|, |vMax|) per axis combined', () => {
-        expect(zonesDatabase.getMapAssetExtent('TEST_OFFSET_ASSET')).toBe(570);
+    // @verified 2026-05-14: synthetic. 5002 Bank shape: bounds (-80,-160)..(90,10), max abs = 160,
+    // so the asset (square) depicts ±160 game-units around cluster (0, 0) -> extent 320.
+    test('extent is 2 * max(|bounds|) symmetric square around origin', () => {
+        expect(zonesDatabase.getMapAssetExtent('TEST_OFFSET_BOUNDS')).toBe(320);
     });
 
-    // @verified 2026-05-13: synthetic. AuctionHouse_Thetford: content all north of origin
-    // (Y=[45,115]); max abs = 115 -> extent 230. Asset asymmetry is in the content's pixel
-    // placement, the asset's pixel center stays at cluster (0, 0).
-    test('asset extent uses the largest absolute vMin/vMax dimension across both axes', () => {
-        expect(zonesDatabase.getMapAssetExtent('TEST_TINY_NORTH_ASSET')).toBe(230);
+    // @verified 2026-05-14: synthetic. 0007 Tetford Market shape: bounds (-55,40)..(45,140),
+    // max abs = 140 -> extent 280. Bounds asymmetry is in cluster space; the asset's pixel
+    // center stays at cluster (0, 0).
+    test('extent uses the largest absolute bounds dimension across both axes', () => {
+        expect(zonesDatabase.getMapAssetExtent('TEST_TINY_NORTH_BOUNDS')).toBe(280);
     });
 
-    // @verified 2026-05-13: synthetic. No asset field falls back to the legacy 825 baseline,
-    // which user-baseline confirms aligns almost every cluster correctly.
-    test('defaults to 825 when no asset field is present (auto-generated cluster)', () => {
-        expect(zonesDatabase.getMapAssetExtent('TEST_NO_ASSET')).toBe(825);
+    // @verified 2026-05-14: synthetic. No bounds field falls back to legacy 825 (matches the
+    // outdoor baseline for zones that predate the bounds field in our pipeline).
+    test('defaults to 825 when no bounds field is present', () => {
+        expect(zonesDatabase.getMapAssetExtent('TEST_NO_BOUNDS')).toBe(825);
     });
 
-    // @verified 2026-05-13: synthetic. Defensive fallback against malformed upstream data.
-    test('defaults to 825 when the asset field is malformed', () => {
-        expect(zonesDatabase.getMapAssetExtent('TEST_BAD_ASSET')).toBe(825);
+    // @verified 2026-05-14: synthetic. Defensive fallback against malformed upstream data.
+    test('defaults to 825 when the bounds field is malformed', () => {
+        expect(zonesDatabase.getMapAssetExtent('TEST_BAD_BOUNDS')).toBe(825);
     });
 
-    // @verified 2026-05-13: synthetic. Aligns with getZone(null) returning null.
+    // @verified 2026-05-14: synthetic. Aligns with getZone(null) returning null.
     test('defaults to 825 for an unknown zone id', () => {
         expect(zonesDatabase.getMapAssetExtent('UNKNOWN_ZONE')).toBe(825);
     });
 
-    // @verified 2026-05-13: synthetic. Mist clones reuse the origin's asset metadata.
-    test('Mist override carries the origin asset extent', () => {
+    // @verified 2026-05-14: synthetic. Mist clones reuse the origin's bounds metadata.
+    test('Mist override carries the origin bounds extent', () => {
         zonesDatabase.clearAllMistOverrides();
-        zonesDatabase.setMistOverride('@MISTS@extent-carry', 'TEST_OFFSET_ASSET');
-        expect(zonesDatabase.getMapAssetExtent('@MISTS@extent-carry')).toBe(570);
+        zonesDatabase.setMistOverride('@MISTS@extent-carry', 'TEST_OFFSET_BOUNDS');
+        expect(zonesDatabase.getMapAssetExtent('@MISTS@extent-carry')).toBe(320);
     });
 });
 
 describe('ZonesDatabase asset extent from real zones.json', () => {
-    // @verified 2026-05-13: regenerated zones.json with asset from minimapgendata templatedata.
-    // 5001 asset (5001_CTY_MI_T1_NON) = (-395,-205)..(155,245); max abs = 395 -> 790.
-    test('Brecilien plaza 5001 -> extent 790', () => {
-        expect(zonesDatabase.getMapAssetExtent('5001')).toBe(790);
+    // @verified 2026-05-14: cluster.xml minimapBoundsMin/Max for 5001 = (-200,-200)..(200,200);
+    // max abs = 200 -> 400.
+    test('Brecilien plaza 5001 -> extent 400', () => {
+        expect(zonesDatabase.getMapAssetExtent('5001')).toBe(400);
     });
 
-    // @verified 2026-05-13: 5000 asset (5000_CTY_MI_T1_NON) = (-395,-385)..(415,415);
-    // max abs = 415 -> 830, the legacy outdoor baseline.
-    test('Brecilien main 5000 -> extent 830 (matches legacy baseline)', () => {
-        expect(zonesDatabase.getMapAssetExtent('5000')).toBe(830);
+    // @verified 2026-05-14: 5000 bounds = (-255,-355)..(445,345); max abs = 445 -> 890.
+    test('Brecilien main 5000 -> extent 890', () => {
+        expect(zonesDatabase.getMapAssetExtent('5000')).toBe(890);
     });
 
-    // @verified 2026-05-13: 5002 asset (Bank_Mists) = (-285,-225)..(165,225); max abs = 285 -> 570.
-    test('Brecilien Bank 5002 -> extent 570', () => {
-        expect(zonesDatabase.getMapAssetExtent('5002')).toBe(570);
+    // @verified 2026-05-14: 5002 bounds = (-80,-160)..(90,10); max abs = 160 -> 320.
+    test('Brecilien Bank 5002 -> extent 320', () => {
+        expect(zonesDatabase.getMapAssetExtent('5002')).toBe(320);
     });
 
-    // @verified 2026-05-13: 0007 asset (AuctionHouse_Thetford) = (-35,45)..(35,115);
-    // max abs = 115 -> 230.
-    test('Tetford Market 0007 -> extent 230', () => {
-        expect(zonesDatabase.getMapAssetExtent('0007')).toBe(230);
+    // @verified 2026-05-14: 0007 bounds = (-55,40)..(45,140); max abs = 140 -> 280.
+    test('Tetford Market 0007 -> extent 280', () => {
+        expect(zonesDatabase.getMapAssetExtent('0007')).toBe(280);
     });
 
-    // @verified 2026-05-13: outdoor zones have no asset override; default 825.
-    test('Battlebrae Flatland 3316 (outdoor) -> default extent 825', () => {
-        expect(zonesDatabase.getMapAssetExtent('3316')).toBe(825);
+    // @verified 2026-05-14: outdoor 3316 bounds = (-415,-415)..(415,415); max abs = 415 -> 830.
+    // Matches legacy 825 baseline within rounding (the hardcoded 825 was an approximation of
+    // the average outdoor bounds).
+    test('Battlebrae Flatland 3316 (outdoor) -> extent 830', () => {
+        expect(zonesDatabase.getMapAssetExtent('3316')).toBe(830);
     });
 
-    // @verified 2026-05-13: 1000 asset (1000_CTY_FR_T1_NON) = (-305,-305)..(295,595);
-    // max abs = 595 -> 1190 (large city, content extends far north of origin).
-    test('Lymhurst 1000 -> extent 1190', () => {
-        expect(zonesDatabase.getMapAssetExtent('1000')).toBe(1190);
+    // @verified 2026-05-14: 1000 bounds = (-305,-305)..(295,295); max abs = 305 -> 610.
+    test('Lymhurst 1000 -> extent 610', () => {
+        expect(zonesDatabase.getMapAssetExtent('1000')).toBe(610);
     });
 });
