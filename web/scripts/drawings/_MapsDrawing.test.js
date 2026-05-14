@@ -22,6 +22,7 @@ vi.mock('../utils/ImageCache.js', () => ({
 vi.mock('../data/ZonesDatabase.js', () => ({
     default: {
         getMapAssetExtent: vi.fn(() => 825),
+        getMapAssetCenter: vi.fn(() => ({x: 0, y: 0})),
     },
 }));
 
@@ -76,26 +77,59 @@ describe('MapsDrawing per-zone asset extent', () => {
         expect(tr[1]).toBeCloseTo(0, 6);
     });
 
-    // @verified 2026-05-13: synthetic. Brecilien plaza extent 790; legacy translate, no asset
-    // offset.
-    test('plaza extent 790 draws square at 790 * sf with no asset offset', () => {
-        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(790);
+    // @verified 2026-05-14: synthetic. Symmetric bounds (center 0, 0), player at origin.
+    test('symmetric center, player at origin: no translate', () => {
+        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(400);
+        zonesDatabase.getMapAssetCenter.mockReturnValueOnce({x: 0, y: 0});
         const map = {id: '5001', hX: 0, hY: 0};
 
         drawing.draw(ctx, map);
 
         const drawCall = ctx.drawImage.mock.calls[0];
-        expect(drawCall[3]).toBeCloseTo(790 * 4, 6);
-        expect(drawCall[4]).toBeCloseTo(790 * 4, 6);
+        expect(drawCall[3]).toBeCloseTo(400 * 4, 6);
+        expect(drawCall[4]).toBeCloseTo(400 * 4, 6);
         const tr = lastTranslate(ctx);
         expect(tr[0]).toBeCloseTo(0, 6);
         expect(tr[1]).toBeCloseTo(0, 6);
     });
 
-    // @verified 2026-05-13: synthetic. Player movement uses translate(-hX*sf, hY*sf), the legacy
-    // formula proven correct by the user-baseline observation.
-    test('player movement uses legacy translate(-hX*sf, hY*sf)', () => {
-        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(570);
+    // @verified 2026-05-14: synthetic. 5002 Bank: extent 170, center (5, -75). Player at origin.
+    // adjX = (0 - 5) * 4 = -20, ctx.translate(-adjX, adjY) -> tr[0] = +20.
+    // adjY = (0 + (-75)) * 4 = -300 -> tr[1] = -300.
+    test('asymmetric center applies offset on translate at origin', () => {
+        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(170);
+        zonesDatabase.getMapAssetCenter.mockReturnValueOnce({x: 5, y: -75});
+        const map = {id: '5002', hX: 0, hY: 0};
+
+        drawing.draw(ctx, map);
+
+        const drawCall = ctx.drawImage.mock.calls[0];
+        expect(drawCall[3]).toBeCloseTo(170 * 4, 6);
+        expect(drawCall[4]).toBeCloseTo(170 * 4, 6);
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(20, 6);
+        expect(tr[1]).toBeCloseTo(-300, 6);
+    });
+
+    // @verified 2026-05-14: synthetic. Player at lpX=6.15, lpY=-72.08 (so hX=6.15, hY=72.08).
+    // 5002 center (5, -75). adjX = (6.15 - 5) * 4 = 4.6, adjY = (72.08 + (-75)) * 4 = -11.68.
+    // tr[0] = -4.6, tr[1] = -11.68.
+    test('player at bounds midpoint cancels offset', () => {
+        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(170);
+        zonesDatabase.getMapAssetCenter.mockReturnValueOnce({x: 5, y: -75});
+        const map = {id: '5002', hX: 6.15, hY: 72.08};
+
+        drawing.draw(ctx, map);
+
+        const tr = lastTranslate(ctx);
+        expect(tr[0]).toBeCloseTo(-4.6, 6);
+        expect(tr[1]).toBeCloseTo(-11.68, 6);
+    });
+
+    // @verified 2026-05-14: synthetic. Symmetric center (0, 0) reduces to legacy translate.
+    test('symmetric center uses legacy translate(-hX*sf, hY*sf)', () => {
+        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(170);
+        zonesDatabase.getMapAssetCenter.mockReturnValueOnce({x: 0, y: 0});
         const map = {id: '5002', hX: 50, hY: -30};
 
         drawing.draw(ctx, map);
@@ -105,33 +139,22 @@ describe('MapsDrawing per-zone asset extent', () => {
         expect(tr[1]).toBeCloseTo(-30 * 4, 6);
     });
 
-    // @verified 2026-05-13: synthetic. Tetford Market extent 230; image fits the canvas instead
-    // of being stretched to the legacy 825 (3.6x over-stretch).
-    test('tiny extent 230 draws square at 230 * sf', () => {
-        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(230);
-        const map = {id: '0007', hX: 0, hY: 0};
-
-        drawing.draw(ctx, map);
-
-        const drawCall = ctx.drawImage.mock.calls[0];
-        expect(drawCall[3]).toBeCloseTo(230 * 4, 6);
-        expect(drawCall[4]).toBeCloseTo(230 * 4, 6);
-    });
-
-    // @verified 2026-05-13: synthetic. Zoom multiplier flows through size and player offset.
-    test('zoom multiplier scales size and player offset uniformly', () => {
-        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(790);
+    // @verified 2026-05-14: synthetic. Zoom multiplier scales size and offset uniformly.
+    // adjX = (10 - 5) * 8 = 40, adjY = (-5 + (-75)) * 8 = -640.
+    test('zoom multiplier scales size and offset uniformly', () => {
+        zonesDatabase.getMapAssetExtent.mockReturnValueOnce(170);
+        zonesDatabase.getMapAssetCenter.mockReturnValueOnce({x: 5, y: -75});
         drawing.getZoomLevel.mockReturnValue(2.0);
-        const map = {id: '5001', hX: 10, hY: -5};
+        const map = {id: '5002', hX: 10, hY: -5};
 
         drawing.draw(ctx, map);
 
         const drawCall = ctx.drawImage.mock.calls[0];
-        expect(drawCall[3]).toBeCloseTo(790 * 8, 6);
-        expect(drawCall[4]).toBeCloseTo(790 * 8, 6);
+        expect(drawCall[3]).toBeCloseTo(170 * 8, 6);
+        expect(drawCall[4]).toBeCloseTo(170 * 8, 6);
         const tr = lastTranslate(ctx);
-        expect(tr[0]).toBeCloseTo(-10 * 8, 6);
-        expect(tr[1]).toBeCloseTo(-5 * 8, 6);
+        expect(tr[0]).toBeCloseTo(-40, 6);
+        expect(tr[1]).toBeCloseTo(-640, 6);
     });
 
     // @verified 2026-05-13: synthetic. Negative id is the "no map" sentinel from MapH(-1) at boot.

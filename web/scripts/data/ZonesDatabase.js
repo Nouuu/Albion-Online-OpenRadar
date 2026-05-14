@@ -159,6 +159,18 @@ export class ZonesDatabase {
   }
 
   getMapAssetExtent(zoneId) {
+    const b = this._validBounds(zoneId);
+    if (!b) return 825;
+    return Math.max(b.max[0] - b.min[0], b.max[1] - b.min[1]);
+  }
+
+  getMapAssetCenter(zoneId) {
+    const b = this._validBounds(zoneId);
+    if (!b) return {x: 0, y: 0};
+    return {x: (b.min[0] + b.max[0]) / 2, y: (b.min[1] + b.max[1]) / 2};
+  }
+
+  _validBounds(zoneId) {
     const b = this.getZone(zoneId)?.bounds;
     if (
       !b ||
@@ -167,12 +179,9 @@ export class ZonesDatabase {
       !Number.isFinite(b.min[0]) || !Number.isFinite(b.min[1]) ||
       !Number.isFinite(b.max[0]) || !Number.isFinite(b.max[1])
     ) {
-      return 825;
+      return null;
     }
-    return 2 * Math.max(
-      Math.abs(b.min[0]), Math.abs(b.max[0]),
-      Math.abs(b.min[1]), Math.abs(b.max[1])
-    );
+    return b;
   }
 }
 

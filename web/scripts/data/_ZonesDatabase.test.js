@@ -217,17 +217,16 @@ describe('ZonesDatabase map asset extent', () => {
         };
     });
 
-    // @verified 2026-05-14: synthetic. 5002 Bank shape: bounds (-80,-160)..(90,10), max abs = 160,
-    // so the asset (square) depicts ±160 game-units around cluster (0, 0) -> extent 320.
-    test('extent is 2 * max(|bounds|) symmetric square around origin', () => {
-        expect(zonesDatabase.getMapAssetExtent('TEST_OFFSET_BOUNDS')).toBe(320);
+    // @verified 2026-05-14: synthetic. 5002 Bank shape: bounds (-80,-160)..(90,10),
+    // width 170, height 170. extent = max(width, height) = 170.
+    test('extent is max(width, height) of bounds rectangle', () => {
+        expect(zonesDatabase.getMapAssetExtent('TEST_OFFSET_BOUNDS')).toBe(170);
     });
 
     // @verified 2026-05-14: synthetic. 0007 Tetford Market shape: bounds (-55,40)..(45,140),
-    // max abs = 140 -> extent 280. Bounds asymmetry is in cluster space; the asset's pixel
-    // center stays at cluster (0, 0).
-    test('extent uses the largest absolute bounds dimension across both axes', () => {
-        expect(zonesDatabase.getMapAssetExtent('TEST_TINY_NORTH_BOUNDS')).toBe(280);
+    // width 100, height 100. extent = 100.
+    test('extent uses bounds rectangle dimension regardless of offset from origin', () => {
+        expect(zonesDatabase.getMapAssetExtent('TEST_TINY_NORTH_BOUNDS')).toBe(100);
     });
 
     // @verified 2026-05-14: synthetic. No bounds field falls back to legacy 825 (matches the
@@ -250,41 +249,91 @@ describe('ZonesDatabase map asset extent', () => {
     test('Mist override carries the origin bounds extent', () => {
         zonesDatabase.clearAllMistOverrides();
         zonesDatabase.setMistOverride('@MISTS@extent-carry', 'TEST_OFFSET_BOUNDS');
-        expect(zonesDatabase.getMapAssetExtent('@MISTS@extent-carry')).toBe(320);
+        expect(zonesDatabase.getMapAssetExtent('@MISTS@extent-carry')).toBe(170);
+    });
+});
+
+describe('ZonesDatabase map asset center', () => {
+    // @verified 2026-05-14: synthetic. bounds midpoint = ((-80+90)/2, (-160+10)/2) = (5, -75).
+    test('center is the bounds midpoint for asymmetric bounds', () => {
+        expect(zonesDatabase.getMapAssetCenter('TEST_OFFSET_BOUNDS')).toEqual({x: 5, y: -75});
+    });
+
+    // @verified 2026-05-14: synthetic. bounds midpoint = ((-55+45)/2, (40+140)/2) = (-5, 90).
+    test('center for Y-asymmetric bounds (market-shaped)', () => {
+        expect(zonesDatabase.getMapAssetCenter('TEST_TINY_NORTH_BOUNDS')).toEqual({x: -5, y: 90});
+    });
+
+    // @verified 2026-05-14: synthetic. No bounds field -> origin (0, 0).
+    test('center defaults to (0, 0) when no bounds', () => {
+        expect(zonesDatabase.getMapAssetCenter('TEST_NO_BOUNDS')).toEqual({x: 0, y: 0});
+    });
+
+    // @verified 2026-05-14: synthetic. Unknown zone -> origin.
+    test('center defaults to (0, 0) for an unknown zone', () => {
+        expect(zonesDatabase.getMapAssetCenter('UNKNOWN_ZONE')).toEqual({x: 0, y: 0});
+    });
+
+    // @verified 2026-05-14: real zones.json. 5001 bounds (-200,-200)..(200,200) midpoint (0, 0).
+    test('Brecilien plaza 5001 -> center (0, 0) (symmetric bounds)', () => {
+        expect(zonesDatabase.getMapAssetCenter('5001')).toEqual({x: 0, y: 0});
+    });
+
+    // @verified 2026-05-14: 5002 bounds (-80,-160)..(90,10) midpoint (5, -75).
+    test('Brecilien Bank 5002 -> center (5, -75)', () => {
+        expect(zonesDatabase.getMapAssetCenter('5002')).toEqual({x: 5, y: -75});
+    });
+
+    // @verified 2026-05-14: 5003 bounds (-80,-10)..(90,160) midpoint (5, 75).
+    test('Brecilien Market 5003 -> center (5, 75)', () => {
+        expect(zonesDatabase.getMapAssetCenter('5003')).toEqual({x: 5, y: 75});
+    });
+
+    // @verified 2026-05-14: 0007 bounds (-55,40)..(45,140) midpoint (-5, 90).
+    test('Tetford Market 0007 -> center (-5, 90)', () => {
+        expect(zonesDatabase.getMapAssetCenter('0007')).toEqual({x: -5, y: 90});
+    });
+
+    // @verified 2026-05-14: outdoor 3316 bounds (-415,-415)..(415,415) midpoint (0, 0).
+    test('Battlebrae Flatland 3316 -> center (0, 0)', () => {
+        expect(zonesDatabase.getMapAssetCenter('3316')).toEqual({x: 0, y: 0});
     });
 });
 
 describe('ZonesDatabase asset extent from real zones.json', () => {
     // @verified 2026-05-14: cluster.xml minimapBoundsMin/Max for 5001 = (-200,-200)..(200,200);
-    // max abs = 200 -> 400.
+    // width 400, height 400. extent = 400.
     test('Brecilien plaza 5001 -> extent 400', () => {
         expect(zonesDatabase.getMapAssetExtent('5001')).toBe(400);
     });
 
-    // @verified 2026-05-14: 5000 bounds = (-255,-355)..(445,345); max abs = 445 -> 890.
-    test('Brecilien main 5000 -> extent 890', () => {
-        expect(zonesDatabase.getMapAssetExtent('5000')).toBe(890);
+    // @verified 2026-05-14: 5000 bounds = (-255,-355)..(445,345); width 700, height 700.
+    test('Brecilien main 5000 -> extent 700', () => {
+        expect(zonesDatabase.getMapAssetExtent('5000')).toBe(700);
     });
 
-    // @verified 2026-05-14: 5002 bounds = (-80,-160)..(90,10); max abs = 160 -> 320.
-    test('Brecilien Bank 5002 -> extent 320', () => {
-        expect(zonesDatabase.getMapAssetExtent('5002')).toBe(320);
+    // @verified 2026-05-14: 5002 bounds = (-80,-160)..(90,10); width 170, height 170.
+    test('Brecilien Bank 5002 -> extent 170', () => {
+        expect(zonesDatabase.getMapAssetExtent('5002')).toBe(170);
     });
 
-    // @verified 2026-05-14: 0007 bounds = (-55,40)..(45,140); max abs = 140 -> 280.
-    test('Tetford Market 0007 -> extent 280', () => {
-        expect(zonesDatabase.getMapAssetExtent('0007')).toBe(280);
+    // @verified 2026-05-14: 5003 bounds = (-80,-10)..(90,160); width 170, height 170.
+    test('Brecilien Market 5003 -> extent 170', () => {
+        expect(zonesDatabase.getMapAssetExtent('5003')).toBe(170);
     });
 
-    // @verified 2026-05-14: outdoor 3316 bounds = (-415,-415)..(415,415); max abs = 415 -> 830.
-    // Matches legacy 825 baseline within rounding (the hardcoded 825 was an approximation of
-    // the average outdoor bounds).
+    // @verified 2026-05-14: 0007 bounds = (-55,40)..(45,140); width 100, height 100.
+    test('Tetford Market 0007 -> extent 100', () => {
+        expect(zonesDatabase.getMapAssetExtent('0007')).toBe(100);
+    });
+
+    // @verified 2026-05-14: outdoor 3316 bounds = (-415,-415)..(415,415); width 830, height 830.
     test('Battlebrae Flatland 3316 (outdoor) -> extent 830', () => {
         expect(zonesDatabase.getMapAssetExtent('3316')).toBe(830);
     });
 
-    // @verified 2026-05-14: 1000 bounds = (-305,-305)..(295,295); max abs = 305 -> 610.
-    test('Lymhurst 1000 -> extent 610', () => {
-        expect(zonesDatabase.getMapAssetExtent('1000')).toBe(610);
+    // @verified 2026-05-14: 1000 bounds = (-305,-305)..(295,295); width 600, height 600.
+    test('Lymhurst 1000 -> extent 600', () => {
+        expect(zonesDatabase.getMapAssetExtent('1000')).toBe(600);
     });
 });
