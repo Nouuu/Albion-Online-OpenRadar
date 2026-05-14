@@ -1,0 +1,15 @@
+{
+  "scenario": "brec-op473-duo-lethal.json",
+  "handler": "mists",
+  "messages": [
+    {
+      "kind": "request",
+      "parameters": {
+        "0": 639142180996055908,
+        "1": 8,
+        "2": 4,
+        "253": 473
+      }
+    }
+  ]
+}

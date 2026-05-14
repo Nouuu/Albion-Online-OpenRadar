@@ -1,0 +1,15 @@
+{
+  "scenario": "brec-op473-solo-lethal.json",
+  "handler": "mists",
+  "messages": [
+    {
+      "kind": "request",
+      "parameters": {
+        "0": 639142123857865908,
+        "1": 8,
+        "2": 2,
+        "253": 473
+      }
+    }
+  ]
+}
