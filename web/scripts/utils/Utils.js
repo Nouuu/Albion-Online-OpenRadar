@@ -7,6 +7,7 @@ import {MapDrawing} from '../drawings/MapsDrawing.js';
 import {WispCageDrawing} from '../drawings/WispCageDrawing.js';
 import {MistsWispDrawing} from '../drawings/MistsWispDrawing.js';
 import {FishingDrawing} from '../drawings/FishingDrawing.js';
+import {MistsDungeonDrawing} from '../drawings/MistsDungeonDrawing.js';
 
 import {PlayersHandler} from '../handlers/PlayersHandler.js';
 import {WispCageHandler} from '../handlers/WispCageHandler.js';
@@ -14,6 +15,7 @@ import {FishingHandler} from '../handlers/FishingHandler.js';
 import {MobsHandler} from '../handlers/MobsHandler.js';
 import {ChestsHandler} from '../handlers/ChestsHandler.js';
 import {HarvestablesHandler} from '../handlers/HarvestablesHandler.js';
+import {MistsDungeonHandler} from '../handlers/MistsDungeonHandler.js';
 import {MapH} from './Map.js';
 import {DungeonsHandler} from '../handlers/DungeonsHandler.js';
 import {DrawingUtils} from './DrawingUtils.js';
@@ -38,12 +40,13 @@ let lastPlayerListHash = '';
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
-    dungeons: null, wispCage: null, fishing: null
+    dungeons: null, wispCage: null, fishing: null, mistsDungeon: null
 };
 
 let drawings = {
     harvestables: null, mobs: null, players: null, chests: null,
-    dungeons: null, wispCage: null, mistsWisp: null, fishing: null, maps: null
+    dungeons: null, wispCage: null, mistsWisp: null, fishing: null, maps: null,
+    mistsDungeon: null
 };
 
 let drawingUtils = null;
@@ -92,7 +95,8 @@ function initializeRadarRenderer() {
             chestsHandler: handlers.chests,
             dungeonsHandler: handlers.dungeons,
             wispCageHandler: handlers.wispCage,
-            fishingHandler: handlers.fishing
+            fishingHandler: handlers.fishing,
+            mistsDungeonHandler: handlers.mistsDungeon
         },
         drawings: {
             mapsDrawing: drawings.maps,
@@ -103,7 +107,8 @@ function initializeRadarRenderer() {
             dungeonsDrawing: drawings.dungeons,
             wispCageDrawing: drawings.wispCage,
             fishingDrawing: drawings.fishing,
-            mistsWispDrawing: drawings.mistsWisp
+            mistsWispDrawing: drawings.mistsWisp,
+            mistsDungeonDrawing: drawings.mistsDungeon
         },
         drawingUtils
     });
@@ -160,6 +165,7 @@ export async function initRadar() {
         handlers.players = new PlayersHandler();
         handlers.wispCage = new WispCageHandler();
         handlers.fishing = new FishingHandler();
+        handlers.mistsDungeon = new MistsDungeonHandler();
 
         drawings.maps = new MapDrawing();
         drawings.harvestables = new HarvestablesDrawing();
@@ -170,6 +176,7 @@ export async function initRadar() {
         drawings.wispCage = new WispCageDrawing();
         drawings.mistsWisp = new MistsWispDrawing();
         drawings.fishing = new FishingDrawing();
+        drawings.mistsDungeon = new MistsDungeonDrawing();
 
         window.harvestablesHandler = handlers.harvestables;
         window.mobsHandler = handlers.mobs;
@@ -184,7 +191,8 @@ export async function initRadar() {
                 chestsHandler: handlers.chests,
                 dungeonsHandler: handlers.dungeons,
                 fishingHandler: handlers.fishing,
-                wispCageHandler: handlers.wispCage
+                wispCageHandler: handlers.wispCage,
+                mistsDungeonHandler: handlers.mistsDungeon
             },
             map,
             radarRenderer: null
