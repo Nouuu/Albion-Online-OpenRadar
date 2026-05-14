@@ -1180,4 +1180,82 @@ describe('EventRouter', () => {
             expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
         });
     });
+
+    // -------------------------------------------------------------------------
+    // MIST-119 sanctuary chain
+    // -------------------------------------------------------------------------
+    describe('MIST-119 sanctuary chain', () => {
+        // @verified 2026-05-14: capture 19-38-46 sequence 0220 -> @MISTS@8dfbe1cb -> @MISTSDUNGEON@c21e6e24 -> @MISTS@254f55bc.
+        test('Mist -> Knightfall Abbey -> Mist preserves yellow pvpType', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@8dfbe1cb', 9: [0, 0]}, clearHandlers);
+            expect(zonesDatabase.getPvpType('@MISTS@8dfbe1cb')).toBe('yellow');
+
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@c21e6e24', 9: [0, 0]}, clearHandlers);
+
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@254f55bc', 9: [0, 0]}, clearHandlers);
+            expect(zonesDatabase.getPvpType('@MISTS@254f55bc')).toBe('yellow');
+        });
+
+        // @verified 2026-05-14: same capture; abbey banner must reflect parent Mist class (issue #119 audio bug).
+        test('Knightfall Abbey entry registers an override that mirrors the parent Mist pvpType', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@8dfbe1cb', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@c21e6e24', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTSDUNGEON@c21e6e24')).toBe('yellow');
+        });
+
+        // @verified 2026-05-14: synthetic. Black BZ -> Mist -> abbey -> Mist preserves black across the chain.
+        test('BZ Mist -> Abbey -> BZ Mist preserves black pvpType', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-1', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@deadbeef', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-2', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTSDUNGEON@deadbeef')).toBe('black');
+            expect(zonesDatabase.getPvpType('@MISTS@bz-2')).toBe('black');
+        });
+
+        // @verified 2026-05-14: synthetic. Chain TTL boundary.
+        test('Override chain expires after 30 minutes', () => {
+            zonesDatabase.clearAllMistOverrides();
+
+            vi.useFakeTimers();
+            vi.setSystemTime(new Date('2026-05-14T12:00:00Z'));
+
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@yellow-1', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@long-stay', 9: [0, 0]}, clearHandlers);
+
+            vi.advanceTimersByTime(30 * 60 * 1000 + 1000);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@post-expiry', 9: [0, 0]}, clearHandlers);
+
+            vi.useRealTimers();
+            sessionStorage.clear();
+
+            expect(zonesDatabase.getPvpType('@MISTS@post-expiry')).toBe('safe');
+        });
+
+        // @verified 2026-05-14: synthetic. Transit through a real zone clears the chain.
+        test('Mist -> real zone -> Mist clears the chain (no false propagation)', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@chain-bz', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '0220', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@new-yellow', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@new-yellow')).toBe('yellow');
+            expect(EventRouter._debugGetLastActiveMistOverride()?.pvpType).toBe('yellow');
+        });
+
+        // @verified 2026-05-14: synthetic. Resetting the router clears the chain.
+        test('reset() clears lastActiveMistOverride', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@chain-bz', 9: [0, 0]}, clearHandlers);
+
+            EventRouter.reset();
+
+            expect(EventRouter._debugGetLastActiveMistOverride()).toBeNull();
+        });
+    });
 });

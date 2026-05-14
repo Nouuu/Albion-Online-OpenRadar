@@ -17,6 +17,14 @@ const MIST_CHOICE_TTL_MS = 30000;
 let lastMapChangeTime = 0;
 let pendingMistChoice = null;
 
+// Sanctuary chain tracking
+const MIST_CHAIN_TTL_MS = 30 * 60 * 1000;
+let lastActiveMistOverride = null;
+
+function isSanctuaryId(mapId) {
+    return typeof mapId === 'string' && mapId.startsWith('@MISTSDUNGEON@');
+}
+
 // Local player position (relative coords)
 let lpX = 0.0;
 let lpY = 0.0;
@@ -96,18 +104,46 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     map.id = newMapId;
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
+
     if (typeof newMapId === 'string' && newMapId.startsWith('@MISTS@')) {
-        const originId = resolveMistOriginId(previousMapId);
         const choice = consumePendingMistChoice();
-        const forcedPvpType = choice ? (choice.lethal ? 'black' : 'yellow') : undefined;
+        let forcedPvpType = choice ? (choice.lethal ? 'black' : 'yellow') : undefined;
+        let originId;
+
+        if (isSanctuaryId(previousMapId)) {
+            if (lastActiveMistOverride
+                && (Date.now() - lastActiveMistOverride.ts) <= MIST_CHAIN_TTL_MS) {
+                originId = lastActiveMistOverride.originZoneId;
+                if (!forcedPvpType) {
+                    forcedPvpType = lastActiveMistOverride.pvpType;
+                }
+            }
+        } else {
+            originId = resolveMistOriginId(previousMapId);
+        }
+
         if (originId && zonesDatabase.setMistOverride(newMapId, originId, forcedPvpType)) {
+            const resolved = zonesDatabase.getZone(newMapId);
+            lastActiveMistOverride = {
+                mistMapId: newMapId,
+                originZoneId: originId,
+                pvpType: resolved.pvpType,
+                ts: Date.now(),
+            };
             persistMistOverride(newMapId, originId);
+        }
+    } else if (isSanctuaryId(newMapId)) {
+        if (lastActiveMistOverride
+            && (Date.now() - lastActiveMistOverride.ts) <= MIST_CHAIN_TTL_MS) {
+            zonesDatabase.setMistOverride(newMapId, lastActiveMistOverride.originZoneId, lastActiveMistOverride.pvpType);
         }
     } else {
         zonesDatabase.clearAllMistOverrides();
         clearMistOverridePersistence();
         pendingMistChoice = null;
+        lastActiveMistOverride = null;
     }
+
     syncMapIsBZ();
     radarRenderer?.setMap?.(map);
     persistMapToSession();
@@ -503,9 +539,14 @@ export function reset() {
     window.lpY = 0;
     lastMapChangeTime = 0;
     pendingMistChoice = null;
+    lastActiveMistOverride = null;
 
     // Clear references to prevent memory leaks
     handlers = null;
     map = null;
     radarRenderer = null;
+}
+
+export function _debugGetLastActiveMistOverride() {
+    return lastActiveMistOverride;
 }
