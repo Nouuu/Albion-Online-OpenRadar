@@ -20,8 +20,6 @@
                 <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="drawCanvas" width="500" height="500" style="z-index: 3;"></canvas>
                 <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="ourPlayerCanvas" width="500" height="500" style="z-index: 5;"></canvas>
                 <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="uiCanvas" width="500" height="500" style="z-index: 6;"></canvas>
-                <canvas class="ttcan absolute top-0 left-0 m-0 sm:m-2.5" id="debugGridCanvas" width="500" height="500" style="z-index: 7; pointer-events: none;"></canvas>
-                <pre id="mapDebugOverlay" class="absolute top-2 left-2 sm:top-3.5 sm:left-3.5 bg-base-300/85 text-base-content text-[10px] leading-tight px-2 py-1 rounded font-mono" style="z-index: 10; pointer-events: none;"></pre>
             </div>
             <!-- Controls - flex wrap for responsive -->
             <div class="flex flex-wrap items-center gap-4 mt-3 mx-0 sm:mx-2.5 text-sm">
@@ -150,7 +148,6 @@
             const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
             const {initRadar, destroyRadar} = await import('/scripts/utils/Utils.js');
 
-            // Only register once per session (avoids PageController_Overwrite warning on SPA navigation)
             if (!window._radarPageRegistered) {
                 registerPage('radar', {
                     init: async () => await initRadar(),
@@ -159,107 +156,7 @@
                 window._radarPageRegistered = true;
             }
 
-            // Wait for globals to be ready before reinitializing
             window.onGlobalsReady(() => reinitCurrentPage());
-
-            const dbg = document.getElementById('mapDebugOverlay');
-            const grid = document.getElementById('debugGridCanvas');
-            if (dbg) {
-                const zonesDatabaseMod = await import('/scripts/data/ZonesDatabase.js');
-                const settingsSyncMod = await import('/scripts/utils/SettingsSync.js');
-                const zonesDatabase = zonesDatabaseMod.default;
-                const settingsSync = settingsSyncMod.default;
-                const f2 = (v) => (v === undefined || v === null || Number.isNaN(v)) ? '?' : Number(v).toFixed(2);
-                const f0 = (v) => (v === undefined || v === null || Number.isNaN(v)) ? '?' : Math.round(Number(v));
-                const RING_UNITS = [50, 100, 150, 200];
-                const SQRT2_OVER_2 = Math.SQRT1_2;
-                const drawGrid = () => {
-                    if (!grid) return;
-                    const ctx = grid.getContext('2d');
-                    const w = grid.width, h = grid.height;
-                    ctx.clearRect(0, 0, w, h);
-                    const zoom = settingsSync.getFloat('settingRadarZoom') || 1.0;
-                    const sf = 4 * zoom;
-                    const cx = w / 2, cy = h / 2;
-                    ctx.strokeStyle = 'rgba(0, 255, 200, 0.55)';
-                    ctx.fillStyle = 'rgba(0, 255, 200, 0.85)';
-                    ctx.lineWidth = 1;
-                    ctx.font = '10px monospace';
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'middle';
-                    for (const u of RING_UNITS) {
-                        const r = u * sf;
-                        if (r < 5 || r > Math.max(w, h)) continue;
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-                        ctx.stroke();
-                        ctx.fillText(`${u}u`, cx + r + 3, cy);
-                    }
-                    ctx.strokeStyle = 'rgba(255, 50, 50, 0.7)';
-                    ctx.beginPath();
-                    ctx.moveTo(cx - 8, cy);
-                    ctx.lineTo(cx + 8, cy);
-                    ctx.moveTo(cx, cy - 8);
-                    ctx.lineTo(cx, cy + 8);
-                    ctx.stroke();
-
-                    const lpX = Number(window.lpX);
-                    const lpY = Number(window.lpY);
-                    if (Number.isFinite(lpX) && Number.isFinite(lpY)) {
-                        const ox = cx - SQRT2_OVER_2 * sf * (lpX + lpY);
-                        const oy = cy - SQRT2_OVER_2 * sf * (lpX - lpY);
-                        ctx.strokeStyle = 'rgba(255, 230, 0, 0.95)';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.moveTo(ox - 10, oy);
-                        ctx.lineTo(ox + 10, oy);
-                        ctx.moveTo(ox, oy - 10);
-                        ctx.lineTo(ox, oy + 10);
-                        ctx.stroke();
-                        ctx.fillStyle = 'rgba(255, 230, 0, 0.95)';
-                        ctx.font = '11px monospace';
-                        ctx.textAlign = 'left';
-                        ctx.fillText('map(0,0)', ox + 12, oy + 4);
-
-                        const angle = -0.785398;
-                        const ehX = lpX;
-                        const ehY = -lpY;
-                        let enX = ehX * angle - ehY * angle;
-                        let enY = ehX * angle + ehY * angle;
-                        const ezoom = 4 * (settingsSync.getFloat('settingRadarZoom') || 1.0);
-                        enX *= ezoom;
-                        enY *= ezoom;
-                        const ex = enX + cx;
-                        const ey = enY + cy;
-                        ctx.strokeStyle = 'rgba(0, 255, 80, 0.95)';
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.arc(ex, ey, 9, 0, Math.PI * 2);
-                        ctx.stroke();
-                        ctx.fillStyle = 'rgba(0, 255, 80, 0.95)';
-                        ctx.fillText('ent(0,0)', ex + 12, ey + 4);
-                    }
-                };
-                setInterval(() => {
-                    const id = window.currentMapId;
-                    const zone = id ? zonesDatabase.getZone(String(id)) : null;
-                    const asset = zone?.asset;
-                    const extent = id ? zonesDatabase.getMapAssetExtent(String(id)) : '?';
-                    const zoom = settingsSync.getFloat('settingRadarZoom') || 1.0;
-                    dbg.textContent = [
-                        `map  : ${id ?? '?'} ${zone?.name ?? ''}`,
-                        `lpX  : ${f2(window.lpX)}`,
-                        `lpY  : ${f2(window.lpY)}`,
-                        `ext  : ${extent}`,
-                        `zoom : ${f2(zoom)} (sf=${f2(4 * zoom)} px/u)`,
-                        asset
-                            ? `asset: (${f0(asset.min[0])}, ${f0(asset.min[1])}) .. (${f0(asset.max[0])}, ${f0(asset.max[1])})`
-                            : 'asset: (none)'
-                    ].join('\n');
-                    drawGrid();
-                }, 200);
-                window.addEventListener('canvasSizeChanged', drawGrid);
-            }
         })();
     </script>
 
