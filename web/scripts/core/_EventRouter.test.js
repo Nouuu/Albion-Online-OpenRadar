@@ -1136,4 +1136,48 @@ describe('EventRouter', () => {
             expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
         });
     });
+
+    // -------------------------------------------------------------------------
+    // MIST-117 applyMapChange consumption
+    // -------------------------------------------------------------------------
+    describe('MIST-117 applyMapChange consumption', () => {
+        // @verified 2026-05-12: full pipeline op 473 lethal then Mist Join.
+        test('applyMapChange consumes pendingMistChoice and forces black on lethal', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-1', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@deadbeef-1')).toBe('black');
+        });
+
+        // @verified 2026-05-12: op 473 non-lethal then Mist Join, forced yellow despite safe origin.
+        test('applyMapChange consumes pendingMistChoice and forces yellow when non-lethal', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-2', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@deadbeef-2')).toBe('yellow');
+        });
+
+        // @verified 2026-05-12: synthetic. Choice older than 30s is ignored, fallback inheritance applies.
+        test('applyMapChange ignores expired pendingMistChoice (>30s)', () => {
+            map.id = '5001';
+            vi.useFakeTimers();
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            vi.advanceTimersByTime(31000);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-3', 9: [0, 0]}, clearHandlers);
+            vi.useRealTimers();
+
+            expect(zonesDatabase.getPvpType('@MISTS@deadbeef-3')).toBe('safe');
+        });
+
+        // @verified 2026-05-12: synthetic. Pending choice cleared after successful consumption.
+        test('applyMapChange clears pendingMistChoice after consumption', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-4', 9: [0, 0]}, clearHandlers);
+
+            expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
+        });
+    });
 });

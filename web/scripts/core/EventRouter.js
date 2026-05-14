@@ -13,6 +13,7 @@ function syncMapIsBZ() {
 
 // Map change debouncing
 const MAP_CHANGE_DEBOUNCE_MS = 4000;
+const MIST_CHOICE_TTL_MS = 30000;
 let lastMapChangeTime = 0;
 let pendingMistChoice = null;
 
@@ -82,6 +83,14 @@ function resolveMistOriginId(previousMapId) {
         : null;
 }
 
+function consumePendingMistChoice() {
+    if (!pendingMistChoice) return null;
+    const age = Date.now() - pendingMistChoice.ts;
+    const choice = age <= MIST_CHOICE_TTL_MS ? pendingMistChoice : null;
+    pendingMistChoice = null;
+    return choice;
+}
+
 function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     const previousMapId = map.id;
     map.id = newMapId;
@@ -89,12 +98,15 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     lastMapChangeTime = Date.now();
     if (typeof newMapId === 'string' && newMapId.startsWith('@MISTS@')) {
         const originId = resolveMistOriginId(previousMapId);
-        if (originId && zonesDatabase.setMistOverride(newMapId, originId)) {
+        const choice = consumePendingMistChoice();
+        const forcedPvpType = choice ? (choice.lethal ? 'black' : 'yellow') : undefined;
+        if (originId && zonesDatabase.setMistOverride(newMapId, originId, forcedPvpType)) {
             persistMistOverride(newMapId, originId);
         }
     } else {
         zonesDatabase.clearAllMistOverrides();
         clearMistOverridePersistence();
+        pendingMistChoice = null;
     }
     syncMapIsBZ();
     radarRenderer?.setMap?.(map);
