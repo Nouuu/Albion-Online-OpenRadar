@@ -1446,5 +1446,21 @@ describe('EventRouter', () => {
 
             expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('black');
         });
+
+        // @verified 2026-05-16: defensive. Confirms the Mist-to-Mist elif does NOT capture
+        // @MISTSDUNGEON@ prefixes. Brec lethal -> Mist -> abbey -> Mist must keep black via
+        // the SANCTUARY branch (chain through lastActiveMistOverride), not via the plain-Mist
+        // elif (which would inherit from a wrong source if it fired here).
+        test('@MISTSDUNGEON@ previousMapId routes through sanctuary branch, not plain-Mist branch', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-pre-abbey', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@inner', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-post-abbey', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTSDUNGEON@inner')).toBe('black');
+            expect(zonesDatabase.getPvpType('@MISTS@brec-post-abbey')).toBe('black');
+            expect(EventRouter._debugGetLastActiveMistOverride()?.mistMapId).toBe('@MISTS@brec-post-abbey');
+        });
     });
 });

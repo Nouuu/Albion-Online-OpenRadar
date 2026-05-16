@@ -25,6 +25,10 @@ function isSanctuaryId(mapId) {
     return typeof mapId === 'string' && mapId.startsWith('@MISTSDUNGEON@');
 }
 
+function isPlainMistId(mapId) {
+    return typeof mapId === 'string' && mapId.startsWith('@MISTS@');
+}
+
 // Local player position (relative coords)
 let lpX = 0.0;
 let lpY = 0.0;
@@ -106,7 +110,7 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
 
-    if (typeof newMapId === 'string' && newMapId.startsWith('@MISTS@')) {
+    if (isPlainMistId(newMapId)) {
         const choice = consumePendingMistChoice();
         let forcedPvpType = choice ? (choice.lethal ? 'black' : 'yellow') : undefined;
         let originId;
@@ -119,7 +123,7 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
                     forcedPvpType = lastActiveMistOverride.pvpType;
                 }
             }
-        } else if (typeof previousMapId === 'string' && previousMapId.startsWith('@MISTS@')) {
+        } else if (isPlainMistId(previousMapId)) {
             const prevOverride = zonesDatabase.getZone(previousMapId);
             if (prevOverride && typeof prevOverride.originZoneId === 'string') {
                 originId = prevOverride.originZoneId;
