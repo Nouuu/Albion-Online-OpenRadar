@@ -14,6 +14,7 @@ interface ZoneInfo {
     pvpType: PvpType;
     tier: number;
     file: string;
+    bounds?: {min: [number, number], max: [number, number]};
 }
 
 // ============================================================================
@@ -353,13 +354,28 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
             const file = cluster['@file'] || '';
             const filename = file.replace('.cluster.xml', '');
 
-            zones[id] = {
+            const zone: ZoneInfo = {
                 name: displayName,
                 type: type,
                 pvpType: getPvpType(type),
                 tier: extractTier(file),
                 file: filename
             };
+
+            const minAttr = cluster['@minimapBoundsMin'];
+            const maxAttr = cluster['@minimapBoundsMax'];
+            if (typeof minAttr === 'string' && typeof maxAttr === 'string') {
+                const mins = minAttr.trim().split(/\s+/).map(parseFloat);
+                const maxs = maxAttr.trim().split(/\s+/).map(parseFloat);
+                if (
+                    mins.length === 2 && maxs.length === 2 &&
+                    mins.every(Number.isFinite) && maxs.every(Number.isFinite)
+                ) {
+                    zone.bounds = {min: [mins[0], mins[1]], max: [maxs[0], maxs[1]]};
+                }
+            }
+
+            zones[id] = zone;
         }
 
         fs.writeFileSync(outputPath, JSON.stringify(zones));

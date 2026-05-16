@@ -2,6 +2,7 @@ import {DrawingUtils} from "../utils/DrawingUtils.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../utils/SettingsSync.js";
 import imageCache from "../utils/ImageCache.js";
+import zonesDatabase from "../data/ZonesDatabase.js";
 
 export class MapDrawing extends DrawingUtils
 {
@@ -16,17 +17,20 @@ export class MapDrawing extends DrawingUtils
 
     draw(ctx, curr_map)
     {
-        //const point = this.transformPoint(curr_map.hX, curr_map.hY);
-
         if (curr_map.id < 0)
             return;
 
-        // Scale map position and size with zoom (base factor 4 * zoom)
         const zoom = this.getZoomLevel();
         const scaleFactor = 4 * zoom;
-        this.DrawImageMap(ctx, curr_map.hX * scaleFactor, curr_map.hY * scaleFactor, curr_map.id.toString(), 825 * scaleFactor, curr_map);
+        const id = curr_map.id.toString();
+        const extent = zonesDatabase.getMapAssetExtent(id);
+        const center = zonesDatabase.getMapAssetCenter(id);
+        const size = extent * scaleFactor;
+        const adjX = (curr_map.hX - center.x) * scaleFactor;
+        const adjY = (curr_map.hY + center.y) * scaleFactor;
+        this.DrawImageMap(ctx, adjX, adjY, id, size, size);
     }
-    DrawImageMap(ctx, x, y, imageName, size)
+    DrawImageMap(ctx, x, y, imageName, drawWidth, drawHeight)
     {
         // Fill background => if no map image or corner to prevent glitch textures
         ctx.fillStyle = '#1a1c23';
@@ -54,7 +58,7 @@ export class MapDrawing extends DrawingUtils
             ctx.rotate(-0.785398);
             ctx.translate(-x, y);
 
-            ctx.drawImage(preloadedImage, -size/2, -size/2, size, size);
+            ctx.drawImage(preloadedImage, -drawWidth/2, -drawHeight/2, drawWidth, drawHeight);
             ctx.restore();
         }
         else
