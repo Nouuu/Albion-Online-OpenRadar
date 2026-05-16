@@ -1375,4 +1375,76 @@ describe('EventRouter', () => {
             });
         });
     });
+
+    // -------------------------------------------------------------------------
+    // MIST-119 Mist-to-Mist chain (border exit between two Mists)
+    // -------------------------------------------------------------------------
+    describe('MIST-119 Mist-to-Mist chain', () => {
+        // @verified 2026-05-16: bug report. Brec lethal -> Mist A (black) -> Mist B via border
+        // exit (no op 473). B currently inherits from origin 5001 = safe = green. Should stay black.
+        test('Brec lethal Mist -> Mist via border exit preserves black pvpType', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-A', 9: [0, 0]}, clearHandlers);
+            expect(zonesDatabase.getPvpType('@MISTS@brec-A')).toBe('black');
+
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-B', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-B')).toBe('black');
+        });
+
+        // @verified 2026-05-16: same logic, 3 hops. Brec lethal -> A -> B -> C all black.
+        test('Brec lethal chain across 3 Mists preserves black throughout', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-A', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-B', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-C', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-C')).toBe('black');
+        });
+
+        // @verified 2026-05-16: Brec non-lethal yellow inherits across hops.
+        test('Brec non-lethal Mist -> Mist preserves yellow pvpType', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-yA', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-yB', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-yB')).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: regression. Royal yellow -> Mist A -> Mist B both yellow (already
+        // worked via origin inheritance, regression guard for the new chain logic).
+        test('Royal yellow Mist -> Mist preserves yellow', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@royal-A', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@royal-B', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@royal-B')).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: regression. BZ -> Mist A -> Mist B both black (already worked).
+        test('BZ Mist -> Mist preserves black', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-A', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-B', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@bz-B')).toBe('black');
+        });
+
+        // @verified 2026-05-16: regression. Brec lethal Mist -> back to Brec -> re-talk NPC ->
+        // new Mist with own choice. Transit through real zone clears chain, new op 473 sets fresh
+        // forcedPvpType. Ensures the new chain logic does not leak state across real-zone transits.
+        test('Brec lethal -> Mist -> Brec -> new lethal Mist starts a fresh black override', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@first', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '5001', 9: [0, 0]}, clearHandlers);
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@second', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('black');
+        });
+    });
 });

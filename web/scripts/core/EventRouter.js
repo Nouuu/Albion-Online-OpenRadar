@@ -119,6 +119,14 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
                     forcedPvpType = lastActiveMistOverride.pvpType;
                 }
             }
+        } else if (typeof previousMapId === 'string' && previousMapId.startsWith('@MISTS@')) {
+            const prevOverride = zonesDatabase.getZone(previousMapId);
+            if (prevOverride && typeof prevOverride.originZoneId === 'string') {
+                originId = prevOverride.originZoneId;
+                if (!forcedPvpType) {
+                    forcedPvpType = prevOverride.pvpType;
+                }
+            }
         } else {
             originId = resolveMistOriginId(previousMapId);
         }
