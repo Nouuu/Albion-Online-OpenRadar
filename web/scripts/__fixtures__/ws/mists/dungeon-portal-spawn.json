@@ -1,0 +1,25 @@
+{
+  "scenario": "dungeon-portal-spawn.json",
+  "handler": "mists",
+  "messages": [
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 2675,
+        "1": [135, 185],
+        "3": "",
+        "5": "SHARED_MIST_DUNGEON_ENTRANCE_SMALL",
+        "6": 9,
+        "7": true,
+        "8": 0,
+        "14": 0,
+        "15": "MISTS_DUNGEON_SOLO_BLACK",
+        "16": -1,
+        "17": 0,
+        "18": 639145285541222400,
+        "19": 6,
+        "252": 323
+      }
+    }
+  ]
+}

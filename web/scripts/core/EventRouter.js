@@ -466,9 +466,18 @@ export function onEvent(Parameters) {
             playersHandler.handleMountedPlayerEvent(id, Parameters);
             break;
 
-        case EventCodes.NewRandomDungeonExit:
-            dungeonsHandler.dungeonEvent(Parameters);
+        case EventCodes.NewRandomDungeonExit: {
+            const tag = Parameters[15];
+            if (typeof tag === 'string' && tag.startsWith('MISTS_DUNGEON')) {
+                const pos = Parameters[1];
+                if (Array.isArray(pos) && pos.length === 2) {
+                    handlers.mistsDungeonHandler?.addPortal(Parameters[0], pos[0], pos[1], tag);
+                }
+            } else {
+                dungeonsHandler.dungeonEvent(Parameters);
+            }
             break;
+        }
 
         case EventCodes.NewLootChest:
             chestsHandler.addChestEvent(Parameters);
@@ -507,13 +516,6 @@ export function onEvent(Parameters) {
             break;
         }
 
-        case EventCodes.NewMistsDungeonExit: {
-            const id = Parameters[0];
-            const pos = Parameters[2];
-            if (!Array.isArray(pos) || pos.length !== 2) break;
-            handlers.mistsDungeonHandler?.addPortal(id, pos[0], pos[1], Parameters[3]);
-            break;
-        }
     }
 }
 

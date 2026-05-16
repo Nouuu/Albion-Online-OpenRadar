@@ -1,11 +1,11 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 
 class MistsDungeonPortal {
-    constructor(id, posX, posY, rawParam3) {
+    constructor(id, posX, posY, name) {
         this.id = id;
         this.posX = posX;
         this.posY = posY;
-        this.rawParam3 = rawParam3;
+        this.name = name;
         this.drawName = 'mists_abbey';
         this.hX = 0;
         this.hY = 0;
@@ -22,14 +22,14 @@ export class MistsDungeonHandler {
         this.portalList = [];
     }
 
-    addPortal(id, posX, posY, rawParam3) {
+    addPortal(id, posX, posY, name) {
         const existing = this.portalList.find(p => p.id === id);
         if (existing) {
             existing.touch();
             return;
         }
-        this.portalList.push(new MistsDungeonPortal(id, posX, posY, rawParam3));
-        window.logger?.debug(CATEGORIES.MAP, 'MistsDungeonPortalAdded', {id, posX, posY, rawParam3});
+        this.portalList.push(new MistsDungeonPortal(id, posX, posY, name));
+        window.logger?.debug(CATEGORIES.MAP, 'MistsDungeonPortalAdded', {id, posX, posY, name});
     }
 
     cleanupStaleEntities(maxAgeMs = 130000) {

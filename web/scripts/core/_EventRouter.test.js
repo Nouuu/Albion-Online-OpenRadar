@@ -1260,20 +1260,47 @@ describe('EventRouter', () => {
         });
     });
 
-    describe('MIST-119 NewMistsDungeonExit dispatch', () => {
-        // @verified 2026-05-14: pcap-derived dungeon-exit-spawn fixture (capture 19-38-46).
-        test('event 536 routes to mistsDungeonHandler.addPortal with id, position, rawParam3', async () => {
-            const fix = await loadFixture('mists', 'dungeon-exit-spawn');
+    describe('MIST-119 NewRandomDungeonExit routing (MISTS_DUNGEON detection)', () => {
+        // @verified 2026-05-16: pcap-derived dungeon-portal-spawn fixture (capture 13-41-00).
+        // Knightfall Abbey portal arrives via event 323 with param[15]="MISTS_DUNGEON_SOLO_BLACK"
+        // and param[3]="" (empty). Route to mistsDungeonHandler, not dungeonsHandler.
+        test('event 323 with param[15] starting MISTS_DUNGEON routes to mistsDungeonHandler.addPortal', async () => {
+            const fix = await loadFixture('mists', 'dungeon-portal-spawn');
             const p = normalizeParams(fix.messages[0].parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.mistsDungeonHandler.addPortal).toHaveBeenCalledWith(p[0], p[2][0], p[2][1], p[3]);
+            expect(handlers.mistsDungeonHandler.addPortal)
+                .toHaveBeenCalledWith(p[0], p[1][0], p[1][1], p[15]);
+            expect(handlers.dungeonsHandler.dungeonEvent).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-05-14: synthetic guard. Missing position skips dispatch.
-        test('event 536 with missing position does not call addPortal', () => {
-            EventRouter.onEvent({0: 1, 252: 536, 3: 90});
+        // @verified 2026-05-16: regression. Standard random dungeon (no MISTS_DUNGEON tag) still
+        // routes to dungeonsHandler.
+        test('event 323 without MISTS_DUNGEON tag routes to dungeonsHandler.dungeonEvent', () => {
+            const params = {0: 1, 1: [10, 20], 3: 'CORRUPTED_SOLO_NONLETHAL', 252: 323, 15: undefined};
+
+            EventRouter.onEvent(params);
+
+            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(params);
+            expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-05-16: pcap-derived. Standard Mist solo/duo entrance (MISTS_SOLO_BLACK
+        // without DUNGEON) routes to dungeonsHandler, NOT mistsDungeonHandler. The detection key
+        // is the MISTS_DUNGEON prefix, not the plain MISTS_ prefix.
+        test('event 323 with MISTS_SOLO (non-DUNGEON) routes to dungeonsHandler, not mistsDungeonHandler', () => {
+            const params = {0: 2, 1: [50, 60], 3: '', 5: 'SHARED_MIST_WISP_PORTAL_MOB', 15: 'MISTS_SOLO_BLACK', 252: 323};
+
+            EventRouter.onEvent(params);
+
+            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(params);
+            expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-05-16: synthetic guard. Missing position skips abbey dispatch silently.
+        test('event 323 MISTS_DUNGEON with missing position does not call addPortal', () => {
+            EventRouter.onEvent({0: 1, 252: 323, 15: 'MISTS_DUNGEON_SOLO_BLACK'});
 
             expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });
