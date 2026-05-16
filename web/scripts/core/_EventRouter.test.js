@@ -1278,4 +1278,101 @@ describe('EventRouter', () => {
             expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });
     });
+
+    // -------------------------------------------------------------------------
+    // MIST-117/119 pvpType persistence across SPA navigation
+    // -------------------------------------------------------------------------
+    describe('MIST-117/119 pvpType persistence', () => {
+        beforeEach(() => {
+            sessionStorage.clear();
+        });
+
+        // @verified 2026-05-16: bug report. User entered a Brec lethal Mist (black banner),
+        // switched tab, came back. Without pvpType in the persisted payload, restore inherits
+        // from origin 5001 = safe = green banner.
+        test('Brec lethal Mist override persists pvpType, not just originZoneId', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-letal', 9: [0, 0]}, clearHandlers);
+
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted.pvpType).toBe('black');
+        });
+
+        // @verified 2026-05-16: companion to the above. restoreMistOverrideFromSession must
+        // forward pvpType to setMistOverride so Brec lethal stays black after SPA navigation.
+        test('restoreMistOverrideFromSession applies persisted pvpType (Brec lethal stays black)', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@brec-letal',
+                originZoneId: '5001',
+                pvpType: 'black',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-letal')).toBe('black');
+        });
+
+        // @verified 2026-05-16: companion. Brec non-lethal stays yellow on restore.
+        test('restoreMistOverrideFromSession applies persisted yellow pvpType (Brec non-lethal)', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@brec-yellow',
+                originZoneId: '5001',
+                pvpType: 'yellow',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-yellow')).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: backward compat. Legacy payloads without pvpType still
+        // restore via origin inheritance (the prior MIST-90 behavior). BZ origin -> black.
+        test('restoreMistOverrideFromSession without persisted pvpType falls back to origin inheritance', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@bz-legacy',
+                originZoneId: '3316',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@bz-legacy')).toBe('black');
+        });
+
+        // @verified 2026-05-16: sanctuary persistence. When the user switches tab while inside
+        // an abbey, the abbey override must survive so the in-abbey banner stays correct.
+        test('Knightfall Abbey entry persists the abbey override with parent pvpType', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@parent', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@abbey-1', 9: [0, 0]}, clearHandlers);
+
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted.mistMapId).toBe('@MISTSDUNGEON@abbey-1');
+            expect(persisted.pvpType).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: chain restoration. After restore from a Mist override,
+        // lastActiveMistOverride must be populated so chain logic works for subsequent
+        // abbey transitions.
+        test('restoreMistOverrideFromSession also rebuilds lastActiveMistOverride for chain', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@chain-bz',
+                originZoneId: '3316',
+                pvpType: 'black',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+            const restored = EventRouter._debugGetLastActiveMistOverride();
+
+            expect(restored).toMatchObject({
+                mistMapId: '@MISTS@chain-bz',
+                originZoneId: '3316',
+                pvpType: 'black'
+            });
+        });
+    });
 });

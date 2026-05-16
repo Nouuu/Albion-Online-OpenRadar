@@ -62,11 +62,12 @@ function persistMapToSession() {
     }
 }
 
-function persistMistOverride(mistMapId, originZoneId) {
+function persistMistOverride(mistMapId, originZoneId, pvpType) {
     try {
         sessionStorage.setItem('activeMistOverride', JSON.stringify({
             mistMapId,
             originZoneId,
+            pvpType,
             timestamp: Date.now()
         }));
     } catch (e) {
@@ -130,12 +131,13 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
                 pvpType: resolved.pvpType,
                 ts: Date.now(),
             };
-            persistMistOverride(newMapId, originId);
+            persistMistOverride(newMapId, originId, resolved.pvpType);
         }
     } else if (isSanctuaryId(newMapId)) {
         if (lastActiveMistOverride
             && (Date.now() - lastActiveMistOverride.ts) <= MIST_CHAIN_TTL_MS) {
             zonesDatabase.setMistOverride(newMapId, lastActiveMistOverride.originZoneId, lastActiveMistOverride.pvpType);
+            persistMistOverride(newMapId, lastActiveMistOverride.originZoneId, lastActiveMistOverride.pvpType);
         }
     } else {
         zonesDatabase.clearAllMistOverrides();
@@ -262,10 +264,20 @@ export function restoreMistOverrideFromSession() {
         if (!saved) return;
         const data = JSON.parse(saved);
         if (data && typeof data.mistMapId === 'string' && typeof data.originZoneId === 'string') {
-            zonesDatabase.setMistOverride(data.mistMapId, data.originZoneId);
+            zonesDatabase.setMistOverride(data.mistMapId, data.originZoneId, data.pvpType);
+            const resolved = zonesDatabase.getZone(data.mistMapId);
+            if (resolved) {
+                lastActiveMistOverride = {
+                    mistMapId: data.mistMapId,
+                    originZoneId: data.originZoneId,
+                    pvpType: resolved.pvpType,
+                    ts: Date.now(),
+                };
+            }
             window.logger?.info(CATEGORIES.MAP, 'MistOverrideRestored', {
                 mistMapId: data.mistMapId,
                 originZoneId: data.originZoneId,
+                pvpType: data.pvpType,
                 age: Date.now() - (data.timestamp || 0)
             });
         }
