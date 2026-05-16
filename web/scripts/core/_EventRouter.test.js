@@ -64,7 +64,8 @@ describe('EventRouter', () => {
             chestsHandler: {removeChest: vi.fn(), addChestEvent: vi.fn()},
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
-            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()}
+            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
+            mistsDungeonHandler: {addPortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()}
         };
 
         map = {id: -1, hX: 0, hY: 0, isBZ: false};
@@ -1178,6 +1179,315 @@ describe('EventRouter', () => {
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-4', 9: [0, 0]}, clearHandlers);
 
             expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // MIST-119 sanctuary chain
+    // -------------------------------------------------------------------------
+    describe('MIST-119 sanctuary chain', () => {
+        // @verified 2026-05-14: capture 19-38-46 sequence 0220 -> @MISTS@8dfbe1cb -> @MISTSDUNGEON@c21e6e24 -> @MISTS@254f55bc.
+        test('Mist -> Knightfall Abbey -> Mist preserves yellow pvpType', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@8dfbe1cb', 9: [0, 0]}, clearHandlers);
+            expect(zonesDatabase.getPvpType('@MISTS@8dfbe1cb')).toBe('yellow');
+
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@c21e6e24', 9: [0, 0]}, clearHandlers);
+
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@254f55bc', 9: [0, 0]}, clearHandlers);
+            expect(zonesDatabase.getPvpType('@MISTS@254f55bc')).toBe('yellow');
+        });
+
+        // @verified 2026-05-14: same capture; abbey banner must reflect parent Mist class (issue #119 audio bug).
+        test('Knightfall Abbey entry registers an override that mirrors the parent Mist pvpType', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@8dfbe1cb', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@c21e6e24', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTSDUNGEON@c21e6e24')).toBe('yellow');
+        });
+
+        // @verified 2026-05-14: synthetic. Black BZ -> Mist -> abbey -> Mist preserves black across the chain.
+        test('BZ Mist -> Abbey -> BZ Mist preserves black pvpType', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-1', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@deadbeef', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-2', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTSDUNGEON@deadbeef')).toBe('black');
+            expect(zonesDatabase.getPvpType('@MISTS@bz-2')).toBe('black');
+        });
+
+        // @verified 2026-05-14: synthetic. Chain TTL boundary.
+        test('Override chain expires after 30 minutes', () => {
+            zonesDatabase.clearAllMistOverrides();
+
+            vi.useFakeTimers();
+            vi.setSystemTime(new Date('2026-05-14T12:00:00Z'));
+
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@yellow-1', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@long-stay', 9: [0, 0]}, clearHandlers);
+
+            vi.advanceTimersByTime(30 * 60 * 1000 + 1000);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@post-expiry', 9: [0, 0]}, clearHandlers);
+
+            vi.useRealTimers();
+            sessionStorage.clear();
+
+            expect(zonesDatabase.getPvpType('@MISTS@post-expiry')).toBe('safe');
+        });
+
+        // @verified 2026-05-14: synthetic. Transit through a real zone clears the chain.
+        test('Mist -> real zone -> Mist clears the chain (no false propagation)', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@chain-bz', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '0220', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@new-yellow', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@new-yellow')).toBe('yellow');
+            expect(EventRouter._debugGetLastActiveMistOverride()?.pvpType).toBe('yellow');
+        });
+
+        // @verified 2026-05-14: synthetic. Resetting the router clears the chain.
+        test('reset() clears lastActiveMistOverride', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@chain-bz', 9: [0, 0]}, clearHandlers);
+
+            EventRouter.reset();
+
+            expect(EventRouter._debugGetLastActiveMistOverride()).toBeNull();
+        });
+    });
+
+    describe('MIST-119 NewRandomDungeonExit routing (MISTS_DUNGEON detection)', () => {
+        // @verified 2026-05-16: pcap-derived dungeon-portal-spawn fixture (capture 13-41-00).
+        // Knightfall Abbey portal arrives via event 323 with param[15]="MISTS_DUNGEON_SOLO_BLACK"
+        // and param[3]="" (empty). Route to mistsDungeonHandler, not dungeonsHandler.
+        test('event 323 with param[15] starting MISTS_DUNGEON routes to mistsDungeonHandler.addPortal', async () => {
+            const fix = await loadFixture('mists', 'dungeon-portal-spawn');
+            const p = normalizeParams(fix.messages[0].parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.mistsDungeonHandler.addPortal)
+                .toHaveBeenCalledWith(p[0], p[1][0], p[1][1], p[15]);
+            expect(handlers.dungeonsHandler.dungeonEvent).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-05-16: regression. Standard random dungeon (no MISTS_DUNGEON tag) still
+        // routes to dungeonsHandler.
+        test('event 323 without MISTS_DUNGEON tag routes to dungeonsHandler.dungeonEvent', () => {
+            const params = {0: 1, 1: [10, 20], 3: 'CORRUPTED_SOLO_NONLETHAL', 252: 323, 15: undefined};
+
+            EventRouter.onEvent(params);
+
+            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(params);
+            expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-05-16: pcap-derived. Standard Mist solo/duo entrance (MISTS_SOLO_BLACK
+        // without DUNGEON) routes to dungeonsHandler, NOT mistsDungeonHandler. The detection key
+        // is the MISTS_DUNGEON prefix, not the plain MISTS_ prefix.
+        test('event 323 with MISTS_SOLO (non-DUNGEON) routes to dungeonsHandler, not mistsDungeonHandler', () => {
+            const params = {0: 2, 1: [50, 60], 3: '', 5: 'SHARED_MIST_WISP_PORTAL_MOB', 15: 'MISTS_SOLO_BLACK', 252: 323};
+
+            EventRouter.onEvent(params);
+
+            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(params);
+            expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-05-16: synthetic guard. Missing position skips abbey dispatch silently.
+        test('event 323 MISTS_DUNGEON with missing position does not call addPortal', () => {
+            EventRouter.onEvent({0: 1, 252: 323, 15: 'MISTS_DUNGEON_SOLO_BLACK'});
+
+            expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // MIST-117/119 pvpType persistence across SPA navigation
+    // -------------------------------------------------------------------------
+    describe('MIST-117/119 pvpType persistence', () => {
+        beforeEach(() => {
+            sessionStorage.clear();
+        });
+
+        // @verified 2026-05-16: bug report. User entered a Brec lethal Mist (black banner),
+        // switched tab, came back. Without pvpType in the persisted payload, restore inherits
+        // from origin 5001 = safe = green banner.
+        test('Brec lethal Mist override persists pvpType, not just originZoneId', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-letal', 9: [0, 0]}, clearHandlers);
+
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted.pvpType).toBe('black');
+        });
+
+        // @verified 2026-05-16: companion to the above. restoreMistOverrideFromSession must
+        // forward pvpType to setMistOverride so Brec lethal stays black after SPA navigation.
+        test('restoreMistOverrideFromSession applies persisted pvpType (Brec lethal stays black)', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@brec-letal',
+                originZoneId: '5001',
+                pvpType: 'black',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-letal')).toBe('black');
+        });
+
+        // @verified 2026-05-16: companion. Brec non-lethal stays yellow on restore.
+        test('restoreMistOverrideFromSession applies persisted yellow pvpType (Brec non-lethal)', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@brec-yellow',
+                originZoneId: '5001',
+                pvpType: 'yellow',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-yellow')).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: backward compat. Legacy payloads without pvpType still
+        // restore via origin inheritance (the prior MIST-90 behavior). BZ origin -> black.
+        test('restoreMistOverrideFromSession without persisted pvpType falls back to origin inheritance', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@bz-legacy',
+                originZoneId: '3316',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+
+            expect(zonesDatabase.getPvpType('@MISTS@bz-legacy')).toBe('black');
+        });
+
+        // @verified 2026-05-16: sanctuary persistence. When the user switches tab while inside
+        // an abbey, the abbey override must survive so the in-abbey banner stays correct.
+        test('Knightfall Abbey entry persists the abbey override with parent pvpType', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@parent', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@abbey-1', 9: [0, 0]}, clearHandlers);
+
+            const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
+            expect(persisted.mistMapId).toBe('@MISTSDUNGEON@abbey-1');
+            expect(persisted.pvpType).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: chain restoration. After restore from a Mist override,
+        // lastActiveMistOverride must be populated so chain logic works for subsequent
+        // abbey transitions.
+        test('restoreMistOverrideFromSession also rebuilds lastActiveMistOverride for chain', () => {
+            sessionStorage.setItem('activeMistOverride', JSON.stringify({
+                mistMapId: '@MISTS@chain-bz',
+                originZoneId: '3316',
+                pvpType: 'black',
+                timestamp: Date.now()
+            }));
+
+            EventRouter.restoreMistOverrideFromSession();
+            const restored = EventRouter._debugGetLastActiveMistOverride();
+
+            expect(restored).toMatchObject({
+                mistMapId: '@MISTS@chain-bz',
+                originZoneId: '3316',
+                pvpType: 'black'
+            });
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // MIST-119 Mist-to-Mist chain (border exit between two Mists)
+    // -------------------------------------------------------------------------
+    describe('MIST-119 Mist-to-Mist chain', () => {
+        // @verified 2026-05-16: bug report. Brec lethal -> Mist A (black) -> Mist B via border
+        // exit (no op 473). B currently inherits from origin 5001 = safe = green. Should stay black.
+        test('Brec lethal Mist -> Mist via border exit preserves black pvpType', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-A', 9: [0, 0]}, clearHandlers);
+            expect(zonesDatabase.getPvpType('@MISTS@brec-A')).toBe('black');
+
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-B', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-B')).toBe('black');
+        });
+
+        // @verified 2026-05-16: same logic, 3 hops. Brec lethal -> A -> B -> C all black.
+        test('Brec lethal chain across 3 Mists preserves black throughout', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-A', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-B', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-C', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-C')).toBe('black');
+        });
+
+        // @verified 2026-05-16: Brec non-lethal yellow inherits across hops.
+        test('Brec non-lethal Mist -> Mist preserves yellow pvpType', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-yA', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-yB', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@brec-yB')).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: regression. Royal yellow -> Mist A -> Mist B both yellow (already
+        // worked via origin inheritance, regression guard for the new chain logic).
+        test('Royal yellow Mist -> Mist preserves yellow', () => {
+            map.id = '0220';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@royal-A', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@royal-B', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@royal-B')).toBe('yellow');
+        });
+
+        // @verified 2026-05-16: regression. BZ -> Mist A -> Mist B both black (already worked).
+        test('BZ Mist -> Mist preserves black', () => {
+            map.id = '0316';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-A', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@bz-B', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@bz-B')).toBe('black');
+        });
+
+        // @verified 2026-05-16: regression. Brec lethal Mist -> back to Brec -> re-talk NPC ->
+        // new Mist with own choice. Transit through real zone clears chain, new op 473 sets fresh
+        // forcedPvpType. Ensures the new chain logic does not leak state across real-zone transits.
+        test('Brec lethal -> Mist -> Brec -> new lethal Mist starts a fresh black override', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@first', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '5001', 9: [0, 0]}, clearHandlers);
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@second', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('black');
+        });
+
+        // @verified 2026-05-16: defensive. Confirms the Mist-to-Mist elif does NOT capture
+        // @MISTSDUNGEON@ prefixes. Brec lethal -> Mist -> abbey -> Mist must keep black via
+        // the SANCTUARY branch (chain through lastActiveMistOverride), not via the plain-Mist
+        // elif (which would inherit from a wrong source if it fired here).
+        test('@MISTSDUNGEON@ previousMapId routes through sanctuary branch, not plain-Mist branch', () => {
+            map.id = '5001';
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-pre-abbey', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@inner', 9: [0, 0]}, clearHandlers);
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-post-abbey', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTSDUNGEON@inner')).toBe('black');
+            expect(zonesDatabase.getPvpType('@MISTS@brec-post-abbey')).toBe('black');
+            expect(EventRouter._debugGetLastActiveMistOverride()?.mistMapId).toBe('@MISTS@brec-post-abbey');
         });
     });
 });

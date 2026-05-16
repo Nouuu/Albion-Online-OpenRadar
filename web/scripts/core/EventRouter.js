@@ -17,6 +17,18 @@ const MIST_CHOICE_TTL_MS = 30000;
 let lastMapChangeTime = 0;
 let pendingMistChoice = null;
 
+// Sanctuary chain tracking
+const MIST_CHAIN_TTL_MS = 30 * 60 * 1000;
+let lastActiveMistOverride = null;
+
+function isSanctuaryId(mapId) {
+    return typeof mapId === 'string' && mapId.startsWith('@MISTSDUNGEON@');
+}
+
+function isPlainMistId(mapId) {
+    return typeof mapId === 'string' && mapId.startsWith('@MISTS@');
+}
+
 // Local player position (relative coords)
 let lpX = 0.0;
 let lpY = 0.0;
@@ -54,11 +66,12 @@ function persistMapToSession() {
     }
 }
 
-function persistMistOverride(mistMapId, originZoneId) {
+function persistMistOverride(mistMapId, originZoneId, pvpType) {
     try {
         sessionStorage.setItem('activeMistOverride', JSON.stringify({
             mistMapId,
             originZoneId,
+            pvpType,
             timestamp: Date.now()
         }));
     } catch (e) {
@@ -96,18 +109,55 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     map.id = newMapId;
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
-    if (typeof newMapId === 'string' && newMapId.startsWith('@MISTS@')) {
-        const originId = resolveMistOriginId(previousMapId);
+
+    if (isPlainMistId(newMapId)) {
         const choice = consumePendingMistChoice();
-        const forcedPvpType = choice ? (choice.lethal ? 'black' : 'yellow') : undefined;
+        let forcedPvpType = choice ? (choice.lethal ? 'black' : 'yellow') : undefined;
+        let originId;
+
+        if (isSanctuaryId(previousMapId)) {
+            if (lastActiveMistOverride
+                && (Date.now() - lastActiveMistOverride.ts) <= MIST_CHAIN_TTL_MS) {
+                originId = lastActiveMistOverride.originZoneId;
+                if (!forcedPvpType) {
+                    forcedPvpType = lastActiveMistOverride.pvpType;
+                }
+            }
+        } else if (isPlainMistId(previousMapId)) {
+            const prevOverride = zonesDatabase.getZone(previousMapId);
+            if (prevOverride && typeof prevOverride.originZoneId === 'string') {
+                originId = prevOverride.originZoneId;
+                if (!forcedPvpType) {
+                    forcedPvpType = prevOverride.pvpType;
+                }
+            }
+        } else {
+            originId = resolveMistOriginId(previousMapId);
+        }
+
         if (originId && zonesDatabase.setMistOverride(newMapId, originId, forcedPvpType)) {
-            persistMistOverride(newMapId, originId);
+            const resolved = zonesDatabase.getZone(newMapId);
+            lastActiveMistOverride = {
+                mistMapId: newMapId,
+                originZoneId: originId,
+                pvpType: resolved.pvpType,
+                ts: Date.now(),
+            };
+            persistMistOverride(newMapId, originId, resolved.pvpType);
+        }
+    } else if (isSanctuaryId(newMapId)) {
+        if (lastActiveMistOverride
+            && (Date.now() - lastActiveMistOverride.ts) <= MIST_CHAIN_TTL_MS) {
+            zonesDatabase.setMistOverride(newMapId, lastActiveMistOverride.originZoneId, lastActiveMistOverride.pvpType);
+            persistMistOverride(newMapId, lastActiveMistOverride.originZoneId, lastActiveMistOverride.pvpType);
         }
     } else {
         zonesDatabase.clearAllMistOverrides();
         clearMistOverridePersistence();
         pendingMistChoice = null;
+        lastActiveMistOverride = null;
     }
+
     syncMapIsBZ();
     radarRenderer?.setMap?.(map);
     persistMapToSession();
@@ -226,10 +276,20 @@ export function restoreMistOverrideFromSession() {
         if (!saved) return;
         const data = JSON.parse(saved);
         if (data && typeof data.mistMapId === 'string' && typeof data.originZoneId === 'string') {
-            zonesDatabase.setMistOverride(data.mistMapId, data.originZoneId);
+            zonesDatabase.setMistOverride(data.mistMapId, data.originZoneId, data.pvpType);
+            const resolved = zonesDatabase.getZone(data.mistMapId);
+            if (resolved) {
+                lastActiveMistOverride = {
+                    mistMapId: data.mistMapId,
+                    originZoneId: data.originZoneId,
+                    pvpType: resolved.pvpType,
+                    ts: Date.now(),
+                };
+            }
             window.logger?.info(CATEGORIES.MAP, 'MistOverrideRestored', {
                 mistMapId: data.mistMapId,
                 originZoneId: data.originZoneId,
+                pvpType: data.pvpType,
                 age: Date.now() - (data.timestamp || 0)
             });
         }
@@ -406,9 +466,18 @@ export function onEvent(Parameters) {
             playersHandler.handleMountedPlayerEvent(id, Parameters);
             break;
 
-        case EventCodes.NewRandomDungeonExit:
-            dungeonsHandler.dungeonEvent(Parameters);
+        case EventCodes.NewRandomDungeonExit: {
+            const tag = Parameters[15];
+            if (typeof tag === 'string' && tag.startsWith('MISTS_DUNGEON')) {
+                const pos = Parameters[1];
+                if (Array.isArray(pos) && pos.length === 2) {
+                    handlers.mistsDungeonHandler?.addPortal(Parameters[0], pos[0], pos[1], tag);
+                }
+            } else {
+                dungeonsHandler.dungeonEvent(Parameters);
+            }
             break;
+        }
 
         case EventCodes.NewLootChest:
             chestsHandler.addChestEvent(Parameters);
@@ -446,6 +515,7 @@ export function onEvent(Parameters) {
             }
             break;
         }
+
     }
 }
 
@@ -503,9 +573,14 @@ export function reset() {
     window.lpY = 0;
     lastMapChangeTime = 0;
     pendingMistChoice = null;
+    lastActiveMistOverride = null;
 
     // Clear references to prevent memory leaks
     handlers = null;
     map = null;
     radarRenderer = null;
+}
+
+export function _debugGetLastActiveMistOverride() {
+    return lastActiveMistOverride;
 }

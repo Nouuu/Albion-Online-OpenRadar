@@ -147,6 +147,15 @@
                     <input type="checkbox" id="settingWispSpawnDebugID" class="checkbox checkbox-primary checkbox-xs">
                     <span class="text-sm text-base-content/80">Show wisp ID (debug)</span>
                 </label>
+
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 border border-secondary/20 cursor-pointer group hover:bg-secondary/20 transition-colors mt-2">
+                    <input type="checkbox" id="settingShowKnightfallAbbey" class="checkbox checkbox-secondary">
+                    <i data-lucide="church" class="w-5 h-5 text-secondary"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Knightfall Abbey</span>
+                    <div class="tooltip" data-tip="Display Knightfall Abbey portals on the radar when you are inside a Mist instance">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
             </div>
         </div>
     </div>
@@ -274,7 +283,7 @@
             ["settingChestGreen", "settingChestBlue", "settingChestPurple", "settingChestYellow"].forEach(bindCheckbox);
 
             // Mists
-            ["settingMistSolo", "settingMistDuo", "settingMistE0", "settingMistE1", "settingMistE2", "settingMistE3", "settingMistE4", "settingCage", "settingWispSpawn", "settingWispSpawnDebugID"].forEach(bindCheckbox);
+            ["settingMistSolo", "settingMistDuo", "settingMistE0", "settingMistE1", "settingMistE2", "settingMistE3", "settingMistE4", "settingCage", "settingWispSpawn", "settingWispSpawnDebugID", "settingShowKnightfallAbbey"].forEach(bindCheckbox);
 
             // Dungeons
             ["settingDungeonSolo", "settingDungeonDuo", "settingDungeonE0", "settingDungeonE1", "settingDungeonE2", "settingDungeonE3", "settingDungeonE4", "settingDungeonCorrupted", "settingDungeonHellgate"].forEach(bindCheckbox);

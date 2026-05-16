@@ -146,6 +146,13 @@ export class RadarRenderer {
             );
         }
 
+        if (this.handlers.mistsDungeonHandler && this.drawings.mistsDungeonDrawing) {
+            this.drawings.mistsDungeonDrawing.interpolate(
+                this.handlers.mistsDungeonHandler.portalList,
+                this.lpX, this.lpY, t
+            );
+        }
+
         if (this.handlers.mobsHandler && this.drawings.mistsWispDrawing) {
             this.drawings.mistsWispDrawing.interpolate(
                 this.handlers.mobsHandler.mistList,
@@ -252,6 +259,13 @@ export class RadarRenderer {
                 this.drawings.wispCageDrawing.draw(
                     context,
                     this.handlers.wispCageHandler.cages
+                );
+            }
+
+            if (this.drawings.mistsDungeonDrawing && this.handlers.mistsDungeonHandler) {
+                this.drawings.mistsDungeonDrawing.draw(
+                    context,
+                    this.handlers.mistsDungeonHandler.portalList
                 );
             }
 
