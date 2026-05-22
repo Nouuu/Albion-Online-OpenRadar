@@ -99,6 +99,23 @@ describe('ZonesDatabase mist overrides', () => {
         expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('yellow');
     });
 
+    // @verified 2026-05-22: capture 14-07-27 sequence 2204 (Deadvein Gully, red) -> @MISTS@4860a8f8
+    // (portal MISTS_SOLO_BLACK). Red zones are lethal full-loot (game rule), and Mists entered from
+    // them are lethal black. Origin inheritance must map red -> black so the threat gate treats any
+    // player as hostile inside the Mist.
+    test('setMistOverride from a red origin forces black (Mists from red zones are lethal)', () => {
+        zonesDatabase.setMistOverride('@MISTS@from-red', '2204');
+
+        expect(zonesDatabase.getPvpType('@MISTS@from-red')).toBe('black');
+    });
+
+    // @verified 2026-05-22: explicit forcedPvpType still wins over the red->black inheritance map.
+    test('setMistOverride red origin with explicit forcedPvpType keeps the forced value', () => {
+        zonesDatabase.setMistOverride('@MISTS@from-red-forced', '2204', 'yellow');
+
+        expect(zonesDatabase.getPvpType('@MISTS@from-red-forced')).toBe('yellow');
+    });
+
     // @verified 2026-05-22: a @MISTSDUNGEON@ override (Knightfall Abbey) is labelled distinctly
     // from a plain Mist so the in-abbey banner reads "Knightfall Abbey (Mist of X)".
     test('setMistOverride on a @MISTSDUNGEON@ id labels it as Knightfall Abbey', () => {

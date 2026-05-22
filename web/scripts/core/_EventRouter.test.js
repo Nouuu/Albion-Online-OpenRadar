@@ -1468,6 +1468,16 @@ describe('EventRouter', () => {
             expect(zonesDatabase.getPvpType('@MISTS@bz-B')).toBe('black');
         });
 
+        // @verified 2026-05-22: capture 14-07-27 sequence 2204 (Deadvein Gully, red) -> Mist.
+        // Red zones are lethal full-loot; the Mist must be classified black so any player triggers
+        // the threat gate (isPlayerThreat black -> true), not just faction 255.
+        test('red zone -> Mist classifies as black (lethal), not red', () => {
+            map.id = '2204';
+            EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@from-red', 9: [0, 0]}, clearHandlers);
+
+            expect(zonesDatabase.getPvpType('@MISTS@from-red')).toBe('black');
+        });
+
         // @verified 2026-05-16: regression. Brec lethal Mist -> back to Brec -> re-talk NPC ->
         // new Mist with own choice. Transit through real zone clears chain, new op 473 sets fresh
         // forcedPvpType. Ensures the new chain logic does not leak state across real-zone transits.
