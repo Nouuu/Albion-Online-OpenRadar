@@ -32,6 +32,10 @@ export class MistsDungeonHandler {
         window.logger?.debug(CATEGORIES.MAP, 'MistsDungeonPortalAdded', {id, posX, posY, name});
     }
 
+    removePortal(id) {
+        this.portalList = this.portalList.filter(p => p.id !== id);
+    }
+
     cleanupStaleEntities(maxAgeMs = 130000) {
         const now = Date.now();
         this.portalList = this.portalList.filter(p => (now - p.lastUpdateTime) < maxAgeMs);

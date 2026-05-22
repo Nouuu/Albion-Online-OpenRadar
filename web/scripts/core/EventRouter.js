@@ -371,6 +371,7 @@ export function onEvent(Parameters) {
             chestsHandler.removeChest(id);
             fishingHandler.removeFish(id);
             wispCageHandler.removeCage(id);
+            handlers.mistsDungeonHandler?.removePortal(id);
             break;
 
         case EventCodes.Move:

@@ -70,4 +70,24 @@ describe('MistsDungeonHandler', () => {
 
         expect(handler.portalList).toHaveLength(0);
     });
+
+    // @verified 2026-05-22: pcap-confirmed (capture 13-36-55) the abbey portal id receives a
+    // Leave event (event 1) on despawn. removePortal drops only the matching id.
+    test('removePortal removes only the matching id', () => {
+        handler.addPortal(1, 10, 20, 'MISTS_DUNGEON_SOLO_BLACK');
+        handler.addPortal(2, 30, 40, 'MISTS_DUNGEON_SOLO_BLACK');
+
+        handler.removePortal(1);
+
+        expect(handler.portalList.map(p => p.id)).toEqual([2]);
+    });
+
+    // @verified 2026-05-22: synthetic. removePortal on an unknown id is a no-op.
+    test('removePortal with unknown id leaves the list unchanged', () => {
+        handler.addPortal(1, 10, 20, 'MISTS_DUNGEON_SOLO_BLACK');
+
+        handler.removePortal(999);
+
+        expect(handler.portalList).toHaveLength(1);
+    });
 });

@@ -65,7 +65,7 @@ describe('EventRouter', () => {
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
             wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
-            mistsDungeonHandler: {addPortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()}
+            mistsDungeonHandler: {addPortal: vi.fn(), removePortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()}
         };
 
         map = {id: -1, hX: 0, hY: 0, isBZ: false};
@@ -643,6 +643,14 @@ describe('EventRouter', () => {
             expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
             expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
             expect(handlers.wispCageHandler.removeCage).toHaveBeenCalledWith(42);
+        });
+
+        // @verified 2026-05-22: pcap-confirmed (capture 13-36-55) the abbey portal id receives a
+        // Leave event on despawn. Leave must drop it from mistsDungeonHandler too.
+        test('Leave event removes the abbey portal from mistsDungeonHandler', () => {
+            EventRouter.onEvent({0: 2547, 252: EventCodes.Leave});
+
+            expect(handlers.mistsDungeonHandler.removePortal).toHaveBeenCalledWith(2547);
         });
     });
 
