@@ -1,0 +1,25 @@
+{
+  "scenario": "mist-solo-portal-spawn.json",
+  "handler": "dungeons",
+  "messages": [
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 2627,
+        "1": [237.78215, -228.41034],
+        "3": "",
+        "5": "SHARED_MIST_WISP_PORTAL_MOB",
+        "6": 3,
+        "7": true,
+        "8": 1,
+        "14": 0,
+        "15": "MISTS_SOLO_BLACK",
+        "16": 2492,
+        "17": 0,
+        "18": 639150467941626231,
+        "19": 0,
+        "252": 323
+      }
+    }
+  ]
+}
