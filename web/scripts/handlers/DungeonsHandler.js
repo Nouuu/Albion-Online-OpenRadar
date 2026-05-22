@@ -84,7 +84,8 @@ export class DungeonsHandler
 
         const id = parameters[0];
         const position = parameters[1];
-        const name = parameters[3];
+        // Post-Knightfall the Mist portal name moved from Parameters[3] to Parameters[15].
+        const name = parameters[3] || parameters[15] || '';
         // Parameters[8] is the enchant (0-4); Parameters[6] is a type/variant id.
         const enchant = parameters[8] ?? 0;
 
