@@ -93,8 +93,9 @@ export class ZonesDatabase {
       });
       return false;
     }
+    const isAbbey = String(mistMapId).startsWith("@MISTSDUNGEON@");
     this.overrides.set(String(mistMapId), {
-      name: `Mist of ${origin.name}`,
+      name: isAbbey ? `Knightfall Abbey (Mist of ${origin.name})` : `Mist of ${origin.name}`,
       type: "MISTS",
       pvpType: forcedPvpType || origin.pvpType,
       tier: 0,

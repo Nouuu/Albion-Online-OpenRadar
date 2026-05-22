@@ -99,6 +99,22 @@ describe('ZonesDatabase mist overrides', () => {
         expect(zonesDatabase.getPvpType('@MISTS@x')).toBe('yellow');
     });
 
+    // @verified 2026-05-22: a @MISTSDUNGEON@ override (Knightfall Abbey) is labelled distinctly
+    // from a plain Mist so the in-abbey banner reads "Knightfall Abbey (Mist of X)".
+    test('setMistOverride on a @MISTSDUNGEON@ id labels it as Knightfall Abbey', () => {
+        zonesDatabase.setMistOverride('@MISTSDUNGEON@abc', '0220', 'yellow');
+
+        expect(zonesDatabase.getZoneName('@MISTSDUNGEON@abc')).toBe('Knightfall Abbey (Mist of Falsestep Marsh)');
+        expect(zonesDatabase.getPvpType('@MISTSDUNGEON@abc')).toBe('yellow');
+    });
+
+    // @verified 2026-05-22: a plain @MISTS@ override keeps the "Mist of X" label (regression guard).
+    test('setMistOverride on a plain @MISTS@ id keeps the Mist of X label', () => {
+        zonesDatabase.setMistOverride('@MISTS@plain', '0220');
+
+        expect(zonesDatabase.getZoneName('@MISTS@plain')).toBe('Mist of Falsestep Marsh');
+    });
+
     // @verified 2026-05-12: source captures A/C/D op 473 param[2] discriminant.
     // Brecilien city origin (safe) with explicit pvpType override = black for lethal Mists.
     test('setMistOverride accepts forcedPvpType overriding origin pvpType', () => {
