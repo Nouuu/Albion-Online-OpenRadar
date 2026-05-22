@@ -102,6 +102,7 @@ export class ZonesDatabase {
       pvpType: forcedPvpType || inheritedPvpType,
       tier: 0,
       file: origin.file,
+      bounds: origin.bounds,
       originZoneId: String(originZoneId),
     });
     return true;
@@ -154,6 +155,32 @@ export class ZonesDatabase {
 
   getZoneType(zoneId) {
     return this.getZone(zoneId)?.type || "";
+  }
+
+  getMapAssetExtent(zoneId) {
+    const b = this._validBounds(zoneId);
+    if (!b) return 825;
+    return Math.max(b.max[0] - b.min[0], b.max[1] - b.min[1]);
+  }
+
+  getMapAssetCenter(zoneId) {
+    const b = this._validBounds(zoneId);
+    if (!b) return {x: 0, y: 0};
+    return {x: (b.min[0] + b.max[0]) / 2, y: (b.min[1] + b.max[1]) / 2};
+  }
+
+  _validBounds(zoneId) {
+    const b = this.getZone(zoneId)?.bounds;
+    if (
+      !b ||
+      !Array.isArray(b.min) || !Array.isArray(b.max) ||
+      b.min.length !== 2 || b.max.length !== 2 ||
+      !Number.isFinite(b.min[0]) || !Number.isFinite(b.min[1]) ||
+      !Number.isFinite(b.max[0]) || !Number.isFinite(b.max[1])
+    ) {
+      return null;
+    }
+    return b;
   }
 }
 
