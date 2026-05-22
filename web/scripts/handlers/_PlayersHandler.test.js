@@ -74,7 +74,7 @@ describe('PlayersHandler', () => {
         test('synthetic hostile in unknown zone: alert should fire but does not', () => {
             zonesDatabase.getPvpType.mockReturnValue('safe');
             window.currentMapId = 'UNMAPPED_AVALON_HIDEOUT';
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
@@ -123,7 +123,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-04-18: passive player in safe zone does not trigger audio.
         test('synthetic: passive faction=0 in safe zone does not play sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('safe');
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
 
@@ -133,7 +133,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-04-18: hostile in safe zone does not trigger audio (isPlayerThreat returns false for 'safe').
         test('synthetic: hostile faction=255 in safe zone does not play sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('safe');
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
@@ -143,7 +143,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-04-18: hostile faction=255 in red zone triggers audio alert.
         test('synthetic: hostile faction=255 in red zone plays sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
@@ -153,7 +153,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-04-18: in black zone isPlayerThreat returns true for any faction including passive=0.
         test('synthetic: passive faction=0 in black zone plays sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('black');
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
 
@@ -164,7 +164,7 @@ describe('PlayersHandler', () => {
         test('synthetic: missing mapId suppresses alert even in red zone', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             window.currentMapId = null;
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
@@ -178,7 +178,7 @@ describe('PlayersHandler', () => {
                 if (k === 'settingFlash' || k === 'settingSound') return false;
                 return true;
             });
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
@@ -225,7 +225,7 @@ describe('PlayersHandler', () => {
         test('synthetic: passive-to-hostile transition in red zone plays sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.updatePlayerFaction(1, 255);
 
@@ -236,7 +236,7 @@ describe('PlayersHandler', () => {
         test('synthetic: hostile-to-hostile does not play sound again', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 255, 51: null, 40: [], 43: []});
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.updatePlayerFaction(1, 255);
 
@@ -247,7 +247,7 @@ describe('PlayersHandler', () => {
         test('synthetic: hostile-to-passive does not play sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 255, 51: null, 40: [], 43: []});
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.updatePlayerFaction(1, 0);
 
@@ -258,7 +258,7 @@ describe('PlayersHandler', () => {
         test('synthetic: passive-to-hostile in safe zone does not play sound', () => {
             zonesDatabase.getPvpType.mockReturnValue('safe');
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.updatePlayerFaction(1, 255);
 
@@ -270,7 +270,7 @@ describe('PlayersHandler', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
             handler.alreadyIgnoredPlayers = [{id: 1}];
-            const playSpy = vi.spyOn(handler.audio, 'play').mockResolvedValue();
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.updatePlayerFaction(1, 255);
 
@@ -554,6 +554,39 @@ describe('PlayersHandler', () => {
         test('synthetic: triggerScreenFlash appends bg-error/60 div to body', () => {
             handler.triggerScreenFlash();
             expect(document.body.querySelectorAll('.bg-error\\/60').length).toBeGreaterThanOrEqual(1);
+        });
+    });
+
+    describe('playThreatSound (fresh audio per trigger)', () => {
+        afterEach(() => {
+            vi.unstubAllGlobals();
+        });
+
+        // @verified 2026-05-22: bug report. The single reused Audio element stopped emitting after a
+        // long session (flash still worked). A fresh Audio per trigger mirrors the stateless flash
+        // and avoids a stale/suspended media element.
+        test('synthetic: each call constructs a new Audio and plays it', () => {
+            const playMock = vi.fn().mockResolvedValue();
+            const audioCtor = vi.fn(function () { this.play = playMock; });
+            vi.stubGlobal('Audio', audioCtor);
+
+            handler.playThreatSound();
+            handler.playThreatSound();
+
+            expect(audioCtor).toHaveBeenCalledTimes(2);
+            expect(audioCtor).toHaveBeenCalledWith('/sounds/player.mp3');
+            expect(playMock).toHaveBeenCalledTimes(2);
+        });
+
+        // @verified 2026-05-22: synthetic. A rejected play() promise is swallowed and logged, not thrown.
+        test('synthetic: rejected play() is caught and logged', async () => {
+            const playMock = vi.fn().mockRejectedValue(new Error('autoplay blocked'));
+            vi.stubGlobal('Audio', vi.fn(function () { this.play = playMock; }));
+
+            expect(() => handler.playThreatSound()).not.toThrow();
+            await Promise.resolve();
+
+            expect(window.logger.debug).toHaveBeenCalled();
         });
     });
 

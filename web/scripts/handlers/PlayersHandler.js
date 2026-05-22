@@ -86,9 +86,19 @@ export class PlayersHandler {
     constructor() {
         this.playersList = [];
         this.localPlayer = new Player();
-        this.audio = new Audio('/sounds/player.mp3');
         this.lastFlashAt = 0;
         this.FLASH_DURATION_MS = 300;
+    }
+
+    playThreatSound() {
+        try {
+            const audio = new Audio('/sounds/player.mp3');
+            audio.play().catch((err) => {
+                window.logger?.debug(CATEGORIES.PLAYERS, 'audio_blocked', {error: err?.message});
+            });
+        } catch (err) {
+            window.logger?.debug(CATEGORIES.PLAYERS, 'audio_error', {error: err?.message});
+        }
     }
 
     triggerScreenFlash() {
@@ -172,12 +182,7 @@ export class PlayersHandler {
         }
 
         if (isThreat && mapId && settingsSync.getBool('settingSound')) {
-            this.audio.play().catch(err => {
-                window.logger?.debug(CATEGORIES.PLAYERS, 'audio_blocked', {
-                    error: err.message,
-                    player: nickname
-                });
-            });
+            this.playThreatSound();
         }
 
         return 2;
@@ -283,9 +288,7 @@ export class PlayersHandler {
         }
 
         if (settingsSync.getBool('settingSound')) {
-            this.audio.play().catch((err) => {
-                window.logger?.debug(CATEGORIES.PLAYERS, 'audio_blocked_hostile', {error: err?.message});
-            });
+            this.playThreatSound();
         }
 
         window.logger?.info(CATEGORIES.PLAYERS, 'PlayerBecameHostile', {
