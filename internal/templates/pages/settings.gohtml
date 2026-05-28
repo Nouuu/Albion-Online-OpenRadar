@@ -135,6 +135,28 @@
                     </label>
                 </div>
             </div>
+
+            <!-- Player Trail Settings (sub-section) -->
+            <div class="mt-4 p-4 rounded-lg bg-base-300">
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingPlayerTrail" class="checkbox checkbox-primary checkbox-sm">
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
+                        <i data-lucide="footprints" class="w-4 h-4 text-base-content/50"></i>
+                        Player Trail
+                    </span>
+                    <div class="tooltip" data-tip="Draw a fading neon trail behind the player indicating where you have walked.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
+                <div class="mt-3 ml-8 flex flex-wrap gap-4">
+                    <label class="flex items-center gap-2">
+                        <span class="text-base-content/60 text-xs">Duration</span>
+                        <input id="settingPlayerTrailDuration" type="number" min="30" max="600" step="30" placeholder="180"
+                               class="input input-bordered input-xs w-20">
+                        <span class="text-base-content/50 text-xs">seconds</span>
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -458,6 +480,10 @@
             bindCheckbox("settingResourceClusters");
             bindNumber("settingClusterRadius", 30);
             bindNumber("settingClusterMinSize", 2);
+
+            // Player Trail settings
+            bindCheckbox("settingPlayerTrail");
+            bindNumber("settingPlayerTrailDuration", 180);
 
             // Category filters (Logging section)
             bindCheckbox("categorySystem");
