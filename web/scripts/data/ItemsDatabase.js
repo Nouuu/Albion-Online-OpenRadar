@@ -30,31 +30,32 @@ export class ItemsDatabase {
 
             const items = await response.json();
 
-            if (!Array.isArray(items)) {
-                throw new Error('Invalid items.min.json structure: expected array');
-            }
+          if (!Array.isArray(items)) {
+    throw new Error('Invalid items.min.json structure: expected array');
+}
 
-            // Items are pre-filtered (itempower > 0) and sequential
-            // Index 0 = game ID 1, Index 1 = game ID 2, etc.
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const id = i + 1; // Game IDs start at 1
+// Array index = real Albion item ID (sparse array; null at unused IDs)
+for (let id = 0; id < items.length; id++) {
+    const item = items[id];
+    if (item === null || item === undefined) continue;
 
-                // Parse enchant from name (e.g., "T4_2H_SWORD@2" -> enchant 2)
-                let name = item.n;
-                let enchant = 0;
-                const atIndex = name.lastIndexOf('@');
-                if (atIndex > 0) {
-                    enchant = parseInt(name.substring(atIndex + 1)) || 0;
-                }
+    const name = item.n;
+    if (!name) continue;
 
-                this.items.set(id, {
-                    name: name,
-                    tier: this._extractTier(name),
-                    itempower: item.p,
-                    enchant: enchant
-                });
-            }
+    // Parse enchant from name (e.g., "T4_2H_SWORD@2" -> enchant 2)
+    let enchant = 0;
+    const atIndex = name.lastIndexOf('@');
+    if (atIndex > 0) {
+        enchant = parseInt(name.substring(atIndex + 1)) || 0;
+    }
+
+    this.items.set(id, {
+        name: name,
+        tier: this._extractTier(name),
+        itempower: item.p || 0,
+        enchant: enchant,
+    });
+}
 
             this.isLoaded = true;
             window.logger?.info(CATEGORIES.SYSTEM, 'ItemsLoaded', {count: this.items.size});
