@@ -51,7 +51,7 @@
     "puppeteer-real-browser": "^1.4.4",
     "sharp": "^0.34.5",
     "tailwindcss": "^4.0.0",
-    "tsx": "^4.21.0",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",
     "vitest": "^4.1.6"
