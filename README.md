@@ -19,6 +19,9 @@
   </a>
 </p>
 
+> **⚠️ Radar broken since 06/29 game update, this is acknowledged and followed in https://github.com/Nouuu/Albion-Online-OpenRadar/issues/141 <br>**
+> A patch is comming soon
+
 https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 
 ---
