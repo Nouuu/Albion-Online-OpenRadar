@@ -287,61 +287,29 @@ describe('HarvestablesHandler', () => {
             expect(harv.tier).toBe(4);
         });
 
-        // @verified 2026-04-19: MobsHandler and HarvestablesHandler converge on harvest tier for Fiber critter mobId=529.
-        // MobsHandler uses getLivingHarvestTier rule (max(3, 4-1) = 3); HarvestablesHandler uses server Parameters[7]=3.
-        test('MobsHandler and HarvestablesHandler agree on harvest tier 3 for Fiber critter mobId=529', async () => {
+        // @verified 2026-07-05: same creature captured on both events in the 2026-07-05 Mists session:
+        // event 40 (mobileTypeId=396, server Parameters[7]=5) and NewMob 396 -> T5_MOB_HIDE_MISTS_OWL (DB tier 5).
+        test('MobsHandler and HarvestablesHandler agree on harvest tier 5 for Hide owl mobileTypeId=396', async () => {
             const mobsHandler = new MobsHandler();
 
-            const mobParams = {
-                0: 8403,
-                1: 529,
-                2: 255,
-                7: [-358.25, 15.5],
-                13: 1000,
-                33: 0
-            };
+            const mobFx = await loadFixture('mobs', 'living-tier');
+            const mobMsg = mobFx.messages.find(m => m.parameters['1'] === 396);
+            expect(mobMsg).toBeDefined();
+            const mobParams = normalizeParams(mobMsg.parameters);
             mobsHandler.NewMobEvent(mobParams);
 
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 529);
+            const fx = await loadFixture('harvestables', 'living-pair');
+            const msg = fx.messages.find(m => m.parameters['6'] === 396);
+            expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
             handler.newHarvestableObject(p[0], p);
 
-            const mob = mobsHandler.mobsList.find(m => m.id === 8403);
+            const mob = mobsHandler.mobsList.find(m => m.id === mobParams[0]);
             const harv = handler.getHarvestableList()[0];
             expect(mob).toBeDefined();
             expect(harv).toBeDefined();
-            expect(mob.tier).toBe(3);
-            expect(harv.tier).toBe(3);
-            expect(mob.tier).toBe(harv.tier);
-        });
-
-        // @verified 2026-04-19: MobsHandler and HarvestablesHandler converge on harvest tier for Fiber critter mobId=531.
-        // MobsHandler uses getLivingHarvestTier rule (max(3, 5-1) = 4); HarvestablesHandler uses server Parameters[7]=4.
-        test('MobsHandler and HarvestablesHandler agree on harvest tier 4 for Fiber critter mobId=531', async () => {
-            const mobsHandler = new MobsHandler();
-
-            const mobParams = {
-                0: 9358,
-                1: 531,
-                2: 255,
-                7: [-364.47, 194.42],
-                13: 1000,
-                33: 0
-            };
-            mobsHandler.NewMobEvent(mobParams);
-
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 531);
-            const p = normalizeParams(msg.parameters);
-            handler.newHarvestableObject(p[0], p);
-
-            const mob = mobsHandler.mobsList.find(m => m.id === 9358);
-            const harv = handler.getHarvestableList()[0];
-            expect(mob).toBeDefined();
-            expect(harv).toBeDefined();
-            expect(mob.tier).toBe(4);
-            expect(harv.tier).toBe(4);
+            expect(mob.tier).toBe(5);
+            expect(harv.tier).toBe(5);
             expect(mob.tier).toBe(harv.tier);
         });
     });

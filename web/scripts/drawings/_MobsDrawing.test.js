@@ -1,8 +1,8 @@
-// pcap-derived: full-flow NewMobEvent -> drawing.invalidate using mobs/living-tier.json (typeIds 532/534 are real DEAD carcasses observed in capture).
-// synthetic: synthetic entity constructors for edge cases where the corresponding mob was not observed in the 25-minute capture.
+// pcap-derived: full-flow NewMobEvent -> drawing.invalidate using mobs/living-tier.json (2026-07-05 Mists capture).
+// synthetic: constructed entities or name-derived wire ids for variants not observed in the post-patch corpus.
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
-import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
+import {normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
@@ -216,14 +216,13 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         settingsSync.getJSON.mockImplementation(key => merged[key] ?? null);
     }
 
-    // @verified 2026-04-24: pcap-derived, typeId=534 T6_MOB_CRITTER_FIBER_SWAMP_DEAD comes through
-    // event 123 in mobs/living-tier.json. Full-flow MobsHandler -> drawing: Living Fiber T6 renders when
+    // @verified 2026-07-05: name-derived T6_MOB_CRITTER_FIBER_SWAMP_DEAD (no DEAD carcass observed
+    // in the post-patch corpus). Full-flow MobsHandler -> drawing: Living Fiber T6 renders when
     // Living setting is on and Static setting is off. Pins the user live-test scenario end-to-end.
-    test('pcap-derived full-flow: DEAD Fiber carcass typeId=534 renders via Living filter', async () => {
-        const fx = await loadFixture('mobs', 'living-tier');
-        const msg = fx.messages.find(m => m.parameters['1'] === 534);
-        expect(msg).toBeDefined();
-        const p = normalizeParams(msg.parameters);
+    test('full-flow: DEAD Fiber T6 carcass renders via Living filter', () => {
+        const typeId = window.mobsDatabase.getTypeIdByName('T6_MOB_CRITTER_FIBER_SWAMP_DEAD');
+        expect(typeId).not.toBeNull();
+        const p = normalizeParams({'0': 9601, '1': typeId, '2': 255, '7': [0, 0], '13': 1000, '33': 0});
 
         mockSettings(livingOn('Fiber'), staticOff('Fiber'));
         mobsHandler.NewMobEvent(p);
@@ -232,11 +231,10 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_6_0', 'Resources', 32);
     });
 
-    // @verified 2026-04-24: pcap-derived, Static filter has no effect on DEAD carcasses; turning Living off hides them.
-    test('pcap-derived full-flow: DEAD Fiber carcass typeId=534 is skipped when Living off even if Static on', async () => {
-        const fx = await loadFixture('mobs', 'living-tier');
-        const msg = fx.messages.find(m => m.parameters['1'] === 534);
-        const p = normalizeParams(msg.parameters);
+    // @verified 2026-07-05: Static filter has no effect on DEAD carcasses; turning Living off hides them.
+    test('full-flow: DEAD Fiber T6 carcass is skipped when Living off even if Static on', () => {
+        const typeId = window.mobsDatabase.getTypeIdByName('T6_MOB_CRITTER_FIBER_SWAMP_DEAD');
+        const p = normalizeParams({'0': 9602, '1': typeId, '2': 255, '7': [0, 0], '13': 1000, '33': 0});
 
         mockSettings(livingOff('Fiber'), staticOn('Fiber'));
         mobsHandler.NewMobEvent(p);
@@ -245,12 +243,11 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: pcap-derived, second DEAD variant typeId=532 (T5 carcass) routes the same way.
-    test('pcap-derived full-flow: DEAD Fiber carcass typeId=532 renders via Living T5 filter', async () => {
-        const fx = await loadFixture('mobs', 'living-tier');
-        const msg = fx.messages.find(m => m.parameters['1'] === 532);
-        expect(msg).toBeDefined();
-        const p = normalizeParams(msg.parameters);
+    // @verified 2026-07-05: second DEAD variant T5_MOB_CRITTER_FIBER_SWAMP_DEAD routes the same way.
+    test('full-flow: DEAD Fiber T5 carcass renders via Living T5 filter', () => {
+        const typeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
+        expect(typeId).not.toBeNull();
+        const p = normalizeParams({'0': 9603, '1': typeId, '2': 255, '7': [0, 0], '13': 1000, '33': 0});
 
         mockSettings(livingOn('Fiber'), staticOff('Fiber'));
         mobsHandler.NewMobEvent(p);

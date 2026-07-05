@@ -24,7 +24,7 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class MobsDatabase {
-    // Anchor: wire 422 (hp=20) -> idx 406 = T1_MOB_HIDE_SWAMP_TOAD.
+    // Anchor: wire 116 (server-named MISTS_SOLO_YELLOW, 2026-07-05 capture) -> idx 100 = MOB_UNIQUE_MISTS_PORTAL_WISP.
     // Re-verify with tools/offset-validate after each DB refresh.
     static OFFSET = 16;
 

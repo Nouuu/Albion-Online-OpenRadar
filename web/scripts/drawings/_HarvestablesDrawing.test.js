@@ -89,12 +89,11 @@ describe('HarvestablesDrawing render-time routing', () => {
     // Live critter path: mobileTypeId references a live mob in MobsDatabase -> Living filter
     // -------------------------------------------------------------------------
 
-    // @verified 2026-04-24: live Fiber critter (mobileTypeId=529 T4_MOB_CRITTER_FIBER_SWAMP_GREEN) routes to Living.
-    test('pcap-derived full-flow: live Fiber critter mobileTypeId=529 renders under Living filter', async () => {
-        const fx = await loadFixture('harvestables', 'single-spawn');
-        const msg = fx.messages.find(m => m.parameters['6'] === 529 && m.parameters['10'] > 0);
-        expect(msg).toBeDefined();
-        const p = normalizeParams(msg.parameters);
+    // @verified 2026-07-05: name-derived live Fiber critter (T4_MOB_CRITTER_FIBER_SWAMP_GREEN) routes to Living.
+    test('full-flow: live Fiber critter renders under Living filter', () => {
+        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T4_MOB_CRITTER_FIBER_SWAMP_GREEN');
+        expect(mobileTypeId).not.toBeNull();
+        const p = {0: 9101, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
             if (key === 'settingLivingFiberEnchants') return allTrue();
@@ -109,11 +108,10 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: live Fiber critter skipped when Living is off even if Static is on (wrong routing guard).
-    test('pcap-derived full-flow: live Fiber critter mobileTypeId=529 skipped when Living off, Static on', async () => {
-        const fx = await loadFixture('harvestables', 'single-spawn');
-        const msg = fx.messages.find(m => m.parameters['6'] === 529 && m.parameters['10'] > 0);
-        const p = normalizeParams(msg.parameters);
+    // @verified 2026-07-05: live Fiber critter skipped when Living is off even if Static is on (wrong routing guard).
+    test('full-flow: live Fiber critter skipped when Living off, Static on', () => {
+        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T4_MOB_CRITTER_FIBER_SWAMP_GREEN');
+        const p = {0: 9102, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
             if (key === 'settingLivingFiberEnchants') return allFalse();
@@ -128,7 +126,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: live Hide DYNAMIC critter (mobileTypeId=424 T3_MOB_DYNAMIC_HIDE_SWAMP_GIANTTOAD) routes to Living.
+    // @verified 2026-07-05: live Hide critter (old-capture mobileTypeId=424, post-patch DB MOB_DYNAMIC_WOLF l=HIDE) routes to Living.
     test('pcap-derived full-flow: live Hide critter mobileTypeId=424 renders under Living filter', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
         const msg = fx.messages.find(m => m.parameters['6'] === 424 && m.parameters['10'] > 0);
@@ -147,7 +145,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: live Hide skipped when Living is off and Static is on.
+    // @verified 2026-07-05: live Hide skipped when Living is off and Static is on.
     test('pcap-derived full-flow: live Hide critter mobileTypeId=424 skipped when Living off, Static on', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
         const msg = fx.messages.find(m => m.parameters['6'] === 424 && m.parameters['10'] > 0);
@@ -172,9 +170,11 @@ describe('HarvestablesDrawing render-time routing', () => {
     // harvestables (mobileTypeId=-1/null/65535) go to the Static filter.
     // -------------------------------------------------------------------------
 
-    // @verified 2026-04-24: dead Fiber carcass routes through Living since it has a valid mobileTypeId.
-    test('full-flow: dead Fiber carcass mobileTypeId=532 renders under Living filter', () => {
-        const p = {0: 9001, 5: 11, 6: 532, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
+    // @verified 2026-07-05: dead Fiber carcass routes through Living since it has a valid mobileTypeId.
+    test('full-flow: dead Fiber carcass renders under Living filter', () => {
+        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
+        expect(mobileTypeId).not.toBeNull();
+        const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
 
         settingsSync.getJSON.mockImplementation(key => {
             if (key === 'settingLivingFiberEnchants') return allTrue();
@@ -189,9 +189,10 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: dead Fiber carcass skipped when Living off even if Static is on.
-    test('full-flow: dead Fiber carcass mobileTypeId=532 skipped when Living off, Static on', () => {
-        const p = {0: 9001, 5: 11, 6: 532, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
+    // @verified 2026-07-05: dead Fiber carcass skipped when Living off even if Static is on.
+    test('full-flow: dead Fiber carcass skipped when Living off, Static on', () => {
+        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
+        const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
 
         settingsSync.getJSON.mockImplementation(key => {
             if (key === 'settingLivingFiberEnchants') return allFalse();
@@ -301,14 +302,15 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-05-01: pcap-derived full-flow test: real handler -> drawing chain produces a badge in badge mode.
-    test('pcap-derived full-flow: live Fiber critter renders as badge under settingResourceColorBadges', async () => {
-        const fx = await loadFixture('harvestables', 'single-spawn');
-        const msg = fx.messages.find(m => m.parameters['6'] === 529 && m.parameters['10'] > 0);
+    // @verified 2026-07-05: pcap-derived full-flow test: real handler -> drawing chain produces a badge
+    // in badge mode. Live Hide owl (mobileTypeId=396) from the 2026-07-05 Mists capture.
+    test('pcap-derived full-flow: live Hide critter renders as badge under settingResourceColorBadges', async () => {
+        const fx = await loadFixture('harvestables', 'living-pair');
+        const msg = fx.messages.find(m => m.parameters['6'] === 396 && m.parameters['10'] > 0);
         expect(msg).toBeDefined();
         const p = normalizeParams(msg.parameters);
 
-        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingHideEnchants' ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
 
         const handler = new HarvestablesHandler(null);
@@ -318,7 +320,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.drawResourceBadge).toHaveBeenCalled();
         const call = drawing.drawResourceBadge.mock.calls[0];
         expect(call[3]).toBe(32);                  // baseSize
-        expect(call[4]).toBe('Fiber');             // category
+        expect(call[4]).toBe('Hide');              // category
         expect(typeof call[5]).toBe('number');     // tier
         expect(typeof call[6]).toBe('number');     // enchant
         expect(call[7]).toBe(false);               // static, not living
