@@ -207,7 +207,7 @@ func newApp(
 	log := logger.New("./logs", serverLogsEnabled)
 	wsHandler := server.NewWebSocketHandler(log)
 
-	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version, manager, allIfaces)
+	httpServer, err := createHTTPServer(cfg.devMode, appDir, wsHandler, log, Version, BuildTime, manager, allIfaces)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP server: %w", err)
 	}
@@ -239,12 +239,13 @@ func createHTTPServer(
 	wsHandler *server.WebSocketHandler,
 	log *logger.Logger,
 	version string,
+	buildTime string,
 	mgr *capture.Manager,
 	allIfaces []capture.NetworkInterface,
 ) (*server.HTTPServer, error) {
 	if devMode {
 		logger.PrintInfo("MODE", "Development mode: reading files from disk")
-		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version, mgr, allIfaces, mgr, pcapCaptureDir)
+		return server.NewHTTPServerDev(serverPort, appDir, wsHandler, log, version, buildTime, mgr, allIfaces, mgr, pcapCaptureDir)
 	}
 	logger.PrintInfo("MODE", "Production mode: using embedded assets")
 	return server.NewHTTPServer(
@@ -258,6 +259,7 @@ func createHTTPServer(
 		wsHandler,
 		log,
 		version,
+		buildTime,
 		mgr,
 		allIfaces,
 		appDir,

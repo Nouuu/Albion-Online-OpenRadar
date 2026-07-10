@@ -23,7 +23,7 @@ export class ItemsDatabase {
         try {
             window.logger?.info(CATEGORIES.SYSTEM, 'ItemsLoading', {path: jsonPath});
 
-            const response = await fetch(jsonPath);
+            const response = await fetch(jsonPath, {cache: 'no-cache'});
             if (!response.ok) {
                 throw new Error(`Failed to fetch items.min.json: ${response.status}`);
             }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"embed"
@@ -32,9 +33,30 @@ type HTTPServer struct {
 	// Template engine
 	tmpl        *templates.Engine
 	version     string
+	assetID     string
 	devMode     bool
 	networkAPI  *NetworkAPI
 	settingsAPI *SettingsAPI
+}
+
+// buildID fingerprints the embedded assets. It is empty for an unversioned build,
+// whose Version stays "dev" and would collide with the next one. BuildTime is folded
+// in because two builds of the same git tag can embed different assets.
+func buildID(version, buildTime string) string {
+	if version == "" || version == "dev" {
+		return ""
+	}
+	return etagSafe(version + "-" + buildTime)
+}
+
+// etagSafe keeps only the bytes RFC 9110 allows inside an opaque-tag.
+func etagSafe(s string) string {
+	return strings.Map(func(r rune) rune {
+		if r > 0x20 && r < 0x7f && r != '"' {
+			return r
+		}
+		return '-'
+	}, s)
 }
 
 // NewHTTPServer creates a new HTTP server with embedded assets (production mode)
@@ -44,6 +66,7 @@ func NewHTTPServer(
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 	version string,
+	buildTime string,
 	mgr NetworkManager,
 	allInterfaces []capture.NetworkInterface,
 	appDir string,
@@ -91,6 +114,7 @@ func NewHTTPServer(
 		styles:    stylesFS,
 		tmpl:      tmpl,
 		version:   version,
+		assetID:   buildID(version, buildTime),
 	}
 	if mgr != nil {
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
@@ -107,6 +131,7 @@ func NewHTTPServerDev(
 	wsHandler *WebSocketHandler,
 	log *logger.Logger,
 	version string,
+	buildTime string,
 	mgr NetworkManager,
 	allInterfaces []capture.NetworkInterface,
 	recorder Recorder,
@@ -132,6 +157,7 @@ func NewHTTPServerDev(
 		styles:    os.DirFS(appDir + "/web/styles"),
 		tmpl:      tmpl,
 		version:   version,
+		assetID:   buildID(version, buildTime),
 		devMode:   true,
 	}
 	if mgr != nil {
@@ -144,17 +170,6 @@ func NewHTTPServerDev(
 
 // setupRoutes configures all HTTP routes
 func (s *HTTPServer) setupRoutes() {
-	// Cache durations. Dev mode disables scripts/styles caching so JS/CSS edits
-	// reach the browser on the next request without a 1h HTTP cache window.
-	imageCacheDuration := 24 * time.Hour
-	dataCacheDuration := 7 * 24 * time.Hour
-	scriptsCacheDuration := 1 * time.Hour
-	stylesCacheDuration := 1 * time.Hour
-	if s.devMode {
-		scriptsCacheDuration = 0
-		stylesCacheDuration = 0
-	}
-
 	// WebSocket endpoint
 	if s.wsHandler != nil {
 		s.mux.Handle("/ws", s.wsHandler)
@@ -179,29 +194,31 @@ func (s *HTTPServer) setupRoutes() {
 		})
 	}
 
-	// Static file handlers with caching
 	// Items and Spells: serve fallback image if not found
-	s.mux.Handle("/images/Items/", s.fsHandlerWithFallback("/images/Items/", s.images, "Items", "_default.webp", imageCacheDuration))
-	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp", imageCacheDuration))
-	// Other images: standard handler (cache 24h)
-	s.mux.Handle("/images/", s.fsHandler("/images/", s.images, imageCacheDuration, false))
-	// Scripts: cache 1h + gzip
-	s.mux.Handle("/scripts/", s.gzipFSHandlerDirect("/scripts/", s.scripts, scriptsCacheDuration))
-	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds, 0, false))
-	// Styles: cache 1h + gzip
-	s.mux.Handle("/styles/", s.gzipFSHandlerDirect("/styles/", s.styles, stylesCacheDuration))
+	s.mux.Handle("/images/Items/", s.fsHandlerWithFallback("/images/Items/", s.images, "Items", "_default.webp"))
+	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp"))
+	s.mux.Handle("/images/", s.fsHandler("/images/", s.images))
+	s.mux.Handle("/scripts/", s.gzipFSHandlerDirect("/scripts/", s.scripts))
+	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds))
+	s.mux.Handle("/styles/", s.gzipFSHandlerDirect("/styles/", s.styles))
 
 	// ao-bin-dumps with gzip support (data FS is already the ao-bin-dumps directory)
-	s.mux.Handle(
-		"/ao-bin-dumps/",
-		s.gzipFSHandlerDirect("/ao-bin-dumps/", s.data, dataCacheDuration),
-	)
+	s.mux.Handle("/ao-bin-dumps/", s.gzipFSHandlerDirect("/ao-bin-dumps/", s.data))
 
 	// API endpoints
-	s.settingsAPI.Register(s.mux)
+	apiMux := http.NewServeMux()
+	s.settingsAPI.Register(apiMux)
 	if s.networkAPI != nil {
-		s.networkAPI.Register(s.mux)
+		s.networkAPI.Register(apiMux)
 	}
+	s.mux.Handle("/api/", noStore(apiMux))
+}
+
+func noStore(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		h.ServeHTTP(w, r)
+	})
 }
 
 // renderPage renders a page template
@@ -225,7 +242,8 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 	data := templates.NewPageData(page, "OpenRadar - "+title).WithVersion(s.version)
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Vary", "Hx-Request")
 
 	// Check if this is an HTMX request (SPA navigation)
 	isHTMX := r.Header.Get("Hx-Request") == "true"
@@ -246,19 +264,22 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 	}
 }
 
-// setCacheHeaders sets Cache-Control and optional Vary headers
-func setCacheHeaders(
-	w http.ResponseWriter,
-	duration time.Duration,
-	noCache bool,
-	vary string,
-) {
-	if noCache {
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Pragma", "no-cache")
-		w.Header().Set("Expires", "0")
-	} else if duration > 0 {
-		w.Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", int(duration.Seconds())))
+// assetETag returns "" when the build carries no trustworthy fingerprint.
+// An ETag identifies a representation, so the gzip variant needs its own.
+func (s *HTTPServer) assetETag(gzipped bool) string {
+	if s.devMode || s.assetID == "" {
+		return ""
+	}
+	if gzipped {
+		return `"` + s.assetID + `-gz"`
+	}
+	return `"` + s.assetID + `"`
+}
+
+func (s *HTTPServer) setStaticCacheHeaders(w http.ResponseWriter, vary string, gzipped bool) {
+	w.Header().Set("Cache-Control", "no-cache")
+	if etag := s.assetETag(gzipped); etag != "" {
+		w.Header().Set("Etag", etag)
 	}
 	if vary != "" {
 		w.Header().Set("Vary", vary)
@@ -266,16 +287,11 @@ func setCacheHeaders(
 }
 
 // fsHandler creates a file server handler from fs.FS
-func (s *HTTPServer) fsHandler(
-	prefix string,
-	fsys fs.FS,
-	cacheDuration time.Duration,
-	noCache bool,
-) http.Handler {
+func (s *HTTPServer) fsHandler(prefix string, fsys fs.FS) http.Handler {
 	handler := http.StripPrefix(prefix, http.FileServer(http.FS(fsys)))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		setCacheHeaders(w, cacheDuration, noCache, "")
+		s.setStaticCacheHeaders(w, "", false)
 		handler.ServeHTTP(w, r)
 	})
 }
@@ -286,7 +302,6 @@ func (s *HTTPServer) fsHandlerWithFallback(
 	fsys fs.FS,
 	subdir string,
 	fallbackFile string,
-	cacheDuration time.Duration,
 ) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract filename from path
@@ -305,60 +320,63 @@ func (s *HTTPServer) fsHandlerWithFallback(
 			}
 		}
 
-		// Set headers
-		setCacheHeaders(w, cacheDuration, false, "")
+		s.setStaticCacheHeaders(w, "", false)
 		w.Header().Set("Content-Type", "image/webp")
-		//nolint:gosec // G705: data is read from embed.FS (compiled-in assets), not user-controlled.
-		_, _ = w.Write(data)
+		http.ServeContent(w, r, urlPath, time.Time{}, bytes.NewReader(data))
 	})
 }
 
 // gzipFSHandlerDirect serves files directly from fs.FS with gzip support
 // It looks for pre-compressed .gz files first
-func (s *HTTPServer) gzipFSHandlerDirect(
-	prefix string,
-	fsys fs.FS,
-	cacheDuration time.Duration,
-) http.Handler {
+func (s *HTTPServer) gzipFSHandlerDirect(prefix string, fsys fs.FS) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		urlPath := strings.TrimPrefix(r.URL.Path, prefix)
 		acceptsGzip := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
 
-		// Try serving .gz file if client accepts gzip
-		if acceptsGzip {
-			gzPath := urlPath + ".gz"
-			if data, err := fs.ReadFile(fsys, gzPath); err == nil {
-				w.Header().Set("Content-Encoding", "gzip")
-				setContentType(w, urlPath)
-				setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
-				//nolint:gosec // G705: data is read from embed.FS (compiled-in assets), not user-controlled.
-				_, _ = w.Write(data)
-				return
-			}
-		}
-
-		// Try serving original file
-		data, err := fs.ReadFile(fsys, urlPath)
+		body, gzipped, err := readAsset(fsys, urlPath, acceptsGzip)
 		if err != nil {
 			http.NotFound(w, r)
 			return
 		}
 
-		setContentType(w, urlPath)
-		setCacheHeaders(w, cacheDuration, false, "Accept-Encoding")
-
-		// Compress on the fly if large and client accepts gzip
-		if acceptsGzip && len(data) > 1024 {
+		if gzipped {
 			w.Header().Set("Content-Encoding", "gzip")
-			gz := gzip.NewWriter(w)
-			_, _ = gz.Write(data)
-			_ = gz.Close()
-			return
+			// ServeContent would slice the gzip stream, and a slice of it cannot be inflated.
+			r.Header.Del("Range")
 		}
-
-		//nolint:gosec // G705: data is read from embed.FS (compiled-in assets), not user-controlled.
-		_, _ = w.Write(data)
+		setContentType(w, urlPath)
+		s.setStaticCacheHeaders(w, "Accept-Encoding", gzipped)
+		http.ServeContent(w, r, urlPath, time.Time{}, bytes.NewReader(body))
 	})
+}
+
+// readAsset prefers a pre-compressed sibling, then falls back to compressing on
+// the fly. It reports whether the returned bytes are gzip-encoded.
+func readAsset(fsys fs.FS, urlPath string, acceptsGzip bool) (body []byte, gzipped bool, err error) {
+	if acceptsGzip {
+		if data, err := fs.ReadFile(fsys, urlPath+".gz"); err == nil {
+			return data, true, nil
+		}
+	}
+
+	data, err := fs.ReadFile(fsys, urlPath)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if !acceptsGzip || len(data) <= 1024 {
+		return data, false, nil
+	}
+
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+	if _, err := gz.Write(data); err != nil {
+		return nil, false, err
+	}
+	if err := gz.Close(); err != nil {
+		return nil, false, err
+	}
+	return buf.Bytes(), true, nil
 }
 
 // setContentType sets Content-Type header based on file extension
