@@ -1,9 +1,9 @@
 /**
  * Items Database
- * Parses items.min.json and provides item lookup by sequential ID
+ * Parses items.min.json and provides item lookup by real Albion item ID
  *
- * Minified format: [{ n: "uniquename", p: itempower }, ...]
- * Index in array = sequential ID (0-based, add 1 for game ID)
+ * Minified format: [null, { n: "uniquename", p: itempower }, ...]
+ * Array index = real Albion item ID (sparse; null at unused IDs)
  */
 
 import {CATEGORIES} from '../constants/LoggerConstants.js';
@@ -34,14 +34,15 @@ export class ItemsDatabase {
                 throw new Error('Invalid items.min.json structure: expected array');
             }
 
-            // Items are pre-filtered (itempower > 0) and sequential
-            // Index 0 = game ID 1, Index 1 = game ID 2, etc.
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-                const id = i + 1; // Game IDs start at 1
+            // Array index = real Albion item ID (sparse array; null at unused IDs)
+            for (let id = 0; id < items.length; id++) {
+                const item = items[id];
+                if (item === null || item === undefined) continue;
+
+                const name = item.n;
+                if (!name) continue;
 
                 // Parse enchant from name (e.g., "T4_2H_SWORD@2" -> enchant 2)
-                let name = item.n;
                 let enchant = 0;
                 const atIndex = name.lastIndexOf('@');
                 if (atIndex > 0) {
@@ -51,7 +52,7 @@ export class ItemsDatabase {
                 this.items.set(id, {
                     name: name,
                     tier: this._extractTier(name),
-                    itempower: item.p,
+                    itempower: item.p || 0,
                     enchant: enchant
                 });
             }
@@ -66,8 +67,8 @@ export class ItemsDatabase {
     }
 
     /**
-     * Get item by sequential ID
-     * @param {number} id - Sequential item ID (1, 2, 3...)
+     * Get item by real Albion item ID
+     * @param {number} id - Real Albion item ID
      * @returns {{name: string, tier: number, itempower: number, enchant: number} | undefined}
      */
     getItemById(id) {

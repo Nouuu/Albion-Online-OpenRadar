@@ -81,64 +81,98 @@ type MinifiedHarvestables = Record<string, HarvestableTier[]>;
 // Minification Functions
 // ============================================================================
 
-function minifyItems(rawData: any): MinifiedItem[] {
-    const items: MinifiedItem[] = [];
-    const itemsRoot = rawData?.items;
-    if (!itemsRoot) return items;
+/**
+ * Build (id -> {uniqueName, itempower, ...}) map from items.txt + items.json.
+ * items.txt is the canonical source of (numericId, uniqueName) pairs.
+ * items.json provides itempower, tier, category for each uniqueName.
+ */
+async function buildItemsArray(itemsJsonRaw: any): Promise<(MinifiedItem | null)[]> {
+    // Step 1: Build uniqueName -> metadata lookup from items.json
+    const metaByName = new Map<string, {itempower: number, type: string, cat?: string, slot?: string, h2?: boolean}>();
+    const itemsRoot = itemsJsonRaw?.items;
 
-    const itemTypes = [
-        'simpleitem', 'equipmentitem', 'weapon', 'consumableitem',
-        'consumablefrominventoryitem', 'farmableitem', 'mount',
-        'furnitureitem', 'trackingitem', 'journalitem'
-    ];
+    if (itemsRoot) {
+        const itemTypes = [
+            'hideoutitem', 'trackingitem', 'farmableitem', 'simpleitem',
+            'consumableitem', 'consumablefrominventoryitem', 'equipmentitem',
+            'weapon', 'mount', 'furnitureitem', 'journalitem', 'labourercontract',
+            'mountskin', 'crystalleagueitem'
+        ];
 
-    for (const itemType of itemTypes) {
-        if (!itemsRoot[itemType]) continue;
+        for (const itemType of itemTypes) {
+            if (!itemsRoot[itemType]) continue;
+            const arr = Array.isArray(itemsRoot[itemType]) ? itemsRoot[itemType] : [itemsRoot[itemType]];
 
-        const typeItems = Array.isArray(itemsRoot[itemType])
-            ? itemsRoot[itemType]
-            : [itemsRoot[itemType]];
+            for (const item of arr) {
+                const uniqueName = item['@uniquename'];
+                if (!uniqueName) continue;
 
-        for (const item of typeItems) {
-            const uniqueName = item['@uniquename'];
-            if (!uniqueName) continue;
+                const baseMeta = {
+                    itempower: parseInt(item['@itempower'] || '0') || 0,
+                    type: itemType,
+                    cat: item['@shopcategory'] || undefined,
+                    slot: item['@slottype'] || undefined,
+                    h2: item['@twohanded'] === 'true' ? true : undefined,
+                };
+                metaByName.set(uniqueName, baseMeta);
 
-            const itempower = parseInt(item['@itempower'] || '0');
+                // Enchanted variants
+                if (item.enchantments?.enchantment) {
+                    const encs = Array.isArray(item.enchantments.enchantment)
+                        ? item.enchantments.enchantment
+                        : [item.enchantments.enchantment];
 
-            if (itempower > 0) {
-                const minItem: MinifiedItem = {n: uniqueName, p: itempower, t: itemType};
-                if (item['@shopcategory']) minItem.cat = item['@shopcategory'];
-                if (item['@slottype']) minItem.slot = item['@slottype'];
-                if (item['@twohanded'] === 'true') minItem.h2 = true;
-                items.push(minItem);
-            }
-
-            if (item.enchantments?.enchantment) {
-                const enchantments = Array.isArray(item.enchantments.enchantment)
-                    ? item.enchantments.enchantment
-                    : [item.enchantments.enchantment];
-
-                for (const enchant of enchantments) {
-                    const enchantLevel = parseInt(enchant['@enchantmentlevel'] || '0');
-                    const enchantPower = parseInt(enchant['@itempower'] || '0');
-
-                    if (enchantPower > 0) {
-                        const minItem: MinifiedItem = {
-                            n: `${uniqueName}@${enchantLevel}`,
-                            p: enchantPower,
-                            t: itemType
-                        };
-                        if (item['@shopcategory']) minItem.cat = item['@shopcategory'];
-                        if (item['@slottype']) minItem.slot = item['@slottype'];
-                        if (item['@twohanded'] === 'true') minItem.h2 = true;
-                        items.push(minItem);
+                    for (const enchant of encs) {
+                        const lvl = parseInt(enchant['@enchantmentlevel'] || '0') || 0;
+                        const power = parseInt(enchant['@itempower'] || '0') || 0;
+                        const enchName = `${uniqueName}@${lvl}`;
+                        metaByName.set(enchName, {
+                            ...baseMeta,
+                            itempower: power || baseMeta.itempower,
+                        });
                     }
                 }
             }
         }
     }
 
-    return items;
+    // Step 2: Download items.txt (canonical id -> uniqueName mapping)
+    const itemsTxtUrl = `${GITHUB_RAW_BASE}/formatted/items.txt`;
+    console.log(`📥 Downloading items.txt for canonical IDs...`);
+    const txtRes = await downloadFile(itemsTxtUrl);
+    if (txtRes.status !== DownloadStatus.SUCCESS || !txtRes.buffer) {
+        throw new Error(`Failed to download items.txt: ${txtRes.message}`);
+    }
+    const txtContent = txtRes.buffer.toString('utf-8');
+
+    // Step 3: Parse items.txt and build sparse array indexed by real Albion ID
+    // Format: "8952: T7_HEAD_PLATE_AVALON@2   : Avalonian Plate Helmet"
+    const result: (MinifiedItem | null)[] = [];
+    const lineRe = /^\s*(\d+)\s*:\s*([^\s:]+)/;
+
+    for (const rawLine of txtContent.split(/\r?\n/)) {
+        const m = rawLine.match(lineRe);
+        if (!m) continue;
+        const id = parseInt(m[1], 10);
+        const uniqueName = m[2];
+
+        // Fill gaps with null so array indices match real IDs
+        while (result.length < id) result.push(null);
+
+        const meta = metaByName.get(uniqueName);
+        const minItem: MinifiedItem = {
+            n: uniqueName,
+            p: meta?.itempower ?? 0,
+        };
+        if (meta?.type) minItem.t = meta.type;
+        if (meta?.cat) minItem.cat = meta.cat;
+        if (meta?.slot) minItem.slot = meta.slot;
+        if (meta?.h2) minItem.h2 = meta.h2;
+
+        result[id] = minItem;
+    }
+
+    return result;
 }
 
 function minifyMobs(rawData: any): MinifiedMob[] {
@@ -457,6 +491,45 @@ function formatSize(bytes: number): string {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
+async function downloadAndMinifyItems(): Promise<ProcessResult> {
+    const url = `${GITHUB_RAW_BASE}/items.json`;
+    const outputPath = path.join(OUTPUT_DIR, 'items.min.json');
+
+    console.log(`\n📥 Downloading items.json...`);
+    const res = await downloadFile(url);
+    if (res.status !== DownloadStatus.SUCCESS || !res.buffer) {
+        console.error(`❌ Failed to download items.json: ${res.message}`);
+        return {name: 'items.json', success: false, originalSize: 0, minifiedSize: 0};
+    }
+    const originalSize = res.buffer.length;
+    console.log(`✅ Downloaded items.json (${formatSize(originalSize)})`);
+
+    try {
+        const rawData = JSON.parse(res.buffer.toString('utf-8'));
+        const minified = await buildItemsArray(rawData);
+
+        const minifiedJson = JSON.stringify(minified);
+        fs.writeFileSync(outputPath, minifiedJson);
+
+        const minifiedSize = Buffer.byteLength(minifiedJson);
+        const reduction = ((1 - minifiedSize / originalSize) * 100).toFixed(1);
+        const nonNullCount = minified.filter(x => x !== null).length;
+
+        console.log(`💾 Saved items.min.json (${formatSize(minifiedSize)}, -${reduction}%, ${nonNullCount} non-null / ${minified.length} total slots)`);
+
+        return {
+            name: 'items.json',
+            success: true,
+            originalSize,
+            minifiedSize,
+            itemCount: nonNullCount,
+        };
+    } catch (error) {
+        console.error(`❌ Failed to process items.json: ${error}`);
+        return {name: 'items.json', success: false, originalSize, minifiedSize: 0};
+    }
+}
+
 async function main() {
     console.log('Albion Online Data Updater');
     console.log('==========================');
@@ -471,7 +544,7 @@ async function main() {
     const results: ProcessResult[] = [];
 
     // Process each data file with minification
-    results.push(await downloadAndMinify('items.json', minifyItems, 'items.min.json'));
+    results.push(await downloadAndMinifyItems());
     results.push(await downloadAndMinify('mobs.json', minifyMobs, 'mobs.min.json'));
     results.push(await downloadAndMinify('spells.json', minifySpells, 'spells.min.json'));
     results.push(await downloadAndMinify('harvestables.json', minifyHarvestables, 'harvestables.min.json'));

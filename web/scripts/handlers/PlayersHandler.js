@@ -119,25 +119,32 @@ export class PlayersHandler {
     }
 
     updateItems(id, Parameters) {
-        // eslint-disable-next-line no-useless-assignment
-        let items = null;
+        let equipment;
         try {
-            items = Parameters[2];
+            equipment = Parameters[2];
         } catch (error) {
             window.logger?.warn(CATEGORIES.PLAYERS, 'UpdateItems_Failed', {
                 playerId: id,
                 error: error?.message
             });
-            items = null;
+            return;
         }
 
-        if (items != null) {
-            const player = this.playersList.find(p => p.id === id);
-            if (player) {
-                player.items = items;
-                player.touch();
-            }
+        if (!Array.isArray(equipment) || equipment.length === 0) {
+            return;
         }
+
+        const player = this.playersList.find(p => p.id === id);
+        if (!player) return;
+
+        player.equipments = equipment;
+        player.touch();
+
+        window.logger?.debug(CATEGORIES.PLAYERS, 'EquipmentUpdated', {
+            playerId: id,
+            nickname: player.nickname,
+            slotCount: equipment.length
+        });
     }
 
     handleNewPlayerEvent(id, Parameters) {
@@ -157,7 +164,20 @@ export class PlayersHandler {
         const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
         const maxPlayers = Math.min(100, parsedMaxPlayers);
 
-        if (!existingPlayer && this.playersList.length < maxPlayers) {
+        if (existingPlayer) {
+            // Upsert: refresh mutable fields on repeat NewCharacter events
+            if (Array.isArray(equipments) && equipments.length > 0) {
+                existingPlayer.equipments = equipments;
+            }
+            if (Array.isArray(spells) && spells.length > 0) {
+                existingPlayer.spells = spells;
+            }
+            if (nickname !== undefined) existingPlayer.nickname = nickname;
+            if (guildName !== undefined) existingPlayer.guildName = guildName;
+            existingPlayer.allianceName = allianceName;
+            existingPlayer.faction = faction;
+            existingPlayer.touch();
+        } else if (this.playersList.length < maxPlayers) {
             const player = new Player(0, 0, id, nickname, guildName, faction, allianceName, equipments, spells);
             this.playersList.push(player);
         }

@@ -369,8 +369,8 @@ describe('PlayersHandler', () => {
     // updateItems (event 90)
     // ---------------------------------------------------------------------------
     describe('updateItems (event 90)', () => {
-        // @verified 2026-04-18: pcap equipment message stores items on the matching player.
-        test('pcap-derived equipment: items stored and touch called', async () => {
+        // @verified 2026-04-18: pcap equipment message stores equipment on the matching player.
+        test('pcap-derived equipment: equipment stored and touch called', async () => {
             const fx = await loadFixture('players', 'equipment');
             const msg = fx.messages[0];
             const id = msg.parameters['0'];
@@ -382,7 +382,7 @@ describe('PlayersHandler', () => {
             handler.updateItems(id, normalizeParams(msg.parameters));
 
             const p = handler.playersList[0];
-            expect(p.items).toEqual(items);
+            expect(p.equipments).toEqual(items);
             expect(p.lastUpdateTime).toBeGreaterThanOrEqual(before);
         });
 
@@ -392,13 +392,13 @@ describe('PlayersHandler', () => {
             expect(handler.getSize()).toBe(0);
         });
 
-        // @characterization 2026-04-18: current code: if Parameters[2] is undefined, items remain null on player.
-        test('synthetic: missing Parameters[2] leaves items as null', () => {
+        // @characterization: current code: if Parameters[2] is missing/empty, equipments is left untouched on player.
+        test('synthetic: missing Parameters[2] leaves equipments unchanged', () => {
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
 
             handler.updateItems(1, {0: 1});
 
-            expect(handler.playersList[0].items).toBeNull();
+            expect(handler.playersList[0].equipments).toEqual([]);
         });
     });
 
