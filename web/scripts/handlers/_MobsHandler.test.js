@@ -626,6 +626,69 @@ describe('MobsHandler', () => {
             expect(mobs).toHaveLength(1);
             expect(mobs[0].type).toBe(EnemyType.MiniBoss);
         });
+
+        // @verified 2026-07-12: Mist boss name match overrides the generic '_BOSS'/'_VETERAN' heuristics.
+        test("synthetic: uniqueName 'CRYSTALSPIDER' (even _VETERAN_BOSS variant) -> EnemyType.MistBoss", () => {
+            // synthetic: would otherwise hit the '_VETERAN' MiniBoss heuristic first.
+            spawnWithDbInfo(1014, {isHarvestable: false, category: 'boss', uniqueName: 'T5_MOB_ARCANE_CRYSTALSPIDER_VETERAN_BOSS', tier: 5});
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.MistBoss);
+            expect(mobs[0].name).toBe('CRYSTALSPIDER');
+            expect(mobs[0].mistBossSetting).toBe('settingBossCrystalSpider');
+        });
+
+        // @verified 2026-07-12: MISTS_GRIFFIN maps to EnemyType.MistBoss with its own setting/image.
+        test("synthetic: uniqueName 'MISTS_GRIFFIN' -> EnemyType.MistBoss", () => {
+            spawnWithDbInfo(1015, {isHarvestable: false, category: 'boss', uniqueName: 'T7_MOB_MISTS_GRIFFIN', tier: 7});
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.MistBoss);
+            expect(mobs[0].name).toBe('GRIFFIN');
+            expect(mobs[0].mistBossSetting).toBe('settingBossGriffin');
+        });
+
+        // @verified 2026-07-12: MISTS_FAIRYDRAGON maps to EnemyType.MistBoss with its own setting/image.
+        test("synthetic: uniqueName 'MISTS_FAIRYDRAGON' -> EnemyType.MistBoss", () => {
+            spawnWithDbInfo(1016, {isHarvestable: false, category: 'boss', uniqueName: 'T6_MOB_MISTS_FAIRYDRAGON', tier: 6});
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.MistBoss);
+            expect(mobs[0].name).toBe('FAIRYDRAGON');
+            expect(mobs[0].mistBossSetting).toBe('settingBossFairyDragon');
+        });
+
+        // @verified 2026-07-12: regression guard - the plain ambient 'MISTS_SPIDER' critter must NOT
+        // be swept up by the 'CRYSTALSPIDER' substring match (it's a different, non-boss creature).
+        test("synthetic: uniqueName 'MISTS_SPIDER' (ambient, not Crystal Spider) stays out of MistBoss", () => {
+            spawnWithDbInfo(1017, {isHarvestable: false, category: 'roaming', uniqueName: 'T5_MOB_MISTS_SPIDER', tier: 5});
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).not.toBe(EnemyType.MistBoss);
+        });
+
+        // @verified 2026-07-12: real-DB proof the four wired Mist boss uniqueNames actually exist in mobs.min.json.
+        test('real DB: T8_MOB_ARCANE_CRYSTALSPIDER_BOSS and T8_MOB_MISTS_GRIFFIN/_FAIRYDRAGON resolve as MistBoss', () => {
+            const names = [
+                ['T8_MOB_ARCANE_CRYSTALSPIDER_BOSS', 'CRYSTALSPIDER'],
+                ['T8_MOB_MISTS_GRIFFIN', 'GRIFFIN'],
+                ['T8_MOB_MISTS_FAIRYDRAGON', 'FAIRYDRAGON'],
+            ];
+            names.forEach(([uniqueName], i) => {
+                const typeId = dbs.mobsDatabase.getTypeIdByName(uniqueName);
+                expect(typeId).not.toBeNull();
+                const p = normalizeParams({'0': 2000 + i, '1': typeId, '2': 255, '7': [0, 0], '13': 5000, '33': 0});
+                handler.NewMobEvent(p);
+            });
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(3);
+            mobs.forEach((mob, i) => {
+                const [, expectedImageName] = names[i];
+                expect(mob.type).toBe(EnemyType.MistBoss);
+                expect(mob.name).toBe(expectedImageName);
+            });
+        });
     });
 
     // -------------------------------------------------------------------------

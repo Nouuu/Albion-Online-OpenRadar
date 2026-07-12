@@ -25,6 +25,29 @@ export function getSettingNameForEnemyType(type) {
     }
 }
 
+/**
+ * Mist boss unique-name substrings -> {imageName, settingName}.
+ * Matched before the generic VETERAN/ELITE/BOSS heuristics in
+ * _getEnemyTypeFromCategory so every tier/variant (e.g. _VETERAN_BOSS) renders
+ * as EnemyType.MistBoss with its dedicated icon instead of a generic
+ * color-coded Boss/MiniBoss circle. imageName matches a file in
+ * web/images/Resources/.
+ *
+ * Veil Weaver has a settings toggle (settingBossVeilWeaver) but no confirmed
+ * uniqueName exists in mobs.min.json as of 2026-07 - left unmapped until a
+ * live Mists capture identifies it.
+ */
+const MIST_BOSS_NAME_MAP = [
+    {match: 'CRYSTALSPIDER', imageName: 'CRYSTALSPIDER', settingName: 'settingBossCrystalSpider'},
+    {match: 'MISTS_GRIFFIN', imageName: 'GRIFFIN', settingName: 'settingBossGriffin'},
+    {match: 'MISTS_FAIRYDRAGON', imageName: 'FAIRYDRAGON', settingName: 'settingBossFairyDragon'},
+];
+
+function getMistBossInfo(uniqueName) {
+    const name = (uniqueName || '').toUpperCase();
+    return MIST_BOSS_NAME_MAP.find(entry => name.includes(entry.match)) || null;
+}
+
 class Mob {
     constructor(id, typeId, posX, posY, health, maxHealth, enchantmentLevel, rarity) {
         this.id = id;
@@ -212,9 +235,16 @@ export class MobsHandler {
                 assignedEnemyType: this.getEnemyTypeName(mob.type)
             });
         } else if (dbInfo) {
-            // Hostile mob from MobsDatabase
-            mob.type = this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
-            mob.name = dbInfo.uniqueName;  // For Mist Boss filtering
+            const mistBossInfo = getMistBossInfo(dbInfo.uniqueName);
+            if (mistBossInfo) {
+                mob.type = EnemyType.MistBoss;
+                mob.name = mistBossInfo.imageName;
+                mob.mistBossSetting = mistBossInfo.settingName;
+            } else {
+                // Hostile mob from MobsDatabase
+                mob.type = this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
+                mob.name = dbInfo.uniqueName;
+            }
             mob.tier = dbInfo.tier || 0;   // Store tier for hostile mobs
             mob.category = dbInfo.category || null;  // Store category for badge display
             mob.namelocatag = dbInfo.namelocatag || null;  // Store localization tag for translated name

@@ -83,6 +83,8 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type == EnemyType.MistBoss)
             {
+                if (mobOne.mistBossSetting && settingsSync.getBool(mobOne.mistBossSetting) === false) continue;
+
                 // Only set imageName if mob has been identified (has name from mobinfo)
                 // Otherwise leave undefined and fallback blue circle will be drawn
                 if (mobOne.name) {
