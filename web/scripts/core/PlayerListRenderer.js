@@ -261,12 +261,6 @@ export function update(playersHandler) {
         els.emptyState.classList.toggle('hidden', total > 0);
     }
 
-    // Set data-sections for CSS grid rules
-    const visibleSections = (counts.hostile > 0 ? 1 : 0) +
-        (counts.faction > 0 ? 1 : 0) +
-        (counts.passive > 0 ? 1 : 0);
-    els.container.dataset.sections = visibleSections;
-
     // Helper to update a player section (DRY)
     const updateSection = (section, list, countEl, players, type) => {
         if (!section || !list) return;
