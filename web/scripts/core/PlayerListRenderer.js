@@ -58,10 +58,10 @@ function renderPlayerCard(player, threatType = null) {
     const effectiveType = threatType || (player.isPassive?.() ? 'passive' : player.isFactionPlayer?.() ? 'faction' : 'hostile');
     const {badge: playerTypeBadge, color: playerTypeColor} = renderPlayerTypeBadge(effectiveType, factionCityName);
 
-    // Average IP badge
-    const avgItemPower = player.getAverageItemPower?.();
-    const ipBadge = avgItemPower
-        ? `<span class="text-[11px] font-mono font-bold text-warning bg-gradient-to-br from-warning/15 to-warning/5 px-2 py-0.5 rounded border border-warning/30">IP ${avgItemPower}</span>`
+    // Max IP badge (estimate: real gear tier/enchant + Excellent quality + max possible specialization)
+    const maxItemPower = player.getMaxItemPower?.();
+    const ipBadge = maxItemPower
+        ? `<span class="text-[11px] font-mono font-bold text-warning bg-gradient-to-br from-warning/15 to-warning/5 px-2 py-0.5 rounded border border-warning/30" title="Estimated max IP: real gear + Excellent quality + maxed specialization">Max IP ${maxItemPower}</span>`
         : '';
 
     // Mounted badge
