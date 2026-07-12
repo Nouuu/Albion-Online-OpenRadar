@@ -3,6 +3,11 @@ import zonesDatabase from "../data/ZonesDatabase.js";
 import settingsSync from "../utils/SettingsSync.js";
 
 class Player {
+    // Max Destiny Board specialization bonus at level 120 (+2 IP/level), per Albion's IP formula
+    static MAX_SPECIALIZATION_BONUS = 240;
+    // Assumed quality bonus (Excellent), per Albion's IP formula
+    static MAX_QUALITY_BONUS = 20;
+
     constructor(posX, posY, id, nickname, guildName1, faction, allianceName, equipments, spells) {
         this.posX = posX;
         this.posY = posY;
@@ -45,8 +50,17 @@ class Player {
         return this.faction >= 1 && this.faction <= 6;
     }
 
-    // Equipment slots: 0-4=combat, 5=Cape, 6=Mount, 7=Bag, 8=Food
-    getAverageItemPower() {
+    // Equipment slots: 0-4=combat, 5=Bag, 6=Cape, 7=Mount, 8=Food
+    //
+    // Item power the game reports for a character also includes item quality
+    // and Destiny Board specialization, neither of which is present in the
+    // equipment ids broadcast over the network (see docs/technical/DEATHEYE_ANALYSIS.md
+    // - even a full MITM decrypt doesn't expose them). This returns an estimated
+    // max IP those equipped items could reach: real tier/enchant power plus an
+    // assumed Excellent quality (+20) and max possible specialization
+    // (+2/level, capped at level 120 = +240) on every combat slot. It is an
+    // estimate, not the player's actual current IP.
+    getMaxItemPower() {
         // Safety check: ensure equipments is an array
         if (!this.equipments || !Array.isArray(this.equipments) || this.equipments.length === 0) {
             return null;
@@ -58,7 +72,7 @@ class Player {
             return null; // Database not loaded yet
         }
 
-        // Filter combat equipment slots (exclude Cape=5, Mount=6, Bag=7)
+        // Filter combat equipment slots (exclude Bag=5, Cape=6, Mount=7)
         // Slots 0-4 (MainHand, OffHand, Head, Chest, Shoes) + Food=8
         const combatSlots = this.equipments.filter((itemId, index) => {
             return (index <= 4 || index === 8) && itemId && itemId > 0;
@@ -66,14 +80,14 @@ class Player {
 
         if (combatSlots.length === 0) return null;
 
-        // Lookup actual itempower from database
+        // Lookup actual itempower from database, assuming max specialization per item
         let totalPower = 0;
         let validItems = 0;
 
         for (const itemId of combatSlots) {
             const item = itemsDB.getItemById(itemId);
             if (item && item.itempower > 0) {
-                totalPower += item.itempower;
+                totalPower += item.itempower + Player.MAX_SPECIALIZATION_BONUS + Player.MAX_QUALITY_BONUS;
                 validItems++;
             }
         }
