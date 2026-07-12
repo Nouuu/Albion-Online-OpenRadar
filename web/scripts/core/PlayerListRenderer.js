@@ -61,12 +61,12 @@ function renderPlayerCard(player, threatType = null) {
     // Max IP badge (estimate: real gear tier/enchant + Excellent quality + max possible specialization)
     const maxItemPower = player.getMaxItemPower?.();
     const ipBadge = maxItemPower
-        ? `<span class="text-[11px] font-mono font-bold text-warning bg-gradient-to-br from-warning/15 to-warning/5 px-2 py-0.5 rounded border border-warning/30" title="Estimated max IP: real gear + Excellent quality + maxed specialization">Max IP ${maxItemPower}</span>`
+        ? `<span class="text-[32px] font-mono font-bold text-warning bg-gradient-to-br from-warning/15 to-warning/5 px-4 py-1 rounded border border-warning/30" title="Estimated max IP: real gear + Excellent quality + maxed specialization">Max IP ${maxItemPower}</span>`
         : '';
 
     // Mounted badge
     const mountedBadge = player.mounted
-        ? `<span class="text-[9px] font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/25 uppercase tracking-wide">Mounted</span>`
+        ? `<span class="text-[32px] font-mono font-semibold text-primary bg-primary/10 px-3 py-1 rounded border border-primary/25 uppercase tracking-wide">Mounted</span>`
         : '';
 
     // Equipment section
@@ -87,7 +87,7 @@ function renderPlayerCard(player, threatType = null) {
                 const baseName = item.name.split('@')[0];
                 const iconPath = `/images/Items/${baseName}.webp`;
 
-                return `<div class="inline-flex items-center gap-1.5 bg-base-100/60 px-2 py-1 rounded hover:bg-base-100/80 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}"><img src="${iconPath}" alt="${baseName}" class="w-6 h-6 object-contain drop-shadow-sm bg-base-200/50 rounded" loading="lazy"><span class="text-[10px] font-mono font-semibold text-base-content/80">${tierStr}${enchantStr}</span>${ipStr ? `<span class="text-[9px] font-mono font-bold text-warning">${ipStr}</span>` : ''}</div>`;
+                return `<div class="inline-flex items-center gap-1.5 bg-base-100/60 px-2 py-1 rounded hover:bg-base-100/80 transition-colors" title="${baseName} - ${tierStr}${enchantStr} - IP: ${ipStr}"><img src="${iconPath}" alt="${baseName}" class="w-12 h-12 object-contain drop-shadow-sm bg-base-200/50 rounded" loading="lazy"><span class="text-[14px] font-mono font-semibold text-base-content/80">${tierStr}${enchantStr}</span></div>`;
             }).filter(Boolean).join('');
 
             if (items) {
@@ -131,7 +131,7 @@ function renderPlayerCard(player, threatType = null) {
     // Build card
     const accentBarClass = `bg-${playerTypeColor}`;
 
-    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-center gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex items-center gap-2 shrink-0">${ipBadge}${mountedBadge}</div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
 }
 
 function updateSectionPlayers(listContainer, players, threatType) {
