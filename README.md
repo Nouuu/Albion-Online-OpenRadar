@@ -47,14 +47,36 @@ reading.
 ```bash
 # Install libpcap
 sudo apt install libpcap0.8  # Debian/Ubuntu
+sudo pacman -S libpcap  # Arch linux
 
 # Download and set permissions
+## Create a folder at /home/username/albion-radar
+mkdir ~/albion-radar
+
+### Move to the folder
+cd ~/albion-radar
+
+## Download latest release
+curl https://github.com/Nouuu/Albion-Online-OpenRadar/releases/latest/OpenRadar-linux-amd64
+
+## set permissions
 chmod +x OpenRadar-linux-amd64
+
+## Give ability to listen without opening the radar with root
 sudo setcap cap_net_raw=eip ./OpenRadar-linux-amd64
 
 # Run
 ./OpenRadar-linux-amd64
 ```
+
+### libpcap.so.0.8: cannot open shared object file
+```
+./OpenRadar-linux-amd64: error while loading shared libraries: libpcap.so.0.8: cannot open shared object file: No such file or directory
+```
+- This error mean that no matching version has been found
+- To fix this, make a symbolic link to the version you installed : 
+- `sudo ln -s /usr/lib/libpcap.so.1 /usr/lib/libpcap.so.0.8`, or if not working ;
+  - `sudo ln -s /usr/lib/libpcap.so /usr/lib/libpcap.so.0.8`
 
 ### CLI Options
 
