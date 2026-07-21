@@ -57,7 +57,7 @@ mkdir ~/albion-radar
 cd ~/albion-radar
 
 ## Download latest release
-curl https://github.com/Nouuu/Albion-Online-OpenRadar/releases/latest/OpenRadar-windows-amd64.exe
+curl https://github.com/Nouuu/Albion-Online-OpenRadar/releases/latest/OpenRadar-linux-amd64
 
 ## set permissions
 chmod +x OpenRadar-linux-amd64
