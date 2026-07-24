@@ -41,7 +41,7 @@ export class HarvestablesDatabase {
         try {
             window.logger?.info(CATEGORIES.SYSTEM, 'HarvestablesLoading', {path: jsonPath});
 
-            const response = await fetch(jsonPath);
+            const response = await fetch(jsonPath, {cache: 'no-cache'});
             if (!response.ok) {
                 throw new Error(`Failed to fetch harvestables: ${response.status}`);
             }

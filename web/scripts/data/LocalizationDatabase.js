@@ -54,7 +54,7 @@ export class LocalizationDatabase {
                 { path: jsonPath, lang }
             );
 
-            const response = await fetch(jsonPath);
+            const response = await fetch(jsonPath, {cache: 'no-cache'});
             if (!response.ok) {
                 throw new Error(`Failed to fetch localization.json: ${response.status}`);
             }

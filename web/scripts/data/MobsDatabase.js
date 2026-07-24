@@ -68,7 +68,7 @@ export class MobsDatabase {
                 { path: jsonPath }
             );
 
-            const response = await fetch(jsonPath);
+            const response = await fetch(jsonPath, {cache: 'no-cache'});
             if (!response.ok) {
                 throw new Error(`Failed to fetch mobs: ${response.status}`);
             }
