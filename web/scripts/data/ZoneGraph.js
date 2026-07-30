@@ -7,7 +7,7 @@ const STALE_MS = 3 * 24 * 60 * 60 * 1000;
 
 export class ZoneGraph {
   constructor() {
-    this.adjacency = new Map(); // zoneId -> [{to, pos, source: 'static'|'discovered', discoveredAt?}]
+    this.adjacency = new Map(); // zoneId -> [{to, pos, source: 'static'|'discovered'|'assumed', discoveredAt?}]
     this.loaded = false;
   }
 
@@ -43,6 +43,12 @@ export class ZoneGraph {
     for (const edge of discoveredEdges) {
       this._addEdge(edge.from, edge.to, edge.pos ?? null, "discovered", edge.discoveredAt);
     }
+    // Second pass, after every real observed direction is in: assume each discovered edge is
+    // reversible (you can back out the way you came) unless that reverse was itself separately
+    // observed, in which case the real observation already added by the loop above wins.
+    for (const edge of discoveredEdges) {
+      this._addAssumedReverse(edge.to, edge.from, edge.discoveredAt);
+    }
     this.loaded = true;
   }
 
@@ -60,38 +66,63 @@ export class ZoneGraph {
     }
   }
 
+  // The exit position for the reverse direction lives in the *other* zone's local coordinates,
+  // which reportTransition never observes (only the pre-transition position, in the origin zone,
+  // is known) - so the assumed reverse carries no viaPos, only "which zone to head back to".
+  _addAssumedReverse(from, to, discoveredAt) {
+    if (!from || !to || from === to) return;
+    if (this.hasEdge(from, to)) return; // never downgrade an already-known (real) edge
+    this._addEdge(from, to, null, "assumed", discoveredAt);
+  }
+
   hasEdge(from, to) {
     const edges = this.adjacency.get(from);
     return !!edges && edges.some((e) => e.to === to);
   }
 
+  // "Stale" = a real observation old enough that the road may have reset since.
   isStale(edge) {
     if (edge.source !== "discovered" || !edge.discoveredAt) return false;
     return Date.now() - new Date(edge.discoveredAt).getTime() > STALE_MS;
   }
 
+  // "Assumed" = never actually observed in this direction, only inferred as the reverse of a
+  // real transition. Ages out via the same discoveredAt as a stale check would, since it's exactly
+  // as likely to have been invalidated by a road reset as the observation it was inferred from.
+  isAssumed(edge) {
+    return edge.source === "assumed";
+  }
+
+  isUnreliable(edge) {
+    return this.isAssumed(edge) || this.isStale(edge);
+  }
+
   // Unweighted BFS: "which exit do I take now" is answered correctly by hop-count
   // shortest path in the vast majority of cases; weighting by zone danger would be an
   // unjustified value judgment (safe-but-long vs. short-but-black has no universal answer).
-  _shortestPath(fromZoneId, toZoneId, includeStale) {
+  // Tries reliable-only edges first (static + confirmed discoveries), falling back to also
+  // allowing stale/assumed edges only when no fully-reliable path exists - so a confirmed
+  // route is always preferred over "probably still works" guesses, but a U-turn through an
+  // unconfirmed-reversible road beats no suggestion at all.
+  _shortestPath(fromZoneId, toZoneId, includeUnreliable) {
     const visited = new Set([fromZoneId]);
-    const queue = [{ id: fromZoneId, path: [fromZoneId], usedStale: false }];
+    const queue = [{ id: fromZoneId, path: [fromZoneId], usedStale: false, usedAssumed: false }];
     let head = 0;
     while (head < queue.length) {
-      const { id, path, usedStale } = queue[head++];
+      const { id, path, usedStale, usedAssumed } = queue[head++];
       const edges = this.adjacency.get(id) || [];
       for (const edge of edges) {
         if (visited.has(edge.to)) continue;
-        const stale = this.isStale(edge);
-        if (stale && !includeStale) continue;
+        if (this.isUnreliable(edge) && !includeUnreliable) continue;
 
         const nextPath = [...path, edge.to];
-        const nextUsedStale = usedStale || stale;
+        const nextUsedStale = usedStale || this.isStale(edge);
+        const nextUsedAssumed = usedAssumed || this.isAssumed(edge);
         if (edge.to === toZoneId) {
-          return { path: nextPath, usedStale: nextUsedStale };
+          return { path: nextPath, usedStale: nextUsedStale, usedAssumed: nextUsedAssumed };
         }
         visited.add(edge.to);
-        queue.push({ id: edge.to, path: nextPath, usedStale: nextUsedStale });
+        queue.push({ id: edge.to, path: nextPath, usedStale: nextUsedStale, usedAssumed: nextUsedAssumed });
       }
     }
     return null;
@@ -100,7 +131,9 @@ export class ZoneGraph {
   // Returns only the next hop (zone + exit position), not the full route.
   getNextHop(fromZoneId, toZoneId) {
     if (!this.loaded || !fromZoneId || !toZoneId) return null;
-    if (fromZoneId === toZoneId) return { nextZoneId: fromZoneId, viaPos: null, hops: 0, stale: false };
+    if (fromZoneId === toZoneId) {
+      return { nextZoneId: fromZoneId, viaPos: null, hops: 0, stale: false, assumed: false };
+    }
 
     const result =
       this._shortestPath(fromZoneId, toZoneId, false) ?? this._shortestPath(fromZoneId, toZoneId, true);
@@ -113,6 +146,7 @@ export class ZoneGraph {
       viaPos: usedEdge?.pos ?? null,
       hops: result.path.length - 1,
       stale: result.usedStale,
+      assumed: result.usedAssumed,
     };
   }
 
@@ -130,6 +164,7 @@ export class ZoneGraph {
     const discoveredAt = new Date().toISOString();
     const posArray = pos && Number.isFinite(pos.x) && Number.isFinite(pos.y) ? [pos.x, pos.y] : null;
     this._addEdge(fromZoneId, toZoneId, posArray, "discovered", discoveredAt);
+    this._addAssumedReverse(toZoneId, fromZoneId, discoveredAt);
 
     // fetch() can throw synchronously (e.g. unavailable in the current environment) in addition
     // to rejecting asynchronously (network error) - guard both so a reporting failure never

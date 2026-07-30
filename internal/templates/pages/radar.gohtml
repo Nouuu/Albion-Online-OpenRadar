@@ -241,8 +241,16 @@
                     const bearing = relativeScreenBearing(hop.viaPos[0] - player.x, hop.viaPos[1] - player.y);
                     via = ` (exit to the ${bearingToCompassLabel(bearing)} on your radar)`;
                 }
-                const staleNote = hop.stale ? ' - route may be outdated (based on an older discovered road)' : '';
-                resultEl.textContent = `Next: ${nextZoneName}${via} - ${hop.hops} hop(s) to ${dest.name}${staleNote}`;
+                // "assumed" = we never actually confirmed this direction is passable, only inferred
+                // it as the reverse of a road you walked in - flag it distinctly from "stale" (an
+                // observation that's simply old) so the note is honest about which kind of guess it is.
+                let note = '';
+                if (hop.assumed) {
+                    note = ' - includes an unconfirmed U-turn (we know you got here, not that you can go back)';
+                } else if (hop.stale) {
+                    note = ' - route may be outdated (based on an older discovered road)';
+                }
+                resultEl.textContent = `Next: ${nextZoneName}${via} - ${hop.hops} hop(s) to ${dest.name}${note}`;
             }
 
             function setDestination() {

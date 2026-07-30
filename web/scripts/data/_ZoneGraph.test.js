@@ -14,12 +14,16 @@ describe("ZoneGraph pathfinding", () => {
 
   test("getNextHop on the current zone returns 0 hops", () => {
     graph.loadFromEdges([{ from: "A", to: "B", pos: [1, 1] }]);
-    expect(graph.getNextHop("A", "A")).toEqual({ nextZoneId: "A", viaPos: null, hops: 0, stale: false });
+    expect(graph.getNextHop("A", "A")).toEqual({
+      nextZoneId: "A", viaPos: null, hops: 0, stale: false, assumed: false,
+    });
   });
 
   test("getNextHop finds a direct single-hop static edge", () => {
     graph.loadFromEdges([{ from: "A", to: "B", pos: [10, 20] }]);
-    expect(graph.getNextHop("A", "B")).toEqual({ nextZoneId: "B", viaPos: [10, 20], hops: 1, stale: false });
+    expect(graph.getNextHop("A", "B")).toEqual({
+      nextZoneId: "B", viaPos: [10, 20], hops: 1, stale: false, assumed: false,
+    });
   });
 
   test("getNextHop finds the shortest multi-hop static path and reports the first hop only", () => {
@@ -32,6 +36,7 @@ describe("ZoneGraph pathfinding", () => {
     expect(hop.nextZoneId).toBe("B");
     expect(hop.hops).toBe(3);
     expect(hop.stale).toBe(false);
+    expect(hop.assumed).toBe(false);
   });
 
   test("getNextHop returns null when no path exists", () => {
@@ -50,7 +55,7 @@ describe("ZoneGraph pathfinding", () => {
       [{ from: "A", to: "D", pos: [9, 9], discoveredAt: new Date().toISOString() }]
     );
     const hop = graph.getNextHop("A", "D");
-    expect(hop).toEqual({ nextZoneId: "D", viaPos: [9, 9], hops: 1, stale: false });
+    expect(hop).toEqual({ nextZoneId: "D", viaPos: [9, 9], hops: 1, stale: false, assumed: false });
   });
 
   test("a stale-only discovered path falls back to a fresh alternative when one exists", () => {
@@ -73,14 +78,99 @@ describe("ZoneGraph pathfinding", () => {
     const staleDate = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
     graph.loadFromEdges([], [{ from: "A", to: "Z", pos: [1, 2], discoveredAt: staleDate }]);
     const hop = graph.getNextHop("A", "Z");
-    expect(hop).toEqual({ nextZoneId: "Z", viaPos: [1, 2], hops: 1, stale: true });
+    expect(hop).toEqual({ nextZoneId: "Z", viaPos: [1, 2], hops: 1, stale: true, assumed: false });
   });
 
-  test("hasEdge reports both static and discovered edges", () => {
+  test("hasEdge reports static edges, discovered edges, and their assumed reverse", () => {
     graph.loadFromEdges([{ from: "A", to: "B", pos: null }], [{ from: "B", to: "C", discoveredAt: new Date().toISOString() }]);
     expect(graph.hasEdge("A", "B")).toBe(true);
     expect(graph.hasEdge("B", "C")).toBe(true);
-    expect(graph.hasEdge("C", "B")).toBe(false);
+    // C->B was never observed directly, but is now known as an assumed reverse of the B->C discovery.
+    expect(graph.hasEdge("C", "B")).toBe(true);
+    // A static edge never gets a synthesized reverse: only discovered edges do (see loadFromEdges).
+    expect(graph.hasEdge("B", "A")).toBe(false);
+  });
+});
+
+describe("ZoneGraph assumed reverse (U-turn) edges", () => {
+  let graph;
+
+  beforeEach(() => {
+    graph = new ZoneGraph();
+  });
+
+  // @verified: motivating case - entering a brand new, never-explored Avalonian Road should
+  // immediately let the GPS suggest turning back, since we know how we got here.
+  test("a freshly discovered A->B edge lets getNextHop(B, A) suggest turning back", () => {
+    graph.loadFromEdges([], [{ from: "A", to: "TNL-001", pos: [5, 5], discoveredAt: new Date().toISOString() }]);
+
+    const hop = graph.getNextHop("TNL-001", "A");
+    expect(hop.nextZoneId).toBe("A");
+    expect(hop.hops).toBe(1);
+    expect(hop.assumed).toBe(true);
+    // The return exit's position lives in TNL-001's own local coordinates, which was never
+    // observed (only the pre-transition position, in A, is known) - so it's honestly null.
+    expect(hop.viaPos).toBeNull();
+  });
+
+  test("a real observed edge always wins over its synthesized assumed counterpart", () => {
+    // Player walked A->B once, then separately walked B->A later - both are real observations.
+    graph.loadFromEdges([], [
+      { from: "A", to: "B", pos: [1, 1], discoveredAt: new Date().toISOString() },
+      { from: "B", to: "A", pos: [9, 9], discoveredAt: new Date().toISOString() },
+    ]);
+
+    const hop = graph.getNextHop("B", "A");
+    expect(hop.assumed).toBe(false);
+    expect(hop.viaPos).toEqual([9, 9]); // the real B->A observation's own position, not null
+  });
+
+  test("chained discoveries let getNextHop retrace multiple hops back out via assumed edges", () => {
+    // Simulates walking three tunnel hops deep: A -> R1 -> R2 -> R3, each reported individually.
+    const now = new Date().toISOString();
+    graph.loadFromEdges([], [
+      { from: "A", to: "R1", pos: [1, 1], discoveredAt: now },
+      { from: "R1", to: "R2", pos: [2, 2], discoveredAt: now },
+      { from: "R2", to: "R3", pos: [3, 3], discoveredAt: now },
+    ]);
+
+    const hop = graph.getNextHop("R3", "A");
+    expect(hop.nextZoneId).toBe("R2");
+    expect(hop.hops).toBe(3);
+    expect(hop.assumed).toBe(true);
+  });
+
+  test("reportTransition immediately makes the reverse direction usable, not just on next load", () => {
+    graph.loadFromEdges([]);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve({ status: "ok" }) });
+
+    graph.reportTransition("A", "TNL-005", { x: 3, y: 4 });
+
+    const hop = graph.getNextHop("TNL-005", "A");
+    expect(hop).toEqual({ nextZoneId: "A", viaPos: null, hops: 1, stale: false, assumed: true });
+
+    globalThis.fetch = originalFetch;
+  });
+
+  test("an assumed edge does not overwrite an existing static edge in the opposite direction", () => {
+    // A->B is a known static (bidirectional-by-construction, since the static graph already
+    // emits both directions) edge; reportTransition should never downgrade it to "assumed".
+    graph.loadFromEdges([
+      { from: "A", to: "B", pos: [1, 1] },
+      { from: "B", to: "A", pos: [2, 2] },
+    ]);
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve({ status: "ok" }) });
+
+    // Not expected in practice (static edges are already known) but exercises the guard directly.
+    graph._addAssumedReverse("B", "A", new Date().toISOString());
+
+    expect(graph.getNextHop("B", "A")).toEqual({
+      nextZoneId: "A", viaPos: [2, 2], hops: 1, stale: false, assumed: false,
+    });
+
+    globalThis.fetch = originalFetch;
   });
 });
 
@@ -113,6 +203,7 @@ describe("ZoneGraph.reportTransition", () => {
       viaPos: [1.5, -2.5],
       hops: 1,
       stale: false,
+      assumed: false,
     });
 
     await vi.waitFor(() => expect(calls).toHaveLength(1));
@@ -173,6 +264,6 @@ describe("ZoneGraph.load", () => {
 
     expect(graph.hasEdge("A", "B")).toBe(true);
     expect(graph.hasEdge("B", "C")).toBe(true);
-    expect(graph.getNextHop("A", "C")).toEqual({ nextZoneId: "B", viaPos: [1, 1], hops: 2, stale: false });
+    expect(graph.getNextHop("A", "C")).toEqual({ nextZoneId: "B", viaPos: [1, 1], hops: 2, stale: false, assumed: false });
   });
 });
