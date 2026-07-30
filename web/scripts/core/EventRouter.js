@@ -5,6 +5,7 @@ import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
+import zoneGraph from '../data/ZoneGraph.js';
 
 function syncMapIsBZ() {
     if (!map) return;
@@ -41,6 +42,18 @@ window.lpY = lpY;
 let handlers = null;
 let map = null;
 let radarRenderer = null;
+
+// GPS: notified with (newMapId, previousMapId) at the end of every applyMapChange,
+// so a GPS panel can recompute its next hop without polling.
+let mapChangeListeners = [];
+
+export function onMapChange(callback) {
+    mapChangeListeners.push(callback);
+}
+
+function isRealZoneId(id) {
+    return typeof id === 'string' && id.length > 0 && !isPlainMistId(id) && !isSanctuaryId(id);
+}
 
 // Helper: Update local player position (DRY pattern)
 function updateLocalPlayerPosition(x, y) {
@@ -106,6 +119,14 @@ function consumePendingMistChoice() {
 
 function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
     const previousMapId = map.id;
+
+    // GPS: only real cluster-to-cluster transitions can teach the graph anything - Mist/dungeon
+    // synthetic ids aren't routable zones. lpX/lpY still hold the last position in the zone
+    // being left, i.e. the approximate location of the exit that was just taken.
+    if (isRealZoneId(previousMapId) && isRealZoneId(newMapId)) {
+        zoneGraph.reportTransition(previousMapId, newMapId, {x: lpX, y: lpY});
+    }
+
     map.id = newMapId;
     window.currentMapId = map.id;
     lastMapChangeTime = Date.now();
@@ -166,6 +187,14 @@ function applyMapChange(newMapId, logEvent, extraLogFields = {}) {
         newMapId: map.id,
         ...extraLogFields
     });
+
+    for (const listener of mapChangeListeners) {
+        try {
+            listener(map.id, previousMapId);
+        } catch (e) {
+            window.logger?.warn(CATEGORIES.MAP, 'MapChangeListenerFailed', {error: e?.message});
+        }
+    }
 }
 
 function decodeJoinPosition(p9) {
@@ -575,6 +604,7 @@ export function reset() {
     lastMapChangeTime = 0;
     pendingMistChoice = null;
     lastActiveMistOverride = null;
+    mapChangeListeners = [];
 
     // Clear references to prevent memory leaks
     handlers = null;

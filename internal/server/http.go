@@ -37,6 +37,7 @@ type HTTPServer struct {
 	devMode     bool
 	networkAPI  *NetworkAPI
 	settingsAPI *SettingsAPI
+	roadsAPI    *RoadsAPI
 }
 
 // buildID fingerprints the embedded assets. It is empty for an unversioned build,
@@ -120,6 +121,7 @@ func NewHTTPServer(
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
 	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
+	s.roadsAPI = NewRoadsAPI(appDir)
 	s.setupRoutes()
 	return s, nil
 }
@@ -164,6 +166,7 @@ func NewHTTPServerDev(
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
 	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
+	s.roadsAPI = NewRoadsAPI(appDir)
 	s.setupRoutes()
 	return s, nil
 }
@@ -211,6 +214,7 @@ func (s *HTTPServer) setupRoutes() {
 	if s.networkAPI != nil {
 		s.networkAPI.Register(apiMux)
 	}
+	s.roadsAPI.Register(apiMux)
 	s.mux.Handle("/api/", noStore(apiMux))
 }
 

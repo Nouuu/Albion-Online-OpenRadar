@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import {pathToFileURL} from 'url';
 import {downloadFile, DownloadStatus} from "./common";
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master';
@@ -15,6 +16,12 @@ interface ZoneInfo {
     tier: number;
     file: string;
     bounds?: {min: [number, number], max: [number, number]};
+}
+
+interface GraphEdge {
+    from: string;
+    to: string;
+    pos: [number, number] | null;
 }
 
 // ============================================================================
@@ -319,16 +326,91 @@ function extractTier(file: string): number {
     return tierMatch ? parseInt(tierMatch[1], 10) : 0;
 }
 
-async function processWorldJson(): Promise<{ success: boolean, zonesCount: number }> {
+// Static dungeons (incl. Hellgates and corrupted dungeons, whose types all contain "DUNGEON"),
+// hideouts, islands, arenas and expeditions are all "Cluster"-type targets in world.json despite
+// not being freely walkable open-world content - entering one means a combat instance or an
+// ownership/matchmaking gate, not a simple pass-through. Excluded from the GPS routing graph.
+export function isRoutableZoneType(type: string): boolean {
+    if (!type) return false;
+    const t = type.toUpperCase();
+    if (t.includes('DUNGEON')) return false;
+    if (t.includes('HIDEOUT')) return false;
+    if (t.includes('ISLAND')) return false;
+    if (t.startsWith('ARENA')) return false;
+    if (t.includes('EXPEDITION')) return false;
+    return true;
+}
+
+// Only "Cluster" exits are stable static-world adjacency. "DungeonGroup" exits (and all
+// Roads of Avalon connectivity) lead into instanced/randomized content whose far side isn't
+// fixed here - those are learned at runtime by the radar instead (see docs/project/TODO.md).
+export function extractClusterEdges(clusterId: string, cluster: any): GraphEdge[] {
+    const rawExits = cluster?.exits?.exit;
+    if (!rawExits) return [];
+    const exitList = Array.isArray(rawExits) ? rawExits : [rawExits];
+
+    const edges: GraphEdge[] = [];
+    for (const exit of exitList) {
+        if (exit?.['@targettype'] !== 'Cluster') continue;
+
+        const targetId = exit['@targetid'];
+        if (typeof targetId !== 'string' || targetId.length === 0) continue;
+        // Target ids look like "<uuid>@<clusterId>"; the segment after the last '@' is the
+        // neighbor's cluster id. Zone ids are not always numeric (e.g. "TNL-001"), so no
+        // further validation is applied beyond "non-empty".
+        const atIndex = targetId.lastIndexOf('@');
+        const targetClusterId = atIndex >= 0 ? targetId.slice(atIndex + 1) : targetId;
+        if (!targetClusterId) continue;
+
+        let pos: [number, number] | null = null;
+        const posAttr = exit['@pos'];
+        if (typeof posAttr === 'string') {
+            const parts = posAttr.trim().split(/\s+/).map(parseFloat);
+            if (parts.length === 2 && parts.every(Number.isFinite)) {
+                pos = [parts[0], parts[1]];
+            }
+        }
+
+        edges.push({from: clusterId, to: targetClusterId, pos});
+    }
+    return edges;
+}
+
+// Bidirectional exits are declared once per side, so the same (from,to) pair can show up
+// more than once with a different `pos` (or none). Keep the first position seen.
+export function dedupeEdges(edges: GraphEdge[]): GraphEdge[] {
+    const byKey = new Map<string, GraphEdge>();
+    for (const edge of edges) {
+        const key = `${edge.from}->${edge.to}`;
+        if (!byKey.has(key)) byKey.set(key, edge);
+    }
+    return Array.from(byKey.values());
+}
+
+// Drops edges touching a non-routable zone (dungeon/hideout/island/arena/expedition) on either
+// end, and edges whose endpoint isn't a known zone at all. Must run after `zones` is fully built
+// since a target's type may not be known yet while its own cluster is still being processed.
+export function filterRoutableEdges(edges: GraphEdge[], zones: Record<string, ZoneInfo>): GraphEdge[] {
+    return edges.filter(e => {
+        const fromZone = zones[e.from];
+        const toZone = zones[e.to];
+        return !!fromZone && !!toZone
+            && isRoutableZoneType(fromZone.type)
+            && isRoutableZoneType(toZone.type);
+    });
+}
+
+async function processWorldJson(): Promise<{ success: boolean, zonesCount: number, edgesCount: number }> {
     const worldJsonUrl = `${GITHUB_RAW_BASE}/cluster/world.json`;
     const outputPath = path.join(OUTPUT_DIR, 'zones.json');
+    const graphOutputPath = path.join(OUTPUT_DIR, 'zone-graph.json');
 
     console.log('\n📍 Processing world.json for zone data...');
 
     const res = await downloadFile(worldJsonUrl);
     if (res.status !== DownloadStatus.SUCCESS || !res.buffer) {
         console.error(`❌ Failed to download world.json: ${res.message}`);
-        return {success: false, zonesCount: 0};
+        return {success: false, zonesCount: 0, edgesCount: 0};
     }
 
     console.log(`✅ Downloaded world.json (${res.size})`);
@@ -339,10 +421,11 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
 
         if (!Array.isArray(clusters)) {
             console.error('❌ Invalid world.json structure: clusters.cluster is not an array');
-            return {success: false, zonesCount: 0};
+            return {success: false, zonesCount: 0, edgesCount: 0};
         }
 
         const zones: Record<string, ZoneInfo> = {};
+        let rawEdges: GraphEdge[] = [];
 
         for (const cluster of clusters) {
             const id = cluster['@id'];
@@ -376,6 +459,7 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
             }
 
             zones[id] = zone;
+            rawEdges = rawEdges.concat(extractClusterEdges(id, cluster));
         }
 
         fs.writeFileSync(outputPath, JSON.stringify(zones));
@@ -387,10 +471,14 @@ async function processWorldJson(): Promise<{ success: boolean, zonesCount: numbe
         }
         console.log(`   🛡️ Safe: ${pvpCounts.safe} | 🔶 Yellow: ${pvpCounts.yellow} | ⚔️ Red: ${pvpCounts.red} | 💀 Black: ${pvpCounts.black}`);
 
-        return {success: true, zonesCount: Object.keys(zones).length};
+        const edges = filterRoutableEdges(dedupeEdges(rawEdges), zones);
+        fs.writeFileSync(graphOutputPath, JSON.stringify({edges}));
+        console.log(`💾 Generated zone-graph.json with ${edges.length} static edges`);
+
+        return {success: true, zonesCount: Object.keys(zones).length, edgesCount: edges.length};
     } catch (error) {
         console.error(`❌ Failed to parse world.json: ${error}`);
-        return {success: false, zonesCount: 0};
+        return {success: false, zonesCount: 0, edgesCount: 0};
     }
 }
 
@@ -476,7 +564,7 @@ async function main() {
     results.push(await downloadAndMinify('spells.json', minifySpells, 'spells.min.json'));
     results.push(await downloadAndMinify('harvestables.json', minifyHarvestables, 'harvestables.min.json'));
 
-    // Process zones
+    // Process zones (also emits zone-graph.json, the static world adjacency graph)
     const zonesResult = await processWorldJson();
     results.push({
         name: 'world.json',
@@ -485,6 +573,9 @@ async function main() {
         minifiedSize: 0,
         itemCount: zonesResult.zonesCount
     });
+    if (zonesResult.success) {
+        console.log(`   🗺️ zone-graph.json: ${zonesResult.edgesCount} static edges`);
+    }
 
     // Summary
     console.log('\n' + '='.repeat(60));
@@ -527,7 +618,10 @@ async function main() {
     process.exit(failCount > 0 ? 1 : 0);
 }
 
-main().catch(err => {
-    console.error('❌ Fatal error:', err);
-    process.exit(1);
-});
+// Guard against running main() as a side effect of importing this module (e.g. from tests).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+    main().catch(err => {
+        console.error('❌ Fatal error:', err);
+        process.exit(1);
+    });
+}

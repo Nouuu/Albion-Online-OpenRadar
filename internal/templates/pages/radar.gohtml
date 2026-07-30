@@ -70,6 +70,27 @@
         </div>
     </div>
 
+    <!-- GPS Section -->
+    <div id="gpsSection" class="card bg-base-200">
+        <div class="card-body">
+            <h3 class="text-xl font-semibold text-base-content flex items-center gap-2 mb-3">
+                <i data-lucide="navigation" class="w-5 h-5 text-primary"></i>
+                GPS
+            </h3>
+            <div class="flex flex-wrap items-end gap-3">
+                <div class="flex-1 min-w-[220px]">
+                    <label class="label-text text-xs text-base-content/60 block mb-1" for="gpsDestinationInput">Destination zone</label>
+                    <input type="text" id="gpsDestinationInput" list="gpsZoneOptions" placeholder="Search zone name..."
+                           class="input input-bordered input-sm w-full" autocomplete="off">
+                    <datalist id="gpsZoneOptions"></datalist>
+                </div>
+                <button id="gpsSetBtn" class="btn btn-primary btn-sm">Set destination</button>
+                <button id="gpsClearBtn" class="btn btn-ghost btn-sm">Clear</button>
+            </div>
+            <div id="gpsResult" class="mt-3 text-sm text-base-content/70">No destination set.</div>
+        </div>
+    </div>
+
     <!-- Detected Players Section -->
     <div id="playersSection" class="card bg-base-200">
         <div class="card-body">
@@ -144,15 +165,147 @@
 {{define "scripts/radar"}}
     <!-- Radar core: register page with PageController using dynamic import for HTMX compatibility -->
     <script>
+        // GPS: label carries the zone id in parens ("Bridgewatch (0002)") so free-text search
+        // against a plain <datalist> (no extra JS dependency) can be resolved back to an id.
+        function gpsZoneLabel(id, zone) {
+            return `${zone.name} (${id})`;
+        }
+
+        function gpsParseZoneId(label) {
+            const match = /\(([^()]+)\)\s*$/.exec((label || '').trim());
+            return match ? match[1] : null;
+        }
+
+        // Roads of Avalon (TUNNEL_ROYAL, TUNNEL_BLACK_*, TUNNEL_DEEP, TUNNEL_HIGH/MEDIUM/LOW...)
+        // reset in-game and carry zero static connectivity data (confirmed against real game data:
+        // the extracted zone-graph.json has no edges at all touching a TNL- zone) - every hop through
+        // one has to be learned live. TUNNEL_HIDEOUT* is excluded: player hideouts, not roads.
+        function gpsIsOnAvalonRoad(zoneType) {
+            const t = (zoneType || '').toUpperCase();
+            return t.includes('TUNNEL') && !t.includes('HIDEOUT');
+        }
+
+        // Wires the GPS card. Called from the "radar" page's init (after initRadar, so
+        // window.zonesDatabase/window.currentMapId are populated) and torn down before destroyRadar
+        // clears EventRouter's onMapChange listeners. Returns a cleanup function.
+        function initGpsPanel(zoneGraph, onMapChange, getLocalPlayerPosition, relativeScreenBearing, bearingToCompassLabel) {
+            const settingsSync = window.settingsSync;
+            const input = document.getElementById('gpsDestinationInput');
+            const optionsList = document.getElementById('gpsZoneOptions');
+            const setBtn = document.getElementById('gpsSetBtn');
+            const clearBtn = document.getElementById('gpsClearBtn');
+            const resultEl = document.getElementById('gpsResult');
+            if (!input || !optionsList || !setBtn || !clearBtn || !resultEl) return () => {};
+
+            const zonesDb = window.zonesDatabase;
+            if (zonesDb?.zones) {
+                const fragment = document.createDocumentFragment();
+                for (const [id, zone] of Object.entries(zonesDb.zones)) {
+                    const opt = document.createElement('option');
+                    opt.value = gpsZoneLabel(id, zone);
+                    fragment.appendChild(opt);
+                }
+                optionsList.appendChild(fragment);
+            }
+
+            function renderResult() {
+                const dest = settingsSync.getJSON('gpsDestination', null);
+                if (!dest?.id) {
+                    resultEl.textContent = 'No destination set.';
+                    return;
+                }
+
+                const currentZoneId = window.currentMapId;
+                if (currentZoneId === undefined || currentZoneId === null || currentZoneId === -1) {
+                    resultEl.textContent = `Destination: ${dest.name}. Waiting for zone data...`;
+                    return;
+                }
+                if (String(currentZoneId) === String(dest.id)) {
+                    resultEl.textContent = `You are in ${dest.name}.`;
+                    return;
+                }
+
+                const hop = zoneGraph.getNextHop(String(currentZoneId), String(dest.id));
+                if (!hop) {
+                    const currentType = zonesDb?.getZoneType ? zonesDb.getZoneType(currentZoneId) : '';
+                    resultEl.textContent = gpsIsOnAvalonRoad(currentType)
+                        ? `Destination: ${dest.name}. You're on an unexplored Avalonian Road - the GPS learns each hop as you walk it, so this route isn't known yet. Keep going and it'll pick up from here next time.`
+                        : `Destination: ${dest.name}. No known route from here yet.`;
+                    return;
+                }
+
+                const nextZoneName = zonesDb?.getZoneName ? zonesDb.getZoneName(hop.nextZoneId) : hop.nextZoneId;
+                let via = '';
+                if (hop.viaPos) {
+                    const player = getLocalPlayerPosition();
+                    const bearing = relativeScreenBearing(hop.viaPos[0] - player.x, hop.viaPos[1] - player.y);
+                    via = ` (exit to the ${bearingToCompassLabel(bearing)} on your radar)`;
+                }
+                const staleNote = hop.stale ? ' - route may be outdated (based on an older discovered road)' : '';
+                resultEl.textContent = `Next: ${nextZoneName}${via} - ${hop.hops} hop(s) to ${dest.name}${staleNote}`;
+            }
+
+            function setDestination() {
+                const id = gpsParseZoneId(input.value);
+                if (!id || !zonesDb?.getZone(id)) {
+                    resultEl.textContent = 'Unknown zone - pick one from the suggestions list.';
+                    return;
+                }
+                settingsSync.setJSON('gpsDestination', {id, name: zonesDb.getZoneName(id)});
+                renderResult();
+            }
+
+            function clearDestination() {
+                settingsSync.setJSON('gpsDestination', null);
+                input.value = '';
+                renderResult();
+            }
+
+            setBtn.addEventListener('click', setDestination);
+            clearBtn.addEventListener('click', clearDestination);
+
+            const savedDest = settingsSync.getJSON('gpsDestination', null);
+            if (savedDest?.name) input.value = gpsZoneLabel(savedDest.id, {name: savedDest.name});
+
+            onMapChange(() => renderResult());
+            renderResult();
+            // Refresh the compass direction as the player walks, not just on zone changes.
+            const refreshIntervalId = setInterval(renderResult, 1000);
+
+            return () => {
+                setBtn.removeEventListener('click', setDestination);
+                clearBtn.removeEventListener('click', clearDestination);
+                clearInterval(refreshIntervalId);
+            };
+        }
+
         (async function () {
             const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
             const {initRadar, destroyRadar} = await import('/scripts/utils/Utils.js');
+            const {onMapChange, getLocalPlayerPosition} = await import('/scripts/core/EventRouter.js');
+            const {default: zoneGraph} = await import('/scripts/data/ZoneGraph.js');
+            const {relativeScreenBearing, bearingToCompassLabel} = await import('/scripts/utils/DrawingUtils.js');
+
+            let gpsCleanup = null;
 
             // Only register once per session (avoids PageController_Overwrite warning on SPA navigation)
             if (!window._radarPageRegistered) {
                 registerPage('radar', {
-                    init: async () => await initRadar(),
-                    destroy: () => destroyRadar()
+                    init: async () => {
+                        await initRadar();
+                        await zoneGraph.load();
+                        gpsCleanup = initGpsPanel(
+                            zoneGraph, onMapChange, getLocalPlayerPosition,
+                            relativeScreenBearing, bearingToCompassLabel
+                        );
+                    },
+                    destroy: () => {
+                        if (gpsCleanup) {
+                            gpsCleanup();
+                            gpsCleanup = null;
+                        }
+                        destroyRadar();
+                    }
                 });
                 window._radarPageRegistered = true;
             }

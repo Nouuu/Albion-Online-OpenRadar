@@ -4,6 +4,24 @@ import settingsSync from "./SettingsSync.js";
 
 const SCALE_FACTOR = 1.0;
 const BASE_ZOOM = 4;
+const SCREEN_ROTATION = -0.785398;
+
+// GPS: expresses a raw-coordinate delta (dx, dy in game units) as a bearing in degrees
+// (0=up/N, 90=right/E, 180=down/S, 270=left/W) matching the radar canvas's own rotation
+// (see transformPoint below) - NOT true in-game North, just "which way on your radar screen".
+export function relativeScreenBearing(dx, dy) {
+    const screenDx = SCREEN_ROTATION * (dx - dy);
+    const screenDy = SCREEN_ROTATION * (dx + dy);
+    const deg = Math.atan2(screenDx, -screenDy) * 180 / Math.PI;
+    return (deg + 360) % 360;
+}
+
+const COMPASS_LABELS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+
+export function bearingToCompassLabel(bearingDeg) {
+    const index = Math.round(bearingDeg / 45) % 8;
+    return COMPASS_LABELS[index];
+}
 
 export class DrawingUtils {
     constructor() {
@@ -145,7 +163,7 @@ export class DrawingUtils {
     }
 
     transformPoint(x, y) {
-        const angle = -0.785398;
+        const angle = SCREEN_ROTATION;
         let newX = x * angle - y * angle;
         let newY = x * angle + y * angle;
         const zoom = BASE_ZOOM * this.getZoomLevel();

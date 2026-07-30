@@ -18,7 +18,7 @@ vi.mock('./ImageCache.js', () => ({
     },
 }));
 
-const {DrawingUtils} = await import('./DrawingUtils.js');
+const {DrawingUtils, relativeScreenBearing, bearingToCompassLabel} = await import('./DrawingUtils.js');
 const settingsSync = (await import('./SettingsSync.js')).default;
 const imageCache = (await import('./ImageCache.js')).default;
 
@@ -306,6 +306,59 @@ describe('DrawingUtils.drawResourceBadge', () => {
         utils.drawResourceBadge(ctx, 100, 100, 40, 'Fiber', 6, 0, false);
 
         expect(ctx.fillRect).toHaveBeenCalledWith(70, 70, 60, 60);
+    });
+});
+
+// GPS: relativeScreenBearing must express directions the same way the radar canvas actually
+// renders them (transformPoint's rotation), not true in-game North - verified by comparing a
+// few reference deltas against where transformPoint would place them on screen.
+describe('relativeScreenBearing / bearingToCompassLabel', () => {
+    // @verified 2026-05-01: a target at raw (+dx, 0) renders up-and-left on screen per
+    // transformPoint (newX = angle*(dx), newY = angle*(dx), both negative since angle<0) -> NW.
+    test('a target directly on +X (raw) renders up-left on screen -> NW', () => {
+        const bearing = relativeScreenBearing(1, 0);
+        expect(bearing).toBeCloseTo(315, 0);
+        expect(bearingToCompassLabel(bearing)).toBe('NW');
+    });
+
+    // @verified 2026-05-01: a target at raw (0, +dy) renders up-and-right on screen per
+    // transformPoint (newX = angle*(-dy) i.e. positive, newY = angle*(dy) i.e. negative) -> NE.
+    test('a target directly on +Y (raw) renders up-right on screen -> NE', () => {
+        const bearing = relativeScreenBearing(0, 1);
+        expect(bearing).toBeCloseTo(45, 0);
+        expect(bearingToCompassLabel(bearing)).toBe('NE');
+    });
+
+    // @verified 2026-05-01: opposite of the +X case -> down-right on screen -> SE.
+    test('a target directly on -X (raw) renders down-right on screen -> SE', () => {
+        const bearing = relativeScreenBearing(-1, 0);
+        expect(bearing).toBeCloseTo(135, 0);
+        expect(bearingToCompassLabel(bearing)).toBe('SE');
+    });
+
+    // @verified 2026-05-01: opposite of the +Y case -> down-left on screen -> SW.
+    test('a target directly on -Y (raw) renders down-left on screen -> SW', () => {
+        const bearing = relativeScreenBearing(0, -1);
+        expect(bearing).toBeCloseTo(225, 0);
+        expect(bearingToCompassLabel(bearing)).toBe('SW');
+    });
+
+    // @verified 2026-05-01: same position as the player has no defined direction; atan2(0,0)=0 -> N
+    // by convention (arbitrary but stable), callers should special-case "you have arrived" instead.
+    test('zero delta returns a stable (if arbitrary) bearing of 0/N', () => {
+        expect(relativeScreenBearing(0, 0)).toBe(0);
+        expect(bearingToCompassLabel(0)).toBe('N');
+    });
+
+    test('bearingToCompassLabel covers all 8 sectors (each 45deg wide, centered on its label)', () => {
+        expect(bearingToCompassLabel(0)).toBe('N');
+        expect(bearingToCompassLabel(22)).toBe('N');
+        expect(bearingToCompassLabel(23)).toBe('NE');
+        expect(bearingToCompassLabel(45)).toBe('NE');
+        expect(bearingToCompassLabel(90)).toBe('E');
+        expect(bearingToCompassLabel(180)).toBe('S');
+        expect(bearingToCompassLabel(270)).toBe('W');
+        expect(bearingToCompassLabel(359)).toBe('N');
     });
 });
 

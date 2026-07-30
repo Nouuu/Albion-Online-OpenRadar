@@ -1,4 +1,4 @@
-import {describe, test, expect, beforeAll, beforeEach, vi} from 'vitest';
+import {describe, test, expect, beforeAll, beforeEach, afterEach, vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
@@ -7,6 +7,7 @@ import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
+import zoneGraph from '../data/ZoneGraph.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const zonesJsonPath = join(here, '..', '..', 'ao-bin-dumps', 'zones.json');
@@ -585,6 +586,73 @@ describe('EventRouter', () => {
             EventRouter.onResponse(pSafe, clearHandlers);
             expect(map.id).toBe('0000');
             expect(map.isBZ).toBe(false);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // GPS: applyMapChange reports transitions to ZoneGraph, and notifies onMapChange listeners
+    // -------------------------------------------------------------------------
+    describe('GPS transition reporting', () => {
+        let reportTransitionSpy;
+
+        beforeEach(() => {
+            reportTransitionSpy = vi.spyOn(zoneGraph, 'reportTransition').mockImplementation(() => {});
+        });
+
+        afterEach(() => {
+            reportTransitionSpy.mockRestore();
+        });
+
+        test('opcode 41 reports the transition with previous/new zone ids and last-known position', () => {
+            map.id = '0201';
+            EventRouter.onRequest({253: 22, 1: [12.5, 34.5]}); // sets lpX/lpY via Move request
+
+            EventRouter.onResponse({253: 41, 0: '0203'}, clearHandlers);
+
+            expect(reportTransitionSpy).toHaveBeenCalledWith('0201', '0203', {x: 12.5, y: 34.5});
+        });
+
+        test('same-id transition does not report anything (guarded upstream)', () => {
+            map.id = '0203';
+            EventRouter.onResponse({253: 41, 0: '0203'}, clearHandlers);
+
+            expect(reportTransitionSpy).not.toHaveBeenCalled();
+        });
+
+        test('transition into a Mist instance is not reported (not a routable cluster id)', () => {
+            map.id = '0201';
+            EventRouter.onResponse({253: 41, 0: '@MISTS@abc'}, clearHandlers);
+
+            expect(reportTransitionSpy).not.toHaveBeenCalled();
+        });
+
+        test('transition from the initial sentinel map id (-1) is not reported', () => {
+            map.id = -1;
+            EventRouter.onResponse({253: 41, 0: '0203'}, clearHandlers);
+
+            expect(reportTransitionSpy).not.toHaveBeenCalled();
+        });
+
+        test('onMapChange listeners are notified with (newMapId, previousMapId)', () => {
+            const listener = vi.fn();
+            EventRouter.onMapChange(listener);
+
+            map.id = '0201';
+            EventRouter.onResponse({253: 41, 0: '0203'}, clearHandlers);
+
+            expect(listener).toHaveBeenCalledWith('0203', '0201');
+        });
+
+        test('reset() clears registered onMapChange listeners', () => {
+            const listener = vi.fn();
+            EventRouter.onMapChange(listener);
+            EventRouter.reset();
+            EventRouter.init({handlers, map, radarRenderer});
+
+            map.id = '0201';
+            EventRouter.onResponse({253: 41, 0: '0203'}, clearHandlers);
+
+            expect(listener).not.toHaveBeenCalled();
         });
     });
 

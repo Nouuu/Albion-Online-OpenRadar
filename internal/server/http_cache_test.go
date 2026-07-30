@@ -97,6 +97,7 @@ func newTestServerBuild(t *testing.T, version, buildTime string, devMode bool) *
 		devMode: devMode,
 	}
 	s.settingsAPI = NewSettingsAPI(t.TempDir(), log, nil, t.TempDir())
+	s.roadsAPI = NewRoadsAPI(t.TempDir())
 	s.setupRoutes()
 	return s
 }
