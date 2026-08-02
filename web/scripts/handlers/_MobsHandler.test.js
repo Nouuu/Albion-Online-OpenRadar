@@ -304,6 +304,45 @@ describe('MobsHandler', () => {
             expect(handler.getSize().mobs).toBe(0);
         });
 
+        // @verified 2026-08-02 (issue #145): a NewMob carrying a server name that is not a Mist portal is a hostile,
+        // not a wisp sign. Corpus evidence from logs/captures (16 pcaps, 6093 NewMob, 79 named): every one of the 71
+        // names in Parameters[32] is a MISTS_ portal, and none of the 8 names in Parameters[31] is. The 8 non-portal
+        // messages carry 6 distinct entity ids across 4 templates (event champion, two power-crystal wisps, an
+        // anniversary statue).
+        test('pcap-derived named-non-mist: named hostiles land in mobsList, never in mistList', async () => {
+            const fx = await loadFixture('mobs', 'named-non-mist');
+
+            for (const msg of fx.messages) {
+                handler.NewMobEvent(normalizeParams(msg.parameters));
+            }
+
+            const sizes = handler.getSize();
+            expect(sizes.mists).toBe(0);
+            expect(sizes.mobs).toBe(6);
+        });
+
+        // @verified 2026-08-02 (issue #145): each named non-portal template resolves against the real DB and picks up
+        // its hostile classification instead of being drawn as a wisp. typeId 5148 is the mob reported in the issue.
+        test.each([
+            ['MOB_EVENT_LEAD_UP_SPEARMAN_T6', 5148, 'T6_MOB_ROAMING_KEEPER_FANATIC_SPEAR_CHAMPION', EnemyType.EnchantedEnemy],
+            ['POWER_CRYSTAL_MOB_WISP_YELLOW_R0', 137, 'MOB_UNIQUE_POWERCRYSTAL_TERRITORY_R1_MOUNTAIN_DEAD', EnemyType.Enemy],
+            ['POWER_CRYSTAL_MOB_WISP_BLACK_R0', 138, 'MOB_UNIQUE_POWERCRYSTAL_TERRITORY_R1_MOUNTAIN_RED', EnemyType.Enemy],
+            ['EVENT_ANNIVERSARY_STATUE_SEASON_14_REGULAR', 208, 'T6_MOB_ANNIVERSARY_STATUE_SEASON_14_SMALL', EnemyType.Boss],
+        ])('pcap-derived named-non-mist: %s spawns as a hostile', async (serverName, typeId, uniqueName, expectedType) => {
+            const fx = await loadFixture('mobs', 'named-non-mist');
+            const msg = fx.messages.find(m => m.parameters['31'] === serverName);
+            expect(msg).toBeDefined();
+            expect(msg.parameters['1']).toBe(typeId);
+            expect(dbs.mobsDatabase.getMobInfo(typeId).uniqueName).toBe(uniqueName);
+
+            handler.NewMobEvent(normalizeParams(msg.parameters));
+
+            expect(handler.mistList).toHaveLength(0);
+            const mob = handler.getMobList().find(m => m.typeId === typeId);
+            expect(mob).toBeDefined();
+            expect(mob.type).toBe(expectedType);
+        });
+
         // @verified 2026-04-24: enemy filters moved to render; spawn always stores, and mob.identified pins the db-match state for the render gate.
         test('synthetic: settingNormalEnemy=false no longer blocks spawn, mob lands with identified=true', () => {
             settingsSync.getBool.mockImplementation((key) => key !== 'settingNormalEnemy');
