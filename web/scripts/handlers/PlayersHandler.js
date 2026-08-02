@@ -111,6 +111,22 @@ export class PlayersHandler {
         setTimeout(() => flash.remove(), this.FLASH_DURATION_MS);
     }
 
+    isIgnored({nickname, guildName, allianceName}) {
+        const entries = settingsSync.getJSON('ignoreList', []);
+        if (!Array.isArray(entries) || entries.length === 0) return false;
+
+        const identities = [nickname, guildName, allianceName]
+            .filter(value => typeof value === 'string' && value.trim() !== '')
+            .map(value => value.trim().toLowerCase());
+        if (identities.length === 0) return false;
+
+        return entries.some(entry =>
+            typeof entry === 'string'
+            && entry.trim() !== ''
+            && identities.includes(entry.trim().toLowerCase())
+        );
+    }
+
     isPlayerThreat(faction, pvpType) {
         if (pvpType === 'safe') return false;
         if (pvpType === 'black') return true;
@@ -164,7 +180,8 @@ export class PlayersHandler {
 
         const mapId = window.currentMapId;
         const pvpType = zonesDatabase.getPvpType(mapId);
-        const isThreat = this.isPlayerThreat(faction, pvpType);
+        const ignored = this.isIgnored({nickname, guildName, allianceName});
+        const isThreat = !ignored && this.isPlayerThreat(faction, pvpType);
 
         window.logger?.info(CATEGORIES.PLAYERS, 'PlayerDetected', {
             id,
@@ -173,6 +190,7 @@ export class PlayersHandler {
             alliance: allianceName,
             faction,
             pvpType,
+            ignored,
             isThreat,
             playersCount: this.playersList.length
         });
@@ -281,6 +299,7 @@ export class PlayersHandler {
 
     triggerHostileAlert(player) {
         const pvpType = zonesDatabase.getPvpType(window.currentMapId);
+        if (this.isIgnored(player)) return;
         if (!this.isPlayerThreat(player.faction, pvpType)) return;
 
         if (settingsSync.getBool('settingFlash')) {

@@ -186,6 +186,59 @@ describe('PlayersHandler', () => {
             expect(document.body.querySelectorAll('.bg-error\\/60').length).toBe(0);
         });
 
+        // @verified 2026-08-02: the ignore list written by the Ignore List page gates the spawn alert. The page states
+        // that listed players do not trigger sound alerts or screen flashes, and PLAYERS.md specifies the match runs
+        // on nickname, guild or alliance.
+        test.each([
+            ['nickname', ['Ignored'], {1: 'Ignored', 8: 'SomeGuild', 51: 'SomeAlliance'}],
+            ['guild', ['IgnoredGuild'], {1: 'Someone', 8: 'IgnoredGuild', 51: 'SomeAlliance'}],
+            ['alliance', ['IgnoredAlliance'], {1: 'Someone', 8: 'SomeGuild', 51: 'IgnoredAlliance'}],
+        ])('synthetic: player ignored by %s does not alert in red zone', (_label, ignoreList, identity) => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ignoreList : null);
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+
+            handler.handleNewPlayerEvent(1, {...identity, 53: 255, 40: [], 43: []});
+
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-08-02: the match is case and whitespace insensitive, so a list entry typed by hand still hits.
+        test('synthetic: ignore list match is case and whitespace insensitive', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['  iGnOrEd  '] : null);
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+
+            handler.handleNewPlayerEvent(1, {1: 'Ignored', 8: '', 53: 255, 51: null, 40: [], 43: []});
+
+            expect(playSpy).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-08-02: a non-empty ignore list that does not match still lets the alert through, so the gate
+        // cannot silence every threat once the user adds a single name.
+        test('synthetic: non-matching ignore list still alerts in red zone', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['SomeoneElse'] : null);
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+
+            handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+
+            expect(playSpy).toHaveBeenCalled();
+        });
+
+        // @verified 2026-08-02: an empty guild must not match an empty ignore entry, which would ignore everyone.
+        test('synthetic: blank identity fields do not match a blank ignore entry', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['   '] : null);
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+
+            handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+
+            expect(playSpy).toHaveBeenCalled();
+        });
+
         // @characterization 2026-04-18: settingFlash=true and threat present appends a flash div to document.body.
         test('synthetic: settingFlash=true with threat appends flash div to body', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
@@ -265,11 +318,25 @@ describe('PlayersHandler', () => {
             expect(playSpy).not.toHaveBeenCalled();
         });
 
-        // @suspect 2026-04-18 PLAY-2 (issue #36): alreadyIgnoredPlayers list is never consulted in triggerHostileAlert. A player pushed into that list still triggers a sound alert on faction change.
-        test('synthetic PLAY-2: ignored player still triggers alert on faction change in red zone', () => {
+        // @verified 2026-08-02 (PLAY-2): a player on the ignore list stays silent when their faction flips to hostile.
+        // This used to assert the opposite against alreadyIgnoredPlayers, a field nothing ever populated, while the
+        // list the Ignore List page actually writes was never read at all.
+        test('synthetic PLAY-2: ignored player does not trigger alert on faction change in red zone', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['Alice'] : null);
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            handler.alreadyIgnoredPlayers = [{id: 1}];
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+
+            handler.updatePlayerFaction(1, 255);
+
+            expect(playSpy).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-08-02: a player absent from the ignore list still alerts on the same transition.
+        test('synthetic: non-ignored player still triggers alert on faction change in red zone', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['SomeoneElse'] : null);
+            handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.updatePlayerFaction(1, 255);
