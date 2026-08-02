@@ -63,7 +63,7 @@ describe('equipment reaches the renderer with the right items', () => {
 
         const ip = handler.playersList[0].getAverageItemPower();
 
-        expect(ip).toBeGreaterThan(0);
+        expect(ip).toBe(1100);
     });
 
     // @verified 2026-07-24: the rendered markup carries the icon path of the head slot item.
