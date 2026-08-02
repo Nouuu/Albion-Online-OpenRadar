@@ -298,11 +298,24 @@ describe('PlayersHandler', () => {
         // @verified 2026-07-24: an upsert refreshes the staleness clock so cleanup does not drop a live player.
         test('synthetic: repeat spawn touches lastUpdateTime', () => {
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            const before = handler.playersList[0].lastUpdateTime;
+            const touchSpy = vi.spyOn(handler.playersList[0], 'touch');
 
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
 
-            expect(handler.playersList[0].lastUpdateTime).toBeGreaterThanOrEqual(before);
+            expect(touchSpy).toHaveBeenCalled();
+        });
+
+        // @characterization 2026-07-24: current code does not guard allianceName or faction the way it guards nickname and guildName; omitting Parameters[51] and Parameters[53] on a repeat spawn resets allianceName to null and faction to 0, while nickname and guildName keep their prior values.
+        test('synthetic: repeat spawn without alliance or faction resets them but keeps nickname and guild', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: 'Guild', 53: 5, 51: 'Ally', 40: [], 43: []});
+
+            handler.handleNewPlayerEvent(1, {40: [], 43: []});
+
+            const p = handler.playersList[0];
+            expect(p.nickname).toBe('Bob');
+            expect(p.guildName).toBe('Guild');
+            expect(p.allianceName).toBeNull();
+            expect(p.faction).toBe(0);
         });
     });
 
@@ -500,13 +513,13 @@ describe('PlayersHandler', () => {
             const items = msg.parameters['2'];
 
             handler.handleNewPlayerEvent(id, {1: 'Geared', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            const before = handler.playersList[0].lastUpdateTime;
+            const touchSpy = vi.spyOn(handler.playersList[0], 'touch');
 
             handler.updateItems(id, normalizeParams(msg.parameters));
 
             const p = handler.playersList[0];
             expect(p.equipments).toEqual(items);
-            expect(p.lastUpdateTime).toBeGreaterThanOrEqual(before);
+            expect(touchSpy).toHaveBeenCalled();
         });
 
         // @verified 2026-04-18: unknown id results in no entity created and no throw.
