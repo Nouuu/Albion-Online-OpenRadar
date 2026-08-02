@@ -1,9 +1,9 @@
 /**
  * Items Database
- * Parses items.min.json and provides item lookup by sequential ID
+ * Parses items.min.json and provides item lookup by real Albion item id
  *
  * Minified format: [{ n: "uniquename", p: itempower }, ...]
- * Index in array = sequential ID (0-based, add 1 for game ID)
+ * Index in array = real Albion item id
  */
 
 import {CATEGORIES} from '../constants/LoggerConstants.js';
@@ -30,32 +30,11 @@ export class ItemsDatabase {
 
             const items = await response.json();
 
-          if (!Array.isArray(items)) {
-    throw new Error('Invalid items.min.json structure: expected array');
-}
+            if (!Array.isArray(items)) {
+                throw new Error('Invalid items.min.json structure: expected array');
+            }
 
-// Array index = real Albion item ID (sparse array; null at unused IDs)
-for (let id = 0; id < items.length; id++) {
-    const item = items[id];
-    if (item === null || item === undefined) continue;
-
-    const name = item.n;
-    if (!name) continue;
-
-    // Parse enchant from name (e.g., "T4_2H_SWORD@2" -> enchant 2)
-    let enchant = 0;
-    const atIndex = name.lastIndexOf('@');
-    if (atIndex > 0) {
-        enchant = parseInt(name.substring(atIndex + 1)) || 0;
-    }
-
-    this.items.set(id, {
-        name: name,
-        tier: this._extractTier(name),
-        itempower: item.p || 0,
-        enchant: enchant,
-    });
-}
+            this._parseItems(items);
 
             this.isLoaded = true;
             window.logger?.info(CATEGORIES.SYSTEM, 'ItemsLoaded', {count: this.items.size});
@@ -67,8 +46,35 @@ for (let id = 0; id < items.length; id++) {
     }
 
     /**
-     * Get item by sequential ID
-     * @param {number} id - Sequential item ID (1, 2, 3...)
+     * Parse the minified catalog into the id lookup.
+     * @param {Array<{n: string, p: number}|null>} items - array indexed by real Albion item id
+     */
+    _parseItems(items) {
+        for (let id = 0; id < items.length; id++) {
+            const item = items[id];
+            if (item === null || item === undefined) continue;
+
+            const name = item.n;
+            if (!name) continue;
+
+            let enchant = 0;
+            const atIndex = name.lastIndexOf('@');
+            if (atIndex > 0) {
+                enchant = parseInt(name.substring(atIndex + 1)) || 0;
+            }
+
+            this.items.set(id, {
+                name: name,
+                tier: this._extractTier(name),
+                itempower: item.p || 0,
+                enchant: enchant,
+            });
+        }
+    }
+
+    /**
+     * Get item by real Albion item id
+     * @param {number} id - Real Albion item id
      * @returns {{name: string, tier: number, itempower: number, enchant: number} | undefined}
      */
     getItemById(id) {
