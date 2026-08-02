@@ -34,8 +34,8 @@ describe('equipment reaches the renderer with the right items', () => {
         handler = new PlayersHandler();
     });
 
-    // @verified 2026-07-24: the head, armor and shoes slots of a real player resolve to armour, not weapons.
-    test('pcap-derived equipment resolves to the gatherer set the player wore', async () => {
+    // @verified 2026-08-02: the head, armor and shoes slots of a real player resolve to armour, not weapons.
+    test('pcap-derived equipment resolves to the gear set the player wore', async () => {
         const fx = await loadFixture('players', 'equipment');
         const msg = fx.messages[0];
         const id = msg.parameters['0'];
@@ -46,13 +46,13 @@ describe('equipment reaches the renderer with the right items', () => {
         const player = handler.playersList[0];
         const resolved = player.equipments.map(itemId => window.itemsDatabase.getItemById(itemId)?.name ?? null);
 
-        expect(resolved[2]).toBe('T8_HEAD_GATHERER_FIBER');
-        expect(resolved[3]).toBe('T8_ARMOR_GATHERER_FIBER');
-        expect(resolved[4]).toBe('T8_SHOES_GATHERER_FIBER');
-        expect(resolved[7]).toBe('T6_MOUNT_GIANTSTAG_MOOSE');
+        expect(resolved[2]).toBe('T4_HEAD_LEATHER_SET2@1');
+        expect(resolved[3]).toBe('T4_ARMOR_LEATHER_SET1@1');
+        expect(resolved[4]).toBe('T4_SHOES_PLATE_SET3@1');
+        expect(resolved[7]).toBe('T4_MOUNT_HORSE');
     });
 
-    // @verified 2026-07-24: average item power is computed from the combat slots of the real set.
+    // @verified 2026-08-02: average item power is computed from the combat slots of the real set.
     test('pcap-derived equipment yields an item power from the combat slots', async () => {
         const fx = await loadFixture('players', 'equipment');
         const msg = fx.messages[0];
@@ -63,10 +63,10 @@ describe('equipment reaches the renderer with the right items', () => {
 
         const ip = handler.playersList[0].getAverageItemPower();
 
-        expect(ip).toBe(1100);
+        expect(ip).toBe(800);
     });
 
-    // @verified 2026-07-24: the rendered markup carries the icon path of the head slot item.
+    // @verified 2026-08-02: the rendered markup carries the icon path of the head slot item.
     test('rendered markup points at the head slot icon', async () => {
         const renderer = await import('./PlayerListRenderer.js');
         const fx = await loadFixture('players', 'equipment');
@@ -81,6 +81,6 @@ describe('equipment reaches the renderer with the right items', () => {
         renderer.update(handler);
         await new Promise(resolve => requestAnimationFrame(resolve));
 
-        expect(document.body.innerHTML).toContain('/images/Items/T8_HEAD_GATHERER_FIBER.webp');
+        expect(document.body.innerHTML).toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
     });
 });

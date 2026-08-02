@@ -2,9 +2,9 @@ import {describe, test, expect} from 'vitest';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 import {ItemsDatabase} from './ItemsDatabase.js';
 
-// pcap-derived: ids 5453, 5478, 5503, 2989 are the head, armor, shoes and mount
-// slots of one player in web/scripts/__fixtures__/ws/players/equipment.json.
-// Expected names come from upstream formatted/items.txt.
+// ids 5453-5457 are a T8 gatherer fiber head across enchant 0-4, 5478 and 5503
+// are the matching armor and shoes, 2989 is a T6 mount. Expected names come
+// from upstream formatted/items.txt.
 
 const REAL_IDS = [
     [1, 'UNIQUE_HIDEOUT', 0, 0],
