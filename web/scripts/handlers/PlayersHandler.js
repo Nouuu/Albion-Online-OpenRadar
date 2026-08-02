@@ -187,8 +187,8 @@ export class PlayersHandler {
             }
             if (nickname !== undefined) existingPlayer.nickname = nickname;
             if (guildName !== undefined) existingPlayer.guildName = guildName;
-            existingPlayer.allianceName = allianceName;
-            existingPlayer.faction = faction;
+            if (Parameters[51] !== undefined) existingPlayer.allianceName = allianceName;
+            if (Parameters[53] !== undefined) existingPlayer.faction = faction;
             existingPlayer.touch();
         } else if (this.playersList.length < maxPlayers) {
             const player = new Player(0, 0, id, nickname, guildName, faction, allianceName, equipments, spells);

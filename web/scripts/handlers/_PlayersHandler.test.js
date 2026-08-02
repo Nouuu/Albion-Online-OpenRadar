@@ -305,8 +305,8 @@ describe('PlayersHandler', () => {
             expect(touchSpy).toHaveBeenCalled();
         });
 
-        // @characterization 2026-07-24: current code does not guard allianceName or faction the way it guards nickname and guildName; omitting Parameters[51] and Parameters[53] on a repeat spawn resets allianceName to null and faction to 0, while nickname and guildName keep their prior values.
-        test('synthetic: repeat spawn without alliance or faction resets them but keeps nickname and guild', () => {
+        // @verified 2026-08-02: allianceName and faction are guarded the same way as nickname and guildName; omitting Parameters[51] and Parameters[53] on a repeat spawn must not reset a hostile player's faction to passive, which would drop them out of getThreatPlayers() and silently stop the alert.
+        test('synthetic: repeat spawn without alliance or faction keeps them, along with nickname and guild', () => {
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: 'Guild', 53: 5, 51: 'Ally', 40: [], 43: []});
 
             handler.handleNewPlayerEvent(1, {40: [], 43: []});
@@ -314,8 +314,8 @@ describe('PlayersHandler', () => {
             const p = handler.playersList[0];
             expect(p.nickname).toBe('Bob');
             expect(p.guildName).toBe('Guild');
-            expect(p.allianceName).toBeNull();
-            expect(p.faction).toBe(0);
+            expect(p.allianceName).toBe('Ally');
+            expect(p.faction).toBe(5);
         });
     });
 
@@ -531,10 +531,11 @@ describe('PlayersHandler', () => {
         // @verified 2026-07-24: a message with no Parameters[2] leaves the stored slots untouched.
         test('synthetic: missing Parameters[2] leaves equipments untouched', () => {
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.updateItems(1, {2: [0, 0, 5453]});
 
             handler.updateItems(1, {0: 1});
 
-            expect(handler.playersList[0].equipments).toEqual([]);
+            expect(handler.playersList[0].equipments).toEqual([0, 0, 5453]);
         });
 
         // @verified 2026-07-24: an empty slot array does not erase what the player already carries.
