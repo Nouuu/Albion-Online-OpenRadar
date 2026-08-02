@@ -1,7 +1,9 @@
-// synthetic: narrow coverage of _collectClusterCandidates(); assertions only reach the living/static filter gate,
-// so no pcap fixture is needed and the full RadarRenderer setup (canvas, game loop, zones) is stubbed out.
+// synthetic + pcap-derived: the first describe stubs entity shapes to reach the living/static filter gate; the second
+// replays real NewMob payloads through MobsHandler so the living path is proven on decoded state, not on a hand-built mob.
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
+import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
+import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
 vi.mock('./SettingsSync.js', () => ({
     default: {
@@ -13,7 +15,7 @@ vi.mock('./SettingsSync.js', () => ({
 vi.mock('./CanvasManager.js', () => ({
     CanvasManager: class { initialize() { return {contexts: {}}; } destroy() {} },
 }));
-vi.mock('../data/ZonesDatabase.js', () => ({default: {zones: {}}}));
+vi.mock('../data/ZonesDatabase.js', () => ({default: {zones: {}}, ZonesDatabase: class {}}));
 
 const {RadarRenderer} = await import('./RadarRenderer.js');
 const {EnemyType} = await import('../handlers/MobsHandler.js');
@@ -41,7 +43,7 @@ function allFalse() {
 describe('RadarRenderer._collectClusterCandidates', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        window.EnemyType = EnemyType;
+        delete window.EnemyType;
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
     });
 
@@ -80,6 +82,31 @@ describe('RadarRenderer._collectClusterCandidates', () => {
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
     });
 
+    // @verified 2026-08-02: living mob with Living on reaches the cluster input, so cluster rings surround
+    // living resources the same way they surround static ones.
+    test('living mob with Living on is kept in cluster candidates', () => {
+        settingsSync.getJSON.mockImplementation(key => {
+            if (key === 'settingLivingFiberEnchants') return allTrue();
+            if (key === 'settingStaticFiberEnchants') return allFalse();
+            return null;
+        });
+        const renderer = makeRenderer({
+            mobsList: [{id: 11, name: 'Fiber', tier: 4, enchantmentLevel: 0, type: EnemyType.LivingHarvestable, hX: 1, hY: 1}],
+        });
+
+        expect(renderer._collectClusterCandidates()).toHaveLength(1);
+    });
+
+    // @verified 2026-08-02: skinnable living mob (Hide) with Living on reaches the cluster input.
+    test('living skinnable mob with Living on is kept in cluster candidates', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingHideEnchants' ? allTrue() : null);
+        const renderer = makeRenderer({
+            mobsList: [{id: 12, name: 'Hide', tier: 6, enchantmentLevel: 2, type: EnemyType.LivingSkinnable, hX: 1, hY: 1}],
+        });
+
+        expect(renderer._collectClusterCandidates()).toHaveLength(1);
+    });
+
     // @verified 2026-04-24: living mob with Living off is excluded even if Static is on, matching MobsDrawing.
     test('living mob with Living off is excluded from cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => {
@@ -112,5 +139,74 @@ describe('RadarRenderer._collectClusterCandidates', () => {
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
+    });
+});
+
+const LIVING_KEYS = [
+    'settingLivingHideEnchants',
+    'settingLivingWoodEnchants',
+    'settingLivingRockEnchants',
+    'settingLivingOreEnchants',
+    'settingLivingFiberEnchants',
+];
+
+describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state', () => {
+    let mobsList;
+
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        delete window.EnemyType;
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        installRealDatabasesOnWindow();
+
+        const {MobsHandler} = await import('../handlers/MobsHandler.js');
+        const handler = new MobsHandler();
+        const fixture = await loadFixture('mobs', 'living-tier');
+        for (const message of fixture.messages) {
+            handler.NewMobEvent(normalizeParams(message.parameters));
+        }
+
+        mobsList = handler.mobsList;
+    });
+
+    // @verified 2026-08-02: the 19 living resources decoded from the capture (Hide, Log, Rock, Ore, Fiber, T1-T5)
+    // all reach the cluster input when every Living setting is on. The synthetic cases above passed while this path
+    // returned nothing, because the filter read a global the tests set themselves and production never did.
+    test('every living resource from a real capture reaches the cluster input', () => {
+        settingsSync.getJSON.mockImplementation(key => LIVING_KEYS.includes(key) ? allTrue() : null);
+        const renderer = makeRenderer({mobsList});
+
+        const living = mobsList.filter(
+            m => m.type === EnemyType.LivingHarvestable || m.type === EnemyType.LivingSkinnable
+        );
+
+        expect(living).toHaveLength(19);
+        expect(renderer._collectClusterCandidates()).toHaveLength(19);
+    });
+
+    // @verified 2026-08-02: per-family gating holds on decoded state. The capture carries 8 Hide, 3 Log, 3 Rock,
+    // 3 Ore, 2 Fiber, so enabling one family admits exactly that family.
+    test.each([
+        ['settingLivingHideEnchants', 'Hide', 8],
+        ['settingLivingWoodEnchants', 'Log', 3],
+        ['settingLivingRockEnchants', 'Rock', 3],
+        ['settingLivingOreEnchants', 'Ore', 3],
+        ['settingLivingFiberEnchants', 'Fiber', 2],
+    ])('%s alone admits only the %s living resources (%i)', (settingKey, family, expected) => {
+        settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
+        const renderer = makeRenderer({mobsList});
+
+        const candidates = renderer._collectClusterCandidates();
+
+        expect(candidates).toHaveLength(expected);
+        expect(candidates.every(c => c.name === family)).toBe(true);
+    });
+
+    // @verified 2026-08-02: the same decoded state yields no candidate when every Living setting is off.
+    test('living resources from a real capture are dropped when Living is off', () => {
+        settingsSync.getJSON.mockImplementation(key => LIVING_KEYS.includes(key) ? allFalse() : null);
+        const renderer = makeRenderer({mobsList});
+
+        expect(renderer._collectClusterCandidates()).toHaveLength(0);
     });
 });

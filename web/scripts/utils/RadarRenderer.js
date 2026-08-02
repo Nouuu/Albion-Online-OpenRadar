@@ -3,6 +3,7 @@ import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
 import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
+import {EnemyType} from '../handlers/MobsHandler.js';
 
 export class RadarRenderer {
     constructor(dependencies) {
@@ -489,8 +490,8 @@ export class RadarRenderer {
                 : shouldRenderLivingResource(entity, getSetting);
         });
         const livingList = (this.handlers.mobsHandler?.mobsList || [])
-            .filter(mob => mob.type === window.EnemyType?.LivingHarvestable
-                || mob.type === window.EnemyType?.LivingSkinnable)
+            .filter(mob => mob.type === EnemyType.LivingHarvestable
+                || mob.type === EnemyType.LivingSkinnable)
             .filter(mob => shouldRenderLivingResource(mob, getSetting));
         return staticList.concat(livingList);
     }

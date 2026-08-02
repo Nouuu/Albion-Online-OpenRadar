@@ -75,7 +75,6 @@ For history. These were `test.fails` or open register entries that flipped to ve
 - **`NewHTTPServer` config struct**: signature is at 10 parameters after #91. Refactor to `NewHTTPServer(cfg HTTPServerConfig)` to keep the call site readable as more wiring lands. Estimate: 1h.
 - **Aggregate `pcap.Stats` across handles**: the per-30s kernel-drop log line was removed when the multi-interface manager replaced the single capturer (commit `fedb2c4e`, replaced by `// TODO(#91)` in `cmd/radar/main.go:updateStats`). Restore by adding `Manager.Stats() map[string]*pcap.Stats` and logging deltas. Helps in-prod debugging of capture loss. Estimate: 2h.
 - **TUI awaiting-state banner**: when all opens fail at boot, the warn-log is the only signal. The settings page banner shows the state, the TUI does not. Estimate: 30m.
-- **`window.EnemyType` ESM cleanup**: `RadarRenderer._collectClusterCandidates` and `MobsDrawing.invalidate` still read from `window.EnemyType` instead of the ESM `import {EnemyType}` already in scope. Pre-ESM-migration artefact, low risk. Estimate: 30m.
 - **`/api/settings/server-logs` removal**: replaced by `/api/settings/logging` in v2.2 (#107). Old endpoint returns 404. No clients in the wild known to use the old path; no compatibility shim shipped. Note in case of future bug reports.
 
 ## Permanent limitations
