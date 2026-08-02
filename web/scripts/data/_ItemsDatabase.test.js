@@ -2,7 +2,7 @@ import {describe, test, expect} from 'vitest';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 import {ItemsDatabase} from './ItemsDatabase.js';
 
-// pcap-derived: ids 2989, 5453, 5478, 5503 are the head, armor, shoes and mount
+// pcap-derived: ids 5453, 5478, 5503, 2989 are the head, armor, shoes and mount
 // slots of one player in web/scripts/__fixtures__/ws/players/equipment.json.
 // Expected names come from upstream formatted/items.txt.
 

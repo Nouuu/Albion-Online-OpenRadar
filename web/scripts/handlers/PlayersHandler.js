@@ -19,7 +19,6 @@ class Player {
         this.initialHealth = 0;
         this.equipments = equipments || null;
         this.spells = spells || null;
-        this.items = null;
         this.mounted = false;
         this.detectedAt = Date.now();
         this.lastUpdateTime = Date.now();
@@ -45,7 +44,7 @@ class Player {
         return this.faction >= 1 && this.faction <= 6;
     }
 
-    // Equipment slots: 0-4=combat, 5=Cape, 6=Mount, 7=Bag, 8=Food
+    // Equipment slots: 0=MainHand, 1=OffHand, 2=Head, 3=Armor, 4=Shoes, 5=Bag, 6=Cape, 7=Mount, 8=Potion, 9=Food
     getAverageItemPower() {
         // Safety check: ensure equipments is an array
         if (!this.equipments || !Array.isArray(this.equipments) || this.equipments.length === 0) {
@@ -58,8 +57,7 @@ class Player {
             return null; // Database not loaded yet
         }
 
-        // Filter combat equipment slots (exclude Cape=5, Mount=6, Bag=7)
-        // Slots 0-4 (MainHand, OffHand, Head, Chest, Shoes) + Food=8
+        // Combat slots 0-4 plus slot 8
         const combatSlots = this.equipments.filter((itemId, index) => {
             return (index <= 4 || index === 8) && itemId && itemId > 0;
         });
@@ -135,33 +133,33 @@ export class PlayersHandler {
     }
 
     updateItems(id, Parameters) {
-    let equipment = null;
-    try {
-        equipment = Parameters[2];
-    } catch (error) {
-        window.logger?.warn(CATEGORIES.PLAYERS, 'UpdateItems_Failed', {
+        let equipment;
+        try {
+            equipment = Parameters[2];
+        } catch (error) {
+            window.logger?.warn(CATEGORIES.PLAYERS, 'UpdateItems_Failed', {
+                playerId: id,
+                error: error?.message
+            });
+            return;
+        }
+
+        if (!Array.isArray(equipment) || equipment.length === 0) {
+            return;
+        }
+
+        const player = this.playersList.find(p => p.id === id);
+        if (!player) return;
+
+        player.equipments = equipment;
+        player.touch();
+
+        window.logger?.debug(CATEGORIES.PLAYERS, 'EquipmentUpdated', {
             playerId: id,
-            error: error?.message
+            nickname: player.nickname,
+            slotCount: equipment.length
         });
-        return;
     }
-
-    if (!Array.isArray(equipment) || equipment.length === 0) {
-        return;
-    }
-
-    const player = this.playersList.find(p => p.id === id);
-    if (!player) return;
-
-    player.equipments = equipment;
-    player.touch();
-
-    window.logger?.debug(CATEGORIES.PLAYERS, 'EquipmentUpdated', {
-        playerId: id,
-        nickname: player.nickname,
-        slotCount: equipment.length
-    });
-}
 
     handleNewPlayerEvent(id, Parameters) {
         // 🔍 Check if player detection is enabled
@@ -176,31 +174,26 @@ export class PlayersHandler {
         const equipments = Parameters[40] || null;
         const spells = Parameters[43] || null;
 
-
-
-
-
         const existingPlayer = this.playersList.find(player => player.id === id);
         const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
         const maxPlayers = Math.min(100, parsedMaxPlayers);
 
         if (existingPlayer) {
-    // Upsert: tekrarlanan NewCharacter event'lerinde mutable alanları tazele
-    if (Array.isArray(equipments) && equipments.length > 0) {
-        existingPlayer.equipments = equipments;
-    }
-    if (Array.isArray(spells) && spells.length > 0) {
-        existingPlayer.spells = spells;
-    }
-    if (nickname !== undefined) existingPlayer.nickname = nickname;
-    if (guildName !== undefined) existingPlayer.guildName = guildName;
-    existingPlayer.allianceName = allianceName;
-    existingPlayer.faction = faction;
-    existingPlayer.touch();
-} else if (this.playersList.length < maxPlayers) {
-    const player = new Player(0, 0, id, nickname, guildName, faction, allianceName, equipments, spells);
-    this.playersList.push(player);
-}
+            if (Array.isArray(equipments) && equipments.length > 0) {
+                existingPlayer.equipments = equipments;
+            }
+            if (Array.isArray(spells) && spells.length > 0) {
+                existingPlayer.spells = spells;
+            }
+            if (nickname !== undefined) existingPlayer.nickname = nickname;
+            if (guildName !== undefined) existingPlayer.guildName = guildName;
+            existingPlayer.allianceName = allianceName;
+            existingPlayer.faction = faction;
+            existingPlayer.touch();
+        } else if (this.playersList.length < maxPlayers) {
+            const player = new Player(0, 0, id, nickname, guildName, faction, allianceName, equipments, spells);
+            this.playersList.push(player);
+        }
 
         const mapId = window.currentMapId;
         const pvpType = zonesDatabase.getPvpType(mapId);

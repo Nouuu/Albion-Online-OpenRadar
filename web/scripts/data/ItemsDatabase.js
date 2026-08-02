@@ -1,8 +1,8 @@
 /**
  * Items Database
- * Parses items.min.json and provides item lookup by real Albion item id
+ * Parses items.min.json and provides item lookup by Albion item id
  *
- * Minified format: [{ n: "uniquename", p: itempower }, ...]
+ * Minified format: [null, { n: "uniquename", p: itempower }, ...]
  * Index in array = real Albion item id
  */
 
@@ -73,8 +73,8 @@ export class ItemsDatabase {
     }
 
     /**
-     * Get item by real Albion item id
-     * @param {number} id - Real Albion item id
+     * Get item by Albion item id
+     * @param {number} id - Albion item id as sent by the server
      * @returns {{name: string, tier: number, itempower: number, enchant: number} | undefined}
      */
     getItemById(id) {
