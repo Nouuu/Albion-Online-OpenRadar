@@ -1,10 +1,18 @@
+import {readFileSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {dirname, join} from 'node:path';
 import {describe, test, expect} from 'vitest';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 import {ItemsDatabase} from './ItemsDatabase.js';
 
-// ids 5453-5457 are a T8 gatherer fiber head across enchant 0-4, 5478 and 5503
-// are the matching armor and shoes, 2989 is a T6 mount. Expected names come
-// from upstream formatted/items.txt.
+// upstream: ids picked directly from web/ao-bin-dumps/items.min.json and
+// cross-checked against upstream formatted/items.txt. They are catalog ids,
+// not ids drawn from any committed WS fixture. ids 5453-5457 are a T8
+// gatherer fiber head across enchant 0-4, 5478 and 5503 are the matching
+// armor and shoes, 2989 is a T6 mount.
+
+const here = dirname(fileURLToPath(import.meta.url));
+const rawItemsCatalog = JSON.parse(readFileSync(join(here, '..', '..', 'ao-bin-dumps', 'items.min.json'), 'utf8'));
 
 const REAL_IDS = [
     [1, 'UNIQUE_HIDEOUT', 0, 0],
@@ -45,15 +53,15 @@ describe('ItemsDatabase real catalog', () => {
     test('catalog holds the full upstream id space', () => {
         const db = loadRealItemsDatabase();
 
-        expect(db.items.size).toBeGreaterThan(12000);
+        expect(db.items.size).toBe(12071);
     });
 
-    // @verified 2026-07-24: no entry carries an empty name, guards a regex drift in the builder.
-    test('every entry has a name', () => {
-        const db = loadRealItemsDatabase();
-
-        for (const [id, item] of db.items) {
-            expect(item.name, `id ${id} has an empty name`).toBeTruthy();
+    // @verified 2026-07-24: no non-null entry in the raw catalog carries a falsy n, guards a regex drift in the builder. Asserts on the raw JSON, not the parsed map, since _parseItems skips a falsy name before it would ever reach the map.
+    test('every non-null raw entry has a name', () => {
+        for (let id = 0; id < rawItemsCatalog.length; id++) {
+            const item = rawItemsCatalog[id];
+            if (item === null) continue;
+            expect(item.n, `id ${id} has a falsy name`).toBeTruthy();
         }
     });
 });

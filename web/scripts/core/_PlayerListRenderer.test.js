@@ -23,7 +23,7 @@ const {PlayersHandler} = await import('../handlers/PlayersHandler.js');
 // 3 armor, 4 shoes, 5 bag, 6 cape, 7 mount, 8 potion, 9 food.
 // Expected names come from upstream formatted/items.txt.
 
-describe('equipment reaches the renderer with the right items', () => {
+describe('player equipment resolves to the correct items', () => {
     let handler;
 
     beforeEach(() => {
@@ -52,7 +52,9 @@ describe('equipment reaches the renderer with the right items', () => {
         expect(resolved[7]).toBe('T4_MOUNT_HORSE');
     });
 
-    // @verified 2026-08-02: average item power is computed from the combat slots of the real set.
+    // @verified 2026-08-02: each combat slot resolves to its own item power through the catalog, so a
+    // wrong id-to-item mapping changes individual values instead of hiding behind an average that can
+    // cancel out. The average is asserted too, on top of the per-slot values.
     test('pcap-derived equipment yields an item power from the combat slots', async () => {
         const fx = await loadFixture('players', 'equipment');
         const msg = fx.messages[0];
@@ -61,8 +63,16 @@ describe('equipment reaches the renderer with the right items', () => {
         handler.handleNewPlayerEvent(id, {1: 'Geared', 8: '', 53: 0, 51: null, 40: [], 43: []});
         handler.updateItems(id, normalizeParams(msg.parameters));
 
-        const ip = handler.playersList[0].getAverageItemPower();
+        const equipment = handler.playersList[0].equipments;
+        const itemPower = index => window.itemsDatabase.getItemById(equipment[index])?.itempower ?? null;
 
+        expect(itemPower(0)).toBe(800);
+        expect(itemPower(1)).toBe(800);
+        expect(itemPower(2)).toBe(800);
+        expect(itemPower(3)).toBe(800);
+        expect(itemPower(4)).toBe(800);
+
+        const ip = handler.playersList[0].getAverageItemPower();
         expect(ip).toBe(800);
     });
 
