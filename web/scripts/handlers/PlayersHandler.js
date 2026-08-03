@@ -174,6 +174,9 @@ export class PlayersHandler {
         const equipments = Parameters[40] || null;
         const spells = Parameters[43] || null;
 
+        const hasAllianceName = Parameters[51] !== undefined;
+        const hasFaction = Parameters[53] !== undefined;
+
         const existingPlayer = this.playersList.find(player => player.id === id);
         const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
         const maxPlayers = Math.min(100, parsedMaxPlayers);
@@ -187,8 +190,8 @@ export class PlayersHandler {
             }
             if (nickname !== undefined) existingPlayer.nickname = nickname;
             if (guildName !== undefined) existingPlayer.guildName = guildName;
-            if (Parameters[51] !== undefined) existingPlayer.allianceName = allianceName;
-            if (Parameters[53] !== undefined) existingPlayer.faction = faction;
+            if (hasAllianceName) existingPlayer.allianceName = allianceName;
+            if (hasFaction) existingPlayer.faction = faction;
             existingPlayer.touch();
         } else if (this.playersList.length < maxPlayers) {
             const player = new Player(0, 0, id, nickname, guildName, faction, allianceName, equipments, spells);
