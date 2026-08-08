@@ -273,7 +273,7 @@ Real Photon payloads live in `internal/photon/testdata/` as small `.pcap` fragme
 Capture procedure for new fixtures:
 
 1. `tcpdump -i <iface> -w capture.pcap 'udp port 5056'` during a live session.
-2. Anonymize via `tools/anonymize-pcap` (scrubs MAC, IP, timestamps). It refuses to run without a payload decision: pass `--scrub-string` once per name to remove, or `--no-scrub` to keep the payloads as they are. Every name visible in the capture counts, not only your own. The run prints a replacement count per name, and a zero means the name was never found.
+2. Anonymize via `tools/anonymize-pcap` (scrubs MAC, IP, timestamps). It decodes the capture and removes the parameters known to carry a nickname, a guild name, an alliance tag, an account identifier or a machine model, so every name in the capture goes, not only your own. Add `--scrub-string` for anything the field table does not cover, or `--no-scrub` to keep the payloads as they are. Flags come before the two paths. The run prints a replacement count per value, and a zero means the value was never found.
 3. Extract per-scenario fragments via `tools/photon-dump` (outputs both pcap fragments and WS-level JSON fixtures matching EventRouter dispatch format).
 4. Commit the small anonymized fragment.
 
