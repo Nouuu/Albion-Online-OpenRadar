@@ -26,6 +26,7 @@ export class RadarRenderer {
         this.lastFrameTime = 0;
         this.lastClusterUpdate = 0;
         this.cachedClusters = null;
+        this.playerPath = [];
     }
 
     /**
@@ -44,6 +45,12 @@ export class RadarRenderer {
      * @param {number} y - Player Y coordinate
      */
     setLocalPlayerPosition(x, y) {
+        // Track absolute player movement history
+        const lastPoint = this.playerPath[this.playerPath.length - 1];
+        if (!lastPoint || this.drawingUtils.calculateDistance(lastPoint.x, lastPoint.y, x, y) >= 1.0) {
+            this.playerPath.push({ x, y, time: Date.now() });
+        }
+
         this.lpX = x;
         this.lpY = y;
     }
@@ -54,6 +61,7 @@ export class RadarRenderer {
      */
     setMap(mapData) {
         this.map = mapData;
+        this.playerPath = []; // Clear trail on map change
     }
 
 
@@ -227,6 +235,10 @@ export class RadarRenderer {
         }
 
         if (context) {
+            if (settingsSync.getBool('settingPlayerTrail', true)) {
+                this.drawPlayerTrail(context);
+            }
+
             if (this.drawings.harvestablesDrawing && this.handlers.harvestablesHandler) {
                 this.drawings.harvestablesDrawing.invalidate(
                     context,
@@ -475,6 +487,58 @@ export class RadarRenderer {
         ctx.strokeStyle = `rgba(255, 50, 50, ${pulse})`;
         ctx.lineWidth = 5;
         ctx.strokeRect(3, 3, canvasSize - 6, canvasSize - 6);
+        ctx.restore();
+    }
+
+    /**
+     * Draw fading neon trail behind the player
+     * @param {CanvasRenderingContext2D} ctx - Draw canvas context
+     */
+    drawPlayerTrail(ctx) {
+        if (!this.playerPath || this.playerPath.length < 2) return;
+
+        const currentTime = Date.now();
+        const durationLimitMs = (settingsSync.getNumber('settingPlayerTrailDuration', 180) || 180) * 1000;
+
+        // Filter out old points
+        this.playerPath = this.playerPath.filter(point => (currentTime - point.time) <= durationLimitMs);
+
+        if (this.playerPath.length < 2) return;
+
+        ctx.save();
+        ctx.lineWidth = Math.max(1.5, this.drawingUtils.getScaledSize(2));
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Set glow effect for neon aesthetic
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = 'rgba(0, 212, 255, 0.8)';
+
+        for (let i = 0; i < this.playerPath.length - 1; i++) {
+            const p1 = this.playerPath[i];
+            const p2 = this.playerPath[i + 1];
+
+            // Convert absolute map coordinates to relative coordinate space centered on player
+            const relX1 = -1 * p1.x + this.lpX;
+            const relY1 = p1.y - this.lpY;
+            const relX2 = -1 * p2.x + this.lpX;
+            const relY2 = p2.y - this.lpY;
+
+            const pt1 = this.drawingUtils.transformPoint(relX1, relY1);
+            const pt2 = this.drawingUtils.transformPoint(relX2, relY2);
+
+            // Calculate fading opacity based on age of the starting point of the segment
+            const age = currentTime - p1.time;
+            const ageRatio = Math.max(0, Math.min(1, age / durationLimitMs));
+            const opacity = 0.7 * (1 - ageRatio);
+
+            ctx.beginPath();
+            ctx.moveTo(pt1.x, pt1.y);
+            ctx.lineTo(pt2.x, pt2.y);
+            ctx.strokeStyle = `rgba(0, 212, 255, ${opacity})`;
+            ctx.stroke();
+        }
+
         ctx.restore();
     }
 

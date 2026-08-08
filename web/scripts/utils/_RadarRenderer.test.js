@@ -114,3 +114,91 @@ describe('RadarRenderer._collectClusterCandidates', () => {
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
     });
 });
+
+describe('RadarRenderer Player Trail', () => {
+    let renderer;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        renderer = makeRenderer();
+        renderer.drawingUtils.calculateDistance = (x1, y1, x2, y2) => {
+            const dx = x2 - x1; const dy = y2 - y1;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
+        renderer.drawingUtils.getScaledSize = vi.fn((x) => x);
+        renderer.drawingUtils.transformPoint = vi.fn((x, y) => ({ x: x + 100, y: y + 100 }));
+    });
+
+    test('initializes playerPath as empty array', () => {
+        expect(renderer.playerPath).toEqual([]);
+    });
+
+    test('adds position to playerPath when player moves', () => {
+        renderer.setLocalPlayerPosition(10, 10);
+        expect(renderer.playerPath).toHaveLength(1);
+        expect(renderer.playerPath[0].x).toBe(10);
+        expect(renderer.playerPath[0].y).toBe(10);
+
+        // Moving less than 1m shouldn't add a point
+        renderer.setLocalPlayerPosition(10.5, 10);
+        expect(renderer.playerPath).toHaveLength(1);
+
+        // Moving >= 1m should add a point
+        renderer.setLocalPlayerPosition(12, 10);
+        expect(renderer.playerPath).toHaveLength(2);
+        expect(renderer.playerPath[1].x).toBe(12);
+    });
+
+    test('clears playerPath on map change', () => {
+        renderer.setLocalPlayerPosition(10, 10);
+        renderer.setLocalPlayerPosition(20, 20);
+        expect(renderer.playerPath).toHaveLength(2);
+
+        renderer.setMap({ id: 'test_map' });
+        expect(renderer.playerPath).toEqual([]);
+    });
+
+    test('drawPlayerTrail filters expired points', () => {
+        const now = Date.now();
+        vi.useFakeTimers();
+        vi.setSystemTime(now);
+
+        renderer.playerPath = [
+            { x: 10, y: 10, time: now - 200 * 1000 }, // 200s old (expired, limit is 180s by default)
+            { x: 15, y: 15, time: now - 100 * 1000 }, // 100s old (keep)
+            { x: 20, y: 20, time: now }               // 0s old (keep)
+        ];
+
+        const ctx = {
+            save: vi.fn(),
+            restore: vi.fn(),
+            beginPath: vi.fn(),
+            moveTo: vi.fn(),
+            lineTo: vi.fn(),
+            stroke: vi.fn(),
+            lineWidth: 0,
+            lineCap: '',
+            lineJoin: '',
+            shadowBlur: 0,
+            shadowColor: '',
+            strokeStyle: ''
+        };
+
+        settingsSync.getNumber.mockReturnValue(180); // 180 seconds limit
+        renderer.drawPlayerTrail(ctx);
+
+        // Expired point should be removed
+        expect(renderer.playerPath).toHaveLength(2);
+        expect(renderer.playerPath[0].x).toBe(15);
+
+        // Should draw line segment connecting the 2 remaining points
+        expect(ctx.beginPath).toHaveBeenCalled();
+        expect(ctx.moveTo).toHaveBeenCalled();
+        expect(ctx.lineTo).toHaveBeenCalled();
+        expect(ctx.stroke).toHaveBeenCalled();
+
+        vi.useRealTimers();
+    });
+});
+
