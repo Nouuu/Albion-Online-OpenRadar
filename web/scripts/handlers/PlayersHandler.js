@@ -57,7 +57,6 @@ class Player {
             return null; // Database not loaded yet
         }
 
-        // Combat slots 0-4 plus slot 8
         const combatSlots = this.equipments.filter((itemId, index) => {
             return (index <= 4 || index === 8) && itemId && itemId > 0;
         });

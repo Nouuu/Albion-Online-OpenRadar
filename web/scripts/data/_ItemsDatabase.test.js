@@ -5,11 +5,9 @@ import {describe, test, expect} from 'vitest';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 import {ItemsDatabase} from './ItemsDatabase.js';
 
-// upstream: ids picked directly from web/ao-bin-dumps/items.min.json and
-// cross-checked against upstream formatted/items.txt. They are catalog ids,
-// not ids drawn from any committed WS fixture. ids 5453-5457 are a T8
-// gatherer fiber head across enchant 0-4, 5478 and 5503 are the matching
-// armor and shoes, 2989 is a T6 mount.
+// upstream: expected ids and names come from the committed catalog, cross-checked
+// against upstream formatted/items.txt. No WS fixture is involved.
+// synthetic: the hole and malformed-entry cases, not observable upstream today.
 
 const here = dirname(fileURLToPath(import.meta.url));
 const rawItemsCatalog = JSON.parse(readFileSync(join(here, '..', '..', 'ao-bin-dumps', 'items.min.json'), 'utf8'));
@@ -56,7 +54,7 @@ describe('ItemsDatabase real catalog', () => {
         expect(db.items.size).toBe(12071);
     });
 
-    // @verified 2026-07-24: no non-null entry in the raw catalog carries a falsy n, guards a regex drift in the builder. Asserts on the raw JSON, not the parsed map, since _parseItems skips a falsy name before it would ever reach the map.
+    // @verified 2026-07-24: no non-null raw entry carries a falsy n, guards a builder regex drift.
     test('every non-null raw entry has a name', () => {
         for (let id = 0; id < rawItemsCatalog.length; id++) {
             const item = rawItemsCatalog[id];

@@ -18,10 +18,8 @@ vi.mock('../data/ZonesDatabase.js', () => ({
 
 const {PlayersHandler} = await import('../handlers/PlayersHandler.js');
 
-// pcap-derived: web/scripts/__fixtures__/ws/players/equipment.json message 0.
-// Slot layout measured on 10390 real arrays: 0 main hand, 1 off hand, 2 head,
-// 3 armor, 4 shoes, 5 bag, 6 cape, 7 mount, 8 potion, 9 food.
-// Expected names come from upstream formatted/items.txt.
+// pcap-derived: the equipment fixture from the 2026-07-24 capture
+// synthetic: the spawn parameters that seed the player before the equipment message
 
 describe('player equipment resolves to the correct items', () => {
     let handler;
@@ -52,9 +50,7 @@ describe('player equipment resolves to the correct items', () => {
         expect(resolved[7]).toBe('T4_MOUNT_HORSE');
     });
 
-    // @verified 2026-08-02: each combat slot resolves to its own item power through the catalog, so a
-    // wrong id-to-item mapping changes individual values instead of hiding behind an average that can
-    // cancel out. The average is asserted too, on top of the per-slot values.
+    // @verified 2026-08-02: each combat slot carries its own item power, so a wrong mapping cannot hide inside the average.
     test('pcap-derived equipment yields an item power from the combat slots', async () => {
         const fx = await loadFixture('players', 'equipment');
         const msg = fx.messages[0];

@@ -305,7 +305,7 @@ describe('PlayersHandler', () => {
             expect(touchSpy).toHaveBeenCalled();
         });
 
-        // @verified 2026-08-02: allianceName and faction are guarded the same way as nickname and guildName; omitting Parameters[51] and Parameters[53] on a repeat spawn must not reset a hostile player's faction to passive, which would drop them out of getThreatPlayers() and silently stop the alert.
+        // @verified 2026-08-02: a repeat spawn without alliance or faction must not reset a hostile to passive and silence the alert.
         test('synthetic: repeat spawn without alliance or faction keeps them, along with nickname and guild', () => {
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: 'Guild', 53: 5, 51: 'Ally', 40: [], 43: []});
 

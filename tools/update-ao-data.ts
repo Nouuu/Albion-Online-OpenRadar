@@ -82,12 +82,10 @@ type MinifiedHarvestables = Record<string, HarvestableTier[]>;
 // ============================================================================
 
 /**
- * Build (id -> {uniqueName, itempower, ...}) map from items.txt + items.json.
  * items.txt is the canonical source of (numericId, uniqueName) pairs.
- * items.json provides itempower, tier, category for each uniqueName.
+ * items.json only supplies metadata for a uniqueName.
  */
 async function buildItemsArray(itemsJsonRaw: any): Promise<(MinifiedItem | null)[]> {
-    // Step 1: Build uniqueName -> metadata lookup from items.json
     const metaByName = new Map<string, {itempower: number, type: string, cat?: string, slot?: string, h2?: boolean}>();
     const itemsRoot = itemsJsonRaw?.items;
 
@@ -116,7 +114,6 @@ async function buildItemsArray(itemsJsonRaw: any): Promise<(MinifiedItem | null)
                 };
                 metaByName.set(uniqueName, baseMeta);
 
-                // Enchanted variants
                 if (item.enchantments?.enchantment) {
                     const encs = Array.isArray(item.enchantments.enchantment)
                         ? item.enchantments.enchantment
@@ -136,7 +133,6 @@ async function buildItemsArray(itemsJsonRaw: any): Promise<(MinifiedItem | null)
         }
     }
 
-    // Step 2: Download items.txt (canonical id -> uniqueName mapping)
     const itemsTxtUrl = `${GITHUB_RAW_BASE}/formatted/items.txt`;
     console.log(`📥 Downloading items.txt for canonical IDs...`);
     const txtRes = await downloadFile(itemsTxtUrl);
@@ -145,8 +141,7 @@ async function buildItemsArray(itemsJsonRaw: any): Promise<(MinifiedItem | null)
     }
     const txtContent = txtRes.buffer.toString('utf-8');
 
-    // Step 3: Parse items.txt and build sparse array indexed by real Albion ID
-    // Format: "8952: T7_HEAD_PLATE_AVALON@2   : Avalonian Plate Helmet"
+    // Line format: "8952: T7_HEAD_PLATE_AVALON@2   : Avalonian Plate Helmet"
     const result: (MinifiedItem | null)[] = [];
     const lineRe = /^\s*(\d+)\s*:\s*([^\s:]+)/;
 
@@ -156,7 +151,6 @@ async function buildItemsArray(itemsJsonRaw: any): Promise<(MinifiedItem | null)
         const id = parseInt(m[1], 10);
         const uniqueName = m[2];
 
-        // Fill gaps with null so array indices match real IDs
         while (result.length < id) result.push(null);
 
         const meta = metaByName.get(uniqueName);
