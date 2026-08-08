@@ -3,6 +3,7 @@ import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 
 import {HarvestablesDatabase} from '../data/HarvestablesDatabase.js';
+import {ItemsDatabase} from '../data/ItemsDatabase.js';
 import {MobsDatabase} from '../data/MobsDatabase.js';
 import zonesDatabase, {ZonesDatabase} from '../data/ZonesDatabase.js';
 
@@ -23,6 +24,13 @@ export function loadRealHarvestablesDatabase() {
 export function loadRealMobsDatabase() {
     const db = new MobsDatabase();
     db._parseMobs(readJSON('mobs.min.json'));
+    db.isLoaded = true;
+    return db;
+}
+
+export function loadRealItemsDatabase() {
+    const db = new ItemsDatabase();
+    db._parseItems(readJSON('items.min.json'));
     db.isLoaded = true;
     return db;
 }

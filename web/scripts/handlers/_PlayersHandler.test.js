@@ -251,6 +251,75 @@ describe('PlayersHandler', () => {
     });
 
     // ---------------------------------------------------------------------------
+    // handleNewPlayerEvent upsert on a repeat event
+    // ---------------------------------------------------------------------------
+    describe('handleNewPlayerEvent upsert (event 29)', () => {
+        // @verified 2026-07-24: a repeat spawn refreshes equipment instead of dropping the event.
+        test('synthetic: repeat spawn refreshes equipments', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [1, 2], 43: []});
+
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [5453, 5478], 43: []});
+
+            expect(handler.getSize()).toBe(1);
+            expect(handler.playersList[0].equipments).toEqual([5453, 5478]);
+        });
+
+        // @verified 2026-07-24: a repeat spawn with no equipment keeps the known set.
+        test('synthetic: repeat spawn with empty equipment keeps the known set', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [5453], 43: []});
+
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+
+            expect(handler.playersList[0].equipments).toEqual([5453]);
+        });
+
+        // @verified 2026-07-24: a repeat spawn refreshes spells the same way.
+        test('synthetic: repeat spawn refreshes spells', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: [10]});
+
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: [20, 30]});
+
+            expect(handler.playersList[0].spells).toEqual([20, 30]);
+        });
+
+        // @verified 2026-07-24: identity fields follow the latest event.
+        test('synthetic: repeat spawn refreshes nickname, guild, alliance and faction', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: 'OldGuild', 53: 0, 51: 'OldAlly', 40: [], 43: []});
+
+            handler.handleNewPlayerEvent(1, {1: 'Bobby', 8: 'NewGuild', 53: 255, 51: 'NewAlly', 40: [], 43: []});
+
+            const p = handler.playersList[0];
+            expect(p.nickname).toBe('Bobby');
+            expect(p.guildName).toBe('NewGuild');
+            expect(p.allianceName).toBe('NewAlly');
+            expect(p.faction).toBe(255);
+        });
+
+        // @verified 2026-07-24: an upsert refreshes the staleness clock so cleanup does not drop a live player.
+        test('synthetic: repeat spawn touches lastUpdateTime', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            const touchSpy = vi.spyOn(handler.playersList[0], 'touch');
+
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+
+            expect(touchSpy).toHaveBeenCalled();
+        });
+
+        // @verified 2026-08-02: a repeat spawn without alliance or faction must not reset a hostile to passive and silence the alert.
+        test('synthetic: repeat spawn without alliance or faction keeps them, along with nickname and guild', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: 'Guild', 53: 5, 51: 'Ally', 40: [], 43: []});
+
+            handler.handleNewPlayerEvent(1, {40: [], 43: []});
+
+            const p = handler.playersList[0];
+            expect(p.nickname).toBe('Bob');
+            expect(p.guildName).toBe('Guild');
+            expect(p.allianceName).toBe('Ally');
+            expect(p.faction).toBe(5);
+        });
+    });
+
+    // ---------------------------------------------------------------------------
     // updatePlayerFaction (event 363)
     // ---------------------------------------------------------------------------
     describe('updatePlayerFaction (event 363)', () => {
@@ -436,21 +505,21 @@ describe('PlayersHandler', () => {
     // updateItems (event 90)
     // ---------------------------------------------------------------------------
     describe('updateItems (event 90)', () => {
-        // @verified 2026-04-18: pcap equipment message stores items on the matching player.
-        test('pcap-derived equipment: items stored and touch called', async () => {
+        // @verified 2026-07-24: pcap equipment message stores slots on the field PlayerListRenderer reads.
+        test('pcap-derived equipment: slots stored on equipments and touch called', async () => {
             const fx = await loadFixture('players', 'equipment');
             const msg = fx.messages[0];
             const id = msg.parameters['0'];
             const items = msg.parameters['2'];
 
             handler.handleNewPlayerEvent(id, {1: 'Geared', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            const before = handler.playersList[0].lastUpdateTime;
+            const touchSpy = vi.spyOn(handler.playersList[0], 'touch');
 
             handler.updateItems(id, normalizeParams(msg.parameters));
 
             const p = handler.playersList[0];
-            expect(p.items).toEqual(items);
-            expect(p.lastUpdateTime).toBeGreaterThanOrEqual(before);
+            expect(p.equipments).toEqual(items);
+            expect(touchSpy).toHaveBeenCalled();
         });
 
         // @verified 2026-04-18: unknown id results in no entity created and no throw.
@@ -459,13 +528,34 @@ describe('PlayersHandler', () => {
             expect(handler.getSize()).toBe(0);
         });
 
-        // @characterization 2026-04-18: current code: if Parameters[2] is undefined, items remain null on player.
-        test('synthetic: missing Parameters[2] leaves items as null', () => {
+        // @verified 2026-07-24: a message with no Parameters[2] leaves the stored slots untouched.
+        test('synthetic: missing Parameters[2] leaves equipments untouched', () => {
             handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.updateItems(1, {2: [0, 0, 5453]});
 
             handler.updateItems(1, {0: 1});
 
-            expect(handler.playersList[0].items).toBeNull();
+            expect(handler.playersList[0].equipments).toEqual([0, 0, 5453]);
+        });
+
+        // @verified 2026-07-24: an empty slot array does not erase what the player already carries.
+        test('synthetic: empty array does not downgrade stored equipment', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.updateItems(1, {2: [0, 0, 5453]});
+
+            handler.updateItems(1, {2: []});
+
+            expect(handler.playersList[0].equipments).toEqual([0, 0, 5453]);
+        });
+
+        // @verified 2026-07-24: a non-array payload is ignored rather than stored.
+        test('synthetic: non-array Parameters[2] is ignored', () => {
+            handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.updateItems(1, {2: [0, 0, 5453]});
+
+            handler.updateItems(1, {2: 'not-an-array'});
+
+            expect(handler.playersList[0].equipments).toEqual([0, 0, 5453]);
         });
     });
 

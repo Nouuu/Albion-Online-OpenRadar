@@ -68,6 +68,7 @@ For history. These were `test.fails` or open register entries that flipped to ve
 - **PLAY-1** (#65): hostile in unknown zone does not fire the alert because `zonesDatabase.getPvpType(unknown)` falls back to `safe` and `isPlayerThreat(255, 'safe')` returns `false`. Pinned by `test.fails` in `PlayersHandler.test.js`.
 - **ROUTER-1** (#57): direct hashtable parse of `Parameters[103]` is a follow-up. The user-visible BZ alert symptom was resolved by deriving `map.isBZ` from `zonesDatabase.getPvpType(mapId)` (#87), which is the correct long-term path; the direct parse stays pinned in case a future change needs the raw value.
 - **OPS-1..4**: four call sites in `EventRouter.js` hardcode opcodes whose upstream name does not match the local handler semantics (event 590 logs as `key_sync`, request 21 is the pre-Protocol18 Move opcode kept as legacy fallback, response 35 treated as map-change with debounce, response 137 is a probably-dead character-stats branch). Each carries a `FIXME ops-drift` comment. Resolution requires pcap-backed investigation.
+- **PLAY-3** (#131 follow-up): `Player.getAverageItemPower` filters `index <= 4 || index === 8`. Slot 8 is the potion slot, not food, verified against 10390 equipment arrays in the capture logs. Potions carry no itempower so the average is unaffected, but the intent of including slot 8 is unclear. The renderer uses the same filter and will now draw a potion icon in the equipment strip.
 
 ## Tech debt
 

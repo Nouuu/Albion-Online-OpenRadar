@@ -702,16 +702,16 @@ describe('EventRouter', () => {
     // onEvent CharacterEquipmentChanged (90)
     // -------------------------------------------------------------------------
     describe('onEvent CharacterEquipmentChanged', () => {
-        // @verified 2026-04-18: pcap-derived equipment change dispatches updateItems
+        // @verified 2026-07-24: pcap-derived equipment change dispatches updateItems
         test('CharacterEquipmentChanged pcap-derived: dispatches updateItems with id and params', async () => {
-            // pcap-derived: players/equipment.json message[0], params[0]=6740, params[252]=90
+            // pcap-derived: players/equipment.json message[0], params[0]=107652, params[252]=90
             const fix = await loadFixture('players', 'equipment');
             const msg = fix.messages[0];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.playersHandler.updateItems).toHaveBeenCalledWith(6740, p);
+            expect(handlers.playersHandler.updateItems).toHaveBeenCalledWith(107652, p);
         });
     });
 
