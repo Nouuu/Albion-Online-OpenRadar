@@ -81,7 +81,7 @@ func TestScrubString_ReplacesAsciiNameWithSameLengthPadding(t *testing.T) {
 		[]byte("unrelated"),
 	})
 
-	err := runWithOptions(in, out, []string{"Bob"})
+	err := runWithOptions(in, out, []string{"Bob"}, nil)
 	require.NoError(t, err)
 
 	payloads := readPayloads(t, out)
@@ -91,12 +91,12 @@ func TestScrubString_ReplacesAsciiNameWithSameLengthPadding(t *testing.T) {
 	require.Equal(t, []byte("unrelated"), payloads[1])
 }
 
-func TestParseArgs_RejectsMissingScrubDecision(t *testing.T) {
-	_, err := parseArgs([]string{"in.pcap", "out.pcap"})
+func TestParseArgs_DefaultsToScrubbingIdentityFields(t *testing.T) {
+	opts, err := parseArgs([]string{"in.pcap", "out.pcap"})
 
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "--scrub-string")
-	require.Contains(t, err.Error(), "--no-scrub")
+	require.NoError(t, err)
+	require.False(t, opts.noScrub)
+	require.Empty(t, opts.scrubs)
 }
 
 func TestParseArgs_AcceptsExplicitNoScrub(t *testing.T) {
@@ -131,6 +131,13 @@ func TestParseArgs_RejectsWrongPositionalCount(t *testing.T) {
 	require.Contains(t, err.Error(), "usage")
 }
 
+func TestParseArgs_RejectsFlagsPlacedAfterThePaths(t *testing.T) {
+	_, err := parseArgs([]string{"in.pcap", "out.pcap", "--scrub-string", "Alice"})
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "before the two paths")
+}
+
 func TestScrubPayload_CountsReplacementsPerNeedle(t *testing.T) {
 	counts := map[string]int{"Bob": 0, "Alice": 0}
 
@@ -157,7 +164,7 @@ func TestScrubString_EmptyListIsNoOpOnPayload(t *testing.T) {
 
 	writeFixturePcap(t, in, [][]byte{[]byte("hello Bob goodbye")})
 
-	err := runWithOptions(in, out, nil)
+	err := runWithOptions(in, out, nil, nil)
 	require.NoError(t, err)
 
 	payloads := readPayloads(t, out)

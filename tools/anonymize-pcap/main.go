@@ -1,9 +1,9 @@
 // Rewrite MACs, IPs, timestamps in a pcap. --scrub-string (repeatable)
 // ASCII-replaces matches in UDP payloads with same-length 'X' padding.
 //
-// Usage: go run ./tools/anonymize-pcap <input.pcap> <output.pcap> --scrub-string name [--scrub-string name]...
+// Usage: go run ./tools/anonymize-pcap --scrub-string name [--scrub-string name]... <input.pcap> <output.pcap>
 //
-//	go run ./tools/anonymize-pcap <input.pcap> <output.pcap> --no-scrub
+//	go run ./tools/anonymize-pcap --no-scrub <input.pcap> <output.pcap>
 package main
 
 import (
@@ -27,8 +27,9 @@ type stringList []string
 func (s *stringList) String() string     { return fmt.Sprintf("%v", []string(*s)) }
 func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
-const usage = "usage: anonymize-pcap <input.pcap> <output.pcap> --scrub-string name [--scrub-string name]...\n" +
-	"       anonymize-pcap <input.pcap> <output.pcap> --no-scrub"
+const usage = "usage: anonymize-pcap [--scrub-string name]... <input.pcap> <output.pcap>\n" +
+	"       anonymize-pcap --no-scrub <input.pcap> <output.pcap>\n" +
+	"flags must come before the two paths"
 
 type options struct {
 	in      string
@@ -43,7 +44,7 @@ func parseArgs(args []string) (options, error) {
 
 	fs := flag.NewFlagSet("anonymize-pcap", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	fs.Var(&scrub, "scrub-string", "ASCII string to replace in UDP payloads with same-length 'X' padding (repeatable)")
+	fs.Var(&scrub, "scrub-string", "extra ASCII string to replace on top of the identity fields (repeatable)")
 	fs.BoolVar(&noScrub, "no-scrub", false, "write the capture without touching UDP payloads")
 	if err := fs.Parse(args); err != nil {
 		return options{}, err
@@ -53,9 +54,6 @@ func parseArgs(args []string) (options, error) {
 	}
 	if noScrub && len(scrub) > 0 {
 		return options{}, errors.New("--no-scrub cannot be combined with --scrub-string")
-	}
-	if !noScrub && len(scrub) == 0 {
-		return options{}, errors.New("refusing to write an unscrubbed capture: pass --scrub-string for every name to remove, or --no-scrub to keep the payloads as they are")
 	}
 
 	return options{in: fs.Arg(0), out: fs.Arg(1), scrubs: scrub, noScrub: noScrub}, nil
@@ -67,7 +65,17 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	if err := runWithOptions(opts.in, opts.out, opts.scrubs); err != nil {
+
+	var identity []string
+	if !opts.noScrub {
+		identity, err = collectIdentityValues(opts.in)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "error:", err)
+			os.Exit(1)
+		}
+	}
+
+	if err := run(opts, identity); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
@@ -80,7 +88,11 @@ var (
 	fakeServerIP  = net.IPv4(10, 0, 0, 2)
 )
 
-func runWithOptions(in, out string, scrubs []string) error {
+func run(opts options, identity []string) error {
+	return runWithOptions(opts.in, opts.out, opts.scrubs, identity)
+}
+
+func runWithOptions(in, out string, scrubs, identity []string) error {
 	src, err := os.Open(in)
 	if err != nil {
 		return err
@@ -134,14 +146,25 @@ func runWithOptions(in, out string, scrubs []string) error {
 	ipMap["seed-client"] = fakeClientIP
 	ipMap["seed-server"] = fakeServerIP
 
-	counts := make(map[string]int, len(scrubs))
+	counts := make(map[string]int, len(scrubs)+len(identity))
 	for _, n := range scrubs {
+		counts[n] = 0
+	}
+	for _, n := range identity {
 		counts[n] = 0
 	}
 
 	var baseTime time.Time
 	total := 0
 	kept := 0
+
+	type decoded struct {
+		eth *layers.Ethernet
+		ip4 *layers.IPv4
+		udp *layers.UDP
+		ci  gopacket.CaptureInfo
+	}
+	var packets []decoded
 
 	for {
 		data, ci, err := reader.ReadPacketData()
@@ -167,9 +190,26 @@ func runWithOptions(in, out string, scrubs []string) error {
 			return fmt.Errorf("checksum wiring: %w", err)
 		}
 
+		if len(identity) > 0 {
+			udp.Payload = scrubPrefixedValues(udp.Payload, identity, counts)
+		}
 		if len(scrubs) > 0 {
 			udp.Payload = scrubPayload(udp.Payload, scrubs, counts)
 		}
+
+		packets = append(packets, decoded{eth: eth, ip4: ip4, udp: udp, ci: ci})
+	}
+
+	if len(identity) > 0 {
+		payloads := make([][]byte, len(packets))
+		for i, p := range packets {
+			payloads[i] = p.udp.Payload
+		}
+		scrubSplitValues(payloads, identity, counts)
+	}
+
+	for _, p := range packets {
+		eth, ip4, udp, ci := p.eth, p.ip4, p.udp, p.ci
 
 		buf := gopacket.NewSerializeBuffer()
 		opts := gopacket.SerializeOptions{FixLengths: true, ComputeChecksums: true}
