@@ -16,6 +16,8 @@ The Mists has three radar-visible facets. All three are reached via the existing
 
 Feu follets and open portals share the same backing store. The visual difference is rendered by two separate Drawings reading the same list.
 
+The wisp route is gated on the `MISTS_` name prefix. A NewMob carrying any other server name falls through to `AddEnemy` and picks up its classification from the mob table. Without that gate every named mob reached the wisp list, which is how event champions, power-crystal wisps and anniversary statues ended up drawn as wisp signs (#145). The prefix is the discriminant rather than the portal typeIds because a portal is not pinned to one typeId: the local capture corpus carries `MISTS_*` names on typeIds 94, 95, 96, 116 and 121.
+
 ## Portal naming and rarity
 
 Portal names follow the pattern `MISTS_<TYPE>_<COLOR>`:
