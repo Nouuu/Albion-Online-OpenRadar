@@ -91,6 +91,65 @@ func TestScrubString_ReplacesAsciiNameWithSameLengthPadding(t *testing.T) {
 	require.Equal(t, []byte("unrelated"), payloads[1])
 }
 
+func TestParseArgs_RejectsMissingScrubDecision(t *testing.T) {
+	_, err := parseArgs([]string{"in.pcap", "out.pcap"})
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "--scrub-string")
+	require.Contains(t, err.Error(), "--no-scrub")
+}
+
+func TestParseArgs_AcceptsExplicitNoScrub(t *testing.T) {
+	opts, err := parseArgs([]string{"--no-scrub", "in.pcap", "out.pcap"})
+
+	require.NoError(t, err)
+	require.True(t, opts.noScrub)
+	require.Empty(t, opts.scrubs)
+	require.Equal(t, "in.pcap", opts.in)
+	require.Equal(t, "out.pcap", opts.out)
+}
+
+func TestParseArgs_AcceptsRepeatedScrubStrings(t *testing.T) {
+	opts, err := parseArgs([]string{"--scrub-string", "Alice", "--scrub-string", "Bob", "in.pcap", "out.pcap"})
+
+	require.NoError(t, err)
+	require.False(t, opts.noScrub)
+	require.Equal(t, []string{"Alice", "Bob"}, opts.scrubs)
+}
+
+func TestParseArgs_RejectsScrubStringCombinedWithNoScrub(t *testing.T) {
+	_, err := parseArgs([]string{"--no-scrub", "--scrub-string", "Alice", "in.pcap", "out.pcap"})
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "--no-scrub")
+}
+
+func TestParseArgs_RejectsWrongPositionalCount(t *testing.T) {
+	_, err := parseArgs([]string{"--no-scrub", "in.pcap"})
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "usage")
+}
+
+func TestScrubPayload_CountsReplacementsPerNeedle(t *testing.T) {
+	counts := map[string]int{"Bob": 0, "Alice": 0}
+
+	out := scrubPayload([]byte("Bob met Bob and Alice"), []string{"Bob", "Alice"}, counts)
+
+	require.Equal(t, []byte("XXX met XXX and XXXXX"), out)
+	require.Equal(t, 2, counts["Bob"])
+	require.Equal(t, 1, counts["Alice"])
+}
+
+func TestScrubPayload_LeavesAbsentNeedleAtZero(t *testing.T) {
+	counts := map[string]int{"Skoggangr": 0}
+
+	out := scrubPayload([]byte("nothing to see"), []string{"Skoggangr"}, counts)
+
+	require.Equal(t, []byte("nothing to see"), out)
+	require.Equal(t, 0, counts["Skoggangr"])
+}
+
 func TestScrubString_EmptyListIsNoOpOnPayload(t *testing.T) {
 	dir := t.TempDir()
 	in := filepath.Join(dir, "in.pcap")

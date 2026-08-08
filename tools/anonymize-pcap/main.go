@@ -1,15 +1,20 @@
-// Rewrite MACs, IPs, timestamps in a pcap. Optional --scrub-string (repeatable)
+// Rewrite MACs, IPs, timestamps in a pcap. --scrub-string (repeatable)
 // ASCII-replaces matches in UDP payloads with same-length 'X' padding.
 //
-// Usage: go run ./tools/anonymize-pcap <input.pcap> <output.pcap> [--scrub-string name]...
+// Usage: go run ./tools/anonymize-pcap <input.pcap> <output.pcap> --scrub-string name [--scrub-string name]...
+//
+//	go run ./tools/anonymize-pcap <input.pcap> <output.pcap> --no-scrub
 package main
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"net"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/google/gopacket"
@@ -22,18 +27,47 @@ type stringList []string
 func (s *stringList) String() string     { return fmt.Sprintf("%v", []string(*s)) }
 func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
-func main() {
+const usage = "usage: anonymize-pcap <input.pcap> <output.pcap> --scrub-string name [--scrub-string name]...\n" +
+	"       anonymize-pcap <input.pcap> <output.pcap> --no-scrub"
+
+type options struct {
+	in      string
+	out     string
+	scrubs  []string
+	noScrub bool
+}
+
+func parseArgs(args []string) (options, error) {
 	var scrub stringList
-	fs := flag.NewFlagSet("anonymize-pcap", flag.ExitOnError)
+	var noScrub bool
+
+	fs := flag.NewFlagSet("anonymize-pcap", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
 	fs.Var(&scrub, "scrub-string", "ASCII string to replace in UDP payloads with same-length 'X' padding (repeatable)")
-	if err := fs.Parse(os.Args[1:]); err != nil {
-		os.Exit(2)
+	fs.BoolVar(&noScrub, "no-scrub", false, "write the capture without touching UDP payloads")
+	if err := fs.Parse(args); err != nil {
+		return options{}, err
 	}
 	if fs.NArg() != 2 {
-		fmt.Fprintln(os.Stderr, "usage: anonymize-pcap <input.pcap> <output.pcap> [--scrub-string name]...")
+		return options{}, errors.New(usage)
+	}
+	if noScrub && len(scrub) > 0 {
+		return options{}, errors.New("--no-scrub cannot be combined with --scrub-string")
+	}
+	if !noScrub && len(scrub) == 0 {
+		return options{}, errors.New("refusing to write an unscrubbed capture: pass --scrub-string for every name to remove, or --no-scrub to keep the payloads as they are")
+	}
+
+	return options{in: fs.Arg(0), out: fs.Arg(1), scrubs: scrub, noScrub: noScrub}, nil
+}
+
+func main() {
+	opts, err := parseArgs(os.Args[1:])
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	if err := runWithOptions(fs.Arg(0), fs.Arg(1), scrub); err != nil {
+	if err := runWithOptions(opts.in, opts.out, opts.scrubs); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
@@ -100,6 +134,11 @@ func runWithOptions(in, out string, scrubs []string) error {
 	ipMap["seed-client"] = fakeClientIP
 	ipMap["seed-server"] = fakeServerIP
 
+	counts := make(map[string]int, len(scrubs))
+	for _, n := range scrubs {
+		counts[n] = 0
+	}
+
 	var baseTime time.Time
 	total := 0
 	kept := 0
@@ -129,7 +168,7 @@ func runWithOptions(in, out string, scrubs []string) error {
 		}
 
 		if len(scrubs) > 0 {
-			udp.Payload = scrubPayload(udp.Payload, scrubs)
+			udp.Payload = scrubPayload(udp.Payload, scrubs, counts)
 		}
 
 		buf := gopacket.NewSerializeBuffer()
@@ -155,13 +194,29 @@ func runWithOptions(in, out string, scrubs []string) error {
 	}
 
 	fmt.Printf("%d packets read, %d anonymized packets written to %s\n", total, kept, out)
+	reportScrubCounts(os.Stdout, counts)
 	return nil
+}
+
+func reportScrubCounts(w io.Writer, counts map[string]int) {
+	if len(counts) == 0 {
+		return
+	}
+	needles := make([]string, 0, len(counts))
+	for n := range counts {
+		needles = append(needles, n)
+	}
+	sort.Strings(needles)
+
+	for _, n := range needles {
+		fmt.Fprintf(w, "  %s: %d replacements\n", n, counts[n])
+	}
 }
 
 const scrubByte = 'X'
 
 // scrubPayload applies needles in order; overlapping matches resolve by first match wins. ASCII only.
-func scrubPayload(payload []byte, needles []string) []byte {
+func scrubPayload(payload []byte, needles []string, counts map[string]int) []byte {
 	if len(needles) == 0 {
 		return payload
 	}
@@ -170,6 +225,11 @@ func scrubPayload(payload []byte, needles []string) []byte {
 		if n == "" {
 			continue
 		}
+		hits := bytes.Count(out, []byte(n))
+		if hits == 0 {
+			continue
+		}
+		counts[n] += hits
 		pad := bytes.Repeat([]byte{scrubByte}, len(n))
 		out = bytes.ReplaceAll(out, []byte(n), pad)
 	}
