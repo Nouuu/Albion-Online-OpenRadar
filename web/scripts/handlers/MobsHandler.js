@@ -15,6 +15,12 @@ export const EnemyType =
         Events: 9,
     };
 
+const MIST_PORTAL_NAME_PREFIX = 'MISTS_';
+
+export function isMistPortalName(name) {
+    return typeof name === 'string' && name.toUpperCase().startsWith(MIST_PORTAL_NAME_PREFIX);
+}
+
 export function getSettingNameForEnemyType(type) {
     switch (type) {
         case EnemyType.Enemy: return 'settingNormalEnemy';
@@ -164,7 +170,7 @@ export class MobsHandler {
                 }
             });
 
-            if (name) {
+            if (isMistPortalName(name)) {
                 this.AddMist(mobId, posX, posY, name, enchant);
             } else {
                 this.AddEnemy(mobId, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity);
