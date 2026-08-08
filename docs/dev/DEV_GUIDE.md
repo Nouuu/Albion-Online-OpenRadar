@@ -274,8 +274,9 @@ Capture procedure for new fixtures:
 
 1. `tcpdump -i <iface> -w capture.pcap 'udp port 5056'` during a live session.
 2. Anonymize via `tools/anonymize-pcap` (scrubs MAC, IP, timestamps). It decodes the capture and removes the parameters known to carry a nickname, a guild name, an alliance tag, an account identifier or a machine model, so every name in the capture goes, not only your own. Add `--scrub-string` for anything the field table does not cover, or `--no-scrub` to keep the payloads as they are. Flags come before the two paths. The run prints a replacement count per value, and a zero means the value was never found.
-3. Extract per-scenario fragments via `tools/photon-dump` (outputs both pcap fragments and WS-level JSON fixtures matching EventRouter dispatch format).
-4. Commit the small anonymized fragment.
+3. Audit the result with `tools/photon-strings`, which lists every string the capture carries grouped by message kind, Albion code and parameter index. A name still readable there means the field table needs a new entry.
+4. Extract per-scenario fragments via `tools/photon-dump` (outputs both pcap fragments and WS-level JSON fixtures matching EventRouter dispatch format).
+5. Commit the small anonymized fragment.
 
 ### Frontend tests
 

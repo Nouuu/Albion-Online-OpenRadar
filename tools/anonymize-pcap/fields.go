@@ -2,25 +2,18 @@ package main
 
 import (
 	"bytes"
-	"errors"
-	"fmt"
-	"io"
-	"os"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcapgo"
-	"github.com/nospy/albion-openradar/internal/photon"
+	"github.com/nospy/albion-openradar/internal/photonscan"
 )
 
 const (
-	kindEvent = iota
-	kindRequest
-	kindResponse
+	kindEvent    = photonscan.KindEvent
+	kindRequest  = photonscan.KindRequest
+	kindResponse = photonscan.KindResponse
 )
 
 type fieldRef struct {
-	kind  int
+	kind  photonscan.Kind
 	code  int
 	index byte
 }
@@ -53,71 +46,22 @@ var identityFields = []fieldRef{
 	{kindRequest, 300, 2}, // operating system
 }
 
-func codeOf(params map[byte]interface{}, key byte) int {
-	v, ok := params[key]
-	if !ok {
-		return -1
-	}
-	switch t := v.(type) {
-	case byte:
-		return int(t)
-	case int16:
-		return int(t)
-	case int32:
-		return int(t)
-	case int64:
-		return int(t)
-	case int:
-		return t
-	}
-	return -1
-}
-
 // collectIdentityValues decodes the whole capture and returns every distinct
 // string sitting in an identity field.
 func collectIdentityValues(path string) ([]string, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
-	reader, err := pcapgo.NewReader(f)
-	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
-	}
-
 	seen := map[string]struct{}{}
-	harvest := func(kind int, codeKey byte, params map[byte]interface{}) {
-		code := codeOf(params, codeKey)
+	err := photonscan.Scan(path, func(m photonscan.Message) {
 		for _, field := range identityFields {
-			if field.kind != kind || field.code != code {
+			if field.kind != m.Kind || field.code != m.Code {
 				continue
 			}
-			collectStrings(seen, params[field.index])
+			for _, v := range photonscan.StringsIn(m.Params[field.index]) {
+				seen[v] = struct{}{}
+			}
 		}
-	}
-
-	parser := photon.NewPhotonParser(
-		func(e *photon.EventData) { harvest(kindEvent, 252, e.Parameters) },
-		func(r *photon.OperationRequest) { harvest(kindRequest, 253, r.Parameters) },
-		func(r *photon.OperationResponse) { harvest(kindResponse, 253, r.Parameters) },
-	)
-
-	for {
-		data, _, err := reader.ReadPacketData()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			break
-		}
-		pkt := gopacket.NewPacket(data, reader.LinkType(), gopacket.Default)
-		udp, _ := pkt.Layer(layers.LayerTypeUDP).(*layers.UDP)
-		if udp == nil {
-			continue
-		}
-		parser.ReceivePacket(udp.Payload)
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	out := make([]string, 0, len(seen))
@@ -125,23 +69,6 @@ func collectIdentityValues(path string) ([]string, error) {
 		out = append(out, v)
 	}
 	return out, nil
-}
-
-func collectStrings(seen map[string]struct{}, v interface{}) {
-	switch t := v.(type) {
-	case string:
-		if t != "" {
-			seen[t] = struct{}{}
-		}
-	case []string:
-		for _, item := range t {
-			collectStrings(seen, item)
-		}
-	case []interface{}:
-		for _, item := range t {
-			collectStrings(seen, item)
-		}
-	}
 }
 
 // scrubSplitValues handles a value the Photon layer cut between two packets.

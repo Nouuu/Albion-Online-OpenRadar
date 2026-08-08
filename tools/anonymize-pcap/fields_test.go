@@ -106,9 +106,3 @@ func TestIdentityFields_CoverNicknameGuildAndAllianceOnEvent29(t *testing.T) {
 func TestIdentityFields_DoNotCoverTheAccessModeField(t *testing.T) {
 	require.NotContains(t, identityFields, fieldRef{kindEvent, 210, 5})
 }
-
-func TestCodeOf_ReadsTheAlbionCodeParameter(t *testing.T) {
-	require.Equal(t, 29, codeOf(map[byte]interface{}{252: int16(29)}, 252))
-	require.Equal(t, 300, codeOf(map[byte]interface{}{253: int16(300)}, 253))
-	require.Equal(t, -1, codeOf(map[byte]interface{}{}, 252))
-}
