@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"sort"
 	"sync"
 	"time"
@@ -192,9 +193,7 @@ func (m *Manager) State() State {
 	out := State{
 		LastErrors: make(map[string]string, len(m.lastErrors)),
 	}
-	for k, v := range m.lastErrors {
-		out.LastErrors[k] = v
-	}
+	maps.Copy(out.LastErrors, m.lastErrors)
 	for _, mc := range m.active {
 		i := mc.cap.iface
 		out.Active = append(out.Active, CaptureSummary{

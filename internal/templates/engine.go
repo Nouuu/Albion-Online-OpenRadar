@@ -25,11 +25,11 @@ type Engine struct {
 func FuncMap() template.FuncMap {
 	return template.FuncMap{
 		// dict creates a map from key-value pairs for passing to templates
-		"dict": func(values ...interface{}) map[string]interface{} {
+		"dict": func(values ...any) map[string]any {
 			if len(values)%2 != 0 {
 				return nil
 			}
-			d := make(map[string]interface{}, len(values)/2)
+			d := make(map[string]any, len(values)/2)
 			for i := 0; i < len(values); i += 2 {
 				key, ok := values[i].(string)
 				if !ok {
@@ -56,7 +56,7 @@ func FuncMap() template.FuncMap {
 			return a - b
 		},
 		// eq checks equality (for use in templates)
-		"eq": func(a, b interface{}) bool {
+		"eq": func(a, b any) bool {
 			return a == b
 		},
 		// contains checks if a string contains a substring
@@ -206,7 +206,7 @@ func (e *Engine) reloadTemplates() error {
 }
 
 // Render renders a template by name with the given data
-func (e *Engine) Render(w io.Writer, name string, data interface{}) error {
+func (e *Engine) Render(w io.Writer, name string, data any) error {
 	// In dev mode, reload templates on each render for hot reload
 	if e.devMode {
 		if err := e.reloadTemplates(); err != nil {
@@ -226,7 +226,7 @@ func (e *Engine) Render(w io.Writer, name string, data interface{}) error {
 }
 
 // RenderString renders a template to a string
-func (e *Engine) RenderString(name string, data interface{}) (string, error) {
+func (e *Engine) RenderString(name string, data any) (string, error) {
 	var buf bytes.Buffer
 	if err := e.Render(&buf, name, data); err != nil {
 		return "", err

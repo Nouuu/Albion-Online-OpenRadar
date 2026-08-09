@@ -21,7 +21,7 @@ const (
 // WSBatchMessage represents a batch of messages
 type WSBatchMessage struct {
 	Type     string        `json:"type"`
-	Messages []interface{} `json:"messages"`
+	Messages []any `json:"messages"`
 }
 
 // WSStats holds WebSocket statistics
@@ -40,7 +40,7 @@ type WebSocketHandler struct {
 	logger    *logger.Logger
 
 	// Batching
-	batchBuffer []interface{}
+	batchBuffer []any
 	batchMu     sync.Mutex
 	batchTicker *time.Ticker
 	stopBatch   chan struct{}
@@ -56,7 +56,7 @@ func NewWebSocketHandler(log *logger.Logger) *WebSocketHandler {
 	ws := &WebSocketHandler{
 		clients:     make(map[*websocket.Conn]bool),
 		logger:      log,
-		batchBuffer: make([]interface{}, 0, MaxBatchSize),
+		batchBuffer: make([]any, 0, MaxBatchSize),
 		stopBatch:   make(chan struct{}),
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
@@ -91,7 +91,7 @@ func (ws *WebSocketHandler) flushBatch() {
 	}
 	batch := ws.batchBuffer
 	msgCount := uint64(len(batch))
-	ws.batchBuffer = make([]interface{}, 0, MaxBatchSize)
+	ws.batchBuffer = make([]any, 0, MaxBatchSize)
 	ws.batchMu.Unlock()
 
 	msg := &WSBatchMessage{Type: "batch", Messages: batch}
@@ -210,7 +210,7 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 		// Parse incoming message (for logs)
 		var data struct {
 			Type string        `json:"type"`
-			Logs []interface{} `json:"logs"`
+			Logs []any `json:"logs"`
 		}
 		if err := json.Unmarshal(message, &data); err == nil {
 			if data.Type == "logs" && len(data.Logs) > 0 && ws.logger != nil {
@@ -238,8 +238,8 @@ func (ws *WebSocketHandler) CloseAllClients() {
 }
 
 // broadcastPayload adds a message to the batch buffer
-func (ws *WebSocketHandler) broadcastPayload(code string, payload interface{}) {
-	msg := map[string]interface{}{
+func (ws *WebSocketHandler) broadcastPayload(code string, payload any) {
+	msg := map[string]any{
 		"code":       code,
 		"dictionary": payload,
 	}
@@ -250,7 +250,7 @@ func (ws *WebSocketHandler) broadcastPayload(code string, payload interface{}) {
 
 // BroadcastEvent broadcasts an event to all clients
 func (ws *WebSocketHandler) BroadcastEvent(event *photon.EventData) {
-	ws.broadcastPayload("event", map[string]interface{}{
+	ws.broadcastPayload("event", map[string]any{
 		"code":       event.Code,
 		"parameters": event.Parameters,
 	})
@@ -258,7 +258,7 @@ func (ws *WebSocketHandler) BroadcastEvent(event *photon.EventData) {
 
 // BroadcastRequest broadcasts a request to all clients
 func (ws *WebSocketHandler) BroadcastRequest(req *photon.OperationRequest) {
-	ws.broadcastPayload("request", map[string]interface{}{
+	ws.broadcastPayload("request", map[string]any{
 		"operationCode": req.OperationCode,
 		"parameters":    req.Parameters,
 	})
@@ -266,7 +266,7 @@ func (ws *WebSocketHandler) BroadcastRequest(req *photon.OperationRequest) {
 
 // BroadcastResponse broadcasts a response to all clients
 func (ws *WebSocketHandler) BroadcastResponse(resp *photon.OperationResponse) {
-	ws.broadcastPayload("response", map[string]interface{}{
+	ws.broadcastPayload("response", map[string]any{
 		"operationCode": resp.OperationCode,
 		"returnCode":    resp.ReturnCode,
 		"debugMessage":  resp.DebugMessage,

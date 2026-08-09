@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-func deserialize(buf *bytes.Buffer, tc byte) interface{} {
+func deserialize(buf *bytes.Buffer, tc byte) any {
 	if tc >= customTypeSlimBase {
 		return deserializeCustom(buf, tc)
 	}
@@ -91,18 +91,18 @@ func deserialize(buf *bytes.Buffer, tc byte) interface{} {
 	}
 }
 
-func isComparable(v interface{}) bool {
+func isComparable(v any) bool {
 	switch v.(type) {
 	case nil, bool, byte, int16, int32, int64, float32, float64, string:
 		return true
-	case ByteArray, []interface{}, []bool, []byte, []int16, []int32, []int64, []float32, []float64, []string,
-		map[interface{}]interface{}, map[byte]interface{}:
+	case ByteArray, []any, []bool, []byte, []int16, []int32, []int64, []float32, []float64, []string,
+		map[any]any, map[byte]any:
 		return false
 	}
 	return reflect.TypeOf(v).Comparable()
 }
 
-func deserializeCustom(buf *bytes.Buffer, gpType byte) interface{} {
+func deserializeCustom(buf *bytes.Buffer, gpType byte) any {
 	if gpType < customTypeSlimBase {
 		if _, err := buf.ReadByte(); err != nil {
 			return nil
@@ -162,12 +162,12 @@ func deserializeDictionary(buf *bytes.Buffer) Hashtable {
 func deserializeHashtable(buf *bytes.Buffer) Hashtable {
 	return deserializeDictionary(buf)
 }
-func deserializeObjectArray(buf *bytes.Buffer) interface{} {
+func deserializeObjectArray(buf *bytes.Buffer) any {
 	size := int(readCount(buf))
 	if size < 0 || size > maxArraySize || size > buf.Len() {
 		return nil
 	}
-	result := make([]interface{}, size)
+	result := make([]any, size)
 	for i := range result {
 		tc, err := buf.ReadByte()
 		if err != nil {
@@ -178,13 +178,13 @@ func deserializeObjectArray(buf *bytes.Buffer) interface{} {
 	return result
 }
 
-func deserializeOperationRequestInner(buf *bytes.Buffer) interface{} {
+func deserializeOperationRequestInner(buf *bytes.Buffer) any {
 	opCode, _ := buf.ReadByte()
 	params := readParameterTable(buf)
-	return map[string]interface{}{"operationCode": opCode, "parameters": params}
+	return map[string]any{"operationCode": opCode, "parameters": params}
 }
 
-func deserializeOperationResponseInner(buf *bytes.Buffer) interface{} {
+func deserializeOperationResponseInner(buf *bytes.Buffer) any {
 	if buf.Len() < 3 {
 		return nil
 	}
@@ -198,25 +198,25 @@ func deserializeOperationResponseInner(buf *bytes.Buffer) interface{} {
 		}
 	}
 	params := readParameterTable(buf)
-	return map[string]interface{}{
+	return map[string]any{
 		"operationCode": opCode,
 		"returnCode":    returnCode,
 		"debugMessage":  debugMsg,
 		"parameters":    params,
 	}
 }
-func deserializeEventDataInner(buf *bytes.Buffer) interface{} {
+func deserializeEventDataInner(buf *bytes.Buffer) any {
 	code, _ := buf.ReadByte()
 	params := readParameterTable(buf)
-	return map[string]interface{}{"code": code, "parameters": params}
+	return map[string]any{"code": code, "parameters": params}
 }
 
-func readParameterTable(buf *bytes.Buffer) map[byte]interface{} {
+func readParameterTable(buf *bytes.Buffer) map[byte]any {
 	count := int(readCount(buf))
 	if count < 0 || count > maxArraySize || count > buf.Len() {
-		return map[byte]interface{}{}
+		return map[byte]any{}
 	}
-	params := make(map[byte]interface{}, count)
+	params := make(map[byte]any, count)
 	for i := 0; i < count && buf.Len() > 0; i++ {
 		key, err := buf.ReadByte()
 		if err != nil {
@@ -286,7 +286,7 @@ func DeserializeResponse(data []byte) (*OperationResponse, error) {
 		Parameters:    params,
 	}, nil
 }
-func deserializeNestedArray(buf *bytes.Buffer) interface{} {
+func deserializeNestedArray(buf *bytes.Buffer) any {
 	size := int(readCount(buf))
 	if size < 0 || size > maxArraySize || size > buf.Len() {
 		return nil
@@ -295,14 +295,14 @@ func deserializeNestedArray(buf *bytes.Buffer) interface{} {
 	if err != nil {
 		return nil
 	}
-	result := make([]interface{}, size)
+	result := make([]any, size)
 	for i := range result {
 		result[i] = deserialize(buf, tc)
 	}
 	return result
 }
 
-func deserializeTypedArray(buf *bytes.Buffer, elemType byte) interface{} {
+func deserializeTypedArray(buf *bytes.Buffer, elemType byte) any {
 	size := int(readCount(buf))
 	if size < 0 || size > maxArraySize {
 		return nil
@@ -358,13 +358,13 @@ func deserializeTypedArray(buf *bytes.Buffer, elemType byte) interface{} {
 		}
 		return result
 	case typeDictionary:
-		result := make([]interface{}, size)
+		result := make([]any, size)
 		for i := range result {
 			result[i] = deserializeDictionary(buf)
 		}
 		return result
 	case typeHashtable:
-		result := make([]interface{}, size)
+		result := make([]any, size)
 		for i := range result {
 			result[i] = deserializeHashtable(buf)
 		}
@@ -374,7 +374,7 @@ func deserializeTypedArray(buf *bytes.Buffer, elemType byte) interface{} {
 		if _, err := buf.ReadByte(); err != nil {
 			return nil
 		}
-		result := make([]interface{}, size)
+		result := make([]any, size)
 		for i := range result {
 			elemSize := int(readCount(buf))
 			if elemSize < 0 || elemSize > buf.Len() || elemSize > maxArraySize {
@@ -386,7 +386,7 @@ func deserializeTypedArray(buf *bytes.Buffer, elemType byte) interface{} {
 		}
 		return result
 	default:
-		result := make([]interface{}, size)
+		result := make([]any, size)
 		for i := range result {
 			result[i] = deserialize(buf, elemType)
 		}

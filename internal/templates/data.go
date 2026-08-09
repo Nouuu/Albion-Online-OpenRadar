@@ -14,7 +14,7 @@ type PageData struct {
 	NavItems []NavItem
 
 	// Page-specific data (use type assertions in templates)
-	Data interface{}
+	Data any
 }
 
 // NavItem represents a navigation menu item
@@ -64,7 +64,7 @@ func (p *PageData) WithVersion(version string) *PageData {
 }
 
 // WithData sets the page-specific data and returns the PageData for chaining
-func (p *PageData) WithData(data interface{}) *PageData {
+func (p *PageData) WithData(data any) *PageData {
 	p.Data = data
 	return p
 }
@@ -81,9 +81,9 @@ type CheckboxData struct {
 
 // CardData represents data for a card partial
 type CardData struct {
-	Title   string      // Card title
-	Class   string      // Additional CSS classes
-	Content interface{} // Card content (can be template.HTML or nested template)
+	Title   string // Card title
+	Class   string // Additional CSS classes
+	Content any    // Card content (can be template.HTML or nested template)
 }
 
 // InputData represents data for an input partial

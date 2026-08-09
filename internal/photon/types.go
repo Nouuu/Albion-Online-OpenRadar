@@ -9,10 +9,10 @@ import (
 
 // Hashtable serializes with stringified keys; json.Marshal does not accept
 // map[interface{}]interface{}.
-type Hashtable map[interface{}]interface{}
+type Hashtable map[any]any
 
 func (h Hashtable) MarshalJSON() ([]byte, error) {
-	out := make(map[string]interface{}, len(h))
+	out := make(map[string]any, len(h))
 	for k, v := range h {
 		out[fmt.Sprintf("%v", k)] = v
 	}
@@ -40,17 +40,17 @@ func (b ByteArray) MarshalJSON() ([]byte, error) {
 
 type EventData struct {
 	Code       byte
-	Parameters map[byte]interface{}
+	Parameters map[byte]any
 }
 
 type OperationRequest struct {
 	OperationCode byte
-	Parameters    map[byte]interface{}
+	Parameters    map[byte]any
 }
 
 type OperationResponse struct {
 	OperationCode byte
 	ReturnCode    int16
 	DebugMessage  string
-	Parameters    map[byte]interface{}
+	Parameters    map[byte]any
 }

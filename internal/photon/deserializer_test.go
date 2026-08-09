@@ -13,7 +13,7 @@ func TestDeserialize_Primitives(t *testing.T) {
 		name    string
 		tc      byte
 		payload []byte
-		want    interface{}
+		want    any
 	}{
 		{"null", typeNull, nil, nil},
 		{"unknown", typeUnknown, nil, nil},
@@ -65,7 +65,7 @@ func TestDeserialize_ObjectArray(t *testing.T) {
 		typeShort, 0x34, 0x12,
 	}
 	buf := bytes.NewBuffer(payload)
-	got := deserialize(buf, typeObjectArray).([]interface{})
+	got := deserialize(buf, typeObjectArray).([]any)
 	require.Len(t, got, 2)
 	require.Equal(t, byte(0x01), got[0])
 	require.Equal(t, int16(0x1234), got[1])
@@ -74,8 +74,8 @@ func TestDeserialize_ObjectArray(t *testing.T) {
 func TestDeserialize_NestedArray(t *testing.T) {
 	payload := []byte{0x03, typeByte, 0x0a, 0x0b, 0x0c}
 	buf := bytes.NewBuffer(payload)
-	got := deserialize(buf, typeArray).([]interface{})
-	require.Equal(t, []interface{}{byte(0x0a), byte(0x0b), byte(0x0c)}, got)
+	got := deserialize(buf, typeArray).([]any)
+	require.Equal(t, []any{byte(0x0a), byte(0x0b), byte(0x0c)}, got)
 }
 
 func TestDeserialize_TypedArray_Byte(t *testing.T) {
@@ -116,7 +116,7 @@ func TestDeserialize_TypedArray_Custom(t *testing.T) {
 	tc := typeArray | typeCustom
 	// count=2, shared customId=7, then (size=2, data=[0xaa,0xbb]), (size=1, data=[0xcc])
 	payload := []byte{0x02, 0x07, 0x02, 0xaa, 0xbb, 0x01, 0xcc}
-	got := deserialize(bytes.NewBuffer(payload), tc).([]interface{})
+	got := deserialize(bytes.NewBuffer(payload), tc).([]any)
 	require.Len(t, got, 2)
 	require.Equal(t, ByteArray{0xaa, 0xbb}, got[0])
 	require.Equal(t, ByteArray{0xcc}, got[1])
@@ -308,9 +308,9 @@ func TestMarshalJoinResponse_HashtableAtParam103(t *testing.T) {
 	require.NoError(t, err)
 	PostProcessResponse(resp)
 
-	msg := map[string]interface{}{
+	msg := map[string]any{
 		"code": "response",
-		"dictionary": map[string]interface{}{
+		"dictionary": map[string]any{
 			"operationCode": resp.OperationCode,
 			"returnCode":    resp.ReturnCode,
 			"debugMessage":  resp.DebugMessage,
@@ -357,7 +357,7 @@ func TestDeserialize_ZeroValues(t *testing.T) {
 	cases := []struct {
 		name string
 		tc   byte
-		want interface{}
+		want any
 	}{
 		{"bool false", typeBoolFalse, false},
 		{"bool true", typeBoolTrue, true},

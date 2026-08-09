@@ -15,12 +15,12 @@ import (
 func TestBroadcastEvent_JSONShape(t *testing.T) {
 	event := &photon.EventData{
 		Code: 3,
-		Parameters: map[byte]interface{}{
+		Parameters: map[byte]any{
 			0:   int32(42),
 			252: byte(3),
 		},
 	}
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"code":       event.Code,
 		"parameters": event.Parameters,
 	}
@@ -35,7 +35,7 @@ func TestBroadcastEvent_JSONShape(t *testing.T) {
 func TestBroadcastEvent_ByteArray_BufferShape(t *testing.T) {
 	event := &photon.EventData{
 		Code: 3,
-		Parameters: map[byte]interface{}{
+		Parameters: map[byte]any{
 			1: photon.ByteArray{0x01, 0x02, 0xff},
 		},
 	}

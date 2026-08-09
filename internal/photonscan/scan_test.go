@@ -73,11 +73,11 @@ func TestScan_ReportsAMissingFile(t *testing.T) {
 func TestStringsIn_FlattensNestedValues(t *testing.T) {
 	require.Equal(t, []string{"a"}, StringsIn("a"))
 	require.Equal(t, []string{"a", "b"}, StringsIn([]string{"a", "b"}))
-	require.Equal(t, []string{"a", "b"}, StringsIn([]interface{}{"a", []string{"b"}}))
+	require.Equal(t, []string{"a", "b"}, StringsIn([]any{"a", []string{"b"}}))
 }
 
 func TestStringsIn_SkipsEmptyAndNonStringValues(t *testing.T) {
 	require.Empty(t, StringsIn(""))
 	require.Empty(t, StringsIn(42))
-	require.Equal(t, []string{"a"}, StringsIn([]interface{}{"", 7, "a"}))
+	require.Equal(t, []string{"a"}, StringsIn([]any{"", 7, "a"}))
 }
