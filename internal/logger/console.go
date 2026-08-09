@@ -45,7 +45,7 @@ func timestamp() string {
 }
 
 // log sends a log message to the callback or prints to stdout
-func log(level, tag, msg string, args ...interface{}) {
+func log(level, tag, msg string, args ...any) {
 	formatted := fmt.Sprintf(msg, args...)
 
 	callbackMu.RLock()
@@ -74,21 +74,21 @@ func log(level, tag, msg string, args ...interface{}) {
 }
 
 // PrintInfo prints an info message with cyan tag
-func PrintInfo(tag, msg string, args ...interface{}) {
+func PrintInfo(tag, msg string, args ...any) {
 	log("INFO", tag, msg, args...)
 }
 
 // PrintSuccess prints a success message with green tag
-func PrintSuccess(tag, msg string, args ...interface{}) {
+func PrintSuccess(tag, msg string, args ...any) {
 	log("SUCCESS", tag, msg, args...)
 }
 
 // PrintWarn prints a warning message with yellow tag
-func PrintWarn(tag, msg string, args ...interface{}) {
+func PrintWarn(tag, msg string, args ...any) {
 	log("WARN", tag, msg, args...)
 }
 
 // PrintError prints an error message with red tag
-func PrintError(tag, msg string, args ...interface{}) {
+func PrintError(tag, msg string, args ...any) {
 	log("ERROR", tag, msg, args...)
 }

@@ -18,12 +18,12 @@ const (
 )
 
 type LogEntry struct {
-	Timestamp string                 `json:"timestamp"`
-	Level     string                 `json:"level"`
-	Category  string                 `json:"category"`
-	Event     string                 `json:"event"`
-	Data      interface{}            `json:"data"`
-	Context   map[string]interface{} `json:"context"`
+	Timestamp string         `json:"timestamp"`
+	Level     string         `json:"level"`
+	Category  string         `json:"category"`
+	Event     string         `json:"event"`
+	Data      any            `json:"data"`
+	Context   map[string]any `json:"context"`
 }
 
 type Logger struct {
@@ -35,8 +35,8 @@ type Logger struct {
 	mu                 sync.Mutex
 
 	// Batching
-	serverBuffer []interface{}
-	clientBuffer []interface{}
+	serverBuffer []any
+	clientBuffer []any
 	bufferMu     sync.Mutex
 	flushTicker  *time.Ticker
 	stopFlush    chan struct{}
@@ -53,8 +53,8 @@ func New(logsDir string, enabled bool) *Logger {
 		logsDir:          logsDir,
 		enabled:          enabled,
 		sessionStartTime: time.Now(),
-		serverBuffer:     make([]interface{}, 0, MaxBufferSize),
-		clientBuffer:     make([]interface{}, 0, MaxBufferSize),
+		serverBuffer:     make([]any, 0, MaxBufferSize),
+		clientBuffer:     make([]any, 0, MaxBufferSize),
 		stopFlush:        make(chan struct{}),
 	}
 	l.initializeDirectories()
@@ -134,13 +134,13 @@ func (l *Logger) createSessionFile() {
 }
 
 // WriteLogs queues client logs for batched writing and mirrors ERROR/CRITICAL synchronously.
-func (l *Logger) WriteLogs(logs []interface{}) {
+func (l *Logger) WriteLogs(logs []any) {
 	if len(logs) == 0 {
 		return
 	}
 
 	for _, raw := range logs {
-		if m, ok := raw.(map[string]interface{}); ok {
+		if m, ok := raw.(map[string]any); ok {
 			level, _ := m["level"].(string)
 			if level == "ERROR" || level == "CRITICAL" {
 				category, _ := m["category"].(string)
@@ -170,8 +170,8 @@ func (l *Logger) Flush() {
 		l.bufferMu.Unlock()
 		return
 	}
-	l.serverBuffer = make([]interface{}, 0, MaxBufferSize)
-	l.clientBuffer = make([]interface{}, 0, MaxBufferSize)
+	l.serverBuffer = make([]any, 0, MaxBufferSize)
+	l.clientBuffer = make([]any, 0, MaxBufferSize)
 	l.bufferMu.Unlock()
 
 	l.mu.Lock()
@@ -212,7 +212,7 @@ func (l *Logger) Flush() {
 }
 
 // Log queues a server-side log entry.
-func (l *Logger) Log(level, category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Log(level, category, event string, data any, context map[string]any) {
 	l.mu.Lock()
 	if !l.enabled {
 		l.mu.Unlock()
@@ -221,7 +221,7 @@ func (l *Logger) Log(level, category, event string, data interface{}, context ma
 	l.mu.Unlock()
 
 	if context == nil {
-		context = make(map[string]interface{})
+		context = make(map[string]any)
 	}
 	context["sessionDuration"] = int(time.Since(l.sessionStartTime).Seconds())
 
@@ -241,7 +241,7 @@ func (l *Logger) Log(level, category, event string, data interface{}, context ma
 }
 
 // writeErrorLine appends one line to the daily errors file.
-func (l *Logger) writeErrorLine(category, event string, data interface{}) {
+func (l *Logger) writeErrorLine(category, event string, data any) {
 	date := time.Now().Format("2006-01-02")
 	errorFile := filepath.Join(l.logsDir, "errors", fmt.Sprintf("errors_%s.log", date))
 
@@ -256,24 +256,24 @@ func (l *Logger) writeErrorLine(category, event string, data interface{}) {
 	f.WriteString(line)
 }
 
-func (l *Logger) Error(category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Error(category, event string, data any, context map[string]any) {
 	l.writeErrorLine("[SERVER] "+category, event, data)
 	l.Log("ERROR", category, event, data, context)
 }
 
-func (l *Logger) Debug(category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Debug(category, event string, data any, context map[string]any) {
 	l.Log("DEBUG", category, event, data, context)
 }
 
-func (l *Logger) Info(category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Info(category, event string, data any, context map[string]any) {
 	l.Log("INFO", category, event, data, context)
 }
 
-func (l *Logger) Warn(category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Warn(category, event string, data any, context map[string]any) {
 	l.Log("WARN", category, event, data, context)
 }
 
-func (l *Logger) Critical(category, event string, data interface{}, context map[string]interface{}) {
+func (l *Logger) Critical(category, event string, data any, context map[string]any) {
 	l.writeErrorLine("[SERVER] "+category, event, data)
 	l.Log("CRITICAL", category, event, data, context)
 }

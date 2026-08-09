@@ -31,8 +31,8 @@ func TestWriteLogs_RoutesToDebugFile(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.WriteLogs([]interface{}{
-		map[string]interface{}{"level": "DEBUG", "category": "X", "event": "e", "data": map[string]interface{}{}},
+	l.WriteLogs([]any{
+		map[string]any{"level": "DEBUG", "category": "X", "event": "e", "data": map[string]any{}},
 	})
 	l.Flush()
 
@@ -40,7 +40,7 @@ func TestWriteLogs_RoutesToDebugFile(t *testing.T) {
 	if len(debugLines) != 1 {
 		t.Fatalf("debug file: want 1 line, got %d", len(debugLines))
 	}
-	var entry map[string]interface{}
+	var entry map[string]any
 	if err := json.Unmarshal([]byte(debugLines[0]), &entry); err != nil {
 		t.Fatalf("debug line not valid JSON: %v", err)
 	}
@@ -59,8 +59,8 @@ func TestWriteLogs_ErrorAlsoRoutesToErrorsFile(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.WriteLogs([]interface{}{
-		map[string]interface{}{"level": "ERROR", "category": "X", "event": "e", "data": map[string]interface{}{}},
+	l.WriteLogs([]any{
+		map[string]any{"level": "ERROR", "category": "X", "event": "e", "data": map[string]any{}},
 	})
 	l.Flush()
 
@@ -83,8 +83,8 @@ func TestWriteLogs_CriticalAlsoRoutesToErrorsFile(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.WriteLogs([]interface{}{
-		map[string]interface{}{"level": "CRITICAL", "category": "X", "event": "e", "data": map[string]interface{}{}},
+	l.WriteLogs([]any{
+		map[string]any{"level": "CRITICAL", "category": "X", "event": "e", "data": map[string]any{}},
 	})
 	l.Flush()
 
@@ -107,11 +107,11 @@ func TestWriteLogs_MixedBatch_RoutesPerLevel(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.WriteLogs([]interface{}{
-		map[string]interface{}{"level": "INFO", "category": "INFO_CAT", "event": "info_evt", "data": nil},
-		map[string]interface{}{"level": "WARN", "category": "WARN_CAT", "event": "warn_evt", "data": nil},
-		map[string]interface{}{"level": "ERROR", "category": "ERR_CAT", "event": "err_evt", "data": nil},
-		map[string]interface{}{"level": "CRITICAL", "category": "CRIT_CAT", "event": "crit_evt", "data": nil},
+	l.WriteLogs([]any{
+		map[string]any{"level": "INFO", "category": "INFO_CAT", "event": "info_evt", "data": nil},
+		map[string]any{"level": "WARN", "category": "WARN_CAT", "event": "warn_evt", "data": nil},
+		map[string]any{"level": "ERROR", "category": "ERR_CAT", "event": "err_evt", "data": nil},
+		map[string]any{"level": "CRITICAL", "category": "CRIT_CAT", "event": "crit_evt", "data": nil},
 	})
 	l.Flush()
 
@@ -148,7 +148,7 @@ func TestLog_ErrorWritesToErrorsEvenWhenDisabled(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.Error("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Error("CAT", "ev", map[string]any{"k": 1}, nil)
 	l.Flush()
 
 	errLines := readErrorLines(t, dir)
@@ -172,7 +172,7 @@ func TestLog_CriticalWritesToErrorsEvenWhenDisabled(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.Critical("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Critical("CAT", "ev", map[string]any{"k": 1}, nil)
 	l.Flush()
 
 	errLines := readErrorLines(t, dir)
@@ -196,7 +196,7 @@ func TestLog_ErrorWhenEnabledHitsBothFiles(t *testing.T) {
 	l := New(dir, true)
 	defer l.Stop()
 
-	l.Error("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Error("CAT", "ev", map[string]any{"k": 1}, nil)
 	l.Flush()
 
 	errLines := readErrorLines(t, dir)
@@ -225,7 +225,7 @@ func TestLog_CriticalWhenEnabledHitsBothFiles(t *testing.T) {
 	l := New(dir, true)
 	defer l.Stop()
 
-	l.Critical("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Critical("CAT", "ev", map[string]any{"k": 1}, nil)
 	l.Flush()
 
 	errLines := readErrorLines(t, dir)
@@ -254,7 +254,7 @@ func TestLog_InfoWhenDisabledWritesNothing(t *testing.T) {
 	l := New(dir, false)
 	defer l.Stop()
 
-	l.Info("CAT", "ev", map[string]interface{}{"k": 1}, nil)
+	l.Info("CAT", "ev", map[string]any{"k": 1}, nil)
 	l.Flush()
 
 	sessionLines := readSessionLines(t, dir)
@@ -300,7 +300,7 @@ func readNonEmptyLinesFromDir(t *testing.T, dir string) []string {
 		if err != nil {
 			t.Fatalf("ReadFile: %v", err)
 		}
-		for _, line := range strings.Split(string(data), "\n") {
+		for line := range strings.SplitSeq(string(data), "\n") {
 			if strings.TrimSpace(line) != "" {
 				lines = append(lines, line)
 			}

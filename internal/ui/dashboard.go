@@ -551,10 +551,7 @@ func (d *Dashboard) renderHeader() string {
 
 	leftWidth := lipgloss.Width(left)
 	rightWidth := lipgloss.Width(right)
-	spacing := d.width - leftWidth - rightWidth - 4
-	if spacing < 1 {
-		spacing = 1
-	}
+	spacing := max(d.width-leftWidth-rightWidth-4, 1)
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, left, strings.Repeat(" ", spacing), right)
 	headerContent := lipgloss.JoinVertical(lipgloss.Left, row, tabs)
@@ -848,10 +845,7 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 		for i := range sparklineDisplayLen {
 			// Average the values in each bucket
 			start := int(float64(i) * ratio)
-			end := int(float64(i+1) * ratio)
-			if end > len(data) {
-				end = len(data)
-			}
+			end := min(int(float64(i+1)*ratio), len(data))
 			var sum float64
 			for j := start; j < end; j++ {
 				sum += float64(data[j])

@@ -49,10 +49,7 @@ func buildFragmentedEventPackets(n int) [][]byte {
 	packets := make([][]byte, 0, n)
 	for i := range n {
 		start := i * chunkSize
-		end := start + chunkSize
-		if end > total {
-			end = total
-		}
+		end := min(start+chunkSize, total)
 		chunk := reliablePayload[start:end]
 
 		fragHeader := make([]byte, fragmentHeaderLength)

@@ -41,7 +41,7 @@ func replayPcap(t *testing.T, path string) pcapStats {
 		ops:       map[string][]decodedOp{},
 	}
 
-	recordOp := func(kind string, realCode int, params map[byte]interface{}, rc int16) {
+	recordOp := func(kind string, realCode int, params map[byte]any, rc int16) {
 		keys := make(map[byte]bool, len(params))
 		for k := range params {
 			keys[k] = true
@@ -85,7 +85,7 @@ func replayPcap(t *testing.T, path string) pcapStats {
 	return stats
 }
 
-func intFromParam(v interface{}) int {
+func intFromParam(v any) int {
 	switch x := v.(type) {
 	case byte:
 		return int(x)

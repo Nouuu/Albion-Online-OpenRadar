@@ -62,7 +62,7 @@ func TestPostProcessEvent_Move_LivePcapSamples(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ev := &EventData{
 				Code:       3,
-				Parameters: map[byte]interface{}{1: tc.raw},
+				Parameters: map[byte]any{1: tc.raw},
 			}
 			PostProcessEvent(ev)
 			require.InDelta(t, float64(tc.x), ev.Parameters[4].(float32), 0.001)
@@ -87,7 +87,7 @@ func TestPostProcessEvent_Move_SkipsNaNAndInf(t *testing.T) {
 			raw := make([]byte, 17)
 			binary.LittleEndian.PutUint32(raw[9:], tc.bits[0])
 			binary.LittleEndian.PutUint32(raw[13:], tc.bits[1])
-			ev := &EventData{Code: 3, Parameters: map[byte]interface{}{1: ByteArray(raw)}}
+			ev := &EventData{Code: 3, Parameters: map[byte]any{1: ByteArray(raw)}}
 			PostProcessEvent(ev)
 			_, hasX := ev.Parameters[4]
 			_, hasY := ev.Parameters[5]
@@ -100,7 +100,7 @@ func TestPostProcessEvent_Move_SkipsNaNAndInf(t *testing.T) {
 func TestPostProcessEvent_Move_InjectsPositions(t *testing.T) {
 	ev := &EventData{
 		Code: 3,
-		Parameters: map[byte]interface{}{
+		Parameters: map[byte]any{
 			1: makeMoveByteArray(123.5, -456.25),
 		},
 	}
@@ -112,7 +112,7 @@ func TestPostProcessEvent_Move_InjectsPositions(t *testing.T) {
 func TestPostProcessEvent_Move_ShortArray_NoOp(t *testing.T) {
 	ev := &EventData{
 		Code: 3,
-		Parameters: map[byte]interface{}{
+		Parameters: map[byte]any{
 			1: ByteArray{0x00, 0x00, 0x00},
 		},
 	}
@@ -126,7 +126,7 @@ func TestPostProcessEvent_Move_ShortArray_NoOp(t *testing.T) {
 func TestPostProcessEvent_Fallback252_WhenAbsent(t *testing.T) {
 	ev := &EventData{
 		Code:       29,
-		Parameters: map[byte]interface{}{},
+		Parameters: map[byte]any{},
 	}
 	PostProcessEvent(ev)
 	require.Equal(t, byte(29), ev.Parameters[252])
@@ -135,7 +135,7 @@ func TestPostProcessEvent_Fallback252_WhenAbsent(t *testing.T) {
 func TestPostProcessEvent_Preserves252IfPresent(t *testing.T) {
 	ev := &EventData{
 		Code: 29,
-		Parameters: map[byte]interface{}{
+		Parameters: map[byte]any{
 			252: byte(99),
 		},
 	}
@@ -146,7 +146,7 @@ func TestPostProcessEvent_Preserves252IfPresent(t *testing.T) {
 func TestPostProcessRequest_Fallback253(t *testing.T) {
 	req := &OperationRequest{
 		OperationCode: 21,
-		Parameters:    map[byte]interface{}{},
+		Parameters:    map[byte]any{},
 	}
 	PostProcessRequest(req)
 	require.Equal(t, byte(21), req.Parameters[253])
@@ -155,7 +155,7 @@ func TestPostProcessRequest_Fallback253(t *testing.T) {
 func TestPostProcessResponse_Fallback253(t *testing.T) {
 	resp := &OperationResponse{
 		OperationCode: 42,
-		Parameters:    map[byte]interface{}{},
+		Parameters:    map[byte]any{},
 	}
 	PostProcessResponse(resp)
 	require.Equal(t, byte(42), resp.Parameters[253])

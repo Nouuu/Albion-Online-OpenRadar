@@ -38,7 +38,7 @@ func (k Kind) String() string {
 type Message struct {
 	Kind   Kind
 	Code   int
-	Params map[byte]interface{}
+	Params map[byte]any
 }
 
 // codeKey is the parameter holding the Albion code. The byte on the wire is
@@ -62,7 +62,7 @@ func Scan(path string, visit func(Message)) error {
 		return fmt.Errorf("read %s: %w", path, err)
 	}
 
-	emit := func(kind Kind, params map[byte]interface{}) {
+	emit := func(kind Kind, params map[byte]any) {
 		visit(Message{Kind: kind, Code: codeOf(params, codeKey(kind)), Params: params})
 	}
 
@@ -90,7 +90,7 @@ func Scan(path string, visit func(Message)) error {
 	return nil
 }
 
-func codeOf(params map[byte]interface{}, key byte) int {
+func codeOf(params map[byte]any, key byte) int {
 	switch t := params[key].(type) {
 	case byte:
 		return int(t)
@@ -108,7 +108,7 @@ func codeOf(params map[byte]interface{}, key byte) int {
 
 // StringsIn flattens a parameter value into the strings it carries, so a
 // caller does not have to know whether a field holds one name or a list.
-func StringsIn(v interface{}) []string {
+func StringsIn(v any) []string {
 	var out []string
 	switch t := v.(type) {
 	case string:
@@ -119,7 +119,7 @@ func StringsIn(v interface{}) []string {
 		for _, item := range t {
 			out = append(out, StringsIn(item)...)
 		}
-	case []interface{}:
+	case []any:
 		for _, item := range t {
 			out = append(out, StringsIn(item)...)
 		}
