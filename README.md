@@ -354,6 +354,16 @@ Built by [@Nouuu](https://github.com/Nouuu)
 
 Based on [ZQRadar](https://github.com/Zeldruck/Albion-Online-ZQRadar) by [@Zeldruck](https://github.com/Zeldruck)
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=Nouuu%2FAlbion-Online-OpenRadar&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Nouuu/Albion-Online-OpenRadar&type=date&theme=dark&legend=top-left&sealed_token=-zvDWixqs2Y0r6AOQJOgDNlG_rBSGs6zqrR73XaDp2RDVLfWoszgZRlN9HAsYIpvUrKAUQroGJQn3W19DGkymdop7jRTWjcz4mBq_Rq_48xe_dCRpUpjISHC6pAKuEMY8eBwqraA0-IXuWp82Pq5vz6QVSk-R3CBEdLSgBLADpdcspkMHzsaz4K9yGq5" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Nouuu/Albion-Online-OpenRadar&type=date&legend=top-left&sealed_token=-zvDWixqs2Y0r6AOQJOgDNlG_rBSGs6zqrR73XaDp2RDVLfWoszgZRlN9HAsYIpvUrKAUQroGJQn3W19DGkymdop7jRTWjcz4mBq_Rq_48xe_dCRpUpjISHC6pAKuEMY8eBwqraA0-IXuWp82Pq5vz6QVSk-R3CBEdLSgBLADpdcspkMHzsaz4K9yGq5" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Nouuu/Albion-Online-OpenRadar&type=date&legend=top-left&sealed_token=-zvDWixqs2Y0r6AOQJOgDNlG_rBSGs6zqrR73XaDp2RDVLfWoszgZRlN9HAsYIpvUrKAUQroGJQn3W19DGkymdop7jRTWjcz4mBq_Rq_48xe_dCRpUpjISHC6pAKuEMY8eBwqraA0-IXuWp82Pq5vz6QVSk-R3CBEdLSgBLADpdcspkMHzsaz4K9yGq5" />
+ </picture>
+</a>
+
 ---
 
 <p align="center">
