@@ -6,6 +6,17 @@
 #   docker build -f Dockerfile.windows -o dist/ \
 #     --build-arg VERSION=x.y.z --build-arg BUILD_TIME=2026-04-15T12:00:00Z .
 
+FROM node:25-bookworm-slim AS frontend
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY web ./web
+COPY internal/templates ./internal/templates
+RUN npm run build
+
 FROM golang:1.26-bookworm AS builder
 
 ARG VERSION=dev
@@ -31,6 +42,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+COPY --from=frontend /app/web/styles/tailwind.css ./web/styles/tailwind.css
+COPY --from=frontend /app/web/styles/fonts ./web/styles/fonts
+COPY --from=frontend /app/web/scripts/vendors ./web/scripts/vendors
 
 ENV CGO_ENABLED=1 \
     GOOS=windows \
