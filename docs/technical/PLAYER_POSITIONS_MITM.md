@@ -2,7 +2,7 @@
 
 Why OpenRadar cannot place other players' live positions on the radar without a Photon MITM proxy.
 
-*Last verified against code: 2026-05-01.*
+*Last verified against code: 2026-08-14.*
 
 ## Problem
 
@@ -22,14 +22,14 @@ Player positions in events 29 and 3 carry an additional XOR layer with an 8-byte
 EncryptedPosition XOR XorCode = relative position
 ```
 
-The XorCode is transmitted via `Event 593 KeySync`, itself wrapped by Photon's AES layer. A passive pcap listener cannot read either of them without first cracking the AES wrapper.
+The XorCode is transmitted via `EventCodes.KeySync`, currently code 600, itself wrapped by Photon's AES layer. A passive pcap listener cannot read either of them without first cracking the AES wrapper. The code moved twice with upstream enum insertions, so read it from `EventCodes.js` rather than from the number in this page.
 
 ## Why a passive capture cannot recover positions
 
 ```
 pcap capture
   -> AES-encrypted UDP traffic
-    -> Event 593 unreadable
+    -> KeySync unreadable
       -> XorCode unknown
         -> positions stay encrypted
 ```
@@ -41,7 +41,7 @@ DEATHEYE used Cryptonite, a custom Photon MITM proxy. The chain of operations wa
 1. Stand a transparent UDP proxy between the client and the Albion server.
 2. Intercept the Diffie-Hellman key exchange.
 3. Derive the AES session key.
-4. Decrypt Event 593 to extract the 8-byte XorCode.
+4. Decrypt the KeySync event to extract the 8-byte XorCode.
 5. Decrypt the XOR-encrypted positions in events 29 and 3.
 
 ```csharp
@@ -68,9 +68,9 @@ const decrypted = coordBytes.map((b, i) => b ^ headerBytes[i]);
 // produces garbage
 ```
 
-### Event 593 captured passively
+### KeySync captured passively
 
-Event 593 captures from passive listening usually contain other unrelated content (journals, etc.). The KeySync flavour of Event 593 is AES-wrapped and never appears decrypted on the wire. Confirmed in the radar's own pcap corpus.
+Events arriving on the KeySync code from passive listening usually carry other unrelated content (journals and the like). The KeySync flavour is AES-wrapped and never appears decrypted on the wire. Confirmed in the radar's own pcap corpus.
 
 ## Decision
 
@@ -93,4 +93,4 @@ For the equipment side of the story, see `DEATHEYE_ANALYSIS.md`.
 
 - Photon MITM history: `DEATHEYE_ANALYSIS.md`.
 - Discord (Jonyleeson, ex DEATHEYE dev): "The KeySync event itself is encrypted using photons built in encryption. Cryptonite decrypted any photon event/operation response that was encrypted." and "you won't be able to glean any information from listening on the wire, you need to set up a (custom photon) mitm proxy".
-- Items database: `web/scripts/data/ItemsDatabase.js`, fed by `web/ao-bin-dumps/items.txt` and friends.
+- Items database: `web/scripts/data/ItemsDatabase.js`, fed by `web/ao-bin-dumps/items.min.json`.

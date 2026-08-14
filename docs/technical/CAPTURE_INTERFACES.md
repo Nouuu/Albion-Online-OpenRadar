@@ -2,7 +2,7 @@
 
 How OpenRadar selects, opens, and switches network interfaces for packet capture.
 
-*Last verified against code: 2026-05-01.*
+*Last verified against code: 2026-08-14.*
 
 ## Why multi-interface
 
@@ -53,7 +53,7 @@ The user-facing prudence is encoded in the lifecycle:
 
 | Category | Match (case-insensitive on `name + " " + description`) |
 |---|---|
-| `virtual` | virtualbox, vmware, hyper-v, virtual switch, vethernet, teredo, loopback pseudo, wi-fi direct, mobile hotspot, docker, br-, virbr, vmnet, veth, lo |
+| `virtual` | virtualbox, vmware, hyper-v, virtual switch, vethernet, teredo, loopback pseudo, software loopback, wi-fi direct, mobile hotspot, docker, br-, virbr, vmnet, veth, lo |
 | `exitlag` | exit lag |
 | `vpn` | vpn, wireguard, wintun, tap-windows, openvpn, tun, tap, wg, ppp |
 | `wifi` | wi-fi, wireless, 802.11, wlan, wlp, wifi |

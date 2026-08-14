@@ -2,7 +2,7 @@
 
 Why OpenRadar diverged from DEATHEYE on architecture and what we kept from its design.
 
-*Last verified against code: 2026-05-01.*
+*Last verified against code: 2026-08-14.*
 
 ## Two philosophies
 
@@ -30,13 +30,13 @@ The ones that proved load-bearing once OpenRadar started shipping fixtures and t
 1. **TypeID OFFSET=16 is the live anchor.** The radar tried OFFSET=15 for a long time and silently compensated the drift with a `t-1` shift on living non-DYNAMIC critters; that shift exposed itself as a bug on DEAD/DYNAMIC variants. Cross-validation against 6469 pcap NewMob events plus 5889 session-log events confirmed OFFSET=16 with zero outliers. The radar now reads `MobsDatabase.OFFSET = 16` and the tier rule reduces to the database `t` field.
 2. **Dungeon enchant lives in `Parameters[8]`.** Not `Parameters[6]`, which is a dungeon type/variant id. The same `Parameters[8]` slot carries Mists portal rarity. Live evidence on a "Peu commun" YELLOW portal (`Parameters[8]=1`) and a T6_MORGANA E2 dungeon (`Parameters[8]=2`) confirmed the slot. This fix unblocked every group dungeon family that had been silently filtered out (Morgana, Keeper, Undead, Royal Solo).
 3. **Item power comes from real XML values.** Approximations on item id ranges are not better than nothing: they are misleading. `itemsDatabase` parses the official dumps and exposes `getItemById(id)` with `itempower`, fed back into `PlayersHandler.getAverageItemPower`.
-4. **The TypeID namespace for items and mobs is separate.** A live capture can show id 358 as both a quest token (in `items.txt`) and a T1 Hide rabbit (in `MobsInfo.js`); they live in different lookup tables.
+4. **The TypeID namespace for items and mobs is separate.** A live capture can show the same id as a quest token in the item catalog and a T1 Hide rabbit in the mob catalog. They live in different lookup tables and must never share a resolver.
 
 ## Lessons we did not adopt
 
 - **MITM proxy.** Three to four weeks of work, increased detection risk, no PvE gain.
-- **XML parsing in the browser.** OpenRadar uses precomputed JSON minified dumps shipped under `web/ao-bin-dumps`. The build pipeline (`tools/update-ao-data`, `tools/optimize-icons`) turns the XML into the radar-relevant subset.
-- **Full mobs.xml import.** OpenRadar maintains `MobsInfo.js` as a runtime-collected database with the exact entries the radar needs. The `tools/` folder regenerates the JSON from upstream when the schema changes.
+- **XML parsing in the browser.** OpenRadar uses precomputed minified JSON dumps shipped under `web/ao-bin-dumps`. The offline pipeline (`tools/update-ao-data.ts`, `tools/download-and-optimize-item-icons.ts`, `tools/download-and-optimize-spell-icons.ts`, `tools/compress-game-data.ts`) turns the upstream data into the radar-relevant subset.
+- **Full mobs.xml import.** `mobs.min.json` carries only the fields the radar reads, and `MobsDatabase.js` indexes it. The `tools/` folder regenerates it from upstream when the schema changes.
 
 ## Files involved
 
@@ -46,7 +46,7 @@ The ones that proved load-bearing once OpenRadar started shipping fixtures and t
 | `web/scripts/data/MobsDatabase.js` | mob template, harvest type, OFFSET=16 anchor |
 | `web/scripts/data/HarvestablesDatabase.js` | static harvestable nodes |
 | `web/ao-bin-dumps/*.min.json` | precomputed JSONs |
-| `tools/update-ao-data/` | XML to JSON pipeline |
+| `tools/update-ao-data.ts` | upstream data to JSON pipeline |
 
 ## Reference
 
