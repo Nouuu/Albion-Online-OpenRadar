@@ -2,7 +2,7 @@
 
 Technical reference for contributors working on OpenRadar's Go backend and JavaScript frontend.
 
-*Last verified against code: 2026-05-01.*
+*Last verified against code: 2026-08-14.*
 
 ## Architecture overview
 
@@ -21,17 +21,20 @@ OpenRadar/
 ├── internal/
 │   ├── capture/              # Multi-interface manager + libpcap workers
 │   ├── photon/               # Protocol18 deserializer, event codes, fixtures
+│   ├── photonscan/           # Shared decode walk used by the pcap tools
 │   ├── server/               # HTTP routes, WebSocket handler, settings APIs
+│   ├── templates/            # Go templates + HTMX pages (embedded)
 │   ├── ui/                   # Bubble Tea TUI dashboard
 │   └── logger/               # JSONL structured logging
 ├── web/                      # Frontend (embedded at build)
-│   ├── scripts/              # JavaScript modules (handlers, drawings, utils)
-│   ├── images/               # Maps, items, spells icons
-│   ├── public/               # HTML, fonts
+│   ├── scripts/              # JavaScript modules (core, handlers, drawings, utils)
+│   ├── styles/               # Tailwind + DaisyUI sources, fonts
+│   ├── images/               # Maps, item and spell icons
+│   ├── sounds/               # Alert audio
 │   └── ao-bin-dumps/         # Game data, minified
-├── tools/                    # Node.js utilities (asset refresh, generators)
-├── e2e/                      # Playwright regression suite
-├── embed.go                  # //go:embed directives
+├── tools/                    # Go tools (pcap, code generation) + TS asset scripts
+├── embed_prod.go             # //go:embed directives (production)
+├── embed_dev.go              # os.DirFS equivalents, build tag `dev`
 └── Makefile
 ```
 
@@ -42,7 +45,7 @@ OpenRadar/
 | Tool | Version | Notes |
 |---|---|---|
 | Go | 1.26+ | go.mod pins `go 1.26` |
-| Npcap | 1.84+ | Windows packet capture |
+| Npcap | 1.87+ | Windows packet capture |
 | libpcap | latest | Linux: `apt install libpcap-dev` |
 | Node.js | 20+ | tools and Vitest |
 | Docker | latest | Linux cross-compile |
@@ -100,23 +103,35 @@ Common targets:
 
 ### Asset embedding
 
-`embed.go` wires the frontend into the Go binary:
+`embed_prod.go` (package `assets`) wires the frontend into the Go binary:
 
 ```go
+//go:embed all:web/images
+var Images embed.FS
+
+// Scripts omits `all:` so Go embed skips _*.test.js and __fixtures__/.
 //go:embed web/scripts
 var Scripts embed.FS
 
-//go:embed web/images
-var Images embed.FS
+//go:embed all:web/ao-bin-dumps
+var Data embed.FS
 
-//go:embed web/public
-var Public embed.FS
-
-//go:embed web/sounds
+//go:embed all:web/sounds
 var Sounds embed.FS
+
+//go:embed all:web/styles
+var Styles embed.FS
+
+//go:embed all:internal/templates
+var Templates embed.FS
 ```
 
-`embed_prod.go` is the production embed; `embed_dev.go` reads from disk when `-dev` is passed. The CI guard in `.github/workflows/ci.yml` rejects unprefixed `*.test.js` so the production binary cannot ship test artifacts. `embed_prod_test.go` walks the embed FS to confirm.
+`embed_dev.go` carries the `dev` build tag and reads the same trees from disk, which is what `-dev` mode serves. The
+missing `all:` on `Scripts` is load-bearing: Go embed's default rule drops `_`-prefixed paths, which is why every test
+file is named `_<name>.test.js`. A CI guard in `.github/workflows/ci.yml` rejects unprefixed `*.test.js`, and
+`embed_prod_test.go` walks the embed FS to confirm nothing leaked.
+
+`web/styles/tailwind.css` is generated, not committed. `make assets` builds it before any release build.
 
 ### Linux capability
 
@@ -170,14 +185,31 @@ Single server on port 5001 handling both HTTP and WebSocket:
 
 | Route | Purpose |
 |---|---|
-| `/`, `/players`, `/resources`, ... | SPA pages (Go templates) |
+| `/`, `/home`, `/players`, `/resources`, `/enemies`, `/chests`, `/ignorelist`, `/settings` | SPA pages (Go templates) |
 | `/ws` | WebSocket upgrade |
-| `/images/`, `/scripts/`, `/sounds/` | static assets |
-| `/ao-bin-dumps/` | precomputed game data, gzip support |
+| `/images/`, `/sounds/` | static assets |
+| `/scripts/`, `/styles/`, `/ao-bin-dumps/` | static assets with gzip variants |
 | `/api/network/interfaces`, `/api/network/state`, `/api/network/refresh` | capture interface management |
 | `/api/settings/logging` | logging and pcap toggles |
 
+`/images/Items/` and `/images/Spells/` fall back to `_default.webp` on a miss, so an unknown item id renders a
+placeholder instead of a broken image.
+
 Production mode embeds assets; `-dev` mode reads from disk for hot iteration.
+
+### Caching contract
+
+`embed.FS` reports a zero modtime, so there is no `Last-Modified` to revalidate against. Duration caching therefore
+served the previous release's data at the same URL after every upgrade (#146). The rule since #147:
+
+| Response | Headers |
+|---|---|
+| static assets | `Cache-Control: no-cache` plus a build-scoped `ETag` (`version-buildTime`, distinct `-gz` variant), 304 via `http.ServeContent` |
+| HTML pages | `Cache-Control: no-cache`, `Vary: Hx-Request` |
+| `/api/**` | `Cache-Control: no-store` |
+
+The ETag is empty when the build carries no version, which is the case for a bare `go build`. Use the Makefile targets
+(they pass `-ldflags -X main.Version=...`) when testing anything cache-related.
 
 ### WebSocket (`internal/server/websocket.go`)
 
@@ -294,7 +326,8 @@ Real game data must back every test that touches the database layer. Load it via
 
 ### End-to-end
 
-Playwright lives at `e2e/`. The flow boots the Go binary, navigates to `localhost:5001`, verifies the page renders, the WebSocket connects, and an injected entity appears.
+None yet. An end-to-end suite that boots the binary and drives the browser is on the roadmap, not in the repo. Until it
+lands, SPA lifecycle regressions are caught by the handler and renderer unit tests plus a manual pass.
 
 ## Common tasks
 
@@ -362,4 +395,12 @@ Go embed serves the JS that was present at the last `go build`. Either run with 
 
 ## Performance notes
 
-The radar runs at 160+ FPS in modern browsers under typical load. Memory usage stays around 500 MB after long sessions thanks to image cache LRU eviction, event coalescing on hot paths, and the SPA destroy() discipline. The Go binary itself is around 15 MB; embedded assets bring the total to roughly 45 MB.
+Three mechanisms keep a long session from degrading:
+
+- `ImageCache` evicts least-recently-used entries per cache once `MAX_ITEMS` is passed.
+- `WebSocketEventQueue` coalesces the hot events (Move 3, HealthUpdate 6, RegenerationHealth 91) and flushes on
+  `requestAnimationFrame`, so a burst cannot outrun the render loop.
+- Every handler drops its listeners in `destroy()`, which is what stops the SPA leak class.
+
+Binary size, measured on 2026-08-14 with `-ldflags "-s -w"`: 12 MB of code, 61 MB shipped once assets are embedded.
+Images dominate the difference.

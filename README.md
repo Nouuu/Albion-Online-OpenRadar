@@ -23,12 +23,10 @@ https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 
 ---
 
-Tired of farming blind in the Black Zone? OpenRadar shows you resources, mobs, and players around you, right in your
-browser.
+Tired of farming blind in the Black Zone? OpenRadar shows the resources, mobs and players around you, in your browser.
 
-**How does it work?** The app listens to network traffic between your PC and Albion's servers, decodes the Photon
-protocol, and displays everything on a web-based radar. No client modification, no memory injection. Just passive
-reading.
+It reads the network traffic between your PC and Albion's servers, decodes the Photon protocol, and draws what it finds.
+No client modification, no memory injection, no proxy. Passive listening only.
 
 ---
 
@@ -36,66 +34,64 @@ reading.
 
 ### Windows
 
-1. Install **[Npcap](https://npcap.com/#download)** (required for packet capture).
-2. Download `OpenRadar-windows-amd64.exe` from [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases).
-3. Run it. The radar auto-selects your active LAN interfaces; the startup banner prints both the localhost URL and a `http://<your-lan-ip>:5001 (LAN)` URL when one is available.
-4. Open **http://localhost:5001** in your browser, or the LAN URL from a phone or second device on the same network.
-5. Launch Albion and start playing. To change which interfaces the radar listens on, open the **Settings -> Network** page.
+1. Install [Npcap](https://npcap.com/#download).
+2. Download `OpenRadar-windows-amd64.exe` from
+   [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases/latest).
+3. Run it. The startup banner prints a localhost URL and, when available, a `http://<your-lan-ip>:5001 (LAN)` one.
+4. Open **http://localhost:5001**, or the LAN URL from a phone on the same network.
+5. Launch Albion.
+
+Interfaces are auto-selected. Change them from **Settings -> Network** in the browser.
 
 ### Linux
 
 ```bash
-# Install libpcap
-sudo apt install libpcap0.8  # Debian/Ubuntu
-sudo pacman -S libpcap  # Arch linux
+# 1. libpcap
+sudo apt install libpcap0.8   # Debian, Ubuntu
+sudo pacman -S libpcap        # Arch
 
-# Download and set permissions
-## Create a folder at /home/username/albion-radar
-mkdir ~/albion-radar
-
-### Move to the folder
-cd ~/albion-radar
-
-## Download latest release
-curl https://github.com/Nouuu/Albion-Online-OpenRadar/releases/latest/OpenRadar-linux-amd64
-
-## set permissions
+# 2. Download
+mkdir ~/albion-radar && cd ~/albion-radar
+curl -L -o OpenRadar-linux-amd64 \
+  https://github.com/Nouuu/Albion-Online-OpenRadar/releases/latest/download/OpenRadar-linux-amd64
 chmod +x OpenRadar-linux-amd64
 
-## Give ability to listen without opening the radar with root
+# 3. Capture without root
 sudo setcap cap_net_raw=eip ./OpenRadar-linux-amd64
 
-# Run
+# 4. Run
 ./OpenRadar-linux-amd64
 ```
 
-### libpcap.so.0.8: cannot open shared object file
-```
-./OpenRadar-linux-amd64: error while loading shared libraries: libpcap.so.0.8: cannot open shared object file: No such file or directory
-```
-- This error mean that no matching version has been found
-- To fix this, make a symbolic link to the version you installed : 
-- `sudo ln -s /usr/lib/libpcap.so.1 /usr/lib/libpcap.so.0.8`, or if not working ;
-  - `sudo ln -s /usr/lib/libpcap.so /usr/lib/libpcap.so.0.8`
+<details>
+<summary><code>libpcap.so.0.8: cannot open shared object file</code></summary>
 
-### CLI Options
+Your distribution ships a different soname. Link it:
 
 ```bash
-OpenRadar -version       # Show version
-OpenRadar -ip X.X.X.X    # One-shot interface override by IP (does not write network.json)
-OpenRadar -dev           # Development mode (read files from disk)
+sudo ln -s /usr/lib/libpcap.so.1 /usr/lib/libpcap.so.0.8
+# or, if that file does not exist
+sudo ln -s /usr/lib/libpcap.so /usr/lib/libpcap.so.0.8
 ```
 
-Persistent interface selection lives in `network.json` next to the binary. Edit it from the **Settings -> Network** page in the browser, or by hand for headless setups.
+</details>
+
+### CLI options
+
+```bash
+OpenRadar -version       # print version and exit
+OpenRadar -ip X.X.X.X    # one-shot interface override by IP (does not write network.json)
+OpenRadar -dev           # development mode (read assets from disk)
+```
+
+Interface selection persists in `network.json` next to the binary. Edit it from **Settings -> Network**, or by hand for
+headless setups.
 
 ### Using ExitLag?
 
-ExitLag's default packet redirection method (WFP) intercepts Albion's traffic
-above the NDIS layer, so Npcap (and Wireshark, and OpenRadar) sees nothing.
-
-In ExitLag, open **Settings &rarr; Advanced &rarr; Packet redirection method**
-and select **NDIS (Legacy)**. The radar will then capture normally on your
-physical adapter.
+ExitLag's default redirection method (WFP) intercepts Albion's traffic above the NDIS layer, so Npcap sees nothing.
+Wireshark sees nothing either. In ExitLag, open **Settings -> Advanced -> Packet redirection method** and pick
+**NDIS (Legacy)**.
 
 ![ExitLag settings screenshot](docs/images/exitlag.png)
 
@@ -103,82 +99,52 @@ physical adapter.
 
 ## What It Detects
 
-### Production-Ready
+| What          | Coverage                                                                                       |
+|---------------|------------------------------------------------------------------------------------------------|
+| **Resources** | Wood, Rock, Fiber, Hide, Ore. T1-T8, enchanted `.1 .2 .3`, static and living                   |
+| **Mobs**      | 5,186 catalogued, 9 danger classes colour-coded from green (normal) to red (boss)              |
+| **Players**   | Faction flag, guild, alliance, equipment, item power, zone-aware threat alerts                  |
+| **Zones**     | 1,418 zones. Safe / Yellow / Red / Black drives the alert gate                                  |
+| **Mists**     | Solo and Duo portals with rarity, feu follets (wisp signs), wisp cages, Knightfall Abbey        |
+| **Dungeons**  | Solo, Group, Corrupted, Hellgate, with per-enchant filters E0-E4                                |
+| **Fishing**   | Spawns detected and drawn                                                                       |
+| **Chests**    | Drawn on the radar. Rarity is stored but not yet colour-coded (#29)                             |
 
-| What          | Coverage                                                                                          |
-|---------------|---------------------------------------------------------------------------------------------------|
-| **Resources** | 3,698 nodes validated. T1-T8, enchanted (.1 .2 .3), static and skinnable                          |
-| **Mobs**      | 4,528 catalogued. Color-coded: green (normal), purple (enchanted), orange (mini-boss), red (boss) |
-| **Players**   | Faction flags, hostile detection, zone-aware alerts                                               |
-| **Zones**     | 1,000+ zones mapped. Safe/Yellow/Red/Black detection drives threat logic                          |
+### Threat alerts
 
-### Player Threat Detection
+The alert gate depends on where you are:
 
-| Status  | Color     | Description             |
-|---------|-----------|-------------------------|
-| Passive | `#00ff88` | Not flagged for PvP     |
-| Faction | `#ffa500` | Faction warfare flagged |
-| Hostile | `#ff0000` | Hostile (flagged 255)   |
+| Zone type      | Alerts on                                     |
+|----------------|-----------------------------------------------|
+| Safe           | nothing                                       |
+| Yellow, Red    | PvP-flagged players only                      |
+| Black          | every player                                  |
 
-> **Alert System**: Screen flash + sound on hostile detection
+Roads of Avalon and the Mists count as Black. A triggered alert flashes the screen, pulses the radar border and plays a
+sound. Players you add to the ignore list never trigger it.
 
-### Mists
-
-- **Portals** (Solo, Duo) detected with rarity (Common, Uncommon, Rare, Epic, Legendary)
-- **Feu follets** (wisp signs) shown before portals appear
-- **Wisp cages** detected inside Mists zones
-
-### Dungeons
-
-Solo, Group (Duo), Corrupted, and Hellgate filters all validated end to end in v2.2. Per-enchant filter E0-E4 works across every family. The `Parameters[8]` enchant fix unblocked five group families that were silently filtered out: T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL.
-
-### Fishing
-
-Spawns detected and rendered. Issue #25 closed in v2.2. End-of-fishing event 61 reaches the radar but is not yet visualized.
-
-### Basic (Legacy)
-
-- **Chests**: shown on the radar, rarity is persisted on the entity but the drawing layer does not yet color-code by rarity (CHEST-1 follow-up).
-
-Coming in v2.3: a Dungeons database for Avalonian and per-difficulty filters, chests rarity drawing-layer wiring, end-of-fishing visualization, Mists cluster id routing.
+Players appear in the players list with their gear and item power. They are **not** drawn on the radar itself: Albion
+encrypts live positions, see [Known limitations](#known-limitations).
 
 ---
 
 ## Radar Controls
 
-| Feature | Description                              |
-|---------|------------------------------------------|
-| Size    | 300px - 800px adjustable                 |
-| Zoom    | 0.5x - 2.0x magnification                |
-| Rings   | Distance indicators at 10m/20m intervals |
-| Zone    | Current zone name + PvP type indicator   |
-| Stats   | Player/resource/mob counts               |
-| Threat  | Red pulse border on hostile detection    |
-| PiP     | Picture-in-Picture floating window       |
+| Control    | Range                                     |
+|------------|-------------------------------------------|
+| Size       | 300px to 800px                            |
+| Zoom       | 0.1x to 3x                                |
+| Icon size  | 0.5x to 2x                                |
+| Rings      | distance markers at 10m and 20m           |
+| Zone       | current zone name and PvP type            |
+| Stats      | player, resource and mob counts           |
+| PiP        | Picture-in-Picture floating window        |
 
----
+**Picture-in-Picture**: playing fullscreen? Pop the radar into a floating always-on-top window. One click, native
+browser PiP. Alerts mirror onto it.
 
-## Features
-
-### Picture-in-Picture
-
-Playing fullscreen? Pop the radar into a floating window that stays on top. Native browser PiP, one click.
-
-### Zone-Aware Alerts
-
-The radar knows where you are. Safe zone? Quiet. Black Zone? Every player is a threat. Visual flash + audio alert when
-hostiles appear.
-
-### Self-Contained
-
-Fonts, icons, everything bundled. Once Albion connects, the radar works without internet.
-
-### Roadmap
-
-Check [TODO.md](docs/project/TODO.md) for what's coming:
-
-- v2.3: Dungeons database, Chests rarity, Fishing completion, Mists cluster routing
-- Future: squad mode, session heatmaps
+**Self-contained**: fonts, icons and game data are bundled in the binary. Once Albion connects, the radar needs no
+internet.
 
 ---
 
@@ -219,132 +185,97 @@ Check [TODO.md](docs/project/TODO.md) for what's coming:
 
 ---
 
-## What's New in v2.2
+## Releases
 
-The stabilization release. Game updates that broke prior builds are caught up, the capture path survives ExitLag and VPN toggles, and the logging system finally makes sense.
+| Version                                            | Headline                                                             |
+|----------------------------------------------------|----------------------------------------------------------------------|
+| [v2.2.2](docs/releases/RELEASE_2.2.2.md)           | 2026-06-29 patch resync: event codes and mob table                   |
+| [v2.2.1](docs/releases/RELEASE_2.2.1.md)           | Mists threat detection, Knightfall Abbey, sub-zone maps              |
+| [v2.2.0](docs/releases/RELEASE_2.2.0.md)           | Protocol18 stabilization, multi-interface capture, LAN access        |
+| [v2.1.0](docs/releases/RELEASE_2.1.0.md)           | Memory and performance, Picture-in-Picture                           |
+| [v2.0.0](docs/releases/RELEASE_2.0.0.md)           | Go backend, UI overhaul                                              |
 
-### Radiant Wilds Protocol18 stabilization
-
-v2.1.1 ported the wire parser to Protocol18 so the radar would speak again after the Radiant Wilds patch broke packet parsing. v2.2.0 finishes the cleanup that follows any protocol revision: Photon hashtable marshal failure that silently dropped Join responses (#78), Black Zone parameter going broken in the same revision (#87), Mist clones inheriting wrong PvP type (#103), TypeID OFFSET drift exposed across all critters (#93), 452 stale event-code values synced to upstream (#70), and a router contract pinned by pcap fixtures so the next protocol bump catches us early (#64).
-
-### Game updates caught up
-
-- **Mists detection**: portals, feu follets, and wisp cages back on the radar. Rarity reads from `Parameters[8]` (the same slot non-Mists dungeons use).
-- **Tier and resource detection across the board**: living mob tiers match the in-game tooltip (TypeID OFFSET=16 validated on 6,469 pcap events with zero outliers); static + DEAD harvestables route through the correct filter at render time; the `-1` / `0xFFFF` mobileTypeId sentinel correctly routes to the static path.
-
-### Network
-
-- **Multi-interface capture**: listen on WiFi and Ethernet at the same time, so VPN starts, ExitLag activations, and WiFi-to-Ethernet handoffs no longer silence the radar.
-- **ExitLag support**: cases A/B/C covered; users on the default WFP redirection should switch to NDIS (Legacy) in ExitLag's advanced settings (the README screenshots the exact path).
-- **Pick interfaces from the browser**: **Settings → Network** lets you check / uncheck capture interfaces live. `network.json` with stable interface identifiers replaces `ip.txt` (one-shot migration on first boot).
-
-### LAN access
-
-- **Dynamic WebSocket URL**: open `http://<host-ip>:5001` from a phone, the radar just works.
-- **Startup banner**: prints localhost and LAN URLs side by side.
-- **Mobile responsive baseline**: every page usable at 375x667 portrait without horizontal scroll.
-
-### Logging and pcap
-
-- **Coherent log directories**: `logs/sessions/` for backend, `logs/debug/` for frontend, `logs/errors/` always-on, `logs/captures/` for pcap recording.
-- **In-process pcap recording**: gated by a UI toggle. No more `tcpdump` to debug a parser issue.
-- **Unified `/api/settings/logging` endpoint**: replaces the old single-toggle endpoint.
-
-### UI polish
-
-- **Icon Size slider** (0.5x-2.0x): scales markers and circles for dense screens.
-- **Resource Color Badges** (toggle, off by default): for players who want a tier-first view without the game icons. When on, harvestables render as `T<tier>+<enchant>` colored squares per family; living variants get a gold border.
-- **Picture-in-Picture alerts**: Pulsating Border and Screen Flash now mirror on the radar UI canvas, so PiP and overlay viewers see threats too.
-- **Mist instance pvpType**: inherits from the parent cluster, no more wrong "safe" tagging in Mists.
-- **Every Avalonian / Roads dungeon family back on the radar**: T6_MORGANA, T6_KEEPER, T6_UNDEAD, T5_PORTAL_ROYAL_SOLO, T6_PORTAL. Solo and Group alike were silently filtered out before.
-
-### Stability
-
-- **848 tests across the stack**: 591 frontend tests in 22 Vitest suites + 257 Go tests across `internal/photon`, `internal/capture`, `internal/server`, `internal/logger`, `internal/ui`, `cmd/radar`, plus tooling. Real game DBs back every test that touches the database layer.
-- **Embed safety**: production binary cannot ship test files or fixtures.
-- **Shutdown reliability**: pcap close ordering reworked, no more goroutine polling a freed handle.
-
-For the full changelog see [RELEASE_2.2.0.md](docs/releases/RELEASE_2.2.0.md).
-
----
-
-## For Developers
-
-### Requirements
-
-| Tool    | Version | Notes                  |
-|---------|---------|------------------------|
-| Go      | 1.26+   | Backend                |
-| Npcap   | 1.84+   | Windows packet capture |
-| libpcap | Latest  | Linux packet capture   |
-| Node.js | 20+     | Build scripts only     |
-| Docker  | Latest  | Linux cross-compile    |
-
-### Quick Start
-
-```bash
-git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
-cd Albion-Online-OpenRadar
-
-make run   # Run directly
-# or
-make dev   # Run with hot-reload (requires: make install-tools)
-```
-
-### Build
-
-```bash
-make build-windows    # Windows binary
-make build-linux      # Linux binary (via Docker)
-make all-in-one       # Both binaries + READMEs + checksums
-make release-dry-run  # Same plus a generated RELEASE.md for review
-```
-
-### Project Structure
-
-```
-├── cmd/radar/        # Entry point + flags
-├── internal/         # Go packages
-│   ├── capture/      # Multi-interface manager + libpcap workers
-│   ├── photon/       # Protocol18 parser, event/op codes, fixtures
-│   ├── server/       # HTTP routes, WebSocket, network/settings APIs
-│   ├── ui/           # Bubble Tea TUI dashboard
-│   └── logger/       # JSONL structured logging
-├── web/              # Frontend (embedded in binary)
-│   ├── scripts/      # JavaScript modules (handlers, drawings, utils)
-│   ├── images/       # Maps, items, spells icons
-│   └── ao-bin-dumps/ # Game data (minified JSON)
-├── tools/            # Node.js + Go utilities (anonymize-pcap, photon-dump, gen-eventcodes, offset-validate)
-├── e2e/              # Playwright regression suite
-└── docs/             # Documentation
-```
-
----
-
-## Documentation
-
-| Guide | Description |
-|---|---|
-| [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md) | Development setup, build system, testing |
-| [RELEASE_2.2.0.md](docs/releases/RELEASE_2.2.0.md) | What changed in v2.2 |
-| [RELEASE_2.1.0.md](docs/releases/RELEASE_2.1.0.md) | Memory and performance, Picture-in-Picture |
-| [RELEASE_2.0.0.md](docs/releases/RELEASE_2.0.0.md) | Go backend, UI overhaul |
-| [TODO.md](docs/project/TODO.md) | Roadmap and open observations |
-| [docs/](docs/) | Full documentation index |
+Albion patches shift the wire protocol regularly. When detection breaks after a game update, that is usually why, and
+the fix ships as a patch release.
 
 ---
 
 ## Known Limitations
 
-- **Player positions**: Albion encrypts movement data. Players are detected but their live positions cannot be shown on the radar without a Photon MITM proxy (out of scope). See `docs/technical/PLAYER_POSITIONS_MITM.md`.
-- **Some Black Zone maps**: tiles missing for zone IDs 4000+. Workaround: disable map background in settings.
-- **Event 46 unreliability**: `HarvestableChangeState` can skip size values or fire late depending on server batching. The radar reflects what the wire delivers; intermediate states the server skipped are unrecoverable.
+- **Player positions**: Albion encrypts movement data. Players are detected and listed, but their live positions cannot
+  be placed on the radar without a Photon MITM proxy, which is out of scope. See
+  [PLAYER_POSITIONS_MITM.md](docs/technical/PLAYER_POSITIONS_MITM.md).
+- **Some Black Zone maps**: background tiles are missing for zone IDs 4000+. Turn the map background off in settings.
+- **Event 46 timing**: `HarvestableChangeState` can skip sizes or arrive late depending on server batching. The radar
+  shows what the wire delivers. States the server skipped are unrecoverable.
+
+Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-Online-OpenRadar/issues), the roadmap in
+[TODO.md](docs/project/TODO.md).
+
+---
+
+## For Developers
+
+| Tool    | Version | Purpose                |
+|---------|---------|------------------------|
+| Go      | 1.26+   | backend                |
+| Npcap   | 1.87+   | Windows packet capture |
+| libpcap | latest  | Linux packet capture   |
+| Node.js | 20+     | asset and data tooling |
+| Docker  | latest  | Linux cross-compile    |
+
+```bash
+git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
+cd Albion-Online-OpenRadar
+
+make run              # run
+make dev              # hot-reload (needs: make install-tools)
+make test             # Go tests + Vitest
+make build-windows    # Windows binary
+make build-linux      # Linux binary, via Docker
+make all-in-one       # both binaries + READMEs + checksums
+```
+
+```
+├── cmd/radar/        # entry point, flags, app wiring
+├── internal/
+│   ├── capture/      # multi-interface manager + libpcap workers
+│   ├── photon/       # Protocol18 parser, event/op codes, pcap fixtures
+│   ├── photonscan/   # shared decode walk used by the pcap tools
+│   ├── server/       # HTTP routes, WebSocket, network and settings APIs
+│   ├── templates/    # Go templates + HTMX pages
+│   ├── ui/           # Bubble Tea TUI dashboard
+│   └── logger/       # JSONL structured logging
+├── web/              # frontend, embedded in the binary
+│   ├── scripts/      # JS modules (core, handlers, drawings, utils)
+│   ├── styles/       # Tailwind + DaisyUI, fonts
+│   ├── images/       # maps, item and spell icons
+│   ├── sounds/       # alert audio
+│   └── ao-bin-dumps/ # game data, minified JSON
+├── tools/            # Go tools (anonymize-pcap, photon-dump, photon-strings,
+│                     # gen-eventcodes, offset-validate) + TS asset scripts
+└── docs/             # documentation
+```
+
+Full setup, build system and test strategy: [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md).
+
+---
+
+## Documentation
+
+| Guide                                                | Description                                     |
+|------------------------------------------------------|-------------------------------------------------|
+| [docs/](docs/)                                       | documentation index                             |
+| [DEV_GUIDE.md](docs/dev/DEV_GUIDE.md)                | development setup, build system, testing        |
+| [docs/technical/](docs/technical/)                   | subsystem deep-dives                            |
+| [TODO.md](docs/project/TODO.md)                      | roadmap and open observations                   |
 
 ---
 
 ## Contributing
 
-Found a bug? Want to help? [Open an issue](https://github.com/Nouuu/Albion-Online-OpenRadar/issues) or submit a PR.
+Found a bug? [Open an issue](https://github.com/Nouuu/Albion-Online-OpenRadar/issues). A network capture helps but is
+not required: a clear description of where you were and what you expected is already enough to aim the search.
 
 ---
 
