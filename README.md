@@ -95,6 +95,11 @@ Wireshark sees nothing either. In ExitLag, open **Settings -> Advanced -> Packet
 
 ![ExitLag settings screenshot](docs/images/exitlag.png)
 
+
+### Launching on a separate machine
+
+You can run OpenRadar on a separate machine/server in docker, sending traffic using TZSP proto. [More](docker-tzsp/README.md)
+
 ---
 
 ## Common Questions

@@ -1,0 +1,20 @@
+services:
+  openradar:
+    build:
+      context: .
+      args:
+        - OPENRADAR_VERSION=2.2.0
+    image: openradar-tzsp
+    environment:
+      - TZSP_PORT=${TZSP_PORT:-37008}
+    ports:
+      - "${RADAR_PORT:-5001}:5001"
+      - "${TZSP_PORT:-37008}:${TZSP_PORT:-37008}/udp"
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    tty: true
+    stdin_open: true
+    logging:
+      driver: "none"
