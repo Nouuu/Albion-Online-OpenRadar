@@ -1,9 +1,13 @@
 package main
 
 import (
+	"errors"
 	"testing"
 
+	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/nospy/albion-openradar/internal/capture"
+	"github.com/nospy/albion-openradar/internal/ui"
 )
 
 func TestResolvePersistedWithIPOverride(t *testing.T) {
@@ -77,5 +81,37 @@ func TestAutoPickDefaultsExcludesVirtualAndVPN(t *testing.T) {
 	got := autoPickDefaults(all)
 	if len(got) != 0 {
 		t.Errorf("got %d, want 0 (vpn+virtual excluded)", len(got))
+	}
+}
+
+func TestRunInterfaceKeepsRunningWhenTheDashboardCannotStart(t *testing.T) {
+	waited := false
+
+	restart := runInterface(
+		func() (tea.Model, error) { return nil, errors.New("error making raw: The parameter is incorrect.") },
+		func() { waited = true },
+	)
+
+	if !waited {
+		t.Error("a dashboard that cannot start must leave the radar running until a signal, capture and the web server are unaffected")
+	}
+	if restart {
+		t.Error("a failed dashboard must not request a restart")
+	}
+}
+
+func TestRunInterfaceDoesNotWaitWhenTheDashboardExitsNormally(t *testing.T) {
+	waited := false
+
+	restart := runInterface(
+		func() (tea.Model, error) { return ui.Dashboard{}, nil },
+		func() { waited = true },
+	)
+
+	if waited {
+		t.Error("a clean dashboard exit means the user asked to quit, no extra wait")
+	}
+	if restart {
+		t.Error("a dashboard that did not ask for a restart must report false")
 	}
 }

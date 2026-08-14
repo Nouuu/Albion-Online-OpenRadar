@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -132,9 +134,6 @@ func runApp(cfg Config) bool {
 
 	app.startCaptureStatePoll()
 
-	// Track if restart was requested
-	restartRequested := false
-
 	// Set up log callback to send logs to dashboard
 	logger.SetLogCallback(func(level, tag, message string) {
 		app.program.Send(ui.LogMsg{
@@ -151,22 +150,35 @@ func runApp(cfg Config) bool {
 	go app.updateStats()
 
 	// Run dashboard (blocking)
-	model, err := app.program.Run()
-	if err != nil {
-		logger.ClearLogCallback()
-		fmt.Printf("Dashboard error: %v\n", err)
-	}
-
-	// Check if restart was requested
-	if d, ok := model.(ui.Dashboard); ok {
-		restartRequested = d.RestartRequested()
-	}
+	restartRequested := runInterface(app.program.Run, waitForInterrupt)
 
 	// Cleanup
 	logger.ClearLogCallback()
 	app.shutdown()
 
 	return restartRequested
+}
+
+func runInterface(runDashboard func() (tea.Model, error), waitForSignal func()) bool {
+	model, err := runDashboard()
+	if err != nil {
+		logger.ClearLogCallback()
+		logger.PrintWarn("APP", "Console dashboard unavailable: %v", err)
+		logger.PrintInfo("APP", "Radar still running, press Ctrl+C to stop")
+		waitForSignal()
+		return false
+	}
+
+	if d, ok := model.(ui.Dashboard); ok {
+		return d.RestartRequested()
+	}
+	return false
+}
+
+func waitForInterrupt() {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+	<-sig
 }
 
 // Config holds command-line configuration
