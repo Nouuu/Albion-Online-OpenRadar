@@ -237,6 +237,7 @@ internet.
 
 | Version                                            | Headline                                                             |
 |----------------------------------------------------|----------------------------------------------------------------------|
+| [v2.2.3](docs/releases/RELEASE_2.2.3.md)           | Fresh game data on upgrade, equipment ids, alert gate                |
 | [v2.2.2](docs/releases/RELEASE_2.2.2.md)           | 2026-06-29 patch resync: event codes and mob table                   |
 | [v2.2.1](docs/releases/RELEASE_2.2.1.md)           | Mists threat detection, Knightfall Abbey, sub-zone maps              |
 | [v2.2.0](docs/releases/RELEASE_2.2.0.md)           | Protocol18 stabilization, multi-interface capture, LAN access        |
