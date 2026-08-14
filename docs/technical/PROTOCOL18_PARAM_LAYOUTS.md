@@ -1,9 +1,15 @@
 # Protocol18 Event Parameter Layouts (observed)
 
 Status: snapshot from a single live capture (T5 zone + harvest + zone transit,
-~130s, 3020 packets, 4954 events decoded). Use as baseline for regression tests
-and frontend compatibility checks. Expect shifts when Albion patches gameplay
-payload layouts.
+~130s, 3020 packets, 4954 events decoded), taken before the 2026-06-29 patch.
+Parameter shapes below still hold. The event codes do not: that patch inserted
+two entries in the upstream enum, shifting every code at or above 248 by +2.
+Codes under 248, which is all of the ones listed here, were untouched.
+
+Use as a baseline for regression tests and frontend compatibility checks.
+Expect shifts when Albion patches gameplay payload layouts.
+
+*Last verified against code: 2026-08-14.*
 
 ## Convention
 
@@ -12,9 +18,8 @@ payload layouts.
   path) and `1` (generic, real code in `params[252]`).
 - **Real code** (`params[252]` as `int16`): the authoritative Albion event ID.
   74 distinct codes observed in this capture.
-- **Frontend truth**: `web/scripts/core/EventRouter.js:117` routes on
-  `params[252]`. Backend logs follow the same convention
-  (`cmd/radar/main.go:onPhotonEvent`).
+- **Frontend truth**: `EventRouter.onEvent` routes on `params[252]`. Backend
+  logs follow the same convention (`cmd/radar/main.go:onPhotonEvent`).
 
 ## Dispatch byte 3: Move
 
@@ -47,17 +52,20 @@ Representative layouts observed:
 | 22        | ?                            | `params[1]` `[]int32`, `params[3..4]` ByteArray |
 | 29        | NewCharacter (player spawn)  | `params[1]` string (name), `params[5..7,16,17]` ByteArray, `params[19..37]` float32 stats |
 | 30        | ?                            | `params[5]` string, `params[8]` ByteArray, `params[9]` `[]int16`/ByteArray |
-| 39        | NewHarvestableObjectList     | `params[0]` `[]int16` batch ids, `params[3]` `[]float32` batch positions |
-| 40        | NewMob (probable)            | `params[8]` **`[]float32`** packed X/Y, `params[9]` `float32` scalar (rotation?) |
+| 39        | NewSimpleHarvestableObjectList | `params[0]` `[]int16` batch ids, `params[3]` `[]float32` batch positions |
+| 40        | NewHarvestableObject         | `params[5]` typeNumber, `params[6]` mobileTypeId, `params[7]` tier, `params[8]` **`[]float32`** packed X/Y, `params[10]` size, `params[11]` enchant |
 | 91        | ?                            | `params[2..3,5]` float32, `params[6]` int64 |
 
 **Frontend layout note (real code 40):**
 
-`web/scripts/handlers/MobsHandler.js` reads positions from `parameters[8]` as a
-`[]float32` array of length 2 (packed X and Y), not as scalars. The current code
-unpacks `loc[0]` and `loc[1]` into `posX` and `posY` after a `normalizeNumber`
-guard. Upstream `ao-data/albiondata-client` and
-`Triky313/AlbionOnline-StatisticsAnalysis` decode the same wire shape.
+`HarvestablesHandler.newHarvestableObject` reads the position from
+`Parameters[8]` as a `[]float32` of length 2 (packed X and Y), not as scalars.
+`MobsHandler` does the same on its own spawn event. Upstream
+`ao-data/albiondata-client` and `Triky313/AlbionOnline-StatisticsAnalysis`
+decode the same wire shape.
+
+Mobs and living resources do not arrive on code 40. They arrive on `NewMob`,
+currently code 123. See `HARVEST_EVENTS.md`.
 
 ## Gaps in this snapshot
 

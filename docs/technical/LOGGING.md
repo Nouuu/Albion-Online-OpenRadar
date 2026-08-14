@@ -2,7 +2,7 @@
 
 How OpenRadar routes its log output and records raw network traffic.
 
-*Last verified against code: 2026-05-01.*
+*Last verified against code: 2026-08-14.*
 
 ## Output channels
 

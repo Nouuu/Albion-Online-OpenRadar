@@ -1,16 +1,8 @@
-# OpenRadar v2.0 - Screenshots & Assets
+# Screenshots and assets
 
-## TUI Dashboard
+Images used by the main README and the release notes.
 
-<p align="center">
-  <img src="OpenRadar.gif" alt="OpenRadar TUI" width="600">
-</p>
-
-Terminal dashboard with Bubble Tea showing real-time stats (packets, WS clients, memory, goroutines) and log output.
-
----
-
-## Radar Views
+## Radar
 
 <table>
   <tr>
@@ -22,26 +14,16 @@ Terminal dashboard with Bubble Tea showing real-time stats (packets, WS clients,
     <td align="center"><em>Radar with detected entities</em></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><img src="radar_3.png" alt="Radar zoomed" width="500"></td>
+    <td><img src="radar_3.png" alt="Radar zoomed" width="350"></td>
+    <td><img src="pip.jpg" alt="Picture-in-Picture" width="350"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><em>Radar with zoom and size controls</em></td>
+    <td align="center"><em>Zoom and size controls</em></td>
+    <td align="center"><em>Picture-in-Picture window</em></td>
   </tr>
 </table>
 
----
-
-## Overlay Window
-
-<p align="center">
-  <img src="overlay.png" alt="Overlay" width="600">
-</p>
-
-Floating transparent radar window for multi-monitor setups.
-
----
-
-## Settings Pages
+## Settings
 
 <table>
   <tr>
@@ -57,30 +39,38 @@ Floating transparent radar window for multi-monitor setups.
     <td><img src="ennemies.png" alt="Enemies" width="350"></td>
   </tr>
   <tr>
-    <td align="center"><em>Resources filtering</em></td>
-    <td align="center"><em>Enemies filtering</em></td>
+    <td align="center"><em>Resource filtering</em></td>
+    <td align="center"><em>Enemy filtering</em></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><img src="chest%20&%20dungeon.png" alt="Chests & Dungeons" width="350"></td>
+    <td colspan="2" align="center"><img src="chest%20&%20dungeon.png" alt="Chests and dungeons" width="350"></td>
   </tr>
   <tr>
-    <td colspan="2" align="center"><em>Chests & dungeons settings</em></td>
+    <td colspan="2" align="center"><em>Chests and dungeons settings</em></td>
   </tr>
 </table>
 
----
+## Terminal dashboard
 
-## File List
+<p align="center">
+  <img src="OpenRadar.gif" alt="OpenRadar TUI" width="600">
+</p>
 
-| File | Description |
-|------|-------------|
+Bubble Tea dashboard: packets, WebSocket clients, memory, goroutines, live log tail.
+
+## File list
+
+| File | Used by |
+|---|---|
 | `OpenRadar.gif` | TUI dashboard animation |
-| `radar_1.png` | Main radar view |
-| `radar_2.png` | Radar with entities |
-| `radar_3.png` | Radar zoomed |
-| `overlay.png` | Floating overlay window |
-| `settings.png` | General settings page |
-| `players.png` | Players settings |
-| `resources.png` | Resources settings |
-| `ennemies.png` | Enemies settings |
-| `chest & dungeon.png` | Chests & dungeons settings |
+| `radar_1.png` | main radar view |
+| `radar_2.png` | radar with entities |
+| `radar_3.png` | radar zoomed |
+| `pip.jpg` | Picture-in-Picture window |
+| `settings.png` | general settings page |
+| `players.png` | players settings |
+| `resources.png` | resources settings |
+| `ennemies.png` | enemies settings |
+| `chest & dungeon.png` | chests and dungeons settings |
+| `exitlag.png` | ExitLag NDIS setting, main README |
+| `overlay.png` | legacy, the Wails-era floating window. Replaced by Picture-in-Picture |

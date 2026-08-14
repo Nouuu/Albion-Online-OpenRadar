@@ -192,7 +192,7 @@ func parseFlags() Config {
 	cfg := Config{}
 	flag.BoolVar(&cfg.devMode, "dev", false, "Run in development mode (read files from disk)")
 	flag.BoolVar(&cfg.showVersion, "version", false, "Show version information")
-	flag.StringVar(&cfg.ipAddr, "ip", "", "Network adapter IP address (skip interactive prompt)")
+	flag.StringVar(&cfg.ipAddr, "ip", "", "Capture on the interface holding this IP, this run only (network.json is not written)")
 	flag.Parse()
 	return cfg
 }

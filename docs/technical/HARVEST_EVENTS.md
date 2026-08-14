@@ -2,19 +2,21 @@
 
 How OpenRadar processes harvestable resource lifecycle events and resolves the tier displayed on the radar.
 
-*Last verified against code: 2026-05-01.*
+*Last verified against code: 2026-08-14.*
 
 ## Event handling
 
-Harvestables emit three event codes during their lifetime.
-
 | Event | Code | Purpose |
 |---|---|---|
-| `NewHarvestableObject` | 40 / 59 | Resource spawn (single, batch). |
+| `NewSimpleHarvestableObjectList` | 39 | Batch spawn. Ids in `Parameters[0]`, positions in `Parameters[3]`. |
+| `NewHarvestableObject` | 40 | Single spawn, carries tier and enchant. |
 | `HarvestableChangeState` | 46 | Size update (decrement, regeneration, depletion). |
+| `HarvestStart` | 59 | Ignored. The router has an empty case. |
+| `HarvestCancel` | 60 | Ignored. Same case. |
 | `HarvestFinished` | 61 | End-of-harvest notification. Logged only. |
 
-Events 46, 59, 61 are explicitly excluded from the WebSocketEventQueue coalescing list. Coalescing harvest events would lose intermediate size states.
+None of these are in the `WebSocketEventQueue` coalescing set, which holds only Move 3, HealthUpdate 6 and
+RegenerationHealth 91. Adding a harvest event to that set would drop intermediate size states.
 
 ## Event 46 logic
 
@@ -48,9 +50,9 @@ Event 46 occasionally skips values (size 3 -> 1, missing 2), fails to fire on th
 
 | `mobileTypeId` | Type | Source |
 |---|---|---|
-| `null` | STATIC | event 38 batch spawn |
+| `null` | STATIC | event 39 batch spawn |
 | `65535` | STATIC | enchanted resource node |
-| pure-static sentinels (`-1`, others) | STATIC | event 40/59 spawn |
+| pure-static sentinels (`-1`, others) | STATIC | event 40 spawn |
 | real TypeID | LIVING | creature (animal, critter) |
 
 `HarvestablesDrawing.invalidate` consults `shouldRenderStaticResource` when `mobileTypeId` is a pure-static sentinel and `shouldRenderLivingResource` otherwise. `MobsDrawing.invalidate` always consults `shouldRenderLivingResource` for `LivingHarvestable` and `LivingSkinnable` entries. Both helpers live in `web/scripts/utils/LivingResourceFilter.js` via shared `resolveSettingsCell`.
@@ -99,7 +101,8 @@ WebSocketManager.js -> WebSocketEventQueue.js
     | parseMessage -> EventRouter.onEvent
     v
 HarvestablesHandler / MobsHandler
-    | event 40/59  -> addHarvestable / AddEnemy
+    | event 39/40  -> newSimpleHarvestableObject / newHarvestableObject
+    | event 123    -> AddEnemy (living resources arrive as mobs)
     | event 46     -> HarvestUpdateEvent (size change or removal)
     | event 61     -> harvestFinished (log only)
     v
@@ -115,7 +118,7 @@ Canvas (drawCanvas layer)
 
 | File | Purpose |
 |---|---|
-| `web/scripts/handlers/HarvestablesHandler.js` | event 40/46/59/61 handling, state |
+| `web/scripts/handlers/HarvestablesHandler.js` | event 39/40/46/61 handling, state |
 | `web/scripts/handlers/MobsHandler.js` | living resource handling via NewMob (event 123) |
 | `web/scripts/drawings/HarvestablesDrawing.js` | static resource rendering |
 | `web/scripts/drawings/MobsDrawing.js` | living resource and mob rendering |

@@ -206,9 +206,8 @@ make all-in-one       # Update data + build + package
 
 ## Documentation
 
-- [RELEASE_NOTES.md](../../RELEASE_NOTES.md) - Full changelog
 - [DEV_GUIDE.md](../dev/DEV_GUIDE.md) - Development guide
-- [GO_MIGRATION_PLAN.md](../project/GO_MIGRATION_PLAN.md) - Migration details
+- [docs/](../README.md) - Documentation index
 
 ---
 
