@@ -43,7 +43,7 @@
                 <div class="hidden sm:flex items-center gap-2">
                     <span class="text-xs text-base-content/50">Zoom:</span>
                     <button id="zoomOut" class="btn btn-ghost btn-xs">−</button>
-                    <input type="range" id="settingRadarZoom" min="0.3" max="3" step="0.1" value="1" class="range range-primary range-xs w-24">
+                    <input type="range" id="settingRadarZoom" min="0.1" max="3" step="0.1" value="1" class="range range-primary range-xs w-24">
                     <button id="zoomIn" class="btn btn-ghost btn-xs">+</button>
                     <span id="zoomValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
                     <button id="zoomReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
@@ -206,7 +206,7 @@ window.onGlobalsReady(function() {
     }
 
     function setZoom(value) {
-        value = Math.max(0.3, Math.min(3, value));
+        value = Math.max(0.1, Math.min(3, value));
         settingsSync.setFloat('settingRadarZoom', value);
         updateZoomDisplay(value);
     }
