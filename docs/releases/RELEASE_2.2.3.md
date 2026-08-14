@@ -83,15 +83,24 @@ All 22 fixtures were rewritten. Every file kept its exact byte length, and the G
 
 ## 🧪 Tests
 
-1,082 green (753 frontend, 329 Go), up from 947 at 2.2.2. Cache headers and revalidation are covered by
+1,087 green (758 frontend, 329 Go), up from 947 at 2.2.2. Cache headers and revalidation are covered by
 `internal/server/http_cache_test.go` and `_DatabaseCacheMode.test.js`. The zoom bounds and the Windows Docker build are
 pinned by tests that read the file they describe, so a silent revert fails CI.
 
 ## 📄 Documentation
 
-The README claimed an end-to-end suite that has never existed, gave a Linux download URL that returned 404, and carried
-a zoom range and a mob count that had both been wrong for several releases. Corrected, and the roadmap was rewritten
-against the current issue list.
+The README shipped inside the archive told you to select a network adapter at startup. That prompt was removed back in
+2.2, when interfaces became automatic. Every downloader since has been following a step that does not happen. Both the
+Windows and Linux files are rewritten, and both now answer the two questions the tracker keeps receiving: why players
+are not drawn on the radar, and what to check when nothing is detected.
+
+The main README had its own set: an end-to-end test suite that has never existed, a Linux download URL that returned
+404, a zoom range and a mob count wrong for several releases, and a table of threat colours that appear nowhere in the
+code. Corrected, and a Common Questions section added from the closed issues.
+
+Nine technical pages were checked line by line against the code. The corrections worth knowing: `KeySync` is event 600,
+not 593; code 40 is `NewHarvestableObject`, not `NewMob`; batch harvestable spawn is 39, not 38 or 59. Both Protocol18
+snapshots now state which side of the 2026-06-29 shift they were recorded on.
 
 ## 🙏 Thanks
 
