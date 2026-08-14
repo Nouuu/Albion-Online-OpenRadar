@@ -30,6 +30,7 @@ Everything that ships with the repo, and what each file is for.
 
 | Version | Notes |
 |---|---|
+| [v2.2.3](./releases/RELEASE_2.2.3.md) | unreleased draft. Cache revalidation, item ids, alert gate fixes |
 | [v2.2.2](./releases/RELEASE_2.2.2.md) | 2026-06-29 patch resync: event codes and mob table |
 | [v2.2.1](./releases/RELEASE_2.2.1.md) | Mists threat detection, Knightfall Abbey, sub-zone maps |
 | [v2.2.0](./releases/RELEASE_2.2.0.md) | Protocol18 stabilization, Mists, multi-interface, logging coherence |
