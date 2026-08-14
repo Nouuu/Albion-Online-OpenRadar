@@ -1,10 +1,12 @@
 ## ⭐ 100 stars
 
-OpenRadar passed **100 stars** this week. Thank you, genuinely. This is one person recording pcaps between play
-sessions, so a star is a real signal that the work lands somewhere.
+OpenRadar just hit **100 stars**, and I did not expect a number to make me this happy.
 
-Good moment for this release in particular, because it is the one that fixes the bug that made the last one look
-broken.
+I built this thing for me. A radar I wanted while farming, written between play sessions, with no plan beyond
+scratching my own itch. It is the first project I have put out in the open that actually caught on, and learning that
+a hundred other people wanted the same tool is a genuinely proud moment over here. So, thank you 🙏
+
+Fitting release for it, too, because this is the one that fixes the bug that made the last one look broken.
 
 ---
 
