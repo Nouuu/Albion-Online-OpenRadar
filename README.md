@@ -99,13 +99,15 @@ Wireshark sees nothing either. In ExitLag, open **Settings -> Advanced -> Packet
 
 ## Common Questions
 
-**Other players do not appear on the radar.**
-That is expected, and it is the question asked most often. Albion encrypts live player positions, so no passive tool
-can place them on the map. The radar still detects them: open the **Players** page to see who is around, their guild,
-alliance, gear and item power. Threat alerts run off that detection. Details in
+### Other players do not appear on the radar
+
+Expected, and the question asked most often. Albion encrypts live player positions, so no passive tool can place them
+on the map. The radar still detects them: open the **Players** page to see who is around, their guild, alliance, gear
+and item power. Threat alerts run off that detection. Details in
 [PLAYER_POSITIONS_MITM.md](docs/technical/PLAYER_POSITIONS_MITM.md).
 
-**Nothing is detected at all.**
+### Nothing is detected at all
+
 Work down this list:
 
 1. Npcap (Windows) or libpcap (Linux) installed, radar restarted afterwards.
@@ -113,24 +115,29 @@ Work down this list:
 3. ExitLag, a VPN or a proxy in the way. See the section above.
 4. On Linux, `setcap` applied, or running as root.
 
-**It worked yesterday and now it detects nothing.**
-Albion patches shift the wire protocol. When that happens every build stops decoding until the parser catches up.
-Check [Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases) for a newer version before opening an
-issue, and hard-refresh the page (Ctrl+F5) after upgrading.
+### It worked yesterday and now it detects nothing
 
-**Can two PCs share one radar?**
+Albion patches shift the wire protocol. When that happens every build stops decoding until the parser catches up. Check
+[Releases](https://github.com/Nouuu/Albion-Online-OpenRadar/releases) for a newer version before opening an issue, and
+hard-refresh the page (Ctrl+F5) after upgrading.
+
+### Can two PCs share one radar?
+
 Yes. Run the binary on the PC that plays Albion, then open the `(LAN)` URL from the startup banner on the other device.
 Capture settings stay locked to the host for safety, so the second device gets a read-only view.
 
-**macOS?**
+### Is there a macOS build?
+
 No official build. It might compile from source, nobody has tested it. Tracked in
 [#151](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/151).
 
-**Is there a Discord?**
+### Is there a Discord?
+
 No. Use [Issues](https://github.com/Nouuu/Albion-Online-OpenRadar/issues) or
 [Discussions](https://github.com/Nouuu/Albion-Online-OpenRadar/discussions).
 
-**Is it safe?**
+### Is it safe?
+
 The radar only reads network traffic. It never modifies the game client, never injects into its memory, and never
 touches the connection. That said, it is still a third-party tool for an online game, and whether you use one is your
 call and your risk.
