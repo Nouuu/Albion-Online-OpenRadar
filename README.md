@@ -120,8 +120,9 @@ The alert gate depends on where you are:
 | Yellow, Red    | PvP-flagged players only                      |
 | Black          | every player                                  |
 
-Roads of Avalon and the Mists count as Black. A triggered alert flashes the screen, pulses the radar border and plays a
-sound. Players you add to the ignore list never trigger it.
+Roads of Avalon always count as Black. A Mist counts as Black when you entered it through a lethal entrance or from a
+red zone, Yellow otherwise, which is what the game does. A triggered alert flashes the screen, pulses the radar border
+and plays a sound. Players on your ignore list never trigger it.
 
 Players appear in the players list with their gear and item power. They are **not** drawn on the radar itself: Albion
 encrypts live positions, see [Known limitations](#known-limitations).
