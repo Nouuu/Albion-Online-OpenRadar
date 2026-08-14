@@ -735,15 +735,14 @@ describe('PlayersHandler', () => {
             expect(playMock).toHaveBeenCalledTimes(2);
         });
 
-        // @verified 2026-05-22: synthetic. A rejected play() promise is swallowed and logged, not thrown.
-        test('synthetic: rejected play() is caught and logged', async () => {
+        // @verified 2026-08-09: a rejected play() is reported at warn level so a silent alert is visible in the logs.
+        test('synthetic: rejected play() is caught and reported', async () => {
             const playMock = vi.fn().mockRejectedValue(new Error('autoplay blocked'));
             vi.stubGlobal('Audio', vi.fn(function () { this.play = playMock; }));
 
-            expect(() => handler.playThreatSound()).not.toThrow();
-            await Promise.resolve();
+            await expect(handler.playThreatSound()).resolves.toBeUndefined();
 
-            expect(window.logger.debug).toHaveBeenCalled();
+            expect(window.logger.warn).toHaveBeenCalled();
         });
     });
 

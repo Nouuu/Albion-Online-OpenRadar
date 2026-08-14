@@ -1,6 +1,7 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
 import settingsSync from "../utils/SettingsSync.js";
+import alertSound from "../utils/AlertSound.js";
 
 class Player {
     constructor(posX, posY, id, nickname, guildName1, faction, allianceName, equipments, spells) {
@@ -88,14 +89,7 @@ export class PlayersHandler {
     }
 
     playThreatSound() {
-        try {
-            const audio = new Audio('/sounds/player.mp3');
-            audio.play().catch((err) => {
-                window.logger?.debug(CATEGORIES.PLAYERS, 'audio_blocked', {error: err?.message});
-            });
-        } catch (err) {
-            window.logger?.debug(CATEGORIES.PLAYERS, 'audio_error', {error: err?.message});
-        }
+        return alertSound.play();
     }
 
     triggerScreenFlash() {
