@@ -88,6 +88,12 @@
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
+                <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 md:col-span-2">
+                    <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
+                    <span class="text-base-content/80 font-medium">Alert Volume</span>
+                    <input type="range" id="settingSoundVolume" min="0" max="1" step="0.05" value="1"
+                           class="range range-warning range-xs w-32">
+                </label>
                 <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors md:col-span-2">
                     <input type="checkbox" id="settingFlashDangerousPlayer" class="checkbox checkbox-error">
                     <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
@@ -193,6 +199,12 @@
             ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
                 "settingSound", "settingFlash", "settingFlashDangerousPlayer", "settingPassivePlayers", "settingFactionPlayers",
                 "settingDangerousPlayers"].forEach(bindCheckbox);
+
+            const volumeEl = document.getElementById("settingSoundVolume");
+            if (volumeEl) {
+                volumeEl.value = settingsSync.getFloat("settingSoundVolume", 1);
+                addListener(volumeEl, "input", () => settingsSync.setFloat("settingSoundVolume", Number(volumeEl.value)));
+            }
 
             const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
             if (settingMaxPlayersDisplay) {
