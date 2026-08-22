@@ -1,7 +1,15 @@
 // synthetic: browser audio policy is not observable in a capture
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 
-import {AlertSound} from './AlertSound.js';
+vi.mock('./SettingsSync.js', () => ({
+    default: {
+        get: vi.fn((_k, d) => d),
+        getFloat: vi.fn((_k, d) => d),
+    },
+}));
+
+const {AlertSound} = await import('./AlertSound.js');
+const settingsSync = (await import('./SettingsSync.js')).default;
 
 describe('AlertSound', () => {
     let toast;
@@ -10,6 +18,8 @@ describe('AlertSound', () => {
         toast = {warning: vi.fn(), error: vi.fn(), info: vi.fn(), success: vi.fn()};
         window.toast = toast;
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        settingsSync.get.mockImplementation((_k, d) => d);
+        settingsSync.getFloat.mockImplementation((_k, d) => d);
     });
 
     afterEach(() => {
@@ -71,6 +81,30 @@ describe('AlertSound', () => {
 
         expect(toast.warning).not.toHaveBeenCalled();
         expect(window.logger.warn).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-08-23: the level is read per alert, so a change applies without a reload.
+    test('synthetic: playback applies the stored volume', async () => {
+        settingsSync.getFloat.mockReturnValue(0.25);
+        let built;
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+
+        expect(built.volume).toBe(0.25);
+    });
+
+    // @verified 2026-08-23: zero is silence, and it is a different control from the on/off toggle.
+    test('synthetic: a volume of zero plays nothing audible', async () => {
+        settingsSync.getFloat.mockReturnValue(0);
+        let built;
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+
+        expect(built.volume).toBe(0);
     });
 
     // @verified 2026-08-23: a burst must not stack, and the gate is time based, not length based.

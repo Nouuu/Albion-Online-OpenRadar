@@ -1,4 +1,5 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
+import settingsSync from './SettingsSync.js';
 
 const BLOCKED_MESSAGE = 'Threat sound blocked by the browser. Click anywhere on the page to allow it.';
 const MIN_GAP_MS = 500;
@@ -15,8 +16,10 @@ export class AlertSound {
         if (at - this.lastPlayedAt < MIN_GAP_MS) return;
         this.lastPlayedAt = at;
         try {
-            await new Audio(this.src).play();
-            window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundPlayed', {src: this.src});
+            const audio = new Audio(this.src);
+            audio.volume = settingsSync.getFloat('settingSoundVolume', 1);
+            await audio.play();
+            window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundPlayed', {src: this.src, volume: audio.volume});
         } catch (err) {
             this.report(err);
         }

@@ -6,6 +6,7 @@ vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
         getNumber: vi.fn((_k, d) => d),
+        getFloat: vi.fn((_k, d) => d),
         getJSON: vi.fn(() => null),
     },
 }));
