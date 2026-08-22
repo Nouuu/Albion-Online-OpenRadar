@@ -17,6 +17,7 @@ vi.mock('../data/ZonesDatabase.js', () => ({
 }));
 
 const {PlayersHandler} = await import('./PlayersHandler.js');
+const alertSound = (await import('../utils/AlertSound.js')).default;
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 const zonesDatabase = (await import('../data/ZonesDatabase.js')).default;
 
@@ -738,8 +739,13 @@ describe('PlayersHandler', () => {
     });
 
     describe('playThreatSound (fresh audio per trigger)', () => {
+        beforeEach(() => {
+            alertSound.lastPlayedAt = -Infinity;
+        });
+
         afterEach(() => {
             vi.unstubAllGlobals();
+            vi.useRealTimers();
         });
 
         // @verified 2026-05-22: bug report. The single reused Audio element stopped emitting after a
@@ -749,8 +755,10 @@ describe('PlayersHandler', () => {
             const playMock = vi.fn().mockResolvedValue();
             const audioCtor = vi.fn(function () { this.play = playMock; });
             vi.stubGlobal('Audio', audioCtor);
+            vi.useFakeTimers();
 
             handler.playThreatSound();
+            vi.advanceTimersByTime(500);
             handler.playThreatSound();
 
             expect(audioCtor).toHaveBeenCalledTimes(2);
