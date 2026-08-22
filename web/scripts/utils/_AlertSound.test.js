@@ -67,6 +67,30 @@ describe('AlertSound', () => {
         expect(window.logger.warn).not.toHaveBeenCalled();
     });
 
+    // @verified 2026-08-23: the error name is what separates an autoplay refusal from any other failure.
+    test('synthetic: a refused play records the error name', async () => {
+        const err = new Error('play() failed');
+        err.name = 'NotAllowedError';
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockRejectedValue(err); }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+
+        expect(window.logger.warn).toHaveBeenCalledWith(
+            expect.anything(), 'ThreatSoundBlocked', expect.objectContaining({name: 'NotAllowedError'}));
+    });
+
+    // @verified 2026-08-23: a played attempt must be distinguishable from one that never started.
+    test('synthetic: a successful play records a debug line', async () => {
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+
+        expect(window.logger.debug).toHaveBeenCalledWith(
+            expect.anything(), 'ThreatSoundPlayed', expect.anything());
+    });
+
     // @verified 2026-08-09: a constructor that throws is handled like a rejected play, the caller never sees it.
     test('synthetic: a throwing constructor does not escape', async () => {
         vi.stubGlobal('Audio', vi.fn(() => { throw new Error('no media support'); }));

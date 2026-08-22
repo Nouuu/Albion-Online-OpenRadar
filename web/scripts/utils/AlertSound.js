@@ -11,13 +11,14 @@ export class AlertSound {
     async play() {
         try {
             await new Audio(this.src).play();
+            window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundPlayed', {src: this.src});
         } catch (err) {
             this.report(err);
         }
     }
 
     report(err) {
-        window.logger?.warn(CATEGORIES.PLAYERS, 'ThreatSoundBlocked', {error: err?.message});
+        window.logger?.warn(CATEGORIES.PLAYERS, 'ThreatSoundBlocked', {name: err?.name, error: err?.message});
         if (this.reported) return;
         this.reported = true;
         window.toast?.warning(BLOCKED_MESSAGE, 0);
