@@ -96,7 +96,8 @@ raises a visible warning rather than a silent debug log.
 | `web/scripts/handlers/PlayersHandler.js` | detection, ignore list, alert gate, state |
 | `web/scripts/core/PlayerListRenderer.js` | player cards, badges, gear and spell icons |
 | `web/scripts/drawings/PlayersDrawing.js` | interpolation only, `invalidate` is a no-op |
-| `web/scripts/utils/AlertSound.js` | threat sound, reports a browser block to the user |
+| `web/scripts/utils/AlertSound.js` | asks the Go process to play the threat sound |
+| `internal/audio/player.go` | native playback, one sound at a time |
 | `internal/templates/pages/players.gohtml` | settings UI |
 | `internal/templates/pages/ignorelist.gohtml` | ignore list management |
 | `internal/photon/events.go` | event 29 deserialization |

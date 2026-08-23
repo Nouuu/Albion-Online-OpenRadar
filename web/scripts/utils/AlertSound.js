@@ -2,11 +2,10 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 import settingsSync from './SettingsSync.js';
 import {DEFAULT_SOUND, findSound, defaultSound} from './AlertSoundCatalog.js';
 
-const BLOCKED_MESSAGE = 'Threat sound blocked by the browser. Click anywhere on the page to allow it.';
+const UNAVAILABLE_MESSAGE = 'Threat sound unavailable. The machine running the radar could not play it.';
 
 export class AlertSound {
-    constructor(src) {
-        this.src = src;
+    constructor() {
         this.reported = false;
     }
 
@@ -30,9 +29,16 @@ export class AlertSound {
     async emit(volume) {
         const file = this.resolve().file;
         try {
-            const audio = new Audio(`/sounds/${file}`);
-            audio.volume = volume;
-            await audio.play();
+            const response = await fetch('/api/alert/play', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({file, volume}),
+            });
+            if (!response.ok) {
+                const err = new Error(`alert play refused with HTTP ${response.status}`);
+                err.status = response.status;
+                throw err;
+            }
             window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundPlayed', {file, volume});
         } catch (err) {
             this.report(err);
@@ -40,11 +46,11 @@ export class AlertSound {
     }
 
     report(err) {
-        window.logger?.warn(CATEGORIES.PLAYERS, 'ThreatSoundBlocked', {name: err?.name, error: err?.message});
+        window.logger?.warn(CATEGORIES.PLAYERS, 'ThreatSoundFailed', {status: err?.status, error: err?.message});
         if (this.reported) return;
         this.reported = true;
-        window.toast?.warning(BLOCKED_MESSAGE, 0);
+        window.toast?.warning(UNAVAILABLE_MESSAGE, 0);
     }
 }
 
-export default new AlertSound('/sounds/player.wav');
+export default new AlertSound();

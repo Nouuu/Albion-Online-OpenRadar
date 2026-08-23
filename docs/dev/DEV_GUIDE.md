@@ -187,7 +187,7 @@ Single server on port 5001 handling both HTTP and WebSocket:
 |---|---|
 | `/`, `/home`, `/players`, `/resources`, `/enemies`, `/chests`, `/ignorelist`, `/settings` | SPA pages (Go templates) |
 | `/ws` | WebSocket upgrade |
-| `/images/`, `/sounds/` | static assets |
+| `/images/` | static assets |
 | `/scripts/`, `/styles/`, `/ao-bin-dumps/` | static assets with gzip variants |
 | `/api/network/interfaces`, `/api/network/state`, `/api/network/refresh` | capture interface management |
 | `/api/settings/logging` | logging and pcap toggles |

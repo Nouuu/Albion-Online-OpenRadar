@@ -202,7 +202,6 @@ func (s *HTTPServer) setupRoutes() {
 	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp"))
 	s.mux.Handle("/images/", s.fsHandler("/images/", s.images))
 	s.mux.Handle("/scripts/", s.gzipFSHandlerDirect("/scripts/", s.scripts))
-	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds))
 	s.mux.Handle("/styles/", s.gzipFSHandlerDirect("/styles/", s.styles))
 
 	// ao-bin-dumps with gzip support (data FS is already the ao-bin-dumps directory)
