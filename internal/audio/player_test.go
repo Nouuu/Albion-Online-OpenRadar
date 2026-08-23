@@ -45,9 +45,12 @@ func TestLoadClipsDecodesEveryWAV(t *testing.T) {
 		"notes.txt":  {Data: []byte("not audio")},
 	}
 
-	clips, err := loadClips(dir)
+	clips, skipped, err := loadClips(dir)
 	if err != nil {
 		t.Fatalf("loadClips returned %v, want no error", err)
+	}
+	if len(skipped) != 0 {
+		t.Errorf("loadClips skipped %v, want nothing skipped", skipped)
 	}
 	if len(clips) != 2 {
 		t.Fatalf("loadClips returned %d clips, want the 2 WAV files only", len(clips))
@@ -60,18 +63,42 @@ func TestLoadClipsDecodesEveryWAV(t *testing.T) {
 	}
 }
 
-func TestLoadClipsNamesTheFileItCouldNotDecode(t *testing.T) {
+func TestLoadClipsKeepsTheSoundsItCanDecode(t *testing.T) {
 	dir := fstest.MapFS{
 		"alert.wav":  {Data: conformingWAV([]byte{1, 2})},
 		"broken.wav": {Data: []byte("not a wav")},
+		"mono.wav":   {Data: buildWAV(wavChunk{"fmt ", fmtBody(1, 1, 44100, 16)}, wavChunk{"data", []byte{1, 2}})},
 	}
 
-	_, err := loadClips(dir)
-	if err == nil {
-		t.Fatal("loadClips returned no error, want it to refuse a file it cannot decode")
+	clips, skipped, err := loadClips(dir)
+	if err != nil {
+		t.Fatalf("loadClips returned %v, want one bad file not to silence the others", err)
 	}
-	if !strings.Contains(err.Error(), "broken.wav") {
-		t.Errorf("loadClips returned %q, want it to name broken.wav", err)
+	if _, ok := clips["alert.wav"]; !ok {
+		t.Error("loadClips dropped alert.wav, want the sounds it can decode kept")
+	}
+	if len(clips) != 1 {
+		t.Errorf("loadClips returned %d clips, want only the one it can decode", len(clips))
+	}
+	if len(skipped) != 2 {
+		t.Fatalf("loadClips reported %v, want both unusable files named", skipped)
+	}
+	for _, want := range []string{"broken.wav", "mono.wav"} {
+		if !strings.Contains(strings.Join(skipped, " "), want) {
+			t.Errorf("loadClips reported %v, want it to name %s", skipped, want)
+		}
+	}
+	if !strings.Contains(strings.Join(skipped, " "), "1 channels") {
+		t.Errorf("loadClips reported %v, want each entry to say what is wrong", skipped)
+	}
+}
+
+func TestLoadClipsRefusesADirectoryWithNothingPlayable(t *testing.T) {
+	dir := fstest.MapFS{"broken.wav": {Data: []byte("not a wav")}}
+
+	_, _, err := loadClips(dir)
+	if err == nil {
+		t.Fatal("loadClips returned no error, want it to refuse a directory holding no playable sound")
 	}
 }
 

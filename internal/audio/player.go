@@ -2,6 +2,7 @@ package audio
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/fs"
 	"path"
@@ -9,6 +10,8 @@ import (
 	"sync"
 
 	"github.com/ebitengine/oto/v3"
+
+	"github.com/nospy/albion-openradar/internal/logger"
 )
 
 type clip interface {
@@ -28,9 +31,12 @@ type Player struct {
 // NewPlayer decodes every WAV in soundsFS once and opens one audio context.
 // A machine with no audio device returns an error; the caller keeps running without sound.
 func NewPlayer(soundsFS fs.FS) (*Player, error) {
-	clips, err := loadClips(soundsFS)
+	clips, skipped, err := loadClips(soundsFS)
 	if err != nil {
 		return nil, err
+	}
+	for _, reason := range skipped {
+		logger.PrintWarn("SND", "sound skipped: %s", reason)
 	}
 
 	ctx, ready, err := oto.NewContext(&oto.NewContextOptions{
@@ -49,28 +55,37 @@ func NewPlayer(soundsFS fs.FS) (*Player, error) {
 	}, nil
 }
 
-func loadClips(soundsFS fs.FS) (map[string][]byte, error) {
+// loadClips decodes what it can and reports what it could not, so one unusable file
+// leaves the other sounds working. It fails only when nothing at all is playable.
+func loadClips(soundsFS fs.FS) (map[string][]byte, []string, error) {
 	entries, err := fs.ReadDir(soundsFS, ".")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	clips := map[string][]byte{}
+	var skipped []string
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.EqualFold(path.Ext(entry.Name()), ".wav") {
 			continue
 		}
 		raw, err := fs.ReadFile(soundsFS, entry.Name())
 		if err != nil {
-			return nil, err
+			skipped = append(skipped, fmt.Sprintf("%s: %v", entry.Name(), err))
+			continue
 		}
 		pcm, err := DecodeWAV(raw)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", entry.Name(), err)
+			skipped = append(skipped, fmt.Sprintf("%s: %v", entry.Name(), err))
+			continue
 		}
 		clips[entry.Name()] = pcm
 	}
-	return clips, nil
+
+	if len(clips) == 0 {
+		return nil, skipped, errors.New("no playable sound found")
+	}
+	return clips, skipped, nil
 }
 
 // Has reports whether the named sound was bundled.
