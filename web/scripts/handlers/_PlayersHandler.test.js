@@ -741,6 +741,7 @@ describe('PlayersHandler', () => {
 
     describe('playThreatSound (fresh audio per trigger)', () => {
         beforeEach(() => {
+            handler.lastThreatSoundAt = -Infinity;
             alertSound.lastPlayedAt = -Infinity;
         });
 
@@ -765,6 +766,54 @@ describe('PlayersHandler', () => {
             expect(audioCtor).toHaveBeenCalledTimes(2);
             expect(audioCtor).toHaveBeenCalledWith('/sounds/player.mp3');
             expect(playMock).toHaveBeenCalledTimes(2);
+        });
+
+        // @verified 2026-08-23: a burst of detections is one alert. The gate lives here, on the detection
+        // path, so a sound played from the settings page can never suppress a real threat alert.
+        test('synthetic: a detection under the cooldown does not play', () => {
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 500 : d);
+            const audioCtor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
+            vi.stubGlobal('Audio', audioCtor);
+            vi.useFakeTimers();
+
+            handler.playThreatSound();
+            vi.advanceTimersByTime(499);
+            handler.playThreatSound();
+
+            expect(audioCtor).toHaveBeenCalledTimes(1);
+
+            vi.advanceTimersByTime(1);
+            handler.playThreatSound();
+
+            expect(audioCtor).toHaveBeenCalledTimes(2);
+        });
+
+        // @verified 2026-08-23: the interval is a player setting, not a constant baked into the code.
+        test('synthetic: the cooldown comes from settings', () => {
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 2000 : d);
+            const audioCtor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
+            vi.stubGlobal('Audio', audioCtor);
+            vi.useFakeTimers();
+
+            handler.playThreatSound();
+            vi.advanceTimersByTime(1500);
+            handler.playThreatSound();
+
+            expect(audioCtor).toHaveBeenCalledTimes(1);
+        });
+
+        // @verified 2026-08-23: zero means the player wants every detection to sound.
+        test('synthetic: a cooldown of zero plays every detection', () => {
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 0 : d);
+            const audioCtor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
+            vi.stubGlobal('Audio', audioCtor);
+            vi.useFakeTimers();
+
+            handler.playThreatSound();
+            handler.playThreatSound();
+            handler.playThreatSound();
+
+            expect(audioCtor).toHaveBeenCalledTimes(3);
         });
 
         // @verified 2026-08-09: a rejected play() is reported at warn level so a silent alert is visible in the logs.

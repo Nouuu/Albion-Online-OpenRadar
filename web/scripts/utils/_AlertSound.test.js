@@ -24,7 +24,6 @@ describe('AlertSound', () => {
 
     afterEach(() => {
         vi.unstubAllGlobals();
-        vi.useRealTimers();
     });
 
     // @verified 2026-05-22: a reused element stopped emitting after a long session, so each trigger builds its own.
@@ -32,11 +31,9 @@ describe('AlertSound', () => {
         const play = vi.fn().mockResolvedValue();
         const ctor = vi.fn(function () { this.play = play; });
         vi.stubGlobal('Audio', ctor);
-        vi.useFakeTimers();
         const sound = new AlertSound('/sounds/player.mp3');
 
         await sound.play();
-        vi.advanceTimersByTime(500);
         await sound.play();
 
         expect(ctor).toHaveBeenCalledTimes(2);
@@ -59,13 +56,10 @@ describe('AlertSound', () => {
     // @verified 2026-08-09: a stream of hostiles cannot bury the screen in toasts.
     test('synthetic: repeated rejections warn the user once', async () => {
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockRejectedValue(new Error('NotAllowedError')); }));
-        vi.useFakeTimers();
         const sound = new AlertSound('/sounds/player.mp3');
 
         await sound.play();
-        vi.advanceTimersByTime(500);
         await sound.play();
-        vi.advanceTimersByTime(500);
         await sound.play();
 
         expect(toast.warning).toHaveBeenCalledTimes(1);
@@ -105,54 +99,6 @@ describe('AlertSound', () => {
         await sound.play();
 
         expect(built.volume).toBe(0);
-    });
-
-    // @verified 2026-08-23: a burst must not stack, and the gate is time based, not length based.
-    test('synthetic: an alert under 500 ms after the previous one is dropped', async () => {
-        vi.useFakeTimers();
-        const ctor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
-        vi.stubGlobal('Audio', ctor);
-        const sound = new AlertSound('/sounds/player.mp3');
-
-        await sound.play();
-        vi.advanceTimersByTime(499);
-        await sound.play();
-
-        expect(ctor).toHaveBeenCalledTimes(1);
-
-        vi.advanceTimersByTime(1);
-        await sound.play();
-
-        expect(ctor).toHaveBeenCalledTimes(2);
-    });
-
-    // @verified 2026-08-23: a burst must leave a trace, or the log shows one play and no sign of the rest.
-    test('synthetic: an alert dropped by the gate is still recorded', async () => {
-        vi.useFakeTimers();
-        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); }));
-        const sound = new AlertSound('/sounds/player.mp3');
-
-        await sound.play();
-        vi.advanceTimersByTime(100);
-        await sound.play();
-
-        expect(window.logger.debug).toHaveBeenCalledWith(
-            expect.anything(), 'ThreatSoundDropped', expect.objectContaining({sinceLastMs: 100}));
-    });
-
-    // @verified 2026-08-23: five detections in a tight burst are one alert, not five.
-    test('synthetic: five triggers inside 200 ms produce one play', async () => {
-        vi.useFakeTimers();
-        const ctor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
-        vi.stubGlobal('Audio', ctor);
-        const sound = new AlertSound('/sounds/player.mp3');
-
-        for (let i = 0; i < 5; i++) {
-            await sound.play();
-            vi.advanceTimersByTime(40);
-        }
-
-        expect(ctor).toHaveBeenCalledTimes(1);
     });
 
     // @verified 2026-08-23: the error name is what separates an autoplay refusal from any other failure.

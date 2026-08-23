@@ -86,9 +86,18 @@ export class PlayersHandler {
         this.localPlayer = new Player();
         this.lastFlashAt = 0;
         this.FLASH_DURATION_MS = 300;
+        this.lastThreatSoundAt = -Infinity;
     }
 
     playThreatSound() {
+        const at = Date.now();
+        const cooldown = settingsSync.getNumber('settingSoundCooldown', 500);
+        const sinceLastMs = at - this.lastThreatSoundAt;
+        if (sinceLastMs < cooldown) {
+            window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundDropped', {sinceLastMs, cooldown});
+            return;
+        }
+        this.lastThreatSoundAt = at;
         return alertSound.play();
     }
 
