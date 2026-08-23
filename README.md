@@ -125,7 +125,7 @@ hard-refresh the page (Ctrl+F5) after upgrading.
 
 ### Can two PCs share one radar?
 
-Yes. Run the binary on the PC that plays Albion, then open the `(LAN)` URL from the startup banner on the other device.
+Yes. Run the binary on the PC that plays Albion, then open the `(LAN)` URL from the startup banner on the other device. The threat alert sound comes out of the PC running the radar, not the device showing the page.
 Capture settings stay locked to the host for safety, so the second device gets a read-only view.
 
 ### Is there a macOS build?

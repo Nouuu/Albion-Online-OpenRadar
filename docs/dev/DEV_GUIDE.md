@@ -75,6 +75,8 @@ WS     WebSocket: ws://localhost:5001/ws
 
 The frontend builds the WebSocket URL from `window.location`, so a phone or second laptop loading `http://<server-ip>:5001` gets a working radar without configuration. The capture interface settings UI is loopback-only: `POST /api/network/interfaces` returns 403 if `req.RemoteAddr` is not local. A LAN visitor sees a read-only view.
 
+The threat alert sound plays on the machine running the radar, never on the machine showing the page. `POST /api/alert/play` hands a file name and a volume to the Go process, which owns the audio device. A LAN visitor sees the preview button work and hears nothing locally. This is deliberate: a browser tab that is not in front cannot be relied on to make a sound, and the player watching the game is on the capture host.
+
 ## Build system
 
 ### Makefile targets
