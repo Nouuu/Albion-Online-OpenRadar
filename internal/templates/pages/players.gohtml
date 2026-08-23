@@ -71,37 +71,49 @@
                 <i data-lucide="bell" class="w-5 h-5 text-warning"></i>
                 Alerts
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                    <input type="checkbox" id="settingFlash" class="checkbox checkbox-error">
-                    <i data-lucide="zap" class="w-5 h-5 text-error"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
-                    <div class="tooltip" data-tip="Shows a red flash when a player is detected.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
-                    <input type="checkbox" id="settingSound" class="checkbox checkbox-warning">
-                    <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
-                    <div class="tooltip" data-tip="Plays a sound alert when a player is detected.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 md:col-span-2">
-                    <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
-                    <span class="text-base-content/80 font-medium">Alert Volume</span>
-                    <input type="range" id="settingSoundVolume" min="0" max="1" step="0.05" value="1"
-                           class="range range-warning range-xs w-32">
-                </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors md:col-span-2">
-                    <input type="checkbox" id="settingFlashDangerousPlayer" class="checkbox checkbox-error">
-                    <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
-                    <div class="tooltip" data-tip="Draws a red pulsating border around the radar while hostile players are detected.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3">
+                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-error/80">
+                        <i data-lucide="monitor" class="w-4 h-4"></i>
+                        Screen
+                    </h3>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                        <input type="checkbox" id="settingFlash" class="checkbox checkbox-error">
+                        <i data-lucide="zap" class="w-5 h-5 text-error"></i>
+                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
+                        <div class="tooltip" data-tip="Shows a red flash when a player is detected.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                        <input type="checkbox" id="settingFlashDangerousPlayer" class="checkbox checkbox-error">
+                        <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
+                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
+                        <div class="tooltip" data-tip="Draws a red pulsating border around the radar while hostile players are detected.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                    </label>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-warning/80">
+                        <i data-lucide="volume-2" class="w-4 h-4"></i>
+                        Sound
+                    </h3>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
+                        <input type="checkbox" id="settingSound" class="checkbox checkbox-warning">
+                        <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
+                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
+                        <div class="tooltip" data-tip="Plays a sound alert when a player is detected.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingSoundVolume">
+                        <i data-lucide="sliders-horizontal" class="w-5 h-5 text-warning"></i>
+                        <span class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
+                        <input type="range" id="settingSoundVolume" min="0" max="1" step="0.05" value="1"
+                               class="range range-warning range-xs w-full max-w-32 ml-auto">
+                    </label>
+                </div>
             </div>
         </div>
     </div>
