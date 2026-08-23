@@ -208,7 +208,7 @@
 <script>
     (async function () {
         const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
-        const {ALERT_SOUNDS, DEFAULT_SOUND} = await import('/scripts/utils/AlertSoundCatalog.js');
+        const {ALERT_SOUNDS} = await import('/scripts/utils/AlertSoundCatalog.js');
         const alertSound = (await import('/scripts/utils/AlertSound.js')).default;
 
         let cleanup = [];
@@ -239,7 +239,7 @@
             const soundFileEl = document.getElementById("settingSoundFile");
             if (soundFileEl) {
                 soundFileEl.replaceChildren(...ALERT_SOUNDS.map(s => new Option(s.label, s.file)));
-                soundFileEl.value = settingsSync.get("settingSoundFile", DEFAULT_SOUND);
+                soundFileEl.value = alertSound.resolve().file;
                 addListener(soundFileEl, "change", () => settingsSync.set("settingSoundFile", soundFileEl.value));
             }
 

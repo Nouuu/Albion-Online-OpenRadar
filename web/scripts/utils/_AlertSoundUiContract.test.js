@@ -32,6 +32,14 @@ describe('alert sound ui contract', () => {
         expect(playersTemplate).not.toContain('addListener(soundFileEl, "change", () => alertSound.preview');
     });
 
+    // @verified 2026-08-23: a selection left over from a sound that no longer ships must not
+    // leave the picker blank. AlertSound already resolves a stale name to the default and warns,
+    // so the picker reads through it rather than assigning the stored string straight to the select.
+    test('the picker resolves a stale selection through the catalog', () => {
+        expect(playersTemplate).toContain('soundFileEl.value = alertSound.resolve().file');
+        expect(playersTemplate).not.toContain('soundFileEl.value = settingsSync.get(');
+    });
+
     // @verified 2026-08-23: the cooldown is a player setting, and zero must be reachable so every detection can sound.
     test('the cooldown slider reaches zero and three seconds', () => {
         expect(playersTemplate).toContain(
