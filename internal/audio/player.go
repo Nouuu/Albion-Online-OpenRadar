@@ -57,14 +57,13 @@ func NewPlayer(soundsFS fs.FS) (*Player, error) {
 
 // loadClips decodes what it can and reports what it could not, so one unusable file
 // leaves the other sounds working. It fails only when nothing at all is playable.
-func loadClips(soundsFS fs.FS) (map[string][]byte, []string, error) {
+func loadClips(soundsFS fs.FS) (clips map[string][]byte, skipped []string, err error) {
 	entries, err := fs.ReadDir(soundsFS, ".")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	clips := map[string][]byte{}
-	var skipped []string
+	clips = map[string][]byte{}
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.EqualFold(path.Ext(entry.Name()), ".wav") {
 			continue
