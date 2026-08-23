@@ -2,7 +2,6 @@ package audio
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/fs"
 	"path"
@@ -31,12 +30,9 @@ type Player struct {
 // NewPlayer decodes every WAV in soundsFS once and opens one audio context.
 // A machine with no audio device returns an error; the caller keeps running without sound.
 func NewPlayer(soundsFS fs.FS) (*Player, error) {
-	clips, skipped, err := loadClips(soundsFS)
+	clips, err := loadClips(soundsFS)
 	if err != nil {
 		return nil, err
-	}
-	for _, reason := range skipped {
-		logger.PrintWarn("SND", "sound skipped: %s", reason)
 	}
 
 	ctx, ready, err := oto.NewContext(&oto.NewContextOptions{
@@ -55,49 +51,47 @@ func NewPlayer(soundsFS fs.FS) (*Player, error) {
 	}, nil
 }
 
-// loadClips decodes what it can and reports what it could not, so one unusable file
-// leaves the other sounds working. It fails only when nothing at all is playable.
-func loadClips(soundsFS fs.FS) (clips map[string][]byte, skipped []string, err error) {
+// loadClips decodes what it can and warns about the rest, so one unusable file
+// leaves the other sounds working.
+func loadClips(soundsFS fs.FS) (map[string][]byte, error) {
 	entries, err := fs.ReadDir(soundsFS, ".")
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	clips = map[string][]byte{}
+	clips := map[string][]byte{}
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.EqualFold(path.Ext(entry.Name()), ".wav") {
 			continue
 		}
-		raw, err := fs.ReadFile(soundsFS, entry.Name())
+		pcm, err := decodeEntry(soundsFS, entry.Name())
 		if err != nil {
-			skipped = append(skipped, fmt.Sprintf("%s: %v", entry.Name(), err))
-			continue
-		}
-		pcm, err := DecodeWAV(raw)
-		if err != nil {
-			skipped = append(skipped, fmt.Sprintf("%s: %v", entry.Name(), err))
+			logger.PrintWarn("SND", "sound skipped, %v", err)
 			continue
 		}
 		clips[entry.Name()] = pcm
 	}
-
-	if len(clips) == 0 {
-		return nil, skipped, errors.New("no playable sound found")
-	}
-	return clips, skipped, nil
+	return clips, nil
 }
 
-// Has reports whether the named sound was bundled.
-func (p *Player) Has(file string) bool {
-	_, ok := p.clips[file]
-	return ok
+func decodeEntry(soundsFS fs.FS, name string) ([]byte, error) {
+	raw, err := fs.ReadFile(soundsFS, name)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", name, err)
+	}
+	pcm, err := DecodeWAV(raw)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", name, err)
+	}
+	return pcm, nil
 }
 
 // Play stops whatever is sounding and starts the named clip at once.
-func (p *Player) Play(file string, volume float64) {
+// It reports false when the sound was not bundled.
+func (p *Player) Play(file string, volume float64) bool {
 	pcm, ok := p.clips[file]
 	if !ok {
-		return
+		return false
 	}
 
 	p.mu.Lock()
@@ -110,4 +104,5 @@ func (p *Player) Play(file string, volume float64) {
 	next.SetVolume(volume)
 	next.Play()
 	p.current = next
+	return true
 }

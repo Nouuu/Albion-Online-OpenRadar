@@ -12,8 +12,7 @@ import (
 
 // AlertPlayer is the subset of the audio player used by AlertAPI.
 type AlertPlayer interface {
-	Has(file string) bool
-	Play(file string, volume float64)
+	Play(file string, volume float64) bool
 }
 
 type AlertAPI struct {
@@ -55,11 +54,9 @@ func (a *AlertAPI) handlePlay(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no audio device on the machine running the radar", http.StatusServiceUnavailable)
 		return
 	}
-	if !a.player.Has(req.File) {
+	if !a.player.Play(req.File, min(1, max(0, req.Volume))) {
 		http.Error(w, "unknown sound", http.StatusNotFound)
 		return
 	}
-
-	a.player.Play(req.File, min(1, max(0, req.Volume)))
 	w.WriteHeader(http.StatusNoContent)
 }

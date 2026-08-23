@@ -248,34 +248,30 @@
                 addListener(previewEl, "click", () => alertSound.preview());
             }
 
-            const volumeEl = document.getElementById("settingSoundVolume");
-            const volumeTip = document.getElementById("settingSoundVolumeTip");
-            if (volumeEl) {
-                const showVolume = () => {
-                    if (volumeTip) volumeTip.dataset.tip = Math.round(Number(volumeEl.value) * 100) + "%";
+            const bindSlider = (id, read, write, format) => {
+                const el = document.getElementById(id);
+                const tip = document.getElementById(id + "Tip");
+                if (!el) return;
+                const show = () => {
+                    if (tip) tip.dataset.tip = format(Number(el.value));
                 };
-                volumeEl.value = settingsSync.getFloat("settingSoundVolume", 1);
-                showVolume();
-                addListener(volumeEl, "input", () => {
-                    settingsSync.setFloat("settingSoundVolume", Number(volumeEl.value));
-                    showVolume();
+                el.value = read();
+                show();
+                addListener(el, "input", () => {
+                    write(Number(el.value));
+                    show();
                 });
-            }
+            };
 
-            const cooldownEl = document.getElementById("settingSoundCooldown");
-            const cooldownTip = document.getElementById("settingSoundCooldownTip");
-            if (cooldownEl) {
-                const showCooldown = () => {
-                    const ms = Number(cooldownEl.value);
-                    if (cooldownTip) cooldownTip.dataset.tip = ms === 0 ? "every detection" : ms + " ms";
-                };
-                cooldownEl.value = settingsSync.getNumber("settingSoundCooldown", 500);
-                showCooldown();
-                addListener(cooldownEl, "input", () => {
-                    settingsSync.setNumber("settingSoundCooldown", Number(cooldownEl.value));
-                    showCooldown();
-                });
-            }
+            bindSlider("settingSoundVolume",
+                () => settingsSync.getFloat("settingSoundVolume", 1),
+                v => settingsSync.setFloat("settingSoundVolume", v),
+                v => Math.round(v * 100) + "%");
+
+            bindSlider("settingSoundCooldown",
+                () => settingsSync.getNumber("settingSoundCooldown", 500),
+                ms => settingsSync.setNumber("settingSoundCooldown", ms),
+                ms => ms === 0 ? "every detection" : ms + " ms");
 
             const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
             if (settingMaxPlayersDisplay) {

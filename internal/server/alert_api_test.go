@@ -14,12 +14,14 @@ type fakeAlertPlayer struct {
 	plays  int
 }
 
-func (p *fakeAlertPlayer) Has(file string) bool { return p.held[file] }
-
-func (p *fakeAlertPlayer) Play(file string, volume float64) {
+func (p *fakeAlertPlayer) Play(file string, volume float64) bool {
+	if !p.held[file] {
+		return false
+	}
 	p.file = file
 	p.volume = volume
 	p.plays++
+	return true
 }
 
 func postPlay(t *testing.T, player AlertPlayer, body string) *httptest.ResponseRecorder {

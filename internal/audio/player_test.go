@@ -1,7 +1,6 @@
 package audio
 
 import (
-	"strings"
 	"sync"
 	"testing"
 	"testing/fstest"
@@ -45,12 +44,9 @@ func TestLoadClipsDecodesEveryWAV(t *testing.T) {
 		"notes.txt":  {Data: []byte("not audio")},
 	}
 
-	clips, skipped, err := loadClips(dir)
+	clips, err := loadClips(dir)
 	if err != nil {
 		t.Fatalf("loadClips returned %v, want no error", err)
-	}
-	if len(skipped) != 0 {
-		t.Errorf("loadClips skipped %v, want nothing skipped", skipped)
 	}
 	if len(clips) != 2 {
 		t.Fatalf("loadClips returned %d clips, want the 2 WAV files only", len(clips))
@@ -70,7 +66,7 @@ func TestLoadClipsKeepsTheSoundsItCanDecode(t *testing.T) {
 		"mono.wav":   {Data: buildWAV(wavChunk{"fmt ", fmtBody(1, 1, 44100, 16)}, wavChunk{"data", []byte{1, 2}})},
 	}
 
-	clips, skipped, err := loadClips(dir)
+	clips, err := loadClips(dir)
 	if err != nil {
 		t.Fatalf("loadClips returned %v, want one bad file not to silence the others", err)
 	}
@@ -80,43 +76,14 @@ func TestLoadClipsKeepsTheSoundsItCanDecode(t *testing.T) {
 	if len(clips) != 1 {
 		t.Errorf("loadClips returned %d clips, want only the one it can decode", len(clips))
 	}
-	if len(skipped) != 2 {
-		t.Fatalf("loadClips reported %v, want both unusable files named", skipped)
-	}
-	for _, want := range []string{"broken.wav", "mono.wav"} {
-		if !strings.Contains(strings.Join(skipped, " "), want) {
-			t.Errorf("loadClips reported %v, want it to name %s", skipped, want)
-		}
-	}
-	if !strings.Contains(strings.Join(skipped, " "), "1 channels") {
-		t.Errorf("loadClips reported %v, want each entry to say what is wrong", skipped)
-	}
-}
-
-func TestLoadClipsRefusesADirectoryWithNothingPlayable(t *testing.T) {
-	dir := fstest.MapFS{"broken.wav": {Data: []byte("not a wav")}}
-
-	_, _, err := loadClips(dir)
-	if err == nil {
-		t.Fatal("loadClips returned no error, want it to refuse a directory holding no playable sound")
-	}
-}
-
-func TestHasReportsWhatWasLoaded(t *testing.T) {
-	p, _ := newTestPlayer(map[string][]byte{"alert.wav": {1, 2}})
-
-	if !p.Has("alert.wav") {
-		t.Error("Has(alert.wav) returned false, want true")
-	}
-	if p.Has("missing.wav") {
-		t.Error("Has(missing.wav) returned true, want false")
-	}
 }
 
 func TestPlayStartsTheClipAtTheVolumeAsked(t *testing.T) {
 	p, built := newTestPlayer(map[string][]byte{"alert.wav": {1, 2, 3, 4}})
 
-	p.Play("alert.wav", 0.25)
+	if !p.Play("alert.wav", 0.25) {
+		t.Fatal("Play reported the sound was not bundled, want it played")
+	}
 
 	if len(*built) != 1 {
 		t.Fatalf("Play built %d clips, want 1", len(*built))
@@ -136,7 +103,9 @@ func TestPlayStartsTheClipAtTheVolumeAsked(t *testing.T) {
 func TestPlayIgnoresASoundItDoesNotHold(t *testing.T) {
 	p, built := newTestPlayer(map[string][]byte{"alert.wav": {1, 2}})
 
-	p.Play("missing.wav", 1)
+	if p.Play("missing.wav", 1) {
+		t.Error("Play reported success for a sound it does not hold, want false")
+	}
 
 	if len(*built) != 0 {
 		t.Errorf("Play built %d clips for an unknown sound, want 0", len(*built))

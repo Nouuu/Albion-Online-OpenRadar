@@ -20,7 +20,7 @@ describe('alert sound ui contract', () => {
     // @verified 2026-08-23: a slider with no readout leaves the player guessing what they just set.
     test('the volume slider shows its level on hover', () => {
         expect(playersTemplate).toContain('id="settingSoundVolumeTip"');
-        expect(playersTemplate).toContain('volumeTip.dataset.tip');
+        expect(playersTemplate).toContain('tip.dataset.tip');
     });
 
     // @verified 2026-08-23: preview binds to the button, never to the select, or arrowing fires audio.

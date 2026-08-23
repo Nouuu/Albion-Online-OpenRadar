@@ -1,6 +1,6 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import settingsSync from './SettingsSync.js';
-import {DEFAULT_SOUND, findSound, defaultSound} from './AlertSoundCatalog.js';
+import {DEFAULT_SOUND, findSound} from './AlertSoundCatalog.js';
 
 const UNAVAILABLE_MESSAGE = 'Threat sound unavailable. The machine running the radar could not play it.';
 
@@ -23,7 +23,7 @@ export class AlertSound {
         const entry = findSound(stored);
         if (entry) return entry;
         window.logger?.warn(CATEGORIES.PLAYERS, 'AlertSoundMissing', {stored});
-        return defaultSound();
+        return findSound(DEFAULT_SOUND);
     }
 
     async emit(volume) {
