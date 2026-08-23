@@ -120,7 +120,7 @@ var staticRoutes = []string{
 	"/images/icon.png",
 	"/images/Items/T4_BAG.webp",
 	"/images/Spells/SPELL_GENERIC.webp",
-	"/sounds/player.mp3",
+	"/sounds/player.wav",
 	"/ao-bin-dumps/harvestables.min.json",
 }
 

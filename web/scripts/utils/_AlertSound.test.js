@@ -31,20 +31,20 @@ describe('AlertSound', () => {
         const play = vi.fn().mockResolvedValue();
         const ctor = vi.fn(function () { this.play = play; });
         vi.stubGlobal('Audio', ctor);
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
         await sound.play();
 
         expect(ctor).toHaveBeenCalledTimes(2);
-        expect(ctor).toHaveBeenCalledWith('/sounds/player.mp3');
+        expect(ctor).toHaveBeenCalledWith('/sounds/player.wav');
         expect(play).toHaveBeenCalledTimes(2);
     });
 
     // @verified 2026-08-09: a blocked alert reaches the user instead of being swallowed into a debug log.
     test('synthetic: a rejected play raises a persistent warning', async () => {
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockRejectedValue(new Error('NotAllowedError')); }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
@@ -56,7 +56,7 @@ describe('AlertSound', () => {
     // @verified 2026-08-09: a stream of hostiles cannot bury the screen in toasts.
     test('synthetic: repeated rejections warn the user once', async () => {
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockRejectedValue(new Error('NotAllowedError')); }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
         await sound.play();
@@ -69,7 +69,7 @@ describe('AlertSound', () => {
     // @verified 2026-08-09: a working alert stays silent in the interface.
     test('synthetic: a successful play warns about nothing', async () => {
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
@@ -82,7 +82,7 @@ describe('AlertSound', () => {
         settingsSync.getFloat.mockReturnValue(0.25);
         let built;
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
@@ -94,7 +94,7 @@ describe('AlertSound', () => {
         settingsSync.getFloat.mockReturnValue(0);
         let built;
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
@@ -103,14 +103,14 @@ describe('AlertSound', () => {
 
     // @verified 2026-08-23: the selection is read per alert, so a change applies without a reload.
     test('synthetic: playback uses the file named by the setting', async () => {
-        settingsSync.get.mockReturnValue('player.mp3');
+        settingsSync.get.mockReturnValue('player.wav');
         const ctor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
         vi.stubGlobal('Audio', ctor);
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
-        expect(ctor).toHaveBeenCalledWith('/sounds/player.mp3');
+        expect(ctor).toHaveBeenCalledWith('/sounds/player.wav');
     });
 
     // @verified 2026-08-23: a stale selection must fall back audibly, never to silence.
@@ -118,11 +118,11 @@ describe('AlertSound', () => {
         settingsSync.get.mockReturnValue('deleted.mp3');
         const ctor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
         vi.stubGlobal('Audio', ctor);
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
-        expect(ctor).toHaveBeenCalledWith('/sounds/player.mp3');
+        expect(ctor).toHaveBeenCalledWith('/sounds/player.wav');
         expect(window.logger.warn).toHaveBeenCalledWith(
             expect.anything(), 'AlertSoundMissing', expect.objectContaining({stored: 'deleted.mp3'}));
     });
@@ -132,7 +132,7 @@ describe('AlertSound', () => {
         settingsSync.getFloat.mockReturnValue(0);
         let built;
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.preview();
 
@@ -145,7 +145,7 @@ describe('AlertSound', () => {
         settingsSync.getFloat.mockReturnValue(0.4);
         let built;
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.preview();
 
@@ -157,7 +157,7 @@ describe('AlertSound', () => {
         const err = new Error('play() failed');
         err.name = 'NotAllowedError';
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockRejectedValue(err); }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
@@ -168,7 +168,7 @@ describe('AlertSound', () => {
     // @verified 2026-08-23: a played attempt must be distinguishable from one that never started.
     test('synthetic: a successful play records a debug line', async () => {
         vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await sound.play();
 
@@ -179,7 +179,7 @@ describe('AlertSound', () => {
     // @verified 2026-08-09: a constructor that throws is handled like a rejected play, the caller never sees it.
     test('synthetic: a throwing constructor does not escape', async () => {
         vi.stubGlobal('Audio', vi.fn(() => { throw new Error('no media support'); }));
-        const sound = new AlertSound('/sounds/player.mp3');
+        const sound = new AlertSound('/sounds/player.wav');
 
         await expect(sound.play()).resolves.toBeUndefined();
         expect(toast.warning).toHaveBeenCalledTimes(1);

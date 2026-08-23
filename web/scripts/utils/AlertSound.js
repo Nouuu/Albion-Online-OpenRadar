@@ -47,4 +47,4 @@ export class AlertSound {
     }
 }
 
-export default new AlertSound('/sounds/player.mp3');
+export default new AlertSound('/sounds/player.wav');

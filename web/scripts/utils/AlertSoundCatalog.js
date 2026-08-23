@@ -1,9 +1,9 @@
-export const DEFAULT_SOUND = 'player.mp3';
+export const DEFAULT_SOUND = 'player.wav';
 
-export const LICENCE_EXEMPT = ['player.mp3'];
+export const LICENCE_EXEMPT = ['player.wav'];
 
 export const ALERT_SOUNDS = [
-    {file: 'player.mp3', label: 'Default', source: 'unknown, predates the catalog', licence: 'unknown'},
+    {file: 'player.wav', label: 'Default', source: 'unknown, predates the catalog', licence: 'unknown'},
 ];
 
 export function findSound(file) {

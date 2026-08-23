@@ -765,7 +765,7 @@ describe('PlayersHandler', () => {
             handler.playThreatSound();
 
             expect(audioCtor).toHaveBeenCalledTimes(2);
-            expect(audioCtor).toHaveBeenCalledWith('/sounds/player.mp3');
+            expect(audioCtor).toHaveBeenCalledWith('/sounds/player.wav');
             expect(playMock).toHaveBeenCalledTimes(2);
         });
 
