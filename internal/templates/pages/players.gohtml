@@ -110,8 +110,21 @@
                     <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingSoundVolume">
                         <i data-lucide="sliders-horizontal" class="w-5 h-5 text-warning"></i>
                         <span class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
-                        <input type="range" id="settingSoundVolume" min="0" max="1" step="0.05" value="1"
-                               class="range range-warning range-xs w-full max-w-32 ml-auto">
+                        <div class="tooltip ml-auto w-full max-w-64" id="settingSoundVolumeTip" data-tip="100%">
+                            <input type="range" id="settingSoundVolume" min="0" max="1" step="0.05" value="1"
+                                   class="range range-warning range-xs w-full">
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingSoundCooldown">
+                        <i data-lucide="hourglass" class="w-5 h-5 text-warning"></i>
+                        <span class="text-base-content/80 font-medium whitespace-nowrap">Cooldown</span>
+                        <div class="tooltip" data-tip="Minimum delay between two alert sounds. At zero, every detection plays.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                        <div class="tooltip ml-auto w-full max-w-64" id="settingSoundCooldownTip" data-tip="500 ms">
+                            <input type="range" id="settingSoundCooldown" min="0" max="3000" step="100" value="500"
+                                   class="range range-warning range-xs w-full">
+                        </div>
                     </label>
                 </div>
             </div>
@@ -213,9 +226,32 @@
                 "settingDangerousPlayers"].forEach(bindCheckbox);
 
             const volumeEl = document.getElementById("settingSoundVolume");
+            const volumeTip = document.getElementById("settingSoundVolumeTip");
             if (volumeEl) {
+                const showVolume = () => {
+                    if (volumeTip) volumeTip.dataset.tip = Math.round(Number(volumeEl.value) * 100) + "%";
+                };
                 volumeEl.value = settingsSync.getFloat("settingSoundVolume", 1);
-                addListener(volumeEl, "input", () => settingsSync.setFloat("settingSoundVolume", Number(volumeEl.value)));
+                showVolume();
+                addListener(volumeEl, "input", () => {
+                    settingsSync.setFloat("settingSoundVolume", Number(volumeEl.value));
+                    showVolume();
+                });
+            }
+
+            const cooldownEl = document.getElementById("settingSoundCooldown");
+            const cooldownTip = document.getElementById("settingSoundCooldownTip");
+            if (cooldownEl) {
+                const showCooldown = () => {
+                    const ms = Number(cooldownEl.value);
+                    if (cooldownTip) cooldownTip.dataset.tip = ms === 0 ? "every detection" : ms + " ms";
+                };
+                cooldownEl.value = settingsSync.getNumber("settingSoundCooldown", 500);
+                showCooldown();
+                addListener(cooldownEl, "input", () => {
+                    settingsSync.setNumber("settingSoundCooldown", Number(cooldownEl.value));
+                    showCooldown();
+                });
             }
 
             const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");

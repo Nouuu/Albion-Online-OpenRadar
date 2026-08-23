@@ -16,4 +16,20 @@ describe('alert sound ui contract', () => {
             'settingsSync.setFloat("settingSoundVolume"',
         );
     });
+
+    // @verified 2026-08-23: a slider with no readout leaves the player guessing what they just set.
+    test('the volume slider shows its level on hover', () => {
+        expect(playersTemplate).toContain('id="settingSoundVolumeTip"');
+        expect(playersTemplate).toContain('volumeTip.dataset.tip');
+    });
+
+    // @verified 2026-08-23: the cooldown is a player setting, and zero must be reachable so every detection can sound.
+    test('the cooldown slider reaches zero and three seconds', () => {
+        expect(playersTemplate).toContain(
+            'id="settingSoundCooldown" min="0" max="3000" step="100"',
+        );
+        expect(playersTemplate).toContain(
+            'settingsSync.setNumber("settingSoundCooldown"',
+        );
+    });
 });
