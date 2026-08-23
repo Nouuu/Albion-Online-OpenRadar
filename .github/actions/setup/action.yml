@@ -1,5 +1,5 @@
 name: Setup OpenRadar toolchain
-description: Checkout, Go, Node (LTS), libpcap, npm deps
+description: Checkout, Go, Node (LTS), libpcap, ALSA, npm deps
 
 inputs:
   fetch-depth:
@@ -24,10 +24,10 @@ runs:
         node-version: "lts/*"
         cache: "npm"
 
-    - name: Install libpcap (CGO, Linux only)
+    - name: Install libpcap and ALSA (CGO, Linux only)
       if: runner.os == 'Linux'
       shell: bash
-      run: sudo apt-get update && sudo apt-get install -y libpcap-dev
+      run: sudo apt-get update && sudo apt-get install -y libpcap-dev libasound2-dev
 
     - name: Install npm dependencies
       shell: bash

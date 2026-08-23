@@ -48,9 +48,9 @@ Interfaces are auto-selected. Change them from **Settings -> Network** in the br
 ### Linux
 
 ```bash
-# 1. libpcap
-sudo apt install libpcap0.8   # Debian, Ubuntu
-sudo pacman -S libpcap        # Arch
+# 1. libpcap and ALSA
+sudo apt install libpcap0.8 libasound2   # Debian, Ubuntu
+sudo pacman -S libpcap alsa-lib          # Arch
 
 # 2. Download
 mkdir ~/albion-radar && cd ~/albion-radar
@@ -272,6 +272,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 | Go      | 1.26+   | backend                |
 | Npcap   | 1.87+   | Windows packet capture |
 | libpcap | latest  | Linux packet capture   |
+| ALSA    | latest  | Linux alert sound      |
 | Node.js | 20+     | asset and data tooling |
 | Docker  | latest  | Linux cross-compile    |
 
