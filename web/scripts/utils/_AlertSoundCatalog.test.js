@@ -13,6 +13,14 @@ describe('AlertSoundCatalog', () => {
         }
     });
 
+    // @verified 2026-08-23: a file dropped under web/sounds with no entry never reaches the picker,
+    // and the Go process decodes it at startup for nothing. The drift has to fail on both sides.
+    test('synthetic: every sound under web/sounds has an entry', () => {
+        const onDisk = readdirSync('web/sounds').filter(f => f.toLowerCase().endsWith('.wav'));
+        const catalogued = ALERT_SOUNDS.map(entry => entry.file);
+        expect(onDisk.filter(file => !catalogued.includes(file))).toEqual([]);
+    });
+
     // @verified 2026-08-23: the project is MIT and ships a public binary, so terms travel with the file.
     test('synthetic: every entry records a source and a licence', () => {
         for (const entry of ALERT_SOUNDS) {
