@@ -101,6 +101,57 @@ describe('AlertSound', () => {
         expect(built.volume).toBe(0);
     });
 
+    // @verified 2026-08-23: the selection is read per alert, so a change applies without a reload.
+    test('synthetic: playback uses the file named by the setting', async () => {
+        settingsSync.get.mockReturnValue('player.mp3');
+        const ctor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
+        vi.stubGlobal('Audio', ctor);
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+
+        expect(ctor).toHaveBeenCalledWith('/sounds/player.mp3');
+    });
+
+    // @verified 2026-08-23: a stale selection must fall back audibly, never to silence.
+    test('synthetic: an unknown selection falls back to the default and warns', async () => {
+        settingsSync.get.mockReturnValue('deleted.mp3');
+        const ctor = vi.fn(function () { this.play = vi.fn().mockResolvedValue(); });
+        vi.stubGlobal('Audio', ctor);
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+
+        expect(ctor).toHaveBeenCalledWith('/sounds/player.mp3');
+        expect(window.logger.warn).toHaveBeenCalledWith(
+            expect.anything(), 'AlertSoundMissing', expect.objectContaining({stored: 'deleted.mp3'}));
+    });
+
+    // @verified 2026-08-23: a preview button that stays silent reads as broken, and the player pressed it.
+    test('synthetic: preview plays at full when the volume is zero', async () => {
+        settingsSync.getFloat.mockReturnValue(0);
+        let built;
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.preview();
+
+        expect(built.play).toHaveBeenCalledTimes(1);
+        expect(built.volume).toBe(1);
+    });
+
+    // @verified 2026-08-23: above zero, preview shows the player the level their alerts will use.
+    test('synthetic: preview follows the volume when it is above zero', async () => {
+        settingsSync.getFloat.mockReturnValue(0.4);
+        let built;
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); built = this; }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.preview();
+
+        expect(built.volume).toBe(0.4);
+    });
+
     // @verified 2026-08-23: the error name is what separates an autoplay refusal from any other failure.
     test('synthetic: a refused play records the error name', async () => {
         const err = new Error('play() failed');

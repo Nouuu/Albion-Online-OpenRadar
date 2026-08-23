@@ -4,6 +4,7 @@ import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
+        get: vi.fn((_k, d) => d),
         getBool: vi.fn(() => true),
         getNumber: vi.fn((_k, d) => d),
         getFloat: vi.fn((_k, d) => d),

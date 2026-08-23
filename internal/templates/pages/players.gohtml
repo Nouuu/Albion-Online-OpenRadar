@@ -107,6 +107,15 @@
                             <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                         </div>
                     </label>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+                        <i data-lucide="list" class="w-5 h-5 text-warning"></i>
+                        <label for="settingSoundFile" class="text-base-content/80 font-medium whitespace-nowrap">Sound</label>
+                        <select id="settingSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
+                        <button id="previewSound" type="button" class="btn btn-ghost btn-sm btn-square"
+                                aria-label="Play the selected alert sound">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                     <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingSoundVolume">
                         <i data-lucide="sliders-horizontal" class="w-5 h-5 text-warning"></i>
                         <span class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
@@ -199,6 +208,8 @@
 <script>
     (async function () {
         const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
+        const {ALERT_SOUNDS, DEFAULT_SOUND} = await import('/scripts/utils/AlertSoundCatalog.js');
+        const alertSound = (await import('/scripts/utils/AlertSound.js')).default;
 
         let cleanup = [];
 
@@ -224,6 +235,18 @@
             ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
                 "settingSound", "settingFlash", "settingFlashDangerousPlayer", "settingPassivePlayers", "settingFactionPlayers",
                 "settingDangerousPlayers"].forEach(bindCheckbox);
+
+            const soundFileEl = document.getElementById("settingSoundFile");
+            if (soundFileEl) {
+                soundFileEl.replaceChildren(...ALERT_SOUNDS.map(s => new Option(s.label, s.file)));
+                soundFileEl.value = settingsSync.get("settingSoundFile", DEFAULT_SOUND);
+                addListener(soundFileEl, "change", () => settingsSync.set("settingSoundFile", soundFileEl.value));
+            }
+
+            const previewEl = document.getElementById("previewSound");
+            if (previewEl) {
+                addListener(previewEl, "click", () => alertSound.preview());
+            }
 
             const volumeEl = document.getElementById("settingSoundVolume");
             const volumeTip = document.getElementById("settingSoundVolumeTip");

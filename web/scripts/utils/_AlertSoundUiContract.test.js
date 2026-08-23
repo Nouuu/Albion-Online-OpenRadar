@@ -23,6 +23,15 @@ describe('alert sound ui contract', () => {
         expect(playersTemplate).toContain('volumeTip.dataset.tip');
     });
 
+    // @verified 2026-08-23: preview binds to the button, never to the select, or arrowing fires audio.
+    test('the picker and its preview button are labelled and keyboard safe', () => {
+        expect(playersTemplate).toContain('<label for="settingSoundFile"');
+        expect(playersTemplate).toContain('<select id="settingSoundFile"');
+        expect(playersTemplate).toContain('aria-label="Play the selected alert sound"');
+        expect(playersTemplate).toContain('addListener(previewEl, "click"');
+        expect(playersTemplate).not.toContain('addListener(soundFileEl, "change", () => alertSound.preview');
+    });
+
     // @verified 2026-08-23: the cooldown is a player setting, and zero must be reachable so every detection can sound.
     test('the cooldown slider reaches zero and three seconds', () => {
         expect(playersTemplate).toContain(
