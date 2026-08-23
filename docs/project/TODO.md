@@ -84,6 +84,11 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   The settings page shows the state, the terminal dashboard does not.
 - **`alreadyIgnoredPlayers`**. Dead field on `PlayersHandler`, nothing populates it. The ignore gate reads the setting
   the page actually writes (#161). Remove the field.
+- **Page init runs twice on SPA arrival**. Every page script ends with
+  `window.onGlobalsReady(() => reinitCurrentPage())` while `PageController` also inits on `htmx:afterSettle`. Both
+  fire on arrival, and the second init resets the page `cleanup` array while the first set of listeners stays
+  attached. Measured on the players page: after one round trip, a single click on the preview button fires the
+  handler twice. Affects all seven pages, predates 2.2.3. Fix is one owner for the arrival init, not two.
 - **`/api/settings/server-logs`**. Replaced by `/api/settings/logging` in 2.2. The old path returns 404 with no
   compatibility shim. Noted in case an old bug report mentions it.
 
