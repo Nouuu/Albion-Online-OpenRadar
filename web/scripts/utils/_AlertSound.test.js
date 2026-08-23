@@ -126,6 +126,20 @@ describe('AlertSound', () => {
         expect(ctor).toHaveBeenCalledTimes(2);
     });
 
+    // @verified 2026-08-23: a burst must leave a trace, or the log shows one play and no sign of the rest.
+    test('synthetic: an alert dropped by the gate is still recorded', async () => {
+        vi.useFakeTimers();
+        vi.stubGlobal('Audio', vi.fn(function () { this.play = vi.fn().mockResolvedValue(); }));
+        const sound = new AlertSound('/sounds/player.mp3');
+
+        await sound.play();
+        vi.advanceTimersByTime(100);
+        await sound.play();
+
+        expect(window.logger.debug).toHaveBeenCalledWith(
+            expect.anything(), 'ThreatSoundDropped', expect.objectContaining({sinceLastMs: 100}));
+    });
+
     // @verified 2026-08-23: five detections in a tight burst are one alert, not five.
     test('synthetic: five triggers inside 200 ms produce one play', async () => {
         vi.useFakeTimers();

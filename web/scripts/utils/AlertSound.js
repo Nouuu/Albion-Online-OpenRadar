@@ -13,7 +13,11 @@ export class AlertSound {
 
     async play() {
         const at = Date.now();
-        if (at - this.lastPlayedAt < MIN_GAP_MS) return;
+        const sinceLastMs = at - this.lastPlayedAt;
+        if (sinceLastMs < MIN_GAP_MS) {
+            window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundDropped', {sinceLastMs});
+            return;
+        }
         this.lastPlayedAt = at;
         try {
             const audio = new Audio(this.src);
