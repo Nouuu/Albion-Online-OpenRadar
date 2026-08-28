@@ -2,7 +2,6 @@ package audio
 
 import (
 	"bytes"
-	"fmt"
 	"io/fs"
 	"path"
 	"strings"
@@ -61,29 +60,23 @@ func loadClips(soundsFS fs.FS) (map[string][]byte, error) {
 
 	clips := map[string][]byte{}
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.EqualFold(path.Ext(entry.Name()), ".wav") {
+		name := entry.Name()
+		if entry.IsDir() || !strings.EqualFold(path.Ext(name), ".wav") {
 			continue
 		}
-		pcm, err := decodeEntry(soundsFS, entry.Name())
+		raw, err := fs.ReadFile(soundsFS, name)
 		if err != nil {
-			logger.PrintWarn("SND", "sound skipped, %v", err)
+			logger.PrintWarn("SND", "sound skipped, %s: %v", name, err)
 			continue
 		}
-		clips[entry.Name()] = pcm
+		pcm, err := DecodeWAV(raw)
+		if err != nil {
+			logger.PrintWarn("SND", "sound skipped, %s: %v", name, err)
+			continue
+		}
+		clips[name] = pcm
 	}
 	return clips, nil
-}
-
-func decodeEntry(soundsFS fs.FS, name string) ([]byte, error) {
-	raw, err := fs.ReadFile(soundsFS, name)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", name, err)
-	}
-	pcm, err := DecodeWAV(raw)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", name, err)
-	}
-	return pcm, nil
 }
 
 // Play stops whatever is sounding and starts the named clip at once.
