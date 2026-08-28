@@ -69,7 +69,7 @@ func loadClips(soundsFS fs.FS) (map[string][]byte, error) {
 			logger.PrintWarn("SND", "sound skipped, %s: %v", name, err)
 			continue
 		}
-		pcm, err := DecodeWAV(raw)
+		pcm, err := decodeWAV(raw)
 		if err != nil {
 			logger.PrintWarn("SND", "sound skipped, %s: %v", name, err)
 			continue

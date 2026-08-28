@@ -1,7 +1,6 @@
 package audio
 
 import (
-	"sync"
 	"testing"
 	"testing/fstest"
 )
@@ -19,14 +18,11 @@ func (c *fakeClip) Close() error        { c.closed = true; return nil }
 
 func newTestPlayer(clips map[string][]byte) (*Player, *[]*fakeClip) {
 	var built []*fakeClip
-	var mu sync.Mutex
 	p := &Player{
 		clips: clips,
 		newClip: func(pcm []byte) clip {
 			c := &fakeClip{pcm: pcm}
-			mu.Lock()
 			built = append(built, c)
-			mu.Unlock()
 			return c
 		},
 	}

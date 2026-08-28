@@ -12,8 +12,8 @@ const (
 	wantBits       = 16
 )
 
-// DecodeWAV returns the PCM payload of an uncompressed 16 bit little-endian WAV at 44100 Hz.
-func DecodeWAV(b []byte) ([]byte, error) {
+// decodeWAV returns the PCM payload of an uncompressed 16 bit little-endian WAV at 44100 Hz.
+func decodeWAV(b []byte) ([]byte, error) {
 	if len(b) < 12 || string(b[0:4]) != "RIFF" || string(b[8:12]) != "WAVE" {
 		return nil, errors.New("not a RIFF/WAVE file")
 	}

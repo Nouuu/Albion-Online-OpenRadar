@@ -48,28 +48,28 @@ func buildWAV(chunks ...wavChunk) []byte {
 func TestDecodeWAVReturnsThePCMPayload(t *testing.T) {
 	pcm := []byte{1, 2, 3, 4, 5, 6, 7, 8}
 
-	got, err := DecodeWAV(buildWAV(wavChunk{"fmt ", conformingFmt()}, wavChunk{"data", pcm}))
+	got, err := decodeWAV(buildWAV(wavChunk{"fmt ", conformingFmt()}, wavChunk{"data", pcm}))
 	if err != nil {
-		t.Fatalf("DecodeWAV returned %v, want no error", err)
+		t.Fatalf("decodeWAV returned %v, want no error", err)
 	}
 	if !bytes.Equal(got, pcm) {
-		t.Errorf("DecodeWAV returned %v, want %v", got, pcm)
+		t.Errorf("decodeWAV returned %v, want %v", got, pcm)
 	}
 }
 
 func TestDecodeWAVWalksPastChunksItDoesNotUse(t *testing.T) {
 	pcm := []byte{9, 8, 7, 6}
 
-	got, err := DecodeWAV(buildWAV(
+	got, err := decodeWAV(buildWAV(
 		wavChunk{"fmt ", conformingFmt()},
 		wavChunk{"LIST", []byte("odd")},
 		wavChunk{"data", pcm},
 	))
 	if err != nil {
-		t.Fatalf("DecodeWAV returned %v, want no error", err)
+		t.Fatalf("decodeWAV returned %v, want no error", err)
 	}
 	if !bytes.Equal(got, pcm) {
-		t.Errorf("DecodeWAV returned %v, want %v", got, pcm)
+		t.Errorf("decodeWAV returned %v, want %v", got, pcm)
 	}
 }
 
@@ -123,12 +123,12 @@ func TestDecodeWAVRefuses(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DecodeWAV(tt.in)
+			got, err := decodeWAV(tt.in)
 			if err == nil {
-				t.Fatalf("DecodeWAV returned %v and no error, want an error naming %q", got, tt.want)
+				t.Fatalf("decodeWAV returned %v and no error, want an error naming %q", got, tt.want)
 			}
 			if !strings.Contains(err.Error(), tt.want) {
-				t.Errorf("DecodeWAV returned %q, want it to name %q", err, tt.want)
+				t.Errorf("decodeWAV returned %q, want it to name %q", err, tt.want)
 			}
 		})
 	}
@@ -151,12 +151,12 @@ func TestDecodeWAVAcceptsEveryBundledSound(t *testing.T) {
 			if err != nil {
 				t.Fatalf("read %s: %v", file, err)
 			}
-			pcm, err := DecodeWAV(raw)
+			pcm, err := decodeWAV(raw)
 			if err != nil {
-				t.Fatalf("DecodeWAV returned %v, want the bundled sound to meet the format contract", err)
+				t.Fatalf("decodeWAV returned %v, want the bundled sound to meet the format contract", err)
 			}
 			if len(pcm) == 0 {
-				t.Error("DecodeWAV returned an empty payload, want audio")
+				t.Error("decodeWAV returned an empty payload, want audio")
 			}
 		})
 	}
