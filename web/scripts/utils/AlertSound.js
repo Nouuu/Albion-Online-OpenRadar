@@ -29,24 +29,20 @@ export class AlertSound {
     async emit(volume) {
         const file = this.resolve().file;
         try {
-            const response = await fetch('/api/alert/play', {
+            const {ok, status} = await fetch('/api/alert/play', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({file, volume}),
             });
-            if (!response.ok) {
-                const err = new Error(`alert play refused with HTTP ${response.status}`);
-                err.status = response.status;
-                throw err;
-            }
+            if (!ok) return this.report(`alert play refused with HTTP ${status}`, status);
             window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundPlayed', {file, volume});
         } catch (err) {
-            this.report(err);
+            this.report(err?.message);
         }
     }
 
-    report(err) {
-        window.logger?.warn(CATEGORIES.PLAYERS, 'ThreatSoundFailed', {status: err?.status, error: err?.message});
+    report(error, status) {
+        window.logger?.warn(CATEGORIES.PLAYERS, 'ThreatSoundFailed', {status, error});
         if (this.reported) return;
         this.reported = true;
         window.toast?.warning(UNAVAILABLE_MESSAGE, 0);

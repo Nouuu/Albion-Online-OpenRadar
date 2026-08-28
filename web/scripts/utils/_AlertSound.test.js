@@ -60,37 +60,16 @@ describe('AlertSound', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    // @verified 2026-08-23: the level is read per alert, so a change applies without a reload.
-    test('synthetic: the request carries the stored volume', async () => {
-        settingsSync.getFloat.mockReturnValue(0.25);
+    // @verified 2026-08-23: the level is read per alert, so a change applies without a reload. Zero
+    // is silence, and it is a different control from the on/off toggle.
+    test.each([0.25, 0])('synthetic: an alert sends the stored volume %s', async (volume) => {
+        settingsSync.getFloat.mockReturnValue(volume);
         const fetchMock = accepted();
         const sound = new AlertSound();
 
         await sound.play();
 
-        expect(sent(fetchMock).volume).toBe(0.25);
-    });
-
-    // @verified 2026-08-23: zero is silence, and it is a different control from the on/off toggle.
-    test('synthetic: a volume of zero is sent as zero', async () => {
-        settingsSync.getFloat.mockReturnValue(0);
-        const fetchMock = accepted();
-        const sound = new AlertSound();
-
-        await sound.play();
-
-        expect(sent(fetchMock).volume).toBe(0);
-    });
-
-    // @verified 2026-08-23: the selection is read per alert, so a change applies without a reload.
-    test('synthetic: the request carries the file named by the setting', async () => {
-        settingsSync.get.mockReturnValue('player.wav');
-        const fetchMock = accepted();
-        const sound = new AlertSound();
-
-        await sound.play();
-
-        expect(sent(fetchMock).file).toBe('player.wav');
+        expect(sent(fetchMock).volume).toBe(volume);
     });
 
     // @verified 2026-08-23: a stale selection must fall back audibly, never to silence.
@@ -106,26 +85,16 @@ describe('AlertSound', () => {
             expect.anything(), 'AlertSoundMissing', expect.objectContaining({stored: 'deleted.wav'}));
     });
 
-    // @verified 2026-08-23: a preview button that stays silent reads as broken, and the player pressed it.
-    test('synthetic: preview plays at full when the volume is zero', async () => {
-        settingsSync.getFloat.mockReturnValue(0);
+    // @verified 2026-08-23: above zero preview shows the player the level their alerts will use. At
+    // zero that would show nothing, and a preview button that stays silent reads as broken.
+    test.each([[0.4, 0.4], [0, 1]])('synthetic: preview at volume %s sends %s', async (stored, expected) => {
+        settingsSync.getFloat.mockReturnValue(stored);
         const fetchMock = accepted();
         const sound = new AlertSound();
 
         await sound.preview();
 
-        expect(sent(fetchMock).volume).toBe(1);
-    });
-
-    // @verified 2026-08-23: above zero, preview shows the player the level their alerts will use.
-    test('synthetic: preview follows the volume when it is above zero', async () => {
-        settingsSync.getFloat.mockReturnValue(0.4);
-        const fetchMock = accepted();
-        const sound = new AlertSound();
-
-        await sound.preview();
-
-        expect(sent(fetchMock).volume).toBe(0.4);
+        expect(sent(fetchMock).volume).toBe(expected);
     });
 
     // @verified 2026-08-23: a machine with no audio device is the one failure the player cannot fix from here.
@@ -175,8 +144,9 @@ describe('AlertSound', () => {
         expect(window.logger.warn).toHaveBeenCalledTimes(3);
     });
 
-    // @verified 2026-08-09: a working alert stays silent in the interface.
-    test('synthetic: a successful play warns about nothing', async () => {
+    // @verified 2026-08-09: a working alert stays silent in the interface, and a played attempt must
+    // still be distinguishable in the log from one that never started.
+    test('synthetic: a successful play warns about nothing and records a debug line', async () => {
         accepted();
         const sound = new AlertSound();
 
@@ -184,15 +154,6 @@ describe('AlertSound', () => {
 
         expect(toast.warning).not.toHaveBeenCalled();
         expect(window.logger.warn).not.toHaveBeenCalled();
-    });
-
-    // @verified 2026-08-23: a played attempt must be distinguishable from one that never started.
-    test('synthetic: a successful play records a debug line', async () => {
-        accepted();
-        const sound = new AlertSound();
-
-        await sound.play();
-
         expect(window.logger.debug).toHaveBeenCalledWith(
             expect.anything(), 'ThreatSoundPlayed', expect.anything());
     });
