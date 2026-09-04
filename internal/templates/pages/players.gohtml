@@ -71,31 +71,71 @@
                 <i data-lucide="bell" class="w-5 h-5 text-warning"></i>
                 Alerts
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                    <input type="checkbox" id="settingFlash" class="checkbox checkbox-error">
-                    <i data-lucide="zap" class="w-5 h-5 text-error"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
-                    <div class="tooltip" data-tip="Shows a red flash when a player is detected.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-3">
+                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-error/80">
+                        <i data-lucide="monitor" class="w-4 h-4"></i>
+                        Screen
+                    </h3>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                        <input type="checkbox" id="settingFlash" class="checkbox checkbox-error">
+                        <i data-lucide="zap" class="w-5 h-5 text-error"></i>
+                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
+                        <div class="tooltip" data-tip="Shows a red flash when a player is detected.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                        <input type="checkbox" id="settingFlashDangerousPlayer" class="checkbox checkbox-error">
+                        <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
+                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
+                        <div class="tooltip" data-tip="Draws a red pulsating border around the radar while hostile players are detected.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                    </label>
+                </div>
+                <div class="space-y-3">
+                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-warning/80">
+                        <i data-lucide="volume-2" class="w-4 h-4"></i>
+                        Sound
+                    </h3>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
+                        <input type="checkbox" id="settingSound" class="checkbox checkbox-warning">
+                        <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
+                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
+                        <div class="tooltip" data-tip="Plays a sound alert when a player is detected.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                    </label>
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
+                        <i data-lucide="list" class="w-5 h-5 text-warning"></i>
+                        <label for="settingSoundFile" class="text-base-content/80 font-medium whitespace-nowrap">Sound</label>
+                        <select id="settingSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
+                        <button id="previewSound" type="button" class="btn btn-ghost btn-sm btn-square"
+                                aria-label="Play the selected alert sound">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                        </button>
                     </div>
-                </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
-                    <input type="checkbox" id="settingSound" class="checkbox checkbox-warning">
-                    <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
-                    <div class="tooltip" data-tip="Plays a sound alert when a player is detected.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors md:col-span-2">
-                    <input type="checkbox" id="settingFlashDangerousPlayer" class="checkbox checkbox-error">
-                    <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
-                    <div class="tooltip" data-tip="Draws a red pulsating border around the radar while hostile players are detected.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingSoundVolume">
+                        <i data-lucide="sliders-horizontal" class="w-5 h-5 text-warning"></i>
+                        <span class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
+                        <div class="tooltip ml-auto w-full max-w-64" id="settingSoundVolumeTip" data-tip="100%">
+                            <input type="range" id="settingSoundVolume" min="0" max="1" step="0.05" value="1"
+                                   class="range range-warning range-xs w-full">
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingSoundCooldown">
+                        <i data-lucide="hourglass" class="w-5 h-5 text-warning"></i>
+                        <span class="text-base-content/80 font-medium whitespace-nowrap">Cooldown</span>
+                        <div class="tooltip" data-tip="Minimum delay between two alert sounds. At zero, every detection plays.">
+                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        </div>
+                        <div class="tooltip ml-auto w-full max-w-64" id="settingSoundCooldownTip" data-tip="500 ms">
+                            <input type="range" id="settingSoundCooldown" min="0" max="3000" step="100" value="500"
+                                   class="range range-warning range-xs w-full">
+                        </div>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -168,6 +208,8 @@
 <script>
     (async function () {
         const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
+        const {ALERT_SOUNDS} = await import('/scripts/utils/AlertSoundCatalog.js');
+        const alertSound = (await import('/scripts/utils/AlertSound.js')).default;
 
         let cleanup = [];
 
@@ -193,6 +235,43 @@
             ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
                 "settingSound", "settingFlash", "settingFlashDangerousPlayer", "settingPassivePlayers", "settingFactionPlayers",
                 "settingDangerousPlayers"].forEach(bindCheckbox);
+
+            const soundFileEl = document.getElementById("settingSoundFile");
+            if (soundFileEl) {
+                soundFileEl.replaceChildren(...ALERT_SOUNDS.map(s => new Option(s.label, s.file)));
+                soundFileEl.value = alertSound.resolve().file;
+                addListener(soundFileEl, "change", () => settingsSync.set("settingSoundFile", soundFileEl.value));
+            }
+
+            const previewEl = document.getElementById("previewSound");
+            if (previewEl) {
+                addListener(previewEl, "click", () => alertSound.preview());
+            }
+
+            const bindSlider = (id, read, write, format) => {
+                const el = document.getElementById(id);
+                const tip = document.getElementById(id + "Tip");
+                if (!el) return;
+                const show = () => {
+                    if (tip) tip.dataset.tip = format(Number(el.value));
+                };
+                el.value = read();
+                show();
+                addListener(el, "input", () => {
+                    write(Number(el.value));
+                    show();
+                });
+            };
+
+            bindSlider("settingSoundVolume",
+                () => settingsSync.getFloat("settingSoundVolume", 1),
+                v => settingsSync.setFloat("settingSoundVolume", v),
+                v => Math.round(v * 100) + "%");
+
+            bindSlider("settingSoundCooldown",
+                () => settingsSync.getNumber("settingSoundCooldown", 500),
+                ms => settingsSync.setNumber("settingSoundCooldown", ms),
+                ms => ms === 0 ? "every detection" : ms + " ms");
 
             const settingMaxPlayersDisplay = document.getElementById("settingMaxPlayersDisplay");
             if (settingMaxPlayersDisplay) {

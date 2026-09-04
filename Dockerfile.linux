@@ -9,9 +9,9 @@ ARG BUILD_TIME=unknown
 
 WORKDIR /app
 
-# Install libpcap (cached layer)
+# Install libpcap and ALSA (cached layer)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends libpcap-dev && \
+    apt-get install -y --no-install-recommends libpcap-dev libasound2-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy and cache dependencies

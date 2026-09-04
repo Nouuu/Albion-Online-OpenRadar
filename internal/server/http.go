@@ -37,6 +37,7 @@ type HTTPServer struct {
 	devMode     bool
 	networkAPI  *NetworkAPI
 	settingsAPI *SettingsAPI
+	alertAPI    *AlertAPI
 }
 
 // buildID fingerprints the embedded assets. It is empty for an unversioned build,
@@ -120,6 +121,7 @@ func NewHTTPServer(
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
 	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
+	s.alertAPI = NewAlertAPI(newAlertPlayer(s.sounds))
 	s.setupRoutes()
 	return s, nil
 }
@@ -164,6 +166,7 @@ func NewHTTPServerDev(
 		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
 	}
 	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
+	s.alertAPI = NewAlertAPI(newAlertPlayer(s.sounds))
 	s.setupRoutes()
 	return s, nil
 }
@@ -199,7 +202,6 @@ func (s *HTTPServer) setupRoutes() {
 	s.mux.Handle("/images/Spells/", s.fsHandlerWithFallback("/images/Spells/", s.images, "Spells", "_default.webp"))
 	s.mux.Handle("/images/", s.fsHandler("/images/", s.images))
 	s.mux.Handle("/scripts/", s.gzipFSHandlerDirect("/scripts/", s.scripts))
-	s.mux.Handle("/sounds/", s.fsHandler("/sounds/", s.sounds))
 	s.mux.Handle("/styles/", s.gzipFSHandlerDirect("/styles/", s.styles))
 
 	// ao-bin-dumps with gzip support (data FS is already the ao-bin-dumps directory)
@@ -208,6 +210,9 @@ func (s *HTTPServer) setupRoutes() {
 	// API endpoints
 	apiMux := http.NewServeMux()
 	s.settingsAPI.Register(apiMux)
+	if s.alertAPI != nil {
+		s.alertAPI.Register(apiMux)
+	}
 	if s.networkAPI != nil {
 		s.networkAPI.Register(apiMux)
 	}

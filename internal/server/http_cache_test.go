@@ -112,7 +112,7 @@ func do(s *HTTPServer, method, path string, headers map[string]string) *httptest
 }
 
 // staticRoutes covers every static handler: gzipFSHandlerDirect (scripts,
-// styles, ao-bin-dumps), fsHandler (images, sounds) and fsHandlerWithFallback
+// styles, ao-bin-dumps), fsHandler (images) and fsHandlerWithFallback
 // (Items, Spells).
 var staticRoutes = []string{
 	"/scripts/core/DatabaseLoader.js",
@@ -120,7 +120,6 @@ var staticRoutes = []string{
 	"/images/icon.png",
 	"/images/Items/T4_BAG.webp",
 	"/images/Spells/SPELL_GENERIC.webp",
-	"/sounds/player.mp3",
 	"/ao-bin-dumps/harvestables.min.json",
 }
 

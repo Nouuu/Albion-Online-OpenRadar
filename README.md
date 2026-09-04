@@ -48,9 +48,9 @@ Interfaces are auto-selected. Change them from **Settings -> Network** in the br
 ### Linux
 
 ```bash
-# 1. libpcap
-sudo apt install libpcap0.8   # Debian, Ubuntu
-sudo pacman -S libpcap        # Arch
+# 1. libpcap and ALSA
+sudo apt install libpcap0.8 libasound2   # Debian, Ubuntu
+sudo pacman -S libpcap alsa-lib          # Arch
 
 # 2. Download
 mkdir ~/albion-radar && cd ~/albion-radar
@@ -125,7 +125,7 @@ hard-refresh the page (Ctrl+F5) after upgrading.
 
 ### Can two PCs share one radar?
 
-Yes. Run the binary on the PC that plays Albion, then open the `(LAN)` URL from the startup banner on the other device.
+Yes. Run the binary on the PC that plays Albion, then open the `(LAN)` URL from the startup banner on the other device. The threat alert sound comes out of the PC running the radar, not the device showing the page.
 Capture settings stay locked to the host for safety, so the second device gets a read-only view.
 
 ### Is there a macOS build?
@@ -272,6 +272,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 | Go      | 1.26+   | backend                |
 | Npcap   | 1.87+   | Windows packet capture |
 | libpcap | latest  | Linux packet capture   |
+| ALSA    | latest  | Linux alert sound      |
 | Node.js | 20+     | asset and data tooling |
 | Docker  | latest  | Linux cross-compile    |
 

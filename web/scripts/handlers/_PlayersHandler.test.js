@@ -4,8 +4,10 @@ import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
+        get: vi.fn((_k, d) => d),
         getBool: vi.fn(() => true),
         getNumber: vi.fn((_k, d) => d),
+        getFloat: vi.fn((_k, d) => d),
         getJSON: vi.fn(() => null),
     },
 }));
@@ -17,6 +19,7 @@ vi.mock('../data/ZonesDatabase.js', () => ({
 }));
 
 const {PlayersHandler} = await import('./PlayersHandler.js');
+const alertSound = (await import('../utils/AlertSound.js')).default;
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 const zonesDatabase = (await import('../data/ZonesDatabase.js')).default;
 
@@ -31,6 +34,7 @@ describe('PlayersHandler', () => {
 
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
         window.currentMapId = 'safe-zone-01';
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok: true, status: 204}));
 
         handler = new PlayersHandler();
     });
@@ -737,31 +741,86 @@ describe('PlayersHandler', () => {
         });
     });
 
-    describe('playThreatSound (fresh audio per trigger)', () => {
+    describe('playThreatSound (detection cooldown)', () => {
+        const stubBackend = () => {
+            const fetchMock = vi.fn().mockResolvedValue({ok: true, status: 204});
+            vi.stubGlobal('fetch', fetchMock);
+            return fetchMock;
+        };
+
+        beforeEach(() => {
+            handler.lastThreatSoundAt = -Infinity;
+            alertSound.reported = false;
+        });
+
         afterEach(() => {
             vi.unstubAllGlobals();
+            vi.useRealTimers();
         });
 
-        // @verified 2026-05-22: bug report. The single reused Audio element stopped emitting after a
-        // long session (flash still worked). A fresh Audio per trigger mirrors the stateless flash
-        // and avoids a stale/suspended media element.
-        test('synthetic: each call constructs a new Audio and plays it', () => {
-            const playMock = vi.fn().mockResolvedValue();
-            const audioCtor = vi.fn(function () { this.play = playMock; });
-            vi.stubGlobal('Audio', audioCtor);
+        // @verified 2026-08-23: two detections past the cooldown are two alerts, each naming the
+        // selected sound so the process plays what the player chose.
+        test('synthetic: each detection past the cooldown asks the backend to play', () => {
+            const fetchMock = stubBackend();
+            vi.useFakeTimers();
+
+            handler.playThreatSound();
+            vi.advanceTimersByTime(500);
+            handler.playThreatSound();
+
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+            expect(fetchMock.mock.calls[0][0]).toBe('/api/alert/play');
+            expect(JSON.parse(fetchMock.mock.calls[0][1].body).file).toBe('player.wav');
+        });
+
+        // @verified 2026-08-23: a burst of detections is one alert. The gate lives here, on the detection
+        // path, so a sound played from the settings page can never suppress a real threat alert.
+        test('synthetic: a detection under the cooldown does not play', () => {
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 500 : d);
+            const fetchMock = stubBackend();
+            vi.useFakeTimers();
+
+            handler.playThreatSound();
+            vi.advanceTimersByTime(499);
+            handler.playThreatSound();
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+
+            vi.advanceTimersByTime(1);
+            handler.playThreatSound();
+
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        });
+
+        // @verified 2026-08-23: the interval is a player setting, not a constant baked into the code.
+        test('synthetic: the cooldown comes from settings', () => {
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 2000 : d);
+            const fetchMock = stubBackend();
+            vi.useFakeTimers();
+
+            handler.playThreatSound();
+            vi.advanceTimersByTime(1500);
+            handler.playThreatSound();
+
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+        });
+
+        // @verified 2026-08-23: zero means the player wants every detection to sound.
+        test('synthetic: a cooldown of zero plays every detection', () => {
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 0 : d);
+            const fetchMock = stubBackend();
+            vi.useFakeTimers();
 
             handler.playThreatSound();
             handler.playThreatSound();
+            handler.playThreatSound();
 
-            expect(audioCtor).toHaveBeenCalledTimes(2);
-            expect(audioCtor).toHaveBeenCalledWith('/sounds/player.mp3');
-            expect(playMock).toHaveBeenCalledTimes(2);
+            expect(fetchMock).toHaveBeenCalledTimes(3);
         });
 
-        // @verified 2026-08-09: a rejected play() is reported at warn level so a silent alert is visible in the logs.
-        test('synthetic: rejected play() is caught and reported', async () => {
-            const playMock = vi.fn().mockRejectedValue(new Error('autoplay blocked'));
-            vi.stubGlobal('Audio', vi.fn(function () { this.play = playMock; }));
+        // @verified 2026-08-09: a refused alert is reported at warn level so a silent alert is visible in the logs.
+        test('synthetic: a refused alert is caught and reported', async () => {
+            vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ok: false, status: 503}));
 
             await expect(handler.playThreatSound()).resolves.toBeUndefined();
 
