@@ -181,6 +181,7 @@ jobs:
         run: |
           gh release create "${{ env.VERSION }}" \
             --draft \
+            $([[ "${{ env.VERSION }}" == *-* ]] && echo --prerelease) \
             --title "OpenRadar v${{ env.VERSION }}" \
             --notes-file dist/RELEASE.md \
             dist/OpenRadar-linux-amd64 \

@@ -17,6 +17,8 @@ Real-time radar for Albion Online.
 ### 🐛 Bug Fixes
 {% elif group == "Performance" -%}
 ### ⚡ Performance
+{% elif group == "Other" -%}
+### 📦 Other
 {% else -%}
 ### {{ group }}
 {% endif %}
@@ -50,13 +52,13 @@ postprocessors = [
 
 [git]
 conventional_commits = true
-filter_unconventional = true
+filter_unconventional = false
 split_commits = false
 commit_parsers = [
   { message = "^feat", group = "Features" },
   { message = "^fix", group = "Bug fixes" },
   { message = "^perf", group = "Performance" },
-  { message = "^docs", skip = true },
+  { message = "^docs?", skip = true },
   { message = "^test", skip = true },
   { message = "^ci", skip = true },
   { message = "^build", skip = true },
@@ -64,9 +66,10 @@ commit_parsers = [
   { message = "^style", skip = true },
   { message = "^refactor", skip = true },
   { message = "^Merge", skip = true },
+  { message = ".*", group = "Other" },
 ]
 filter_commits = false
 tag_pattern = "v?[0-9]+\\.[0-9]+\\.[0-9]+"
-ignore_tags = ""
+ignore_tags = "-(alpha|beta|rc)"
 topo_order = false
 sort_commits = "oldest"
