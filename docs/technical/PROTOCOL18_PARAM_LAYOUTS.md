@@ -55,6 +55,8 @@ Representative layouts observed:
 | 39        | NewSimpleHarvestableObjectList | `params[0]` `[]int16` batch ids, `params[3]` `[]float32` batch positions |
 | 40        | NewHarvestableObject         | `params[5]` typeNumber, `params[6]` mobileTypeId, `params[7]` tier, `params[8]` **`[]float32`** packed X/Y, `params[10]` size, `params[11]` enchant |
 | 91        | ?                            | `params[2..3,5]` float32, `params[6]` int64 |
+| 123       | NewMob                       | `params[1]` typeId, `params[7]` `[]float32` X/Y, `params[13]` max HP, `params[19]` rarity, `params[31]` server name (Mists creatures carry a `MISTS_` prefix), `params[33]` portal tag string on wisps only, `params[34]` enchant |
+| 325       | NewRandomDungeonExit         | `params[1]` `[]float32` X/Y, `params[3]` name, `params[4]` template on random dungeons only, `params[6]` template, `params[7]` variant, `params[9]` enchant, `params[16]` `MISTS_*` tag on Mists entrances |
 
 **Frontend layout note (real code 40):**
 
@@ -66,6 +68,14 @@ decode the same wire shape.
 
 Mobs and living resources do not arrive on code 40. They arrive on `NewMob`,
 currently code 123. See `HARVEST_EVENTS.md`.
+
+**Dragonfire (2026-08-31) index shifts.** The update inserted one parameter on
+`NewMob` at `[32]` and one on `NewRandomDungeonExit` at `[4]`. On `NewMob` the
+portal tag moved from `[32]` to `[33]` and the enchant from `[33]` to `[34]`;
+`[31]` kept its index but now carries `MISTS_` prefixed creature names, so it is
+no longer a portal signal. On `NewRandomDungeonExit` everything from `[5]` up
+moved by one: template `[5]` to `[6]`, enchant `[8]` to `[9]`, Mists tag `[15]`
+to `[16]`. No other event family changed shape in the 2026-09-03 corpus.
 
 ## Gaps in this snapshot
 

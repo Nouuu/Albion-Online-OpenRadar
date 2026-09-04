@@ -22,7 +22,7 @@ Player positions in events 29 and 3 carry an additional XOR layer with an 8-byte
 EncryptedPosition XOR XorCode = relative position
 ```
 
-The XorCode is transmitted via `EventCodes.KeySync`, currently code 600, itself wrapped by Photon's AES layer. A passive pcap listener cannot read either of them without first cracking the AES wrapper. The code moved twice with upstream enum insertions, so read it from `EventCodes.js` rather than from the number in this page.
+The XorCode is transmitted via `EventCodes.KeySync`, currently code 603, itself wrapped by Photon's AES layer. A passive pcap listener cannot read either of them without first cracking the AES wrapper. The code has moved with every upstream enum insertion, so read it from `EventCodes.js` rather than from the number in this page.
 
 ## Why a passive capture cannot recover positions
 
