@@ -69,17 +69,17 @@ When a player enters the Mists, the cluster id arrives via `Event 521 MistsPlaye
 
 | Code | Symbol | Status |
 |---|---|---|
-| 123 | NewMob | Routed. Handles portals, mob spawns, feu follets via name suffix. |
-| 532 | NewCagedObject | Routed. Wisp cages. |
-| 533 | CagedObjectStateUpdated | Routed. Cage opened. |
-| 521 | MistsPlayerJoinedInfo | Routed. Mists entry signal; applies the map change with origin cluster. |
-| 520 | NewMistsImmediateReturnExit | Not routed. Mists exit signal. |
-| 522 | NewMistsStaticEntrance | Not routed. |
-| 531 | MistsEntranceDataChanged | Not routed. |
-| 525 | NewMistsWispSpawn | Not routed. Initial design assumed this carried feu follets; runtime evidence (re-confirmed post-patch on 2026-07-05, feu follets detected live via NewMob name) shows otherwise. Payload observed x22 in the 2026-07-05 Mists capture: `Parameters[0]` id, `Parameters[1]` `[x, y]`, `Parameters[2]` in {90, 180, 270} (likely an orientation), no rarity field. Out of scope until live evidence clarifies its semantics. |
+| 123 | NewMob | Routed. Mob spawns; a portal wisp carries its `MISTS_*` tag at `Parameters[33]` since Dragonfire, its enchant at `[34]`. |
+| 533 | NewCagedObject | Routed. Wisp cages. |
+| 534 | CagedObjectStateUpdated | Routed. Cage opened. |
+| 522 | MistsPlayerJoinedInfo | Routed. Mists entry signal; applies the map change with origin cluster. |
+| 521 | NewMistsImmediateReturnExit | Not routed. Mists exit signal. |
+| 523 | NewMistsStaticEntrance | Not routed. |
+| 532 | MistsEntranceDataChanged | Not routed. |
+| 526 | NewMistsWispSpawn | Not routed. Initial design assumed this carried feu follets; runtime evidence (re-confirmed post-patch on 2026-07-05, feu follets detected live via NewMob name) shows otherwise. Payload observed x22 in the 2026-07-05 Mists capture: `Parameters[0]` id, `Parameters[1]` `[x, y]`, `Parameters[2]` in {90, 180, 270} (likely an orientation), no rarity field. Out of scope until live evidence clarifies its semantics. |
 
 ## Open observations
 
 - Mists rarity at the cluster level (instance-wide, before portals appear) lives in the `ChangeCluster` operation response `Parameters[3]` byte array, last byte. Reaching it requires plumbing a Mists-zone capture with opcode 41 response into a fixture and a cluster-level rarity store.
-- Events 520/522/525/531 are received but not consumed. A follow-up PR should route them into a Mists state surface readable by drawings.
-- Post-patch portal rarity: only Common portals observed so far. A capture with a non-Common portal is needed to confirm `Parameters[33]` still carries the rarity.
+- Events 521/523/526/532 are received but not consumed. A follow-up PR should route them into a Mists state surface readable by drawings.
+- Portal rarity arrives at `Parameters[34]` since Dragonfire; the 2026-09-03 capture carries a duo Uncommon portal with value 2.
