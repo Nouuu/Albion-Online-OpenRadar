@@ -168,11 +168,49 @@ describe('ZonesDatabase Avalon Roads pvpType', () => {
         expect(zonesDatabase.isRedZone('TNL-023')).toBe(false);
     });
 
-    // @verified 2026-05-07: Hideout interiors stay safe. Player-owned hideouts inside Avalon are
-    // not PvP zones; only the surrounding Roads are.
-    test('TUNNEL_HIDEOUT keeps safe pvpType', () => {
-        expect(zonesDatabase.getPvpType('TNL-151')).toBe('safe');
-        expect(zonesDatabase.isSafeZone('TNL-151')).toBe(true);
+    // @verified 2026-09-04: issue #187. TNL-151 is Quaent-Vynsum, map file
+    // TNL-151_RDS_RO_AUTO_T6_AVA_AVA, a Roads map that carries a hideout. The 2026-05-07 test
+    // asserted safe here, reading TUNNEL_HIDEOUT as a hideout interior. Interiors are the separate
+    // HIDEOUT-NNNNx family, checked below.
+    test('TUNNEL_HIDEOUT is forced to black, it is a Roads map carrying a hideout', () => {
+        expect(zonesDatabase.getPvpType('TNL-151')).toBe('black');
+        expect(zonesDatabase.isBlackZone('TNL-151')).toBe(true);
+    });
+
+    // @verified 2026-09-04: issue #187. Same family, deep variant.
+    test('TUNNEL_HIDEOUT_DEEP is forced to black', () => {
+        expect(zonesDatabase.getPvpType('TNL-154')).toBe('black');
+    });
+
+    // @verified 2026-09-04: the intent behind the 2026-05-07 comment, applied to the entries it
+    // actually meant. A hideout interior is not a PvP zone.
+    test('HIDEOUT interiors keep safe pvpType', () => {
+        expect(zonesDatabase.getPvpType('HIDEOUT-0001a')).toBe('safe');
+        expect(zonesDatabase.isSafeZone('HIDEOUT-0001a')).toBe(true);
+    });
+
+    // @verified 2026-09-04: every Roads entry, not a sample. A data refresh that adds a Roads
+    // family fails here instead of in a player's session.
+    test('every TUNNEL_ family in the shipped database classifies as black', () => {
+        const roads = Object.entries(zonesDatabase.zones)
+            .filter(([, zone]) => String(zone.type).startsWith('TUNNEL_'));
+        const wrong = roads
+            .filter(([id]) => zonesDatabase.getPvpType(id) !== 'black')
+            .map(([id, zone]) => `${id} ${zone.type} ${zone.pvpType}`);
+
+        expect(roads.length).toBeGreaterThan(0);
+        expect(wrong).toEqual([]);
+    });
+
+    // @verified 2026-09-04: the Roads set and the RDS map-file set are the same 400 entries, so
+    // keying the rule on the type name covers exactly the Roads and nothing else.
+    test('TUNNEL_ types and RDS map files describe the same zones', () => {
+        const byType = Object.keys(zonesDatabase.zones)
+            .filter(id => String(zonesDatabase.zones[id].type).startsWith('TUNNEL_')).sort();
+        const byFile = Object.keys(zonesDatabase.zones)
+            .filter(id => String(zonesDatabase.zones[id].file).includes('_RDS_')).sort();
+
+        expect(byType).toEqual(byFile);
     });
 
     // @verified 2026-05-07: regression guard. TUNNEL_LOW already correctly black in zones.json,
