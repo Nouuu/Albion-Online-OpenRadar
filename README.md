@@ -19,7 +19,7 @@
   </a>
 </p>
 
-> ### ⚠️Dragonfire update of 08/31 broke detection on v2.2.3. Fixed on main by [#194](https://github.com/Nouuu/Albion-Online-OpenRadar/pull/194), release to follow.
+> ### ⚠️Dragonfire update of 08/31 broke detection on v2.2.3. Pre-release [v2.2.4-beta1](https://github.com/Nouuu/Albion-Online-OpenRadar/releases/tag/2.2.4-beta1) restores it; report anything still off on [#196](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/196).
 
 https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 
