@@ -74,11 +74,11 @@ export class ZonesDatabase {
     return this._applyAvalonRoadsRule(raw);
   }
 
-  // Roads of Avalon are full-loot PvP regardless of origin. zones.json tags TUNNEL_ROYAL
-  // and TUNNEL_ROYAL_RED as safe/red, overridden here.
+  // Roads of Avalon are full-loot PvP regardless of origin. Every TUNNEL_ family is a Roads map,
+  // and zones.json tags several of them safe or red.
   _applyAvalonRoadsRule(zone) {
     if (!zone) return null;
-    if (zone.type === "TUNNEL_ROYAL" || zone.type === "TUNNEL_ROYAL_RED") {
+    if (String(zone.type).startsWith("TUNNEL_")) {
       return { ...zone, pvpType: "black" };
     }
     return zone;
