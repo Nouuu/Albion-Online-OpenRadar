@@ -1,4 +1,4 @@
-import {describe, test, expect, beforeAll, beforeEach} from 'vitest';
+import {describe, test, expect, beforeAll, beforeEach, vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
@@ -229,6 +229,38 @@ describe('ZonesDatabase Avalon Roads pvpType', () => {
         expect(zonesDatabase.getPvpType('1000')).toBe('safe');
         expect(zonesDatabase.getPvpType('0212')).toBe('yellow');
         expect(zonesDatabase.getPvpType('3316')).toBe('black');
+    });
+});
+
+describe('ZonesDatabase unresolved map ids', () => {
+    beforeEach(() => {
+        zonesDatabase.forgetUnresolved();
+        window.logger = {debug: () => {}, info: () => {}, warn: vi.fn(), error: () => {}};
+    });
+
+    // @verified 2026-09-04: an id the database cannot place answers safe, which disables the threat
+    // gate, the flash and the sound at once. Silent is the one thing it must not be.
+    test('an unknown map id is recorded', () => {
+        expect(zonesDatabase.getZone('NOPE-9999')).toBeNull();
+
+        expect(window.logger.warn).toHaveBeenCalledWith(
+            expect.anything(), 'ZoneUnresolved', expect.objectContaining({mapId: 'NOPE-9999'}));
+    });
+
+    // @verified 2026-09-04: zone lookups run per detection and per frame, so one record per id.
+    test('the same unknown id is recorded once', () => {
+        for (let i = 0; i < 5; i++) zonesDatabase.getZone('NOPE-9999');
+
+        expect(window.logger.warn).toHaveBeenCalledTimes(1);
+    });
+
+    // @verified 2026-09-04: a resolvable id must stay silent, including one resolved by the
+    // compound-id fallback.
+    test('a resolvable id is not recorded', () => {
+        zonesDatabase.getZone('TNL-151');
+        zonesDatabase.getZone('1000');
+
+        expect(window.logger.warn).not.toHaveBeenCalled();
     });
 });
 
