@@ -14,7 +14,6 @@ vi.mock('../utils/SettingsSync.js', () => ({
 }));
 
 const {HarvestablesHandler} = await import('./HarvestablesHandler.js');
-const {MobsHandler} = await import('./MobsHandler.js');
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 
 const allTrueSettings = {
@@ -57,117 +56,57 @@ describe('HarvestablesHandler', () => {
     });
 
     describe('newHarvestableObject (event 40)', () => {
-        // @verified 2026-04-18: server Parameters[7]=3 and real DB lt=3 both agree for mobId=424.
-        test('pcap-derived single-spawn: Hide toad mobId=424 stores tier 3 matching server and DB', async () => {
+        // @verified 2026-09-03: pcap-derived single-spawn, 2026-09-03 capture. Server Parameters[7] and the
+        // Dragonfire DB entry for the living mobileTypeId agree on the tier, and the family comes from the DB.
+        test.each([
+            [715, 'T7_MOB_CRITTER_ORE_MISTS_RED', 'Ore', 7],
+            [721, 'T7_MOB_CRITTER_FIBER_MISTS_RED', 'Fiber', 7],
+        ])('pcap-derived single-spawn: living mobileTypeId=%i (%s) stores tier matching server and DB', async (mobileTypeId, uniqueName, family, tier) => {
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 424);
-            expect(msg, 'fixture should contain mobId=424').toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
-            const list = handler.getHarvestableList();
-            expect(list).toHaveLength(1);
-            expect(list[0].tier).toBe(3);
-            expect(list[0].stringType).toBe('Hide');
-        });
-
-        // @verified 2026-04-18: server Parameters[7]=5 and real DB lt=5 both agree for mobId=428.
-        test('pcap-derived single-spawn: Hide snake mobId=428 stores tier 5 matching server and DB', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 428);
-            expect(msg, 'fixture should contain mobId=428').toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
-            const list = handler.getHarvestableList();
-            expect(list).toHaveLength(1);
-            expect(list[0].tier).toBe(5);
-            expect(list[0].stringType).toBe('Hide');
-        });
-
-        // @verified 2026-04-18: static Fiber typeNumber=14, tier=5, enchant=1; real DB maps typeNumber 14 to FIBER.
-        test('pcap-derived single-spawn: static Fiber tier=5 enchant=1 stored with stringType Fiber', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['5'] === 14 && m.parameters['7'] === 5);
-            expect(msg, 'fixture should contain static Fiber tier=5').toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
-            const list = handler.getHarvestableList();
-            expect(list).toHaveLength(1);
-            expect(list[0].tier).toBe(5);
-            expect(list[0].charges).toBe(1);
-            expect(list[0].stringType).toBe('Fiber');
-        });
-
-        // @verified 2026-04-18: static Log typeNumber=0, tier=4, enchant=2; real DB maps typeNumber 0 to WOOD.
-        test('pcap-derived single-spawn: static Log tier=4 enchant=2 stored with stringType Log', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['5'] === 0 && m.parameters['7'] === 4);
-            expect(msg, 'fixture should contain static Log tier=4').toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
-            const list = handler.getHarvestableList();
-            expect(list).toHaveLength(1);
-            expect(list[0].stringType).toBe('Log');
-            expect(list[0].tier).toBe(4);
-        });
-
-        // @verified 2026-04-18: living Hide mob=424, mobileTypeId routed through real MobsDB.getResourceInfo.
-        test('pcap-derived single-spawn: living Hide mob=424 stringType from real MobsDB', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 424);
-            expect(msg).toBeDefined();
+            const msg = fx.messages.find(m => m.parameters['6'] === mobileTypeId);
+            expect(msg, `fixture should contain mobileTypeId=${mobileTypeId}`).toBeDefined();
             const p = normalizeParams(msg.parameters);
             const spy = vi.spyOn(dbs.mobsDatabase, 'getResourceInfo');
 
             handler.newHarvestableObject(p[0], p);
 
-            expect(spy).toHaveBeenCalledWith(424);
-            const list = handler.getHarvestableList();
-            expect(list).toHaveLength(1);
-            expect(list[0].stringType).toBe('Hide');
-        });
-
-        // @verified 2026-04-18: living Hide mob=531, server tier=4 stored from Parameters[7].
-        test('pcap-derived single-spawn: living Fiber critter mob=531 id stored correctly', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 531);
-            expect(msg).toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
+            expect(spy).toHaveBeenCalledWith(mobileTypeId);
+            expect(dbs.mobsDatabase.getMobInfo(mobileTypeId).uniqueName).toBe(uniqueName);
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
             expect(list[0].id).toBe(p[0]);
-            expect(list[0].tier).toBe(4);
+            expect(list[0].tier).toBe(tier);
+            expect(list[0].tier).toBe(dbs.mobsDatabase.getMobInfo(mobileTypeId).tier);
+            expect(list[0].stringType).toBe(family);
         });
 
-        // @verified 2026-04-18: living Hide mob=428 tier=5 enchant=0 spawns; charges=0 from Parameters[11]=0.
-        test('pcap-derived single-spawn: living Hide mob=428 tier=5 enchant=0 spawns', async () => {
+        // @verified 2026-09-03: pcap-derived single-spawn, 2026-09-03 capture. Static nodes resolve family from
+        // typeNumber through the real HarvestablesDB; tier from Parameters[7], charges from Parameters[11].
+        test.each([
+            [0, 6, 'Log', 2],
+            [7, 6, 'Rock', 1],
+            [14, 6, 'Fiber', 2],
+            [27, 6, 'Ore', 1],
+        ])('pcap-derived single-spawn: static typeNumber=%i tier=%i stored with stringType %s and charges %i', async (typeNumber, tier, family, charges) => {
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 428);
-            expect(msg).toBeDefined();
+            const msg = fx.messages.find(m => m.parameters['5'] === typeNumber && m.parameters['7'] === tier);
+            expect(msg, `fixture should contain static typeNumber=${typeNumber} tier=${tier}`).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
             handler.newHarvestableObject(p[0], p);
 
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
-            expect(list[0].tier).toBe(5);
-            expect(list[0].charges).toBe(0);
+            expect(list[0].tier).toBe(tier);
+            expect(list[0].charges).toBe(charges);
+            expect(list[0].stringType).toBe(family);
         });
 
-        // @verified 2026-04-18: static Fiber tier=4 enchant=1 size stored from Parameters[10].
-        test('pcap-derived single-spawn: static Fiber tier=4 enchant=1 size stored from param[10]', async () => {
+
+        // @verified 2026-09-03: static Fiber tier=6 enchant=2 size stored from Parameters[10] (2026-09-03 capture).
+        test('pcap-derived single-spawn: static Fiber tier=6 enchant=2 size stored from param[10]', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['5'] === 14 && m.parameters['7'] === 4 && m.parameters['6'] === -1);
+            const msg = fx.messages.find(m => m.parameters['5'] === 14 && m.parameters['7'] === 6 && m.parameters['6'] === -1);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -181,7 +120,7 @@ describe('HarvestablesHandler', () => {
         // @verified 2026-04-18: spawning same id twice updates charges and does not duplicate.
         test('pcap-derived single-spawn: same id spawned twice updates, does not duplicate', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const first = fx.messages.find(m => m.parameters['6'] === 529);
+            const first = fx.messages.find(m => m.parameters['6'] === 721);
             expect(first).toBeDefined();
             const p = normalizeParams(first.parameters);
 
@@ -255,62 +194,26 @@ describe('HarvestablesHandler', () => {
     });
 
     describe('newHarvestableObject tier divergence (event 40)', () => {
-        // @characterization 2026-04-18: HarvestablesHandler stores Parameters[7]=3 for mobId=529;
-        // MobsHandler stores dbInfo.tier=4 from real MobsDB for the same creature.
-        // Divergence pending #58 overlay to resolve ground truth.
-        test('characterization: Fiber critter mobId=529 HarvestablesHandler stores server tier (3), not DB tier (4)', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 529);
-            expect(msg).toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
-            const harv = handler.getHarvestableList()[0];
-            expect(harv).toBeDefined();
-            expect(harv.tier).toBe(3);
-        });
-
-        // @characterization 2026-04-18: HarvestablesHandler stores Parameters[7]=4 for mobId=531;
-        // MobsHandler stores dbInfo.tier=5 from real MobsDB for the same creature.
-        // Divergence pending #58 overlay to resolve ground truth.
-        test('characterization: Fiber critter mobId=531 HarvestablesHandler stores server tier (4), not DB tier (5)', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 531);
-            expect(msg).toBeDefined();
-            const p = normalizeParams(msg.parameters);
-
-            handler.newHarvestableObject(p[0], p);
-
-            const harv = handler.getHarvestableList()[0];
-            expect(harv).toBeDefined();
-            expect(harv.tier).toBe(4);
-        });
-
-        // @verified 2026-07-05: same creature captured on both events in the 2026-07-05 Mists session:
-        // event 40 (mobileTypeId=396, server Parameters[7]=5) and NewMob 396 -> T5_MOB_HIDE_MISTS_OWL (DB tier 5).
-        test('MobsHandler and HarvestablesHandler agree on harvest tier 5 for Hide owl mobileTypeId=396', async () => {
-            const mobsHandler = new MobsHandler();
-
-            const mobFx = await loadFixture('mobs', 'living-tier');
-            const mobMsg = mobFx.messages.find(m => m.parameters['1'] === 396);
-            expect(mobMsg).toBeDefined();
-            const mobParams = normalizeParams(mobMsg.parameters);
-            mobsHandler.NewMobEvent(mobParams);
+        // @verified 2026-09-03: pcap-derived event 40 from the 2026-09-03 Mists capture, one per living family
+        // observed: server Parameters[7] and the Dragonfire DB entry for mobileTypeId agree on the harvest tier.
+        test.each([
+            [715, 'T7_MOB_CRITTER_ORE_MISTS_RED', 'Ore', 7],
+            [721, 'T7_MOB_CRITTER_FIBER_MISTS_RED', 'Fiber', 7],
+        ])('DB and HarvestablesHandler agree on harvest tier for living mobileTypeId=%i (%s)', async (mobileTypeId, uniqueName, family, tier) => {
+            const info = window.mobsDatabase.getMobInfo(mobileTypeId);
+            expect(info.uniqueName).toBe(uniqueName);
 
             const fx = await loadFixture('harvestables', 'living-pair');
-            const msg = fx.messages.find(m => m.parameters['6'] === 396);
+            const msg = fx.messages.find(m => m.parameters['6'] === mobileTypeId);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
             handler.newHarvestableObject(p[0], p);
 
-            const mob = mobsHandler.mobsList.find(m => m.id === mobParams[0]);
             const harv = handler.getHarvestableList()[0];
-            expect(mob).toBeDefined();
             expect(harv).toBeDefined();
-            expect(mob.tier).toBe(5);
-            expect(harv.tier).toBe(5);
-            expect(mob.tier).toBe(harv.tier);
+            expect(harv.tier).toBe(tier);
+            expect(harv.tier).toBe(p[7]);
+            expect(info.tier).toBe(harv.tier);
         });
     });
 
@@ -336,7 +239,7 @@ describe('HarvestablesHandler', () => {
             });
 
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 529);
+            const msg = fx.messages.find(m => m.parameters['6'] === 721);
             const p = normalizeParams(msg.parameters);
             const pWithE0 = {...p, 11: 0};
 
@@ -353,7 +256,7 @@ describe('HarvestablesHandler', () => {
         // living Fiber settings instead.
         test('HarvestUpdateEvent preserves living Fiber when static settings are all disabled', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 529);
+            const msg = fx.messages.find(m => m.parameters['6'] === 721);
             const p = normalizeParams(msg.parameters);
             handler.newHarvestableObject(p[0], p);
             expect(handler.getHarvestableList().find(h => h.id === p[0])).toBeDefined();
@@ -387,7 +290,7 @@ describe('HarvestablesHandler', () => {
             });
 
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 531);
+            const msg = fx.messages.find(m => m.parameters['6'] === 721);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
             p[11] = 0;
@@ -403,7 +306,7 @@ describe('HarvestablesHandler', () => {
         test('HARV-2: HarvestUpdateEvent mutates charges without removing entity when setting for new enchant is off', async () => {
             settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)});
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 531);
+            const msg = fx.messages.find(m => m.parameters['6'] === 721);
             const p = normalizeParams(msg.parameters);
             p[11] = 0;
             handler.newHarvestableObject(p[0], p);
@@ -418,13 +321,13 @@ describe('HarvestablesHandler', () => {
             expect(list[0].charges).toBe(2);
         });
 
-        // @verified 2026-04-24: HARV-4, carcass with mobileTypeId!=null no longer filtered at spawn.
-        // The former isLiving=true early-return is gone; Hide carcasses always land in the list and
+        // @verified 2026-09-03: HARV-4, a living node with mobileTypeId!=null is no longer filtered at spawn.
+        // The former isLiving=true early-return is gone; living nodes always land in the list and
         // the static filter at HarvestablesDrawing decides visibility.
-        test('HARV-4: Hide carcass mobileTypeId=424 spawns with all static settings off still lands in list', async () => {
+        test('HARV-4: living Ore mobileTypeId=715 spawns with all static settings off still lands in list', async () => {
             settingsSync.getJSON.mockReturnValue(allFalseSettings);
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === 424);
+            const msg = fx.messages.find(m => m.parameters['6'] === 715);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -432,7 +335,7 @@ describe('HarvestablesHandler', () => {
 
             const stored = handler.getHarvestableList().find(h => h.id === p[0]);
             expect(stored).toBeDefined();
-            expect(stored.mobileTypeId).toBe(424);
+            expect(stored.mobileTypeId).toBe(715);
         });
 
         // @verified 2026-04-24: HARV-4, batch-spawn (event 38) also bypasses settings filter at spawn.
@@ -463,18 +366,18 @@ describe('HarvestablesHandler', () => {
         // static path, which was working before HARV-3.
         test('pcap-composed: static resource enchant re-gate keeps entity with static settings enabled', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['0'] === 3203);
-            expect(msg, 'fixture should contain static id=3203').toBeDefined();
+            const msg = fx.messages.find(m => m.parameters['0'] === 2719);
+            expect(msg, 'fixture should contain static id=2719').toBeDefined();
             const p = normalizeParams(msg.parameters);
             handler.newHarvestableObject(p[0], p);
-            const spawned = handler.getHarvestableList().find(h => h.id === 3203);
+            const spawned = handler.getHarvestableList().find(h => h.id === 2719);
             expect(spawned).toBeDefined();
             expect(spawned.mobileTypeId).toBe(-1);
 
             // Force an enchant change distinct from spawn enchant (p[11]=2) to trigger the re-gate.
-            handler.HarvestUpdateEvent({0: 3203, 1: p[10] ?? 1, 2: 3});
+            handler.HarvestUpdateEvent({0: 2719, 1: p[10] ?? 1, 2: 3});
 
-            const stored = handler.getHarvestableList().find(h => h.id === 3203);
+            const stored = handler.getHarvestableList().find(h => h.id === 2719);
             expect(stored).toBeDefined();
             expect(stored.charges).toBe(3);
         });

@@ -2,7 +2,10 @@
 // synthetic: constructed entities or name-derived wire ids for variants not observed in the post-patch corpus.
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
-import {normalizeParams} from '../__fixtures__/loader.js';
+import {existsSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {dirname, join} from 'node:path';
+import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
@@ -215,6 +218,52 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         const merged = Object.assign({}, ...maps);
         settingsSync.getJSON.mockImplementation(key => merged[key] ?? null);
     }
+
+    // @verified 2026-09-03: pcap-derived, 2026-09-03 Mists capture, wire 416. Full-flow MobsHandler -> drawing:
+    // the fairy dragon draws its Resources icon when settingBossFairyDragon is on, and nothing when it is off.
+    test('full-flow: fairy dragon draws FAIRYDRAGON from Resources when settingBossFairyDragon is on', async () => {
+        const fx = await loadFixture('mobs', 'mist-boss-spawn');
+        const p = normalizeParams(fx.messages.find(m => m.parameters['1'] === 416).parameters);
+        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
+
+        mobsHandler.NewMobEvent(p);
+        drawing.invalidate(ctx, mobsHandler.getMobList(), []);
+
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'FAIRYDRAGON', 'Resources', expect.any(Number));
+    });
+
+    // @verified 2026-09-04: every Mists boss icon the drawing asks for exists on disk at the path
+    // DrawCustomImage composes, so the embedded server can serve it.
+    test.each([
+        'T6_MOB_MISTS_FAIRYDRAGON',
+        'T7_MOB_MISTS_GRIFFIN',
+        'T5_MOB_MISTS_SPIDER',
+        'T6_MOB_ARCANE_CRYSTALSPIDER_BOSS',
+    ])('full-flow: %s asks for an icon that exists under web/images', (uniqueName) => {
+        const typeId = window.mobsDatabase.getTypeIdByName(uniqueName);
+        expect(typeId).not.toBeNull();
+        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
+
+        mobsHandler.NewMobEvent(normalizeParams({'0': 95000 + typeId, '1': typeId, '2': 255, '7': [0, 0], '13': 3000, '34': 0}));
+        drawing.invalidate(ctx, mobsHandler.getMobList(), []);
+
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+        const [, , , imageName, folder] = drawing.DrawCustomImage.mock.calls[0];
+        const file = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'images', folder, `${imageName}.webp`);
+        expect(existsSync(file), file).toBe(true);
+    });
+
+    test('full-flow: fairy dragon is skipped when settingBossFairyDragon is off', async () => {
+        const fx = await loadFixture('mobs', 'mist-boss-spawn');
+        const p = normalizeParams(fx.messages.find(m => m.parameters['1'] === 416).parameters);
+        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges' && key !== 'settingBossFairyDragon');
+
+        mobsHandler.NewMobEvent(p);
+        drawing.invalidate(ctx, mobsHandler.getMobList(), []);
+
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+        expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
+    });
 
     // @verified 2026-07-05: name-derived T6_MOB_CRITTER_FIBER_SWAMP_DEAD (no DEAD carcass observed
     // in the post-patch corpus). Full-flow MobsHandler -> drawing: Living Fiber T6 renders when

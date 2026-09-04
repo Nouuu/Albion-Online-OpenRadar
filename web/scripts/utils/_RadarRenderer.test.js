@@ -180,18 +180,18 @@ describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state',
             m => m.type === EnemyType.LivingHarvestable || m.type === EnemyType.LivingSkinnable
         );
 
-        expect(living).toHaveLength(19);
-        expect(renderer._collectClusterCandidates()).toHaveLength(19);
+        expect(living).toHaveLength(30);
+        expect(renderer._collectClusterCandidates()).toHaveLength(30);
     });
 
-    // @verified 2026-08-02: per-family gating holds on decoded state. The capture carries 8 Hide, 3 Log, 3 Rock,
-    // 3 Ore, 2 Fiber, so enabling one family admits exactly that family.
+    // @verified 2026-09-03: per-family gating holds on decoded state. The 2026-09-03 capture carries 10 Hide,
+    // 4 Log, 8 Rock, 4 Ore, 4 Fiber, so enabling one family admits exactly that family.
     test.each([
-        ['settingLivingHideEnchants', 'Hide', 8],
-        ['settingLivingWoodEnchants', 'Log', 3],
-        ['settingLivingRockEnchants', 'Rock', 3],
-        ['settingLivingOreEnchants', 'Ore', 3],
-        ['settingLivingFiberEnchants', 'Fiber', 2],
+        ['settingLivingHideEnchants', 'Hide', 10],
+        ['settingLivingWoodEnchants', 'Log', 4],
+        ['settingLivingRockEnchants', 'Rock', 8],
+        ['settingLivingOreEnchants', 'Ore', 4],
+        ['settingLivingFiberEnchants', 'Fiber', 4],
     ])('%s alone admits only the %s living resources (%i)', (settingKey, family, expected) => {
         settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
         const renderer = makeRenderer({mobsList});

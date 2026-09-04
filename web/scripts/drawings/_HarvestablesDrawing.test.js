@@ -126,15 +126,17 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-07-05: live Hide critter (old-capture mobileTypeId=424, post-patch DB MOB_DYNAMIC_WOLF l=HIDE) routes to Living.
-    test('pcap-derived full-flow: live Hide critter mobileTypeId=424 renders under Living filter', async () => {
+    // @verified 2026-09-03: pcap-composed. Live Ore critter mobileTypeId=715 (T7_MOB_CRITTER_ORE_MISTS_RED) from the
+    // 2026-09-03 capture routes to Living. Every living node in that corpus arrives with size 0, so the size is
+    // forced to 1 to reach the render gate.
+    test('pcap-composed full-flow: live Ore critter mobileTypeId=715 renders under Living filter', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
-        const msg = fx.messages.find(m => m.parameters['6'] === 424 && m.parameters['10'] > 0);
-        const p = normalizeParams(msg.parameters);
+        const msg = fx.messages.find(m => m.parameters['6'] === 715);
+        const p = {...normalizeParams(msg.parameters), 10: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingHideEnchants') return allTrue();
-            if (key === 'settingStaticHideEnchants') return allFalse();
+            if (key === 'settingLivingOreEnchants') return allTrue();
+            if (key === 'settingStaticOreEnchants') return allFalse();
             return null;
         });
 
@@ -145,15 +147,15 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-07-05: live Hide skipped when Living is off and Static is on.
-    test('pcap-derived full-flow: live Hide critter mobileTypeId=424 skipped when Living off, Static on', async () => {
+    // @verified 2026-09-03: pcap-composed, same node. Live Ore skipped when Living is off and Static is on.
+    test('pcap-composed full-flow: live Ore critter mobileTypeId=715 skipped when Living off, Static on', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
-        const msg = fx.messages.find(m => m.parameters['6'] === 424 && m.parameters['10'] > 0);
-        const p = normalizeParams(msg.parameters);
+        const msg = fx.messages.find(m => m.parameters['6'] === 715);
+        const p = {...normalizeParams(msg.parameters), 10: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingHideEnchants') return allFalse();
-            if (key === 'settingStaticHideEnchants') return allTrue();
+            if (key === 'settingLivingOreEnchants') return allFalse();
+            if (key === 'settingStaticOreEnchants') return allTrue();
             return null;
         });
 
@@ -302,15 +304,16 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-07-05: pcap-derived full-flow test: real handler -> drawing chain produces a badge
-    // in badge mode. Live Hide owl (mobileTypeId=396) from the 2026-07-05 Mists capture.
-    test('pcap-derived full-flow: live Hide critter renders as badge under settingResourceColorBadges', async () => {
-        const fx = await loadFixture('harvestables', 'living-pair');
-        const msg = fx.messages.find(m => m.parameters['6'] === 396 && m.parameters['10'] > 0);
+    // @verified 2026-09-03: pcap-derived full-flow test: real handler -> drawing chain produces a badge
+    // in badge mode. Static Fiber T6 node with charges from the 2026-09-03 capture; the living nodes in that
+    // corpus all arrive with size 0 and are skipped at render.
+    test('pcap-derived full-flow: static Fiber node renders as badge under settingResourceColorBadges', async () => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const msg = fx.messages.find(m => m.parameters['5'] === 14 && m.parameters['7'] === 6 && m.parameters['10'] > 0);
         expect(msg).toBeDefined();
         const p = normalizeParams(msg.parameters);
 
-        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingHideEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
 
         const handler = new HarvestablesHandler(null);
@@ -320,7 +323,7 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.drawResourceBadge).toHaveBeenCalled();
         const call = drawing.drawResourceBadge.mock.calls[0];
         expect(call[3]).toBe(32);                  // baseSize
-        expect(call[4]).toBe('Hide');              // category
+        expect(call[4]).toBe('Fiber');             // category
         expect(typeof call[5]).toBe('number');     // tier
         expect(typeof call[6]).toBe('number');     // enchant
         expect(call[7]).toBe(false);               // static, not living

@@ -32,7 +32,8 @@ describe('player equipment resolves to the correct items', () => {
         handler = new PlayersHandler();
     });
 
-    // @verified 2026-08-02: the head, armor and shoes slots of a real player resolve to armour, not weapons.
+    // @verified 2026-09-03: the head, armor and shoes slots of a real player resolve to armour, not weapons.
+    // Same T4.1 set as the 2026-08-02 capture, now carried by its Dragonfire ids.
     test('pcap-derived equipment resolves to the gear set the player wore', async () => {
         const fx = await loadFixture('players', 'equipment');
         const msg = fx.messages[0];

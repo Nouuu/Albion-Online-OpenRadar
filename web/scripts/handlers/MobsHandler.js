@@ -17,6 +17,17 @@ export const EnemyType =
 
 const MIST_PORTAL_NAME_PREFIX = 'MISTS_';
 
+const MIST_BOSSES = [
+    {match: '_MOB_MISTS_FAIRYDRAGON', icon: 'FAIRYDRAGON', setting: 'settingBossFairyDragon'},
+    {match: '_MOB_MISTS_GRIFFIN', icon: 'GRIFFIN', setting: 'settingBossGriffin'},
+    {match: '_MOB_MISTS_SPIDER', icon: 'VEILWEAVER', setting: 'settingBossVeilWeaver'},
+    {match: '_MOB_ARCANE_CRYSTALSPIDER', icon: 'CRYSTALSPIDER', setting: 'settingBossCrystalSpider'},
+];
+
+export function findMistBoss(uniqueName) {
+    return MIST_BOSSES.find(b => typeof uniqueName === 'string' && uniqueName.includes(b.match)) ?? null;
+}
+
 export function isMistPortalName(name) {
     return typeof name === 'string' && name.toUpperCase().startsWith(MIST_PORTAL_NAME_PREFIX);
 }
@@ -105,7 +116,6 @@ export class MobsHandler {
 
     /**
      * Calculate enchantment level from game parameters
-     * Uses parameters[33] directly (server data is reliable)
      */
     calculateEnchantment(paramsEnchant) {
         if (paramsEnchant !== null && paramsEnchant !== undefined) {
@@ -147,16 +157,12 @@ export class MobsHandler {
             const posY = this.normalizeNumber(loc[1], 0);
             const healthNormalized = this.normalizeNumber(parameters[2], 255);  // Current HP (0-255)
             const maxHealth = this.normalizeNumber(parameters[13], 0);          // Max HP (real value)
-            const enchant = this.normalizeNumber(parameters[33], 0) || 0;
+            const enchant = this.normalizeNumber(parameters[34], 0) || 0;
             const rarity = this.normalizeNumber(parameters[19], null);
 
-            let name;
-            try {
-                name = parameters[32] || parameters[31] || null;
-            } catch (e) {
-                window.logger?.error(CATEGORIES.MOBS, 'new_mob_error', e);
-                name = null;
-            }
+            // Dragonfire: the portal tag sits at [33], the enchant at [34], and [31] carries
+            // MISTS_ prefixed creature names that must never be read as a portal.
+            const name = parameters[33] || null;
 
             // 🐛 DEBUG: Log raw parameters from server
             window.logger?.debug(CATEGORIES.MOBS, 'new_mob_raw', {
@@ -165,7 +171,7 @@ export class MobsHandler {
                     health_normalized: parameters[2],
                     maxHP: parameters[13],
                     rarity: parameters[19],
-                    enchant: parameters[33],
+                    enchant: parameters[34],
                     name
                 }
             });
@@ -219,8 +225,9 @@ export class MobsHandler {
             });
         } else if (dbInfo) {
             // Hostile mob from MobsDatabase
-            mob.type = this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
-            mob.name = dbInfo.uniqueName;  // For Mist Boss filtering
+            mob.mistBoss = findMistBoss(dbInfo.uniqueName);
+            mob.type = mob.mistBoss ? EnemyType.MistBoss : this._getEnemyTypeFromCategory(dbInfo.category, dbInfo.uniqueName);
+            mob.name = dbInfo.uniqueName;
             mob.tier = dbInfo.tier || 0;   // Store tier for hostile mobs
             mob.category = dbInfo.category || null;  // Store category for badge display
             mob.namelocatag = dbInfo.namelocatag || null;  // Store localization tag for translated name
@@ -258,7 +265,6 @@ export class MobsHandler {
             source: hasKnownInfo ? 'MobsDatabase' : 'none'
         });
 
-        // Calculate enchantment from server data (parameters[33])
         if (mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable) {
             mob.enchantmentLevel = this.calculateEnchantment(enchant);
         }

@@ -84,10 +84,10 @@ export class DungeonsHandler
 
         const id = parameters[0];
         const position = parameters[1];
-        // Post-Knightfall the Mist portal name moved from Parameters[3] to Parameters[15].
-        const name = parameters[3] || parameters[15] || '';
-        // Parameters[8] is the enchant (0-4); Parameters[6] is a type/variant id.
-        const enchant = parameters[8] ?? 0;
+        // Knightfall moved the Mist portal name from [3] to [15]; Dragonfire shifted it to [16].
+        const name = parameters[3] || parameters[16] || '';
+        // Parameters[9] is the enchant (0-4) since Dragonfire; Parameters[7] is a type/variant id.
+        const enchant = parameters[9] ?? 0;
 
         this.addDungeon(id, position[0], position[1], name, enchant);
     }

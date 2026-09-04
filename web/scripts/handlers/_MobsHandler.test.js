@@ -42,25 +42,85 @@ describe('MobsHandler', () => {
     // -------------------------------------------------------------------------
 
     describe('NewMobEvent (event 123)', () => {
-        // @verified 2026-04-18: Mist spawn (name present in Parameters[32]) adds to mistList with 'solo' type heuristic.
-        test('pcap-derived spawn: mist MISTS_SOLO_YELLOW adds to mistList', async () => {
-            const fx = await loadFixture('mobs', 'spawn');
-            const msg = fx.messages.find(m => m.parameters['32'] === 'MISTS_SOLO_YELLOW');
+        // @verified 2026-09-03: Dragonfire moved the portal tag from Parameters[32] to Parameters[33] and the
+        // enchant from [33] to [34]. pcap-derived, 2026-09-03 Highland capture, wires 120 and 127.
+        test('pcap-derived portal-wisp: MISTS_SOLO_YELLOW at Parameters[33] lands in mistList as a solo portal', async () => {
+            const fx = await loadFixture('mists', 'portal-wisp-spawn');
+            const msg = fx.messages.find(m => m.parameters['33'] === 'MISTS_SOLO_YELLOW');
             expect(msg).toBeDefined();
-            const p = normalizeParams(msg.parameters);
+            expect(msg.parameters['1']).toBe(120);
+
+            handler.NewMobEvent(normalizeParams(msg.parameters));
+
+            expect(handler.getSize()).toEqual(expect.objectContaining({mists: 1, mobs: 0}));
+            expect(handler.mistList[0].type).toBe(0);
+        });
+
+        test('pcap-derived portal-wisp: duo uncommon wisp carries its enchant from Parameters[34]', async () => {
+            const fx = await loadFixture('mists', 'portal-wisp-spawn');
+            const msg = fx.messages.find(m => m.parameters['33'] === 'MISTS_DUO_BLACK');
+            expect(msg).toBeDefined();
+            expect(msg.parameters['1']).toBe(127);
+
+            handler.NewMobEvent(normalizeParams(msg.parameters));
+
+            expect(handler.getSize()).toEqual(expect.objectContaining({mists: 1, mobs: 0}));
+            expect(handler.mistList[0].type).toBe(1);
+            expect(handler.mistList[0].enchant).toBe(2);
+        });
+
+        // @verified 2026-09-03: Dragonfire names Mists creatures with a MISTS_ prefix in Parameters[31]. A name
+        // there is a mob, never a portal. pcap-derived, 2026-09-03 Mists capture, wire 416.
+        test('pcap-derived mist-boss: MISTS_MOB_MYTHICAL_FAIRYDRAGON_T6 lands in mobsList, never in mistList', async () => {
+            const fx = await loadFixture('mobs', 'mist-boss-spawn');
+            const msg = fx.messages.find(m => m.parameters['31'] === 'MISTS_MOB_MYTHICAL_FAIRYDRAGON_T6');
+            expect(msg).toBeDefined();
+            expect(msg.parameters['1']).toBe(416);
+
+            handler.NewMobEvent(normalizeParams(msg.parameters));
+
+            expect(handler.getSize()).toEqual(expect.objectContaining({mists: 0, mobs: 1}));
+            expect(handler.getMobList()[0].name).toBe('T6_MOB_MISTS_FAIRYDRAGON');
+        });
+
+        // @verified 2026-09-03: pcap-derived, 2026-09-03 Mists capture, wire 416. The fairy dragon is one of the
+        // four Mists bosses the enemies page lists; it classifies as MistBoss with its icon and setting attached.
+        test('pcap-derived mist-boss: fairy dragon classifies as MistBoss with icon FAIRYDRAGON', async () => {
+            const fx = await loadFixture('mobs', 'mist-boss-spawn');
+            const msg = fx.messages.find(m => m.parameters['1'] === 416);
+
+            handler.NewMobEvent(normalizeParams(msg.parameters));
+
+            const mob = handler.getMobList()[0];
+            expect(mob.type).toBe(EnemyType.MistBoss);
+            expect(mob.tier).toBe(6);
+            expect(mob.mistBoss).toMatchObject({icon: 'FAIRYDRAGON', setting: 'settingBossFairyDragon'});
+        });
+
+        // @verified 2026-09-03: name-derived wire ids for the three bosses not yet observed in the corpus. The
+        // Mists spider is the Veil Weaver; the crystal spider keeps MistBoss over its _BOSS suffix.
+        test.each([
+            ['T7_MOB_MISTS_GRIFFIN', 'GRIFFIN', 'settingBossGriffin'],
+            ['T5_MOB_MISTS_SPIDER', 'VEILWEAVER', 'settingBossVeilWeaver'],
+            ['T6_MOB_ARCANE_CRYSTALSPIDER_BOSS', 'CRYSTALSPIDER', 'settingBossCrystalSpider'],
+            ['T8_MOB_ARCANE_CRYSTALSPIDER_VETERAN_BOSS', 'CRYSTALSPIDER', 'settingBossCrystalSpider'],
+        ])('mist-boss: %s classifies as MistBoss with icon %s', (uniqueName, icon, setting) => {
+            const typeId = dbs.mobsDatabase.getTypeIdByName(uniqueName);
+            expect(typeId).not.toBeNull();
+            const p = normalizeParams({'0': 97000 + typeId, '1': typeId, '2': 255, '7': [0, 0], '13': 3000, '34': 0});
 
             handler.NewMobEvent(p);
 
-            const sizes = handler.getSize();
-            expect(sizes.mists).toBe(1);
-            expect(sizes.mobs).toBe(0);
+            const mob = handler.getMobList()[0];
+            expect(mob.type).toBe(EnemyType.MistBoss);
+            expect(mob.mistBoss).toMatchObject({icon, setting});
         });
 
-        // @verified 2026-07-05: wire 392 (2026-07-05 capture) -> T1_MOB_HIDE_MISTS_WOLPERTINGER, l=HIDE.
+        // @verified 2026-09-03: wire 396 (2026-09-03 capture) -> T1_MOB_HIDE_MISTS_WOLPERTINGER, l=HIDE.
         // Real DB: type=Hide, tier=1, isHarvestable=true -> LivingSkinnable.
-        test('pcap-derived spawn: living Hide mob typeId=392 adds as LivingSkinnable', async () => {
+        test('pcap-derived spawn: living Hide mob typeId=396 adds as LivingSkinnable', async () => {
             const fx = await loadFixture('mobs', 'spawn');
-            const msg = fx.messages.find(m => m.parameters['1'] === 392);
+            const msg = fx.messages.find(m => m.parameters['1'] === 396);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -74,9 +134,9 @@ describe('MobsHandler', () => {
         });
 
         // @verified 2026-07-05: wire 392 -> T1_MOB_HIDE_MISTS_WOLPERTINGER; uniqueName exposed for overlay.
-        test('pcap-derived spawn: living Hide mob typeId=392 stores DB uniqueName for overlay', async () => {
+        test('pcap-derived spawn: living Hide mob typeId=396 stores DB uniqueName for overlay', async () => {
             const fx = await loadFixture('mobs', 'spawn');
-            const msg = fx.messages.find(m => m.parameters['1'] === 392);
+            const msg = fx.messages.find(m => m.parameters['1'] === 396);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -148,10 +208,10 @@ describe('MobsHandler', () => {
             expect(mobs[0].tier).toBe(5);
         });
 
-        // @verified 2026-07-05: wire 560 (2026-07-05 capture) -> T3_MOB_CRITTER_HIDE_COUGAR, l=HIDE_CRITTER.
-        test('pcap-derived spawn: Hide critter typeId=560 rendered with harvest tier 3', async () => {
+        // @verified 2026-09-03: wire 564 (2026-09-03 capture) -> T3_MOB_CRITTER_HIDE_COUGAR, l=HIDE_CRITTER.
+        test('pcap-derived spawn: Hide critter typeId=564 rendered with harvest tier 3', async () => {
             const fx = await loadFixture('mobs', 'spawn');
-            const msg = fx.messages.find(m => m.parameters['1'] === 560);
+            const msg = fx.messages.find(m => m.parameters['1'] === 564);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
@@ -164,28 +224,40 @@ describe('MobsHandler', () => {
             expect(mobs[0].uniqueName).toBe('T3_MOB_CRITTER_HIDE_COUGAR');
         });
 
-        // @verified 2026-07-05: every living variant observed in the 2026-07-05 Mists capture,
-        // resolved against the post-patch DB. Wire ids are real capture values.
+        // @verified 2026-09-03: every living variant observed in the 2026-09-03 capture (Highland and
+        // Mists), resolved against the Dragonfire DB. Wire ids are real capture values, tiers and
+        // families come from the game names.
         const LIVING_TIER_FIXTURE = [
-            [392, 'T1_MOB_HIDE_MISTS_WOLPERTINGER', 'Hide', 1, EnemyType.LivingSkinnable],
-            [393, 'T2_MOB_HIDE_MISTS_FOX', 'Hide', 2, EnemyType.LivingSkinnable],
-            [394, 'T3_MOB_HIDE_MISTS_DEER', 'Hide', 3, EnemyType.LivingSkinnable],
-            [395, 'T4_MOB_HIDE_MISTS_GIANTSTAG', 'Hide', 4, EnemyType.LivingSkinnable],
-            [396, 'T5_MOB_HIDE_MISTS_OWL', 'Hide', 5, EnemyType.LivingSkinnable],
-            [560, 'T3_MOB_CRITTER_HIDE_COUGAR', 'Hide', 3, EnemyType.LivingSkinnable],
-            [596, 'T4_MOB_CRITTER_HIDE_MISTCOUGAR', 'Hide', 4, EnemyType.LivingSkinnable],
-            [597, 'T5_MOB_CRITTER_HIDE_MISTCOUGAR', 'Hide', 5, EnemyType.LivingSkinnable],
-            [671, 'T3_MOB_CRITTER_WOOD_MISTS_GREEN', 'Log', 3, EnemyType.LivingHarvestable],
-            [672, 'T4_MOB_CRITTER_WOOD_MISTS_GREEN', 'Log', 4, EnemyType.LivingHarvestable],
-            [673, 'T5_MOB_CRITTER_WOOD_MISTS_GREEN', 'Log', 5, EnemyType.LivingHarvestable],
-            [677, 'T3_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 3, EnemyType.LivingHarvestable],
-            [678, 'T4_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 4, EnemyType.LivingHarvestable],
-            [679, 'T5_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 5, EnemyType.LivingHarvestable],
-            [683, 'T3_MOB_CRITTER_ORE_MISTS_GREEN', 'Ore', 3, EnemyType.LivingHarvestable],
-            [684, 'T4_MOB_CRITTER_ORE_MISTS_GREEN', 'Ore', 4, EnemyType.LivingHarvestable],
-            [685, 'T5_MOB_CRITTER_ORE_MISTS_GREEN', 'Ore', 5, EnemyType.LivingHarvestable],
-            [690, 'T4_MOB_CRITTER_FIBER_MISTS_GREEN', 'Fiber', 4, EnemyType.LivingHarvestable],
-            [691, 'T5_MOB_CRITTER_FIBER_MISTS_GREEN', 'Fiber', 5, EnemyType.LivingHarvestable],
+            [396, 'T1_MOB_HIDE_MISTS_WOLPERTINGER', 'Hide', 1, EnemyType.LivingSkinnable],
+            [397, 'T2_MOB_HIDE_MISTS_FOX', 'Hide', 2, EnemyType.LivingSkinnable],
+            [398, 'T3_MOB_HIDE_MISTS_DEER', 'Hide', 3, EnemyType.LivingSkinnable],
+            [399, 'T4_MOB_HIDE_MISTS_GIANTSTAG', 'Hide', 4, EnemyType.LivingSkinnable],
+            [400, 'T5_MOB_HIDE_MISTS_OWL', 'Hide', 5, EnemyType.LivingSkinnable],
+            [402, 'T7_MOB_HIDE_MISTS_DIREBEAR', 'Hide', 7, EnemyType.LivingSkinnable],
+            [483, 'T1_MOB_HIDE_HIGHLAND_MARMOT', 'Hide', 1, EnemyType.LivingSkinnable],
+            [564, 'T3_MOB_CRITTER_HIDE_COUGAR', 'Hide', 3, EnemyType.LivingSkinnable],
+            [595, 'T5_MOB_CRITTER_ROCK_HIGHLAND_DEAD', 'Rock', 5, EnemyType.LivingHarvestable],
+            [597, 'T6_MOB_CRITTER_ROCK_HIGHLAND_DEAD', 'Rock', 6, EnemyType.LivingHarvestable],
+            [600, 'T4_MOB_CRITTER_HIDE_MISTCOUGAR', 'Hide', 4, EnemyType.LivingSkinnable],
+            [601, 'T5_MOB_CRITTER_HIDE_MISTCOUGAR', 'Hide', 5, EnemyType.LivingSkinnable],
+            [676, 'T4_MOB_CRITTER_WOOD_MISTS_GREEN', 'Log', 4, EnemyType.LivingHarvestable],
+            [677, 'T5_MOB_CRITTER_WOOD_MISTS_GREEN', 'Log', 5, EnemyType.LivingHarvestable],
+            [681, 'T3_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 3, EnemyType.LivingHarvestable],
+            [682, 'T4_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 4, EnemyType.LivingHarvestable],
+            [683, 'T5_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 5, EnemyType.LivingHarvestable],
+            [684, 'T6_MOB_CRITTER_ROCK_MISTS_GREEN', 'Rock', 6, EnemyType.LivingHarvestable],
+            [687, 'T3_MOB_CRITTER_ORE_MISTS_GREEN', 'Ore', 3, EnemyType.LivingHarvestable],
+            [688, 'T4_MOB_CRITTER_ORE_MISTS_GREEN', 'Ore', 4, EnemyType.LivingHarvestable],
+            [689, 'T5_MOB_CRITTER_ORE_MISTS_GREEN', 'Ore', 5, EnemyType.LivingHarvestable],
+            [694, 'T4_MOB_CRITTER_FIBER_MISTS_GREEN', 'Fiber', 4, EnemyType.LivingHarvestable],
+            [695, 'T5_MOB_CRITTER_FIBER_MISTS_GREEN', 'Fiber', 5, EnemyType.LivingHarvestable],
+            [701, 'T5_MOB_CRITTER_WOOD_MISTS_RED', 'Log', 5, EnemyType.LivingHarvestable],
+            [702, 'T6_MOB_CRITTER_WOOD_MISTS_RED', 'Log', 6, EnemyType.LivingHarvestable],
+            [707, 'T5_MOB_CRITTER_ROCK_MISTS_RED', 'Rock', 5, EnemyType.LivingHarvestable],
+            [709, 'T7_MOB_CRITTER_ROCK_MISTS_RED', 'Rock', 7, EnemyType.LivingHarvestable],
+            [714, 'T6_MOB_CRITTER_ORE_MISTS_RED', 'Ore', 6, EnemyType.LivingHarvestable],
+            [719, 'T5_MOB_CRITTER_FIBER_MISTS_RED', 'Fiber', 5, EnemyType.LivingHarvestable],
+            [720, 'T6_MOB_CRITTER_FIBER_MISTS_RED', 'Fiber', 6, EnemyType.LivingHarvestable],
         ];
 
         test.each(LIVING_TIER_FIXTURE)(
@@ -235,15 +307,35 @@ describe('MobsHandler', () => {
             }
         );
 
-        // @verified 2026-07-05: hostile MISTS_MORGANA family from the 2026-07-05 capture.
+        // @verified 2026-08-31: Dragonfire data refresh. Living wood must keep
+        // its real harvest tier; stale mob tables previously displayed T6 wood as T8.
+        test.each([
+            ['T6_MOB_CRITTER_WOOD_MISTS_RED', 6],
+            ['T8_MOB_CRITTER_WOOD_MISTS_RED', 8],
+        ])('Dragonfire living wood: %s resolves as Log tier %d', (uniqueName, expectedTier) => {
+            const typeId = dbs.mobsDatabase.getTypeIdByName(uniqueName);
+            expect(typeId).not.toBeNull();
+            const p = normalizeParams({'0': 98000 + typeId, '1': typeId, '2': 255, '7': [0, 0], '13': 1700, '33': 0});
+
+            handler.NewMobEvent(p);
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].type).toBe(EnemyType.LivingHarvestable);
+            expect(mobs[0].name).toBe('Log');
+            expect(mobs[0].tier).toBe(expectedTier);
+            expect(mobs[0].uniqueName).toBe(uniqueName);
+        });
+
+        // @verified 2026-09-03: hostile undead and Morgana families from the 2026-09-03 capture.
         // Every category observed maps through _getEnemyTypeFromCategory.
         const HOSTILE_FIXTURE = [
-            [1452, 'trash', EnemyType.Enemy],
-            [1470, 'standard', EnemyType.Enemy],
-            [1362, 'roaming', EnemyType.Enemy],
-            [1370, 'camp', EnemyType.Enemy],
-            [1826, 'summon', EnemyType.Enemy],
-            [1496, 'champion', EnemyType.EnchantedEnemy],
+            [1875, 'trash', EnemyType.Enemy],
+            [1911, 'standard', EnemyType.Enemy],
+            [1366, 'roaming', EnemyType.Enemy],
+            [1374, 'camp', EnemyType.Enemy],
+            [1830, 'summon', EnemyType.Enemy],
+            [1931, 'champion', EnemyType.EnchantedEnemy],
         ];
 
         test.each(HOSTILE_FIXTURE)(
@@ -295,15 +387,6 @@ describe('MobsHandler', () => {
             expect(mobs[0].posX).toBe(10);
         });
 
-        // @verified 2026-04-18: parameters[32] missing but parameters[31] has a name routes to AddMist.
-        test('synthetic: parameters[31] name with no parameters[32] routes to AddMist', () => {
-            // synthetic: tests the fallback branch name = parameters[32] || parameters[31].
-            const p = normalizeParams({'0': 8004, '1': 94, '2': 255, '7': [0, 0], '13': 1, '31': 'MISTS_DUO_GREEN', '33': 0});
-            handler.NewMobEvent(p);
-            expect(handler.getSize().mists).toBe(1);
-            expect(handler.getSize().mobs).toBe(0);
-        });
-
         // @verified 2026-08-02 (issue #145): a NewMob carrying a server name that is not a Mist portal is a hostile,
         // not a wisp sign. Corpus evidence from logs/captures (16 pcaps, 6093 NewMob, 79 named): every one of the 71
         // names in Parameters[32] is a MISTS_ portal, and none of the 8 names in Parameters[31] is. The 8 non-portal
@@ -321,21 +404,20 @@ describe('MobsHandler', () => {
             expect(sizes.mobs).toBe(6);
         });
 
-        // @verified 2026-08-02 (issue #145): each named non-portal template resolves against the real DB and picks up
-        // its hostile classification instead of being drawn as a wisp. typeId 5148 is the mob reported in the issue.
+        // @verified 2026-09-03 (issue #145): a server name in Parameters[31] never routes to mistList, whatever it
+        // says. Name-derived wire ids: the 2026-08 capture ids no longer resolve after Dragonfire.
         test.each([
-            ['MOB_EVENT_LEAD_UP_SPEARMAN_T6', 5148, 'T6_MOB_ROAMING_KEEPER_FANATIC_SPEAR_CHAMPION', EnemyType.EnchantedEnemy],
-            ['POWER_CRYSTAL_MOB_WISP_YELLOW_R0', 137, 'MOB_UNIQUE_POWERCRYSTAL_TERRITORY_R1_MOUNTAIN_DEAD', EnemyType.Enemy],
-            ['POWER_CRYSTAL_MOB_WISP_BLACK_R0', 138, 'MOB_UNIQUE_POWERCRYSTAL_TERRITORY_R1_MOUNTAIN_RED', EnemyType.Enemy],
-            ['EVENT_ANNIVERSARY_STATUE_SEASON_14_REGULAR', 208, 'T6_MOB_ANNIVERSARY_STATUE_SEASON_14_SMALL', EnemyType.Boss],
-        ])('pcap-derived named-non-mist: %s spawns as a hostile', async (serverName, typeId, uniqueName, expectedType) => {
-            const fx = await loadFixture('mobs', 'named-non-mist');
-            const msg = fx.messages.find(m => m.parameters['31'] === serverName);
-            expect(msg).toBeDefined();
-            expect(msg.parameters['1']).toBe(typeId);
-            expect(dbs.mobsDatabase.getMobInfo(typeId).uniqueName).toBe(uniqueName);
+            ['MOB_EVENT_LEAD_UP_SPEARMAN_T6', 'T6_MOB_ROAMING_KEEPER_FANATIC_SPEAR_CHAMPION', EnemyType.EnchantedEnemy],
+            ['POWER_CRYSTAL_MOB_WISP_YELLOW_R0', 'MOB_UNIQUE_POWERCRYSTAL_TERRITORY_R1_MOUNTAIN_DEAD', EnemyType.Enemy],
+            ['POWER_CRYSTAL_MOB_WISP_BLACK_R0', 'MOB_UNIQUE_POWERCRYSTAL_TERRITORY_R1_MOUNTAIN_RED', EnemyType.Enemy],
+            ['EVENT_ANNIVERSARY_STATUE_SEASON_14_REGULAR', 'T6_MOB_ANNIVERSARY_STATUE_SEASON_14_SMALL', EnemyType.Boss],
+            ['MISTS_MOB_MYTHICAL_FAIRYDRAGON_T6', 'T6_MOB_MISTS_FAIRYDRAGON', EnemyType.MistBoss],
+        ])('named-non-mist: %s in Parameters[31] spawns as a hostile', (serverName, uniqueName, expectedType) => {
+            const typeId = dbs.mobsDatabase.getTypeIdByName(uniqueName);
+            expect(typeId).not.toBeNull();
+            const p = normalizeParams({'0': 96000 + typeId, '1': typeId, '2': 255, '7': [0, 0], '13': 1000, '31': serverName, '34': 0});
 
-            handler.NewMobEvent(normalizeParams(msg.parameters));
+            handler.NewMobEvent(p);
 
             expect(handler.mistList).toHaveLength(0);
             const mob = handler.getMobList().find(m => m.typeId === typeId);
@@ -363,11 +445,11 @@ describe('MobsHandler', () => {
             expect(list[0].identified).toBe(false);
         });
 
-        // @verified 2026-04-18: two distinct mist spawns both land in mistList.
-        test('pcap-derived spawn: two mist messages add two entries to mistList', async () => {
-            const fx = await loadFixture('mobs', 'spawn');
-            const mists = fx.messages.filter(m => m.parameters['32'] === 'MISTS_SOLO_YELLOW');
-            expect(mists.length).toBeGreaterThanOrEqual(2);
+        // @verified 2026-09-03: two distinct portal spawns (solo yellow, duo black) both land in mistList.
+        test('pcap-derived portal-wisp: two portal messages add two entries to mistList', async () => {
+            const fx = await loadFixture('mists', 'portal-wisp-spawn');
+            const mists = fx.messages.filter(m => typeof m.parameters['33'] === 'string');
+            expect(mists.length).toBe(2);
             for (const msg of mists) {
                 handler.NewMobEvent(normalizeParams(msg.parameters));
             }
@@ -778,7 +860,7 @@ describe('MobsHandler', () => {
         }
 
         function addMist(id) {
-            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
         }
 
         // @verified 2026-04-18: updateMobPosition updates posX, posY, and touches lastUpdateTime.
@@ -828,7 +910,7 @@ describe('MobsHandler', () => {
         }
 
         function addMist(id) {
-            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
         }
 
         // @verified 2026-04-18: updateEnchantEvent sets enchantmentLevel on the mob.
@@ -874,7 +956,7 @@ describe('MobsHandler', () => {
         }
 
         function addMist(id) {
-            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
         }
 
         // @verified 2026-04-18: removeMob removes the matching mob by id.
@@ -951,7 +1033,7 @@ describe('MobsHandler', () => {
         }
 
         function addMist(id) {
-            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': id, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
         }
 
         // @verified 2026-04-18: stale mob (lastUpdateTime old) is removed; fresh mob survives.
@@ -1008,7 +1090,7 @@ describe('MobsHandler', () => {
             // synthetic: adds 4 mists then trims to 2.
             const names = ['MISTS_SOLO_YELLOW', 'MISTS_GROUP_RED', 'MISTS_SOLO_BLUE', 'MISTS_GROUP_GREEN'];
             for (let i = 0; i < 4; i++) {
-                handler.NewMobEvent(normalizeParams({'0': 9200 + i, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': names[i], '33': 0}));
+                handler.NewMobEvent(normalizeParams({'0': 9200 + i, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': names[i], '34': 0}));
                 handler.mistList[i].lastUpdateTime = Date.now() + i * 1000;
             }
             const removed = handler.enforceMaxSize(500, 2);
@@ -1033,31 +1115,31 @@ describe('MobsHandler', () => {
         // @verified 2026-04-18: name containing 'solo' (case-insensitive) sets type=0.
         test('synthetic: mist name containing "solo" sets type=0', () => {
             // synthetic: tests the solo heuristic in the Mist constructor.
-            handler.NewMobEvent(normalizeParams({'0': 9400, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': 9400, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
             expect(handler.mistList[0].type).toBe(0);
         });
 
         // @verified 2026-04-18: name not containing 'solo' sets type=1.
         test('synthetic: mist name not containing "solo" sets type=1', () => {
             // synthetic: tests the non-solo branch in the Mist constructor.
-            handler.NewMobEvent(normalizeParams({'0': 9401, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_GROUP_RED', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': 9401, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_GROUP_RED', '34': 0}));
             expect(handler.mistList[0].type).toBe(1);
         });
 
         // @verified 2026-04-18: AddMist with duplicate id is a no-op (touch only, no second push).
         test('synthetic: duplicate mist id is a no-op (touch, not re-added)', () => {
             // synthetic: tests the duplicate guard in AddMist.
-            handler.NewMobEvent(normalizeParams({'0': 9402, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
-            handler.NewMobEvent(normalizeParams({'0': 9402, '1': 94, '2': 255, '7': [5, 5], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+            handler.NewMobEvent(normalizeParams({'0': 9402, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
+            handler.NewMobEvent(normalizeParams({'0': 9402, '1': 94, '2': 255, '7': [5, 5], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
             expect(handler.getSize().mists).toBe(1);
         });
 
-        // @verified 2026-04-23: feu follet rarity arrives via Parameters[33] at live time; pcap fixtures only sample Common so fixture value stays 0, but live evidence confirms the path is correct (user sees green mist_1 for Peu commun wisps).
-        test('MIST-6: AddMist forwards Parameters[33] to Mist.enchant', () => {
-            handler.NewMobEvent(normalizeParams({'0': 9410, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 0}));
+        // @verified 2026-09-03: feu follet rarity arrives via Parameters[34] since Dragonfire; the duo uncommon portal in the 2026-09-03 capture carries 2.
+        test('MIST-6: AddMist forwards Parameters[34] to Mist.enchant', () => {
+            handler.NewMobEvent(normalizeParams({'0': 9410, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
             expect(handler.mistList[0].enchant).toBe(0);
 
-            handler.NewMobEvent(normalizeParams({'0': 9411, '1': 94, '2': 255, '7': [0, 0], '13': 1, '32': 'MISTS_SOLO_YELLOW', '33': 1}));
+            handler.NewMobEvent(normalizeParams({'0': 9411, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 1}));
             expect(handler.mistList[1].enchant).toBe(1);
         });
     });

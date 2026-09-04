@@ -5,210 +5,70 @@
     {
       "kind": "event",
       "parameters": {
-        "0": 5798,
+        "0": 5418,
         "1": [
-          -337,
-          -10
+          224,
+          26
         ],
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
         "2": 90,
-        "252": 323,
-        "3": "T5_PORTAL_ROYAL_SOLO",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_B",
-        "6": 229,
-        "7": true,
-        "8": 0
+        "3": "T7_KEEPER",
+        "4": "RD_DUNGEON_BLACK_3",
+        "6": "HIGHLAND_DEAD_RANDOM_EXIT_10x10_KPR",
+        "7": 280,
+        "8": true,
+        "9": 1,
+        "15": 0,
+        "17": -1,
+        "18": 2,
+        "20": 0,
+        "21": "",
+        "252": 325
       }
     },
     {
       "kind": "event",
       "parameters": {
-        "0": 5776,
+        "0": 41517,
         "1": [
-          -340,
-          21
+          258.2233,
+          47.141792
         ],
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
-        "252": 323,
-        "3": "T5_PORTAL_ROYAL_SOLO",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_B",
-        "6": 229,
-        "7": true,
-        "8": 0
+        "3": "MISTS_DUO_BLACK",
+        "6": "SHARED_MIST_WISP_PORTAL_MOB",
+        "7": 4,
+        "8": true,
+        "9": 2,
+        "15": 0,
+        "16": "MISTS_DUO_BLACK",
+        "17": 5306,
+        "18": 1,
+        "19": 639240606775041500,
+        "20": 0,
+        "21": "",
+        "252": 325
       }
     },
     {
       "kind": "event",
       "parameters": {
-        "0": 5883,
+        "0": 2579,
         "1": [
-          -330,
-          132
+          205,
+          225
         ],
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
-        "2": 90,
-        "252": 323,
-        "3": "T5_PORTAL_ROYAL_SOLO",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_A",
-        "6": 228,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 12833,
-        "1": [
-          -290,
-          130
-        ],
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
-        "2": 90,
-        "252": 323,
-        "3": "T5_PORTAL_ROYAL_SOLO",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_A",
-        "6": 228,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 5353,
-        "1": [
-          -189,
-          281
-        ],
-        "11": true,
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
-        "2": 90,
-        "252": 323,
-        "3": "CORRUPTED_SOLO_NONLETHAL",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_A_CORRUPT",
-        "6": 37,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 5356,
-        "1": [
-          -190,
-          310
-        ],
-        "11": true,
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
-        "2": 90,
-        "252": 323,
-        "3": "CORRUPTED_SOLO_NONLETHAL",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_B_CORRUPT",
-        "6": 38,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 5884,
-        "1": [
-          -163,
-          303
-        ],
-        "14": 0,
-        "16": -1,
-        "17": 2,
-        "19": 0,
-        "2": 90,
-        "252": 323,
-        "3": "T5_MORGANA",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_MOR",
-        "6": 327,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 5770,
-        "1": [
-          -113,
-          -300
-        ],
-        "14": 0,
-        "16": -1,
-        "17": 1,
-        "19": 0,
-        "2": 90,
-        "252": 323,
-        "3": "T5_PORTAL_ROYAL_SOLO",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_PORTAL_SOLO_C",
-        "6": 230,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 5789,
-        "1": [
-          -77,
-          -297
-        ],
-        "14": 0,
-        "16": -1,
-        "17": 2,
-        "19": 0,
-        "252": 323,
-        "3": "T5_HERETIC",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_HER",
-        "6": 293,
-        "7": true,
-        "8": 0
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 5789,
-        "1": [
-          -77,
-          -297
-        ],
-        "14": 0,
-        "16": -1,
-        "17": 2,
-        "19": 0,
-        "252": 323,
-        "3": "T5_HERETIC",
-        "5": "SWAMP_RED_RANDOM_EXIT_10x10_HER",
-        "6": 293,
-        "7": true,
-        "8": 0
+        "3": "",
+        "6": "SHARED_MIST_DUNGEON_ENTRANCE_SMALL",
+        "7": 6,
+        "8": true,
+        "9": 0,
+        "15": 0,
+        "16": "MISTS_DUNGEON_SOLO_YELLOW",
+        "17": -1,
+        "18": 0,
+        "19": 639240609687900200,
+        "20": 5,
+        "21": "",
+        "252": 325
       }
     }
   ]

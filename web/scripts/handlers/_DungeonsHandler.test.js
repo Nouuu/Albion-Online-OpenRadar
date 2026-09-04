@@ -23,11 +23,14 @@ describe('DungeonsHandler', () => {
         handler = new DungeonsHandler();
     });
 
-    describe('dungeonEvent (event 323)', () => {
-        // @verified 2026-04-23: first fixture message "T5_PORTAL_ROYAL_SOLO" adds one Solo dungeon. Enchant now comes from Parameters[8] (universal across dungeon families), not Parameters[6] (type/variant id).
-        test('pcap-derived spawn: first fixture dungeon adds entry with id, position, name, enchant=Parameters[8]', async () => {
+    describe('dungeonEvent (event 325)', () => {
+        // @verified 2026-09-03: pcap-derived, 2026-09-03 Highland capture. Dragonfire inserted a parameter at
+        // [4] on event 325, so the enchant moved from Parameters[8] to [9] and the Mists tag from [15] to
+        // [16]. The keeper dungeon carries its name at [3] and enchant 1 at [9].
+        test('pcap-derived spawn: T7_KEEPER adds entry with id, position, name and enchant=Parameters[9]', async () => {
             const fx = await loadFixture('dungeons', 'spawn');
-            const msg = fx.messages[0];
+            const msg = fx.messages.find(m => m.parameters['3'] === 'T7_KEEPER');
+            expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
             handler.dungeonEvent(p);
@@ -36,60 +39,37 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList[0].id).toBe(p[0]);
             expect(handler.dungeonList[0].posX).toBe(p[1][0]);
             expect(handler.dungeonList[0].posY).toBe(p[1][1]);
-            expect(handler.dungeonList[0].name).toBe(p[3]);
-            expect(handler.dungeonList[0].enchant).toBe(p[8]);
+            expect(handler.dungeonList[0].name).toBe('T7_KEEPER');
+            expect(handler.dungeonList[0].enchant).toBe(1);
         });
 
-        // @verified 2026-04-23: T5_PORTAL_ROYAL_SOLO maps to Solo type with drawName dungeon_<Parameters[8]>.
-        test('pcap-derived spawn: T5_PORTAL_ROYAL_SOLO maps to Solo type with drawName dungeon_<Parameters[8]>', async () => {
+        // @verified 2026-09-03: pcap-derived, same capture. The portal a wisp opens arrives with
+        // param[6]="SHARED_MIST_WISP_PORTAL_MOB", MISTS_DUO_BLACK at [3] and [16], enchant 2 at [9]. It is a
+        // Mists group entrance: DungeonType.Group, gated by settingMistDuo and settingMistE2.
+        test('pcap-derived spawn: MISTS_DUO_BLACK wisp portal maps to a Mists Group entrance with enchant 2', async () => {
             const fx = await loadFixture('dungeons', 'spawn');
-            const msg = fx.messages[0];
-            const p = normalizeParams(msg.parameters);
-
-            handler.dungeonEvent(p);
-
-            const d = handler.dungeonList[0];
-            expect(d.type).toBe(0); // DungeonType.Solo
-            expect(d.drawName).toBe('dungeon_' + p[8]);
-        });
-
-        // @verified 2026-04-18: fixture name "CORRUPTED_SOLO_NONLETHAL" contains "corrupted" -> Corrupted type (DungeonType.Corrupted=2). drawName = "corrupt" (no enchant suffix).
-        test('pcap-derived spawn: CORRUPTED_SOLO_NONLETHAL maps to Corrupted type with drawName "corrupt"', async () => {
-            const fx = await loadFixture('dungeons', 'spawn');
-            const corruptedMsg = fx.messages.find(m => m.parameters['3'] === 'CORRUPTED_SOLO_NONLETHAL');
-            expect(corruptedMsg).toBeDefined();
-            const p = normalizeParams(corruptedMsg.parameters);
-
-            handler.dungeonEvent(p);
-
-            const d = handler.dungeonList[0];
-            expect(d.type).toBe(2); // DungeonType.Corrupted
-            expect(d.drawName).toBe('corrupt');
-        });
-
-        // @verified 2026-04-23: T5_MORGANA falls through to Group type, drawName = group_<Parameters[8]>.
-        test('pcap-derived spawn: T5_MORGANA falls through to Group type with drawName group_<Parameters[8]>', async () => {
-            const fx = await loadFixture('dungeons', 'spawn');
-            const msg = fx.messages.find(m => m.parameters['3'] === 'T5_MORGANA');
+            const msg = fx.messages.find(m => m.parameters['6'] === 'SHARED_MIST_WISP_PORTAL_MOB');
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);
 
             handler.dungeonEvent(p);
 
+            expect(handler.dungeonList).toHaveLength(1);
             const d = handler.dungeonList[0];
+            expect(d.name).toBe('MISTS_DUO_BLACK');
             expect(d.type).toBe(1); // DungeonType.Group
-            expect(d.drawName).toBe('group_' + p[8]);
+            expect(d.enchant).toBe(2);
+            expect(settingsSync.getBool).toHaveBeenCalledWith('settingMistE2');
         });
 
-        // @verified 2026-04-18: last two fixture messages share id 5789; second call deduplicates and list stays at length 1.
-        test('pcap-derived spawn: duplicate id 5789 deduplicates on second event', async () => {
+        // @verified 2026-09-03: pcap-derived, same capture. Re-firing the wisp portal event deduplicates on id.
+        test('pcap-derived spawn: duplicate wisp portal id deduplicates on second event', async () => {
             const fx = await loadFixture('dungeons', 'spawn');
-            const dupes = fx.messages.filter(m => m.parameters['0'] === 5789);
-            expect(dupes).toHaveLength(2);
+            const msg = fx.messages.find(m => m.parameters['6'] === 'SHARED_MIST_WISP_PORTAL_MOB');
+            const p = normalizeParams(msg.parameters);
 
-            for (const msg of dupes) {
-                handler.dungeonEvent(normalizeParams(msg.parameters));
-            }
+            handler.dungeonEvent(p);
+            handler.dungeonEvent(p);
 
             expect(handler.dungeonList).toHaveLength(1);
         });
@@ -203,26 +183,26 @@ describe('DungeonsHandler', () => {
     });
 
     describe('MISTS portals (SHARED_MIST_WISP_PORTAL_MOB)', () => {
-        // @verified 2026-04-23: dungeonEvent picks Parameters[8] (rarity) over Parameters[6] (variant) for MISTS portals.
-        test('MIST-6: dungeonEvent on MISTS_SOLO_YELLOW uses Parameters[8] as enchant, not Parameters[6]', () => {
-            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 6: 2, 8: 0, 252: 323});
+        // @verified 2026-09-03: dungeonEvent picks Parameters[9] (rarity) over Parameters[7] (variant) for MISTS portals.
+        test('MIST-6: dungeonEvent on MISTS_SOLO_YELLOW uses Parameters[9] as enchant, not Parameters[7]', () => {
+            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 7: 2, 9: 0, 252: 325});
 
             expect(handler.dungeonList).toHaveLength(1);
             expect(handler.dungeonList[0].enchant).toBe(0);
             expect(handler.dungeonList[0].drawName).toBe('dungeon_0');
         });
 
-        // @verified 2026-04-23: same MISTS_SOLO_YELLOW name with Parameters[8]=1 renders dungeon_1 (Peu commun).
-        test('MIST-6: Parameters[8]=1 with same MISTS_SOLO_YELLOW name renders dungeon_1', () => {
-            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 6: 2, 8: 1, 252: 323});
+        // @verified 2026-09-03: same MISTS_SOLO_YELLOW name with Parameters[9]=1 renders dungeon_1 (Peu commun).
+        test('MIST-6: Parameters[9]=1 with same MISTS_SOLO_YELLOW name renders dungeon_1', () => {
+            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 7: 2, 9: 1, 252: 325});
 
             expect(handler.dungeonList[0].enchant).toBe(1);
             expect(handler.dungeonList[0].drawName).toBe('dungeon_1');
         });
 
-        // @verified 2026-04-23: non-MISTS dungeon also reads Parameters[8] (universal enchant source).
-        test('MIST-6: non-MISTS dungeon also uses Parameters[8] as enchant (ignoring Parameters[6] variant id)', () => {
-            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'T5_PORTAL_ROYAL_SOLO', 6: 229, 8: 0, 252: 323});
+        // @verified 2026-09-03: non-MISTS dungeon also reads Parameters[9] (universal enchant source).
+        test('MIST-6: non-MISTS dungeon also uses Parameters[9] as enchant (ignoring Parameters[7] variant id)', () => {
+            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'T5_PORTAL_ROYAL_SOLO', 7: 229, 9: 0, 252: 325});
 
             expect(handler.dungeonList[0].enchant).toBe(0);
             expect(handler.dungeonList[0].drawName).toBe('dungeon_0');
@@ -255,9 +235,9 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList).toHaveLength(1);
         });
 
-        // @verified 2026-04-23: T6_MORGANA enchant 2 is now picked up correctly (previously filtered out because Parameters[6]=327 mis-read as enchant).
-        test('MIST-6: T6_MORGANA with Parameters[8]=2 renders group_2 (previously filtered out by Parameters[6]=327)', () => {
-            handler.dungeonEvent({0: 5199, 1: [87, 7], 3: 'T6_MORGANA', 6: 327, 8: 2, 252: 323});
+        // @verified 2026-09-03: T6_MORGANA enchant 2 is read from Parameters[9], never from the [7] variant id.
+        test('MIST-6: T6_MORGANA with Parameters[9]=2 renders group_2 (never the Parameters[7] variant id)', () => {
+            handler.dungeonEvent({0: 5199, 1: [87, 7], 3: 'T6_MORGANA', 7: 327, 9: 2, 252: 325});
 
             expect(handler.dungeonList).toHaveLength(1);
             expect(handler.dungeonList[0].enchant).toBe(2);
@@ -283,25 +263,27 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList).toHaveLength(0);
         });
 
-        // @verified 2026-05-22: pcap-derived (mist-solo-portal-spawn.json, capture 13-36-55). The
+        // @verified 2026-09-03: pcap-derived (dungeons/spawn.json, capture 2026-09-03). The
         // server stopped populating Parameters[3] for MISTS portals between 2026-05-14 and
-        // 2026-05-16; the name is now exclusively in Parameters[15]. Real message has
-        // {3:"", 5:"SHARED_MIST_WISP_PORTAL_MOB", 15:"MISTS_SOLO_BLACK", 8:1}. dungeonEvent must
-        // fall back to Parameters[15] so solo/duo Mist portals keep rendering.
-        test('MIST-6: dungeonEvent falls back to Parameters[15] when Parameters[3] is empty (pcap-derived)', async () => {
-            const fx = await loadFixture('mists', 'mist-solo-portal-spawn');
-            const p = normalizeParams(fx.messages[0].parameters);
+        // @verified 2026-09-03: pcap-derived, 2026-09-03 capture. The abbey entrance arrives with
+        // {3:"", 6:"SHARED_MIST_DUNGEON_ENTRANCE_SMALL", 16:"MISTS_DUNGEON_SOLO_YELLOW", 9:0}. dungeonEvent
+        // must fall back to Parameters[16] so a Mist entrance with an empty [3] keeps rendering.
+        test('MIST-6: dungeonEvent falls back to Parameters[16] when Parameters[3] is empty (pcap-derived)', async () => {
+            const fx = await loadFixture('dungeons', 'spawn');
+            const msg = fx.messages.find(m => m.parameters['6'] === 'SHARED_MIST_DUNGEON_ENTRANCE_SMALL');
+            const p = normalizeParams(msg.parameters);
 
             handler.dungeonEvent(p);
 
             expect(handler.dungeonList).toHaveLength(1);
-            expect(handler.dungeonList[0].drawName).toBe('dungeon_1');
+            expect(handler.dungeonList[0].name).toBe('MISTS_DUNGEON_SOLO_YELLOW');
+            expect(handler.dungeonList[0].drawName).toBe('dungeon_0');
         });
 
-        // @verified 2026-05-16: regression guard. A standard dungeon with a populated
-        // Parameters[3] must keep using it (not the Parameters[15] fallback).
-        test('MIST-6: dungeonEvent keeps Parameters[3] when present even if Parameters[15] differs', () => {
-            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'CORRUPTED_SOLO_NONLETHAL', 8: 0, 15: 'IRRELEVANT', 252: 323});
+        // @verified 2026-09-03: regression guard. A standard dungeon with a populated
+        // Parameters[3] must keep using it (not the Parameters[16] fallback).
+        test('MIST-6: dungeonEvent keeps Parameters[3] when present even if Parameters[16] differs', () => {
+            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'CORRUPTED_SOLO_NONLETHAL', 9: 0, 16: 'IRRELEVANT', 252: 325});
 
             expect(handler.dungeonList).toHaveLength(1);
             expect(handler.dungeonList[0].drawName).toBe('corrupt');

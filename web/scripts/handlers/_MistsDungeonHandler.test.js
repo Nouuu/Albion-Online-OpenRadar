@@ -1,4 +1,4 @@
-// pcap-derived fixture: web/scripts/__fixtures__/ws/mists/dungeon-portal-spawn.json (capture 2026-05-16T13-41-00)
+// pcap-derived fixture: web/scripts/__fixtures__/ws/dungeons/spawn.json (capture 2026-09-03)
 // synthetic: dedup, cleanup, and Clear coverage
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
@@ -21,20 +21,21 @@ describe('MistsDungeonHandler', () => {
         handler = new MistsDungeonHandler();
     });
 
-    // @verified 2026-05-16: pcap-derived; event 323 with param[15]="MISTS_DUNGEON_SOLO_BLACK"
-    // is the Knightfall Abbey portal. Position from param[1], id from param[0], name from param[15].
+    // @verified 2026-09-03: pcap-derived; event 325 with param[16]="MISTS_DUNGEON_SOLO_YELLOW"
+    // is the Knightfall Abbey portal. Position from param[1], id from param[0], name from param[16].
     test('addPortal stores entry from pcap fixture parameters', async () => {
-        const fx = await loadFixture('mists', 'dungeon-portal-spawn');
-        const p = normalizeParams(fx.messages[0].parameters);
+        const fx = await loadFixture('dungeons', 'spawn');
+        const msg = fx.messages.find(m => m.parameters['6'] === 'SHARED_MIST_DUNGEON_ENTRANCE_SMALL');
+        const p = normalizeParams(msg.parameters);
 
-        handler.addPortal(p[0], p[1][0], p[1][1], p[15]);
+        handler.addPortal(p[0], p[1][0], p[1][1], p[16]);
 
         expect(handler.portalList).toHaveLength(1);
         const portal = handler.portalList[0];
         expect(portal.id).toBe(p[0]);
         expect(portal.posX).toBe(p[1][0]);
         expect(portal.posY).toBe(p[1][1]);
-        expect(portal.name).toBe('MISTS_DUNGEON_SOLO_BLACK');
+        expect(portal.name).toBe('MISTS_DUNGEON_SOLO_YELLOW');
         expect(portal.drawName).toBe('mists_abbey');
     });
 

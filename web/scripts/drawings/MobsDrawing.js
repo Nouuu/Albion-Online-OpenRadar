@@ -83,13 +83,10 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type == EnemyType.MistBoss)
             {
-                // Only set imageName if mob has been identified (has name from mobinfo)
-                // Otherwise leave undefined and fallback blue circle will be drawn
-                if (mobOne.name) {
-                    imageName = mobOne.name;
-                    imageFolder = "Resources"; // Change folder to enemies
-                }
+                if (!settingsSync.getBool(mobOne.mistBoss?.setting)) continue;
 
+                imageName = mobOne.mistBoss.icon;
+                imageFolder = "Resources";
                 drawId = settingsSync.getBool("settingEnemiesID");
             }
             else if (mobOne.type == EnemyType.Events)

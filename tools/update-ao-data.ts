@@ -36,7 +36,7 @@ interface MinifiedItem {
 
 /**
  * Minified mob: { u: uniqueName, t: tier, c: category, n: namelocatag, l?: lootType, lt?: lootTier }
- * Index in array = typeId - 15 (MobsDatabase.OFFSET)
+ * Index in array = typeId - MobsDatabase.OFFSET
  */
 interface MinifiedMob {
     u: string;

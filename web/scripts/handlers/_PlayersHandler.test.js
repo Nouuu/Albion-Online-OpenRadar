@@ -1,5 +1,6 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
+import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
@@ -42,6 +43,26 @@ describe('PlayersHandler', () => {
     // handleNewPlayerEvent (event 29)
     // ---------------------------------------------------------------------------
     describe('handleNewPlayerEvent (event 29)', () => {
+        // @verified 2026-09-03: pcap-derived players/naked-spawn.json, 2026-09-03 Mists capture. Two of 112 spawns
+        // carry Parameters[40] as a byte array of ten zeros instead of an int array, and no equipment event ever
+        // follows. The player lists with no items and no item power, and nothing throws.
+        test('pcap-derived naked-spawn: byte-array equipment lists the player with no items', async () => {
+            window.itemsDatabase = loadRealItemsDatabase();
+            const fx = await loadFixture('players', 'naked-spawn');
+            expect(fx.messages).toHaveLength(2);
+
+            for (const msg of fx.messages) {
+                const p = normalizeParams(msg.parameters);
+                expect(Array.isArray(p[40])).toBe(false);
+                handler.handleNewPlayerEvent(p[0], p);
+            }
+
+            expect(handler.getSize()).toBe(2);
+            for (const player of handler.playersList) {
+                expect(player.getAverageItemPower()).toBeNull();
+            }
+        });
+
         // @verified 2026-04-18: passive player (faction=0) from pcap adds a Player entity to the list.
         test('pcap-derived spawn: passive player faction=0 adds entity', async () => {
             const fx = await loadFixture('players', 'spawn');
@@ -59,8 +80,10 @@ describe('PlayersHandler', () => {
         });
 
         // @verified 2026-04-18: faction player (faction=5) lands with stored faction value.
-        test('pcap-derived spawn: faction=5 player stores faction field', async () => {
-            const fx = await loadFixture('players', 'spawn');
+        // pcap-derived players/faction-spawn.json, 2026-04 capture: the only faction-flagged spawn in the corpus.
+        // Its equipment ids predate Dragonfire; only Parameters[53] is read here.
+        test('pcap-derived faction-spawn: faction=5 player stores faction field', async () => {
+            const fx = await loadFixture('players', 'faction-spawn');
             const msg = fx.messages.find(m => m.parameters['53'] === 5);
             expect(msg).toBeDefined();
             const p = normalizeParams(msg.parameters);

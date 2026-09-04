@@ -219,37 +219,11 @@ function handleJoinResponse(Parameters, clearHandlersCallback) {
     clearHandlersCallback();
 }
 
+const EVENT_NAMES_BY_CODE = new Map(Object.entries(EventCodes).map(([name, code]) => [code, name]));
+
 // Helper function to get event name (for debugging)
 function getEventName(eventCode) {
-    const eventNames = {
-        1: 'Leave',
-        2: 'JoinFinished',
-        3: 'Move',
-        4: 'Teleport',
-        5: 'ChangeEquipment',
-        6: 'HealthUpdate',
-        7: 'HealthUpdates',
-        15: 'Damage',
-        21: 'Request_Move',
-        29: 'NewCharacter',
-        35: 'ClusterChange',
-        38: 'NewSimpleHarvestableObject',
-        39: 'NewSimpleHarvestableObjectList',
-        40: 'NewHarvestableObject',
-        46: 'HarvestableChangeState',
-        71: 'NewMob',
-        72: 'MobChangeState',
-        91: 'RegenerationHealthChanged',
-        101: 'NewHarvestableObject',
-        102: 'NewSimpleHarvestableObjectList',
-        103: 'HarvestStart',
-        104: 'HarvestCancel',
-        105: 'HarvestFinished',
-        137: 'GetCharacterStats',
-        201: 'NewSimpleItem',
-        202: 'NewEquipmentItem',
-    };
-    return eventNames[eventCode] || `Unknown_${eventCode}`;
+    return EVENT_NAMES_BY_CODE.get(eventCode) ?? `Unknown_${eventCode}`;
 }
 
 export function init(deps) {
@@ -340,7 +314,7 @@ export function onEvent(Parameters) {
     });
 
     // Detailed event logging (skip verbose events)
-    if (eventCode !== 91) {
+    if (eventCode !== EventCodes.RegenerationHealthChanged) {
         const paramDetails = {};
         for (let key in Parameters) {
             if (Parameters.hasOwnProperty(key) && key !== '252' && key !== '0') {
@@ -424,7 +398,7 @@ export function onEvent(Parameters) {
         case EventCodes.RegenerationHealthChanged: {
             const mobInfo = mobsHandler.debugLogMobById(Parameters[0]);
             window.logger?.debug(CATEGORIES.MOBS, 'regen_health_changed', {
-                eventCode: 91,
+                eventCode: EventCodes.RegenerationHealthChanged,
                 id: Parameters[0],
                 mobInfo,
                 allParameters: Parameters
@@ -437,7 +411,7 @@ export function onEvent(Parameters) {
         case EventCodes.HealthUpdate: {
             const mobInfo = mobsHandler.debugLogMobById(Parameters[0]);
             window.logger?.debug(CATEGORIES.MOBS, 'health_update', {
-                eventCode: 6,
+                eventCode: EventCodes.HealthUpdate,
                 id: Parameters[0],
                 mobInfo,
                 allParameters: Parameters
@@ -449,7 +423,7 @@ export function onEvent(Parameters) {
 
         case EventCodes.HealthUpdates:
             window.logger?.debug(CATEGORIES.MOBS, 'bulk_hp_update', {
-                eventCode: 7,
+                eventCode: EventCodes.HealthUpdates,
                 allParameters: Parameters
             });
             mobsHandler.updateMobHealthBulk(Parameters);
@@ -468,7 +442,8 @@ export function onEvent(Parameters) {
             break;
 
         case EventCodes.NewRandomDungeonExit: {
-            const tag = Parameters[15];
+            // Dragonfire inserted a parameter at [4]; the Mists tag moved from [15] to [16].
+            const tag = Parameters[16];
             if (typeof tag === 'string' && tag.startsWith('MISTS_DUNGEON')) {
                 const pos = Parameters[1];
                 if (Array.isArray(pos) && pos.length === 2) {
@@ -502,11 +477,6 @@ export function onEvent(Parameters) {
 
         case EventCodes.ChangeFlaggingFinished:
             playersHandler.updatePlayerFaction(Parameters[0], Parameters[1]);
-            break;
-
-        // upstream 590 = UpdateEnemyWarBannerActive; local dispatch labels it "key_sync", semantics diverge.
-        case 590:
-            window.logger?.debug(CATEGORIES.NETWORK, 'key_sync', {Parameters});
             break;
 
         case EventCodes.MistsPlayerJoinedInfo: {

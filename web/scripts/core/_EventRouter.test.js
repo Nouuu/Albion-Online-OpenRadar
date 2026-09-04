@@ -159,7 +159,7 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent MistsPlayerJoinedInfo (event 521)
+    // onEvent MistsPlayerJoinedInfo (event 522)
     // -------------------------------------------------------------------------
     describe('onEvent MistsPlayerJoinedInfo', () => {
         // @verified 2026-04-23: pcap-derived. Event 519 with Parameters[2]="@MISTS@<guid>" and
@@ -169,7 +169,7 @@ describe('EventRouter', () => {
             const fix = await loadFixture('mists', 'player-joined-info');
             const entry = fix.messages.find(m => m.parameters['3'] === true);
             const p = normalizeParams(entry.parameters);
-            p[252] = 521; // post-patch MistsPlayerJoinedInfo (SAT+ADA 2026-06-29); fixture shape is pre-patch, code was 519
+            p[252] = 522; // Dragonfire MistsPlayerJoinedInfo (SAT+ADA 2026-08-31); fixture shape is pre-patch, code was 521
 
             EventRouter.onEvent(p);
 
@@ -179,12 +179,12 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-23: the first pcap message has Parameters[2]="0212" (Royal cluster) with no
         // Parameters[3] flag. Must NOT overwrite map.id (not a Mists entry, just session info).
-        test('MIST-7: event 521 without Parameters[3] flag does not update map.id', async () => {
+        test('MIST-7: event 522 without Parameters[3] flag does not update map.id', async () => {
             const fix = await loadFixture('mists', 'player-joined-info');
             map.id = '0212';
             const msg = fix.messages[0];
             const p = normalizeParams(msg.parameters);
-            p[252] = 521; // post-patch MistsPlayerJoinedInfo (SAT+ADA 2026-06-29); fixture shape is pre-patch, code was 519
+            p[252] = 522; // Dragonfire MistsPlayerJoinedInfo (SAT+ADA 2026-08-31); fixture shape is pre-patch, code was 521
 
             EventRouter.onEvent(p);
 
@@ -192,13 +192,13 @@ describe('EventRouter', () => {
             expect(radarRenderer.setMap).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-04-23: idempotent. Re-firing event 521 for the same Mists instance does not
+        // @verified 2026-04-23: idempotent. Re-firing event 522 for the same Mists instance does not
         // re-trigger setMap.
-        test('MIST-7: re-firing event 521 for same instance does not re-notify renderer', () => {
+        test('MIST-7: re-firing event 522 for same instance does not re-notify renderer', () => {
             map.id = '@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434';
             EventRouter.onEvent({
                 0: 1,
-                252: 521,
+                252: 522,
                 2: '@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434',
                 3: true,
                 4: '0212'
@@ -220,12 +220,12 @@ describe('EventRouter', () => {
         // @verified 2026-04-29: source: session log 2026-04-26T14-33-25.jsonl event 521
         // @MISTS@9f9a62f3-... fired while map.id was already a BZ. Override origin is taken
         // from the previous map id, not Parameters[4] (which carries the joining player's origin).
-        test('MIST-90: event 521 entry from BZ registers black-zone override and persists sessionStorage', () => {
+        test('MIST-90: event 522 entry from BZ registers black-zone override and persists sessionStorage', () => {
             map.id = '3316';
 
             EventRouter.onEvent({
                 0: 1,
-                252: 521,
+                252: 522,
                 2: '@MISTS@9f9a62f3-c9a8-418c-9ad0-440580332ab5',
                 3: true,
                 4: '3316'
@@ -247,7 +247,7 @@ describe('EventRouter', () => {
             const fix = await loadFixture('mists', 'player-joined-info');
             const entry = fix.messages.find(m => m.parameters['3'] === true);
             const p = normalizeParams(entry.parameters);
-            p[252] = 521; // post-patch MistsPlayerJoinedInfo (SAT+ADA 2026-06-29); fixture shape is pre-patch, code was 519
+            p[252] = 522; // Dragonfire MistsPlayerJoinedInfo (SAT+ADA 2026-08-31); fixture shape is pre-patch, code was 521
 
             EventRouter.onEvent(p);
 
@@ -256,10 +256,10 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-29: synthetic. Mirrors the first message of the pcap fixture
         // (Parameters[2]==Parameters[4], no [3] flag, presence info, not a Mist entry).
-        test('MIST-90: event 521 without Parameters[3] flag does not register override', () => {
+        test('MIST-90: event 522 without Parameters[3] flag does not register override', () => {
             EventRouter.onEvent({
                 0: 1,
-                252: 521,
+                252: 522,
                 2: '3316',
                 4: '3316'
             });
@@ -274,7 +274,7 @@ describe('EventRouter', () => {
             map.id = '99999_unknown_zone';
             EventRouter.onEvent({
                 0: 1,
-                252: 521,
+                252: 522,
                 2: '@MISTS@deadbeef',
                 3: true,
                 4: '99999_unknown_zone'
@@ -291,7 +291,7 @@ describe('EventRouter', () => {
             map.id = '3316';
             EventRouter.onEvent({
                 0: 1,
-                252: 521,
+                252: 522,
                 2: '@MISTS@x',
                 3: true,
                 4: '3316'
@@ -312,14 +312,14 @@ describe('EventRouter', () => {
             map.id = '3316';
             EventRouter.onEvent({
                 0: 1,
-                252: 521,
+                252: 522,
                 2: '@MISTS@first',
                 3: true,
                 4: '3316'
             });
             EventRouter.onEvent({
                 0: 2,
-                252: 521,
+                252: 522,
                 2: '@MISTS@second',
                 3: true,
                 4: '3316'
@@ -362,7 +362,7 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-29: source: session log 2026-04-29T19-23-39.jsonl, sequence
         // 17:25:32 op 2 Join Parameters[8]="0344" then 17:26:11 op 2 Join
-        // Parameters[8]="@MISTS@b0676408-..." (no event 521 with Parameters[3]=true fired).
+        // Parameters[8]="@MISTS@b0676408-..." (no event 522 with Parameters[3]=true fired).
         test('MIST-90: op 2 Join entry into Mist from BZ origin registers black-zone override', () => {
             EventRouter.onResponse({253: OperationCodes.Join, 8: '0344', 9: [0, 0]}, clearHandlers);
             expect(map.id).toBe('0344');
@@ -663,38 +663,38 @@ describe('EventRouter', () => {
     describe('onEvent NewCharacter', () => {
         // @verified 2026-04-18: pcap-derived spawn routes to handleNewPlayerEvent with id + full params
         test('NewCharacter pcap-derived: dispatches handleNewPlayerEvent', async () => {
-            // pcap-derived: players/spawn.json message[0], params[0]=9956, params[252]=29
+            // pcap-derived: players/spawn.json message[0], 2026-09-03 capture
             const fix = await loadFixture('players', 'spawn');
             const msg = fix.messages[0];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.playersHandler.handleNewPlayerEvent).toHaveBeenCalledWith(9956, p);
+            expect(handlers.playersHandler.handleNewPlayerEvent).toHaveBeenCalledWith(p[0], p);
         });
 
         // @verified 2026-04-18: second spawn variant (different player id)
         test('NewCharacter pcap-derived: second player variant dispatches correctly', async () => {
-            // pcap-derived: players/spawn.json message[1], params[0]=9512
+            // pcap-derived: players/spawn.json message[1], 2026-09-03 capture
             const fix = await loadFixture('players', 'spawn');
             const msg = fix.messages[1];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.playersHandler.handleNewPlayerEvent).toHaveBeenCalledWith(9512, p);
+            expect(handlers.playersHandler.handleNewPlayerEvent).toHaveBeenCalledWith(p[0], p);
         });
 
         // @verified 2026-04-18: third player variant with guild tag
         test('NewCharacter pcap-derived: high-gear player with guild dispatches correctly', async () => {
-            // pcap-derived: players/spawn.json message[7], params[0]=1441, params[51]="JOIN"
+            // pcap-derived: players/spawn.json message[7], 2026-09-03 capture, guild tag in params[51]
             const fix = await loadFixture('players', 'spawn');
             const msg = fix.messages[7];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.playersHandler.handleNewPlayerEvent).toHaveBeenCalledWith(1441, p);
+            expect(handlers.playersHandler.handleNewPlayerEvent).toHaveBeenCalledWith(p[0], p);
         });
     });
 
@@ -704,14 +704,14 @@ describe('EventRouter', () => {
     describe('onEvent CharacterEquipmentChanged', () => {
         // @verified 2026-07-24: pcap-derived equipment change dispatches updateItems
         test('CharacterEquipmentChanged pcap-derived: dispatches updateItems with id and params', async () => {
-            // pcap-derived: players/equipment.json message[0], params[0]=107652, params[252]=90
+            // pcap-derived: players/equipment.json message[0], 2026-09-03 capture
             const fix = await loadFixture('players', 'equipment');
             const msg = fix.messages[0];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.playersHandler.updateItems).toHaveBeenCalledWith(107652, p);
+            expect(handlers.playersHandler.updateItems).toHaveBeenCalledWith(p[0], p);
         });
     });
 
@@ -783,26 +783,26 @@ describe('EventRouter', () => {
     describe('onEvent NewHarvestableObject', () => {
         // @verified 2026-04-18: single harvestable spawn dispatches newHarvestableObject(id, params)
         test('NewHarvestableObject pcap-derived: dispatches newHarvestableObject with id', async () => {
-            // pcap-derived: harvestables/single-spawn.json message[0], params[0]=2246
+            // pcap-derived: harvestables/single-spawn.json message[0], 2026-09-03 capture
             const fix = await loadFixture('harvestables', 'single-spawn');
             const msg = fix.messages[0];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.harvestablesHandler.newHarvestableObject).toHaveBeenCalledWith(2246, p);
+            expect(handlers.harvestablesHandler.newHarvestableObject).toHaveBeenCalledWith(p[0], p);
         });
 
-        // @verified 2026-04-18: enchanted stone variant (params[6]=529)
-        test('NewHarvestableObject pcap-derived: enchanted stone variant dispatches correctly', async () => {
-            // pcap-derived: harvestables/single-spawn.json message[2], params[0]=8403, params[6]=529
+        // @verified 2026-09-03: a later message in the same fixture dispatches the same way
+        test('NewHarvestableObject pcap-derived: third fixture message dispatches correctly', async () => {
+            // pcap-derived: harvestables/single-spawn.json message[2], 2026-09-03 capture
             const fix = await loadFixture('harvestables', 'single-spawn');
             const msg = fix.messages[2];
             const p = normalizeParams(msg.parameters);
 
             EventRouter.onEvent(p);
 
-            expect(handlers.harvestablesHandler.newHarvestableObject).toHaveBeenCalledWith(8403, p);
+            expect(handlers.harvestablesHandler.newHarvestableObject).toHaveBeenCalledWith(p[0], p);
         });
     });
 
@@ -1012,15 +1012,15 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewCagedObject (532) + CagedObjectStateUpdated (533)
+    // onEvent NewCagedObject (533) + CagedObjectStateUpdated (534)
     // -------------------------------------------------------------------------
     describe('onEvent WispCage', () => {
         // @verified 2026-04-19: pcap-derived from capture-70 confirms P[252]=530 in real traffic. Dispatch routes to newCageEvent.
-        test('onEvent routes NewCagedObject (P[252]=532) to wispCageHandler.newCageEvent', async () => {
-            // pcap-derived shape: wispcage/spawn.json message[0]. Code resynced to post-patch 532 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        test('onEvent routes NewCagedObject (P[252]=533) to wispCageHandler.newCageEvent', async () => {
+            // pcap-derived shape: wispcage/spawn.json message[0]. Code resynced to Dragonfire 533 (SAT+ADA 2026-08-31), pending live-capture re-verification.
             const fix = await loadFixture('wispcage', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 532;
+            p[252] = 533;
 
             EventRouter.onEvent(p);
 
@@ -1028,9 +1028,9 @@ describe('EventRouter', () => {
         });
 
         // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch. Capture-70 has no CagedObjectStateUpdated events so this stays synthetic.
-        test('onEvent routes CagedObjectStateUpdated (P[252]=533) to wispCageHandler.cageOpenedEvent', () => {
+        test('onEvent routes CagedObjectStateUpdated (P[252]=534) to wispCageHandler.cageOpenedEvent', () => {
             // synthetic: no wispcage-opened fixture in corpus; upstream value is 531
-            const p = {0: 777, 252: 533};
+            const p = {0: 777, 252: 534};
 
             EventRouter.onEvent(p);
 
@@ -1063,12 +1063,26 @@ describe('EventRouter', () => {
             expect(allHandlerCalls()).toHaveLength(0);
         });
 
-        // @verified 2026-04-18: code 590 (BotCommand) is logging-only, no handler dispatch
-        test('code 590 is logging-only and invokes no handler method', () => {
-            // synthetic: code 590 exists as literal in EventRouter switch
-            EventRouter.onEvent({0: 1, 252: 590});
+        // @verified 2026-08-31: the debug log resolves the event name from the generated table.
+        test('event name in the debug log is resolved from the generated table', () => {
+            EventRouter.onEvent({0: 1, 252: EventCodes.Leave});
 
-            expect(allHandlerCalls()).toHaveLength(0);
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(),
+                `Event_${EventCodes.Leave}_ID_1`,
+                expect.objectContaining({eventName: 'Leave'})
+            );
+        });
+
+        // @verified 2026-08-31: a code absent from the generated table falls back to Unknown_<code>.
+        test('event name falls back to Unknown for a code absent from the table', () => {
+            EventRouter.onEvent({0: 1, 252: 9999});
+
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(),
+                'Event_9999_ID_1',
+                expect.objectContaining({eventName: 'Unknown_9999'})
+            );
         });
 
         // @verified 2026-04-18: completely unknown code produces no side effect and no throw
@@ -1123,34 +1137,34 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // MIST-117 op 473 discriminant onRequest
+    // MIST-117 op 477 discriminant onRequest
     // -------------------------------------------------------------------------
-    describe('MIST-117 op 473 discriminant onRequest', () => {
+    describe('MIST-117 op 477 discriminant onRequest', () => {
         // @verified 2026-05-12: capture 21-44-17 Mist#0 (Brecilien solo non-lethal).
-        // op 473 without param[2] caches a non-lethal pending choice.
-        test('onRequest op 473 without param[2] caches lethal=false', () => {
-            EventRouter.onRequest({1: 8, 253: 473});
+        // op 477 without param[2] caches a non-lethal pending choice.
+        test('onRequest op 477 without param[2] caches lethal=false', () => {
+            EventRouter.onRequest({1: 8, 253: 477});
 
             expect(EventRouter._debugGetPendingMistChoice()).toMatchObject({lethal: false});
         });
 
         // @verified 2026-05-12: capture 21-44-17 Mist#1 (solo lethal, param[2]=2).
-        test('onRequest op 473 with param[2]=2 caches lethal=true (solo lethal)', () => {
-            EventRouter.onRequest({1: 8, 2: 2, 253: 473});
+        test('onRequest op 477 with param[2]=2 caches lethal=true (solo lethal)', () => {
+            EventRouter.onRequest({1: 8, 2: 2, 253: 477});
 
             expect(EventRouter._debugGetPendingMistChoice()).toMatchObject({lethal: true});
         });
 
         // @verified 2026-05-12: capture 23-28-09 Mist#0 (duo lethal, param[2]=4).
-        test('onRequest op 473 with param[2]=4 caches lethal=true (duo lethal)', () => {
-            EventRouter.onRequest({1: 8, 2: 4, 253: 473});
+        test('onRequest op 477 with param[2]=4 caches lethal=true (duo lethal)', () => {
+            EventRouter.onRequest({1: 8, 2: 4, 253: 477});
 
             expect(EventRouter._debugGetPendingMistChoice()).toMatchObject({lethal: true});
         });
 
-        // @verified 2026-05-12: synthetic guard. op 473 with param[1] != 8 ignored (not a Brecilien NPC interaction).
-        test('onRequest op 473 with param[1] != 8 ignored', () => {
-            EventRouter.onRequest({0: 999, 1: 99, 253: 473});
+        // @verified 2026-05-12: synthetic guard. op 477 with param[1] != 8 ignored (not a Brecilien NPC interaction).
+        test('onRequest op 477 with param[1] != 8 ignored', () => {
+            EventRouter.onRequest({0: 999, 1: 99, 253: 477});
 
             expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
         });
@@ -1160,19 +1174,19 @@ describe('EventRouter', () => {
     // MIST-117 applyMapChange consumption
     // -------------------------------------------------------------------------
     describe('MIST-117 applyMapChange consumption', () => {
-        // @verified 2026-05-12: full pipeline op 473 lethal then Mist Join.
+        // @verified 2026-05-12: full pipeline op 477 lethal then Mist Join.
         test('applyMapChange consumes pendingMistChoice and forces black on lethal', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-1', 9: [0, 0]}, clearHandlers);
 
             expect(zonesDatabase.getPvpType('@MISTS@deadbeef-1')).toBe('black');
         });
 
-        // @verified 2026-05-12: op 473 non-lethal then Mist Join, forced yellow despite safe origin.
+        // @verified 2026-05-12: op 477 non-lethal then Mist Join, forced yellow despite safe origin.
         test('applyMapChange consumes pendingMistChoice and forces yellow when non-lethal', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-2', 9: [0, 0]}, clearHandlers);
 
             expect(zonesDatabase.getPvpType('@MISTS@deadbeef-2')).toBe('yellow');
@@ -1182,7 +1196,7 @@ describe('EventRouter', () => {
         test('applyMapChange ignores expired pendingMistChoice (>30s)', () => {
             map.id = '5001';
             vi.useFakeTimers();
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             vi.advanceTimersByTime(31000);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-3', 9: [0, 0]}, clearHandlers);
             vi.useRealTimers();
@@ -1193,7 +1207,7 @@ describe('EventRouter', () => {
         // @verified 2026-05-12: synthetic. Pending choice cleared after successful consumption.
         test('applyMapChange clears pendingMistChoice after consumption', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@deadbeef-4', 9: [0, 0]}, clearHandlers);
 
             expect(EventRouter._debugGetPendingMistChoice()).toBeNull();
@@ -1279,47 +1293,54 @@ describe('EventRouter', () => {
     });
 
     describe('MIST-119 NewRandomDungeonExit routing (MISTS_DUNGEON detection)', () => {
-        // @verified 2026-05-16: pcap-derived dungeon-portal-spawn fixture (capture 13-41-00).
-        // Knightfall Abbey portal arrives via event 325 with param[15]="MISTS_DUNGEON_SOLO_BLACK"
-        // and param[3]="" (empty). Route to mistsDungeonHandler, not dungeonsHandler.
-        test('event 325 with param[15] starting MISTS_DUNGEON routes to mistsDungeonHandler.addPortal', async () => {
-            const fix = await loadFixture('mists', 'dungeon-portal-spawn');
-            const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 325; // post-patch NewRandomDungeonExit (SAT+ADA 2026-06-29); fixture shape is pre-patch, code was 323
+        // @verified 2026-09-03: pcap-derived dungeons/spawn fixture, 2026-09-03 Highland capture. Dragonfire
+        // inserted a parameter at [4] on event 325, so the MISTS tag moved from [15] to [16]. The abbey
+        // entrance arrives with param[6]="SHARED_MIST_DUNGEON_ENTRANCE_SMALL", param[3]="" and
+        // param[16]="MISTS_DUNGEON_SOLO_YELLOW". Route to mistsDungeonHandler, not dungeonsHandler.
+        test('event 325 with param[16] starting MISTS_DUNGEON routes to mistsDungeonHandler.addPortal', async () => {
+            const fix = await loadFixture('dungeons', 'spawn');
+            const entry = fix.messages.find(m => m.parameters['6'] === 'SHARED_MIST_DUNGEON_ENTRANCE_SMALL');
+            const p = normalizeParams(entry.parameters);
+            expect(p[16]).toBe('MISTS_DUNGEON_SOLO_YELLOW');
 
             EventRouter.onEvent(p);
 
             expect(handlers.mistsDungeonHandler.addPortal)
-                .toHaveBeenCalledWith(p[0], p[1][0], p[1][1], p[15]);
+                .toHaveBeenCalledWith(p[0], p[1][0], p[1][1], 'MISTS_DUNGEON_SOLO_YELLOW');
             expect(handlers.dungeonsHandler.dungeonEvent).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-05-16: regression. Standard random dungeon (no MISTS_DUNGEON tag) still
-        // routes to dungeonsHandler.
-        test('event 325 without MISTS_DUNGEON tag routes to dungeonsHandler.dungeonEvent', () => {
-            const params = {0: 1, 1: [10, 20], 3: 'CORRUPTED_SOLO_NONLETHAL', 252: 325, 15: undefined};
+        // @verified 2026-09-03: pcap-derived, same fixture. A standard random dungeon exit carries no MISTS
+        // tag at [16] and still routes to dungeonsHandler.
+        test('event 325 without MISTS_DUNGEON tag routes to dungeonsHandler.dungeonEvent', async () => {
+            const fix = await loadFixture('dungeons', 'spawn');
+            const entry = fix.messages.find(m => m.parameters['4'] === 'RD_DUNGEON_BLACK_3');
+            const p = normalizeParams(entry.parameters);
 
-            EventRouter.onEvent(params);
+            EventRouter.onEvent(p);
 
-            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(params);
+            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(p);
             expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-05-16: pcap-derived. Standard Mist solo/duo entrance (MISTS_SOLO_BLACK
-        // without DUNGEON) routes to dungeonsHandler, NOT mistsDungeonHandler. The detection key
-        // is the MISTS_DUNGEON prefix, not the plain MISTS_ prefix.
-        test('event 325 with MISTS_SOLO (non-DUNGEON) routes to dungeonsHandler, not mistsDungeonHandler', () => {
-            const params = {0: 2, 1: [50, 60], 3: '', 5: 'SHARED_MIST_WISP_PORTAL_MOB', 15: 'MISTS_SOLO_BLACK', 252: 325};
+        // @verified 2026-09-03: pcap-derived, same fixture. The portal a wisp opens arrives with
+        // param[6]="SHARED_MIST_WISP_PORTAL_MOB" and param[16]="MISTS_DUO_BLACK" (no DUNGEON). It routes
+        // to dungeonsHandler, NOT mistsDungeonHandler. The detection key is the MISTS_DUNGEON prefix.
+        test('event 325 with MISTS_DUO (non-DUNGEON) routes to dungeonsHandler, not mistsDungeonHandler', async () => {
+            const fix = await loadFixture('dungeons', 'spawn');
+            const entry = fix.messages.find(m => m.parameters['6'] === 'SHARED_MIST_WISP_PORTAL_MOB');
+            const p = normalizeParams(entry.parameters);
+            expect(p[16]).toBe('MISTS_DUO_BLACK');
 
-            EventRouter.onEvent(params);
+            EventRouter.onEvent(p);
 
-            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(params);
+            expect(handlers.dungeonsHandler.dungeonEvent).toHaveBeenCalledWith(p);
             expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-05-16: synthetic guard. Missing position skips abbey dispatch silently.
+        // @verified 2026-09-03: synthetic guard. Missing position skips abbey dispatch silently.
         test('event 325 MISTS_DUNGEON with missing position does not call addPortal', () => {
-            EventRouter.onEvent({0: 1, 252: 325, 15: 'MISTS_DUNGEON_SOLO_BLACK'});
+            EventRouter.onEvent({0: 1, 252: 325, 16: 'MISTS_DUNGEON_SOLO_BLACK'});
 
             expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });
@@ -1338,7 +1359,7 @@ describe('EventRouter', () => {
         // from origin 5001 = safe = green banner.
         test('Brec lethal Mist override persists pvpType, not just originZoneId', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-letal', 9: [0, 0]}, clearHandlers);
 
             const persisted = JSON.parse(sessionStorage.getItem('activeMistOverride'));
@@ -1427,10 +1448,10 @@ describe('EventRouter', () => {
     // -------------------------------------------------------------------------
     describe('MIST-119 Mist-to-Mist chain', () => {
         // @verified 2026-05-16: bug report. Brec lethal -> Mist A (black) -> Mist B via border
-        // exit (no op 473). B currently inherits from origin 5001 = safe = green. Should stay black.
+        // exit (no op 477). B currently inherits from origin 5001 = safe = green. Should stay black.
         test('Brec lethal Mist -> Mist via border exit preserves black pvpType', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-A', 9: [0, 0]}, clearHandlers);
             expect(zonesDatabase.getPvpType('@MISTS@brec-A')).toBe('black');
 
@@ -1442,7 +1463,7 @@ describe('EventRouter', () => {
         // @verified 2026-05-16: same logic, 3 hops. Brec lethal -> A -> B -> C all black.
         test('Brec lethal chain across 3 Mists preserves black throughout', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-A', 9: [0, 0]}, clearHandlers);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-B', 9: [0, 0]}, clearHandlers);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-C', 9: [0, 0]}, clearHandlers);
@@ -1453,7 +1474,7 @@ describe('EventRouter', () => {
         // @verified 2026-05-16: Brec non-lethal yellow inherits across hops.
         test('Brec non-lethal Mist -> Mist preserves yellow pvpType', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-yA', 9: [0, 0]}, clearHandlers);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-yB', 9: [0, 0]}, clearHandlers);
 
@@ -1490,14 +1511,14 @@ describe('EventRouter', () => {
         });
 
         // @verified 2026-05-16: regression. Brec lethal Mist -> back to Brec -> re-talk NPC ->
-        // new Mist with own choice. Transit through real zone clears chain, new op 473 sets fresh
+        // new Mist with own choice. Transit through real zone clears chain, new op 477 sets fresh
         // forcedPvpType. Ensures the new chain logic does not leak state across real-zone transits.
         test('Brec lethal -> Mist -> Brec -> new lethal Mist starts a fresh black override', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@first', 9: [0, 0]}, clearHandlers);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '5001', 9: [0, 0]}, clearHandlers);
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@second', 9: [0, 0]}, clearHandlers);
 
             expect(zonesDatabase.getPvpType('@MISTS@second')).toBe('black');
@@ -1509,7 +1530,7 @@ describe('EventRouter', () => {
         // elif (which would inherit from a wrong source if it fired here).
         test('@MISTSDUNGEON@ previousMapId routes through sanctuary branch, not plain-Mist branch', () => {
             map.id = '5001';
-            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 473});
+            EventRouter.onRequest({0: 1, 1: 8, 2: 2, 253: 477});
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-pre-abbey', 9: [0, 0]}, clearHandlers);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTSDUNGEON@inner', 9: [0, 0]}, clearHandlers);
             EventRouter.onResponse({253: OperationCodes.Join, 8: '@MISTS@brec-post-abbey', 9: [0, 0]}, clearHandlers);
