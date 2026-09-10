@@ -49,11 +49,11 @@
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "puppeteer-real-browser": "^1.4.4",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.4",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.23.11",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.66.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
