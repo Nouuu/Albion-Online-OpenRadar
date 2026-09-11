@@ -45,12 +45,12 @@ type Capturer struct {
 	cancel    context.CancelFunc
 	closeOnce sync.Once
 
-	bytesReceived uint64
+	bytesReceived atomic.Uint64
 
 	recordMu          sync.Mutex
 	recordFile        *os.File
 	recordWriter      *pcapgo.Writer
-	recordWriteErrors uint64
+	recordWriteErrors atomic.Uint64
 }
 
 // captureFactory is overridable in tests; restore via t.Cleanup.
@@ -117,7 +117,7 @@ func (c *Capturer) Close() {
 
 func (c *Capturer) Iface() NetworkInterface { return c.iface }
 
-func (c *Capturer) BytesReceived() uint64 { return atomic.LoadUint64(&c.bytesReceived) }
+func (c *Capturer) BytesReceived() uint64 { return c.bytesReceived.Load() }
 
 func (c *Capturer) Stats() (*pcap.Stats, error) {
 	if c.handle == nil {
@@ -200,7 +200,7 @@ func (c *Capturer) processPacket(p gopacket.Packet) {
 	c.recordMu.Lock()
 	if c.recordWriter != nil {
 		if err := c.recordWriter.WritePacket(p.Metadata().CaptureInfo, p.Data()); err != nil {
-			n := atomic.AddUint64(&c.recordWriteErrors, 1)
+			n := c.recordWriteErrors.Add(1)
 			if n%100 == 1 {
 				logger.PrintWarn("PKT", "pcap recorder write error: %v", err)
 			}
@@ -216,7 +216,7 @@ func (c *Capturer) processPacket(p gopacket.Packet) {
 	if !ok || len(udp.Payload) == 0 || c.onPacket == nil {
 		return
 	}
-	atomic.AddUint64(&c.bytesReceived, uint64(len(udp.Payload)))
+	c.bytesReceived.Add(uint64(len(udp.Payload)))
 	c.onPacket(udp.Payload)
 }
 

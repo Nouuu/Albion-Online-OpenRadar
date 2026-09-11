@@ -61,7 +61,7 @@ func writeCensusSection(sb *strings.Builder, title string, m map[int]int) {
 	sb.WriteString("\n")
 }
 
-func intFromParam(v interface{}) int {
+func intFromParam(v any) int {
 	switch x := v.(type) {
 	case byte:
 		return int(x)

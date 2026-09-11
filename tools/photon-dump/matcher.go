@@ -36,7 +36,7 @@ func matchesResponse(m MatchCriteria, r *photon.OperationResponse) bool {
 }
 
 // matchesWhere is a wildcard when where is empty; otherwise every predicate must hold.
-func matchesWhere(where map[byte]func(v any) bool, params map[byte]interface{}) bool {
+func matchesWhere(where map[byte]func(v any) bool, params map[byte]any) bool {
 	for k, pred := range where {
 		v, ok := params[k]
 		if !ok || !pred(v) {

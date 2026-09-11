@@ -101,7 +101,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 	return nil
 }
 
-func stringifyParams(params map[byte]interface{}) map[string]any {
+func stringifyParams(params map[byte]any) map[string]any {
 	out := make(map[string]any, len(params))
 	for k, v := range params {
 		out[fmt.Sprintf("%d", k)] = v
