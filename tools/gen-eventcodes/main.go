@@ -80,7 +80,7 @@ func generate(root string, s spec) error {
 		Value int
 	}
 	var entries []entry
-	for _, line := range bytes.Split(raw, []byte("\n")) {
+	for line := range bytes.SplitSeq(raw, []byte("\n")) {
 		m := entryRe.FindSubmatch(line)
 		if m == nil {
 			continue

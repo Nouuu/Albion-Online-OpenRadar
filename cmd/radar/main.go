@@ -49,12 +49,12 @@ type App struct {
 	program        *tea.Program
 
 	// Packet statistics (atomic for thread safety)
-	packetsProcessed uint64
-	packetsErrors    uint64
-	packetsEncrypted uint64
+	packetsProcessed atomic.Uint64
+	packetsErrors    atomic.Uint64
+	packetsEncrypted atomic.Uint64
 
 	// Server status (atomic for thread safety)
-	httpRunning int32
+	httpRunning atomic.Int32
 }
 
 func main() {
@@ -285,12 +285,12 @@ func (app *App) startServers() {
 	logger.PrintInfo("APP", "Starting servers...")
 
 	app.wg.Go(func() {
-		atomic.StoreInt32(&app.httpRunning, 1)
+		app.httpRunning.Store(1)
 		if err := app.httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
 			app.ctx.Err() == nil {
 			logger.PrintError("HTTP", "Error: %v", err)
 		}
-		atomic.StoreInt32(&app.httpRunning, 0)
+		app.httpRunning.Store(0)
 	})
 
 	time.Sleep(100 * time.Millisecond)
@@ -326,8 +326,8 @@ func (app *App) updateStats() {
 				wsStats := app.wsHandler.Stats()
 				logStats := app.logger.GetStats()
 				app.program.Send(ui.StatsMsg{
-					Packets:       atomic.LoadUint64(&app.packetsProcessed),
-					Errors:        atomic.LoadUint64(&app.packetsErrors),
+					Packets:       app.packetsProcessed.Load(),
+					Errors:        app.packetsErrors.Load(),
 					WsClients:     app.wsHandler.ClientCount(),
 					MemoryMB:      float64(m.Alloc) / 1024 / 1024,
 					MemorySysMB:   float64(m.Sys) / 1024 / 1024,
@@ -344,7 +344,7 @@ func (app *App) updateStats() {
 
 				captureActive := len(app.captureManager.State().Active) > 0
 				app.program.Send(ui.StatusMsg{
-					HTTPRunning:    atomic.LoadInt32(&app.httpRunning) == 1,
+					HTTPRunning:    app.httpRunning.Load() == 1,
 					WSRunning:      app.wsHandler.ClientCount() >= 0,
 					CaptureRunning: captureActive,
 				})
@@ -355,12 +355,12 @@ func (app *App) updateStats() {
 
 func (app *App) handlePacket(payload []byte) {
 	if app.photonParser.ReceivePacket(payload) {
-		atomic.AddUint64(&app.packetsProcessed, 1)
+		app.packetsProcessed.Add(1)
 	}
 }
 
 func (app *App) onPhotonParseError(reason string, payloadLen int) {
-	n := atomic.AddUint64(&app.packetsErrors, 1)
+	n := app.packetsErrors.Add(1)
 	if n%100 == 1 {
 		logger.PrintWarn("PKT", "Parsing errors: %d (last reason: %s, payload len: %d)",
 			n, reason, payloadLen)
@@ -370,7 +370,7 @@ func (app *App) onPhotonParseError(reason string, payloadLen int) {
 func (app *App) onPhotonEvent(event *photon.EventData) {
 	photon.PostProcessEvent(event)
 	realCode := event.Parameters[252]
-	app.logger.Debug("EVENT_CAPTURE", fmt.Sprintf("Event_%v", realCode), map[string]interface{}{
+	app.logger.Debug("EVENT_CAPTURE", fmt.Sprintf("Event_%v", realCode), map[string]any{
 		"code":       realCode,
 		"paramCount": len(event.Parameters),
 	}, nil)
@@ -388,7 +388,7 @@ func (app *App) onPhotonResponse(resp *photon.OperationResponse) {
 }
 
 func (app *App) onPhotonEncrypted() {
-	n := atomic.AddUint64(&app.packetsEncrypted, 1)
+	n := app.packetsEncrypted.Add(1)
 	if n%100 == 1 {
 		logger.PrintWarn("PKT", "Encrypted traffic seen (%d so far, ignored)", n)
 	}

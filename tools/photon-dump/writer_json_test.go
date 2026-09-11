@@ -13,7 +13,7 @@ func TestWriteJSONFixture_NestedHashtableBecomesStringKeyed(t *testing.T) {
 	dir := t.TempDir()
 	out := filepath.Join(dir, "fixture.json")
 
-	nested := map[interface{}]interface{}{
+	nested := map[any]any{
 		byte(5): int64(1),
 		byte(7): "ZONE",
 	}
