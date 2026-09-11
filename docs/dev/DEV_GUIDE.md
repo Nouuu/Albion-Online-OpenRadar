@@ -44,7 +44,7 @@ OpenRadar/
 
 | Tool | Version | Notes |
 |---|---|---|
-| Go | 1.26+ | go.mod pins `go 1.26` |
+| Go | 1.27+ | go.mod pins `go 1.27` |
 | Npcap | 1.87+ | Windows packet capture |
 | libpcap | latest | Linux: `apt install libpcap-dev` |
 | Node.js | 20+ | tools and Vitest |

@@ -13,7 +13,7 @@
     <img src="https://img.shields.io/github/v/release/Nouuu/Albion-Online-OpenRadar?style=flat-square&label=Download&color=7c3aed" alt="Download">
   </a>
   <img src="https://img.shields.io/badge/Windows%20%7C%20Linux-blue?style=flat-square" alt="Platform">
-  <img src="https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
+  <img src="https://img.shields.io/badge/Go-1.27+-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
   <a href="https://github.com/Nouuu/Albion-Online-OpenRadar/stargazers">
     <img src="https://img.shields.io/github/stars/Nouuu/Albion-Online-OpenRadar?style=flat-square&color=yellow" alt="Stars">
   </a>
@@ -269,7 +269,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 
 | Tool    | Version | Purpose                |
 |---------|---------|------------------------|
-| Go      | 1.26+   | backend                |
+| Go      | 1.27+   | backend                |
 | Npcap   | 1.87+   | Windows packet capture |
 | libpcap | latest  | Linux packet capture   |
 | ALSA    | latest  | Linux alert sound      |
