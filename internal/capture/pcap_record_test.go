@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/google/gopacket"
@@ -159,6 +160,10 @@ func TestProcessPacket_WritesToRecorder(t *testing.T) {
 //
 // synthetic: packets are constructed in-process; no live Albion traffic needed.
 func TestStartRecording_AfterStop_RecordsToNewFile(t *testing.T) {
+	synctest.Test(t, testStartRecordingAfterStopRecordsToNewFile)
+}
+
+func testStartRecordingAfterStopRecordsToNewFile(t *testing.T) {
 	c := newCapturerFromOffline(t, photonFixture)
 	defer c.Close()
 
@@ -173,7 +178,7 @@ func TestStartRecording_AfterStop_RecordsToNewFile(t *testing.T) {
 		t.Fatalf("first StopRecording: %v", err)
 	}
 
-	// Sleep long enough that the next call produces a distinct timestamp filename.
+	// Bubble clock: instant, still yields a distinct timestamp filename.
 	time.Sleep(1100 * time.Millisecond)
 
 	if err := c.StartRecording(dir); err != nil {
