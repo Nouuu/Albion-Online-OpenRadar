@@ -1,4 +1,4 @@
-import {describe, test, expect, beforeAll, beforeEach} from 'vitest';
+import {describe, test, expect, beforeAll, beforeEach, vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
@@ -168,11 +168,49 @@ describe('ZonesDatabase Avalon Roads pvpType', () => {
         expect(zonesDatabase.isRedZone('TNL-023')).toBe(false);
     });
 
-    // @verified 2026-05-07: Hideout interiors stay safe. Player-owned hideouts inside Avalon are
-    // not PvP zones; only the surrounding Roads are.
-    test('TUNNEL_HIDEOUT keeps safe pvpType', () => {
-        expect(zonesDatabase.getPvpType('TNL-151')).toBe('safe');
-        expect(zonesDatabase.isSafeZone('TNL-151')).toBe(true);
+    // @verified 2026-09-04: issue #187. TNL-151 is Quaent-Vynsum, map file
+    // TNL-151_RDS_RO_AUTO_T6_AVA_AVA, a Roads map that carries a hideout. The 2026-05-07 test
+    // asserted safe here, reading TUNNEL_HIDEOUT as a hideout interior. Interiors are the separate
+    // HIDEOUT-NNNNx family, checked below.
+    test('TUNNEL_HIDEOUT is forced to black, it is a Roads map carrying a hideout', () => {
+        expect(zonesDatabase.getPvpType('TNL-151')).toBe('black');
+        expect(zonesDatabase.isBlackZone('TNL-151')).toBe(true);
+    });
+
+    // @verified 2026-09-04: issue #187. Same family, deep variant.
+    test('TUNNEL_HIDEOUT_DEEP is forced to black', () => {
+        expect(zonesDatabase.getPvpType('TNL-154')).toBe('black');
+    });
+
+    // @verified 2026-09-04: the intent behind the 2026-05-07 comment, applied to the entries it
+    // actually meant. A hideout interior is not a PvP zone.
+    test('HIDEOUT interiors keep safe pvpType', () => {
+        expect(zonesDatabase.getPvpType('HIDEOUT-0001a')).toBe('safe');
+        expect(zonesDatabase.isSafeZone('HIDEOUT-0001a')).toBe(true);
+    });
+
+    // @verified 2026-09-04: every Roads entry, not a sample. A data refresh that adds a Roads
+    // family fails here instead of in a player's session.
+    test('every TUNNEL_ family in the shipped database classifies as black', () => {
+        const roads = Object.entries(zonesDatabase.zones)
+            .filter(([, zone]) => String(zone.type).startsWith('TUNNEL_'));
+        const wrong = roads
+            .filter(([id]) => zonesDatabase.getPvpType(id) !== 'black')
+            .map(([id, zone]) => `${id} ${zone.type} ${zone.pvpType}`);
+
+        expect(roads.length).toBeGreaterThan(0);
+        expect(wrong).toEqual([]);
+    });
+
+    // @verified 2026-09-04: the Roads set and the RDS map-file set are the same 400 entries, so
+    // keying the rule on the type name covers exactly the Roads and nothing else.
+    test('TUNNEL_ types and RDS map files describe the same zones', () => {
+        const byType = Object.keys(zonesDatabase.zones)
+            .filter(id => String(zonesDatabase.zones[id].type).startsWith('TUNNEL_')).sort();
+        const byFile = Object.keys(zonesDatabase.zones)
+            .filter(id => String(zonesDatabase.zones[id].file).includes('_RDS_')).sort();
+
+        expect(byType).toEqual(byFile);
     });
 
     // @verified 2026-05-07: regression guard. TUNNEL_LOW already correctly black in zones.json,
@@ -191,6 +229,38 @@ describe('ZonesDatabase Avalon Roads pvpType', () => {
         expect(zonesDatabase.getPvpType('1000')).toBe('safe');
         expect(zonesDatabase.getPvpType('0212')).toBe('yellow');
         expect(zonesDatabase.getPvpType('3316')).toBe('black');
+    });
+});
+
+describe('ZonesDatabase unresolved map ids', () => {
+    beforeEach(() => {
+        zonesDatabase.forgetUnresolved();
+        window.logger = {debug: () => {}, info: () => {}, warn: vi.fn(), error: () => {}};
+    });
+
+    // @verified 2026-09-04: an id the database cannot place answers safe, which disables the threat
+    // gate, the flash and the sound at once. Silent is the one thing it must not be.
+    test('an unknown map id is recorded', () => {
+        expect(zonesDatabase.getZone('NOPE-9999')).toBeNull();
+
+        expect(window.logger.warn).toHaveBeenCalledWith(
+            expect.anything(), 'ZoneUnresolved', expect.objectContaining({mapId: 'NOPE-9999'}));
+    });
+
+    // @verified 2026-09-04: zone lookups run per detection and per frame, so one record per id.
+    test('the same unknown id is recorded once', () => {
+        for (let i = 0; i < 5; i++) zonesDatabase.getZone('NOPE-9999');
+
+        expect(window.logger.warn).toHaveBeenCalledTimes(1);
+    });
+
+    // @verified 2026-09-04: a resolvable id must stay silent, including one resolved by the
+    // compound-id fallback.
+    test('a resolvable id is not recorded', () => {
+        zonesDatabase.getZone('TNL-151');
+        zonesDatabase.getZone('1000');
+
+        expect(window.logger.warn).not.toHaveBeenCalled();
     });
 });
 
