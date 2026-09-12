@@ -6,14 +6,27 @@ import (
 )
 
 func TestIsRFC1918(t *testing.T) {
-	if !IsRFC1918("192.168.1.1") {
-		t.Error("192.168.1.1 should be RFC1918")
+	cases := []struct {
+		addr string
+		want bool
+	}{
+		{"192.168.1.1", true},
+		{"192.168.0.0", true},
+		{"10.0.0.1", true},
+		{"172.16.0.1", true},
+		{"172.31.255.255", true},
+		{"::ffff:10.1.2.3", true},
+		{"172.32.0.1", false},
+		{"8.8.8.8", false},
+		{"fd00::1", false},
+		{"fe80::1", false},
+		{"1.2.3", false},
+		{"", false},
 	}
-	if IsRFC1918("8.8.8.8") {
-		t.Error("8.8.8.8 should not be RFC1918")
-	}
-	if IsRFC1918("") {
-		t.Error("empty should not be RFC1918")
+	for _, tc := range cases {
+		if got := IsRFC1918(tc.addr); got != tc.want {
+			t.Errorf("IsRFC1918(%q) = %v, want %v", tc.addr, got, tc.want)
+		}
 	}
 }
 

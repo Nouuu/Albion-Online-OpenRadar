@@ -191,9 +191,8 @@ func (s *HTTPServer) setupRoutes() {
 	}
 
 	for route, page := range pageRoutes {
-		pageName := page // Capture for closure
 		s.mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			s.renderPage(w, r, pageName)
+			s.renderPage(w, r, page)
 		})
 	}
 

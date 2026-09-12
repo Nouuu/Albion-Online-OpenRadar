@@ -336,3 +336,16 @@ func TestManager_StopRecording_StopsAllActive(t *testing.T) {
 
 	m.Close(t.Context())
 }
+
+func TestStartWorkerIgnoresContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	c := newStubCapturer(ctx, NetworkInterface{Name: "stub"})
+	var wg sync.WaitGroup
+	var reported atomic.Int32
+	startWorker(c, &wg, func(string, error) { reported.Add(1) })
+	cancel()
+	wg.Wait()
+	if n := reported.Load(); n != 0 {
+		t.Errorf("onError called %d times for context.Canceled, want 0", n)
+	}
+}

@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -421,7 +422,7 @@ func (d *Dashboard) addLog(log LogMsg) {
 	}
 
 	// Pre-render the log line
-	ts := TimestampStyle.Render(fmt.Sprintf("[%s]", entry.Time.Format("15:04:05")))
+	ts := TimestampStyle.Render(fmt.Sprintf("[%s]", entry.Time.Format(time.TimeOnly)))
 	tag := GetTagStyle(log.Level).Render(fmt.Sprintf("[%s]", log.Tag))
 	entry.Rendered = fmt.Sprintf("%s %s %s", ts, tag, log.Message)
 
@@ -541,7 +542,7 @@ func (d *Dashboard) renderHeader() string {
 	wsURL := URLStyle.Render(wsLine)
 
 	// Started time
-	startedAt := TimestampStyle.Render("Started: " + d.startTime.Format("15:04:05"))
+	startedAt := TimestampStyle.Render("Started: " + d.startTime.Format(time.TimeOnly))
 
 	// Tabs
 	tabs := d.renderTabs()
@@ -764,16 +765,16 @@ func (d *Dashboard) getSparklineStats(data []uint64, unit string) string {
 	if len(data) == 0 {
 		return StatLabelStyle.Render("No data")
 	}
-	min, max, avg := minVal(data), maxVal(data), avgVal(data)
-	return StatLabelStyle.Render(fmt.Sprintf("min: %.0f  avg: %.0f  max: %.0f %s", min, avg, max, unit))
+	lo, hi, avg := float64(slices.Min(data)), float64(slices.Max(data)), avgVal(data)
+	return StatLabelStyle.Render(fmt.Sprintf("min: %.0f  avg: %.0f  max: %.0f %s", lo, avg, hi, unit))
 }
 
 func (d *Dashboard) getSparklineStatsFloat(data []float64, unit string) string {
 	if len(data) == 0 {
 		return StatLabelStyle.Render("No data")
 	}
-	min, max, avg := minVal(data), maxVal(data), avgVal(data)
-	return StatLabelStyle.Render(fmt.Sprintf("min: %.1f  avg: %.1f  max: %.1f %s", min, avg, max, unit))
+	lo, hi, avg := float64(slices.Min(data)), float64(slices.Max(data)), avgVal(data)
+	return StatLabelStyle.Render(fmt.Sprintf("min: %.1f  avg: %.1f  max: %.1f %s", lo, avg, hi, unit))
 }
 
 func (d *Dashboard) renderConfigView() string {
@@ -854,14 +855,8 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 		}
 	}
 
-	var max T
-	for _, v := range displayData {
-		if v > max {
-			max = v
-		}
-	}
-
-	if max == 0 {
+	peak := slices.Max(displayData)
+	if peak == 0 {
 		return lipgloss.NewStyle().
 			Foreground(color).
 			Render(strings.Repeat(string(sparkChars[0]), len(displayData)))
@@ -869,40 +864,11 @@ func renderSparkline[T uint64 | float64](data []T, color lipgloss.Color) string 
 
 	var sb strings.Builder
 	for _, v := range displayData {
-		idx := int(float64(v) / float64(max) * float64(len(sparkChars)-1))
-		if idx >= len(sparkChars) {
-			idx = len(sparkChars) - 1
-		}
+		idx := min(int(float64(v)/float64(peak)*float64(len(sparkChars)-1)), len(sparkChars)-1)
 		sb.WriteRune(sparkChars[idx])
 	}
 
 	return lipgloss.NewStyle().Foreground(color).Render(sb.String())
-}
-
-func minVal[T uint64 | float64](data []T) float64 {
-	if len(data) == 0 {
-		return 0
-	}
-	min := data[0]
-	for _, v := range data[1:] {
-		if v < min {
-			min = v
-		}
-	}
-	return float64(min)
-}
-
-func maxVal[T uint64 | float64](data []T) float64 {
-	if len(data) == 0 {
-		return 0
-	}
-	max := data[0]
-	for _, v := range data[1:] {
-		if v > max {
-			max = v
-		}
-	}
-	return float64(max)
 }
 
 func avgVal[T uint64 | float64](data []T) float64 {
