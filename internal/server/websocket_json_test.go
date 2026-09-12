@@ -88,3 +88,10 @@ func TestEncodeBatch_NilMapAndSlice_AsNull(t *testing.T) {
 	require.True(t, strings.Contains(s, `"parameters":null`), s)
 	require.True(t, strings.Contains(s, `"0":null`), s)
 }
+
+// synthetic
+func TestParseClientLogs(t *testing.T) {
+	require.Len(t, parseClientLogs([]byte(`{"type":"logs","logs":["\ud800x", 2]}`)), 2)
+	require.Nil(t, parseClientLogs([]byte(`{"type":"ping"}`)))
+	require.Nil(t, parseClientLogs([]byte(`not json`)))
+}

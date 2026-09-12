@@ -217,17 +217,21 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 			break
 		}
 
-		// Parse incoming message (for logs)
-		var data struct {
-			Type string `json:"type"`
-			Logs []any  `json:"logs"`
-		}
-		if err := json.Unmarshal(message, &data); err == nil {
-			if data.Type == "logs" && len(data.Logs) > 0 && ws.logger != nil {
-				ws.logger.WriteLogs(data.Logs)
-			}
+		if logs := parseClientLogs(message); len(logs) > 0 && ws.logger != nil {
+			ws.logger.WriteLogs(logs)
 		}
 	}
+}
+
+func parseClientLogs(message []byte) []any {
+	var data struct {
+		Type string `json:"type"`
+		Logs []any  `json:"logs"`
+	}
+	if err := json.Unmarshal(message, &data, jsontext.AllowInvalidUTF8(true)); err != nil || data.Type != "logs" {
+		return nil
+	}
+	return data.Logs
 }
 
 // CloseAllClients closes all WebSocket connections gracefully
