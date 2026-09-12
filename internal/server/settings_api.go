@@ -3,7 +3,7 @@ package server
 import (
 	"net/http"
 
-	"github.com/segmentio/encoding/json"
+	"encoding/json"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"

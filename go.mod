@@ -10,7 +10,6 @@ require (
 	github.com/fatih/color v1.19.0
 	github.com/google/gopacket v1.1.19
 	github.com/gorilla/websocket v1.5.3
-	github.com/segmentio/encoding v0.5.4
 	github.com/stretchr/testify v1.12.1
 )
 
@@ -35,7 +34,6 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
-	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/xo/terminfo v1.0.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/net v0.59.0 // indirect

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/segmentio/encoding/json"
+	"encoding/json"
 )
 
 const (

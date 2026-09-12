@@ -1,22 +1,22 @@
 package photon
 
 import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"fmt"
 	"strconv"
-
-	"github.com/segmentio/encoding/json"
 )
 
 // Hashtable serializes with stringified keys; json.Marshal does not accept
-// map[interface{}]interface{}.
+// map[any]any.
 type Hashtable map[any]any
 
-func (h Hashtable) MarshalJSON() ([]byte, error) {
+func (h Hashtable) MarshalJSONTo(enc *jsontext.Encoder) error {
 	out := make(map[string]any, len(h))
 	for k, v := range h {
 		out[fmt.Sprintf("%v", k)] = v
 	}
-	return json.Marshal(out)
+	return json.MarshalEncode(enc, out)
 }
 
 // ByteArray serializes as {"type":"Buffer","data":[...]} because the web
