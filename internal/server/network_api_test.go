@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -21,7 +22,7 @@ type fakeManager struct {
 
 func (f *fakeManager) State() capture.State { return f.state }
 func (f *fakeManager) Reconfigure(t []capture.NetworkInterface) error {
-	f.reconfArgs = append([]capture.NetworkInterface(nil), t...)
+	f.reconfArgs = slices.Clone(t)
 	return f.reconfErr
 }
 

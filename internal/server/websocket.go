@@ -20,8 +20,8 @@ const (
 
 // WSBatchMessage represents a batch of messages
 type WSBatchMessage struct {
-	Type     string        `json:"type"`
-	Messages []any `json:"messages"`
+	Type     string `json:"type"`
+	Messages []any  `json:"messages"`
 }
 
 // WSStats holds WebSocket statistics
@@ -209,8 +209,8 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 
 		// Parse incoming message (for logs)
 		var data struct {
-			Type string        `json:"type"`
-			Logs []any `json:"logs"`
+			Type string `json:"type"`
+			Logs []any  `json:"logs"`
 		}
 		if err := json.Unmarshal(message, &data); err == nil {
 			if data.Type == "logs" && len(data.Logs) > 0 && ws.logger != nil {

@@ -1,8 +1,9 @@
 package capture
 
 import (
+	"cmp"
 	"net"
-	"sort"
+	"slices"
 )
 
 var rfc1918Nets = func() []*net.IPNet {
@@ -40,12 +41,9 @@ type lanCandidate struct {
 }
 
 func rankLANCandidates(in []lanCandidate) []string {
-	cp := make([]lanCandidate, len(in))
-	copy(cp, in)
-	sort.SliceStable(cp, func(i, j int) bool {
-		ci := Categorize(cp[i].name, "")
-		cj := Categorize(cp[j].name, "")
-		return categoryRank[ci] < categoryRank[cj]
+	cp := slices.Clone(in)
+	slices.SortStableFunc(cp, func(a, b lanCandidate) int {
+		return cmp.Compare(categoryRank[Categorize(a.name, "")], categoryRank[Categorize(b.name, "")])
 	})
 	out := make([]string, len(cp))
 	for i, c := range cp {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 // Parameters keys are decimal strings for JSON stability.
@@ -62,7 +63,7 @@ func jsonSafeValue(v any) any {
 	case map[byte]any:
 		out := make(map[string]any, len(x))
 		for k, vv := range x {
-			out[fmt.Sprintf("%d", k)] = jsonSafeValue(vv)
+			out[strconv.Itoa(int(k))] = jsonSafeValue(vv)
 		}
 		return out
 	case []any:

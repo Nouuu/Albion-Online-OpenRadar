@@ -117,7 +117,7 @@ func scrubPrefixedValues(payload []byte, values []string, counts map[string]int)
 	if len(values) == 0 {
 		return payload
 	}
-	out := append([]byte(nil), payload...)
+	out := bytes.Clone(payload)
 	for _, v := range values {
 		if v == "" {
 			continue

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/nospy/albion-openradar/internal/photon"
@@ -50,13 +51,8 @@ func runInventory(in, outPath string) error {
 func writeCensusSection(sb *strings.Builder, title string, m map[int]int) {
 	sb.WriteString("## " + title + "\n\n")
 	sb.WriteString("| Code | Count |\n|---:|---:|\n")
-	keys := make([]int, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Ints(keys)
-	for _, k := range keys {
-		sb.WriteString(fmt.Sprintf("| %d | %d |\n", k, m[k]))
+	for _, k := range slices.Sorted(maps.Keys(m)) {
+		fmt.Fprintf(sb, "| %d | %d |\n", k, m[k])
 	}
 	sb.WriteString("\n")
 }

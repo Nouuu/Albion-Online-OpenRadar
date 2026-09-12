@@ -12,9 +12,10 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"os"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/google/gopacket"
@@ -242,13 +243,7 @@ func reportScrubCounts(w io.Writer, counts map[string]int) {
 	if len(counts) == 0 {
 		return
 	}
-	needles := make([]string, 0, len(counts))
-	for n := range counts {
-		needles = append(needles, n)
-	}
-	sort.Strings(needles)
-
-	for _, n := range needles {
+	for _, n := range slices.Sorted(maps.Keys(counts)) {
 		fmt.Fprintf(w, "  %s: %d replacements\n", n, counts[n])
 	}
 }
@@ -260,7 +255,7 @@ func scrubPayload(payload []byte, needles []string, counts map[string]int) []byt
 	if len(needles) == 0 {
 		return payload
 	}
-	out := append([]byte(nil), payload...)
+	out := bytes.Clone(payload)
 	for _, n := range needles {
 		if n == "" {
 			continue

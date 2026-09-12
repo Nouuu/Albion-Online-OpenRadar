@@ -1,8 +1,9 @@
 package capture
 
 import (
+	"cmp"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -52,15 +53,19 @@ var categoryRank = map[Category]int{
 }
 
 func RankCandidates(in []NetworkInterface) []NetworkInterface {
-	out := make([]NetworkInterface, len(in))
-	copy(out, in)
-	sort.SliceStable(out, func(i, j int) bool {
-		ci := Categorize(out[i].Name, out[i].Description)
-		cj := Categorize(out[j].Name, out[j].Description)
-		if ci != cj {
-			return categoryRank[ci] < categoryRank[cj]
+	out := slices.Clone(in)
+	slices.SortStableFunc(out, func(a, b NetworkInterface) int {
+		if c := cmp.Compare(categoryRank[Categorize(a.Name, a.Description)], categoryRank[Categorize(b.Name, b.Description)]); c != 0 {
+			return c
 		}
-		return out[i].Description != "" && out[j].Description == ""
+		switch {
+		case a.Description != "" && b.Description == "":
+			return -1
+		case a.Description == "" && b.Description != "":
+			return 1
+		default:
+			return 0
+		}
 	})
 	return out
 }
