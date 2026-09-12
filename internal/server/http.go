@@ -283,7 +283,7 @@ func (s *HTTPServer) assetETag(gzipped bool) string {
 func (s *HTTPServer) setStaticCacheHeaders(w http.ResponseWriter, vary string, gzipped bool) {
 	w.Header().Set("Cache-Control", "no-cache")
 	if etag := s.assetETag(gzipped); etag != "" {
-		w.Header().Set("Etag", etag)
+		w.Header().Set("ETag", etag)
 	}
 	if vary != "" {
 		w.Header().Set("Vary", vary)
