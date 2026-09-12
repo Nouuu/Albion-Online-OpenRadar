@@ -115,3 +115,10 @@ func TestRunInterfaceDoesNotWaitWhenTheDashboardExitsNormally(t *testing.T) {
 		t.Error("a dashboard that did not ask for a restart must report false")
 	}
 }
+
+func TestMemoryStatsMB(t *testing.T) {
+	heap, sys := memoryStatsMB()
+	if heap <= 0 || sys <= 0 || sys < heap {
+		t.Errorf("heap=%.2f sys=%.2f, want 0 < heap <= sys", heap, sys)
+	}
+}
