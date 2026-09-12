@@ -3,7 +3,7 @@ package server
 import (
 	"testing"
 
-	"github.com/segmentio/encoding/json"
+	"encoding/json"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nospy/albion-openradar/internal/photon"
