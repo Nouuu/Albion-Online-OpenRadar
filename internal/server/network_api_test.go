@@ -305,6 +305,8 @@ func TestIsLoopback(t *testing.T) {
 		{"127.0.0.1", true},
 		{" 127.0.0.1", true},
 		{"[::1]:5001", true},
+		{"::1", true},
+		{"[::1]", false},
 		{"[::ffff:127.0.0.1]:80", true},
 		{"192.168.1.42:5555", false},
 		{"[fe80::1]:5001", false},
