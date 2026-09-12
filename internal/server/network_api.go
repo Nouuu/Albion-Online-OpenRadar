@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 
@@ -48,8 +49,7 @@ type ifaceRow struct {
 
 func (a *NetworkAPI) handleList(w http.ResponseWriter, _ *http.Request) {
 	a.mu.RLock()
-	snapshot := make([]capture.NetworkInterface, len(a.all))
-	copy(snapshot, a.all)
+	snapshot := slices.Clone(a.all)
 	a.mu.RUnlock()
 
 	persisted := make(map[string]bool)

@@ -3,6 +3,7 @@ package capture
 import (
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,7 +77,7 @@ func TestMigrateFromIPTxt(t *testing.T) {
 	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Description != "Wi-Fi" {
 		t.Errorf("migrated config wrong: %+v", cfg)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("ip.txt should be deleted, err=%v", err)
 	}
 }
@@ -112,7 +113,7 @@ func TestMigrateSkipsWhenConfigPopulated(t *testing.T) {
 	if migrated {
 		t.Error("expected migrated=false when config is populated")
 	}
-	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("ip.txt should be deleted, err=%v", err)
 	}
 	got, err := ReadConfig(dir)
@@ -140,7 +141,7 @@ func TestMigrateEmptyIPTxt(t *testing.T) {
 	if migrated {
 		t.Error("expected migrated=false for empty ip.txt")
 	}
-	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("ip.txt should be deleted, err=%v", err)
 	}
 }
@@ -184,7 +185,7 @@ func TestMigrateResolverError(t *testing.T) {
 	if !errors.Is(err, resolverErr) {
 		t.Errorf("error chain should wrap resolver error, got %v", err)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("ip.txt should be deleted on resolver error, err=%v", err)
 	}
 }

@@ -6,10 +6,12 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"io"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 
 	"github.com/nospy/albion-openradar/internal/photonscan"
 )
@@ -53,21 +55,13 @@ func stringsIn(path string) (map[site]int, error) {
 }
 
 func report(w io.Writer, found map[site]int) {
-	sites := make([]site, 0, len(found))
-	for s := range found {
-		sites = append(sites, s)
-	}
-	sort.Slice(sites, func(i, j int) bool {
-		a, b := sites[i], sites[j]
-		switch {
-		case a.kind != b.kind:
-			return a.kind < b.kind
-		case a.code != b.code:
-			return a.code < b.code
-		case a.index != b.index:
-			return a.index < b.index
-		}
-		return a.value < b.value
+	sites := slices.SortedFunc(maps.Keys(found), func(a, b site) int {
+		return cmp.Or(
+			cmp.Compare(a.kind, b.kind),
+			cmp.Compare(a.code, b.code),
+			cmp.Compare(a.index, b.index),
+			cmp.Compare(a.value, b.value),
+		)
 	})
 
 	for _, s := range sites {

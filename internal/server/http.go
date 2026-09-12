@@ -293,7 +293,7 @@ func (s *HTTPServer) setStaticCacheHeaders(w http.ResponseWriter, vary string, g
 
 // fsHandler creates a file server handler from fs.FS
 func (s *HTTPServer) fsHandler(prefix string, fsys fs.FS) http.Handler {
-	handler := http.StripPrefix(prefix, http.FileServer(http.FS(fsys)))
+	handler := http.StripPrefix(prefix, http.FileServerFS(fsys))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.setStaticCacheHeaders(w, "", false)

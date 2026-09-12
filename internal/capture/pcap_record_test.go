@@ -25,7 +25,7 @@ func newCapturerFromOffline(t *testing.T, fixturePath string) *Capturer {
 	if err != nil {
 		t.Skipf("cannot open fixture %s: %v", fixturePath, err)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	return &Capturer{
 		handle: handle,
 		ctx:    ctx,

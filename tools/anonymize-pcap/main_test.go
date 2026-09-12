@@ -66,7 +66,7 @@ func readPayloads(t *testing.T, path string) [][]byte {
 		pkt := gopacket.NewPacket(data, r.LinkType(), gopacket.Default)
 		udp, _ := pkt.Layer(layers.LayerTypeUDP).(*layers.UDP)
 		require.NotNil(t, udp)
-		out = append(out, append([]byte(nil), udp.Payload...))
+		out = append(out, bytes.Clone(udp.Payload))
 	}
 	return out
 }
