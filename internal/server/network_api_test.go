@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -21,7 +22,7 @@ type fakeManager struct {
 
 func (f *fakeManager) State() capture.State { return f.state }
 func (f *fakeManager) Reconfigure(t []capture.NetworkInterface) error {
-	f.reconfArgs = append([]capture.NetworkInterface(nil), t...)
+	f.reconfArgs = slices.Clone(t)
 	return f.reconfErr
 }
 
@@ -293,4 +294,28 @@ func TestNetworkAPI_RefreshConcurrentSafe(t *testing.T) {
 		})
 	}
 	wg.Wait()
+}
+
+func TestIsLoopback(t *testing.T) {
+	cases := []struct {
+		addr string
+		want bool
+	}{
+		{"127.0.0.1:1234", true},
+		{"127.0.0.1", true},
+		{" 127.0.0.1", true},
+		{"[::1]:5001", true},
+		{"::1", true},
+		{"[::1]", false},
+		{"[::ffff:127.0.0.1]:80", true},
+		{"192.168.1.42:5555", false},
+		{"[fe80::1]:5001", false},
+		{"", false},
+		{"not-an-ip:12", false},
+	}
+	for _, tc := range cases {
+		if got := isLoopback(tc.addr); got != tc.want {
+			t.Errorf("isLoopback(%q) = %v, want %v", tc.addr, got, tc.want)
+		}
+	}
 }

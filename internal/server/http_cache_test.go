@@ -127,8 +127,8 @@ func TestETagDistinguishesTwoBuildsOfTheSameVersion(t *testing.T) {
 	first := newTestServerBuild(t, "2.2.3", "2026-07-09T10:00:00Z", false)
 	second := newTestServerBuild(t, "2.2.3", "2026-07-09T11:00:00Z", false)
 
-	a := do(first, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil).Header().Get("Etag")
-	b := do(second, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil).Header().Get("Etag")
+	a := do(first, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil).Header().Get("ETag")
+	b := do(second, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil).Header().Get("ETag")
 
 	if a == "" || b == "" {
 		t.Fatalf("missing Etag: %q, %q", a, b)
@@ -143,7 +143,7 @@ func TestETagIsAWellFormedOpaqueTag(t *testing.T) {
 	s := newTestServerBuild(t, `fix/"quoted" branch`, "2026-07-09T10:00:00Z", false)
 
 	rec := do(s, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil)
-	etag := rec.Header().Get("Etag")
+	etag := rec.Header().Get("ETag")
 
 	if len(etag) < 2 || etag[0] != '"' || etag[len(etag)-1] != '"' {
 		t.Fatalf("Etag = %q, want a double-quoted tag", etag)
@@ -250,7 +250,7 @@ func TestUntrustedVersionEmitsNoETag(t *testing.T) {
 
 			rec := do(s, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil)
 
-			if got := rec.Header().Get("Etag"); got != "" {
+			if got := rec.Header().Get("ETag"); got != "" {
 				t.Errorf("Etag = %q, want none", got)
 			}
 			if got := rec.Header().Get("Cache-Control"); got != "no-cache" {
@@ -271,7 +271,7 @@ func TestGzipRepresentationHasDistinctETag(t *testing.T) {
 	if got := gzipped.Header().Get("Content-Encoding"); got != "gzip" {
 		t.Fatalf("Content-Encoding = %q, want %q", got, "gzip")
 	}
-	if a, b := gzipped.Header().Get("Etag"), identity.Header().Get("Etag"); a == b {
+	if a, b := gzipped.Header().Get("ETag"), identity.Header().Get("ETag"); a == b {
 		t.Errorf("both representations emit %s, but an ETag identifies a representation", a)
 	}
 	if got := gzipped.Header().Get("Vary"); got != "Accept-Encoding" {
@@ -282,7 +282,7 @@ func TestGzipRepresentationHasDistinctETag(t *testing.T) {
 func TestIdentityETagDoesNotValidateGzipRepresentation(t *testing.T) {
 	s := newTestServer(t, "2.2.3", false)
 
-	identity := do(s, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil).Header().Get("Etag")
+	identity := do(s, http.MethodGet, "/scripts/core/DatabaseLoader.js", nil).Header().Get("ETag")
 	rec := do(s, http.MethodGet, "/scripts/core/DatabaseLoader.js", map[string]string{
 		"Accept-Encoding": "gzip",
 		"If-None-Match":   identity,
@@ -298,7 +298,7 @@ func TestMatchingIfNoneMatchReturns304(t *testing.T) {
 
 	for _, path := range staticRoutes {
 		t.Run(path, func(t *testing.T) {
-			etag := do(s, http.MethodGet, path, nil).Header().Get("Etag")
+			etag := do(s, http.MethodGet, path, nil).Header().Get("ETag")
 			rec := do(s, http.MethodGet, path, map[string]string{"If-None-Match": etag})
 
 			if rec.Code != http.StatusNotModified {
@@ -341,7 +341,7 @@ func TestStaticAssetsAlwaysRevalidate(t *testing.T) {
 			if got := rec.Header().Get("Cache-Control"); got != "no-cache" {
 				t.Errorf("Cache-Control = %q, want %q", got, "no-cache")
 			}
-			if rec.Header().Get("Etag") == "" {
+			if rec.Header().Get("ETag") == "" {
 				t.Error("no Etag, so revalidation can never answer 304")
 			}
 		})

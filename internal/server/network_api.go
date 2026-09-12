@@ -3,8 +3,9 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"net"
 	"net/http"
+	"net/netip"
+	"slices"
 	"strings"
 	"sync"
 
@@ -48,8 +49,7 @@ type ifaceRow struct {
 
 func (a *NetworkAPI) handleList(w http.ResponseWriter, _ *http.Request) {
 	a.mu.RLock()
-	snapshot := make([]capture.NetworkInterface, len(a.all))
-	copy(snapshot, a.all)
+	snapshot := slices.Clone(a.all)
 	a.mu.RUnlock()
 
 	persisted := make(map[string]bool)
@@ -164,17 +164,9 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 }
 
 func isLoopback(remoteAddr string) bool {
-	host, _, err := net.SplitHostPort(remoteAddr)
-	if err != nil {
-		host = remoteAddr
+	if ap, err := netip.ParseAddrPort(remoteAddr); err == nil {
+		return ap.Addr().IsLoopback()
 	}
-	host = strings.TrimSpace(host)
-	if host == "" {
-		return false
-	}
-	ip := net.ParseIP(host)
-	if ip == nil {
-		return false
-	}
-	return ip.IsLoopback()
+	ip, err := netip.ParseAddr(strings.TrimSpace(remoteAddr))
+	return err == nil && ip.IsLoopback()
 }

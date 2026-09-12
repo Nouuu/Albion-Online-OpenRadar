@@ -1,37 +1,19 @@
 package capture
 
 import (
+	"cmp"
 	"net"
-	"sort"
+	"net/netip"
+	"slices"
 )
 
-var rfc1918Nets = func() []*net.IPNet {
-	cidrs := []string{"10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"}
-	out := make([]*net.IPNet, 0, len(cidrs))
-	for _, c := range cidrs {
-		_, n, err := net.ParseCIDR(c)
-		if err == nil {
-			out = append(out, n)
-		}
-	}
-	return out
-}()
-
 func IsRFC1918(addr string) bool {
-	ip := net.ParseIP(addr)
-	if ip == nil {
+	ip, err := netip.ParseAddr(addr)
+	if err != nil {
 		return false
 	}
-	ip4 := ip.To4()
-	if ip4 == nil {
-		return false
-	}
-	for _, n := range rfc1918Nets {
-		if n.Contains(ip4) {
-			return true
-		}
-	}
-	return false
+	ip = ip.Unmap()
+	return ip.Is4() && ip.IsPrivate()
 }
 
 type lanCandidate struct {
@@ -40,12 +22,9 @@ type lanCandidate struct {
 }
 
 func rankLANCandidates(in []lanCandidate) []string {
-	cp := make([]lanCandidate, len(in))
-	copy(cp, in)
-	sort.SliceStable(cp, func(i, j int) bool {
-		ci := Categorize(cp[i].name, "")
-		cj := Categorize(cp[j].name, "")
-		return categoryRank[ci] < categoryRank[cj]
+	cp := slices.Clone(in)
+	slices.SortStableFunc(cp, func(a, b lanCandidate) int {
+		return cmp.Compare(categoryRank[Categorize(a.name, "")], categoryRank[Categorize(b.name, "")])
 	})
 	out := make([]string, len(cp))
 	for i, c := range cp {

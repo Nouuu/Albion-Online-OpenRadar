@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -30,12 +31,12 @@ func FuncMap() template.FuncMap {
 				return nil
 			}
 			d := make(map[string]any, len(values)/2)
-			for i := 0; i < len(values); i += 2 {
-				key, ok := values[i].(string)
+			for pair := range slices.Chunk(values, 2) {
+				key, ok := pair[0].(string)
 				if !ok {
 					continue
 				}
-				d[key] = values[i+1]
+				d[key] = pair[1]
 			}
 			return d
 		},

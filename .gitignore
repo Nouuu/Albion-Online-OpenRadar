@@ -105,3 +105,8 @@ HELPER PACKAGE/
 # Local full-session Photon captures (never committed, always anonymized then split)
 captures/
 /network.json
+
+# Spec Kit workspace (local only)
+/specs/
+/.specify/
+/work

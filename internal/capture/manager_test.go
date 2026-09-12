@@ -52,8 +52,8 @@ func assertSinglePayload(t *testing.T, path string, want []byte) {
 	}
 }
 
-func newStubCapturer(iface NetworkInterface) *Capturer {
-	ctx, cancel := context.WithCancel(context.Background())
+func newStubCapturer(ctx context.Context, iface NetworkInterface) *Capturer {
+	ctx, cancel := context.WithCancel(ctx)
 	return &Capturer{
 		iface:  iface,
 		ctx:    ctx,
@@ -68,9 +68,7 @@ func withStubFactory(t *testing.T, opens map[string]error) func() {
 		if err, ok := opens[iface.Name]; ok && err != nil {
 			return nil, err
 		}
-		c := newStubCapturer(iface)
-		c.ctx, c.cancel = context.WithCancel(ctx)
-		return c, nil
+		return newStubCapturer(ctx, iface), nil
 	}
 	return func() { captureFactory = prev }
 }
@@ -78,7 +76,7 @@ func withStubFactory(t *testing.T, opens map[string]error) func() {
 func TestManagerReconfigureAddsRemoves(t *testing.T) {
 	defer withStubFactory(t, nil)()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 
 	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}, {Name: "b", Device: "b"}}); err != nil {
@@ -112,13 +110,13 @@ func TestManagerReconfigureAddsRemoves(t *testing.T) {
 		t.Errorf("status %q, want %q", state.Status, StatusAwaiting)
 	}
 
-	m.Close(context.Background())
+	m.Close(t.Context())
 }
 
 func TestManagerOpenFailureIsolatesOthers(t *testing.T) {
 	defer withStubFactory(t, map[string]error{"bad": errors.New("boom")})()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	err := m.Reconfigure([]NetworkInterface{
 		{Name: "good", Device: "good"},
@@ -135,21 +133,21 @@ func TestManagerOpenFailureIsolatesOthers(t *testing.T) {
 		t.Errorf("expected lastErrors[bad], got %+v", state.LastErrors)
 	}
 
-	m.Close(context.Background())
+	m.Close(t.Context())
 }
 
 func TestManagerCloseTwiceSafe(t *testing.T) {
 	defer withStubFactory(t, nil)()
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	_ = m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}})
-	m.Close(context.Background())
-	m.Close(context.Background())
+	m.Close(t.Context())
+	m.Close(t.Context())
 }
 
 func TestManagerBytesReceivedAggregates(t *testing.T) {
 	defer withStubFactory(t, nil)()
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}, {Name: "b", Device: "b"}}); err != nil {
 		t.Fatal(err)
@@ -157,7 +155,7 @@ func TestManagerBytesReceivedAggregates(t *testing.T) {
 	if got := m.BytesReceived(); got != 0 {
 		t.Errorf("got %d, want 0", got)
 	}
-	m.Close(context.Background())
+	m.Close(t.Context())
 }
 
 func TestManagerNoGoroutineLeak(t *testing.T) {
@@ -174,11 +172,11 @@ func TestManagerNoGoroutineLeak(t *testing.T) {
 	}
 	defer func() { managerStartWorker = prev }()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	_ = m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}, {Name: "b", Device: "b"}})
 
-	closeCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	closeCtx, cancel := context.WithTimeout(t.Context(), 1*time.Second)
 	defer cancel()
 	m.Close(closeCtx)
 
@@ -193,7 +191,7 @@ func TestManagerNoGoroutineLeak(t *testing.T) {
 func TestManager_StartRecording_PropagatesToActive(t *testing.T) {
 	defer withStubFactory(t, nil)()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}}); err != nil {
 		t.Fatalf("Reconfigure: %v", err)
@@ -214,13 +212,13 @@ func TestManager_StartRecording_PropagatesToActive(t *testing.T) {
 		t.Error("capturer 'a' is not recording after Manager.StartRecording")
 	}
 
-	m.Close(context.Background())
+	m.Close(t.Context())
 }
 
 func TestManager_StartRecording_AppliesToFutureCapturers(t *testing.T) {
 	defer withStubFactory(t, nil)()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 
 	dir := t.TempDir()
@@ -242,7 +240,7 @@ func TestManager_StartRecording_AppliesToFutureCapturers(t *testing.T) {
 		t.Error("capturer 'b' added after StartRecording is not recording")
 	}
 
-	m.Close(context.Background())
+	m.Close(t.Context())
 }
 
 // TestManager_StartRecording_MultiInterface_PerCapturerFiles confirms that
@@ -254,7 +252,7 @@ func TestManager_StartRecording_AppliesToFutureCapturers(t *testing.T) {
 func TestManager_StartRecording_MultiInterface_PerCapturerFiles(t *testing.T) {
 	defer withStubFactory(t, nil)()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	if err := m.Reconfigure([]NetworkInterface{
 		{Name: "alpha", Device: "alpha"},
@@ -295,13 +293,13 @@ func TestManager_StartRecording_MultiInterface_PerCapturerFiles(t *testing.T) {
 	assertSinglePayload(t, alphaMatches[0], alphaPayload)
 	assertSinglePayload(t, betaMatches[0], betaPayload)
 
-	m.Close(context.Background())
+	m.Close(t.Context())
 }
 
 func TestManager_StopRecording_StopsAllActive(t *testing.T) {
 	defer withStubFactory(t, nil)()
 
-	m := NewManager(context.Background())
+	m := NewManager(t.Context())
 	m.OnPacket(func([]byte) {})
 	if err := m.Reconfigure([]NetworkInterface{
 		{Name: "c", Device: "c"},
@@ -336,5 +334,18 @@ func TestManager_StopRecording_StopsAllActive(t *testing.T) {
 		t.Error("Manager.IsRecording() still true after StopRecording")
 	}
 
-	m.Close(context.Background())
+	m.Close(t.Context())
+}
+
+func TestStartWorkerIgnoresContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	c := newStubCapturer(ctx, NetworkInterface{Name: "stub"})
+	var wg sync.WaitGroup
+	var reported atomic.Int32
+	startWorker(c, &wg, func(string, error) { reported.Add(1) })
+	cancel()
+	wg.Wait()
+	if n := reported.Load(); n != 0 {
+		t.Errorf("onError called %d times for context.Canceled, want 0", n)
+	}
 }

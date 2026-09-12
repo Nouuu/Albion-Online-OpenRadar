@@ -1,6 +1,8 @@
 package photon
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -133,7 +135,7 @@ func (s pcapStats) hasRouterOp(kind string, realCode int, requiredKeys ...byte) 
 func fixturePath(t *testing.T, name string) string {
 	t.Helper()
 	path := filepath.Join("testdata", name)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
 		t.Skipf("fixture missing: %s", path)
 	}
 	return path

@@ -191,9 +191,8 @@ func (s *HTTPServer) setupRoutes() {
 	}
 
 	for route, page := range pageRoutes {
-		pageName := page // Capture for closure
 		s.mux.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			s.renderPage(w, r, pageName)
+			s.renderPage(w, r, page)
 		})
 	}
 
@@ -284,7 +283,7 @@ func (s *HTTPServer) assetETag(gzipped bool) string {
 func (s *HTTPServer) setStaticCacheHeaders(w http.ResponseWriter, vary string, gzipped bool) {
 	w.Header().Set("Cache-Control", "no-cache")
 	if etag := s.assetETag(gzipped); etag != "" {
-		w.Header().Set("Etag", etag)
+		w.Header().Set("ETag", etag)
 	}
 	if vary != "" {
 		w.Header().Set("Vary", vary)
@@ -293,7 +292,7 @@ func (s *HTTPServer) setStaticCacheHeaders(w http.ResponseWriter, vary string, g
 
 // fsHandler creates a file server handler from fs.FS
 func (s *HTTPServer) fsHandler(prefix string, fsys fs.FS) http.Handler {
-	handler := http.StripPrefix(prefix, http.FileServer(http.FS(fsys)))
+	handler := http.StripPrefix(prefix, http.FileServerFS(fsys))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.setStaticCacheHeaders(w, "", false)
