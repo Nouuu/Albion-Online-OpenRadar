@@ -2,14 +2,13 @@ package logger
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-
-	"encoding/json"
 )
 
 const (
