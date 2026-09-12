@@ -250,7 +250,7 @@ func (m *Manager) Close(closeCtx context.Context) {
 
 func startWorker(c *Capturer, wg *sync.WaitGroup, onError func(string, error)) {
 	wg.Go(func() {
-		if err := c.Start(); err != nil && err != context.Canceled {
+		if err := c.Start(); err != nil && !errors.Is(err, context.Canceled) {
 			onError(c.iface.Name, err)
 		}
 	})

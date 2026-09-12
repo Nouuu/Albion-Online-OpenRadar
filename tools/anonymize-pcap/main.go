@@ -23,11 +23,6 @@ import (
 	"github.com/google/gopacket/pcapgo"
 )
 
-type stringList []string
-
-func (s *stringList) String() string     { return fmt.Sprintf("%v", []string(*s)) }
-func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
-
 const usage = "usage: anonymize-pcap [--scrub-string name]... <input.pcap> <output.pcap>\n" +
 	"       anonymize-pcap --no-scrub <input.pcap> <output.pcap>\n" +
 	"flags must come before the two paths"
@@ -40,12 +35,15 @@ type options struct {
 }
 
 func parseArgs(args []string) (options, error) {
-	var scrub stringList
+	var scrub []string
 	var noScrub bool
 
 	fs := flag.NewFlagSet("anonymize-pcap", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	fs.Var(&scrub, "scrub-string", "extra ASCII string to replace on top of the identity fields (repeatable)")
+	fs.Func("scrub-string", "extra ASCII string to replace on top of the identity fields (repeatable)", func(v string) error {
+		scrub = append(scrub, v)
+		return nil
+	})
 	fs.BoolVar(&noScrub, "no-scrub", false, "write the capture without touching UDP payloads")
 	if err := fs.Parse(args); err != nil {
 		return options{}, err

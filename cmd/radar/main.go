@@ -54,7 +54,7 @@ type App struct {
 	packetsEncrypted atomic.Uint64
 
 	// Server status (atomic for thread safety)
-	httpRunning atomic.Int32
+	httpRunning atomic.Bool
 }
 
 func main() {
@@ -176,9 +176,9 @@ func runInterface(runDashboard func() (tea.Model, error), waitForSignal func()) 
 }
 
 func waitForInterrupt() {
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
-	<-sig
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	<-ctx.Done()
 }
 
 // Config holds command-line configuration
@@ -285,12 +285,12 @@ func (app *App) startServers() {
 	logger.PrintInfo("APP", "Starting servers...")
 
 	app.wg.Go(func() {
-		app.httpRunning.Store(1)
+		app.httpRunning.Store(true)
 		if err := app.httpServer.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) &&
 			app.ctx.Err() == nil {
 			logger.PrintError("HTTP", "Error: %v", err)
 		}
-		app.httpRunning.Store(0)
+		app.httpRunning.Store(false)
 	})
 
 	time.Sleep(100 * time.Millisecond)
@@ -344,7 +344,7 @@ func (app *App) updateStats() {
 
 				captureActive := len(app.captureManager.State().Active) > 0
 				app.program.Send(ui.StatusMsg{
-					HTTPRunning:    app.httpRunning.Load() == 1,
+					HTTPRunning:    app.httpRunning.Load(),
 					WSRunning:      app.wsHandler.ClientCount() >= 0,
 					CaptureRunning: captureActive,
 				})
