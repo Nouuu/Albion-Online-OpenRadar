@@ -1,9 +1,8 @@
 package server
 
 import (
-	"net/http"
-
 	"encoding/json"
+	"net/http"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
