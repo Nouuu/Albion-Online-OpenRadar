@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/metrics"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -320,17 +321,15 @@ func (app *App) updateStats() {
 		case <-ticker.C:
 			// TODO(#91): aggregate pcap.Stats across active capturers.
 			if app.program != nil {
-				var m runtime.MemStats
-				runtime.ReadMemStats(&m)
-
+				heapMB, sysMB := memoryStatsMB()
 				wsStats := app.wsHandler.Stats()
 				logStats := app.logger.GetStats()
 				app.program.Send(ui.StatsMsg{
 					Packets:       app.packetsProcessed.Load(),
 					Errors:        app.packetsErrors.Load(),
 					WsClients:     app.wsHandler.ClientCount(),
-					MemoryMB:      float64(m.Alloc) / 1024 / 1024,
-					MemorySysMB:   float64(m.Sys) / 1024 / 1024,
+					MemoryMB:      heapMB,
+					MemorySysMB:   sysMB,
 					Goroutines:    runtime.NumGoroutine(),
 					WsBatches:     wsStats.BatchesSent,
 					WsMessages:    wsStats.MessagesSent,
@@ -351,6 +350,15 @@ func (app *App) updateStats() {
 			}
 		}
 	}
+}
+
+func memoryStatsMB() (heapMB, sysMB float64) {
+	samples := []metrics.Sample{
+		{Name: "/memory/classes/heap/objects:bytes"},
+		{Name: "/memory/classes/total:bytes"},
+	}
+	metrics.Read(samples)
+	return float64(samples[0].Value.Uint64()) / 1024 / 1024, float64(samples[1].Value.Uint64()) / 1024 / 1024
 }
 
 func (app *App) handlePacket(payload []byte) {
