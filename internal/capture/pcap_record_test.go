@@ -178,7 +178,6 @@ func testStartRecordingAfterStopRecordsToNewFile(t *testing.T) {
 		t.Fatalf("first StopRecording: %v", err)
 	}
 
-	// Bubble clock: instant, still yields a distinct timestamp filename.
 	time.Sleep(1100 * time.Millisecond)
 
 	if err := c.StartRecording(dir); err != nil {
