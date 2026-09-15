@@ -49,7 +49,7 @@ Interfaces are auto-selected. Change them from **Settings -> Network** in the br
 ### Linux
 
 ```bash
-# 1. libpcap and ALSA
+# 1. libpcap and ALSA (PulseAudio or PipeWire is used first when present)
 sudo apt install libpcap0.8 libasound2   # Debian, Ubuntu
 sudo pacman -S libpcap alsa-lib          # Arch
 
@@ -273,7 +273,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 | Go      | 1.27+   | backend                |
 | Npcap   | 1.87+   | Windows packet capture |
 | libpcap | latest  | Linux packet capture   |
-| ALSA    | latest  | Linux alert sound      |
+| ALSA    | latest  | Linux alert sound, PulseAudio preferred when running |
 | Node.js | 20+     | asset and data tooling |
 | Docker  | latest  | Linux cross-compile    |
 
