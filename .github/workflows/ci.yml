@@ -46,7 +46,7 @@ jobs:
       - uses: ./.github/actions/setup
 
       - name: Test Go
-        run: go test ./...
+        run: go test -race ./...
 
       - name: Test Frontend
         run: npm test
