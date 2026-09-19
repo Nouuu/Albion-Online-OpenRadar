@@ -504,7 +504,7 @@ export class RadarRenderer {
 
         const now = Date.now();
         const scale = this.getFameTextScale(ctx);
-        const baseFontPx = Math.max(14, Math.round(24 * scale));
+        const baseFontPx = Math.max(16, Math.round(28 * scale));
 
         ctx.save();
         ctx.textAlign = 'center';
@@ -549,21 +549,25 @@ export class RadarRenderer {
     }
 
     /**
-     * Render session box (bottom left): fame, kills, silver, and fame goal progress
+     * Render session box (bottom left): fame, silver, current pace, time played, fame goal
      */
     renderFameBox(ctx) {
         const fame = this.handlers.fameHandler;
         if (!fame?.hasSession()) return;
 
         const rate = value => value === null ? '(…/h)' : `(${formatFame(value, true)}/h)`;
-        const {fame: total, kills, killFame, silver} = fame.session;
+        const {fame: total, silver} = fame.session;
         const lines = [
-            {text: `⭐ ${formatFame(total, true)} fame  ${rate(fame.getFamePerHour())}`, color: '#ffd24a'},
-            {text: `⚔️ ${kills} kills${kills > 0 ? `  ~${formatFame(killFame / kills, true)}/kill` : ''}`, color: '#ff6b6b'}
+            {text: `⭐ ${formatFame(total, true)} fame  ${rate(fame.getFamePerHour())}`, color: '#ffd24a'}
         ];
         if (silver > 0) {
             lines.push({text: `💰 ${formatFame(silver, true)} silver  ${rate(fame.getSilverPerHour())}`, color: '#e5e7eb'});
         }
+        const pace = fame.getRecentFamePerHour();
+        if (pace !== null) {
+            lines.push({text: `⚡ last 5m: ${formatFame(pace, true)} fame/h`, color: '#9be7ff'});
+        }
+        lines.push({text: `⏱️ ${formatDuration(fame.getSessionDuration())} played`, color: '#cbd5e1'});
 
         const goal = fame.getGoalProgress(parseFameAmount(settingsSync.get('settingFameGoal', '')));
         if (goal) {
@@ -573,10 +577,10 @@ export class RadarRenderer {
 
         const canvasSize = ctx.canvas.width;
         const scale = this.getFameTextScale(ctx);
-        const fontPx = Math.max(10, Math.round(15 * scale));
+        const fontPx = Math.max(12, Math.round(20 * scale));
         const lineHeight = Math.round(fontPx * 1.35);
-        const padX = Math.max(6, Math.round(10 * scale));
-        const padY = Math.max(5, Math.round(8 * scale));
+        const padX = Math.max(8, Math.round(12 * scale));
+        const padY = Math.max(6, Math.round(10 * scale));
 
         const barHeight = Math.max(6, Math.round(fontPx * 0.55));
         const barSpace = goal ? barHeight + Math.round(padY / 2) : 0;

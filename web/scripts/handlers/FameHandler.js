@@ -12,6 +12,8 @@ export const KILL_WINDOW_MS = 2000;
 // Follow-up fame events for an already credited kill are merged into its popup.
 const KILL_MERGE_MS = 500;
 export const POPUP_DURATION_MS = 2500;
+// Window for the "current pace" rate, as opposed to the whole-session average.
+export const PACE_WINDOW_MS = 5 * 60 * 1000;
 const MAX_POPUPS = 20;
 const SESSION_KEY = 'fameSession';
 
@@ -26,7 +28,8 @@ export function parseFameAmount(text) {
 }
 
 function emptySession() {
-    return {startedAt: null, fame: 0, killFame: 0, kills: 0, totalFame: null, silver: 0, silverTotal: null};
+    // recentFame: [{at, amount}] within PACE_WINDOW_MS, kept so the pace survives a page reload
+    return {startedAt: null, fame: 0, totalFame: null, silver: 0, silverTotal: null, recentFame: []};
 }
 
 export class FameHandler
@@ -65,6 +68,9 @@ export class FameHandler
 
         this.startSession(now);
         this.session.fame += gained;
+        this.session.recentFame = this.session.recentFame
+            .filter(g => now - g.at <= PACE_WINDOW_MS)
+            .concat({at: now, amount: gained});
         if (Number.isFinite(total)) this.session.totalFame = total;
 
         this.pruneDeaths(now);
@@ -72,12 +78,9 @@ export class FameHandler
         let popup;
 
         if (death) {
-            this.session.kills++;
-            this.session.killFame += gained;
             popup = this.addPopup({amount: gained, posX: death.posX, posY: death.posY, kill: true, name: death.name, at: now});
             this.lastKill = {popup, at: now};
         } else if (this.lastKill && now - this.lastKill.at <= KILL_MERGE_MS) {
-            this.session.killFame += gained;
             popup = this.lastKill.popup;
             popup.amount += gained;
             popup.at = now;
@@ -165,6 +168,29 @@ export class FameHandler
         return this.perHour(this.session.silver, now);
     }
 
+    /**
+     * Fame per hour over the last PACE_WINDOW_MS (shorter early in a session),
+     * null until one minute of data is available.
+     */
+    getRecentFamePerHour(now = Date.now())
+    {
+        if (this.session.startedAt === null) return null;
+        const windowMs = Math.min(PACE_WINDOW_MS, now - this.session.startedAt);
+        if (windowMs < 60000) return null;
+        const amount = this.session.recentFame
+            .filter(g => now - g.at <= PACE_WINDOW_MS)
+            .reduce((sum, g) => sum + g.amount, 0);
+        return amount / (windowMs / 3600000);
+    }
+
+    /**
+     * Time since the first gain of the session, in ms (0 when no session).
+     */
+    getSessionDuration(now = Date.now())
+    {
+        return this.session.startedAt === null ? 0 : now - this.session.startedAt;
+    }
+
     perHour(amount, now)
     {
         if (this.session.startedAt === null) return null;
@@ -211,7 +237,11 @@ export class FameHandler
     {
         try {
             const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY));
-            if (saved && typeof saved.fame === 'number') return {...emptySession(), ...saved};
+            if (saved && typeof saved.fame === 'number') {
+                const session = {...emptySession(), ...saved};
+                if (!Array.isArray(session.recentFame)) session.recentFame = [];
+                return session;
+            }
         } catch {
             // Missing or unreadable storage: start a fresh session
         }

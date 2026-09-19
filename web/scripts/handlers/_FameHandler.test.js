@@ -1,5 +1,5 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
-import {FameHandler, KILL_WINDOW_MS, POPUP_DURATION_MS, parseFameAmount} from './FameHandler.js';
+import {FameHandler, KILL_WINDOW_MS, PACE_WINDOW_MS, POPUP_DURATION_MS, parseFameAmount} from './FameHandler.js';
 import {formatFame, formatDuration} from '../utils/RadarRenderer.js';
 
 // pcap-derived: UpdateFame layout from harvestables/finished.pcap (post-Dragonfire)
@@ -46,8 +46,7 @@ describe('FameHandler', () => {
         const popup = handler.onUpdateFame(fameEvent(1240));
 
         expect(popup).toMatchObject({amount: 1240, kill: true, posX: 120, posY: -45, name: 'T6_MOB_WOLF'});
-        expect(handler.session.kills).toBe(1);
-        expect(handler.session.killFame).toBe(1240);
+        expect(handler.session.fame).toBe(1240);
     });
 
     test('fame without a recent death is not a kill (gathering, etc.)', () => {
@@ -57,7 +56,6 @@ describe('FameHandler', () => {
         const popup = handler.onUpdateFame(fameEvent(30));
 
         expect(popup.kill).toBe(false);
-        expect(handler.session.kills).toBe(0);
         expect(handler.session.fame).toBe(30);
     });
 
@@ -68,7 +66,6 @@ describe('FameHandler', () => {
         expect(handler.onUpdateFame(fameEvent(100)).name).toBe('A');
         vi.advanceTimersByTime(600);
         expect(handler.onUpdateFame(fameEvent(200)).name).toBe('B');
-        expect(handler.session.kills).toBe(2);
     });
 
     test('a follow-up fame event for the same kill merges into its popup', () => {
@@ -79,8 +76,7 @@ describe('FameHandler', () => {
 
         expect(second).toBe(first);
         expect(first.amount).toBe(1250);
-        expect(handler.session.kills).toBe(1);
-        expect(handler.session.killFame).toBe(1250);
+        expect(handler.session.fame).toBe(1250);
         expect(handler.popups).toHaveLength(1);
     });
 
@@ -106,12 +102,45 @@ describe('FameHandler', () => {
         expect(handler.getFamePerHour()).toBe(10000);
     });
 
+    test('current pace only counts fame from the last 5 minutes', () => {
+        handler.onUpdateFame(fameEvent(90000));
+        expect(handler.getRecentFamePerHour()).toBeNull();
+
+        vi.advanceTimersByTime(PACE_WINDOW_MS + 1000);
+        handler.onUpdateFame(fameEvent(10000));
+
+        // Old 90k gain dropped; 10k over a 5-minute window = 120k/h
+        expect(handler.getRecentFamePerHour()).toBe(120000);
+        // Session average still includes it: 100k over ~5 min
+        expect(handler.getFamePerHour()).toBeGreaterThan(1000000);
+    });
+
+    test('pace uses the elapsed time early in a session', () => {
+        handler.onUpdateFame(fameEvent(20000));
+        vi.advanceTimersByTime(2 * 60 * 1000);
+        expect(handler.getRecentFamePerHour()).toBe(600000);
+    });
+
+    test('pace survives a page reload', () => {
+        handler.onUpdateFame(fameEvent(20000));
+        vi.advanceTimersByTime(2 * 60 * 1000);
+
+        expect(new FameHandler().getRecentFamePerHour()).toBe(600000);
+    });
+
+    test('session duration counts from the first gain', () => {
+        expect(handler.getSessionDuration()).toBe(0);
+        handler.onUpdateFame(fameEvent(10));
+        vi.advanceTimersByTime(90 * 60 * 1000);
+        expect(handler.getSessionDuration()).toBe(90 * 60 * 1000);
+    });
+
     test('session survives a new handler (page navigation) and can be reset', () => {
         handler.onMobDied({posX: 0, posY: 0});
         handler.onUpdateFame(fameEvent(700));
 
         const restored = new FameHandler();
-        expect(restored.session).toMatchObject({fame: 700, kills: 1, killFame: 700});
+        expect(restored.session).toMatchObject({fame: 700});
 
         restored.resetSession();
         expect(restored.hasSession()).toBe(false);
