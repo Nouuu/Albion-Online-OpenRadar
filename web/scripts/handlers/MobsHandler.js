@@ -112,6 +112,8 @@ export class MobsHandler {
     constructor() {
         this.mobsList = [];
         this.mistList = [];
+        // Optional callback(mob) fired when a tracked mob dies (used by the fame tracker)
+        this.onMobDied = null;
     }
 
     /**
@@ -352,6 +354,7 @@ export class MobsHandler {
                 mobId: mobId,
                 typeId: mob.typeId
             });
+            this.onMobDied?.(mob);
             this.removeMob(mobId);
             return;
         }

@@ -16,6 +16,7 @@ import {MobsHandler} from '../handlers/MobsHandler.js';
 import {ChestsHandler} from '../handlers/ChestsHandler.js';
 import {HarvestablesHandler} from '../handlers/HarvestablesHandler.js';
 import {MistsDungeonHandler} from '../handlers/MistsDungeonHandler.js';
+import {FameHandler} from '../handlers/FameHandler.js';
 import {MapH} from './Map.js';
 import {DungeonsHandler} from '../handlers/DungeonsHandler.js';
 import {DrawingUtils} from './DrawingUtils.js';
@@ -40,7 +41,7 @@ let lastPlayerListHash = '';
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
-    dungeons: null, wispCage: null, fishing: null, mistsDungeon: null
+    dungeons: null, wispCage: null, fishing: null, mistsDungeon: null, fame: null
 };
 
 let drawings = {
@@ -96,7 +97,8 @@ function initializeRadarRenderer() {
             dungeonsHandler: handlers.dungeons,
             wispCageHandler: handlers.wispCage,
             fishingHandler: handlers.fishing,
-            mistsDungeonHandler: handlers.mistsDungeon
+            mistsDungeonHandler: handlers.mistsDungeon,
+            fameHandler: handlers.fame
         },
         drawings: {
             mapsDrawing: drawings.maps,
@@ -166,6 +168,8 @@ export async function initRadar() {
         handlers.wispCage = new WispCageHandler();
         handlers.fishing = new FishingHandler();
         handlers.mistsDungeon = new MistsDungeonHandler();
+        handlers.fame = new FameHandler();
+        handlers.mobs.onMobDied = mob => handlers.fame?.onMobDied(mob);
 
         drawings.maps = new MapDrawing();
         drawings.harvestables = new HarvestablesDrawing();
@@ -181,6 +185,7 @@ export async function initRadar() {
         window.harvestablesHandler = handlers.harvestables;
         window.mobsHandler = handlers.mobs;
         window.playersHandler = handlers.players;
+        window.fameHandler = handlers.fame;
         window.handlers = handlers;
 
         EventRouter.init({
@@ -192,7 +197,8 @@ export async function initRadar() {
                 dungeonsHandler: handlers.dungeons,
                 fishingHandler: handlers.fishing,
                 wispCageHandler: handlers.wispCage,
-                mistsDungeonHandler: handlers.mistsDungeon
+                mistsDungeonHandler: handlers.mistsDungeon,
+                fameHandler: handlers.fame
             },
             map,
             radarRenderer: null
@@ -305,6 +311,7 @@ export function destroyRadar() {
     window.harvestablesHandler = null;
     window.mobsHandler = null;
     window.playersHandler = null;
+    window.fameHandler = null;
     window.handlers = null;
     window.radarRenderer = null;
 
