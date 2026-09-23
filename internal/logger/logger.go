@@ -2,14 +2,13 @@ package logger
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/segmentio/encoding/json"
 )
 
 const (
@@ -242,7 +241,7 @@ func (l *Logger) Log(level, category, event string, data any, context map[string
 
 // writeErrorLine appends one line to the daily errors file.
 func (l *Logger) writeErrorLine(category, event string, data any) {
-	date := time.Now().Format("2006-01-02")
+	date := time.Now().Format(time.DateOnly)
 	errorFile := filepath.Join(l.logsDir, "errors", fmt.Sprintf("errors_%s.log", date))
 
 	f, err := os.OpenFile(errorFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)

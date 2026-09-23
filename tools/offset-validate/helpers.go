@@ -1,6 +1,6 @@
 package main
 
-func intFromParam(v interface{}) int {
+func intFromParam(v any) int {
 	switch x := v.(type) {
 	case byte:
 		return int(x)

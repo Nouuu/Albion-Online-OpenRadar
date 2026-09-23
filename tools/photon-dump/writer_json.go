@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 // Parameters keys are decimal strings for JSON stability.
@@ -51,22 +52,22 @@ func jsonSafeMap(m map[string]any) map[string]any {
 	return out
 }
 
-func jsonSafeValue(v interface{}) interface{} {
+func jsonSafeValue(v any) any {
 	switch x := v.(type) {
-	case map[interface{}]interface{}:
-		out := make(map[string]interface{}, len(x))
+	case map[any]any:
+		out := make(map[string]any, len(x))
 		for k, vv := range x {
 			out[fmt.Sprintf("%v", k)] = jsonSafeValue(vv)
 		}
 		return out
-	case map[byte]interface{}:
-		out := make(map[string]interface{}, len(x))
+	case map[byte]any:
+		out := make(map[string]any, len(x))
 		for k, vv := range x {
-			out[fmt.Sprintf("%d", k)] = jsonSafeValue(vv)
+			out[strconv.Itoa(int(k))] = jsonSafeValue(vv)
 		}
 		return out
-	case []interface{}:
-		out := make([]interface{}, len(x))
+	case []any:
+		out := make([]any, len(x))
 		for i, vv := range x {
 			out[i] = jsonSafeValue(vv)
 		}

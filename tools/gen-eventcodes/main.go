@@ -8,11 +8,12 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 )
 
@@ -80,7 +81,7 @@ func generate(root string, s spec) error {
 		Value int
 	}
 	var entries []entry
-	for _, line := range bytes.Split(raw, []byte("\n")) {
+	for line := range bytes.SplitSeq(raw, []byte("\n")) {
 		m := entryRe.FindSubmatch(line)
 		if m == nil {
 			continue
@@ -95,7 +96,7 @@ func generate(root string, s spec) error {
 		return fmt.Errorf("no entries parsed from %s", s.Source)
 	}
 
-	sort.SliceStable(entries, func(i, j int) bool { return entries[i].Value < entries[j].Value })
+	slices.SortStableFunc(entries, func(a, b entry) int { return cmp.Compare(a.Value, b.Value) })
 
 	var out bytes.Buffer
 	fmt.Fprintf(&out, "// Code generated from %s by tools/gen-eventcodes. DO NOT EDIT.\n", s.Source)

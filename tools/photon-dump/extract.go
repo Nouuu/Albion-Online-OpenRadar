@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"path/filepath"
+	"strconv"
 
 	"github.com/nospy/albion-openradar/internal/photon"
 )
@@ -35,7 +37,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 					continue
 				}
 				captured[s.Name] = append(captured[s.Name], hit{
-					raw:     append([]byte(nil), currentRaw...),
+					raw:     bytes.Clone(currentRaw),
 					message: FixtureMessage{Kind: "event", Parameters: stringifyParams(e.Parameters)},
 				})
 				counts[s.Name]++
@@ -47,7 +49,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 					continue
 				}
 				captured[s.Name] = append(captured[s.Name], hit{
-					raw:     append([]byte(nil), currentRaw...),
+					raw:     bytes.Clone(currentRaw),
 					message: FixtureMessage{Kind: "request", Parameters: stringifyParams(r.Parameters)},
 				})
 				counts[s.Name]++
@@ -59,7 +61,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 					continue
 				}
 				captured[s.Name] = append(captured[s.Name], hit{
-					raw:     append([]byte(nil), currentRaw...),
+					raw:     bytes.Clone(currentRaw),
 					message: FixtureMessage{Kind: "response", Parameters: stringifyParams(r.Parameters), ReturnCode: r.ReturnCode},
 				})
 				counts[s.Name]++
@@ -101,10 +103,10 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 	return nil
 }
 
-func stringifyParams(params map[byte]interface{}) map[string]any {
+func stringifyParams(params map[byte]any) map[string]any {
 	out := make(map[string]any, len(params))
 	for k, v := range params {
-		out[fmt.Sprintf("%d", k)] = v
+		out[strconv.Itoa(int(k))] = v
 	}
 	return out
 }

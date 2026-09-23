@@ -3,28 +3,22 @@ package server
 import (
 	"testing"
 
-	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nospy/albion-openradar/internal/photon"
 )
 
-// Locks the JSON wire shape broadcast to the web front-end. The front reads
-// params[252]/params[253] as numeric string keys; switching the param map
-// type (from int to byte) must not alter this contract.
+// synthetic
 func TestBroadcastEvent_JSONShape(t *testing.T) {
-	event := &photon.EventData{
+	ws := &WebSocketHandler{}
+	ws.BroadcastEvent(&photon.EventData{
 		Code: 3,
 		Parameters: map[byte]any{
 			0:   int32(42),
 			252: byte(3),
 		},
-	}
-	payload := map[string]any{
-		"code":       event.Code,
-		"parameters": event.Parameters,
-	}
-	out, err := json.Marshal(payload)
+	})
+	out, err := encodeBatch(ws.batchBuffer)
 	require.NoError(t, err)
 	s := string(out)
 	require.Contains(t, s, `"code":3`)
@@ -32,14 +26,14 @@ func TestBroadcastEvent_JSONShape(t *testing.T) {
 	require.Contains(t, s, `"0":42`)
 }
 
+// synthetic
 func TestBroadcastEvent_ByteArray_BufferShape(t *testing.T) {
-	event := &photon.EventData{
-		Code: 3,
-		Parameters: map[byte]any{
-			1: photon.ByteArray{0x01, 0x02, 0xff},
-		},
-	}
-	out, err := json.Marshal(event.Parameters)
+	ws := &WebSocketHandler{}
+	ws.BroadcastEvent(&photon.EventData{
+		Code:       3,
+		Parameters: map[byte]any{1: photon.ByteArray{0x01, 0x02, 0xff}},
+	})
+	out, err := encodeBatch(ws.batchBuffer)
 	require.NoError(t, err)
 	require.Contains(t, string(out), `{"type":"Buffer","data":[1,2,255]}`)
 }

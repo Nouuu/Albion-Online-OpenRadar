@@ -41,7 +41,7 @@ func ClearLogCallback() {
 
 // timestamp returns the current time formatted as HH:MM:SS
 func timestamp() string {
-	return time.Now().Format("15:04:05")
+	return time.Now().Format(time.TimeOnly)
 }
 
 // log sends a log message to the callback or prints to stdout

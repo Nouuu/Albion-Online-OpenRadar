@@ -1,12 +1,13 @@
 package server
 
 import (
+	"encoding/json/jsontext"
+	"encoding/json/v2"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/segmentio/encoding/json"
 
 	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/photon"
@@ -20,8 +21,18 @@ const (
 
 // WSBatchMessage represents a batch of messages
 type WSBatchMessage struct {
-	Type     string        `json:"type"`
-	Messages []any `json:"messages"`
+	Type     string `json:"type"`
+	Messages []any  `json:"messages"`
+}
+
+var wsJSONOptions = json.JoinOptions(
+	jsontext.AllowInvalidUTF8(true),
+	json.FormatNilMapAsNull(true),
+	json.FormatNilSliceAsNull(true),
+)
+
+func encodeBatch(batch []any) ([]byte, error) {
+	return json.Marshal(&WSBatchMessage{Type: "batch", Messages: batch}, wsJSONOptions)
 }
 
 // WSStats holds WebSocket statistics
@@ -94,13 +105,12 @@ func (ws *WebSocketHandler) flushBatch() {
 	ws.batchBuffer = make([]any, 0, MaxBatchSize)
 	ws.batchMu.Unlock()
 
-	msg := &WSBatchMessage{Type: "batch", Messages: batch}
-	data, err := json.Marshal(msg)
+	data, err := encodeBatch(batch)
 	if err != nil {
 		logger.PrintWarn("WS", "batch marshal failed: %v (batch size=%d, DROPPED)", err, msgCount)
 		// Try to identify which message failed by marshaling each one individually.
 		for i, m := range batch {
-			if _, err := json.Marshal(m); err != nil {
+			if _, err := json.Marshal(m, wsJSONOptions); err != nil {
 				logger.PrintWarn("WS", "  offending message[%d]: %v (type=%T, value=%+v)", i, err, m, m)
 			}
 		}
@@ -207,17 +217,21 @@ func (ws *WebSocketHandler) handleMessages(conn *websocket.Conn) {
 			break
 		}
 
-		// Parse incoming message (for logs)
-		var data struct {
-			Type string        `json:"type"`
-			Logs []any `json:"logs"`
-		}
-		if err := json.Unmarshal(message, &data); err == nil {
-			if data.Type == "logs" && len(data.Logs) > 0 && ws.logger != nil {
-				ws.logger.WriteLogs(data.Logs)
-			}
+		if logs := parseClientLogs(message); len(logs) > 0 && ws.logger != nil {
+			ws.logger.WriteLogs(logs)
 		}
 	}
+}
+
+func parseClientLogs(message []byte) []any {
+	var data struct {
+		Type string `json:"type"`
+		Logs []any  `json:"logs"`
+	}
+	if err := json.Unmarshal(message, &data, jsontext.AllowInvalidUTF8(true)); err != nil || data.Type != "logs" {
+		return nil
+	}
+	return data.Logs
 }
 
 // CloseAllClients closes all WebSocket connections gracefully

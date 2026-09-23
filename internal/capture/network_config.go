@@ -2,7 +2,9 @@ package capture
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,7 +34,7 @@ func ReadConfig(appDir string) (Config, error) {
 	path := filepath.Join(appDir, configFilename)
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return Config{}, nil
 		}
 		return Config{}, fmt.Errorf("read %s: %w", path, err)
@@ -77,7 +79,7 @@ func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {
 	ipPath := filepath.Join(appDir, legacyIPFilename)
 	data, err := os.ReadFile(ipPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, fs.ErrNotExist) {
 			return false, nil
 		}
 		return false, fmt.Errorf("read %s: %w", ipPath, err)

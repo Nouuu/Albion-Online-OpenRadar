@@ -12,20 +12,16 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"os"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 )
-
-type stringList []string
-
-func (s *stringList) String() string     { return fmt.Sprintf("%v", []string(*s)) }
-func (s *stringList) Set(v string) error { *s = append(*s, v); return nil }
 
 const usage = "usage: anonymize-pcap [--scrub-string name]... <input.pcap> <output.pcap>\n" +
 	"       anonymize-pcap --no-scrub <input.pcap> <output.pcap>\n" +
@@ -39,12 +35,15 @@ type options struct {
 }
 
 func parseArgs(args []string) (options, error) {
-	var scrub stringList
+	var scrub []string
 	var noScrub bool
 
 	fs := flag.NewFlagSet("anonymize-pcap", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	fs.Var(&scrub, "scrub-string", "extra ASCII string to replace on top of the identity fields (repeatable)")
+	fs.Func("scrub-string", "extra ASCII string to replace on top of the identity fields (repeatable)", func(v string) error {
+		scrub = append(scrub, v)
+		return nil
+	})
 	fs.BoolVar(&noScrub, "no-scrub", false, "write the capture without touching UDP payloads")
 	if err := fs.Parse(args); err != nil {
 		return options{}, err
@@ -242,13 +241,7 @@ func reportScrubCounts(w io.Writer, counts map[string]int) {
 	if len(counts) == 0 {
 		return
 	}
-	needles := make([]string, 0, len(counts))
-	for n := range counts {
-		needles = append(needles, n)
-	}
-	sort.Strings(needles)
-
-	for _, n := range needles {
+	for _, n := range slices.Sorted(maps.Keys(counts)) {
 		fmt.Fprintf(w, "  %s: %d replacements\n", n, counts[n])
 	}
 }
@@ -260,7 +253,7 @@ func scrubPayload(payload []byte, needles []string, counts map[string]int) []byt
 	if len(needles) == 0 {
 		return payload
 	}
-	out := append([]byte(nil), payload...)
+	out := bytes.Clone(payload)
 	for _, n := range needles {
 		if n == "" {
 			continue

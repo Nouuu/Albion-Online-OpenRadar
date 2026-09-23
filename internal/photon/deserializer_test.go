@@ -2,9 +2,9 @@ package photon
 
 import (
 	"bytes"
+	"encoding/json"
 	"testing"
 
-	"github.com/segmentio/encoding/json"
 	"github.com/stretchr/testify/require"
 )
 

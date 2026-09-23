@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"slices"
+	"strings"
 	"testing"
 )
 
@@ -76,5 +78,50 @@ func TestFormatCaptureLine(t *testing.T) {
 				t.Errorf("formatCaptureLine(%v) = %q, want %q", tc.in, got, tc.want)
 			}
 		})
+	}
+}
+
+func sparkRunes(s string) []rune {
+	var out []rune
+	for _, r := range s {
+		if slices.Contains(sparkChars, r) {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func TestRenderSparkline(t *testing.T) {
+	if got := renderSparkline([]uint64{}, ColorPrimary); got != "" {
+		t.Errorf("empty data rendered %q, want empty", got)
+	}
+	if got := sparkRunes(renderSparkline([]uint64{0, 0, 0}, ColorPrimary)); string(got) != "▁▁▁" {
+		t.Errorf("all zeros rendered %q, want ▁▁▁", string(got))
+	}
+	if got := sparkRunes(renderSparkline([]uint64{0, 4, 8}, ColorPrimary)); string(got) != "▁▄█" {
+		t.Errorf("0,4,8 rendered %q, want ▁▄█", string(got))
+	}
+	if got := sparkRunes(renderSparkline([]float64{2.5, 5}, ColorPrimary)); string(got) != "▄█" {
+		t.Errorf("2.5,5 rendered %q, want ▄█", string(got))
+	}
+	long := make([]uint64, sparklineHistory)
+	for i := range long {
+		long[i] = uint64(i)
+	}
+	if got := sparkRunes(renderSparkline(long, ColorPrimary)); len(got) != sparklineDisplayLen {
+		t.Errorf("%d points rendered %d chars, want %d", len(long), len(got), sparklineDisplayLen)
+	}
+}
+
+func TestSparklineStats(t *testing.T) {
+	d := NewDashboard("v0", 5001, true, nil, nil)
+	if got := d.getSparklineStats(nil, ""); !strings.Contains(got, "No data") {
+		t.Errorf("nil data = %q, want No data", got)
+	}
+	if got := d.getSparklineStats([]uint64{3, 1, 2}, "p/s"); !strings.Contains(got, "min: 1  avg: 2  max: 3 p/s") {
+		t.Errorf("uint64 stats = %q", got)
+	}
+	if got := d.getSparklineStatsFloat([]float64{1.5, 0.5}, "MB"); !strings.Contains(got, "min: 0.5  avg: 1.0  max: 1.5 MB") {
+		t.Errorf("float64 stats = %q", got)
 	}
 }

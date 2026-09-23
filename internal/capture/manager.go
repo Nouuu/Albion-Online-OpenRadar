@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"sort"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -204,7 +205,7 @@ func (m *Manager) State() State {
 			StartedAt:   mc.startedAt,
 		})
 	}
-	sort.Slice(out.Active, func(i, j int) bool { return out.Active[i].Name < out.Active[j].Name })
+	slices.SortFunc(out.Active, func(a, b CaptureSummary) int { return strings.Compare(a.Name, b.Name) })
 	if len(out.Active) == 0 {
 		out.Status = StatusAwaiting
 	} else {
@@ -249,7 +250,7 @@ func (m *Manager) Close(closeCtx context.Context) {
 
 func startWorker(c *Capturer, wg *sync.WaitGroup, onError func(string, error)) {
 	wg.Go(func() {
-		if err := c.Start(); err != nil && err != context.Canceled {
+		if err := c.Start(); err != nil && !errors.Is(err, context.Canceled) {
 			onError(c.iface.Name, err)
 		}
 	})
