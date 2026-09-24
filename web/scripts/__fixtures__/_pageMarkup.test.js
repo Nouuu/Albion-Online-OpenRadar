@@ -16,7 +16,7 @@ describe('mountPage', () => {
         expect(root.dataset.page).toBe('enemies');
         expect(root.innerHTML).not.toContain('{{');
         expect(root.querySelector('script')).toBeNull();
-        expect(root.querySelector('#settingEnemiesBoss')).not.toBeNull();
+        expect(root.querySelector('[data-setting="settingEnemiesBoss"]')).not.toBeNull();
     });
 
     test.each(['chests', 'enemies', 'ignorelist', 'players', 'radar', 'resources', 'settings'])('mounts %s', name => {

@@ -191,9 +191,17 @@ function render(root, sync, key) {
     for (const readout of root.querySelectorAll(`[data-value-for="${key}"]`)) {
         readout.textContent = formatReadout(entry, value);
     }
+    for (const dependent of root.querySelectorAll(`[data-enabled-by="${key}"]`)) {
+        dependent.disabled = value !== true;
+    }
 }
 
 function onButton(root, sync, event) {
+    const preset = event.target.closest('[data-enemy-preset]');
+    if (preset && root.contains(preset)) {
+        applyEnemyPreset(preset.dataset.enemyPreset, sync);
+        return;
+    }
     const button = event.target.closest('[data-nudge], [data-reset]');
     if (!button || !root.contains(button)) return;
     const entry = registryEntry(button.dataset.nudge ?? button.dataset.reset);
@@ -226,6 +234,7 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
         keys.add(entry.key);
     }
     for (const readout of root.querySelectorAll('[data-value-for]')) keys.add(readout.dataset.valueFor);
+    for (const dependent of root.querySelectorAll('[data-enabled-by]')) keys.add(dependent.dataset.enabledBy);
     keys.forEach(key => render(root, sync, key));
 
     root.addEventListener('click', event => onButton(root, sync, event), {signal: bound});

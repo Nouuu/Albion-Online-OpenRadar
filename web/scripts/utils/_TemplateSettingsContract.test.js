@@ -14,7 +14,7 @@ const EXCLUSIONS = [
     {name: 'settings page, until its Debug regroup', page: 'settings', region: root => root},
     {name: 'radar controls row and inline script, until the radar settings panel', page: 'radar',
         region: root => root.querySelector('#canvasContainer').nextElementSibling},
-    ...['enemies', 'chests'].map(page =>
+    ...['chests'].map(page =>
         ({name: `${page} page, pending conversion`, page, region: root => root})),
 ];
 
@@ -260,6 +260,26 @@ describe('page removals', () => {
         }
         expect(template).not.toContain('Debug & Logging');
         expect(template).not.toContain('ResourcesHelper');
+    });
+});
+
+describe('enemies page', () => {
+    const template = templateOf('enemies');
+    const root = pages.find(page => page.name === 'enemies').root;
+
+    test('offers only the All and Clear presets, through data-enemy-preset', () => {
+        const presets = [...root.querySelectorAll('[data-enemy-preset]')];
+        expect(presets.map(el => el.dataset.enemyPreset)).toEqual(['all', 'clear']);
+        expect(presets.map(el => el.textContent.trim())).toEqual(['All', 'Clear']);
+        expect(template).not.toContain('onclick="applyEnemyPreset');
+        expect(template).not.toContain('Mini-Boss+');
+        expect(template).not.toContain('Bosses</button>');
+    });
+
+    test('holds no All checkbox, no Debug collapse and no stale logging tip', () => {
+        expect(template).not.toContain('settingAllEnemies');
+        expect(template).not.toContain('collapse-debug');
+        expect(template).not.toContain('Debug &amp; Logging');
     });
 });
 

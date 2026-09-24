@@ -636,3 +636,56 @@ describe('ignorelist page', () => {
         expect(root.querySelector('[data-ignore-items]').textContent).toContain('Treasure Map');
     });
 });
+
+describe('enemies page', () => {
+    function mountEnemies() {
+        const sync = newSync();
+        const root = mountPage('enemies');
+        bind(root, sync);
+        return {sync, root};
+    }
+
+    function checkedStates(root) {
+        return [...root.querySelectorAll('input[type="checkbox"][data-setting]')].map(el => [el.dataset.setting, el.checked]);
+    }
+
+    test.each([['all', true], ['clear', false]])('the %s preset button writes %s to every enemy filter', (name, value) => {
+        const {sync, root} = mountEnemies();
+
+        root.querySelector(`[data-enemy-preset="${name}"]`).click();
+
+        for (const key of ['settingEnemiesNormal', 'settingEnemiesChampion', 'settingEnemiesBoss', 'settingEnemiesMistsGriffin',
+            'settingEnemiesAvalonianDrones', 'settingEnemiesEvent']) {
+            expect(sync.getBool(key)).toBe(value);
+            expect(root.querySelector(`[data-setting="${key}"]`).checked).toBe(value);
+        }
+        expect(sync.getBool('settingEnemiesMinHealthFilter')).toBe(false);
+        expect(localStorage.getItem('settingEnemiesShowHealthBars')).toBeNull();
+    });
+
+    test('the min HP field is enabled only while its filter is on', () => {
+        const {sync, root} = mountEnemies();
+        const filter = root.querySelector('[data-setting="settingEnemiesMinHealthFilter"]');
+        const field = root.querySelector('[data-setting="settingEnemiesMinHealth"]');
+        expect(field.disabled).toBe(true);
+
+        filter.checked = true;
+        fire(filter, 'change');
+        expect(field.disabled).toBe(false);
+
+        sync.setBool('settingEnemiesMinHealthFilter', false);
+        expect(field.disabled).toBe(true);
+    });
+
+    test('turning on the min HP filter changes no other control (FR-046)', () => {
+        const {root} = mountEnemies();
+        const before = checkedStates(root).filter(([key]) => key !== 'settingEnemiesMinHealthFilter');
+        const filter = root.querySelector('[data-setting="settingEnemiesMinHealthFilter"]');
+
+        filter.checked = true;
+        fire(filter, 'change');
+
+        expect(checkedStates(root).filter(([key]) => key !== 'settingEnemiesMinHealthFilter')).toEqual(before);
+        expect(Object.keys(localStorage).filter(key => key !== 'settingSchemaVersion')).toEqual(['settingEnemiesMinHealthFilter']);
+    });
+});
