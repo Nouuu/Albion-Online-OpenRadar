@@ -126,6 +126,66 @@ const ROWS = [
     ['settingUiSidebarCollapsed', 'bool', false, 'sidebarCollapsed', 'rename'],
 ];
 
+const LOCATIONS = {
+    'Radar > Radar settings > View': ['settingRadarZoom', 'settingRadarSize', 'settingRadarFitToScreen', 'settingRadarIconSize',
+        'settingRadarRotation'],
+    'Radar > Radar settings > Display': ['settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats'],
+    'Radar > Radar settings > Resources': ['settingRadarResourceCount', 'settingRadarResourceDistance',
+        'settingRadarResourceTierBadges', 'settingRadarResourceClusters', 'settingRadarClusterRadius',
+        'settingRadarClusterMinSize'],
+    'Radar > Radar settings': ['settingUiRadarSettingsOpen'],
+    'Players > Display': ['settingPlayersDetect', 'settingPlayersShowEquipment', 'settingPlayersShowSpells',
+        'settingPlayersShowHealthBars'],
+    'Players > Player types': ['settingPlayersPassive', 'settingPlayersFaction', 'settingPlayersHostile'],
+    'Players > Limits': ['settingPlayersMaxDisplayed'],
+    'Players > Alerts': ['settingAlertFlash', 'settingAlertBorder', 'settingAlertSound', 'settingAlertSoundFile',
+        'settingAlertSoundVolume', 'settingAlertSoundCooldown'],
+    'Ignore List': ['settingIgnoreList'],
+    'Enemies > Classic': ['settingEnemiesNormal', 'settingEnemiesChampion', 'settingEnemiesMiniBoss', 'settingEnemiesBoss',
+        'settingEnemiesMinHealthFilter', 'settingEnemiesMinHealth', 'settingUiEnemiesClassicOpen'],
+    'Enemies > Mists bosses': ['settingEnemiesMistsCrystalSpider', 'settingEnemiesMistsFairyDragon',
+        'settingEnemiesMistsVeilWeaver', 'settingEnemiesMistsGriffin', 'settingUiEnemiesMistsOpen'],
+    'Enemies > Other': ['settingEnemiesAvalonianDrones', 'settingEnemiesEvent', 'settingUiEnemiesOtherOpen'],
+    'Enemies > Display': ['settingEnemiesShowHealthBars'],
+    'Settings > Debug > Enemies': ['settingDebugEnemiesUnidentified', 'settingDebugEnemiesTypeId', 'settingDebugEnemiesTier',
+        'settingDebugEnemiesName', 'settingDebugEnemiesCategoryBadge'],
+    ...Object.fromEntries(['Fiber', 'Hide', 'Wood', 'Ore', 'Rock'].flatMap(resource => ['Static', 'Living'].map(kind =>
+        [`Resources > ${resource} > ${kind}`, [`settingResources${kind}${resource}`]]))),
+    ...Object.fromEntries(['Fiber', 'Hide', 'Wood', 'Ore', 'Rock'].map(resource =>
+        [`Resources > ${resource}`, [`settingUiResources${resource}Open`]])),
+    'Resources > Other': ['settingResourcesFishing'],
+    'Resources > Display': ['settingResourcesShowHealthBars'],
+    'Settings > Debug > Resources': ['settingDebugResourcesTypeId', 'settingDebugResourcesDbName'],
+    'Chests > Chests': ['settingChestsGreen', 'settingChestsBlue', 'settingChestsPurple', 'settingChestsYellow'],
+    'Chests > Mists': ['settingMistsSolo', 'settingMistsDuo', 'settingMistsEnchant0', 'settingMistsEnchant1',
+        'settingMistsEnchant2', 'settingMistsEnchant3', 'settingMistsEnchant4', 'settingMistsWispCages', 'settingMistsWisps',
+        'settingMistsKnightfallAbbey'],
+    'Settings > Debug > Mists': ['settingDebugMistsWispIds'],
+    'Chests > Dungeons': ['settingDungeonsSolo', 'settingDungeonsGroup', 'settingDungeonsEnchant0', 'settingDungeonsEnchant1',
+        'settingDungeonsEnchant2', 'settingDungeonsEnchant3', 'settingDungeonsEnchant4', 'settingDungeonsCorrupted',
+        'settingDungeonsHellgate'],
+    'Settings > Logging': ['settingLogLevel', 'settingLogCategorySystem', 'settingLogCategoryNetwork', 'settingLogCategoryMap',
+        'settingLogCategoryPlayers', 'settingLogCategoryMobs', 'settingLogCategoryResources', 'settingLogCategoryDungeons',
+        'settingLogCategoryFishing', 'settingLogToConsole', 'settingLogToServer', 'settingUiSettingsLoggingOpen'],
+    'Settings > Debug > Backend logs': ['settingServerLogsEnabled'],
+    'Settings > Debug > Network traffic': ['settingPcapRecording', 'settingDebugWsCoalescing'],
+    'Settings > Debug': ['settingUiSettingsDebugOpen'],
+    'Settings > Network': ['settingUiSettingsNetworkOpen'],
+    'Layout > Sidebar': ['settingUiSidebarCollapsed'],
+    'removed (header presets stay)': ['settingAllEnemies'],
+    'removed (plain delete)': ['livingResourcesID'],
+    'removed': ['categoryRendering'],
+    'removed with the throttle': ['settingWsThrottling'],
+    'removed (Enemies debug moves to Settings)': ['collapse-debug'],
+};
+
+const LOCATION_OF = new Map(Object.entries(LOCATIONS).flatMap(([location, keys]) => keys.map(key => [key, location])));
+
+function placeOf(key) {
+    const [page, ...section] = LOCATION_OF.get(key)?.split(' > ') ?? [''];
+    return {page, section: section.join(' > ')};
+}
+
 function scopeOf(key, legacyKey, migration) {
     if (migration === 'backend') return 'backend';
     if (key.startsWith('settingUi') || legacyKey?.startsWith('collapse-')) return 'ui';
@@ -144,11 +204,10 @@ export const SETTINGS = deepFreeze(ROWS.map(([key, type, def, legacyKey, migrati
     key,
     type,
     default: structuredClone(def),
-    ...structuredClone(extra),
     label: '',
     tooltip: '',
-    page: '',
-    section: '',
+    ...placeOf(key),
+    ...structuredClone(extra),
     scope: scopeOf(key, legacyKey, migration),
     migration,
     legacyKey,

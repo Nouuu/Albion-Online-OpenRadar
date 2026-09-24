@@ -260,3 +260,54 @@ describe('SettingsRegistry', () => {
         expect(Object.isFrozen(MIGRATION_ROWS[0])).toBe(true);
     });
 });
+
+describe('SettingsRegistry control location', () => {
+    test('every entry has a page', () => {
+        expect(SETTINGS.filter(entry => !entry.page).map(entry => entry.key)).toEqual([]);
+    });
+
+    test.each([
+        ['settingRadarZoom', 'Radar', 'Radar settings > View'],
+        ['settingRadarHudStats', 'Radar', 'Radar settings > Display'],
+        ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
+        ['settingPlayersDetect', 'Players', 'Display'],
+        ['settingAlertSoundFile', 'Players', 'Alerts'],
+        ['settingIgnoreList', 'Ignore List', ''],
+        ['settingEnemiesMistsGriffin', 'Enemies', 'Mists bosses'],
+        ['settingEnemiesEvent', 'Enemies', 'Other'],
+        ['settingUiEnemiesClassicOpen', 'Enemies', 'Classic'],
+        ['settingResourcesLivingRock', 'Resources', 'Rock > Living'],
+        ['settingResourcesFishing', 'Resources', 'Other'],
+        ['settingMistsWisps', 'Chests', 'Mists'],
+        ['settingDungeonsHellgate', 'Chests', 'Dungeons'],
+        ['settingDebugEnemiesTier', 'Settings', 'Debug > Enemies'],
+        ['settingPcapRecording', 'Settings', 'Debug > Network traffic'],
+        ['settingLogLevel', 'Settings', 'Logging'],
+        ['settingUiSettingsNetworkOpen', 'Settings', 'Network'],
+        ['settingUiSidebarCollapsed', 'Layout', 'Sidebar'],
+        ['settingAllEnemies', 'removed (header presets stay)', ''],
+    ])('%s is on page %s, section %s', (key, page, section) => {
+        expect(registryEntry(key)).toMatchObject({page, section});
+    });
+
+    test('enemy filter keys are the 10 bools of Enemies Classic, Mists bosses and Other', () => {
+        const keys = SETTINGS
+            .filter(entry => entry.page === 'Enemies' && ['Classic', 'Mists bosses', 'Other'].includes(entry.section))
+            .filter(entry => entry.type === 'bool' && entry.scope === 'setting' && entry.key !== 'settingEnemiesMinHealthFilter')
+            .map(entry => entry.key)
+            .sort();
+
+        expect(keys).toEqual([
+            'settingEnemiesAvalonianDrones',
+            'settingEnemiesBoss',
+            'settingEnemiesChampion',
+            'settingEnemiesEvent',
+            'settingEnemiesMiniBoss',
+            'settingEnemiesMistsCrystalSpider',
+            'settingEnemiesMistsFairyDragon',
+            'settingEnemiesMistsGriffin',
+            'settingEnemiesMistsVeilWeaver',
+            'settingEnemiesNormal',
+        ]);
+    });
+});
