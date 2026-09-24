@@ -2,7 +2,10 @@
 
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {SettingsSync} from './SettingsSync.js';
-import {bindSettingControls} from './SettingControls.js';
+import {bindSettingControls, registerBoundPage} from './SettingControls.js';
+import {registerPage, reinitCurrentPage} from '../core/PageController.js';
+
+vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
 
 let syncs = [];
 let controller = null;
@@ -328,5 +331,72 @@ describe('bindSettingControls reflection and teardown', () => {
         const root = mount('<input type="checkbox" data-setting="settingNotARealKey">');
 
         expect(() => bind(root, sync)).not.toThrow();
+    });
+});
+
+describe('registerBoundPage', () => {
+    beforeEach(() => {
+        vi.mocked(registerPage).mockClear();
+        vi.mocked(reinitCurrentPage).mockClear();
+        window.onGlobalsReady = callback => callback();
+    });
+
+    afterEach(() => {
+        delete window.onGlobalsReady;
+    });
+
+    function handlersOf(name) {
+        return vi.mocked(registerPage).mock.calls.find(([pageName]) => pageName === name)[1];
+    }
+
+    test('registers once per name, reinits the current page on every call', () => {
+        registerBoundPage('once');
+        registerBoundPage('once');
+
+        expect(vi.mocked(registerPage).mock.calls.filter(([pageName]) => pageName === 'once')).toHaveLength(1);
+        expect(reinitCurrentPage).toHaveBeenCalledTimes(2);
+    });
+
+    test('init binds #page-content and passes root and signal to the page init', async () => {
+        const init = vi.fn();
+        registerBoundPage('bound', {init});
+        const root = mount('<input type="checkbox" data-setting="settingEnemiesBoss">');
+
+        await handlersOf('bound').init();
+
+        expect(root.querySelector('input').checked).toBe(true);
+        expect(init).toHaveBeenCalledWith({root, signal: expect.any(AbortSignal)});
+        expect(init.mock.calls[0][0].signal.aborted).toBe(false);
+        await handlersOf('bound').destroy();
+    });
+
+    test('a second init aborts the first activation', async () => {
+        const init = vi.fn();
+        registerBoundPage('twice', {init});
+        mount('');
+        const handlers = handlersOf('twice');
+
+        await handlers.init();
+        await handlers.init();
+
+        expect(init.mock.calls[0][0].signal.aborted).toBe(true);
+        expect(init.mock.calls[1][0].signal.aborted).toBe(false);
+    });
+
+    test('destroy aborts before the page destroy runs', async () => {
+        let seen = null;
+        const init = vi.fn();
+        const destroy = vi.fn(() => {
+            seen = init.mock.calls[0][0].signal.aborted;
+        });
+        registerBoundPage('teardown', {init, destroy});
+        mount('');
+        const handlers = handlersOf('teardown');
+
+        await handlers.init();
+        await handlers.destroy();
+
+        expect(destroy).toHaveBeenCalledTimes(1);
+        expect(seen).toBe(true);
     });
 });

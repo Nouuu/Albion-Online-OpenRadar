@@ -1,4 +1,5 @@
 import settingsSync from './SettingsSync.js';
+import {registerPage, reinitCurrentPage} from '../core/PageController.js';
 import {SETTINGS, registryEntry} from './SettingsRegistry.js';
 
 const percent = value => `${Math.round(value * 100)}%`;
@@ -141,6 +142,31 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
     const onChange = key => render(root, sync, key);
     sync.on('*', onChange);
     bound.addEventListener('abort', () => sync.off('*', onChange), {once: true});
+}
+
+const registeredPages = new Set();
+
+export function registerBoundPage(name, {init, destroy} = {}) {
+    if (!registeredPages.has(name)) {
+        registeredPages.add(name);
+        let activation = null;
+        registerPage(name, {
+            async init() {
+                activation?.abort();
+                activation = new AbortController();
+                const {signal} = activation;
+                const root = document.getElementById('page-content');
+                bindSettingControls(root, signal);
+                await init?.({root, signal});
+            },
+            async destroy() {
+                activation?.abort();
+                activation = null;
+                await destroy?.();
+            },
+        });
+    }
+    window.onGlobalsReady(() => reinitCurrentPage());
 }
 
 function exportableEntries() {
