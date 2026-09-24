@@ -543,6 +543,14 @@ func TestNetworkSelect_RecordingResetWritesPcapFalse(t *testing.T) {
 	}
 	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{}))
 
+	var warns []string
+	logger.SetLogCallback(func(level, _, msg string) {
+		if level == "WARN" {
+			warns = append(warns, msg)
+		}
+	})
+	t.Cleanup(logger.ClearLogCallback)
+
 	rec := postSelect(t, mux, "a", "b")
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status %d, want 500; body=%s", rec.Code, rec.Body.String())
@@ -559,6 +567,9 @@ func TestNetworkSelect_RecordingResetWritesPcapFalse(t *testing.T) {
 	}
 	if !cfg.Logging.ServerLogsEnabled {
 		t.Error("serverLogsEnabled lost")
+	}
+	if !slices.ContainsFunc(warns, func(m string) bool { return strings.Contains(m, "denied") }) {
+		t.Errorf("no warning logged for the recording failure, got %v", warns)
 	}
 	if got := persistedNames(t, dir); !slices.Equal(got, []string{"a", "b"}) {
 		t.Errorf("persisted %v, want [a b]", got)

@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/nospy/albion-openradar/internal/capture"
+	"github.com/nospy/albion-openradar/internal/logger"
 )
 
 const hostOnlyMessage = "Only the PC running the radar can change this."
@@ -133,6 +134,7 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 	a.applyMu.Lock()
 	defer a.applyMu.Unlock()
 
+	wasRecording := a.mgr.IsRecording()
 	reconfErr := a.mgr.Reconfigure(desired)
 	if errors.Is(reconfErr, capture.ErrClosed) {
 		http.Error(w, "reconfigure: "+reconfErr.Error(), http.StatusServiceUnavailable)
@@ -151,6 +153,9 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 		persisted = append(persisted, capture.PersistedInterface{Name: i.Name, Description: i.Description})
 	}
 	recording := a.mgr.IsRecording()
+	if wasRecording && !recording {
+		logger.PrintWarn("PKT", "pcap recording stopped during interface apply: %v", reconfErr)
+	}
 	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 		cfg.CaptureInterfaces = persisted
 		if !recording {
