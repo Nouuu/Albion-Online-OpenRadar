@@ -144,6 +144,12 @@ function computeCardKey(player) {
     return `${equipment}|${spells}|${healthAvailable}|${showEquipment}|${showSpells}|${showHealthBars}`;
 }
 
+function buildCardElement(player, threatType) {
+    const template = document.createElement('template');
+    template.innerHTML = renderPlayerCard(player, threatType).trim();
+    return template.content.firstChild;
+}
+
 function updateSectionPlayers(listContainer, players, threatType) {
     // 1. Build Map of existing cards in ONE query (not N queries in loop)
     const existingCards = new Map();
@@ -186,14 +192,10 @@ function updateSectionPlayers(listContainer, players, threatType) {
             }
         } else if (existingCard) {
             // Card key changed (equipment, spells, health availability or a display setting) - rebuild in place
-            const template = document.createElement('template');
-            template.innerHTML = renderPlayerCard(player, threatType).trim();
-            existingCard.replaceWith(template.content.firstChild);
+            existingCard.replaceWith(buildCardElement(player, threatType));
         } else {
             // Create new card in fragment (off-DOM)
-            const template = document.createElement('template');
-            template.innerHTML = renderPlayerCard(player, threatType).trim();
-            fragment.appendChild(template.content.firstChild);
+            fragment.appendChild(buildCardElement(player, threatType));
         }
 
         lastRenderedPlayerIds.set(player.id, {health: player.currentHealth, key});
