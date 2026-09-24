@@ -94,6 +94,24 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
 - **`npm run lint` crashes on every `.gohtml` file**. ESLint 10.11 with `eslint-plugin-html` 8.2 throws
   `Cannot read private member #ruleDefinitions` while linting any template, unrelated to file content. Reproduces on
   an untouched file. `npx eslint web/scripts/` alone still works.
+- **Tooltip bubbles cause a sideways scroll in the main content area**. At 390 px wide, `#page-content` measures
+  `scrollWidth` 488 against `clientWidth` 370. Cause: each `.tooltip` span in `#radarSettingsPanel`'s Resources
+  rows (Resource distance, Resource tier color badges, Resource clusters, Cluster radius (m), Min nodes per
+  cluster) lays out its hover bubble at a fixed width (166 px measured) even while hidden until hover, and that
+  width counts toward every ancestor's `scrollWidth` up to `#page-content`, whose `overflow-y-auto` computes
+  `overflow-x` to `auto` per the CSS Overflow spec. The same rows also fail the "row `scrollWidth` <=
+  `clientWidth`" check on their own (up to 381 vs 306). FR-016 territory, not the phone-landscape variant.
+- **Hidden PiP video adds 1 px to every page's scroll height**. `document.documentElement.scrollHeight` is
+  `innerHeight + 1` on every viewport tested. Cause: the PictureInPictureManager appends a `<video
+  style="position: absolute; ... width: 1px; height: 1px;">` directly to `<body>` with no `top` set, so its
+  static position (and therefore its layout box) lands one line below the `.flex.h-dvh` wrapper, contributing
+  1 px of overflow. Cosmetic, but it fails a byte-exact `scrollHeight <= innerHeight` check.
+- **Mobile drawer's last link still sits behind its footer**. `phone-landscape:overflow-y-auto` on
+  `#mobile-sidebar` was added per plan, but the footer is `position: absolute; bottom: 0` with no space
+  reserved for it in the flow, so it overlaps the last nav link (Settings) by 36 px at 844x390 and by 51 px at
+  667x375 even after scrolling to the end. A full fix needs the footer's height reserved in the flow (for
+  example a `padding-bottom` on `#mobile-nav`, or moving the footer into a flex layout with the nav taking the
+  remaining space) rather than a single utility class.
 
 ## Permanent limitations
 
