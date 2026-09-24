@@ -402,6 +402,23 @@ describe('bindSettingControls reflection and teardown', () => {
 
         expect(() => bind(root, sync)).not.toThrow();
     });
+
+    test('an already aborted signal registers nothing', () => {
+        const sync = newSync();
+        const root = mount('<input type="checkbox" data-setting="settingEnemiesBoss">');
+        const before = wildcardCount(sync);
+        const aborted = new AbortController();
+        aborted.abort();
+
+        expect(() => bindSettingControls(root, aborted.signal, sync)).not.toThrow();
+
+        expect(wildcardCount(sync)).toBe(before);
+        const box = root.querySelector('input');
+        expect(box.checked).toBe(false);
+        box.checked = true;
+        fire(box, 'change');
+        expect(localStorage.getItem('settingEnemiesBoss')).toBeNull();
+    });
 });
 
 describe('registerBoundPage', () => {

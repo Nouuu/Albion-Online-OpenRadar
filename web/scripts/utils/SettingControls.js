@@ -158,6 +158,7 @@ function onButton(root, sync, event) {
 const bindings = new WeakMap();
 
 export function bindSettingControls(root, signal, sync = settingsSync) {
+    if (signal.aborted) return;
     bindings.get(root)?.abort();
     const binding = new AbortController();
     bindings.set(root, binding);
