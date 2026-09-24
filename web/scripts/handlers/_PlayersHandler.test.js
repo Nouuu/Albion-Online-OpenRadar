@@ -920,6 +920,7 @@ describe('PlayersHandler', () => {
             vi.advanceTimersToNextFrame();
 
             expect(cards()).toBe(8);
+            expect(handler.getThreatPlayers()).toHaveLength(8);
             expect(playSpy).not.toHaveBeenCalled();
             expect(flashSpy).not.toHaveBeenCalled();
         });
