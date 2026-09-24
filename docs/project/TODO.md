@@ -106,12 +106,6 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   style="position: absolute; ... width: 1px; height: 1px;">` directly to `<body>` with no `top` set, so its
   static position (and therefore its layout box) lands one line below the `.flex.h-dvh` wrapper, contributing
   1 px of overflow. Cosmetic, but it fails a byte-exact `scrollHeight <= innerHeight` check.
-- **Mobile drawer's last link still sits behind its footer**. `phone-landscape:overflow-y-auto` on
-  `#mobile-sidebar` was added per plan, but the footer is `position: absolute; bottom: 0` with no space
-  reserved for it in the flow, so it overlaps the last nav link (Settings) by 36 px at 844x390 and by 51 px at
-  667x375 even after scrolling to the end. A full fix needs the footer's height reserved in the flow (for
-  example a `padding-bottom` on `#mobile-nav`, or moving the footer into a flex layout with the nav taking the
-  remaining space) rather than a single utility class.
 
 ## Permanent limitations
 
