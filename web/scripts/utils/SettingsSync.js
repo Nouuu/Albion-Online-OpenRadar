@@ -208,6 +208,8 @@ export class SettingsSync {
 
     getJSON(key) { return this.read(key); }
 
+    getSchemaVersion() { return this._getCached('settingSchemaVersion'); }
+
     setJSON(key, value) {
         try { this.broadcast(key, JSON.stringify(value)); } catch (error) {
             window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncJSONStringifyFailed', {

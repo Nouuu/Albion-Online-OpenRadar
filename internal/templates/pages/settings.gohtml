@@ -8,7 +8,7 @@
             </div>
             <h3 class="text-lg font-semibold text-base-content">Reset All Settings</h3>
         </div>
-        <p class="text-base-content/60 mb-6">This will reset all settings to their default values and reload the page. This action cannot be undone.</p>
+        <p class="text-base-content/60 mb-6">Resets every radar setting and layout preference in this browser to its default, then reloads. Your ignore list is kept. Capture interfaces, backend logs and pcap recording are saved on the radar PC and are not changed.</p>
         <div class="modal-action">
             <form method="dialog">
                 <button class="btn btn-ghost">Cancel</button>
@@ -307,7 +307,7 @@
                     <i data-lucide="download" class="w-4 h-4"></i>
                     Export Debug Data
                 </button>
-                <span class="text-xs text-base-content/50">Download settings and session info as JSON</span>
+                <span class="text-xs text-base-content/50">Downloads registry settings, UI state and backend logging values as JSON. The ignore list is not included.</span>
             </div>
         </div>
     </div>
@@ -350,6 +350,7 @@
 <script>
     (async function () {
         const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
+        const {resetAllSettings, buildDebugExport} = await import('/scripts/utils/SettingControls.js');
 
         let cleanup = [];
 
@@ -413,7 +414,7 @@
                 try {
                     const resp = await fetch(endpoint);
                     if (!resp.ok) {
-                        console.warn(`[Settings] ${endpoint} returned ${resp.status}, falling back to localStorage`);
+                        console.warn(`[Settings] ${endpoint} returned ${resp.status}, falling back to defaults`);
                         return null;
                     }
                     return await resp.json();
@@ -474,9 +475,7 @@
             bindCheckbox("settingLogToConsole");
             bindCheckbox("settingLogToServer");
 
-            // WebSocket performance (default: enabled)
-            if (settingsSync.get("settingDebugWsCoalescing") === null) settingsSync.setBool("settingDebugWsCoalescing", true);
-            if (settingsSync.get("settingWsThrottling") === null) settingsSync.setBool("settingWsThrottling", true);
+            // WebSocket performance
             bindCheckbox("settingDebugWsCoalescing");
             bindCheckbox("settingWsThrottling");
 
@@ -485,20 +484,9 @@
 
             // Download debug logs
             const downloadBtn = document.getElementById('downloadLogsBtn');
-            addListener(downloadBtn, 'click', () => {
+            addListener(downloadBtn, 'click', async () => {
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const debugData = {
-                    timestamp,
-                    session: {
-                        userAgent: navigator.userAgent,
-                        screenResolution: `${window.screen.width}x${window.screen.height}`,
-                        language: navigator.language
-                    },
-                    localStorage: Object.keys(localStorage).reduce((acc, key) => {
-                        if (key.startsWith('setting')) acc[key] = localStorage.getItem(key);
-                        return acc;
-                    }, {})
-                };
+                const debugData = await buildDebugExport(settingsSync, fetch);
 
                 const blob = new Blob([JSON.stringify(debugData, null, 2)], {type: 'application/json'});
                 const url = URL.createObjectURL(blob);
@@ -515,7 +503,7 @@
             });
 
             addListener(document.getElementById("confirmResetSettings"), "click", () => {
-                localStorage.clear();
+                resetAllSettings(settingsSync);
                 document.getElementById('modal-resetSettings').close();
                 if (window.toast) window.toast.success('Settings reset successfully');
                 setTimeout(() => location.reload(), 500);

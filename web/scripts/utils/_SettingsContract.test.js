@@ -9,7 +9,6 @@ const SCAN_ROOTS = ['web/scripts', 'internal/templates'];
 const STORAGE_OWNERS = new Set(['web/scripts/utils/SettingsSync.js', 'web/scripts/utils/SettingsMigration.js']);
 const STORAGE_EXCEPTIONS = {
     'internal/templates/layouts/base.gohtml': 3,
-    'internal/templates/pages/settings.gohtml': 5,
 };
 
 const GETTER = /settingsSync\??\.(get|getBool|getNumber|getFloat|getJSON)\(/g;
