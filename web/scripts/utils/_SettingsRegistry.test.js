@@ -245,10 +245,10 @@ describe('SettingsRegistry', () => {
     test('readout units live on the registry row', () => {
         const units = {
             settingRadarZoom: '%',
-            settingRadarSize: 'px',
+            settingRadarSize: ' px',
             settingRadarIconSize: '%',
             settingAlertSoundVolume: '%',
-            settingAlertSoundCooldown: 'ms',
+            settingAlertSoundCooldown: ' ms',
         };
         for (const [key, unit] of Object.entries(units)) {
             expect(registryEntry(key).unit, key).toBe(unit);

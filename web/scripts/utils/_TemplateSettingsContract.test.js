@@ -24,6 +24,11 @@ const NO_CONTROL_YET = {
 
 const CONTROL_COUNT_EXCEPTIONS = {settingPlayersDetect: 2, settingUiSidebarCollapsed: 0};
 
+const UNBOUND_INPUTS = {
+    'backend toggles keep their fetch binding until they move to their own module': ['settingServerLogsEnabled',
+        'settingPcapRecording'],
+};
+
 const LABELS = {
     settingRadarZoom: 'Zoom',
     settingRadarSize: 'Max size',
@@ -201,6 +206,7 @@ describe('template settings contract', () => {
         const copies = [
             ...all('input[type="range"][data-setting][value]'),
             ...all('input[type="checkbox"][data-setting][checked]'),
+            ...all('[data-setting] input[type="radio"][checked]'),
             ...all('select[data-setting] option[selected]'),
             ...all('[data-value-for]').filter(({el}) => el.textContent.trim() !== ''),
         ].map(({page, el}) => `${page}: ${el.outerHTML.slice(0, 80)}`);
@@ -218,6 +224,15 @@ describe('template settings contract', () => {
                 return [`${key}: ${count} controls, expected ${expected}`];
             });
         expect(drift).toEqual([]);
+    });
+
+    test('converted pages hold no input or select bound by id alone', () => {
+        const allowed = new Set(Object.values(UNBOUND_INPUTS).flat());
+        const unbound = pages.filter(({name, excluded}) => !name.startsWith('layouts/') && !excluded)
+            .flatMap(({name, root}) => [...root.querySelectorAll('input[id]:not([data-setting]), select[id]:not([data-setting])')]
+                .filter(el => !allowed.has(el.id) && !el.closest('[data-setting]'))
+                .map(el => `${name}: ${el.id}`));
+        expect(unbound).toEqual([]);
     });
 
     test('keys listed without a control have none yet', () => {
@@ -263,7 +278,6 @@ describe('page removals', () => {
             'settingRadarClusterRadius', 'settingRadarClusterMinSize']) {
             expect(template).not.toContain(key);
         }
-        expect(template).not.toContain('Debug & Logging');
         expect(template).not.toContain('ResourcesHelper');
     });
 });
@@ -278,13 +292,18 @@ describe('enemies page', () => {
         expect(presets.map(el => el.textContent.trim())).toEqual(['All', 'Clear']);
         expect(template).not.toContain('onclick="applyEnemyPreset');
         expect(template).not.toContain('Mini-Boss+');
-        expect(template).not.toContain('Bosses</button>');
+        expect(template).not.toMatch(/>\s*Bosses\s*<\/button>/);
     });
 
     test('holds no All checkbox, no Debug collapse and no stale logging tip', () => {
         expect(template).not.toContain('settingAllEnemies');
         expect(template).not.toContain('collapse-debug');
-        expect(template).not.toContain('Debug &amp; Logging');
+    });
+});
+
+describe('stale logging links', () => {
+    test.each(pageNames())('%s page links to no "Debug & Logging" section, in either spelling', name => {
+        expect(templateOf(name)).not.toMatch(/Debug (&|&amp;) Logging/);
     });
 });
 

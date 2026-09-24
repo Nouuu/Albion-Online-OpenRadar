@@ -97,6 +97,12 @@ describe('bindSettingControls range', () => {
         expect(readout.textContent).toBe('150%');
     });
 
+    test('readouts put a space before ms and px', () => {
+        const root = mount(`<span data-value-for="settingAlertSoundCooldown"></span><span data-value-for="settingRadarSize"></span>`);
+        bind(root, newSync());
+        expect([...root.querySelectorAll('[data-value-for]')].map(el => el.textContent)).toEqual(['500 ms', '500 px']);
+    });
+
     test('nudge steps and clamps, reset writes the default', () => {
         localStorage.setItem('settingRadarZoom', '2.9');
         const sync = newSync();

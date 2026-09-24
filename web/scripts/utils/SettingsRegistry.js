@@ -16,7 +16,7 @@ const NETWORK_PATHS = {
 
 const ROWS = [
     ['settingRadarZoom', 'float', 1, 'settingRadarZoom', 'keep', {min: 0.1, max: 3, step: 0.1, unit: '%'}],
-    ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 800, step: 50, unit: 'px'}],
+    ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 800, step: 50, unit: ' px'}],
     ['settingRadarFitToScreen', 'bool', false, null, 'new'],
     ['settingRadarIconSize', 'float', 1, 'settingIconSize', 'rename', {min: 0.5, max: 2, step: 0.1, unit: '%'}],
     ['settingRadarRotation', 'enum', 0, null, 'new', {values: [0, 90, 180, 270]}],
@@ -43,7 +43,7 @@ const ROWS = [
     ['settingAlertSoundFile', 'enum', DEFAULT_SOUND, 'settingSoundFile', 'rename',
         {values: ALERT_SOUNDS.map(sound => sound.file), options: ALERT_SOUNDS}],
     ['settingAlertSoundVolume', 'float', 1, 'settingSoundVolume', 'rename', {min: 0, max: 1, step: 0.05, unit: '%'}],
-    ['settingAlertSoundCooldown', 'int', 500, 'settingSoundCooldown', 'rename', {min: 0, max: 3000, step: 100, unit: 'ms'}],
+    ['settingAlertSoundCooldown', 'int', 500, 'settingSoundCooldown', 'rename', {min: 0, max: 3000, step: 100, unit: ' ms'}],
     ['settingIgnoreList', 'json', [], 'ignoreList', 'rename', {shape: 'stringList'}],
     ['settingAllEnemies', 'bool', false, 'settingAllEnemies', 'remove'],
     ['settingEnemiesNormal', 'bool', false, 'settingNormalEnemy', 'rename'],
