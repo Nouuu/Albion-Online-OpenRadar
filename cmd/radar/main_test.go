@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -113,6 +116,78 @@ func TestRunInterfaceDoesNotWaitWhenTheDashboardExitsNormally(t *testing.T) {
 	}
 	if restart {
 		t.Error("a dashboard that did not ask for a restart must report false")
+	}
+}
+
+func TestBootInterfacesAutoPickKeepsLoggingBlock(t *testing.T) {
+	dir := t.TempDir()
+	seed := capture.Config{Logging: capture.LoggingConfig{ServerLogsEnabled: true, PcapRecording: true}}
+	if err := capture.WriteConfig(dir, seed); err != nil {
+		t.Fatalf("seed WriteConfig: %v", err)
+	}
+
+	all := []capture.NetworkInterface{
+		{Name: "eth", Description: "Realtek PCIe GbE Family Controller", Address: "10.0.0.10"},
+	}
+
+	got := bootInterfaces(dir, capture.Config{}, all, "")
+	if len(got) != 1 || got[0].Name != "eth" {
+		t.Fatalf("got %+v, want auto-picked eth", got)
+	}
+
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if !cfg.Logging.ServerLogsEnabled || !cfg.Logging.PcapRecording {
+		t.Errorf("logging block lost after auto-pick persist: %+v", cfg.Logging)
+	}
+	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Name != "eth" {
+		t.Errorf("auto-picked interface not persisted: %+v", cfg.CaptureInterfaces)
+	}
+}
+
+func TestBootInterfacesIPMissLeavesConfigUnchanged(t *testing.T) {
+	dir := t.TempDir()
+	seed := capture.Config{
+		CaptureInterfaces: []capture.PersistedInterface{{Name: "old", Description: "Old"}},
+		Logging:           capture.LoggingConfig{ServerLogsEnabled: true},
+	}
+	if err := capture.WriteConfig(dir, seed); err != nil {
+		t.Fatalf("seed WriteConfig: %v", err)
+	}
+	path := filepath.Join(dir, "network.json")
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile before: %v", err)
+	}
+	infoBefore, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("Stat before: %v", err)
+	}
+
+	all := []capture.NetworkInterface{
+		{Name: "eth", Description: "Realtek PCIe GbE Family Controller", Address: "10.0.0.10"},
+	}
+
+	got := bootInterfaces(dir, seed, all, "10.0.0.99")
+	if len(got) != 1 || got[0].Name != "eth" {
+		t.Fatalf("got %+v, want auto-picked eth for this run", got)
+	}
+
+	after, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("ReadFile after: %v", err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Errorf("network.json bytes changed on -ip miss")
+	}
+	infoAfter, err := os.Stat(path)
+	if err != nil {
+		t.Fatalf("Stat after: %v", err)
+	}
+	if !infoBefore.ModTime().Equal(infoAfter.ModTime()) {
+		t.Errorf("network.json mtime changed on -ip miss")
 	}
 }
 
