@@ -12,11 +12,6 @@ const LAYOUTS_DIR = join(ROOT, 'internal/templates/layouts');
 
 const CONTROL_COUNT_EXCEPTIONS = {settingPlayersDetect: 2, settingUiSidebarCollapsed: 0};
 
-const UNBOUND_INPUTS = {
-    'backend toggles keep their fetch binding until they move to their own module': ['settingServerLogsEnabled',
-        'settingPcapRecording'],
-};
-
 const LABELS = {
     settingRadarZoom: 'Zoom',
     settingRadarSize: 'Max size',
@@ -199,10 +194,9 @@ describe('template settings contract', () => {
     });
 
     test('converted pages hold no input or select bound by id alone', () => {
-        const allowed = new Set(Object.values(UNBOUND_INPUTS).flat());
         const unbound = pages.filter(({name}) => !name.startsWith('layouts/'))
             .flatMap(({name, root}) => [...root.querySelectorAll('input[id]:not([data-setting]), select[id]:not([data-setting])')]
-                .filter(el => !allowed.has(el.id) && !el.closest('[data-setting]'))
+                .filter(el => !el.closest('[data-setting]'))
                 .map(el => `${name}: ${el.id}`));
         expect(unbound).toEqual([]);
     });
@@ -293,6 +287,11 @@ describe('settings page', () => {
             'categoryRendering', 'Rendering']) {
             expect(template).not.toContain(gone);
         }
+    });
+
+    test('holds no inline backend toggle binding', () => {
+        expect(template).not.toContain('bindBackendCheckbox');
+        expect(template).not.toContain('setBool("settingPcapRecording"');
     });
 
     test('the Logging banner tells where backend and browser errors are saved', () => {

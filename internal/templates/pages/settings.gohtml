@@ -236,10 +236,10 @@
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                        <input type="checkbox" id="settingDebugPcapRecording" data-setting="settingDebugPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
                         <i data-lucide="circle-dot" class="w-4 h-4 text-base-content/50"></i>
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
-                        <div class="tooltip" data-tip="Record the raw network capture to logs/captures/. Useful for debugging without running tcpdump externally.">
+                        <span data-setting-label="settingDebugPcapRecording" class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
+                        <div class="tooltip" data-setting-tip="settingDebugPcapRecording" data-tip="Records Albion game traffic (UDP 5056) to logs/captures/, one .pcap per capture interface. Only changeable from the PC running the radar.">
                             <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                         {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
@@ -253,10 +253,10 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingServerLogsEnabled" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                        <input type="checkbox" id="settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
                         <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Save Backend Logs</span>
-                        <div class="tooltip" data-tip="Save backend (Go) logs to logs/sessions/. Errors are always saved to logs/errors/.">
+                        <span data-setting-label="settingDebugBackendLogs" class="text-base-content/80 text-xs group-hover:text-base-content">Save backend logs</span>
+                        <div class="tooltip" data-setting-tip="settingDebugBackendLogs" data-tip="Writes one line per decoded game event to logs/sessions/. Only changeable from the PC running the radar.">
                             <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                         {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
@@ -304,42 +304,9 @@
 {{define "scripts/settings"}}
 <script>
     import('/scripts/utils/SettingControls.js').then(({registerBoundPage, resetAllSettings, buildDebugExport}) => registerBoundPage('settings', {
-        async init({signal}) {
+        async init({root, signal}) {
             const settingsSync = window.settingsSync;
             const byId = id => document.getElementById(id);
-
-            async function fetchBackendSettings(endpoint) {
-                try {
-                    const resp = await fetch(endpoint);
-                    if (!resp.ok) {
-                        console.warn(`[Settings] ${endpoint} returned ${resp.status}, falling back to defaults`);
-                        return null;
-                    }
-                    return await resp.json();
-                } catch (err) {
-                    console.warn(`[Settings] ${endpoint} fetch failed:`, err);
-                    return null;
-                }
-            }
-
-            function bindBackendCheckbox(id, endpoint, fieldName) {
-                const el = byId(id);
-                if (!el) return;
-                el.checked = settingsSync.getBool(id);
-                el.addEventListener("change", async (e) => {
-                    const checked = e.target.checked;
-                    settingsSync.setBool(id, checked);
-                    try {
-                        await fetch(endpoint, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({[fieldName]: checked})
-                        });
-                    } catch (err) {
-                        console.warn(`[Settings] POST ${endpoint} failed:`, err);
-                    }
-                }, {signal});
-            }
 
             byId('downloadLogsBtn')?.addEventListener('click', async () => {
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -365,14 +332,15 @@
                 setTimeout(() => location.reload(), 500);
             }, {signal});
 
-            const loggingSettings = await fetchBackendSettings('/api/settings/logging');
+            const {BackendLoggingToggles} = await import('/scripts/utils/BackendLoggingToggles.js');
             if (signal.aborted) return;
-            if (loggingSettings) {
-                settingsSync.setBool("settingServerLogsEnabled", loggingSettings.serverLogsEnabled);
-                settingsSync.setBool("settingPcapRecording", loggingSettings.pcapRecording);
+            const hostContainer = root.querySelector('[data-is-host]');
+            if (hostContainer) {
+                const backendToggles = new BackendLoggingToggles(hostContainer);
+                signal.addEventListener('abort', () => backendToggles.destroy(), {once: true});
+                await backendToggles.load();
+                if (signal.aborted) return;
             }
-            bindBackendCheckbox("settingServerLogsEnabled", "/api/settings/logging", "serverLogsEnabled");
-            bindBackendCheckbox("settingPcapRecording", "/api/settings/logging", "pcapRecording");
 
             const {NetworkSettingsHandler} = await import('/scripts/handlers/NetworkSettingsHandler.js');
             const networkContainer = byId('network-section');
