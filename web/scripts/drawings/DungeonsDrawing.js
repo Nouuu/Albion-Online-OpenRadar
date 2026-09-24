@@ -1,4 +1,5 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
+import settingsSync from "../utils/SettingsSync.js";
 
 export class DungeonsDrawing extends DrawingUtils
 {
@@ -16,6 +17,7 @@ export class DungeonsDrawing extends DrawingUtils
         for (const dungeonOne of dungeons)
         {
             if (dungeonOne.drawName === undefined) continue;
+            if ((dungeonOne.settingKeys || []).some(key => !settingsSync.getBool(key))) continue;
 
             const point = this.transformPoint(dungeonOne.hX, dungeonOne.hY);
             this.DrawCustomImage(ctx, point.x, point.y, dungeonOne.drawName, "Resources", 28);

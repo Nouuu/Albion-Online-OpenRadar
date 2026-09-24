@@ -1,5 +1,4 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../utils/SettingsSync.js";
 
 const DungeonType =
 {
@@ -11,7 +10,7 @@ const DungeonType =
 
 class Dungeon
 {
-    constructor(id, posX, posY, name, type, enchant)
+    constructor(id, posX, posY, name, type, enchant, settingKeys)
     {
         this.id = id;
         this.posX = posX;
@@ -20,6 +19,7 @@ class Dungeon
         this.enchant = enchant;
 
         this.type = type;
+        this.settingKeys = settingKeys;
 
         this.drawName = undefined
 
@@ -103,6 +103,7 @@ export class DungeonsHandler
         const lowerCaseName = name.toLowerCase();
         // eslint-disable-next-line no-useless-assignment
         let dungeonType = undefined;
+        let settingKeys;
 
         // MISTS portals route through the Mists settings, not Dungeon settings.
         if (upperCaseName.startsWith("MISTS_"))
@@ -110,11 +111,11 @@ export class DungeonsHandler
             const isSolo = upperCaseName.includes("_SOLO_");
 
             if (isSolo) {
-                if (!settingsSync.getBool("settingMistsSolo") || !settingsSync.getBool("settingMistsEnchant" + enchant)) return;
                 dungeonType = DungeonType.Solo;
+                settingKeys = ["settingMistsSolo", "settingMistsEnchant" + enchant];
             } else {
-                if (!settingsSync.getBool("settingMistsDuo") || !settingsSync.getBool("settingMistsEnchant" + enchant)) return;
                 dungeonType = DungeonType.Group;
+                settingKeys = ["settingMistsDuo", "settingMistsEnchant" + enchant];
             }
         }
         // Corrupted dungeons have "solo" in their names
@@ -122,33 +123,27 @@ export class DungeonsHandler
         // "CORRUPTED_SOLO"
         else if (lowerCaseName.includes("corrupted")) // corrupt
         {
-            // Test if corrupt checkbox
-            if (!settingsSync.getBool("settingDungeonsCorrupted")) return;
-
             dungeonType = DungeonType.Corrupted;
+            settingKeys = ["settingDungeonsCorrupted"];
         }
         else if (lowerCaseName.includes("solo")) // solo
         {
-            // Test if solo checkbox
-            if (!settingsSync.getBool("settingDungeonsSolo") || !settingsSync.getBool('settingDungeonsEnchant'+enchant)) return;
-
             dungeonType = DungeonType.Solo;
+            settingKeys = ["settingDungeonsSolo", "settingDungeonsEnchant" + enchant];
         }
         // "HELLGATE_2V2_NON_LETHAL"
         else if (lowerCaseName.includes("hellgate")) // hellgate
         {
-            if (!settingsSync.getBool('settingDungeonsHellgate')) return;
-
-            dungeonType = DungeonType.Hellgate
-
+            dungeonType = DungeonType.Hellgate;
+            settingKeys = ["settingDungeonsHellgate"];
         }
         else // group
         {
-            if (!settingsSync.getBool('settingDungeonsGroup') || !settingsSync.getBool('settingDungeonsEnchant'+enchant)) return;
             dungeonType = DungeonType.Group;
+            settingKeys = ["settingDungeonsGroup", "settingDungeonsEnchant" + enchant];
         }
 
-        const d = new Dungeon(id, posX, posY, name, dungeonType, enchant);
+        const d = new Dungeon(id, posX, posY, name, dungeonType, enchant, settingKeys);
         this.dungeonList.push(d);
     }
 
