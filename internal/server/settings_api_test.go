@@ -51,7 +51,7 @@ func newSettingsTestMux(t *testing.T, dir string) (*http.ServeMux, *logger.Logge
 	t.Helper()
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
-	api := NewSettingsAPI(dir, log, nil, "")
+	api := NewSettingsAPI(dir, log, nil, "", &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 	return mux, log
@@ -59,7 +59,6 @@ func newSettingsTestMux(t *testing.T, dir string) (*http.ServeMux, *logger.Logge
 
 func TestSettingsLogging_GetReturnsCurrentConfig(t *testing.T) {
 	dir := t.TempDir()
-	// File says the opposite of the runtime state; GET must report the runtime.
 	if err := capture.WriteConfig(dir, capture.Config{
 		Logging: capture.LoggingConfig{ServerLogsEnabled: false, PcapRecording: true},
 	}); err != nil {
@@ -70,7 +69,7 @@ func TestSettingsLogging_GetReturnsCurrentConfig(t *testing.T) {
 	t.Cleanup(func() { log.Stop() })
 	log.SetEnabled(true)
 	rec := &fakeRecorder{recording: false}
-	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 
@@ -275,7 +274,7 @@ func TestSettingsLogging_PostStartsRecording(t *testing.T) {
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
 	rec := &fakeRecorder{}
-	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 
@@ -304,7 +303,7 @@ func TestSettingsLogging_PostStopsRecording(t *testing.T) {
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
 	rec := &fakeRecorder{recording: true}
-	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 
@@ -333,7 +332,7 @@ func TestSettingsLogging_PostStartFailureReportsFalse(t *testing.T) {
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
 	rec := &fakeRecorder{startErr: errors.New("no permission")}
-	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 
@@ -388,7 +387,6 @@ func TestSettingsLogging_ConcurrentPostAndInterfacesPersist(t *testing.T) {
 	}()
 	go func() {
 		defer wg.Done()
-		// Stands in for the interfaces POST, which does not share applyMu yet.
 		_ = capture.MutateConfig(dir, func(cfg *capture.Config) {
 			cfg.CaptureInterfaces = []capture.PersistedInterface{{Name: "eth0"}}
 		})

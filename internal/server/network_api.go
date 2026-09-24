@@ -29,10 +29,11 @@ type NetworkAPI struct {
 	all      []capture.NetworkInterface
 	appDir   string
 	lanAddrs LANAddrFn
+	applyMu  *sync.Mutex
 }
 
-func NewNetworkAPI(mgr NetworkManager, all []capture.NetworkInterface, appDir string, lan LANAddrFn) *NetworkAPI {
-	return &NetworkAPI{mgr: mgr, all: all, appDir: appDir, lanAddrs: lan}
+func NewNetworkAPI(mgr NetworkManager, all []capture.NetworkInterface, appDir string, lan LANAddrFn, applyMu *sync.Mutex) *NetworkAPI {
+	return &NetworkAPI{mgr: mgr, all: all, appDir: appDir, lanAddrs: lan, applyMu: applyMu}
 }
 
 func (a *NetworkAPI) Register(mux *http.ServeMux) {

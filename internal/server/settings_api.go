@@ -21,16 +21,17 @@ type SettingsAPI struct {
 	logger     *logger.Logger
 	recorder   Recorder
 	captureDir string
-	applyMu    sync.Mutex
+	applyMu    *sync.Mutex
 }
 
 // NewSettingsAPI creates a SettingsAPI. recorder may be nil (recording calls are skipped).
-func NewSettingsAPI(appDir string, log *logger.Logger, recorder Recorder, captureDir string) *SettingsAPI {
+func NewSettingsAPI(appDir string, log *logger.Logger, recorder Recorder, captureDir string, applyMu *sync.Mutex) *SettingsAPI {
 	return &SettingsAPI{
 		appDir:     appDir,
 		logger:     log,
 		recorder:   recorder,
 		captureDir: captureDir,
+		applyMu:    applyMu,
 	}
 }
 
@@ -43,7 +44,6 @@ func (a *SettingsAPI) handleGet(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, a.runtimeLogging())
 }
 
-// runtimeLogging reports what is actually running, not what network.json says.
 func (a *SettingsAPI) runtimeLogging() capture.LoggingConfig {
 	return capture.LoggingConfig{
 		ServerLogsEnabled: a.logger != nil && a.logger.IsEnabled(),

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nospy/albion-openradar/internal/capture"
@@ -38,6 +39,7 @@ type HTTPServer struct {
 	networkAPI  *NetworkAPI
 	settingsAPI *SettingsAPI
 	alertAPI    *AlertAPI
+	applyMu     sync.Mutex
 }
 
 // buildID fingerprints the embedded assets. It is empty for an unversioned build,
@@ -118,9 +120,9 @@ func NewHTTPServer(
 		assetID:   buildID(version, buildTime),
 	}
 	if mgr != nil {
-		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
+		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses, &s.applyMu)
 	}
-	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
+	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir, &s.applyMu)
 	s.alertAPI = NewAlertAPI(newAlertPlayer(s.sounds))
 	s.setupRoutes()
 	return s, nil
@@ -163,9 +165,9 @@ func NewHTTPServerDev(
 		devMode:   true,
 	}
 	if mgr != nil {
-		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses)
+		s.networkAPI = NewNetworkAPI(mgr, allInterfaces, appDir, capture.LANAddresses, &s.applyMu)
 	}
-	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir)
+	s.settingsAPI = NewSettingsAPI(appDir, log, recorder, captureDir, &s.applyMu)
 	s.alertAPI = NewAlertAPI(newAlertPlayer(s.sounds))
 	s.setupRoutes()
 	return s, nil

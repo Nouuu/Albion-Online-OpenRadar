@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -96,7 +97,7 @@ func newTestServerBuild(t *testing.T, version, buildTime string, devMode bool) *
 		assetID: buildID(version, buildTime),
 		devMode: devMode,
 	}
-	s.settingsAPI = NewSettingsAPI(t.TempDir(), log, nil, t.TempDir())
+	s.settingsAPI = NewSettingsAPI(t.TempDir(), log, nil, t.TempDir(), &sync.Mutex{})
 	s.setupRoutes()
 	return s
 }

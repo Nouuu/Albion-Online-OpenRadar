@@ -58,7 +58,7 @@ func TestNetworkAPI_ListReturnsCategorized(t *testing.T) {
 			Active: []capture.CaptureSummary{{Name: "n1"}},
 		},
 	}
-	api := NewNetworkAPI(fm, fm.allInterfaces, "/tmp/notused", func() []string { return []string{"192.168.1.5"} })
+	api := NewNetworkAPI(fm, fm.allInterfaces, "/tmp/notused", func() []string { return []string{"192.168.1.5"} }, &sync.Mutex{})
 	mux := newTestMux(api)
 	req := httptest.NewRequest(http.MethodGet, "/api/network/interfaces", nil)
 	rec := httptest.NewRecorder()
@@ -87,7 +87,7 @@ func TestNetworkAPI_PostFromLoopback(t *testing.T) {
 		},
 	}
 	dir := t.TempDir()
-	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil })
+	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"x"}})
@@ -110,7 +110,7 @@ func TestNetworkAPI_PostFromLoopback(t *testing.T) {
 func TestNetworkAPI_PostFromLanRejected(t *testing.T) {
 	fm := &fakeManager{}
 	dir := t.TempDir()
-	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"x"}})
@@ -133,7 +133,7 @@ func TestNetworkAPI_StateShape(t *testing.T) {
 			Active: []capture.CaptureSummary{{Name: "x", Description: "Wi-Fi", Address: "10.0.0.1"}},
 		},
 	}
-	api := NewNetworkAPI(fm, nil, "/tmp", func() []string { return []string{"192.168.1.1"} })
+	api := NewNetworkAPI(fm, nil, "/tmp", func() []string { return []string{"192.168.1.1"} }, &sync.Mutex{})
 	mux := newTestMux(api)
 	req := httptest.NewRequest(http.MethodGet, "/api/network/state", nil)
 	rec := httptest.NewRecorder()
@@ -182,7 +182,7 @@ func TestNetworkAPI_PostUnknownNames(t *testing.T) {
 		allInterfaces: []capture.NetworkInterface{{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"}},
 	}
 	dir := t.TempDir()
-	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil })
+	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"a", "unknown"}})
@@ -204,7 +204,7 @@ func TestNetworkAPI_PostUnknownNames(t *testing.T) {
 func TestNetworkAPI_PostMalformedBody(t *testing.T) {
 	fm := &fakeManager{}
 	dir := t.TempDir()
-	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/network/interfaces", bytes.NewReader([]byte("{not json")))
@@ -221,7 +221,7 @@ func TestNetworkAPI_PostMalformedBody(t *testing.T) {
 
 func TestNetworkAPI_RefreshGETIs405(t *testing.T) {
 	fm := &fakeManager{}
-	api := NewNetworkAPI(fm, nil, t.TempDir(), func() []string { return nil })
+	api := NewNetworkAPI(fm, nil, t.TempDir(), func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/network/refresh", nil)
@@ -234,7 +234,7 @@ func TestNetworkAPI_RefreshGETIs405(t *testing.T) {
 
 func TestNetworkAPI_StatePOSTIs405(t *testing.T) {
 	fm := &fakeManager{}
-	api := NewNetworkAPI(fm, nil, t.TempDir(), func() []string { return nil })
+	api := NewNetworkAPI(fm, nil, t.TempDir(), func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/network/state", nil)
@@ -257,7 +257,7 @@ func TestNetworkSelect_PreservesLogging(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("seed config: %v", err)
 	}
-	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil })
+	api := NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	body, _ := json.Marshal(map[string]any{"names": []string{"eth0"}})
@@ -287,7 +287,7 @@ func TestNetworkAPI_RefreshConcurrentSafe(t *testing.T) {
 	fm := &fakeManager{
 		allInterfaces: []capture.NetworkInterface{{Name: "n1", Description: "Wi-Fi", Address: "10.0.0.1"}},
 	}
-	api := NewNetworkAPI(fm, fm.allInterfaces, t.TempDir(), func() []string { return nil })
+	api := NewNetworkAPI(fm, fm.allInterfaces, t.TempDir(), func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	var wg sync.WaitGroup
@@ -360,10 +360,10 @@ func TestHostOnly_RejectsLANOnThreePostRoutes(t *testing.T) {
 	}
 
 	fm := &fakeManager{}
-	netAPI := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	netAPI := NewNetworkAPI(fm, nil, dir, func() []string { return nil }, &sync.Mutex{})
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
-	settingsAPI := NewSettingsAPI(dir, log, nil, "")
+	settingsAPI := NewSettingsAPI(dir, log, nil, "", &sync.Mutex{})
 
 	mux := http.NewServeMux()
 	netAPI.Register(mux)
@@ -410,7 +410,7 @@ func TestHostOnly_RejectsLANOnThreePostRoutes(t *testing.T) {
 func TestHostOnly_GETsStayOpenFromLAN(t *testing.T) {
 	fm := &fakeManager{}
 	dir := t.TempDir()
-	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil }, &sync.Mutex{})
 	mux := newTestMux(api)
 
 	for _, path := range []string{"/api/network/interfaces", "/api/network/state"} {
