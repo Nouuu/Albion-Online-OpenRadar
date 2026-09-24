@@ -62,18 +62,19 @@
     <!-- Must be in head before sidebar template -->
     <script>
         window.sidebar = {
-            collapsed: (localStorage.getItem('settingUiSidebarCollapsed') ?? localStorage.getItem('sidebarCollapsed')) === 'true',
+            collapsed: false,
             hoverExpanded: false,
             hoverTimeout: null,
 
             init() {
+                this.collapsed = window.settingsSync.getBool('settingUiSidebarCollapsed');
                 this.updateClasses();
                 if (window.lucide) lucide.createIcons();
             },
 
             toggle() {
                 this.collapsed = !this.collapsed;
-                localStorage.setItem('settingUiSidebarCollapsed', this.collapsed);
+                window.settingsSync.setBool('settingUiSidebarCollapsed', this.collapsed);
                 this.updateClasses();
             },
 

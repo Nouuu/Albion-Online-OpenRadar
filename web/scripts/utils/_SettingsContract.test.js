@@ -7,9 +7,6 @@ import {describe, test, expect} from 'vitest';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 const SCAN_ROOTS = ['web/scripts', 'internal/templates'];
 const STORAGE_OWNERS = new Set(['web/scripts/utils/SettingsSync.js', 'web/scripts/utils/SettingsMigration.js']);
-const STORAGE_EXCEPTIONS = {
-    'internal/templates/layouts/base.gohtml': 3,
-};
 
 const GETTER = /settingsSync\??\.(get|getBool|getNumber|getFloat|getJSON)\(/g;
 const LITERAL_FALLBACK = /^\s*(\|\||\?\?)\s*(-?\d|'|"|`|true\b|false\b|null\b|\[|\{)/;
@@ -66,8 +63,21 @@ describe('settings access contract', () => {
         for (const {abs, rel} of productionFiles()) {
             if (STORAGE_OWNERS.has(rel)) continue;
             const count = (readFileSync(abs, 'utf8').match(/localStorage/g) ?? []).length;
-            if (count > (STORAGE_EXCEPTIONS[rel] ?? 0)) hits.push(`${rel}: localStorage ${count}x`);
+            if (count > 0) hits.push(`${rel}: localStorage ${count}x`);
         }
         expect(hits).toEqual([]);
+    });
+});
+
+describe('base layout sidebar contract', () => {
+    const baseTemplate = readFileSync(join(ROOT, 'internal/templates/layouts/base.gohtml'), 'utf8');
+
+    test('the head keeps no localStorage access', () => {
+        expect(baseTemplate).not.toContain('localStorage');
+    });
+
+    test('init and toggle go through settingsSync', () => {
+        expect(baseTemplate).toContain("settingsSync.getBool('settingUiSidebarCollapsed')");
+        expect(baseTemplate).toContain("settingsSync.setBool('settingUiSidebarCollapsed'");
     });
 });
