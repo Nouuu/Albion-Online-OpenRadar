@@ -1,6 +1,8 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
-import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
+import {loadRealItemsDatabase, loadRealZonesDatabase} from '../__fixtures__/realDatabases.js';
+import {mountPage} from '../__fixtures__/pageMarkup.js';
+import * as PlayerListRenderer from '../core/PlayerListRenderer.js';
 
 const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
 
@@ -14,7 +16,8 @@ vi.mock('../utils/SettingsSync.js', () => ({
     },
 }));
 
-vi.mock('../data/ZonesDatabase.js', () => ({
+vi.mock('../data/ZonesDatabase.js', async importOriginal => ({
+    ...await importOriginal(),
     default: {
         getPvpType: vi.fn(() => 'safe'),
     },
@@ -129,24 +132,32 @@ describe('PlayersHandler', () => {
             expect(result).toBe(2);
         });
 
-        // @verified 2026-04-18: settingPlayersDetect=false causes early return with no entity added.
-        test('synthetic: settingPlayersDetect=false skips detection and returns 2', () => {
+        // @verified 2026-09-24: detection off still tracks the player, so turning it on shows the list at once,
+        // while the alert gate stays shut.
+        test('synthetic: settingPlayersDetect=false tracks the player without alerting and returns 2', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
             settingsSync.getBool.mockImplementation(k => k !== 'settingPlayersDetect');
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
 
-            const result = handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            const result = handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
-            expect(handler.getSize()).toBe(0);
+            expect(handler.getSize()).toBe(1);
             expect(result).toBe(2);
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-04-18: when list is at max capacity, new spawn is silently dropped.
-        test('synthetic: list at maxPlayers capacity prevents insertion', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingPlayersMaxDisplayed' ? 2 : d);
-            handler.handleNewPlayerEvent(1, {1: 'A', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            handler.handleNewPlayerEvent(2, {1: 'B', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            handler.handleNewPlayerEvent(3, {1: 'C', 8: '', 53: 0, 51: null, 40: [], 43: []});
+        // @verified 2026-09-24: tracking stops at a fixed 100; Max players only caps the displayed list.
+        test('synthetic: tracking caps at 100 while Max players caps the displayed list', () => {
+            settingsSync.getNumber.mockImplementation(k => k === 'settingPlayersMaxDisplayed' ? 2 : registryDefault(k));
+            for (let id = 1; id <= 101; id++) {
+                handler.handleNewPlayerEvent(id, {1: `P${id}`, 8: '', 53: 0, 51: null, 40: [], 43: []});
+            }
 
-            expect(handler.getSize()).toBe(2);
+            expect(handler.getSize()).toBe(100);
+            expect(handler.playersList.some(p => p.id === 101)).toBe(false);
+            expect(handler.getPlayersByType().passive.map(p => p.id)).toEqual([1, 2]);
         });
 
         // @verified 2026-04-18: passive player in safe zone does not trigger audio.
@@ -857,6 +868,106 @@ describe('PlayersHandler', () => {
             handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
             expect(handler.getThreatPlayers()).toHaveLength(2);
+        });
+    });
+
+    // pcap-derived: players/spawn.json (8 spawns) and players/faction-spawn.json (4 spawns) replayed in zone 0317,
+    // a black zone in the real zones database; synthetic: the faction flip and the 1500 ms list tick.
+    describe('detection switch, threat list and display cap', () => {
+        const realZones = loadRealZonesDatabase();
+        let detect;
+
+        const spawnAll = async scenario => {
+            const fx = await loadFixture('players', scenario);
+            for (const msg of fx.messages) {
+                const p = normalizeParams(msg.parameters);
+                handler.handleNewPlayerEvent(p[0], p);
+            }
+            return fx.messages.map(m => m.parameters['0']);
+        };
+
+        const cards = () => document.querySelectorAll('#hostileList [data-player-id]').length;
+
+        beforeEach(() => {
+            detect = true;
+            settingsSync.getBool.mockImplementation(k => k === 'settingPlayersDetect' ? detect : true);
+            zonesDatabase.getPvpType.mockImplementation(id => realZones.getPvpType(id));
+            window.currentMapId = '0317';
+            window.settingsSync = settingsSync;
+            mountPage('radar');
+            PlayerListRenderer.reset();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+            PlayerListRenderer.reset();
+            delete window.settingsSync;
+            document.body.innerHTML = '';
+        });
+
+        // @verified 2026-09-24: players seen while detection is off show on the first list tick after it turns on,
+        // and turning it on raises no alert for them.
+        test('detection off then on in 0317 lists the 8 spawns after one tick with no flash or sound', async () => {
+            vi.useFakeTimers();
+            detect = false;
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+            await spawnAll('spawn');
+            setInterval(() => PlayerListRenderer.update(handler), 1500);
+
+            detect = true;
+            vi.advanceTimersByTime(1500);
+            vi.advanceTimersToNextFrame();
+
+            expect(cards()).toBe(8);
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-09-24: with detection off, a tracked player turning hostile fires no flash, sound or border.
+        test('detection off: a tracked player turning hostile raises no flash, sound or border', async () => {
+            detect = false;
+            const [id] = await spawnAll('spawn');
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+
+            handler.updatePlayerFaction(id, 255);
+
+            expect(handler.playersList.find(p => p.id === id)?.faction).toBe(255);
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
+            expect(handler.getThreatPlayers()).toEqual([]);
+        });
+
+        // @verified 2026-09-24: the threat list honors the ignore list; 1441 belongs to the ignored guild.
+        test('faction-spawn in 0317 with ignore list ["Treasure Map"] returns 3 threats, not 1441', async () => {
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['Treasure Map'] : null);
+            await spawnAll('faction-spawn');
+
+            const ids = handler.getThreatPlayers().map(p => p.id);
+
+            expect(ids).toHaveLength(3);
+            expect(ids).not.toContain(1441);
+        });
+
+        // @verified 2026-09-24: Max players caps the cards and #playerStats; the HUD row counts every filtered player.
+        test('Max players 2 then 50 shows 2 then 8, #playerStats follows, the HUD row counts all', async () => {
+            vi.useFakeTimers();
+            settingsSync.getNumber.mockImplementation(k => k === 'settingPlayersMaxDisplayed' ? 2 : registryDefault(k));
+            await spawnAll('spawn');
+
+            PlayerListRenderer.update(handler);
+            vi.advanceTimersToNextFrame();
+            expect(cards()).toBe(2);
+            expect(document.getElementById('statHostile').textContent).toBe('2');
+            expect(handler.getFilteredPlayers()).toHaveLength(8);
+
+            settingsSync.getNumber.mockImplementation(k => registryDefault(k));
+            PlayerListRenderer.update(handler);
+            vi.advanceTimersToNextFrame();
+            expect(cards()).toBe(8);
+            expect(document.getElementById('statHostile').textContent).toBe('8');
+            expect(handler.getFilteredPlayers()).toHaveLength(8);
         });
     });
 });
