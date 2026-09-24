@@ -161,6 +161,31 @@ describe('radar page entry', () => {
         expect([...order].sort((a, b) => a - b)).toEqual(order);
     });
 
+    test('@verified 2026-09-24: a throwing fullscreen exit still tears the radar down', async () => {
+        await page.init();
+        stub(document, 'fullscreenElement', document.documentElement);
+        stub(document, 'exitFullscreen', vi.fn(() => { throw new Error('denied'); }));
+        WebSocketManager.disconnect.mockClear();
+
+        await expect(page.destroy()).rejects.toThrow('denied');
+
+        expect(WebSocketManager.disconnect).toHaveBeenCalledTimes(1);
+        expect(observers[0].disconnect).toHaveBeenCalledTimes(1);
+        stub(document, 'fullscreenElement', null);
+    });
+
+    test('@verified 2026-09-24: a throwing panel destroy still exits fullscreen and tears the radar down', async () => {
+        await page.init();
+        stub(document, 'fullscreenElement', document.documentElement);
+        observers[0].disconnect.mockImplementationOnce(() => { throw new Error('observer'); });
+        WebSocketManager.disconnect.mockClear();
+
+        await expect(page.destroy()).rejects.toThrow('observer');
+
+        expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+        expect(WebSocketManager.disconnect).toHaveBeenCalledTimes(1);
+    });
+
     test('@verified 2026-09-24: destroy leaves fullscreen alone when it is not active', async () => {
         await page.init();
 

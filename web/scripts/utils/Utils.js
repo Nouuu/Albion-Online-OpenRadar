@@ -351,9 +351,15 @@ export async function initRadarPage({root, signal}) {
 }
 
 export async function destroyRadarPage() {
-    destroyRadarSettingsPanel();
-    exitFullscreenIfActive();
-    destroyRadar();
+    try {
+        try {
+            destroyRadarSettingsPanel();
+        } finally {
+            exitFullscreenIfActive();
+        }
+    } finally {
+        destroyRadar();
+    }
 }
 
 window.addEventListener('beforeunload', () => {
