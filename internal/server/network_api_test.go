@@ -23,12 +23,23 @@ type fakeManager struct {
 	reconfArgs    []capture.NetworkInterface
 	reconfErr     error
 	allInterfaces []capture.NetworkInterface
+	recording     bool
 }
 
 func (f *fakeManager) State() capture.State { return f.state }
+func (f *fakeManager) IsRecording() bool    { return f.recording }
 func (f *fakeManager) Reconfigure(t []capture.NetworkInterface) error {
 	f.reconfArgs = slices.Clone(t)
 	return f.reconfErr
+}
+
+var _ NetworkManager = (*capture.Manager)(nil)
+
+func TestNetworkManager_ExposesIsRecording(t *testing.T) {
+	var nm NetworkManager = &fakeManager{recording: true}
+	if !nm.IsRecording() {
+		t.Error("NetworkManager.IsRecording() = false, want true")
+	}
 }
 
 func newTestMux(api *NetworkAPI) *http.ServeMux {

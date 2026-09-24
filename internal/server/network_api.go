@@ -18,6 +18,7 @@ const hostOnlyMessage = "Only the PC running the radar can change this."
 type NetworkManager interface {
 	State() capture.State
 	Reconfigure([]capture.NetworkInterface) error
+	IsRecording() bool
 }
 
 type LANAddrFn func() []string
