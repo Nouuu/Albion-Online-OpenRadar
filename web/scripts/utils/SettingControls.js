@@ -165,7 +165,8 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
     bindings.get(root)?.abort();
     const binding = new AbortController();
     bindings.set(root, binding);
-    const bound = AbortSignal.any([signal, binding.signal]);
+    signal.addEventListener('abort', () => binding.abort(), {once: true});
+    const bound = binding.signal;
 
     const keys = new Set();
     for (const el of root.querySelectorAll('[data-setting]')) {
