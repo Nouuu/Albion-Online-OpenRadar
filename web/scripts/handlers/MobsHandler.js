@@ -18,10 +18,10 @@ export const EnemyType =
 const MIST_PORTAL_NAME_PREFIX = 'MISTS_';
 
 const MIST_BOSSES = [
-    {match: '_MOB_MISTS_FAIRYDRAGON', icon: 'FAIRYDRAGON', setting: 'settingBossFairyDragon'},
-    {match: '_MOB_MISTS_GRIFFIN', icon: 'GRIFFIN', setting: 'settingBossGriffin'},
-    {match: '_MOB_MISTS_SPIDER', icon: 'VEILWEAVER', setting: 'settingBossVeilWeaver'},
-    {match: '_MOB_ARCANE_CRYSTALSPIDER', icon: 'CRYSTALSPIDER', setting: 'settingBossCrystalSpider'},
+    {match: '_MOB_MISTS_FAIRYDRAGON', icon: 'FAIRYDRAGON', setting: 'settingEnemiesMistsFairyDragon'},
+    {match: '_MOB_MISTS_GRIFFIN', icon: 'GRIFFIN', setting: 'settingEnemiesMistsGriffin'},
+    {match: '_MOB_MISTS_SPIDER', icon: 'VEILWEAVER', setting: 'settingEnemiesMistsVeilWeaver'},
+    {match: '_MOB_ARCANE_CRYSTALSPIDER', icon: 'CRYSTALSPIDER', setting: 'settingEnemiesMistsCrystalSpider'},
 ];
 
 export function findMistBoss(uniqueName) {
@@ -34,10 +34,10 @@ export function isMistPortalName(name) {
 
 export function getSettingNameForEnemyType(type) {
     switch (type) {
-        case EnemyType.Enemy: return 'settingNormalEnemy';
-        case EnemyType.EnchantedEnemy: return 'settingEnchantedEnemy';
-        case EnemyType.MiniBoss: return 'settingMiniBossEnemy';
-        case EnemyType.Boss: return 'settingBossEnemy';
+        case EnemyType.Enemy: return 'settingEnemiesNormal';
+        case EnemyType.EnchantedEnemy: return 'settingEnemiesChampion';
+        case EnemyType.MiniBoss: return 'settingEnemiesMiniBoss';
+        case EnemyType.Boss: return 'settingEnemiesBoss';
         default: return null;
     }
 }
@@ -279,7 +279,7 @@ export class MobsHandler {
         this.mobsList = this.mobsList.filter(m => m.id !== id);
         const after = this.mobsList.length;
 
-        // 🐛 DEBUG (filtered by categoryMobs setting) - Detailed mob removal
+        // 🐛 DEBUG (filtered by settingLogCategoryMobs setting) - Detailed mob removal
         if (before !== after) {
             window.logger?.debug(CATEGORIES.MOBS, 'mob_removed', {
                 id: id,

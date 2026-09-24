@@ -91,7 +91,7 @@ export class PlayersHandler {
 
     playThreatSound() {
         const at = Date.now();
-        const cooldown = settingsSync.getNumber('settingSoundCooldown', 500);
+        const cooldown = settingsSync.getNumber('settingAlertSoundCooldown', 500);
         const sinceLastMs = at - this.lastThreatSoundAt;
         if (sinceLastMs < cooldown) {
             window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundDropped', {sinceLastMs, cooldown});
@@ -112,7 +112,7 @@ export class PlayersHandler {
     }
 
     isIgnored({nickname, guildName, allianceName}) {
-        const entries = settingsSync.getJSON('ignoreList', []);
+        const entries = settingsSync.getJSON('settingIgnoreList', []);
         if (!Array.isArray(entries) || entries.length === 0) return false;
 
         const identities = [nickname, guildName, allianceName]
@@ -165,7 +165,7 @@ export class PlayersHandler {
 
     handleNewPlayerEvent(id, Parameters) {
         // 🔍 Check if player detection is enabled
-        if (!settingsSync.getBool('settingShowPlayers')) {
+        if (!settingsSync.getBool('settingPlayersDetect')) {
             return 2; // Skip detection if disabled
         }
 
@@ -180,7 +180,7 @@ export class PlayersHandler {
         const hasFaction = Parameters[53] !== undefined;
 
         const existingPlayer = this.playersList.find(player => player.id === id);
-        const parsedMaxPlayers = settingsSync.getNumber('settingMaxPlayersDisplay', 50);
+        const parsedMaxPlayers = settingsSync.getNumber('settingPlayersMaxDisplayed', 50);
         const maxPlayers = Math.min(100, parsedMaxPlayers);
 
         if (existingPlayer) {
@@ -217,11 +217,11 @@ export class PlayersHandler {
             playersCount: this.playersList.length
         });
 
-        if (isThreat && mapId && settingsSync.getBool('settingFlash')) {
+        if (isThreat && mapId && settingsSync.getBool('settingAlertFlash')) {
             this.triggerScreenFlash();
         }
 
-        if (isThreat && mapId && settingsSync.getBool('settingSound')) {
+        if (isThreat && mapId && settingsSync.getBool('settingAlertSound')) {
             this.playThreatSound();
         }
 
@@ -324,11 +324,11 @@ export class PlayersHandler {
         if (this.isIgnored(player)) return;
         if (!this.isPlayerThreat(player.faction, pvpType)) return;
 
-        if (settingsSync.getBool('settingFlash')) {
+        if (settingsSync.getBool('settingAlertFlash')) {
             this.triggerScreenFlash();
         }
 
-        if (settingsSync.getBool('settingSound')) {
+        if (settingsSync.getBool('settingAlertSound')) {
             this.playThreatSound();
         }
 
@@ -391,9 +391,9 @@ export class PlayersHandler {
      * @returns {Player[]} - Filtered list of players
      */
     getFilteredPlayers() {
-        const showPassive = settingsSync.getBool('settingPassivePlayers') ?? true;
-        const showFaction = settingsSync.getBool('settingFactionPlayers') ?? true;
-        const showDangerous = settingsSync.getBool('settingDangerousPlayers') ?? true;
+        const showPassive = settingsSync.getBool('settingPlayersPassive') ?? true;
+        const showFaction = settingsSync.getBool('settingPlayersFaction') ?? true;
+        const showDangerous = settingsSync.getBool('settingPlayersHostile') ?? true;
 
         const pvpType = zonesDatabase.getPvpType(window.currentMapId);
 

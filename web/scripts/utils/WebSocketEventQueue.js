@@ -14,7 +14,7 @@ export class WebSocketEventQueue {
     }
 
     get enableCoalescing() {
-        return window.settingsSync?.getBool('settingWsCoalescing', true) ?? true;
+        return window.settingsSync?.getBool('settingDebugWsCoalescing', true) ?? true;
     }
 
     get enableThrottling() {

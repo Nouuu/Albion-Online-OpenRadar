@@ -71,7 +71,7 @@ function renderPlayerCard(player, threatType = null) {
 
     // Equipment section
     let equipHtml = '';
-    if (window.settingsSync?.getBool('settingItems') && Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
+    if (window.settingsSync?.getBool('settingPlayersShowEquipment') && Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
         const validEquipments = player.equipments
             .map((itemId, index) => ({itemId, index}))
             .filter(({itemId, index}) => (index <= 4 || index === 8) && itemId && itemId > 0);
@@ -98,7 +98,7 @@ function renderPlayerCard(player, threatType = null) {
 
     // Spells section
     let spellsHtml = '';
-    if (window.settingsSync?.getBool('settingShowSpells') && Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
+    if (window.settingsSync?.getBool('settingPlayersShowSpells') && Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
         const validSpells = player.spells.filter(id => id && id > 0 && id !== 65535);
         if (validSpells.length > 0) {
             const spells = validSpells.map(spellIndex => {
@@ -117,7 +117,7 @@ function renderPlayerCard(player, threatType = null) {
 
     // Health bar
     let healthHtml = '';
-    if (window.settingsSync?.getBool('settingShowPlayerHealthBar') && player.currentHealth > 0 && player.initialHealth > 0) {
+    if (window.settingsSync?.getBool('settingPlayersShowHealthBars') && player.currentHealth > 0 && player.initialHealth > 0) {
         const pct = Math.round((player.currentHealth / player.initialHealth) * 100);
         const colorClass = pct > 60 ? 'bg-gradient-to-r from-success to-green-500'
             : pct > 30 ? 'bg-gradient-to-r from-warning to-amber-500'
@@ -229,9 +229,9 @@ export function update(playersHandler) {
     const total = counts.hostile + counts.faction + counts.passive;
 
     // Get filter settings
-    const showHostile = window.settingsSync?.getBool('settingDangerousPlayers') ?? true;
-    const showFaction = window.settingsSync?.getBool('settingFactionPlayers') ?? true;
-    const showPassive = window.settingsSync?.getBool('settingPassivePlayers') ?? true;
+    const showHostile = window.settingsSync?.getBool('settingPlayersHostile') ?? true;
+    const showFaction = window.settingsSync?.getBool('settingPlayersFaction') ?? true;
+    const showPassive = window.settingsSync?.getBool('settingPlayersPassive') ?? true;
 
     // Update stats values
     const countsChanged = counts.hostile !== _lastPlayerCounts.hostile ||

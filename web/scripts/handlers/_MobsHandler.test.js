@@ -94,16 +94,16 @@ describe('MobsHandler', () => {
             const mob = handler.getMobList()[0];
             expect(mob.type).toBe(EnemyType.MistBoss);
             expect(mob.tier).toBe(6);
-            expect(mob.mistBoss).toMatchObject({icon: 'FAIRYDRAGON', setting: 'settingBossFairyDragon'});
+            expect(mob.mistBoss).toMatchObject({icon: 'FAIRYDRAGON', setting: 'settingEnemiesMistsFairyDragon'});
         });
 
         // @verified 2026-09-03: name-derived wire ids for the three bosses not yet observed in the corpus. The
         // Mists spider is the Veil Weaver; the crystal spider keeps MistBoss over its _BOSS suffix.
         test.each([
-            ['T7_MOB_MISTS_GRIFFIN', 'GRIFFIN', 'settingBossGriffin'],
-            ['T5_MOB_MISTS_SPIDER', 'VEILWEAVER', 'settingBossVeilWeaver'],
-            ['T6_MOB_ARCANE_CRYSTALSPIDER_BOSS', 'CRYSTALSPIDER', 'settingBossCrystalSpider'],
-            ['T8_MOB_ARCANE_CRYSTALSPIDER_VETERAN_BOSS', 'CRYSTALSPIDER', 'settingBossCrystalSpider'],
+            ['T7_MOB_MISTS_GRIFFIN', 'GRIFFIN', 'settingEnemiesMistsGriffin'],
+            ['T5_MOB_MISTS_SPIDER', 'VEILWEAVER', 'settingEnemiesMistsVeilWeaver'],
+            ['T6_MOB_ARCANE_CRYSTALSPIDER_BOSS', 'CRYSTALSPIDER', 'settingEnemiesMistsCrystalSpider'],
+            ['T8_MOB_ARCANE_CRYSTALSPIDER_VETERAN_BOSS', 'CRYSTALSPIDER', 'settingEnemiesMistsCrystalSpider'],
         ])('mist-boss: %s classifies as MistBoss with icon %s', (uniqueName, icon, setting) => {
             const typeId = dbs.mobsDatabase.getTypeIdByName(uniqueName);
             expect(typeId).not.toBeNull();
@@ -426,8 +426,8 @@ describe('MobsHandler', () => {
         });
 
         // @verified 2026-04-24: enemy filters moved to render; spawn always stores, and mob.identified pins the db-match state for the render gate.
-        test('synthetic: settingNormalEnemy=false no longer blocks spawn, mob lands with identified=true', () => {
-            settingsSync.getBool.mockImplementation((key) => key !== 'settingNormalEnemy');
+        test('synthetic: settingEnemiesNormal=false no longer blocks spawn, mob lands with identified=true', () => {
+            settingsSync.getBool.mockImplementation((key) => key !== 'settingEnemiesNormal');
             const p = normalizeParams({'0': 8005, '1': 2067, '2': 255, '7': [0, 0], '13': 500, '33': 0});
             handler.NewMobEvent(p);
             const list = handler.getMobList();
@@ -435,9 +435,9 @@ describe('MobsHandler', () => {
             expect(list[0].identified).toBe(true);
         });
 
-        // @verified 2026-04-24: unknown mob also always spawns with identified=false so the render gate can use settingShowUnmanagedEnemies.
-        test('synthetic: settingShowUnmanagedEnemies=false no longer blocks spawn, unknown mob lands with identified=false', () => {
-            settingsSync.getBool.mockImplementation((key) => key !== 'settingShowUnmanagedEnemies');
+        // @verified 2026-04-24: unknown mob also always spawns with identified=false so the render gate can use settingDebugEnemiesUnidentified.
+        test('synthetic: settingDebugEnemiesUnidentified=false no longer blocks spawn, unknown mob lands with identified=false', () => {
+            settingsSync.getBool.mockImplementation((key) => key !== 'settingDebugEnemiesUnidentified');
             const p = normalizeParams({'0': 8006, '1': 9999, '2': 255, '7': [0, 0], '13': 500, '33': 0});
             handler.NewMobEvent(p);
             const list = handler.getMobList();

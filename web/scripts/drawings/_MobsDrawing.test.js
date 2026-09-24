@@ -43,7 +43,7 @@ describe('MobsDrawing living resource filter at render', () => {
         drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
-        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges');
     });
 
     function livingMob({id = 1, tier = 4, enchant = 0, name = 'Fiber'} = {}) {
@@ -56,9 +56,9 @@ describe('MobsDrawing living resource filter at render', () => {
     }
 
     // @verified 2026-04-24: living mob with enchant=0 is skipped when settings e0 for family is off.
-    test('living Fiber e0 is skipped when settingLivingFiberEnchants.e0 is off', () => {
+    test('living Fiber e0 is skipped when settingResourcesLivingFiber.e0 is off', () => {
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingFiberEnchants'
+            key === 'settingResourcesLivingFiber'
                 ? {e0: Array(8).fill(false), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)}
                 : null
         );
@@ -67,9 +67,9 @@ describe('MobsDrawing living resource filter at render', () => {
     });
 
     // @verified 2026-04-24: living mob with enchant=2 is rendered when settings e2 for family+tier is on.
-    test('living Fiber e2 is rendered when settingLivingFiberEnchants.e2[tier-1] is on', () => {
+    test('living Fiber e2 is rendered when settingResourcesLivingFiber.e2[tier-1] is on', () => {
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingFiberEnchants'
+            key === 'settingResourcesLivingFiber'
                 ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, true, false, false, false, false], e3: Array(8).fill(false), e4: Array(8).fill(false)}
                 : null
         );
@@ -77,10 +77,10 @@ describe('MobsDrawing living resource filter at render', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_4_2', 'Resources', 32);
     });
 
-    // @verified 2026-04-24: living Hide resolves via settingLivingHideEnchants correctly.
-    test('living Hide e3 is rendered when settingLivingHideEnchants.e3[tier-1] is on', () => {
+    // @verified 2026-04-24: living Hide resolves via settingResourcesLivingHide correctly.
+    test('living Hide e3 is rendered when settingResourcesLivingHide.e3[tier-1] is on', () => {
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingHideEnchants'
+            key === 'settingResourcesLivingHide'
                 ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: [false, false, false, false, true, false, false, false], e4: Array(8).fill(false)}
                 : null
         );
@@ -91,7 +91,7 @@ describe('MobsDrawing living resource filter at render', () => {
     // @verified 2026-04-24: tier-specific off still blocks even if enchant setting is on for other tiers.
     test('living Fiber e2 T4 is skipped when settings e2 T4 is off (T5 on)', () => {
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingFiberEnchants'
+            key === 'settingResourcesLivingFiber'
                 ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, false, true, false, false, false], e3: Array(8).fill(false), e4: Array(8).fill(false)}
                 : null
         );
@@ -102,7 +102,7 @@ describe('MobsDrawing living resource filter at render', () => {
     // @verified 2026-04-24: hostile enemy (non-living) is not subject to living filter; circle rendering path.
     test('hostile enemy (non-living) is not subject to living filter', () => {
         settingsSync.getJSON.mockReturnValue(null);
-        settingsSync.getBool.mockImplementation(key => key !== 'settingShowMinimumHealthEnemies');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesMinHealthFilter');
         const hostile = {
             id: 2, typeId: 2067, hX: 10, hY: 20, tier: 5, enchantmentLevel: 0,
             name: 'T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE', identified: true,
@@ -113,29 +113,29 @@ describe('MobsDrawing living resource filter at render', () => {
         expect(drawing.drawFilledCircle).toHaveBeenCalled();
     });
 
-    // @verified 2026-05-01: settingResourceColorBadges=true on a living harvestable draws a badge with isLiving=true.
-    test('living Fiber e2 with settingResourceColorBadges=true draws a Fiber badge with gold border', () => {
+    // @verified 2026-05-01: settingRadarResourceTierBadges=true on a living harvestable draws a badge with isLiving=true.
+    test('living Fiber e2 with settingRadarResourceTierBadges=true draws a Fiber badge with gold border', () => {
         drawing.drawResourceBadge = vi.fn();
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingFiberEnchants'
+            key === 'settingResourcesLivingFiber'
                 ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, true, false, false, false, false], e3: Array(8).fill(false), e4: Array(8).fill(false)}
                 : null
         );
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         drawing.invalidate(ctx, [livingMob({tier: 4, enchant: 2})]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Fiber', 4, 2, true);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
     // @verified 2026-05-01: living Skinnable Hide with badges on routes to Hide category badge.
-    test('living Hide e3 LivingSkinnable with settingResourceColorBadges=true draws a Hide badge', () => {
+    test('living Hide e3 LivingSkinnable with settingRadarResourceTierBadges=true draws a Hide badge', () => {
         drawing.drawResourceBadge = vi.fn();
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingHideEnchants'
+            key === 'settingResourcesLivingHide'
                 ? {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: [false, false, false, false, true, false, false, false], e4: Array(8).fill(false)}
                 : null
         );
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         drawing.invalidate(ctx, [livingMob({tier: 5, enchant: 3, name: 'Hide'})]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Hide', 5, 3, true);
     });
@@ -146,19 +146,19 @@ describe('MobsDrawing living resource filter at render', () => {
         drawing.drawResourceBadge = vi.fn();
         drawing.getResourceCategory = vi.fn(() => null);
         settingsSync.getJSON.mockImplementation(key =>
-            key === 'settingLivingFiberEnchants' ? {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)} : null
+            key === 'settingResourcesLivingFiber' ? {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)} : null
         );
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         drawing.invalidate(ctx, [livingMob({tier: 4, enchant: 0})]);
         expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
-    // @verified 2026-05-01: hostile NPC is unaffected by settingResourceColorBadges (badges apply to living harvestables only).
-    test('hostile NPC stays as colored circle even when settingResourceColorBadges=true', () => {
+    // @verified 2026-05-01: hostile NPC is unaffected by settingRadarResourceTierBadges (badges apply to living harvestables only).
+    test('hostile NPC stays as colored circle even when settingRadarResourceTierBadges=true', () => {
         drawing.drawResourceBadge = vi.fn();
         settingsSync.getJSON.mockReturnValue(null);
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges' || key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges' || key === 'settingEnemiesNormal' || key === 'settingEnemiesShowHealthBars');
         const hostile = {
             id: 2, typeId: 2067, hX: 10, hY: 20, tier: 5, enchantmentLevel: 0,
             name: 'T5_MOB_ROAMING_KEEPER_CAMP_UNPROVEN_MALE', identified: true,
@@ -194,24 +194,24 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         drawing.getMarkerSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
-        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges');
         mobsHandler = new MobsHandler();
     });
 
     function livingOn(family) {
-        return {[`settingLiving${family}Enchants`]: {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)}};
+        return {[`settingResourcesLiving${family}`]: {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)}};
     }
 
     function livingOff(family) {
-        return {[`settingLiving${family}Enchants`]: {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)}};
+        return {[`settingResourcesLiving${family}`]: {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)}};
     }
 
     function staticOn(family) {
-        return {[`settingStatic${family}Enchants`]: {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)}};
+        return {[`settingResourcesStatic${family}`]: {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)}};
     }
 
     function staticOff(family) {
-        return {[`settingStatic${family}Enchants`]: {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)}};
+        return {[`settingResourcesStatic${family}`]: {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)}};
     }
 
     function mockSettings(...maps) {
@@ -220,11 +220,11 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
     }
 
     // @verified 2026-09-03: pcap-derived, 2026-09-03 Mists capture, wire 416. Full-flow MobsHandler -> drawing:
-    // the fairy dragon draws its Resources icon when settingBossFairyDragon is on, and nothing when it is off.
-    test('full-flow: fairy dragon draws FAIRYDRAGON from Resources when settingBossFairyDragon is on', async () => {
+    // the fairy dragon draws its Resources icon when settingEnemiesMistsFairyDragon is on, and nothing when it is off.
+    test('full-flow: fairy dragon draws FAIRYDRAGON from Resources when settingEnemiesMistsFairyDragon is on', async () => {
         const fx = await loadFixture('mobs', 'mist-boss-spawn');
         const p = normalizeParams(fx.messages.find(m => m.parameters['1'] === 416).parameters);
-        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges');
 
         mobsHandler.NewMobEvent(p);
         drawing.invalidate(ctx, mobsHandler.getMobList(), []);
@@ -242,7 +242,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
     ])('full-flow: %s asks for an icon that exists under web/images', (uniqueName) => {
         const typeId = window.mobsDatabase.getTypeIdByName(uniqueName);
         expect(typeId).not.toBeNull();
-        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges');
 
         mobsHandler.NewMobEvent(normalizeParams({'0': 95000 + typeId, '1': typeId, '2': 255, '7': [0, 0], '13': 3000, '34': 0}));
         drawing.invalidate(ctx, mobsHandler.getMobList(), []);
@@ -253,10 +253,10 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         expect(existsSync(file), file).toBe(true);
     });
 
-    test('full-flow: fairy dragon is skipped when settingBossFairyDragon is off', async () => {
+    test('full-flow: fairy dragon is skipped when settingEnemiesMistsFairyDragon is off', async () => {
         const fx = await loadFixture('mobs', 'mist-boss-spawn');
         const p = normalizeParams(fx.messages.find(m => m.parameters['1'] === 416).parameters);
-        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceColorBadges' && key !== 'settingBossFairyDragon');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges' && key !== 'settingEnemiesMistsFairyDragon');
 
         mobsHandler.NewMobEvent(p);
         drawing.invalidate(ctx, mobsHandler.getMobList(), []);
@@ -308,9 +308,9 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
     // @verified 2026-04-24: synthetic, carcass with post-spawn enchant is gated by the matching cell.
     // No DEAD carcass with enchant!=0 was observed in the capture; this pins the cell resolution for the
     // real runtime case where event 123 is followed by an enchant update.
-    test('synthetic: DEAD Fiber T7 e2 renders via settingLivingFiberEnchants.e2[6]=true', () => {
+    test('synthetic: DEAD Fiber T7 e2 renders via settingResourcesLivingFiber.e2[6]=true', () => {
         const settings = {
-            settingLivingFiberEnchants: {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, false, false, false, true, false], e3: Array(8).fill(false), e4: Array(8).fill(false)},
+            settingResourcesLivingFiber: {e0: Array(8).fill(false), e1: Array(8).fill(false), e2: [false, false, false, false, false, false, true, false], e3: Array(8).fill(false), e4: Array(8).fill(false)},
         };
         settingsSync.getJSON.mockImplementation(key => settings[key] ?? null);
         const dead = {
@@ -324,7 +324,7 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
     });
 });
 
-describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHealthEnemies + settingTextMinimumHealthEnemies)', () => {
+describe('MobsDrawing minimum HP filter for hostile mobs (settingEnemiesMinHealthFilter + settingEnemiesMinHealth)', () => {
     let drawing;
     let ctx;
 
@@ -353,7 +353,7 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHeal
 
     // @verified 2026-04-24: when the filter is off, hostile mob below any value renders normally.
     test('filter off: hostile with maxHealth=100 still renders', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingShowMinimumHealthEnemies');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesMinHealthFilter');
         settingsSync.getNumber.mockReturnValue(2100);
 
         drawing.invalidate(ctx, [hostile({maxHealth: 100})]);
@@ -363,8 +363,8 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHeal
 
     // @verified 2026-04-24: filter on, maxHealth below threshold skips the mob (no circle drawn).
     test('filter on: hostile with maxHealth=1000 below threshold=2100 is skipped', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingShowMinimumHealthEnemies' || key === 'settingEnemiesHealthBar');
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingTextMinimumHealthEnemies' ? 2100 : (d ?? 0));
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars');
+        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
 
         drawing.invalidate(ctx, [hostile({maxHealth: 1000})]);
 
@@ -373,8 +373,8 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHeal
 
     // @verified 2026-04-24: filter on, maxHealth above threshold renders normally.
     test('filter on: hostile with maxHealth=3000 above threshold=2100 renders', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingShowMinimumHealthEnemies' || key === 'settingEnemiesHealthBar' || key === 'settingNormalEnemy');
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingTextMinimumHealthEnemies' ? 2100 : (d ?? 0));
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars' || key === 'settingEnemiesNormal');
+        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
 
         drawing.invalidate(ctx, [hostile({maxHealth: 3000})]);
 
@@ -383,8 +383,8 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHeal
 
     // @verified 2026-04-24: filter on, boss (high tier hostile) with high HP still renders.
     test('filter on: boss with maxHealth=50000 above threshold=2100 renders', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingShowMinimumHealthEnemies' || key === 'settingEnemiesHealthBar' || key === 'settingBossEnemy');
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingTextMinimumHealthEnemies' ? 2100 : (d ?? 0));
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars' || key === 'settingEnemiesBoss');
+        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
 
         drawing.invalidate(ctx, [hostile({maxHealth: 50000, type: EnemyType.Boss})]);
 
@@ -393,9 +393,9 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingShowMinimumHeal
 
     // @verified 2026-04-24: filter applies only to hostile types; living resource is unaffected.
     test('filter on: living resource is not gated by min HP filter', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingShowMinimumHealthEnemies' || key === 'settingEnemiesHealthBar');
-        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingFiberEnchants' ? {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)} : null);
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingTextMinimumHealthEnemies' ? 2100 : (d ?? 0));
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars');
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesLivingFiber' ? {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)} : null);
+        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
 
         const living = {id: 20, typeId: 529, hX: 10, hY: 20, tier: 4, enchantmentLevel: 0, name: 'Fiber', type: EnemyType.LivingHarvestable, getCurrentHP: () => 100, maxHealth: 100};
         drawing.invalidate(ctx, [living]);
@@ -432,51 +432,51 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         return {id, typeId: 9000, hX: 10, hY: 20, tier: 4, enchantmentLevel: 0, name: identified ? 'Known' : null, identified, type, getCurrentHP: () => maxHealth, maxHealth};
     }
 
-    // @verified 2026-04-24: identified Enemy is skipped at render when settingNormalEnemy is off.
-    test('identified Enemy with settingNormalEnemy=false is not drawn', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingNormalEnemy');
+    // @verified 2026-04-24: identified Enemy is skipped at render when settingEnemiesNormal is off.
+    test('identified Enemy with settingEnemiesNormal=false is not drawn', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesNormal');
         drawing.invalidate(ctx, [hostile({type: EnemyType.Enemy})]);
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: identified Boss is skipped when settingBossEnemy is off.
-    test('identified Boss with settingBossEnemy=false is not drawn', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingBossEnemy');
+    // @verified 2026-04-24: identified Boss is skipped when settingEnemiesBoss is off.
+    test('identified Boss with settingEnemiesBoss=false is not drawn', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesBoss');
         drawing.invalidate(ctx, [hostile({type: EnemyType.Boss})]);
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: identified EnchantedEnemy is drawn when settingEnchantedEnemy is on.
-    test('identified EnchantedEnemy with settingEnchantedEnemy=true is drawn', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingShowMinimumHealthEnemies');
+    // @verified 2026-04-24: identified EnchantedEnemy is drawn when settingEnemiesChampion is on.
+    test('identified EnchantedEnemy with settingEnemiesChampion=true is drawn', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesMinHealthFilter');
         drawing.invalidate(ctx, [hostile({type: EnemyType.EnchantedEnemy})]);
         expect(drawing.drawFilledCircle).toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: unidentified mob uses settingShowUnmanagedEnemies gate.
-    test('unidentified mob with settingShowUnmanagedEnemies=false is not drawn', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingShowUnmanagedEnemies');
+    // @verified 2026-04-24: unidentified mob uses settingDebugEnemiesUnidentified gate.
+    test('unidentified mob with settingDebugEnemiesUnidentified=false is not drawn', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingDebugEnemiesUnidentified');
         drawing.invalidate(ctx, [hostile({identified: false})]);
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: Drone gated by settingAvaloneDrones.
-    test('Drone with settingAvaloneDrones=false is not drawn', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingAvaloneDrones');
+    // @verified 2026-04-24: Drone gated by settingEnemiesAvalonianDrones.
+    test('Drone with settingEnemiesAvalonianDrones=false is not drawn', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesAvalonianDrones');
         drawing.invalidate(ctx, [hostile({type: EnemyType.Drone})]);
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: Events type gated by settingShowEventEnemies.
-    test('Events enemy with settingShowEventEnemies=false is not drawn', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingShowEventEnemies');
+    // @verified 2026-04-24: Events type gated by settingEnemiesEvent.
+    test('Events enemy with settingEnemiesEvent=false is not drawn', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesEvent');
         drawing.invalidate(ctx, [hostile({type: EnemyType.Events, identified: true})]);
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
     });
 
     // @verified 2026-04-24: lastVisibleCount reflects only mobs that passed the render gates.
     test('lastVisibleCount counts only rendered mobs after filters', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy');
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesNormal');
         const kept = hostile({id: 1, type: EnemyType.Enemy});
         const dropped = hostile({id: 2, type: EnemyType.Boss});
         drawing.invalidate(ctx, [kept, dropped]);
@@ -489,14 +489,14 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         drawing.invalidate(ctx, [hostile({id: 1})]);
         expect(drawing.lastVisibleCount).toBe(0);
 
-        settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesNormal' || key === 'settingEnemiesShowHealthBars');
         drawing.invalidate(ctx, [hostile({id: 2})]);
         expect(drawing.lastVisibleCount).toBe(1);
     });
 
     // @verified 2026-05-01: hostile NPC marker uses getMarkerSize(6), tighter than the previous getScaledSize(7).
     test('hostile NPC marker radius is getMarkerSize(6)', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingNormalEnemy' || key === 'settingEnemiesHealthBar');
+        settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesNormal' || key === 'settingEnemiesShowHealthBars');
         drawing.invalidate(ctx, [hostile({id: 1, type: EnemyType.Enemy})]);
         expect(drawing.drawFilledCircle).toHaveBeenCalledWith(ctx, 10, 20, 6, expect.any(String));
         expect(drawing.getMarkerSize).toHaveBeenCalledWith(6);

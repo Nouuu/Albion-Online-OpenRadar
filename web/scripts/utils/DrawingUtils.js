@@ -18,7 +18,7 @@ export class DrawingUtils {
         return settingsSync.getFloat('settingRadarZoom') || 1.0;
     }
     getIconSizeMultiplier() {
-        const v = settingsSync.getFloat('settingIconSize');
+        const v = settingsSync.getFloat('settingRadarIconSize');
         return v && !Number.isNaN(v) ? v : 1.0;
     }
     getCanvasScale() { return this.getCanvasSize() / 500; }
@@ -30,7 +30,7 @@ export class DrawingUtils {
             const c = document.getElementById('drawCanvas');
             if (c?.width) return c.width;
         }
-        return settingsSync.getNumber('settingCanvasSize') || 500;
+        return settingsSync.getNumber('settingRadarSize') || 500;
     }
     getCanvasCenter() { return this.getCanvasSize() / 2; }
 
@@ -431,7 +431,7 @@ export class DrawingUtils {
         const distText = distanceMeters < 1000 ? `${distanceMeters}m` : `${(distanceMeters / 1000).toFixed(1)}km`;
 
         const stacksText = `${totalStacks}`;
-        const clusterRadiusMeters = settingsSync.getNumber("settingClusterRadius");
+        const clusterRadiusMeters = settingsSync.getNumber("settingRadarClusterRadius");
 
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
         const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;

@@ -110,10 +110,10 @@ export class DungeonsHandler
             const isSolo = upperCaseName.includes("_SOLO_");
 
             if (isSolo) {
-                if (!settingsSync.getBool("settingMistSolo") || !settingsSync.getBool("settingMistE" + enchant)) return;
+                if (!settingsSync.getBool("settingMistsSolo") || !settingsSync.getBool("settingMistsEnchant" + enchant)) return;
                 dungeonType = DungeonType.Solo;
             } else {
-                if (!settingsSync.getBool("settingMistDuo") || !settingsSync.getBool("settingMistE" + enchant)) return;
+                if (!settingsSync.getBool("settingMistsDuo") || !settingsSync.getBool("settingMistsEnchant" + enchant)) return;
                 dungeonType = DungeonType.Group;
             }
         }
@@ -123,28 +123,28 @@ export class DungeonsHandler
         else if (lowerCaseName.includes("corrupted")) // corrupt
         {
             // Test if corrupt checkbox
-            if (!settingsSync.getBool("settingDungeonCorrupted")) return;
+            if (!settingsSync.getBool("settingDungeonsCorrupted")) return;
 
             dungeonType = DungeonType.Corrupted;
         }
         else if (lowerCaseName.includes("solo")) // solo
         {
             // Test if solo checkbox
-            if (!settingsSync.getBool("settingDungeonSolo") || !settingsSync.getBool('settingDungeonE'+enchant)) return;
+            if (!settingsSync.getBool("settingDungeonsSolo") || !settingsSync.getBool('settingDungeonsEnchant'+enchant)) return;
 
             dungeonType = DungeonType.Solo;
         }
         // "HELLGATE_2V2_NON_LETHAL"
         else if (lowerCaseName.includes("hellgate")) // hellgate
         {
-            if (!settingsSync.getBool('settingDungeonHellgate')) return;
+            if (!settingsSync.getBool('settingDungeonsHellgate')) return;
 
             dungeonType = DungeonType.Hellgate
 
         }
         else // group
         {
-            if (!settingsSync.getBool('settingDungeonDuo') || !settingsSync.getBool('settingDungeonE'+enchant)) return;
+            if (!settingsSync.getBool('settingDungeonsGroup') || !settingsSync.getBool('settingDungeonsEnchant'+enchant)) return;
             dungeonType = DungeonType.Group;
         }
 

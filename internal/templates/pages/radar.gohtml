@@ -27,15 +27,15 @@
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-base-content/50">Display:</span>
                     <label class="flex items-center gap-1.5 cursor-pointer group">
-                        <input type="checkbox" id="settingResourceCount" class="checkbox checkbox-primary checkbox-xs">
+                        <input type="checkbox" id="settingRadarResourceCount" class="checkbox checkbox-primary checkbox-xs">
                         <span class="text-base-content/60 group-hover:text-base-content transition-colors">Count</span>
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer group">
-                        <input type="checkbox" id="settingResourceDistance" class="checkbox checkbox-primary checkbox-xs">
+                        <input type="checkbox" id="settingRadarResourceDistance" class="checkbox checkbox-primary checkbox-xs">
                         <span class="text-base-content/60 group-hover:text-base-content transition-colors">Distance</span>
                     </label>
                     <label class="flex items-center gap-1.5 cursor-pointer group">
-                        <input type="checkbox" id="settingResourceClusters" class="checkbox checkbox-primary checkbox-xs">
+                        <input type="checkbox" id="settingRadarResourceClusters" class="checkbox checkbox-primary checkbox-xs">
                         <span class="text-base-content/60 group-hover:text-base-content transition-colors">Clusters</span>
                     </label>
                 </div>
@@ -52,7 +52,7 @@
                 <div class="hidden sm:flex items-center gap-2">
                     <span class="text-xs text-base-content/50">Size:</span>
                     <button id="sizeDown" class="btn btn-ghost btn-xs">−</button>
-                    <input type="range" id="settingCanvasSize" min="300" max="800" step="50" value="500" class="range range-primary range-xs w-24">
+                    <input type="range" id="settingRadarSize" min="300" max="800" step="50" value="500" class="range range-primary range-xs w-24">
                     <button id="sizeUp" class="btn btn-ghost btn-xs">+</button>
                     <span id="sizeValue" class="text-xs text-base-content/60 font-mono w-12">500px</span>
                     <button id="sizeReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
@@ -61,7 +61,7 @@
                 <div class="hidden sm:flex items-center gap-2">
                     <span class="text-xs text-base-content/50">Icons:</span>
                     <button id="iconSizeDown" class="btn btn-ghost btn-xs">−</button>
-                    <input type="range" id="settingIconSize" min="0.5" max="2" step="0.1" value="1" class="range range-primary range-xs w-24">
+                    <input type="range" id="settingRadarIconSize" min="0.5" max="2" step="0.1" value="1" class="range range-primary range-xs w-24">
                     <button id="iconSizeUp" class="btn btn-ghost btn-xs">+</button>
                     <span id="iconSizeValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
                     <button id="iconSizeReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
@@ -77,7 +77,7 @@
                 <h3 class="text-xl font-semibold text-base-content flex items-center gap-3">
                     Detected Players
                     <label class="flex items-center gap-1.5 cursor-pointer" title="Show players on radar and in list below">
-                        <input type="checkbox" id="settingShowPlayers" class="checkbox checkbox-primary checkbox-xs">
+                        <input type="checkbox" id="settingPlayersDetect" class="checkbox checkbox-primary checkbox-xs">
                         <span class="text-xs text-base-content/60 font-normal">Show</span>
                     </label>
                 </h3>
@@ -185,7 +185,7 @@ window.onGlobalsReady(function() {
     document.body.addEventListener('htmx:beforeSwap', htmxCleanupHandler);
 
     // Bind display checkboxes
-    ['settingResourceCount', 'settingResourceDistance', 'settingResourceClusters'].forEach(id => {
+    ['settingRadarResourceCount', 'settingRadarResourceDistance', 'settingRadarResourceClusters'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.checked = settingsSync.getBool(id);
@@ -221,7 +221,7 @@ window.onGlobalsReady(function() {
     addListener(zoomReset, 'click', () => setZoom(1.0));
 
     // Icon Size controls
-    const iconSizeSlider = document.getElementById('settingIconSize');
+    const iconSizeSlider = document.getElementById('settingRadarIconSize');
     const iconSizeValue = document.getElementById('iconSizeValue');
     const iconSizeUp = document.getElementById('iconSizeUp');
     const iconSizeDown = document.getElementById('iconSizeDown');
@@ -234,20 +234,20 @@ window.onGlobalsReady(function() {
 
     function setIconSize(value) {
         value = Math.max(0.5, Math.min(2, value));
-        settingsSync.setFloat('settingIconSize', value);
+        settingsSync.setFloat('settingRadarIconSize', value);
         updateIconSizeDisplay(value);
     }
 
-    const initialIconSize = settingsSync.getFloat('settingIconSize') || 1.0;
+    const initialIconSize = settingsSync.getFloat('settingRadarIconSize') || 1.0;
     updateIconSizeDisplay(initialIconSize);
 
     addListener(iconSizeSlider, 'input', () => setIconSize(parseFloat(iconSizeSlider.value)));
-    addListener(iconSizeUp, 'click', () => setIconSize((settingsSync.getFloat('settingIconSize') || 1.0) + 0.1));
-    addListener(iconSizeDown, 'click', () => setIconSize((settingsSync.getFloat('settingIconSize') || 1.0) - 0.1));
+    addListener(iconSizeUp, 'click', () => setIconSize((settingsSync.getFloat('settingRadarIconSize') || 1.0) + 0.1));
+    addListener(iconSizeDown, 'click', () => setIconSize((settingsSync.getFloat('settingRadarIconSize') || 1.0) - 0.1));
     addListener(iconSizeReset, 'click', () => setIconSize(1.0));
 
     // Canvas Size controls
-    const sizeSlider = document.getElementById('settingCanvasSize');
+    const sizeSlider = document.getElementById('settingRadarSize');
     const sizeValueEl = document.getElementById('sizeValue');
     const sizeUp = document.getElementById('sizeUp');
     const sizeDown = document.getElementById('sizeDown');
@@ -278,7 +278,7 @@ window.onGlobalsReady(function() {
 
     function setCanvasSize(size) {
         size = Math.max(300, Math.min(800, size));
-        settingsSync.setNumber('settingCanvasSize', size);
+        settingsSync.setNumber('settingRadarSize', size);
 
         const renderSize = clampForViewport(size);
         const isSmall = window.innerWidth < 640;
@@ -298,28 +298,28 @@ window.onGlobalsReady(function() {
         window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size: renderSize } }));
     }
 
-    const initialSize = settingsSync.getNumber('settingCanvasSize') || 500;
+    const initialSize = settingsSync.getNumber('settingRadarSize') || 500;
     setCanvasSize(initialSize);
 
     function reapplyOnResize() {
-        const persisted = settingsSync.getNumber('settingCanvasSize') || 500;
+        const persisted = settingsSync.getNumber('settingRadarSize') || 500;
         setCanvasSize(persisted);
     }
     window.addEventListener('resize', reapplyOnResize);
     cleanup.push(() => window.removeEventListener('resize', reapplyOnResize));
 
     addListener(sizeSlider, 'input', () => setCanvasSize(parseInt(sizeSlider.value)));
-    addListener(sizeUp, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) + 50));
-    addListener(sizeDown, 'click', () => setCanvasSize((settingsSync.getNumber('settingCanvasSize') || 500) - 50));
+    addListener(sizeUp, 'click', () => setCanvasSize((settingsSync.getNumber('settingRadarSize') || 500) + 50));
+    addListener(sizeDown, 'click', () => setCanvasSize((settingsSync.getNumber('settingRadarSize') || 500) - 50));
     addListener(sizeReset, 'click', () => setCanvasSize(500));
 
     // Show Players toggle + list visibility
-    const showPlayersToggle = document.getElementById('settingShowPlayers');
+    const showPlayersToggle = document.getElementById('settingPlayersDetect');
     const playersListContainer = document.getElementById('playersListContainer');
     const playerStats = document.getElementById('playerStats');
 
     function updatePlayersListVisibility() {
-        const isVisible = settingsSync.getBool('settingShowPlayers');
+        const isVisible = settingsSync.getBool('settingPlayersDetect');
         if (playersListContainer) {
             playersListContainer.style.display = isVisible ? 'block' : 'none';
         }
@@ -336,13 +336,13 @@ window.onGlobalsReady(function() {
 
     // Bind toggle
     addListener(showPlayersToggle, 'change', () => {
-        settingsSync.setBool('settingShowPlayers', showPlayersToggle.checked);
+        settingsSync.setBool('settingPlayersDetect', showPlayersToggle.checked);
         updatePlayersListVisibility();
     });
 
     // Sync with changes from other tabs/pages
     function storageHandler(e) {
-        if (e.key === 'settingShowPlayers') updatePlayersListVisibility();
+        if (e.key === 'settingPlayersDetect') updatePlayersListVisibility();
     }
     window.addEventListener('storage', storageHandler);
     cleanup.push(() => window.removeEventListener('storage', storageHandler));

@@ -55,7 +55,7 @@ export class CanvasManager {
         }
 
         this._onCanvasSizeChanged = (e) => {
-            const newSize = e.detail?.size || settingsSync.getNumber('settingCanvasSize') || 500;
+            const newSize = e.detail?.size || settingsSync.getNumber('settingRadarSize') || 500;
             Object.values(this.canvases).forEach(canvas => {
                 if (canvas) {
                     canvas.width = newSize;

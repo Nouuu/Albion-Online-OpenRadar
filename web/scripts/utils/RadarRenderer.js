@@ -105,7 +105,7 @@ export class RadarRenderer {
         const deltaTime = currentTime - this.previousTime;
         const t = Math.min(1, deltaTime / 100);
 
-        if (settingsSync.getBool('settingShowMap', true) && this.drawings.mapsDrawing) {
+        if (settingsSync.getBool('settingRadarMapBackground', true) && this.drawings.mapsDrawing) {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
@@ -195,7 +195,7 @@ export class RadarRenderer {
 
         // Cluster detection with caching (recalculated every CLUSTER_UPDATE_INTERVAL)
         let clustersForInfo = null;
-        if (settingsSync.getBool('settingResourceClusters') && context) {
+        if (settingsSync.getBool('settingRadarResourceClusters') && context) {
             const currentTime = performance.now();
             const timeSinceLastUpdate = currentTime - this.lastClusterUpdate;
 
@@ -205,8 +205,8 @@ export class RadarRenderer {
 
                     this.cachedClusters = this.drawingUtils.detectClusters(
                         merged,
-                        settingsSync.getNumber('settingClusterRadius'),
-                        settingsSync.getNumber('settingClusterMinSize')
+                        settingsSync.getNumber('settingRadarClusterRadius'),
+                        settingsSync.getNumber('settingRadarClusterMinSize')
                     );
                     this.lastClusterUpdate = currentTime;
                 } catch (e) {
@@ -326,7 +326,7 @@ export class RadarRenderer {
     }
 
     renderFlashOverlay(ctx) {
-        if (!settingsSync.getBool('settingFlash')) return;
+        if (!settingsSync.getBool('settingAlertFlash')) return;
         const handler = this.handlers.playersHandler;
         if (!handler?.lastFlashAt) return;
 
@@ -421,7 +421,7 @@ export class RadarRenderer {
         const mobCount = this.drawings.mobsDrawing?.lastVisibleCount ?? 0;
 
         const stats = [];
-        if (settingsSync.getBool('settingShowPlayers')) {
+        if (settingsSync.getBool('settingPlayersDetect')) {
             stats.push({ emoji: '👥', count: playerCount, label: 'players', color: '#ffffff' });
         }
         stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
@@ -461,7 +461,7 @@ export class RadarRenderer {
      * Render threat border when hostile players detected
      */
     renderThreatBorder(ctx) {
-        if (!settingsSync.getBool('settingFlashDangerousPlayer')) return;
+        if (!settingsSync.getBool('settingAlertBorder')) return;
 
         const threats = this.handlers.playersHandler?.getThreatPlayers?.() || [];
 

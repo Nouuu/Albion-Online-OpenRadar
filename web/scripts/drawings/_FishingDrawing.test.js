@@ -1,4 +1,4 @@
-// synthetic: render-time gate on settingFishing + settingResourceCount; filter logic is deterministic from entity + settings.
+// synthetic: render-time gate on settingResourcesFishing + settingRadarResourceCount; filter logic is deterministic from entity + settings.
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
 vi.mock('../utils/SettingsSync.js', () => ({
@@ -31,44 +31,44 @@ describe('FishingDrawing render-time filter', () => {
         ctx = {};
     });
 
-    // @verified 2026-04-24: settingFishing=false hides every pool at render time.
-    test('settingFishing=false draws nothing', () => {
+    // @verified 2026-04-24: settingResourcesFishing=false hides every pool at render time.
+    test('settingResourcesFishing=false draws nothing', () => {
         settingsSync.getBool.mockImplementation(() => false);
         drawing.draw(ctx, [makePool({id: 1}), makePool({id: 2})]);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: settingFishing=true renders pool icons.
-    test('settingFishing=true draws pool icons', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingFishing');
+    // @verified 2026-04-24: settingResourcesFishing=true renders pool icons.
+    test('settingResourcesFishing=true draws pool icons', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourcesFishing');
         drawing.draw(ctx, [makePool({id: 1})]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fish', 'Resources', 18);
     });
 
-    // @verified 2026-04-24: settingResourceCount still independently gates the count text.
-    test('settingResourceCount=false does not call drawText even when fishing is on', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingFishing');
+    // @verified 2026-04-24: settingRadarResourceCount still independently gates the count text.
+    test('settingRadarResourceCount=false does not call drawText even when fishing is on', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourcesFishing');
         drawing.draw(ctx, [makePool({id: 1, sizeSpawned: 3, total: 5})]);
         expect(drawing.drawText).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-24: settingResourceCount=true calls drawText with sizeSpawned/totalSize format.
-    test('settingResourceCount=true calls drawText with n/total', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingFishing' || key === 'settingResourceCount');
+    // @verified 2026-04-24: settingRadarResourceCount=true calls drawText with sizeSpawned/totalSize format.
+    test('settingRadarResourceCount=true calls drawText with n/total', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourcesFishing' || key === 'settingRadarResourceCount');
         drawing.draw(ctx, [makePool({id: 1, sizeSpawned: 3, total: 5})]);
         expect(drawing.drawText).toHaveBeenCalledWith(10, 38, '3/5', ctx);
     });
 
-    // @verified 2026-04-24: lastVisibleCount reflects rendered pools; zero when settingFishing is off.
-    test('lastVisibleCount is zero when settingFishing is off', () => {
+    // @verified 2026-04-24: lastVisibleCount reflects rendered pools; zero when settingResourcesFishing is off.
+    test('lastVisibleCount is zero when settingResourcesFishing is off', () => {
         settingsSync.getBool.mockImplementation(() => false);
         drawing.draw(ctx, [makePool({id: 1}), makePool({id: 2})]);
         expect(drawing.lastVisibleCount).toBe(0);
     });
 
-    // @verified 2026-04-24: lastVisibleCount equals rendered pool count when settingFishing is on.
-    test('lastVisibleCount equals rendered pool count when settingFishing is on', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingFishing');
+    // @verified 2026-04-24: lastVisibleCount equals rendered pool count when settingResourcesFishing is on.
+    test('lastVisibleCount equals rendered pool count when settingResourcesFishing is on', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingResourcesFishing');
         drawing.draw(ctx, [makePool({id: 1}), makePool({id: 2}), makePool({id: 3})]);
         expect(drawing.lastVisibleCount).toBe(3);
     });

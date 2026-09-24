@@ -78,8 +78,8 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(9);
         });
 
-        // @verified 2026-04-24: settingFishing=false no longer gates spawn; filter is applied at render so toggles take effect instantly.
-        test('synthetic: settingFishing=false still adds pool to list (render-time filter only)', () => {
+        // @verified 2026-04-24: settingResourcesFishing=false no longer gates spawn; filter is applied at render so toggles take effect instantly.
+        test('synthetic: settingResourcesFishing=false still adds pool to list (render-time filter only)', () => {
             settingsSync.getBool.mockReturnValue(false);
 
             handler.newFishEvent({0: 1, 1: [0, 0], 2: 5, 3: 0, 4: 'FishingNodeFish'});
@@ -121,8 +121,8 @@ describe('FishingHandler', () => {
             expect(handler.fishes).toHaveLength(1);
         });
 
-        // @verified 2026-04-24: fishingEnd now removes fish regardless of settingFishing, mirroring the render-time filter migration.
-        test('synthetic: fishingEnd removes fish even when settingFishing=false', () => {
+        // @verified 2026-04-24: fishingEnd now removes fish regardless of settingResourcesFishing, mirroring the render-time filter migration.
+        test('synthetic: fishingEnd removes fish even when settingResourcesFishing=false', () => {
             handler.fishes.push({id: 55, posX: 0, posY: 0, type: 'FishingNodeFish', sizeSpawned: 1, sizeLeftToSpawn: 0, totalSize: 1, hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
             settingsSync.getBool.mockReturnValue(false);
 

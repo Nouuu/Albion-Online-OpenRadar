@@ -33,15 +33,15 @@ describe('DrawingUtils marker scaling helpers', () => {
         utils.getCanvasScale = vi.fn(() => 1.0);
     });
 
-    // @verified 2026-05-01: default returns 1.0 when settingIconSize is unset (backward compat).
-    test('getIconSizeMultiplier returns 1.0 when settingIconSize is unset', () => {
+    // @verified 2026-05-01: default returns 1.0 when settingRadarIconSize is unset (backward compat).
+    test('getIconSizeMultiplier returns 1.0 when settingRadarIconSize is unset', () => {
         settingsSync.getFloat.mockReturnValue(null);
         expect(utils.getIconSizeMultiplier()).toBe(1.0);
     });
 
-    // @verified 2026-05-01: returns the configured value when settingIconSize is set.
+    // @verified 2026-05-01: returns the configured value when settingRadarIconSize is set.
     test('getIconSizeMultiplier returns configured value', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 1.5 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 1.5 : null);
         expect(utils.getIconSizeMultiplier()).toBe(1.5);
     });
 
@@ -55,7 +55,7 @@ describe('DrawingUtils marker scaling helpers', () => {
 
     // @verified 2026-05-01: getMarkerSize composes getScaledSize with the icon multiplier.
     test('getMarkerSize equals base * iconSize * zoom * canvasScale', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 2.0 : null);
         utils.getZoomLevel = vi.fn(() => 1.5);
         utils.getCanvasScale = vi.fn(() => 0.8);
         expect(utils.getMarkerSize(40)).toBeCloseTo(40 * 2.0 * 1.5 * 0.8);
@@ -70,7 +70,7 @@ describe('DrawingUtils marker scaling helpers', () => {
 
     // @verified 2026-05-01: getScaledSize unchanged, does not include the icon multiplier (overlay sizing).
     test('getScaledSize does not apply iconSize multiplier (overlays unaffected)', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 2.0 : null);
         utils.getZoomLevel = vi.fn(() => 1.5);
         utils.getCanvasScale = vi.fn(() => 0.8);
         expect(utils.getScaledSize(40)).toBeCloseTo(40 * 1.5 * 0.8);
@@ -103,7 +103,7 @@ describe('DrawingUtils.DrawCustomImage uses marker scaling', () => {
 
     // @verified 2026-05-01: iconSize=2.0 doubles the rendered image size, not the overlay size.
     test('drawImage size scales with iconSize multiplier', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 2.0 : null);
         imageCache.GetPreloadedImage.mockReturnValue(preloadedImage);
         utils.DrawCustomImage(ctx, 100, 100, 'fiber_5_2', 'Resources', 40);
         expect(ctx.drawImage).toHaveBeenCalledWith(preloadedImage, 100 - 40, 100 - 40, 80, 80);
@@ -111,7 +111,7 @@ describe('DrawingUtils.DrawCustomImage uses marker scaling', () => {
 
     // @verified 2026-05-01: when the image is missing (null), the loading-fallback circle uses getMarkerSize too.
     test('loading-fallback circle uses getMarkerSize(10) and the royal blue color', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 1.5 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 1.5 : null);
         imageCache.GetPreloadedImage.mockReturnValue(null);
         utils.DrawCustomImage(ctx, 100, 100, 'fiber_5_2', 'Resources', 40);
         expect(utils.drawFilledCircle).toHaveBeenCalledWith(ctx, 100, 100, 15, '#4169E1');
@@ -223,7 +223,7 @@ describe('DrawingUtils icon-anchored overlays shift with iconSize', () => {
 
     // @verified 2026-05-01: healthbar y-anchor scales with iconSize so it does not overlap the larger icon.
     test('drawHealthBar barY shifts with iconSize multiplier', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 2.0 : null);
         utils.drawHealthBar(ctx, 100, 100, 50, 100, 60, 10);
 
         // First fillRect call is the bar background at y + getMarkerSize(16) = 100 + 32 = 132
@@ -234,7 +234,7 @@ describe('DrawingUtils icon-anchored overlays shift with iconSize', () => {
 
     // @verified 2026-05-01: count badge anchor offsets scale with iconSize so it sits next to the larger icon.
     test('drawResourceCountBadge offsets scale with iconSize multiplier', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 2.0 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 2.0 : null);
         utils.drawResourceCountBadge(ctx, 100, 100, 5, 'bottom-right');
 
         // The rounded-rect path starts at moveTo(rectX + radius, rectY) where rectX = x + offset8 = 100 + 16 = 116
@@ -302,7 +302,7 @@ describe('DrawingUtils.drawResourceBadge', () => {
 
     // @verified 2026-05-01: badge size obeys getMarkerSize so the icon-size slider scales it.
     test('badge size respects getMarkerSize (iconSize multiplier)', () => {
-        settingsSync.getFloat.mockImplementation(key => key === 'settingIconSize' ? 1.5 : null);
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarIconSize' ? 1.5 : null);
         utils.drawResourceBadge(ctx, 100, 100, 40, 'Fiber', 6, 0, false);
 
         expect(ctx.fillRect).toHaveBeenCalledWith(70, 70, 60, 60);

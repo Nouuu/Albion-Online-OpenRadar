@@ -234,7 +234,7 @@ describe('HarvestablesHandler', () => {
         // @verified 2026-04-19: living Fiber/Hide with e0 off appears after event 46 enchant update (#32 fix).
         test('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2', async () => {
             settingsSync.getJSON.mockImplementation(key => {
-                if (key === 'settingLivingFiberEnchants') return withE0Off();
+                if (key === 'settingResourcesLivingFiber') return withE0Off();
                 return allTrueSettings;
             });
 
@@ -261,9 +261,9 @@ describe('HarvestablesHandler', () => {
             handler.newHarvestableObject(p[0], p);
             expect(handler.getHarvestableList().find(h => h.id === p[0])).toBeDefined();
 
-            // Static-only disablement: Static* keys false, Living* keys unchanged (all true).
+            // Static-only disablement: settingResourcesStatic* keys false, settingResourcesLiving* keys unchanged (all true).
             settingsSync.getJSON.mockImplementation(key =>
-                typeof key === 'string' && key.startsWith('settingStatic') ? allFalseSettings : allTrueSettings
+                typeof key === 'string' && key.startsWith('settingResourcesStatic') ? allFalseSettings : allTrueSettings
             );
 
             handler.HarvestUpdateEvent({0: p[0], 1: p[10] ?? 3, 2: 2});
@@ -283,7 +283,7 @@ describe('HarvestablesHandler', () => {
         // Before the render-time filter move, the spawn-time enchant gate dropped it and event 46 could not recover.
         test('HARV-2: living fiber spawn with charges=0 is kept in list even when e0 setting is off', async () => {
             settingsSync.getJSON.mockImplementation(key => {
-                if (key === 'settingLivingFiberEnchants') {
+                if (key === 'settingResourcesLivingFiber') {
                     return {e0: Array(8).fill(false), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
                 }
                 return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};

@@ -50,7 +50,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // @verified 2026-04-24: pure-static harvestable with Static settings off is dropped from cluster input so
     // cluster rings stop surrounding entities the drawings already skip (Important #1 in PR #82 review).
     test('pure static harvestable with Static off is excluded from cluster candidates', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allFalse() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allFalse() : null);
         const renderer = makeRenderer({
             harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
@@ -60,7 +60,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 
     // @verified 2026-04-24: pure-static harvestable with Static on is kept.
     test('pure static harvestable with Static on is kept in cluster candidates', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
             harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
@@ -71,8 +71,8 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // @verified 2026-04-24: living harvestable (mobileTypeId=real typeId) consults Living key, not Static.
     test('living harvestable with Living on but Static off is kept', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allTrue();
-            if (key === 'settingStaticFiberEnchants') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
             return null;
         });
         const renderer = makeRenderer({
@@ -86,8 +86,8 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // living resources the same way they surround static ones.
     test('living mob with Living on is kept in cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allTrue();
-            if (key === 'settingStaticFiberEnchants') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
             return null;
         });
         const renderer = makeRenderer({
@@ -99,7 +99,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 
     // @verified 2026-08-02: skinnable living mob (Hide) with Living on reaches the cluster input.
     test('living skinnable mob with Living on is kept in cluster candidates', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingHideEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesLivingHide' ? allTrue() : null);
         const renderer = makeRenderer({
             mobsList: [{id: 12, name: 'Hide', tier: 6, enchantmentLevel: 2, type: EnemyType.LivingSkinnable, hX: 1, hY: 1}],
         });
@@ -110,8 +110,8 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // @verified 2026-04-24: living mob with Living off is excluded even if Static is on, matching MobsDrawing.
     test('living mob with Living off is excluded from cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allFalse();
-            if (key === 'settingStaticFiberEnchants') return allTrue();
+            if (key === 'settingResourcesLivingFiber') return allFalse();
+            if (key === 'settingResourcesStaticFiber') return allTrue();
             return null;
         });
         const renderer = makeRenderer({
@@ -133,7 +133,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 
     // @verified 2026-04-24: batch-spawn sentinel mobileTypeId=null routes as pure-static.
     test('batch-spawn harvestable (mobileTypeId=null) is gated by Static setting', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
             harvestableList: [{id: 3, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: null, hX: 1, hY: 1}],
         });
@@ -143,11 +143,11 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 });
 
 const LIVING_KEYS = [
-    'settingLivingHideEnchants',
-    'settingLivingWoodEnchants',
-    'settingLivingRockEnchants',
-    'settingLivingOreEnchants',
-    'settingLivingFiberEnchants',
+    'settingResourcesLivingHide',
+    'settingResourcesLivingWood',
+    'settingResourcesLivingRock',
+    'settingResourcesLivingOre',
+    'settingResourcesLivingFiber',
 ];
 
 describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state', () => {
@@ -187,11 +187,11 @@ describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state',
     // @verified 2026-09-03: per-family gating holds on decoded state. The 2026-09-03 capture carries 10 Hide,
     // 4 Log, 8 Rock, 4 Ore, 4 Fiber, so enabling one family admits exactly that family.
     test.each([
-        ['settingLivingHideEnchants', 'Hide', 10],
-        ['settingLivingWoodEnchants', 'Log', 4],
-        ['settingLivingRockEnchants', 'Rock', 8],
-        ['settingLivingOreEnchants', 'Ore', 4],
-        ['settingLivingFiberEnchants', 'Fiber', 4],
+        ['settingResourcesLivingHide', 'Hide', 10],
+        ['settingResourcesLivingWood', 'Log', 4],
+        ['settingResourcesLivingRock', 'Rock', 8],
+        ['settingResourcesLivingOre', 'Ore', 4],
+        ['settingResourcesLivingFiber', 'Fiber', 4],
     ])('%s alone admits only the %s living resources (%i)', (settingKey, family, expected) => {
         settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
         const renderer = makeRenderer({mobsList});

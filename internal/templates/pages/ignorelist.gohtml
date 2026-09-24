@@ -67,11 +67,11 @@
             const emptyEl = document.getElementById('emptyIgnoreList');
 
             function getIgnoreList() {
-                return settingsSync.getJSON('ignoreList', []);
+                return settingsSync.getJSON('settingIgnoreList', []);
             }
 
             function saveIgnoreList(list) {
-                settingsSync.setJSON('ignoreList', list);
+                settingsSync.setJSON('settingIgnoreList', list);
                 renderList();
             }
 

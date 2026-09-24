@@ -62,7 +62,7 @@
     <!-- Must be in head before sidebar template -->
     <script>
         window.sidebar = {
-            collapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+            collapsed: (localStorage.getItem('settingUiSidebarCollapsed') ?? localStorage.getItem('sidebarCollapsed')) === 'true',
             hoverExpanded: false,
             hoverTimeout: null,
 
@@ -73,7 +73,7 @@
 
             toggle() {
                 this.collapsed = !this.collapsed;
-                localStorage.setItem('sidebarCollapsed', this.collapsed);
+                localStorage.setItem('settingUiSidebarCollapsed', this.collapsed);
                 this.updateClasses();
             },
 

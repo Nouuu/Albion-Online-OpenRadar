@@ -175,5 +175,5 @@ export function getResourceStorageKey(prefix, type) {
         'fsp': 'Fiber', 'hsp': 'Hide', 'wsp': 'Wood', 'osp': 'Ore', 'rsp': 'Rock',
         'flp': 'Fiber', 'hlp': 'Hide', 'wlp': 'Wood', 'olp': 'Ore', 'rlp': 'Rock'
     }[prefix];
-    return `setting${type}${resourceName}Enchants`;
+    return `settingResources${type}${resourceName}`;
 }
