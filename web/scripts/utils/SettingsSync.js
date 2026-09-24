@@ -153,7 +153,8 @@ export class SettingsSync {
                 return Math.min(entry.max, Math.max(entry.min, parsed));
             }
             case 'enum': {
-                const match = entry.values.find(v => typeof v === 'number' ? raw.trim() !== '' && Number(raw) === v : v === raw);
+                const text = String(raw);
+                const match = entry.values.find(v => typeof v === 'number' ? text.trim() !== '' && Number(text) === v : v === text);
                 return match === undefined ? entry.default : match;
             }
             default:
