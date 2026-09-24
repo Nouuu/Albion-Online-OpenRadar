@@ -1,6 +1,5 @@
 {{define "pages/players"}}
 <div class="space-y-6 stagger">
-    <!-- Page Header -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h1 class="text-3xl font-bold text-base-content">Players</h1>
@@ -8,7 +7,6 @@
         </div>
     </div>
 
-    <!-- Position Limitation Info -->
     <div role="alert" class="alert bg-info/20 border border-info/40">
         <i data-lucide="info" class="w-5 h-5 text-info"></i>
         <div>
@@ -20,7 +18,6 @@
         </div>
     </div>
 
-    <!-- Show Section -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -29,34 +26,34 @@
             </h2>
             <div class="space-y-3">
                 <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingPlayersDetect" class="checkbox checkbox-primary">
+                    <input type="checkbox" data-setting="settingPlayersDetect" class="checkbox checkbox-primary">
                     <i data-lucide="users" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Players on Radar</span>
-                    <div class="tooltip" data-tip="Master toggle to show players on the radar.">
+                    <span data-setting-label="settingPlayersDetect" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Detect players</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersDetect" data-tip="Tracks players in range. Off: no player list, no player counts, no flash, border or sound.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
                 <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingPlayersShowEquipment" class="checkbox checkbox-primary">
+                    <input type="checkbox" data-setting="settingPlayersShowEquipment" class="checkbox checkbox-primary">
                     <i data-lucide="backpack" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Equipment</span>
-                    <div class="tooltip" data-tip="Shows the equipment the other player is carrying.">
+                    <span data-setting-label="settingPlayersShowEquipment" class="text-base-content/80 group-hover:text-base-content transition-colors">Show Equipment</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersShowEquipment" data-tip="Shows the equipment the other player is carrying.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
                 <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingPlayersShowSpells" class="checkbox checkbox-primary">
+                    <input type="checkbox" data-setting="settingPlayersShowSpells" class="checkbox checkbox-primary">
                     <i data-lucide="wand-2" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Spells</span>
-                    <div class="tooltip" data-tip="Shows active and passive spells on player cards.">
+                    <span data-setting-label="settingPlayersShowSpells" class="text-base-content/80 group-hover:text-base-content transition-colors">Show Spells</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersShowSpells" data-tip="Shows active and passive spells on player cards.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
                 <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingPlayersShowHealthBars" class="checkbox checkbox-primary">
+                    <input type="checkbox" data-setting="settingPlayersShowHealthBars" class="checkbox checkbox-primary">
                     <i data-lucide="heart-pulse" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Health Bar</span>
-                    <div class="tooltip" data-tip="Shows health bar on player cards when health data is available.">
+                    <span data-setting-label="settingPlayersShowHealthBars" class="text-base-content/80 group-hover:text-base-content transition-colors">Show health bars</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersShowHealthBars" data-tip="Shows health bar on player cards when health data is available.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
@@ -64,7 +61,6 @@
         </div>
     </div>
 
-    <!-- Alerts Section -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -78,18 +74,18 @@
                         Screen
                     </h3>
                     <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                        <input type="checkbox" id="settingAlertFlash" class="checkbox checkbox-error">
+                        <input type="checkbox" data-setting="settingAlertFlash" class="checkbox checkbox-error">
                         <i data-lucide="zap" class="w-5 h-5 text-error"></i>
-                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
-                        <div class="tooltip" data-tip="Shows a red flash when a player is detected.">
+                        <span data-setting-label="settingAlertFlash" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
+                        <div class="tooltip" data-setting-tip="settingAlertFlash" data-tip="Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it.">
                             <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                         </div>
                     </label>
                     <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                        <input type="checkbox" id="settingAlertBorder" class="checkbox checkbox-error">
+                        <input type="checkbox" data-setting="settingAlertBorder" class="checkbox checkbox-error">
                         <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
-                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
-                        <div class="tooltip" data-tip="Draws a red pulsating border around the radar while hostile players are detected.">
+                        <span data-setting-label="settingAlertBorder" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
+                        <div class="tooltip" data-setting-tip="settingAlertBorder" data-tip="Pulses a red border around the radar while a threat is in range. Ignored names do not count.">
                             <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                         </div>
                     </label>
@@ -100,47 +96,44 @@
                         Sound
                     </h3>
                     <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
-                        <input type="checkbox" id="settingAlertSound" class="checkbox checkbox-warning">
+                        <input type="checkbox" data-setting="settingAlertSound" class="checkbox checkbox-warning">
                         <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
-                        <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
-                        <div class="tooltip" data-tip="Plays a sound alert when a player is detected.">
+                        <span data-setting-label="settingAlertSound" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
+                        <div class="tooltip" data-setting-tip="settingAlertSound" data-tip="Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it.">
                             <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                         </div>
                     </label>
                     <div class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
                         <i data-lucide="list" class="w-5 h-5 text-warning"></i>
-                        <label for="settingAlertSoundFile" class="text-base-content/80 font-medium whitespace-nowrap">Sound</label>
-                        <select id="settingAlertSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
+                        <label for="settingAlertSoundFile" data-setting-label="settingAlertSoundFile" class="text-base-content/80 font-medium whitespace-nowrap">Sound</label>
+                        <select id="settingAlertSoundFile" data-setting="settingAlertSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
                         <button id="previewSound" type="button" class="btn btn-ghost btn-sm btn-square"
                                 aria-label="Play the selected alert sound">
                             <i data-lucide="play" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingAlertSoundVolume">
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
                         <i data-lucide="sliders-horizontal" class="w-5 h-5 text-warning"></i>
-                        <span class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
-                        <div class="tooltip ml-auto w-full max-w-64" id="settingAlertSoundVolumeTip" data-tip="100%">
-                            <input type="range" id="settingAlertSoundVolume" min="0" max="1" step="0.05" value="1"
-                                   class="range range-warning range-xs w-full">
-                        </div>
+                        <span data-setting-label="settingAlertSoundVolume" class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
+                        <input type="range" data-setting="settingAlertSoundVolume" min="0" max="1" step="0.05"
+                               class="range range-warning range-xs ml-auto w-full max-w-64">
+                        <span data-value-for="settingAlertSoundVolume" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
                     </label>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20" for="settingAlertSoundCooldown">
+                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
                         <i data-lucide="hourglass" class="w-5 h-5 text-warning"></i>
-                        <span class="text-base-content/80 font-medium whitespace-nowrap">Cooldown</span>
-                        <div class="tooltip" data-tip="Minimum delay between two alert sounds. At zero, every detection plays.">
+                        <span data-setting-label="settingAlertSoundCooldown" class="text-base-content/80 font-medium whitespace-nowrap">Cooldown</span>
+                        <div class="tooltip" data-setting-tip="settingAlertSoundCooldown" data-tip="Minimum delay between two alert sounds. At zero, every alert plays.">
                             <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                         </div>
-                        <div class="tooltip ml-auto w-full max-w-64" id="settingAlertSoundCooldownTip" data-tip="500 ms">
-                            <input type="range" id="settingAlertSoundCooldown" min="0" max="3000" step="100" value="500"
-                                   class="range range-warning range-xs w-full">
-                        </div>
+                        <input type="range" data-setting="settingAlertSoundCooldown" min="0" max="3000" step="100"
+                               class="range range-warning range-xs ml-auto w-full max-w-64">
+                        <span data-value-for="settingAlertSoundCooldown" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
                     </label>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Player Types Section -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -148,30 +141,27 @@
                 Player Types
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <!-- Passive Players -->
                 <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
-                    <input type="checkbox" id="settingPlayersPassive" class="checkbox checkbox-success">
+                    <input type="checkbox" data-setting="settingPlayersPassive" class="checkbox checkbox-success">
                     <span class="w-3 h-3 rounded-full bg-success"></span>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Passive</span>
-                    <div class="tooltip" data-tip="Show players who are not flagged for PvP.">
+                    <span data-setting-label="settingPlayersPassive" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Passive</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersPassive" data-tip="Show players who are not flagged for PvP.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
-                <!-- Faction Players -->
                 <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
-                    <input type="checkbox" id="settingPlayersFaction" class="checkbox checkbox-info">
+                    <input type="checkbox" data-setting="settingPlayersFaction" class="checkbox checkbox-info">
                     <span class="w-3 h-3 rounded-full bg-info"></span>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Faction</span>
-                    <div class="tooltip" data-tip="Show players flagged for faction warfare.">
+                    <span data-setting-label="settingPlayersFaction" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Faction</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersFaction" data-tip="Show players flagged for faction warfare.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
-                <!-- Dangerous Players -->
                 <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
-                    <input type="checkbox" id="settingPlayersHostile" class="checkbox checkbox-error">
+                    <input type="checkbox" data-setting="settingPlayersHostile" class="checkbox checkbox-error">
                     <span class="w-3 h-3 rounded-full bg-error"></span>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Hostile</span>
-                    <div class="tooltip" data-tip="Show hostile/dangerous players.">
+                    <span data-setting-label="settingPlayersHostile" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Hostile</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersHostile" data-tip="Lists hostile-flagged players. In black zones every player counts as hostile, so this shows or hides all of them. Does not change alerts.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
@@ -179,7 +169,6 @@
         </div>
     </div>
 
-    <!-- Display Limit -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -190,12 +179,12 @@
                 <label class="block">
                     <span class="flex items-center gap-2 text-base-content/80 mb-2">
                         <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
-                        Maximum Players Displayed
-                        <div class="tooltip" data-tip="Maximum number of players to display (1-100). Default: 50">
+                        <span data-setting-label="settingPlayersMaxDisplayed">Maximum Players Displayed</span>
+                        <div class="tooltip" data-setting-tip="settingPlayersMaxDisplayed" data-tip="Maximum number of players to display (1-100). Default: 50">
                             <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                         </div>
                     </span>
-                    <input id="settingPlayersMaxDisplayed" type="number" min="1" max="100" placeholder="50"
+                    <input type="number" data-setting="settingPlayersMaxDisplayed" min="1" max="100" step="1"
                            class="input input-bordered w-full">
                 </label>
             </div>
@@ -206,96 +195,12 @@
 
 {{define "scripts/players"}}
 <script>
-    (async function () {
-        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
-        const {ALERT_SOUNDS} = await import('/scripts/utils/AlertSoundCatalog.js');
-        const alertSound = (await import('/scripts/utils/AlertSound.js')).default;
-
-        let cleanup = [];
-
-        function initPlayersPage() {
-            const settingsSync = window.settingsSync;
-            cleanup = [];
-
-            function addListener(el, event, handler) {
-                if (el) {
-                    el.addEventListener(event, handler);
-                    cleanup.push(() => el.removeEventListener(event, handler));
-                }
-            }
-
-            const bindCheckbox = (id) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.checked = settingsSync.getBool(id);
-                    addListener(el, "change", () => settingsSync.setBool(id, el.checked));
-                }
-            };
-
-            ["settingPlayersDetect", "settingPlayersShowEquipment", "settingPlayersShowSpells", "settingPlayersShowHealthBars",
-                "settingAlertSound", "settingAlertFlash", "settingAlertBorder", "settingPlayersPassive", "settingPlayersFaction",
-                "settingPlayersHostile"].forEach(bindCheckbox);
-
-            const soundFileEl = document.getElementById("settingAlertSoundFile");
-            if (soundFileEl) {
-                soundFileEl.replaceChildren(...ALERT_SOUNDS.map(s => new Option(s.label, s.file)));
-                soundFileEl.value = alertSound.resolve().file;
-                addListener(soundFileEl, "change", () => settingsSync.set("settingAlertSoundFile", soundFileEl.value));
-            }
-
-            const previewEl = document.getElementById("previewSound");
-            if (previewEl) {
-                addListener(previewEl, "click", () => alertSound.preview());
-            }
-
-            const bindSlider = (id, read, write, format) => {
-                const el = document.getElementById(id);
-                const tip = document.getElementById(id + "Tip");
-                if (!el) return;
-                const show = () => {
-                    if (tip) tip.dataset.tip = format(Number(el.value));
-                };
-                el.value = read();
-                show();
-                addListener(el, "input", () => {
-                    write(Number(el.value));
-                    show();
-                });
-            };
-
-            bindSlider("settingAlertSoundVolume",
-                () => settingsSync.getFloat("settingAlertSoundVolume"),
-                v => settingsSync.setFloat("settingAlertSoundVolume", v),
-                v => Math.round(v * 100) + "%");
-
-            bindSlider("settingAlertSoundCooldown",
-                () => settingsSync.getNumber("settingAlertSoundCooldown"),
-                ms => settingsSync.setNumber("settingAlertSoundCooldown", ms),
-                ms => ms === 0 ? "every detection" : ms + " ms");
-
-            const settingPlayersMaxDisplayed = document.getElementById("settingPlayersMaxDisplayed");
-            if (settingPlayersMaxDisplayed) {
-                settingPlayersMaxDisplayed.value = settingsSync.getNumber("settingPlayersMaxDisplayed");
-                addListener(settingPlayersMaxDisplayed, "input", () => {
-                    const val = Number(settingPlayersMaxDisplayed.value);
-                    if (val >= 1 && val <= 100) {
-                        settingsSync.setNumber("settingPlayersMaxDisplayed", val);
-                    }
-                });
-            }
-        }
-
-        function destroyPlayersPage() {
-            cleanup.forEach(fn => fn());
-            cleanup = [];
-        }
-
-        if (!window._playersPageRegistered) {
-            registerPage('players', {init: initPlayersPage, destroy: destroyPlayersPage});
-            window._playersPageRegistered = true;
-        }
-
-        window.onGlobalsReady(() => reinitCurrentPage());
-    })();
+    Promise.all([import('/scripts/utils/SettingControls.js'), import('/scripts/utils/AlertSound.js')])
+        .then(([{registerBoundPage}, {default: alertSound}]) => registerBoundPage('players', {
+            init({root, signal}) {
+                root.querySelector('#settingAlertSoundFile').value = alertSound.resolve().file;
+                root.querySelector('#previewSound').addEventListener('click', () => alertSound.preview(), {signal});
+            },
+        }));
 </script>
 {{end}}

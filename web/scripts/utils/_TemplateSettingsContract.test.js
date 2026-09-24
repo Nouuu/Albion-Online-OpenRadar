@@ -14,7 +14,7 @@ const EXCLUSIONS = [
     {name: 'settings page, until its Debug regroup', page: 'settings', region: root => root},
     {name: 'radar controls row and inline script, until the radar settings panel', page: 'radar',
         region: root => root.querySelector('#canvasContainer').nextElementSibling},
-    ...['players', 'enemies', 'chests'].map(page =>
+    ...['enemies', 'chests'].map(page =>
         ({name: `${page} page, pending conversion`, page, region: root => root})),
 ];
 
@@ -190,8 +190,8 @@ describe('template settings contract', () => {
         expect(missing).toEqual([]);
     });
 
-    test('number controls carry the registry bounds and no placeholder or value', () => {
-        const drift = all('input[type="number"][data-setting]').flatMap(({page, el}) => {
+    test('number and range controls carry the registry bounds and no placeholder or value', () => {
+        const drift = all('input[type="number"][data-setting], input[type="range"][data-setting]').flatMap(({page, el}) => {
             const entry = registryEntry(el.dataset.setting);
             const attrs = ['min', 'max', 'step'].map(name => el.getAttribute(name));
             const ok = attrs.join() === [entry.min, entry.max, entry.step].map(String).join()
