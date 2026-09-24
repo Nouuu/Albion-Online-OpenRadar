@@ -1,6 +1,5 @@
 {{define "pages/chests"}}
 <div class="space-y-6 stagger">
-    <!-- Page Header -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h1 class="text-3xl font-bold text-base-content">Chests & Dungeons</h1>
@@ -8,7 +7,6 @@
         </div>
     </div>
 
-    <!-- Experimental Warning -->
     <div role="alert" class="alert bg-warning/20 border border-warning/40">
         <i data-lucide="construction" class="w-5 h-5 text-warning"></i>
         <div>
@@ -17,7 +15,6 @@
         </div>
     </div>
 
-    <!-- Chests Section -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -27,34 +24,34 @@
             <p class="text-base-content/60 text-sm mb-4">Select which chest rarities to display on the radar.</p>
             <div class="flex flex-wrap gap-4">
                 <label class="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" id="settingChestsGreen" class="checkbox checkbox-success">
+                    <input type="checkbox" data-setting="settingChestsGreen" class="checkbox checkbox-success">
                     <span class="w-3 h-3 rounded-full bg-tier-2"></span>
-                    <span class="text-tier-2 group-hover:text-base-content transition-colors font-medium">Green</span>
-                    <div class="tooltip" data-tip="Common loot chests">
+                    <span data-setting-label="settingChestsGreen" class="text-tier-2 group-hover:text-base-content transition-colors font-medium">Green</span>
+                    <div class="tooltip" data-setting-tip="settingChestsGreen" data-tip="Loot chests of this rarity. The rarity is read from the chest name, so some chests are not shown.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" id="settingChestsBlue" class="checkbox checkbox-info">
+                    <input type="checkbox" data-setting="settingChestsBlue" class="checkbox checkbox-info">
                     <span class="w-3 h-3 rounded-full bg-tier-3"></span>
-                    <span class="text-tier-3 group-hover:text-base-content transition-colors font-medium">Blue</span>
-                    <div class="tooltip" data-tip="Uncommon loot chests">
+                    <span data-setting-label="settingChestsBlue" class="text-tier-3 group-hover:text-base-content transition-colors font-medium">Blue</span>
+                    <div class="tooltip" data-setting-tip="settingChestsBlue" data-tip="Loot chests of this rarity. The rarity is read from the chest name, so some chests are not shown.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" id="settingChestsPurple" class="checkbox checkbox-secondary">
+                    <input type="checkbox" data-setting="settingChestsPurple" class="checkbox checkbox-secondary">
                     <span class="w-3 h-3 rounded-full bg-tier-4"></span>
-                    <span class="text-tier-4 group-hover:text-base-content transition-colors font-medium">Purple</span>
-                    <div class="tooltip" data-tip="Rare loot chests">
+                    <span data-setting-label="settingChestsPurple" class="text-tier-4 group-hover:text-base-content transition-colors font-medium">Purple</span>
+                    <div class="tooltip" data-setting-tip="settingChestsPurple" data-tip="Loot chests of this rarity. The rarity is read from the chest name, so some chests are not shown.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer group">
-                    <input type="checkbox" id="settingChestsYellow" class="checkbox checkbox-warning">
+                    <input type="checkbox" data-setting="settingChestsYellow" class="checkbox checkbox-warning">
                     <span class="w-3 h-3 rounded-full bg-tier-5"></span>
-                    <span class="text-tier-5 group-hover:text-base-content transition-colors font-medium">Yellow</span>
-                    <div class="tooltip" data-tip="Legendary loot chests">
+                    <span data-setting-label="settingChestsYellow" class="text-tier-5 group-hover:text-base-content transition-colors font-medium">Yellow</span>
+                    <div class="tooltip" data-setting-tip="settingChestsYellow" data-tip="Loot chests of this rarity. The rarity is read from the chest name, so some chests are not shown.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
@@ -62,7 +59,6 @@
         </div>
     </div>
 
-    <!-- Mists Section -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -78,18 +74,18 @@
                     </h3>
                     <div class="flex flex-wrap gap-4">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsSolo" class="checkbox checkbox-primary checkbox-sm">
+                            <input type="checkbox" data-setting="settingMistsSolo" class="checkbox checkbox-primary checkbox-sm">
                             <i data-lucide="user" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 group-hover:text-base-content transition-colors">Solo</span>
-                            <div class="tooltip" data-tip="Solo mist portals (1 player)">
+                            <span data-setting-label="settingMistsSolo" class="text-base-content/80 group-hover:text-base-content transition-colors">Solo</span>
+                            <div class="tooltip" data-setting-tip="settingMistsSolo" data-tip="Solo mist portals (1 player)">
                                 <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsDuo" class="checkbox checkbox-primary checkbox-sm">
+                            <input type="checkbox" data-setting="settingMistsDuo" class="checkbox checkbox-primary checkbox-sm">
                             <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 group-hover:text-base-content transition-colors">Duo</span>
-                            <div class="tooltip" data-tip="Duo mist portals (2 players)">
+                            <span data-setting-label="settingMistsDuo" class="text-base-content/80 group-hover:text-base-content transition-colors">Duo</span>
+                            <div class="tooltip" data-setting-tip="settingMistsDuo" data-tip="Duo mist portals (2 players)">
                                 <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                             </div>
                         </label>
@@ -103,56 +99,51 @@
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsEnchant0" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E0</span>
+                            <input type="checkbox" data-setting="settingMistsEnchant0" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingMistsEnchant0" class="text-sm text-base-content/80">E0</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsEnchant1" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E1</span>
+                            <input type="checkbox" data-setting="settingMistsEnchant1" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingMistsEnchant1" class="text-sm text-base-content/80">E1</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsEnchant2" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E2</span>
+                            <input type="checkbox" data-setting="settingMistsEnchant2" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingMistsEnchant2" class="text-sm text-base-content/80">E2</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsEnchant3" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E3</span>
+                            <input type="checkbox" data-setting="settingMistsEnchant3" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingMistsEnchant3" class="text-sm text-base-content/80">E3</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingMistsEnchant4" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E4</span>
+                            <input type="checkbox" data-setting="settingMistsEnchant4" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingMistsEnchant4" class="text-sm text-base-content/80">E4</span>
                         </label>
                     </div>
                 </div>
 
                 <label class="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 border border-secondary/20 cursor-pointer group hover:bg-secondary/20 transition-colors mt-2">
-                    <input type="checkbox" id="settingMistsWispCages" class="checkbox checkbox-secondary">
+                    <input type="checkbox" data-setting="settingMistsWispCages" class="checkbox checkbox-secondary">
                     <i data-lucide="box" class="w-5 h-5 text-secondary"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Wisp Cages</span>
-                    <div class="tooltip" data-tip="Display wisp cages locations in mists">
+                    <span data-setting-label="settingMistsWispCages" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Wisp Cages</span>
+                    <div class="tooltip" data-setting-tip="settingMistsWispCages" data-tip="Display wisp cages locations in mists">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
 
                 <label class="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 border border-secondary/20 cursor-pointer group hover:bg-secondary/20 transition-colors mt-2">
-                    <input type="checkbox" id="settingMistsWisps" class="checkbox checkbox-secondary">
+                    <input type="checkbox" data-setting="settingMistsWisps" class="checkbox checkbox-secondary">
                     <i data-lucide="sparkles" class="w-5 h-5 text-secondary"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Wisp signs (pre-portal)</span>
-                    <div class="tooltip" data-tip="Display wisp spawn signs that appear before a mist portal opens">
+                    <span data-setting-label="settingMistsWisps" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Wisp signs (pre-portal)</span>
+                    <div class="tooltip" data-setting-tip="settingMistsWisps" data-tip="Shows the wisp signs that appear before a Mists portal opens. The Solo/Duo and rarity filters also apply.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
 
-                <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors mt-1">
-                    <input type="checkbox" id="settingDebugMistsWispIds" class="checkbox checkbox-primary checkbox-xs">
-                    <span class="text-sm text-base-content/80">Show wisp ID (debug)</span>
-                </label>
-
                 <label class="flex items-center gap-3 p-3 rounded-lg bg-secondary/10 border border-secondary/20 cursor-pointer group hover:bg-secondary/20 transition-colors mt-2">
-                    <input type="checkbox" id="settingMistsKnightfallAbbey" class="checkbox checkbox-secondary">
+                    <input type="checkbox" data-setting="settingMistsKnightfallAbbey" class="checkbox checkbox-secondary">
                     <i data-lucide="church" class="w-5 h-5 text-secondary"></i>
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Knightfall Abbey</span>
-                    <div class="tooltip" data-tip="Display Knightfall Abbey portals on the radar when you are inside a Mist instance">
+                    <span data-setting-label="settingMistsKnightfallAbbey" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Show Knightfall Abbey</span>
+                    <div class="tooltip" data-setting-tip="settingMistsKnightfallAbbey" data-tip="Shows Knightfall Abbey entrances.">
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
@@ -160,7 +151,6 @@
         </div>
     </div>
 
-    <!-- Dungeons Section -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -176,18 +166,18 @@
                     </h3>
                     <div class="flex flex-wrap gap-4">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsSolo" class="checkbox checkbox-primary checkbox-sm">
+                            <input type="checkbox" data-setting="settingDungeonsSolo" class="checkbox checkbox-primary checkbox-sm">
                             <i data-lucide="user" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 group-hover:text-base-content transition-colors">Solo</span>
-                            <div class="tooltip" data-tip="Solo random dungeons">
+                            <span data-setting-label="settingDungeonsSolo" class="text-base-content/80 group-hover:text-base-content transition-colors">Solo</span>
+                            <div class="tooltip" data-setting-tip="settingDungeonsSolo" data-tip="Solo random dungeons">
                                 <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsGroup" class="checkbox checkbox-primary checkbox-sm">
+                            <input type="checkbox" data-setting="settingDungeonsGroup" class="checkbox checkbox-primary checkbox-sm">
                             <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 group-hover:text-base-content transition-colors">Group</span>
-                            <div class="tooltip" data-tip="Group random dungeons">
+                            <span data-setting-label="settingDungeonsGroup" class="text-base-content/80 group-hover:text-base-content transition-colors">Group</span>
+                            <div class="tooltip" data-setting-tip="settingDungeonsGroup" data-tip="Group random dungeon entrances, plus any entrance not recognized as solo, corrupted or hellgate. The E0 to E4 filters also apply.">
                                 <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                             </div>
                         </label>
@@ -201,24 +191,24 @@
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsEnchant0" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E0</span>
+                            <input type="checkbox" data-setting="settingDungeonsEnchant0" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingDungeonsEnchant0" class="text-sm text-base-content/80">E0</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsEnchant1" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E1</span>
+                            <input type="checkbox" data-setting="settingDungeonsEnchant1" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingDungeonsEnchant1" class="text-sm text-base-content/80">E1</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsEnchant2" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E2</span>
+                            <input type="checkbox" data-setting="settingDungeonsEnchant2" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingDungeonsEnchant2" class="text-sm text-base-content/80">E2</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsEnchant3" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E3</span>
+                            <input type="checkbox" data-setting="settingDungeonsEnchant3" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingDungeonsEnchant3" class="text-sm text-base-content/80">E3</span>
                         </label>
                         <label class="flex items-center gap-2 px-3 py-1.5 rounded bg-base-300 cursor-pointer hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" id="settingDungeonsEnchant4" class="checkbox checkbox-primary checkbox-xs">
-                            <span class="text-sm text-base-content/80">E4</span>
+                            <input type="checkbox" data-setting="settingDungeonsEnchant4" class="checkbox checkbox-primary checkbox-xs">
+                            <span data-setting-label="settingDungeonsEnchant4" class="text-sm text-base-content/80">E4</span>
                         </label>
                     </div>
                 </div>
@@ -230,18 +220,18 @@
                     </h3>
                     <div class="flex flex-wrap gap-4">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                            <input type="checkbox" id="settingDungeonsCorrupted" class="checkbox checkbox-error checkbox-sm">
+                            <input type="checkbox" data-setting="settingDungeonsCorrupted" class="checkbox checkbox-error checkbox-sm">
                             <span class="w-3 h-3 rounded-full bg-error"></span>
-                            <span class="text-error group-hover:text-base-content transition-colors font-medium">Corrupted</span>
-                            <div class="tooltip" data-tip="Corrupted dungeon entrances (PvP)">
+                            <span data-setting-label="settingDungeonsCorrupted" class="text-error group-hover:text-base-content transition-colors font-medium">Corrupted</span>
+                            <div class="tooltip" data-setting-tip="settingDungeonsCorrupted" data-tip="Corrupted dungeon entrances (PvP)">
                                 <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
-                            <input type="checkbox" id="settingDungeonsHellgate" class="checkbox checkbox-warning checkbox-sm">
+                            <input type="checkbox" data-setting="settingDungeonsHellgate" class="checkbox checkbox-warning checkbox-sm">
                             <span class="w-3 h-3 rounded-full bg-tier-6"></span>
-                            <span class="text-tier-6 group-hover:text-base-content transition-colors font-medium">Hellgate</span>
-                            <div class="tooltip" data-tip="Hellgate portals (PvP)">
+                            <span data-setting-label="settingDungeonsHellgate" class="text-tier-6 group-hover:text-base-content transition-colors font-medium">Hellgate</span>
+                            <div class="tooltip" data-setting-tip="settingDungeonsHellgate" data-tip="Hellgate portals (PvP)">
                                 <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                             </div>
                         </label>
@@ -255,51 +245,6 @@
 
 {{define "scripts/chests"}}
 <script>
-    (async function () {
-        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
-
-        let cleanup = [];
-
-        function initChestsPage() {
-            const settingsSync = window.settingsSync;
-            cleanup = [];
-
-            function addListener(el, event, handler) {
-                if (el) {
-                    el.addEventListener(event, handler);
-                    cleanup.push(() => el.removeEventListener(event, handler));
-                }
-            }
-
-            const bindCheckbox = (id) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.checked = settingsSync.getBool(id);
-                    addListener(el, "change", () => settingsSync.setBool(id, el.checked));
-                }
-            };
-
-            // Chests
-            ["settingChestsGreen", "settingChestsBlue", "settingChestsPurple", "settingChestsYellow"].forEach(bindCheckbox);
-
-            // Mists
-            ["settingMistsSolo", "settingMistsDuo", "settingMistsEnchant0", "settingMistsEnchant1", "settingMistsEnchant2", "settingMistsEnchant3", "settingMistsEnchant4", "settingMistsWispCages", "settingMistsWisps", "settingDebugMistsWispIds", "settingMistsKnightfallAbbey"].forEach(bindCheckbox);
-
-            // Dungeons
-            ["settingDungeonsSolo", "settingDungeonsGroup", "settingDungeonsEnchant0", "settingDungeonsEnchant1", "settingDungeonsEnchant2", "settingDungeonsEnchant3", "settingDungeonsEnchant4", "settingDungeonsCorrupted", "settingDungeonsHellgate"].forEach(bindCheckbox);
-        }
-
-        function destroyChestsPage() {
-            cleanup.forEach(fn => fn());
-            cleanup = [];
-        }
-
-        if (!window._chestsPageRegistered) {
-            registerPage('chests', {init: initChestsPage, destroy: destroyChestsPage});
-            window._chestsPageRegistered = true;
-        }
-
-        window.onGlobalsReady(() => reinitCurrentPage());
-    })();
+    import('/scripts/utils/SettingControls.js').then(({registerBoundPage}) => registerBoundPage('chests'));
 </script>
 {{end}}

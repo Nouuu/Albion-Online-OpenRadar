@@ -14,8 +14,6 @@ const EXCLUSIONS = [
     {name: 'settings page, until its Debug regroup', page: 'settings', region: root => root},
     {name: 'radar controls row and inline script, until the radar settings panel', page: 'radar',
         region: root => root.querySelector('#canvasContainer').nextElementSibling},
-    ...['chests'].map(page =>
-        ({name: `${page} page, pending conversion`, page, region: root => root})),
 ];
 
 const NO_CONTROL_YET = {
