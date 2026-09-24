@@ -3,7 +3,7 @@ import {readFileSync, readdirSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe, expect, test} from 'vitest';
-import {SETTINGS, registryEntry} from './SettingsRegistry.js';
+import {MIGRATION_ROWS, SETTINGS, registryEntry} from './SettingsRegistry.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
@@ -226,8 +226,8 @@ describe('template settings contract', () => {
     });
 
     test('removed keys have no control', () => {
-        const left = SETTINGS.filter(entry => entry.pendingRemoval && entry.scope !== 'backend')
-            .flatMap(({key}) => pages.filter(({root}) => root.querySelector(`[data-setting="${key}"], [id="${key}"]`))
+        const left = MIGRATION_ROWS.filter(row => row.migration === 'remove')
+            .flatMap(({legacyKey: key}) => pages.filter(({root}) => root.querySelector(`[data-setting="${key}"], [id="${key}"]`))
                 .map(({name}) => `${name}: ${key}`));
         expect(left).toEqual([]);
     });

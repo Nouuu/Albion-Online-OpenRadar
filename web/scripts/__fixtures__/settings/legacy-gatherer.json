@@ -31,7 +31,6 @@
     "settingUiResourcesFiberOpen": "false",
     "settingUiResourcesHideOpen": "true",
     "settingDebugWsCoalescing": "true",
-    "settingWsThrottling": "true",
     "settingUiSidebarCollapsed": "true",
     "settingLogLevel": "WARN",
     "settingPlayersDetect": "false",

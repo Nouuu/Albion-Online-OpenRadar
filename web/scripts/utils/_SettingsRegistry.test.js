@@ -148,6 +148,12 @@ describe('SettingsRegistry', () => {
         expect([...LEGACY_REMOVED].sort()).toEqual(expected.sort());
     });
 
+    test('removed rows have no registry entry', () => {
+        for (const key of ['settingAllEnemies', 'livingResourcesID', 'categoryRendering', 'settingWsThrottling', 'collapse-debug']) {
+            expect(registryEntry(key), key).toBeUndefined();
+        }
+    });
+
     test('registryEntry exposes the legacy name', () => {
         expect(registryEntry('settingPlayersHostile').legacyKey).toBe('settingDangerousPlayers');
         expect(registryEntry('settingUnknownKey')).toBeUndefined();
@@ -299,7 +305,6 @@ describe('SettingsRegistry control location', () => {
         ['settingLogLevel', 'Settings', 'Logging'],
         ['settingUiSettingsNetworkOpen', 'Settings', 'Network'],
         ['settingUiSidebarCollapsed', 'Layout', 'Sidebar'],
-        ['settingAllEnemies', 'removed (header presets stay)', ''],
     ])('%s is on page %s, section %s', (key, page, section) => {
         expect(registryEntry(key)).toMatchObject({page, section});
     });

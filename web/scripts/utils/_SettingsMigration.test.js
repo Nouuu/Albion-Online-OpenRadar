@@ -68,6 +68,13 @@ describe('migrateSettings', () => {
         expect(store).not.toHaveProperty('settingFlash');
     });
 
+    test('removed keys are deleted, also when an old tab writes them after migration', () => {
+        const removed = ['settingAllEnemies', 'livingResourcesID', 'categoryRendering', 'settingWsThrottling', 'collapse-debug'];
+        const storage = memoryStorage({settingSchemaVersion: '1', ...Object.fromEntries(removed.map(key => [key, 'true']))});
+        migrateSettings(storage);
+        expect(storage.snapshot()).toEqual({settingSchemaVersion: '1'});
+    });
+
     test('the schema marker is written last', () => {
         const storage = memoryStorage({settingFlash: 'true'});
         migrateSettings(storage);

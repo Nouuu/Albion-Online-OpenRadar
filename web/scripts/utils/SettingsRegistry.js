@@ -261,11 +261,6 @@ const LOCATIONS = {
     'Settings > Debug': ['settingUiSettingsDebugOpen'],
     'Settings > Network': ['settingUiSettingsNetworkOpen'],
     'Layout > Sidebar': ['settingUiSidebarCollapsed'],
-    'removed (header presets stay)': ['settingAllEnemies'],
-    'removed (plain delete)': ['livingResourcesID'],
-    'removed': ['categoryRendering'],
-    'removed with the throttle': ['settingWsThrottling'],
-    'removed (Enemies debug moves to Settings)': ['collapse-debug'],
 };
 
 const LOCATION_OF = new Map(Object.entries(LOCATIONS).flatMap(([location, keys]) => keys.map(key => [key, location])));
@@ -289,7 +284,9 @@ export function deepFreeze(value) {
     return value;
 }
 
-export const SETTINGS = deepFreeze(ROWS.map(([key, type, def, legacyKey, migration, extra = {}]) => ({
+const REMOVED = new Set(['remove', 'backend']);
+
+export const SETTINGS = deepFreeze(ROWS.filter(row => row[4] !== 'remove').map(([key, type, def, legacyKey, migration, extra = {}]) => ({
     key,
     type,
     default: structuredClone(def),
@@ -301,7 +298,7 @@ export const SETTINGS = deepFreeze(ROWS.map(([key, type, def, legacyKey, migrati
     migration,
     legacyKey,
     networkPath: NETWORK_PATHS[key] ?? null,
-    pendingRemoval: migration === 'remove' || migration === 'backend',
+    pendingRemoval: migration === 'backend',
 })));
 
 const BY_KEY = new Map(SETTINGS.map(entry => [entry.key, entry]));
@@ -316,7 +313,7 @@ export function registryDefault(key) {
     return entry.default;
 }
 
-export const LEGACY_REMOVED = deepFreeze(SETTINGS.filter(e => e.pendingRemoval).map(e => e.legacyKey));
+export const LEGACY_REMOVED = deepFreeze(ROWS.filter(row => REMOVED.has(row[4])).map(row => row[3]));
 
-export const MIGRATION_ROWS = deepFreeze(SETTINGS.map(({legacyKey, key, migration, pendingRemoval}) =>
-    ({legacyKey, key: pendingRemoval ? null : key, migration})));
+export const MIGRATION_ROWS = deepFreeze(ROWS.map(([key, , , legacyKey, migration]) =>
+    ({legacyKey, key: REMOVED.has(migration) ? null : key, migration})));
