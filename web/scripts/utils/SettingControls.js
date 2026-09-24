@@ -149,10 +149,13 @@ function onButton(root, sync, event) {
     if (!button || !root.contains(button)) return;
     const entry = registryEntry(button.dataset.nudge ?? button.dataset.reset);
     if (!entry) return;
-    const value = button.dataset.reset !== undefined
-        ? entry.default
-        : snap(entry, sync.get(entry.key) + Number(button.dataset.dir) * entry.step);
-    writeNumber(sync, entry, value);
+    if (button.dataset.reset !== undefined) {
+        writeNumber(sync, entry, entry.default);
+        return;
+    }
+    const dir = Number(button.dataset.dir);
+    if (!Number.isFinite(dir)) return;
+    writeNumber(sync, entry, snap(entry, sync.get(entry.key) + dir * entry.step));
 }
 
 const bindings = new WeakMap();

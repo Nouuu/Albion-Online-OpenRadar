@@ -117,6 +117,16 @@ describe('bindSettingControls range', () => {
         expect(slider.value).toBe('1');
     });
 
+    test('a nudge button without a valid data-dir writes nothing', () => {
+        const sync = newSync();
+        const root = mount(markup + '<button data-nudge="settingRadarZoom">no dir</button>');
+        bind(root, sync);
+
+        root.querySelectorAll('[data-nudge]')[2].click();
+
+        expect(localStorage.getItem('settingRadarZoom')).toBeNull();
+    });
+
     test('a focused slider still moves on nudge', () => {
         const sync = newSync();
         const root = mount(markup);
