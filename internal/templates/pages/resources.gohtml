@@ -230,13 +230,6 @@
             ];
 
             const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
-            const defaultEnchants = {
-                'e0': [false, false, false, false, false, false, false, false],
-                'e1': [false, false, false, false, false, false, false, false],
-                'e2': [false, false, false, false, false, false, false, false],
-                'e3': [false, false, false, false, false, false, false, false],
-                'e4': [false, false, false, false, false, false, false, false],
-            };
 
             // Generate all resource grids
             resources.forEach(resource => {
@@ -254,7 +247,7 @@
             const checkboxUpdates = [];
             resources.forEach(config => {
                 const storageKey = getResourceStorageKey(config.prefix, config.type);
-                const enchants = settingsSync.getJSON(storageKey, defaultEnchants);
+                const enchants = settingsSync.getJSON(storageKey);
 
                 enchantLevels.forEach(enchantLevel => {
                     const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
@@ -292,10 +285,10 @@
                 }
             };
 
-            const bindNumber = (id, defaultVal) => {
+            const bindNumber = (id) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.value = settingsSync.getNumber(id, defaultVal);
+                    el.value = settingsSync.getNumber(id);
                     el.addEventListener("input", () => settingsSync.setNumber(id, Number(el.value)));
                 }
             };
@@ -309,8 +302,8 @@
             bindCheckbox("settingDebugResourcesTypeId");
             bindCheckbox("settingDebugResourcesDbName");
 
-            bindNumber("settingRadarClusterRadius", 30);
-            bindNumber("settingRadarClusterMinSize", 2);
+            bindNumber("settingRadarClusterRadius");
+            bindNumber("settingRadarClusterMinSize");
 
             // Initialize tier buttons after grids are rendered
             setTimeout(() => {
@@ -320,18 +313,10 @@
 
             // Collapse state persistence
             const collapseIds = ['settingUiResourcesFiberOpen', 'settingUiResourcesHideOpen', 'settingUiResourcesWoodOpen', 'settingUiResourcesOreOpen', 'settingUiResourcesRockOpen'];
-            const defaultStates = {
-                'settingUiResourcesFiberOpen': true,
-                'settingUiResourcesHideOpen': false,
-                'settingUiResourcesWoodOpen': false,
-                'settingUiResourcesOreOpen': false,
-                'settingUiResourcesRockOpen': false
-            };
-
             collapseIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    const saved = settingsSync.getBool(id, defaultStates[id]);
+                    const saved = settingsSync.getBool(id);
                     el.checked = saved;
                     el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
                 }

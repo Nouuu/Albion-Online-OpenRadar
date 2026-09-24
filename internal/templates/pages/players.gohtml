@@ -264,18 +264,18 @@
             };
 
             bindSlider("settingAlertSoundVolume",
-                () => settingsSync.getFloat("settingAlertSoundVolume", 1),
+                () => settingsSync.getFloat("settingAlertSoundVolume"),
                 v => settingsSync.setFloat("settingAlertSoundVolume", v),
                 v => Math.round(v * 100) + "%");
 
             bindSlider("settingAlertSoundCooldown",
-                () => settingsSync.getNumber("settingAlertSoundCooldown", 500),
+                () => settingsSync.getNumber("settingAlertSoundCooldown"),
                 ms => settingsSync.setNumber("settingAlertSoundCooldown", ms),
                 ms => ms === 0 ? "every detection" : ms + " ms");
 
             const settingPlayersMaxDisplayed = document.getElementById("settingPlayersMaxDisplayed");
             if (settingPlayersMaxDisplayed) {
-                settingPlayersMaxDisplayed.value = settingsSync.getNumber("settingPlayersMaxDisplayed", 50);
+                settingPlayersMaxDisplayed.value = settingsSync.getNumber("settingPlayersMaxDisplayed");
                 addListener(settingPlayersMaxDisplayed, "input", () => {
                     const val = Number(settingPlayersMaxDisplayed.value);
                     if (val >= 1 && val <= 100) {

@@ -1,11 +1,13 @@
 // synthetic: render-time gate on settingResourcesFishing + settingRadarResourceCount; filter logic is deterministic from entity + settings.
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
         getJSON: vi.fn(() => null),
-        getNumber: vi.fn((_k, d) => d ?? 0),
+        getNumber: vi.fn(key => registryDefault(key)),
         getFloat: vi.fn(() => null),
     },
 }));

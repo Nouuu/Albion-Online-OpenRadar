@@ -15,7 +15,7 @@ export class DrawingUtils {
 
     getZoomLevel() {
         if (typeof window !== 'undefined' && window.innerWidth < 640) return 0.9;
-        return settingsSync.getFloat('settingRadarZoom') || 1.0;
+        return settingsSync.getFloat('settingRadarZoom');
     }
     getIconSizeMultiplier() {
         const v = settingsSync.getFloat('settingRadarIconSize');
@@ -30,7 +30,7 @@ export class DrawingUtils {
             const c = document.getElementById('drawCanvas');
             if (c?.width) return c.width;
         }
-        return settingsSync.getNumber('settingRadarSize') || 500;
+        return settingsSync.getNumber('settingRadarSize');
     }
     getCanvasCenter() { return this.getCanvasSize() / 2; }
 

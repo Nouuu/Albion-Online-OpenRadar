@@ -5,11 +5,13 @@ import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
+const {registryDefault} = await vi.hoisted(() => import('./SettingsRegistry.js'));
+
 vi.mock('./SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
         getJSON: vi.fn(() => null),
-        getNumber: vi.fn((_k, d) => d ?? 0),
+        getNumber: vi.fn(key => registryDefault(key)),
     },
 }));
 vi.mock('./CanvasManager.js', () => ({

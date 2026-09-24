@@ -367,26 +367,26 @@
             // Collapse state persistence
             const collapseDebug = document.getElementById('settingUiSettingsDebugOpen');
             if (collapseDebug) {
-                collapseDebug.checked = settingsSync.getBool('settingUiSettingsDebugOpen', false);
+                collapseDebug.checked = settingsSync.getBool('settingUiSettingsDebugOpen');
                 addListener(collapseDebug, 'change', () => settingsSync.setBool('settingUiSettingsDebugOpen', collapseDebug.checked));
             }
 
             const collapseLogging = document.getElementById('settingUiSettingsLoggingOpen');
             if (collapseLogging) {
-                collapseLogging.checked = settingsSync.getBool('settingUiSettingsLoggingOpen', false);
+                collapseLogging.checked = settingsSync.getBool('settingUiSettingsLoggingOpen');
                 addListener(collapseLogging, 'change', () => settingsSync.setBool('settingUiSettingsLoggingOpen', collapseLogging.checked));
             }
 
             const collapseNetwork = document.getElementById('settingUiSettingsNetworkOpen');
             if (collapseNetwork) {
-                collapseNetwork.checked = settingsSync.getBool('settingUiSettingsNetworkOpen', false);
+                collapseNetwork.checked = settingsSync.getBool('settingUiSettingsNetworkOpen');
                 addListener(collapseNetwork, 'change', () => settingsSync.setBool('settingUiSettingsNetworkOpen', collapseNetwork.checked));
             }
 
             // Log level dropdown
             const logLevelEl = document.getElementById('settingLogLevel');
             if (logLevelEl) {
-                logLevelEl.value = settingsSync.get('settingLogLevel') || 'WARN';
+                logLevelEl.value = settingsSync.get('settingLogLevel');
                 addListener(logLevelEl, 'change', () => settingsSync.set('settingLogLevel', logLevelEl.value));
             }
 
@@ -401,10 +401,10 @@
                 }
             };
 
-            const bindNumber = (id, defaultVal) => {
+            const bindNumber = (id) => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.value = settingsSync.getNumber(id, defaultVal);
+                    el.value = settingsSync.getNumber(id);
                     addListener(el, "input", () => settingsSync.setNumber(id, Number(el.value)));
                 }
             };
@@ -456,8 +456,8 @@
             bindCheckbox("settingRadarResourceDistance");
             bindCheckbox("settingRadarResourceTierBadges");
             bindCheckbox("settingRadarResourceClusters");
-            bindNumber("settingRadarClusterRadius", 30);
-            bindNumber("settingRadarClusterMinSize", 2);
+            bindNumber("settingRadarClusterRadius");
+            bindNumber("settingRadarClusterMinSize");
 
             // Category filters (Logging section)
             bindCheckbox("settingLogCategorySystem");

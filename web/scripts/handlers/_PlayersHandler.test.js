@@ -2,12 +2,14 @@ import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
-        get: vi.fn((_k, d) => d),
+        get: vi.fn(key => registryDefault(key)),
         getBool: vi.fn(() => true),
-        getNumber: vi.fn((_k, d) => d),
-        getFloat: vi.fn((_k, d) => d),
+        getNumber: vi.fn(key => registryDefault(key)),
+        getFloat: vi.fn(key => registryDefault(key)),
         getJSON: vi.fn(() => null),
     },
 }));
@@ -29,7 +31,7 @@ describe('PlayersHandler', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         settingsSync.getBool.mockReturnValue(true);
-        settingsSync.getNumber.mockImplementation((_k, d) => d);
+        settingsSync.getNumber.mockImplementation(key => registryDefault(key));
         zonesDatabase.getPvpType.mockReturnValue('safe');
 
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};

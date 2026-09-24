@@ -105,7 +105,7 @@ export class RadarRenderer {
         const deltaTime = currentTime - this.previousTime;
         const t = Math.min(1, deltaTime / 100);
 
-        if (settingsSync.getBool('settingRadarMapBackground', true) && this.drawings.mapsDrawing) {
+        if (settingsSync.getBool('settingRadarMapBackground') && this.drawings.mapsDrawing) {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
@@ -349,7 +349,7 @@ export class RadarRenderer {
         const center = canvasSize / 2;
         const distances = [10, 20];
         const isSmall = typeof window !== 'undefined' && window.innerWidth < 640;
-        const zoomLevel = isSmall ? 0.9 : (settingsSync.getFloat('settingRadarZoom') || 1.0);
+        const zoomLevel = isSmall ? 0.9 : settingsSync.getFloat('settingRadarZoom');
         const pixelsPerMeter = (canvasSize / 60) * zoomLevel;
 
         ctx.save();

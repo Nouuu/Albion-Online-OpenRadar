@@ -62,7 +62,7 @@ export class MobsDrawing extends DrawingUtils
                 }
 
                 if (settingsSync.getBool("settingEnemiesMinHealthFilter")) {
-                    const threshold = settingsSync.getNumber("settingEnemiesMinHealth", 2100);
+                    const threshold = settingsSync.getNumber("settingEnemiesMinHealth");
                     if ((mobOne.maxHealth ?? 0) < threshold) continue;
                 }
 

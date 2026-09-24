@@ -5,11 +5,13 @@ import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 // pcap-derived: fixture corpus from 25-minute anonymized capture
 // synthetic: constructed parameters with no pcap origin
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
         getJSON: vi.fn(),
-        getNumber: vi.fn((_k, d) => d),
+        getNumber: vi.fn(key => registryDefault(key)),
     },
 }));
 

@@ -14,11 +14,11 @@ export class WebSocketEventQueue {
     }
 
     get enableCoalescing() {
-        return window.settingsSync?.getBool('settingDebugWsCoalescing', true) ?? true;
+        return window.settingsSync?.getBool('settingDebugWsCoalescing');
     }
 
     get enableThrottling() {
-        return window.settingsSync?.getBool('settingWsThrottling', true) ?? true;
+        return window.settingsSync?.getBool('settingWsThrottling');
     }
 
     setFlushCallback(callback) {

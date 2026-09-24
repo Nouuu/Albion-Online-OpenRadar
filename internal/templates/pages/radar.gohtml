@@ -212,12 +212,12 @@ window.onGlobalsReady(function() {
     }
 
     // Initialize zoom
-    const initialZoom = settingsSync.getFloat('settingRadarZoom') || 1.0;
+    const initialZoom = settingsSync.getFloat('settingRadarZoom');
     updateZoomDisplay(initialZoom);
 
     addListener(zoomSlider, 'input', () => setZoom(parseFloat(zoomSlider.value)));
-    addListener(zoomIn, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) + 0.1));
-    addListener(zoomOut, 'click', () => setZoom((settingsSync.getFloat('settingRadarZoom') || 1.0) - 0.1));
+    addListener(zoomIn, 'click', () => setZoom(settingsSync.getFloat('settingRadarZoom') + 0.1));
+    addListener(zoomOut, 'click', () => setZoom(settingsSync.getFloat('settingRadarZoom') - 0.1));
     addListener(zoomReset, 'click', () => setZoom(1.0));
 
     // Icon Size controls
@@ -238,12 +238,12 @@ window.onGlobalsReady(function() {
         updateIconSizeDisplay(value);
     }
 
-    const initialIconSize = settingsSync.getFloat('settingRadarIconSize') || 1.0;
+    const initialIconSize = settingsSync.getFloat('settingRadarIconSize');
     updateIconSizeDisplay(initialIconSize);
 
     addListener(iconSizeSlider, 'input', () => setIconSize(parseFloat(iconSizeSlider.value)));
-    addListener(iconSizeUp, 'click', () => setIconSize((settingsSync.getFloat('settingRadarIconSize') || 1.0) + 0.1));
-    addListener(iconSizeDown, 'click', () => setIconSize((settingsSync.getFloat('settingRadarIconSize') || 1.0) - 0.1));
+    addListener(iconSizeUp, 'click', () => setIconSize(settingsSync.getFloat('settingRadarIconSize') + 0.1));
+    addListener(iconSizeDown, 'click', () => setIconSize(settingsSync.getFloat('settingRadarIconSize') - 0.1));
     addListener(iconSizeReset, 'click', () => setIconSize(1.0));
 
     // Canvas Size controls
@@ -298,19 +298,19 @@ window.onGlobalsReady(function() {
         window.dispatchEvent(new CustomEvent('canvasSizeChanged', { detail: { size: renderSize } }));
     }
 
-    const initialSize = settingsSync.getNumber('settingRadarSize') || 500;
+    const initialSize = settingsSync.getNumber('settingRadarSize');
     setCanvasSize(initialSize);
 
     function reapplyOnResize() {
-        const persisted = settingsSync.getNumber('settingRadarSize') || 500;
+        const persisted = settingsSync.getNumber('settingRadarSize');
         setCanvasSize(persisted);
     }
     window.addEventListener('resize', reapplyOnResize);
     cleanup.push(() => window.removeEventListener('resize', reapplyOnResize));
 
     addListener(sizeSlider, 'input', () => setCanvasSize(parseInt(sizeSlider.value)));
-    addListener(sizeUp, 'click', () => setCanvasSize((settingsSync.getNumber('settingRadarSize') || 500) + 50));
-    addListener(sizeDown, 'click', () => setCanvasSize((settingsSync.getNumber('settingRadarSize') || 500) - 50));
+    addListener(sizeUp, 'click', () => setCanvasSize(settingsSync.getNumber('settingRadarSize') + 50));
+    addListener(sizeDown, 'click', () => setCanvasSize(settingsSync.getNumber('settingRadarSize') - 50));
     addListener(sizeReset, 'click', () => setCanvasSize(500));
 
     // Show Players toggle + list visibility

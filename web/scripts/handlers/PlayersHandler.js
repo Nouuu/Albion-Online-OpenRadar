@@ -91,7 +91,7 @@ export class PlayersHandler {
 
     playThreatSound() {
         const at = Date.now();
-        const cooldown = settingsSync.getNumber('settingAlertSoundCooldown', 500);
+        const cooldown = settingsSync.getNumber('settingAlertSoundCooldown');
         const sinceLastMs = at - this.lastThreatSoundAt;
         if (sinceLastMs < cooldown) {
             window.logger?.debug(CATEGORIES.PLAYERS, 'ThreatSoundDropped', {sinceLastMs, cooldown});
@@ -112,7 +112,7 @@ export class PlayersHandler {
     }
 
     isIgnored({nickname, guildName, allianceName}) {
-        const entries = settingsSync.getJSON('settingIgnoreList', []);
+        const entries = settingsSync.getJSON('settingIgnoreList');
         if (!Array.isArray(entries) || entries.length === 0) return false;
 
         const identities = [nickname, guildName, allianceName]
@@ -180,7 +180,7 @@ export class PlayersHandler {
         const hasFaction = Parameters[53] !== undefined;
 
         const existingPlayer = this.playersList.find(player => player.id === id);
-        const parsedMaxPlayers = settingsSync.getNumber('settingPlayersMaxDisplayed', 50);
+        const parsedMaxPlayers = settingsSync.getNumber('settingPlayersMaxDisplayed');
         const maxPlayers = Math.min(100, parsedMaxPlayers);
 
         if (existingPlayer) {
@@ -391,9 +391,9 @@ export class PlayersHandler {
      * @returns {Player[]} - Filtered list of players
      */
     getFilteredPlayers() {
-        const showPassive = settingsSync.getBool('settingPlayersPassive') ?? true;
-        const showFaction = settingsSync.getBool('settingPlayersFaction') ?? true;
-        const showDangerous = settingsSync.getBool('settingPlayersHostile') ?? true;
+        const showPassive = settingsSync.getBool('settingPlayersPassive');
+        const showFaction = settingsSync.getBool('settingPlayersFaction');
+        const showDangerous = settingsSync.getBool('settingPlayersHostile');
 
         const pvpType = zonesDatabase.getPvpType(window.currentMapId);
 

@@ -10,16 +10,16 @@ export class AlertSound {
     }
 
     async play() {
-        await this.emit(settingsSync.getFloat('settingAlertSoundVolume', 1));
+        await this.emit(settingsSync.getFloat('settingAlertSoundVolume'));
     }
 
     async preview() {
-        const volume = settingsSync.getFloat('settingAlertSoundVolume', 1);
+        const volume = settingsSync.getFloat('settingAlertSoundVolume');
         await this.emit(volume > 0 ? volume : 1);
     }
 
     resolve() {
-        const stored = settingsSync.get('settingAlertSoundFile', DEFAULT_SOUND);
+        const stored = settingsSync.get('settingAlertSoundFile');
         const entry = findSound(stored);
         if (entry) return entry;
         window.logger?.warn(CATEGORIES.PLAYERS, 'AlertSoundMissing', {stored});

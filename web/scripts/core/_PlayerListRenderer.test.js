@@ -2,10 +2,12 @@ import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
-        getNumber: vi.fn((_k, d) => d),
+        getNumber: vi.fn(key => registryDefault(key)),
         getJSON: vi.fn(() => null),
     },
 }));

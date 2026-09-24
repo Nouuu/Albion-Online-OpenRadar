@@ -8,11 +8,13 @@ import {dirname, join} from 'node:path';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
         getJSON: vi.fn(() => null),
-        getNumber: vi.fn((_k, d) => d ?? 0),
+        getNumber: vi.fn(key => registryDefault(key)),
         getFloat: vi.fn(() => null),
     },
 }));
@@ -410,7 +412,7 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
 
     beforeEach(() => {
         vi.clearAllMocks();
-        settingsSync.getNumber.mockImplementation((_k, d) => d ?? 0);
+        settingsSync.getNumber.mockImplementation(key => registryDefault(key));
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
         drawing = new MobsDrawing();
         drawing.DrawCustomImage = vi.fn();

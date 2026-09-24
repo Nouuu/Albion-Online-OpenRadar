@@ -287,17 +287,10 @@
 
             // Collapse state persistence
             const collapseIds = ['settingUiEnemiesClassicOpen', 'settingUiEnemiesMistsOpen', 'settingUiEnemiesOtherOpen', 'collapse-debug'];
-            const defaultStates = {
-                'settingUiEnemiesClassicOpen': true,
-                'settingUiEnemiesMistsOpen': true,
-                'settingUiEnemiesOtherOpen': false,
-                'collapse-debug': false
-            };
-
             collapseIds.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.checked = settingsSync.getBool(id, defaultStates[id]);
+                    el.checked = settingsSync.getBool(id);
                     addListener(el, 'change', () => settingsSync.setBool(id, el.checked));
                 }
             });
@@ -368,7 +361,7 @@
             const settingEnemiesMinHealth = document.getElementById("settingEnemiesMinHealth");
 
             settingEnemiesMinHealthFilter.checked = settingsSync.getBool('settingEnemiesMinHealthFilter');
-            settingEnemiesMinHealth.value = settingsSync.getNumber("settingEnemiesMinHealth", 2100);
+            settingEnemiesMinHealth.value = settingsSync.getNumber("settingEnemiesMinHealth");
 
             if (!settingEnemiesMinHealthFilter.checked)
                 settingEnemiesMinHealth.setAttribute("disabled", "");

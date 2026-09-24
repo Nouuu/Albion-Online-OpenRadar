@@ -19,6 +19,7 @@ vi.mock('./ImageCache.js', () => ({
 }));
 
 const {DrawingUtils} = await import('./DrawingUtils.js');
+const {SettingsSync: RealSettingsSync} = await vi.importActual('./SettingsSync.js');
 const settingsSync = (await import('./SettingsSync.js')).default;
 const imageCache = (await import('./ImageCache.js')).default;
 
@@ -33,10 +34,19 @@ describe('DrawingUtils marker scaling helpers', () => {
         utils.getCanvasScale = vi.fn(() => 1.0);
     });
 
-    // @verified 2026-05-01: default returns 1.0 when settingRadarIconSize is unset (backward compat).
-    test('getIconSizeMultiplier returns 1.0 when settingRadarIconSize is unset', () => {
-        settingsSync.getFloat.mockReturnValue(null);
-        expect(utils.getIconSizeMultiplier()).toBe(1.0);
+    function readThroughRealSync(stored) {
+        localStorage.clear();
+        if (stored !== undefined) localStorage.setItem('settingRadarIconSize', stored);
+        const real = new RealSettingsSync();
+        settingsSync.getFloat.mockImplementation(key => real.getFloat(key));
+        return real;
+    }
+
+    // @verified 2026-09-24: an unset settingRadarIconSize reads the registry default 1.
+    test('getIconSizeMultiplier returns the registry default when settingRadarIconSize is unset', () => {
+        const real = readThroughRealSync();
+        expect(utils.getIconSizeMultiplier()).toBe(1);
+        real.destroy();
     });
 
     // @verified 2026-05-01: returns the configured value when settingRadarIconSize is set.
@@ -45,12 +55,14 @@ describe('DrawingUtils marker scaling helpers', () => {
         expect(utils.getIconSizeMultiplier()).toBe(1.5);
     });
 
-    // @verified 2026-05-01: NaN/0 fallback to 1.0 to keep markers visible.
-    test('getIconSizeMultiplier falls back to 1.0 when value is 0 or NaN', () => {
-        settingsSync.getFloat.mockReturnValue(0);
-        expect(utils.getIconSizeMultiplier()).toBe(1.0);
-        settingsSync.getFloat.mockReturnValue(NaN);
-        expect(utils.getIconSizeMultiplier()).toBe(1.0);
+    // @verified 2026-09-24: a stored 0 clamps to the registry minimum 0.5, a non-numeric value reads the default 1.
+    test('getIconSizeMultiplier reads 0 as the registry minimum and junk as the default', () => {
+        const zero = readThroughRealSync('0');
+        expect(utils.getIconSizeMultiplier()).toBe(0.5);
+        zero.destroy();
+        const junk = readThroughRealSync('abc');
+        expect(utils.getIconSizeMultiplier()).toBe(1);
+        junk.destroy();
     });
 
     // @verified 2026-05-01: getMarkerSize composes getScaledSize with the icon multiplier.
