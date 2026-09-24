@@ -368,35 +368,34 @@ func TestSettingsLogging_PostStartFailureReportsFalse(t *testing.T) {
 
 func TestSettingsLogging_ConcurrentPostAndInterfacesPersist(t *testing.T) {
 	dir := t.TempDir()
-	if err := capture.WriteConfig(dir, capture.Config{
-		Logging: capture.LoggingConfig{ServerLogsEnabled: false, PcapRecording: false},
-	}); err != nil {
+	if err := capture.WriteConfig(dir, capture.Config{}); err != nil {
 		t.Fatalf("seed config: %v", err)
 	}
-	mux, log := newSettingsTestMux(t, dir)
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	fm := &fakeManager{allInterfaces: []capture.NetworkInterface{{Name: "eth0", Description: "Ethernet", Address: "10.0.0.1"}}}
+	applyMu := &sync.Mutex{}
+	mux := http.NewServeMux()
+	NewSettingsAPI(dir, log, nil, "", applyMu).Register(mux)
+	NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, applyMu).Register(mux)
 
+	var logging, ifaces *httptest.ResponseRecorder
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		body, _ := json.Marshal(map[string]any{"serverLogsEnabled": true})
-		req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	wg.Go(func() {
+		req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader([]byte(`{"serverLogsEnabled":true}`)))
 		req.RemoteAddr = "127.0.0.1:1234"
-		rr := httptest.NewRecorder()
-		mux.ServeHTTP(rr, req)
-	}()
-	go func() {
-		defer wg.Done()
-		_ = capture.MutateConfig(dir, func(cfg *capture.Config) {
-			cfg.CaptureInterfaces = []capture.PersistedInterface{{Name: "eth0"}}
-		})
-	}()
+		logging = httptest.NewRecorder()
+		mux.ServeHTTP(logging, req)
+	})
+	wg.Go(func() { ifaces = postSelect(t, mux, "eth0") })
 	wg.Wait()
 
+	if logging.Code != http.StatusOK || ifaces.Code != http.StatusOK {
+		t.Fatalf("logging %d %s, interfaces %d %s", logging.Code, logging.Body, ifaces.Code, ifaces.Body)
+	}
 	if !log.IsEnabled() {
 		t.Error("logger.IsEnabled() == false after concurrent POST, want true")
 	}
-
 	cfg, err := capture.ReadConfig(dir)
 	if err != nil {
 		t.Fatalf("read config: %v", err)
@@ -407,15 +406,7 @@ func TestSettingsLogging_ConcurrentPostAndInterfacesPersist(t *testing.T) {
 	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Name != "eth0" {
 		t.Errorf("CaptureInterfaces lost in concurrent write: %+v", cfg.CaptureInterfaces)
 	}
-
-	req := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
-	rr := httptest.NewRecorder()
-	mux.ServeHTTP(rr, req)
-	var respBody map[string]any
-	if err := json.NewDecoder(rr.Body).Decode(&respBody); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if respBody["serverLogsEnabled"] != true {
-		t.Errorf("GET serverLogsEnabled=%v, want true", respBody["serverLogsEnabled"])
+	if len(fm.reconfArgs) != 1 || fm.reconfArgs[0].Name != "eth0" {
+		t.Errorf("runtime Reconfigure args %+v, want [eth0]", fm.reconfArgs)
 	}
 }

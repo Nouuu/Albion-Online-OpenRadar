@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -24,12 +26,16 @@ type fakeManager struct {
 	reconfErr     error
 	allInterfaces []capture.NetworkInterface
 	recording     bool
+	onReconfigure func(*fakeManager)
 }
 
 func (f *fakeManager) State() capture.State { return f.state }
 func (f *fakeManager) IsRecording() bool    { return f.recording }
 func (f *fakeManager) Reconfigure(t []capture.NetworkInterface) error {
 	f.reconfArgs = slices.Clone(t)
+	if f.onReconfigure != nil {
+		f.onReconfigure(f)
+	}
 	return f.reconfErr
 }
 
@@ -445,5 +451,168 @@ func TestIsLoopback(t *testing.T) {
 		if got := isLoopback(tc.addr); got != tc.want {
 			t.Errorf("isLoopback(%q) = %v, want %v", tc.addr, got, tc.want)
 		}
+	}
+}
+
+func postSelect(t *testing.T, mux *http.ServeMux, names ...string) *httptest.ResponseRecorder {
+	t.Helper()
+	body, _ := json.Marshal(map[string]any{"names": names})
+	req := httptest.NewRequest(http.MethodPost, "/api/network/interfaces", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	return rec
+}
+
+func persistedNames(t *testing.T, dir string) []string {
+	t.Helper()
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	names := make([]string, 0, len(cfg.CaptureInterfaces))
+	for _, p := range cfg.CaptureInterfaces {
+		names = append(names, p.Name)
+	}
+	return names
+}
+
+func TestNetworkSelect_PartialApplyPersistsOpenedOnly(t *testing.T) {
+	fm := &fakeManager{
+		allInterfaces: []capture.NetworkInterface{
+			{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"},
+			{Name: "b", Description: "Ethernet", Address: "10.0.0.2"},
+		},
+		reconfErr: errors.New("partial open failures: [b: boom]"),
+		onReconfigure: func(f *fakeManager) {
+			f.state = capture.State{
+				Status:     capture.StatusRunning,
+				Active:     []capture.CaptureSummary{{Name: "a"}},
+				LastErrors: map[string]string{"b": "boom"},
+			}
+		},
+	}
+	dir := t.TempDir()
+	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{}))
+
+	rec := postSelect(t, mux, "a", "b")
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500; body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "b: boom") {
+		t.Errorf("body does not name the failed interface and its error: %s", rec.Body.String())
+	}
+	if got := persistedNames(t, dir); !slices.Equal(got, []string{"a"}) {
+		t.Errorf("persisted %v, want [a]", got)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/network/interfaces", nil)
+	list := httptest.NewRecorder()
+	mux.ServeHTTP(list, req)
+	var rows []ifaceRow
+	if err := json.NewDecoder(list.Body).Decode(&rows); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	for _, r := range rows {
+		if want := r.Name == "a"; r.IsPersisted != want {
+			t.Errorf("row %q isPersisted=%v, want %v", r.Name, r.IsPersisted, want)
+		}
+	}
+}
+
+func TestNetworkSelect_RecordingResetWritesPcapFalse(t *testing.T) {
+	fm := &fakeManager{
+		allInterfaces: []capture.NetworkInterface{
+			{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"},
+			{Name: "b", Description: "Ethernet", Address: "10.0.0.2"},
+		},
+		recording: true,
+		reconfErr: errors.New("pcap recording could not start on b: denied"),
+		onReconfigure: func(f *fakeManager) {
+			f.recording = false
+			f.state = capture.State{
+				Status: capture.StatusRunning,
+				Active: []capture.CaptureSummary{{Name: "a"}, {Name: "b"}},
+			}
+		},
+	}
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{ServerLogsEnabled: true, PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{}))
+
+	rec := postSelect(t, mux, "a", "b")
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500; body=%s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "denied") {
+		t.Errorf("body does not carry the recording error: %s", rec.Body.String())
+	}
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if cfg.Logging.PcapRecording {
+		t.Error("network.json pcapRecording still true after the Manager stopped recording")
+	}
+	if !cfg.Logging.ServerLogsEnabled {
+		t.Error("serverLogsEnabled lost")
+	}
+	if got := persistedNames(t, dir); !slices.Equal(got, []string{"a", "b"}) {
+		t.Errorf("persisted %v, want [a b]", got)
+	}
+}
+
+func TestNetworkSelect_ErrClosedAnswers503AndPersistsNothing(t *testing.T) {
+	fm := &fakeManager{
+		allInterfaces: []capture.NetworkInterface{{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"}},
+		reconfErr:     capture.ErrClosed,
+	}
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		CaptureInterfaces: []capture.PersistedInterface{{Name: "old"}},
+		Logging:           capture.LoggingConfig{PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	before, err := os.ReadFile(filepath.Join(dir, "network.json"))
+	if err != nil {
+		t.Fatalf("read seed: %v", err)
+	}
+	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, &sync.Mutex{}))
+
+	rec := postSelect(t, mux, "a")
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status %d, want 503; body=%s", rec.Code, rec.Body.String())
+	}
+	after, err := os.ReadFile(filepath.Join(dir, "network.json"))
+	if err != nil {
+		t.Fatalf("read after: %v", err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Errorf("network.json changed: before %s after %s", before, after)
+	}
+}
+
+func TestNetworkSelect_WaitsForApplyMu(t *testing.T) {
+	fm := &fakeManager{allInterfaces: []capture.NetworkInterface{{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"}}}
+	applyMu := &sync.Mutex{}
+	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, t.TempDir(), func() []string { return nil }, applyMu))
+
+	applyMu.Lock()
+	done := make(chan int)
+	go func() { done <- postSelect(t, mux, "a").Code }()
+	select {
+	case code := <-done:
+		applyMu.Unlock()
+		t.Fatalf("POST answered %d while applyMu was held", code)
+	case <-time.After(50 * time.Millisecond):
+	}
+	applyMu.Unlock()
+	if code := <-done; code != http.StatusOK {
+		t.Errorf("status %d after unlock, want 200", code)
 	}
 }

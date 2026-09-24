@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -129,18 +130,38 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("unknown interface names: %v", unknown), http.StatusBadRequest)
 		return
 	}
-	if err := a.mgr.Reconfigure(desired); err != nil {
-		http.Error(w, "reconfigure: "+err.Error(), http.StatusInternalServerError)
+	a.applyMu.Lock()
+	defer a.applyMu.Unlock()
+
+	reconfErr := a.mgr.Reconfigure(desired)
+	if errors.Is(reconfErr, capture.ErrClosed) {
+		http.Error(w, "reconfigure: "+reconfErr.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	persisted := make([]capture.PersistedInterface, 0, len(desired))
-	for _, i := range desired {
+	opened := desired
+	if reconfErr != nil {
+		active := make(map[string]bool)
+		for _, c := range a.mgr.State().Active {
+			active[c.Name] = true
+		}
+		opened = slices.DeleteFunc(slices.Clone(desired), func(i capture.NetworkInterface) bool { return !active[i.Name] })
+	}
+	persisted := make([]capture.PersistedInterface, 0, len(opened))
+	for _, i := range opened {
 		persisted = append(persisted, capture.PersistedInterface{Name: i.Name, Description: i.Description})
 	}
+	recording := a.mgr.IsRecording()
 	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 		cfg.CaptureInterfaces = persisted
+		if !recording {
+			cfg.Logging.PcapRecording = false
+		}
 	}); err != nil {
 		http.Error(w, "persist: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if reconfErr != nil {
+		http.Error(w, "reconfigure: "+reconfErr.Error(), http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
