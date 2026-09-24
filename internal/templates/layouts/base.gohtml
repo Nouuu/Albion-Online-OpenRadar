@@ -29,25 +29,9 @@
     <script type="module">
         import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
         import settingsSync from '/scripts/utils/SettingsSync.js';
-        import {
-            attachCheckboxListeners,
-            generateResourceGrid,
-            initializeTierButtonStates,
-            updateTierButtonState,
-            selectAllTierEnchants,
-            getResourceStorageKey
-        } from '/scripts/utils/ResourcesHelper.js';
 
         window.CATEGORIES = CATEGORIES;
         window.settingsSync = settingsSync;
-        window.ResourcesHelper = {
-            attachCheckboxListeners,
-            generateResourceGrid,
-            initializeTierButtonStates,
-            updateTierButtonState,
-            selectAllTierEnchants,
-            getResourceStorageKey
-        };
 
         window.__globalsReady = true;
         document.dispatchEvent(new CustomEvent('globalsReady'));
