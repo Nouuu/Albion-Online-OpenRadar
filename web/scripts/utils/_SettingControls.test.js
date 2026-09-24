@@ -4,6 +4,7 @@ import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {SettingsSync} from './SettingsSync.js';
 import {applyEnemyPreset, bindSettingControls, registerBoundPage} from './SettingControls.js';
 import {registerPage, reinitCurrentPage} from '../core/PageController.js';
+import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
 
@@ -531,5 +532,17 @@ describe('applyEnemyPreset', () => {
         applyEnemyPreset(name, sync);
 
         expect(storedKeys()).toEqual([]);
+    });
+});
+
+describe('resources page', () => {
+    test('binds ten resource grids headed Static and Living, T4 on by default', () => {
+        const root = mountPage('resources');
+        bind(root, newSync());
+
+        expect(root.querySelectorAll('[data-enchant="e0"][data-tier="3"]')).toHaveLength(10);
+        expect([...root.querySelectorAll('h4')].map(h => h.textContent.trim())).toEqual(
+            ['Static', 'Living', 'Static', 'Living', 'Static', 'Living', 'Static', 'Living', 'Static', 'Living']);
+        expect([...root.querySelectorAll('[data-enchant="e0"][data-tier="3"]')].every(cell => cell.checked)).toBe(true);
     });
 });

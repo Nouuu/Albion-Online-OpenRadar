@@ -1,6 +1,5 @@
 {{define "pages/resources"}}
 <div class="space-y-6 stagger">
-    <!-- Page Header with Presets -->
     <div class="card bg-base-200">
         <div class="card-body">
             <div>
@@ -10,82 +9,76 @@
         </div>
     </div>
 
-    <!-- Fiber Section -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="settingUiResourcesFiberOpen" />
+        <input type="checkbox" data-setting="settingUiResourcesFiberOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="flower-2" class="w-5 h-5 text-green-400"></i>
-            Fiber
+            <span data-setting-label="settingUiResourcesFiberOpen">Fiber</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div id="static-fiber-grid"></div>
-                <div id="living-fiber-grid"></div>
+                <div data-setting="settingResourcesStaticFiber"></div>
+                <div data-setting="settingResourcesLivingFiber"></div>
             </div>
         </div>
     </div>
 
-    <!-- Hide Section -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="settingUiResourcesHideOpen" />
+        <input type="checkbox" data-setting="settingUiResourcesHideOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="rabbit" class="w-5 h-5 text-amber-400"></i>
-            Hide
+            <span data-setting-label="settingUiResourcesHideOpen">Hide</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div id="static-hide-grid"></div>
-                <div id="living-hide-grid"></div>
+                <div data-setting="settingResourcesStaticHide"></div>
+                <div data-setting="settingResourcesLivingHide"></div>
             </div>
         </div>
     </div>
 
-    <!-- Wood Section -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="settingUiResourcesWoodOpen" />
+        <input type="checkbox" data-setting="settingUiResourcesWoodOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="tree-pine" class="w-5 h-5 text-emerald-400"></i>
-            Wood
+            <span data-setting-label="settingUiResourcesWoodOpen">Wood</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div id="static-wood-grid"></div>
-                <div id="living-wood-grid"></div>
+                <div data-setting="settingResourcesStaticWood"></div>
+                <div data-setting="settingResourcesLivingWood"></div>
             </div>
         </div>
     </div>
 
-    <!-- Ore Section -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="settingUiResourcesOreOpen" />
+        <input type="checkbox" data-setting="settingUiResourcesOreOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="gem" class="w-5 h-5 text-blue-400"></i>
-            Ore
+            <span data-setting-label="settingUiResourcesOreOpen">Ore</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div id="static-ore-grid"></div>
-                <div id="living-ore-grid"></div>
+                <div data-setting="settingResourcesStaticOre"></div>
+                <div data-setting="settingResourcesLivingOre"></div>
             </div>
         </div>
     </div>
 
-    <!-- Rock Section -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="settingUiResourcesRockOpen" />
+        <input type="checkbox" data-setting="settingUiResourcesRockOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="mountain" class="w-5 h-5 text-gray-400"></i>
-            Rock
+            <span data-setting-label="settingUiResourcesRockOpen">Rock</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div id="static-rock-grid"></div>
-                <div id="living-rock-grid"></div>
+                <div data-setting="settingResourcesStaticRock"></div>
+                <div data-setting="settingResourcesLivingRock"></div>
             </div>
         </div>
     </div>
 
-    <!-- Other Resources -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
@@ -93,257 +86,35 @@
                 Other
             </h2>
             <label class="flex items-center gap-3 cursor-pointer group">
-                <input type="checkbox" id="settingResourcesFishing" class="checkbox checkbox-primary">
-                <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Fishing Pools</span>
-                <div class="tooltip" data-tip="Display fishing zones on the radar.">
+                <input type="checkbox" data-setting="settingResourcesFishing" class="checkbox checkbox-primary">
+                <span data-setting-label="settingResourcesFishing" class="text-base-content/80 group-hover:text-base-content transition-colors">Show Fishing Pools</span>
+                <div class="tooltip" data-setting-tip="settingResourcesFishing" data-tip="Shows fishing spots on the radar.">
                     <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                 </div>
             </label>
         </div>
     </div>
 
-    <!-- Visual & Tools -->
     <div class="card bg-base-200">
         <div class="card-body">
             <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="settings-2" class="w-5 h-5 text-primary"></i>
-                Visual & Tools
+                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
+                Display
             </h2>
-            <div class="space-y-3">
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingRadarResourceCount" class="checkbox checkbox-primary">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Resources Count</span>
-                    <div class="tooltip" data-tip="Display the number of resources available on each node.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingRadarResourceDistance" class="checkbox checkbox-primary">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Distance</span>
-                    <div class="tooltip" data-tip="Display distance to each resource node in meters.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingRadarResourceClusters" class="checkbox checkbox-primary">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Clusters</span>
-                    <div class="tooltip" data-tip="Group nearby resources and display cluster indicators.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <div class="ml-8 pl-4 border-l-2 border-base-content/10 space-y-3">
-                    <label class="block">
-                        <span class="flex items-center gap-2 text-base-content/60 text-xs mb-1">
-                            Cluster radius (meters)
-                            <div class="tooltip" data-tip="Maximum distance to group resources together. Default: 30m">
-                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                            </div>
-                        </span>
-                        <input id="settingRadarClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
-                               class="input input-bordered input-sm w-32">
-                    </label>
-                    <label class="block">
-                        <span class="flex items-center gap-2 text-base-content/60 text-xs mb-1">
-                            Min resources per cluster
-                            <div class="tooltip" data-tip="Minimum number of resources to form a cluster. Default: 2">
-                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                            </div>
-                        </span>
-                        <input id="settingRadarClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
-                               class="input input-bordered input-sm w-32">
-                    </label>
+            <label class="flex items-center gap-3 cursor-pointer group">
+                <input type="checkbox" data-setting="settingResourcesShowHealthBars" class="checkbox checkbox-primary">
+                <span data-setting-label="settingResourcesShowHealthBars" class="text-base-content/80 group-hover:text-base-content transition-colors">Show health bars</span>
+                <div class="tooltip" data-setting-tip="settingResourcesShowHealthBars" data-tip="Display health bar on living resources (mobs).">
+                    <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                 </div>
-
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingResourcesShowHealthBars" class="checkbox checkbox-primary">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Health Bar</span>
-                    <div class="tooltip" data-tip="Display health bar on living resources (mobs).">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingDebugResourcesTypeId" class="checkbox checkbox-primary">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show ID</span>
-                    <div class="tooltip" data-tip="Display internal ID for living resources (debug).">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingDebugResourcesDbName" class="checkbox checkbox-primary">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show DB Name</span>
-                    <div class="tooltip" data-tip="Display the DB uniqueName mapped from the wire typeId (debug, for offset/mapping verification).">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <hr class="border-base-content/10 my-4">
-
-                <p class="text-xs text-base-content/50">
-                    <strong>Tip:</strong> Logging options in <a href="/settings" class="text-primary hover:underline">Settings > Debug & Logging</a>
-                </p>
-            </div>
+            </label>
         </div>
     </div>
 </div>
 {{end}}
 
 {{define "scripts/resources"}}
-    <!-- Resources page: register with PageController for proper lifecycle management -->
 <script>
-    (async function () {
-        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
-
-        const gridContainerIds = [
-            'static-fiber-grid', 'static-hide-grid', 'static-wood-grid', 'static-ore-grid', 'static-rock-grid',
-            'living-fiber-grid', 'living-hide-grid', 'living-wood-grid', 'living-ore-grid', 'living-rock-grid'
-        ];
-
-        function initResourcesPage() {
-            const settingsSync = window.settingsSync;
-            const {
-                attachCheckboxListeners,
-                generateResourceGrid,
-                initializeTierButtonStates,
-                updateTierButtonState,
-                selectAllTierEnchants,
-                getResourceStorageKey
-            } = window.ResourcesHelper;
-
-            window.selectAllTierEnchants = selectAllTierEnchants;
-
-            const resources = [
-                {prefix: 'fsp', name: 'Fiber', emoji: '', type: 'Static', containerId: 'static-fiber-grid'},
-                {prefix: 'hsp', name: 'Hide', emoji: '', type: 'Static', containerId: 'static-hide-grid'},
-                {prefix: 'wsp', name: 'Wood', emoji: '', type: 'Static', containerId: 'static-wood-grid'},
-                {prefix: 'osp', name: 'Ore', emoji: '', type: 'Static', containerId: 'static-ore-grid'},
-                {prefix: 'rsp', name: 'Rock', emoji: '', type: 'Static', containerId: 'static-rock-grid'},
-                {prefix: 'flp', name: 'Dryad (Fiber)', emoji: '', type: 'Living', containerId: 'living-fiber-grid'},
-                {prefix: 'hlp', name: 'Animals (Hide)', emoji: '', type: 'Living', containerId: 'living-hide-grid'},
-                {prefix: 'wlp', name: 'Spirit (Wood)', emoji: '', type: 'Living', containerId: 'living-wood-grid'},
-                {prefix: 'olp', name: 'Elemental (Ore)', emoji: '', type: 'Living', containerId: 'living-ore-grid'},
-                {prefix: 'rlp', name: 'Elemental (Rock)', emoji: '', type: 'Living', containerId: 'living-rock-grid'}
-            ];
-
-            const enchantLevels = ['e0', 'e1', 'e2', 'e3', 'e4'];
-
-            // Generate all resource grids
-            resources.forEach(resource => {
-                const container = document.getElementById(resource.containerId);
-                if (container) {
-                    container.innerHTML = generateResourceGrid({
-                        prefix: resource.prefix,
-                        name: resource.name,
-                        emoji: resource.emoji
-                    });
-                }
-            });
-
-            // Bind resource grid checkboxes (batched to avoid reflow)
-            const checkboxUpdates = [];
-            resources.forEach(config => {
-                const storageKey = getResourceStorageKey(config.prefix, config.type);
-                const enchants = settingsSync.getJSON(storageKey);
-
-                enchantLevels.forEach(enchantLevel => {
-                    const parent = document.getElementById(`${config.prefix}-${enchantLevel}`);
-                    if (!parent) return;
-
-                    const children = Array.from(parent.children);
-                    children.forEach((element, i) => {
-                        if (element.nodeName !== 'INPUT') return;
-                        checkboxUpdates.push({
-                            element,
-                            checked: enchants[enchantLevel][i],
-                            onChange: () => {
-                                const next = structuredClone(settingsSync.getJSON(storageKey));
-                                next[enchantLevel][i] = element.checked;
-                                settingsSync.setJSON(storageKey, next);
-                                updateTierButtonState(config.prefix, i);
-                            }
-                        });
-                    });
-                });
-            });
-
-            // Apply all updates (single reflow)
-            checkboxUpdates.forEach(({element, checked, onChange}) => {
-                element.checked = checked;
-                element.addEventListener("change", onChange);
-            });
-
-            // Helper to bind checkboxes
-            const bindCheckbox = (id) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.checked = settingsSync.getBool(id);
-                    el.addEventListener("change", () => settingsSync.setBool(id, el.checked));
-                }
-            };
-
-            const bindNumber = (id) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.value = settingsSync.getNumber(id);
-                    el.addEventListener("input", () => settingsSync.setNumber(id, Number(el.value)));
-                }
-            };
-
-            // Other settings
-            bindCheckbox("settingResourcesFishing");
-            bindCheckbox("settingRadarResourceCount");
-            bindCheckbox("settingRadarResourceDistance");
-            bindCheckbox("settingRadarResourceClusters");
-            bindCheckbox("settingResourcesShowHealthBars");
-            bindCheckbox("settingDebugResourcesTypeId");
-            bindCheckbox("settingDebugResourcesDbName");
-
-            bindNumber("settingRadarClusterRadius");
-            bindNumber("settingRadarClusterMinSize");
-
-            // Initialize tier buttons after grids are rendered
-            setTimeout(() => {
-                attachCheckboxListeners();
-                initializeTierButtonStates();
-            }, 50);
-
-            // Collapse state persistence
-            const collapseIds = ['settingUiResourcesFiberOpen', 'settingUiResourcesHideOpen', 'settingUiResourcesWoodOpen', 'settingUiResourcesOreOpen', 'settingUiResourcesRockOpen'];
-            collapseIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    const saved = settingsSync.getBool(id);
-                    el.checked = saved;
-                    el.addEventListener('change', () => settingsSync.setBool(id, el.checked));
-                }
-            });
-        }
-
-        function destroyResourcesPage() {
-            // Clear all grid containers to release DOM nodes and event listeners
-            gridContainerIds.forEach(id => {
-                const container = document.getElementById(id);
-                if (container) container.innerHTML = '';
-            });
-            // Clear global reference
-            delete window.selectAllTierEnchants;
-        }
-
-        // Register with PageController (only once per session)
-        if (!window._resourcesPageRegistered) {
-            registerPage('resources', {
-                init: initResourcesPage,
-                destroy: destroyResourcesPage
-            });
-            window._resourcesPageRegistered = true;
-        }
-
-        // Wait for globals (settingsSync) to be ready before reinitializing
-        window.onGlobalsReady(() => reinitCurrentPage());
-    })();
+    import('/scripts/utils/SettingControls.js').then(({registerBoundPage}) => registerBoundPage('resources'));
 </script>
 {{end}}

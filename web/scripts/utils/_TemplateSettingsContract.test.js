@@ -14,7 +14,7 @@ const EXCLUSIONS = [
     {name: 'settings page, until its Debug regroup', page: 'settings', region: root => root},
     {name: 'radar controls row and inline script, until the radar settings panel', page: 'radar',
         region: root => root.querySelector('#canvasContainer').nextElementSibling},
-    ...['resources', 'ignorelist', 'players', 'enemies', 'chests'].map(page =>
+    ...['ignorelist', 'players', 'enemies', 'chests'].map(page =>
         ({name: `${page} page, pending conversion`, page, region: root => root})),
 ];
 
@@ -24,7 +24,6 @@ const NO_CONTROL_YET = {
         'settingDebugResourcesTypeId', 'settingDebugResourcesDbName', 'settingDebugMistsWispIds'],
     'added by the radar settings panel': ['settingRadarFitToScreen', 'settingRadarRotation', 'settingRadarHudZoneInfo',
         'settingRadarHudStats', 'settingUiRadarSettingsOpen'],
-    'resources page, pending conversion': SETTINGS.filter(entry => entry.shape === 'matrix').map(entry => entry.key),
     'ignorelist page, pending conversion': ['settingIgnoreList'],
 };
 
@@ -96,6 +95,10 @@ const TOOLTIPS = {
     settingLogLevel: 'Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything.',
     ...Object.fromEntries(SETTINGS.filter(entry => entry.key.startsWith('settingLogCategory')).map(entry => [entry.key, CATEGORY_TIP])),
 };
+
+function templateOf(name) {
+    return readFileSync(join(PAGES_DIR, `${name}.gohtml`), 'utf8');
+}
 
 function pageNames() {
     return readdirSync(PAGES_DIR).filter(file => file.endsWith('.gohtml')).map(file => file.replace('.gohtml', ''));
@@ -246,6 +249,18 @@ describe('template settings contract', () => {
             ...readdirSync(LAYOUTS_DIR).map(file => join(LAYOUTS_DIR, file))]
             .filter(file => readFileSync(file, 'utf8').includes('RENDERING'));
         expect(hits).toEqual([]);
+    });
+});
+
+describe('page removals', () => {
+    test('resources page holds no radar display control and no stale logging tip', () => {
+        const template = templateOf('resources');
+        for (const key of ['settingRadarResourceCount', 'settingRadarResourceDistance', 'settingRadarResourceClusters',
+            'settingRadarClusterRadius', 'settingRadarClusterMinSize']) {
+            expect(template).not.toContain(key);
+        }
+        expect(template).not.toContain('Debug & Logging');
+        expect(template).not.toContain('ResourcesHelper');
     });
 });
 
