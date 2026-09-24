@@ -546,3 +546,93 @@ describe('resources page', () => {
         expect([...root.querySelectorAll('[data-enchant="e0"][data-tier="3"]')].every(cell => cell.checked)).toBe(true);
     });
 });
+
+describe('bindSettingControls ignore list', () => {
+    const KEY = 'settingIgnoreList';
+    const markup = `<div data-setting="${KEY}">
+        <input type="text" data-ignore-input>
+        <button data-ignore-add>Add name</button>
+        <span data-ignore-count></span>
+        <p data-ignore-empty>The ignore list is empty</p>
+        <div data-ignore-items></div>
+    </div>`;
+
+    function mountList(stored) {
+        if (stored) localStorage.setItem(KEY, JSON.stringify(stored));
+        const sync = newSync();
+        const root = mount(markup);
+        bind(root, sync);
+        return {sync, root, input: root.querySelector('[data-ignore-input]')};
+    }
+
+    function names(root) {
+        return [...root.querySelectorAll('[data-ignore-items] [data-ignore-name]')].map(el => el.textContent);
+    }
+
+    test('adding "treasure map" when "Treasure Map" exists is rejected', () => {
+        const {sync, root, input} = mountList(['Treasure Map']);
+        input.value = '  treasure map ';
+        root.querySelector('[data-ignore-add]').click();
+
+        expect(sync.getJSON(KEY)).toEqual(['Treasure Map']);
+        expect(input.value).toBe('');
+    });
+
+    test('Enter adds the trimmed name, count and empty state follow', () => {
+        const {sync, root, input} = mountList();
+        expect(root.querySelector('[data-ignore-count]').textContent).toBe('0');
+        expect(root.querySelector('[data-ignore-empty]').hidden).toBe(false);
+
+        input.value = ' Nouuu ';
+        input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true}));
+
+        expect(sync.getJSON(KEY)).toEqual(['Nouuu']);
+        expect(names(root)).toEqual(['Nouuu']);
+        expect(root.querySelector('[data-ignore-count]').textContent).toBe('1');
+        expect(root.querySelector('[data-ignore-empty]').hidden).toBe(true);
+    });
+
+    test('an empty name adds nothing', () => {
+        const {root, input} = mountList();
+        input.value = '   ';
+        root.querySelector('[data-ignore-add]').click();
+
+        expect(localStorage.getItem(KEY)).toBeNull();
+    });
+
+    test('rows render names as text, never as markup', () => {
+        const {root} = mountList(['<img src=x onerror=alert(1)>']);
+
+        expect(names(root)).toEqual(['<img src=x onerror=alert(1)>']);
+        expect(root.querySelector('[data-ignore-items] img')).toBeNull();
+    });
+
+    test('remove deletes by value from the current list', async () => {
+        const {sync, root} = mountList(['Alpha', 'Beta']);
+        newSync().setJSON(KEY, ['Gamma', 'Alpha', 'Beta']);
+        await vi.waitFor(() => expect(names(root)).toEqual(['Gamma', 'Alpha', 'Beta']));
+
+        const alpha = [...root.querySelectorAll('[data-ignore-items] > *')].find(row => row.textContent.includes('Alpha'));
+        alpha.querySelector('button').click();
+
+        expect(sync.getJSON(KEY)).toEqual(['Gamma', 'Beta']);
+    });
+});
+
+describe('ignorelist page', () => {
+    test('shows the ignore list texts and binds the editor', () => {
+        localStorage.setItem('settingIgnoreList', JSON.stringify(['Treasure Map']));
+        const root = mountPage('ignorelist');
+        bind(root, newSync());
+        const text = root.textContent.replace(/\s+/g, ' ');
+
+        expect(text).toContain('Names on this list never trigger the alert sound, the screen flash or the red border. Ignored players still appear in the player list.');
+        expect(text).not.toContain("Manage players that won't trigger alerts or be shown on radar.");
+        expect(text).not.toContain('A player name, a guild name or an alliance name all work.');
+        expect([...root.querySelectorAll('h2')].map(h => h.textContent.trim())).toEqual(['Add name', 'Ignored names']);
+        expect(root.querySelector('[data-ignore-add]').textContent.trim()).toBe('Add name');
+        expect(root.querySelector('[data-ignore-input]').placeholder).toBe('Player, guild or alliance name');
+        expect(root.querySelector('[data-ignore-empty]').textContent.trim()).toBe('The ignore list is empty');
+        expect(root.querySelector('[data-ignore-items]').textContent).toContain('Treasure Map');
+    });
+});

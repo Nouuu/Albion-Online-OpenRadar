@@ -120,10 +120,59 @@ const KINDS = {
             }, {signal});
         },
     },
+    list: {
+        show(el, entry, value) {
+            const names = Array.isArray(value) ? value : [];
+            const rows = names.map(name => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-3 bg-base-300 rounded-lg group';
+                const label = document.createElement('span');
+                label.className = 'text-base-content font-medium';
+                label.dataset.ignoreName = '';
+                label.textContent = name;
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'btn btn-ghost btn-xs text-error opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity';
+                remove.textContent = 'Remove';
+                row.append(label, remove);
+                return row;
+            });
+            el.querySelector('[data-ignore-items]').replaceChildren(...rows);
+            el.querySelector('[data-ignore-count]').textContent = String(names.length);
+            el.querySelector('[data-ignore-empty]').hidden = names.length > 0;
+        },
+        listen(el, entry, sync, signal) {
+            const input = el.querySelector('[data-ignore-input]');
+            const current = () => {
+                const value = sync.getJSON(entry.key);
+                return Array.isArray(value) ? value : [];
+            };
+            const add = () => {
+                const name = input.value.trim();
+                input.value = '';
+                if (!name) return;
+                const list = current();
+                if (list.some(item => item.trim().toLowerCase() === name.toLowerCase())) return;
+                sync.setJSON(entry.key, [...list, name]);
+            };
+            el.addEventListener('click', event => {
+                if (event.target.closest('[data-ignore-add]')) add();
+                const row = event.target.closest('[data-ignore-items] > *');
+                if (row && event.target.closest('button')) {
+                    const name = row.querySelector('[data-ignore-name]').textContent;
+                    sync.setJSON(entry.key, current().filter(item => item !== name));
+                }
+            }, {signal});
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Enter') add();
+            }, {signal});
+        },
+    },
 };
 
 function kindOf(el, entry) {
     if (entry?.shape === 'matrix') return 'matrix';
+    if (entry?.shape === 'stringList') return 'list';
     if (el.tagName === 'SELECT') return 'select';
     if (el.tagName === 'INPUT') return el.type;
     if (el.querySelector('input[type="radio"]')) return 'radio';
