@@ -23,6 +23,9 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 import {createRadarRenderer} from './RadarRenderer.js';
 import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 import pictureInPictureManager from './PictureInPictureManager.js';
+import {destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
+import {exitFullscreenIfActive} from './FullscreenButton.js';
+import settingsSync from './SettingsSync.js';
 
 import * as WebSocketManager from '../core/WebSocketManager.js';
 import * as DatabaseLoader from '../core/DatabaseLoader.js';
@@ -54,7 +57,7 @@ let map = null;
 
 const STALE_ENTITY_MAX_AGE = 300000;
 
-function cleanupStaleEntities() {
+export function cleanupStaleEntities() {
     const cleanedPlayers = handlers.players?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedMobs = handlers.mobs?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
@@ -122,7 +125,7 @@ function initializeRadarRenderer() {
     return true;
 }
 
-function clearHandlers(preserveSession = false) {
+export function clearHandlers(preserveSession = false) {
     handlers.chests.chestsList = [];
     handlers.dungeons.dungeonList = [];
     handlers.fishing.Clear();
@@ -315,6 +318,42 @@ export function destroyRadar() {
     isInitialized = false;
     isDestroying = false;
     window.logger?.info(CATEGORIES.SYSTEM, 'RadarDestroyed', {});
+}
+
+let pageRoot = null;
+
+function showPlayers() {
+    const visible = settingsSync.getBool('settingPlayersDetect');
+    const list = pageRoot?.querySelector('#playersListContainer');
+    const stats = pageRoot?.querySelector('#playerStats');
+    if (list) list.style.display = visible ? 'block' : 'none';
+    stats?.classList.toggle('!hidden', !visible);
+    if (visible && handlers.players) PlayerListRenderer.update(handlers.players);
+}
+
+export async function initRadarPage({root, signal}) {
+    try {
+        initRadarSettingsPanel();
+    } catch (error) {
+        window.logger?.error(CATEGORIES.SYSTEM, 'RadarSettingsPanelInitFailed', {error: error?.message});
+    }
+
+    pageRoot = root;
+    showPlayers();
+    settingsSync.off('settingPlayersDetect', showPlayers);
+    settingsSync.on('settingPlayersDetect', showPlayers);
+    signal.addEventListener('abort', () => {
+        settingsSync.off('settingPlayersDetect', showPlayers);
+        pageRoot = null;
+    }, {once: true});
+
+    await initRadar();
+}
+
+export async function destroyRadarPage() {
+    destroyRadarSettingsPanel();
+    exitFullscreenIfActive();
+    destroyRadar();
 }
 
 window.addEventListener('beforeunload', () => {

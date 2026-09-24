@@ -229,30 +229,7 @@
     Promise.all([
         import('/scripts/utils/SettingControls.js'),
         import('/scripts/utils/Utils.js'),
-        import('/scripts/utils/RadarSettingsPanel.js'),
-        import('/scripts/utils/SettingsSync.js'),
-        import('/scripts/constants/LoggerConstants.js'),
-    ]).then(([{registerBoundPage}, {initRadar, destroyRadar}, panel, {default: settingsSync}, {CATEGORIES}]) => registerBoundPage('radar', {
-        async init({root, signal}) {
-            try {
-                panel.initRadarSettingsPanel();
-            } catch (error) {
-                window.logger?.error(CATEGORIES.SYSTEM, 'RadarSettingsPanelInitFailed', {error: error?.message});
-            }
-            const showPlayers = () => {
-                const visible = settingsSync.getBool('settingPlayersDetect');
-                root.querySelector('#playersListContainer').style.display = visible ? 'block' : 'none';
-                root.querySelector('#playerStats').classList.toggle('!hidden', !visible);
-            };
-            showPlayers();
-            settingsSync.on('settingPlayersDetect', showPlayers);
-            signal.addEventListener('abort', () => settingsSync.off('settingPlayersDetect', showPlayers), {once: true});
-            await initRadar();
-        },
-        destroy() {
-            panel.destroyRadarSettingsPanel();
-            destroyRadar();
-        },
-    }));
+    ]).then(([{registerBoundPage}, {initRadarPage, destroyRadarPage}]) =>
+        registerBoundPage('radar', {init: initRadarPage, destroy: destroyRadarPage}));
 </script>
 {{end}}
