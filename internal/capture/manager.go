@@ -36,6 +36,9 @@ type State struct {
 
 var managerStartWorker = startWorker
 
+// ErrClosed is returned by Reconfigure once the Manager is closed.
+var ErrClosed = errors.New("manager closed")
+
 type Manager struct {
 	parentCtx context.Context
 
@@ -73,7 +76,7 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 	m.mu.Lock()
 	if m.closed {
 		m.mu.Unlock()
-		return errors.New("manager closed")
+		return ErrClosed
 	}
 	if m.onPacket == nil {
 		m.mu.Unlock()
@@ -86,6 +89,7 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 	}
 
 	var openErrs []string
+	var recErr error
 	for name, iface := range desired {
 		if _, exists := m.active[name]; exists {
 			continue
@@ -100,9 +104,10 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 		mc := &managedCapturer{cap: c, startedAt: time.Now(), cancel: c.cancel}
 		m.active[name] = mc
 		delete(m.lastErrors, name)
-		if m.recordingEnabled {
+		if m.recordingEnabled && recErr == nil {
 			if rErr := c.StartRecording(m.recordingDir); rErr != nil {
 				m.lastErrors[name] = rErr.Error()
+				recErr = fmt.Errorf("pcap recording could not start on %s: %w", name, rErr)
 			}
 		}
 		managerStartWorker(c, &m.wg, func(n string, e error) {
@@ -123,38 +128,46 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 		delete(m.lastErrors, name)
 	}
 
+	if recErr != nil {
+		_ = m.stopRecordingLocked()
+	}
 	m.mu.Unlock()
 
 	if len(openErrs) > 0 {
-		return fmt.Errorf("partial open failures: %v", openErrs)
+		return errors.Join(fmt.Errorf("partial open failures: %v", openErrs), recErr)
 	}
-	return nil
+	return recErr
 }
 
-// StartRecording enables recording on all active capturers and on any future
-// ones added via Reconfigure. If a capturer fails to start, the error is
-// logged as a warning and the others continue.
+// StartRecording enables recording on every active capturer and on any future
+// ones added via Reconfigure. It is all or nothing: if one capturer fails, none
+// keeps recording and the error names the failing interface. Calling it while
+// already recording is a no-op.
 func (m *Manager) StartRecording(dir string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if m.recordingEnabled {
+		return nil
+	}
 	m.recordingEnabled = true
 	m.recordingDir = dir
-	var firstErr error
 	for name, mc := range m.active {
 		if err := mc.cap.StartRecording(dir); err != nil {
-			logger.PrintWarn("PKT", "pcap recording could not start on %s: %v", name, err)
-			if firstErr == nil {
-				firstErr = fmt.Errorf("%s: %w", name, err)
-			}
+			_ = m.stopRecordingLocked()
+			return fmt.Errorf("pcap recording could not start on %s: %w", name, err)
 		}
 	}
-	return firstErr
+	return nil
 }
 
 // StopRecording disables recording on all active capturers.
 func (m *Manager) StopRecording() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	return m.stopRecordingLocked()
+}
+
+func (m *Manager) stopRecordingLocked() error {
 	m.recordingEnabled = false
 	m.recordingDir = ""
 	var firstErr error

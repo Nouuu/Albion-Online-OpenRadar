@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -347,5 +348,123 @@ func TestStartWorkerIgnoresContextCanceled(t *testing.T) {
 	wg.Wait()
 	if n := reported.Load(); n != 0 {
 		t.Errorf("onError called %d times for context.Canceled, want 0", n)
+	}
+}
+
+func recordingCapturers(m *Manager) []string {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var names []string
+	for name, mc := range m.active {
+		if mc.cap.IsRecording() {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+func TestManager_StartRecording_TwiceReturnsNil(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(t.Context())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}}); err != nil {
+		t.Fatalf("Reconfigure: %v", err)
+	}
+	dir := t.TempDir()
+	if err := m.StartRecording(dir); err != nil {
+		t.Fatalf("first StartRecording: %v", err)
+	}
+	if err := m.StartRecording(dir); err != nil {
+		t.Errorf("second StartRecording = %v, want nil", err)
+	}
+	if !m.IsRecording() {
+		t.Error("IsRecording false after StartRecording")
+	}
+	m.Close(t.Context())
+}
+
+func TestManager_StartRecording_PartialFailureRecordsNothing(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(t.Context())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{
+		{Name: "ok1", Device: "ok1"},
+		{Name: "broken", Device: "broken"},
+		{Name: "ok2", Device: "ok2"},
+	}); err != nil {
+		t.Fatalf("Reconfigure: %v", err)
+	}
+	m.mu.Lock()
+	broken := m.active["broken"].cap
+	m.mu.Unlock()
+	if err := broken.StartRecording(t.TempDir()); err != nil {
+		t.Fatalf("pre-arm broken: %v", err)
+	}
+
+	err := m.StartRecording(t.TempDir())
+	if err == nil {
+		t.Fatal("StartRecording = nil, want error")
+	}
+	if !strings.Contains(err.Error(), "broken") {
+		t.Errorf("error %q does not name the failing interface", err)
+	}
+	if m.IsRecording() {
+		t.Error("IsRecording true after partial failure")
+	}
+	if got := recordingCapturers(m); len(got) != 0 {
+		t.Errorf("capturers still recording after partial failure: %v", got)
+	}
+	m.Close(t.Context())
+}
+
+func TestManager_Reconfigure_RecordingFailureResetsState(t *testing.T) {
+	armedDir := t.TempDir()
+	prev := captureFactory
+	captureFactory = func(ctx context.Context, iface NetworkInterface) (*Capturer, error) {
+		c := newStubCapturer(ctx, iface)
+		if iface.Name == "late" {
+			if err := c.StartRecording(armedDir); err != nil {
+				return nil, err
+			}
+		}
+		return c, nil
+	}
+	t.Cleanup(func() { captureFactory = prev })
+
+	m := NewManager(t.Context())
+	m.OnPacket(func([]byte) {})
+	if err := m.Reconfigure([]NetworkInterface{{Name: "early", Device: "early"}}); err != nil {
+		t.Fatalf("Reconfigure early: %v", err)
+	}
+	if err := m.StartRecording(t.TempDir()); err != nil {
+		t.Fatalf("StartRecording: %v", err)
+	}
+
+	err := m.Reconfigure([]NetworkInterface{{Name: "early", Device: "early"}, {Name: "late", Device: "late"}})
+	if err == nil {
+		t.Fatal("Reconfigure = nil, want recording error")
+	}
+	if !strings.Contains(err.Error(), "late") {
+		t.Errorf("error %q does not name the failing interface", err)
+	}
+	if m.IsRecording() {
+		t.Error("IsRecording true after recording failure in Reconfigure")
+	}
+	if got := recordingCapturers(m); len(got) != 0 {
+		t.Errorf("capturers still recording: %v", got)
+	}
+	m.Close(t.Context())
+}
+
+func TestManager_Reconfigure_AfterCloseReturnsErrClosed(t *testing.T) {
+	defer withStubFactory(t, nil)()
+
+	m := NewManager(t.Context())
+	m.OnPacket(func([]byte) {})
+	m.Close(t.Context())
+	if err := m.Reconfigure([]NetworkInterface{{Name: "a", Device: "a"}}); !errors.Is(err, ErrClosed) {
+		t.Errorf("Reconfigure after Close = %v, want ErrClosed", err)
 	}
 }
