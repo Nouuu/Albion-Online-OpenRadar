@@ -9,6 +9,12 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 const inputCss = readFileSync(join(ROOT, 'web/styles/input.css'), 'utf8');
 const baseLayout = readFileSync(join(ROOT, 'internal/templates/layouts/base.gohtml'), 'utf8');
 
+function loadLayout(name) {
+    const root = document.createElement('div');
+    root.innerHTML = readFileSync(join(ROOT, 'internal/templates/layouts', name), 'utf8');
+    return root;
+}
+
 describe('phone layout contract', () => {
     test('input.css declares the phone-landscape custom variant', () => {
         expect(inputCss).toContain('@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 500px));');
@@ -33,5 +39,16 @@ describe('phone layout contract', () => {
         for (const canvas of container.querySelectorAll('canvas')) {
             expect(canvas.className).not.toContain('sm:m-2.5');
         }
+    });
+
+    test('the mobile drawer footer stays in flow above a scrolling nav', () => {
+        const root = loadLayout('sidebar.gohtml');
+        const aside = root.querySelector('#mobile-sidebar');
+        const nav = root.querySelector('#mobile-nav');
+        const footer = aside.lastElementChild;
+        expect(aside.className).toContain('flex');
+        expect(aside.className).toContain('flex-col');
+        expect(nav.className).toContain('overflow-y-auto');
+        expect(footer.className).not.toContain('absolute');
     });
 });
