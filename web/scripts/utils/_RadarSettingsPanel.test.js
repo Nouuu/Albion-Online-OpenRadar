@@ -258,6 +258,17 @@ describe('radar settings panel layout', () => {
         expect(bitmaps()).toEqual(Array(4).fill([500, 500]));
         expect(sizeEvents).toEqual([]);
     });
+
+    test('@verified 2026-09-24: the ResizeObserver callback does nothing once the container left the document', () => {
+        initRadarSettingsPanel();
+        root.remove();
+        stubLayout({width: 358});
+
+        observers[0].callback([]);
+
+        expect(bitmaps()).toEqual(Array(4).fill([500, 500]));
+        expect(sizeEvents).toEqual([]);
+    });
 });
 
 describe('radar settings panel controls', () => {

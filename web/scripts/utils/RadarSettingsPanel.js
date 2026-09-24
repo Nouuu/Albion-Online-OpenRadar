@@ -77,7 +77,7 @@ export function initRadarSettingsPanel() {
     const controller = new AbortController();
     const {signal} = controller;
     const observer = new ResizeObserver(() => {
-        if (state?.container === container) applyLayout();
+        if (state?.container === container && container.isConnected) applyLayout();
     });
     state = {container, page, controller, observer};
 
