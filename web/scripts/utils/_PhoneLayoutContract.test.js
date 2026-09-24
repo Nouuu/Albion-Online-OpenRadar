@@ -41,6 +41,12 @@ describe('phone layout contract', () => {
         }
     });
 
+    test('#page-content never scrolls horizontally, only vertically', () => {
+        const main = baseLayout.match(/<main id="page-content"[\s\S]*?class="([^"]*)"/)[1];
+        expect(main).toContain('overflow-x-hidden');
+        expect(main).toContain('overflow-y-auto');
+    });
+
     test('the mobile drawer footer stays in flow above a scrolling nav', () => {
         const root = loadLayout('sidebar.gohtml');
         const aside = root.querySelector('#mobile-sidebar');
