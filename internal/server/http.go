@@ -245,7 +245,7 @@ func (s *HTTPServer) renderPage(w http.ResponseWriter, r *http.Request, page str
 		title = strings.ToUpper(page[:1]) + page[1:]
 	}
 
-	data := templates.NewPageData(page, "OpenRadar - "+title).WithVersion(s.version)
+	data := templates.NewPageData(page, "OpenRadar - "+title).WithVersion(s.version).WithIsHost(isHost(r))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")

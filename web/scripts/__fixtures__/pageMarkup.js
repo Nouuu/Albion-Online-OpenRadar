@@ -10,7 +10,9 @@ export function mountPage(name) {
     const end = lines.findIndex((line, index) => index > start && line.trim() === '{{end}}');
     if (start < 0 || end < 0) throw new Error(`No pages/${name} define in ${name}.gohtml`);
 
-    const body = lines.slice(start + 1, end).join('\n');
+    const body = lines.slice(start + 1, end).join('\n')
+        .replace(/\{\{if not \.IsHost}}[\s\S]*?\{\{end}}/g, '')
+        .replace(/\{\{\.IsHost}}/g, 'true');
     if (body.includes('{{')) throw new Error(`pages/${name} still holds a template action`);
 
     document.body.innerHTML = `<main id="page-content" data-page="${name}">${body}</main>`;
