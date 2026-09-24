@@ -157,7 +157,7 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 			cfg.Logging.PcapRecording = false
 		}
 	}); err != nil {
-		http.Error(w, "persist: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.Join(fmt.Errorf("persist: %w", err), reconfErr).Error(), http.StatusInternalServerError)
 		return
 	}
 	if reconfErr != nil {

@@ -616,3 +616,31 @@ func TestNetworkSelect_HoldsApplyMuDuringReconfigure(t *testing.T) {
 		t.Error("applyMu was free during Reconfigure, want held")
 	}
 }
+
+func TestNetworkSelect_PersistFailureKeepsInterfaceErrors(t *testing.T) {
+	fm := &fakeManager{
+		allInterfaces: []capture.NetworkInterface{
+			{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"},
+			{Name: "b", Description: "Ethernet", Address: "10.0.0.2"},
+		},
+		reconfErr: errors.New("partial open failures: [b: boom]"),
+		onReconfigure: func(f *fakeManager) {
+			f.state = capture.State{Active: []capture.CaptureSummary{{Name: "a"}}}
+		},
+	}
+	notADir := filepath.Join(t.TempDir(), "file")
+	if err := os.WriteFile(notADir, nil, 0o644); err != nil {
+		t.Fatalf("seed file: %v", err)
+	}
+	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, notADir, func() []string { return nil }, &sync.Mutex{}))
+
+	rec := postSelect(t, mux, "a", "b")
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500; body=%s", rec.Code, rec.Body.String())
+	}
+	for _, want := range []string{"persist", "b: boom"} {
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Errorf("body %q does not contain %q", rec.Body.String(), want)
+		}
+	}
+}
