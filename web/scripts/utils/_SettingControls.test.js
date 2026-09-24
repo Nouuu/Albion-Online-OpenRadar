@@ -267,6 +267,76 @@ describe('bindSettingControls select and radio', () => {
     });
 });
 
+describe('bindSettingControls matrix', () => {
+    const KEY = 'settingResourcesStaticFiber';
+    const ALL_ENCHANTS = ['e0', 'e1', 'e2', 'e3', 'e4'];
+
+    function mountMatrix() {
+        const sync = newSync();
+        const root = mount(`<div data-setting="${KEY}"></div>`);
+        bind(root, sync);
+        return {sync, root, container: root.querySelector(`[data-setting="${KEY}"]`)};
+    }
+
+    test('generates the grid once and shows the default matrix', () => {
+        const {container} = mountMatrix();
+
+        expect(container.querySelector('[data-enchant="e0"][data-tier="0"]').checked).toBe(false);
+        expect(container.querySelector('[data-enchant="e0"][data-tier="3"]').checked).toBe(true);
+        expect(container.querySelector('[data-enchant="e4"][data-tier="3"]').checked).toBe(true);
+    });
+
+    test('a cell change re-reads the key before writing (FR-018b)', () => {
+        const {sync, container} = mountMatrix();
+        const external = structuredClone(sync.getJSON(KEY));
+        external.e0[0] = true;
+        sync.setJSON(KEY, external);
+
+        const cell = container.querySelector('[data-enchant="e0"][data-tier="4"]');
+        cell.checked = false;
+        fire(cell, 'change');
+
+        const stored = sync.getJSON(KEY);
+        expect(stored.e0[0]).toBe(true);
+        expect(stored.e0[4]).toBe(false);
+    });
+
+    test('tier toggle only affects rendered cells for T1 to T3', () => {
+        const {sync, container} = mountMatrix();
+        const preset = structuredClone(sync.getJSON(KEY));
+        preset.e1[0] = true;
+        sync.setJSON(KEY, preset);
+
+        container.querySelector('[data-tier-toggle="0"]').click();
+
+        const stored = sync.getJSON(KEY);
+        expect(stored.e0[0]).toBe(true);
+        expect(stored.e1[0]).toBe(true);
+    });
+
+    test('tier toggle flips all rendered cells off then on for T4 to T8', () => {
+        const {sync, container} = mountMatrix();
+
+        container.querySelector('[data-tier-toggle="3"]').click();
+        let stored = sync.getJSON(KEY);
+        expect(ALL_ENCHANTS.every(e => stored[e][3] === false)).toBe(true);
+
+        container.querySelector('[data-tier-toggle="3"]').click();
+        stored = sync.getJSON(KEY);
+        expect(ALL_ENCHANTS.every(e => stored[e][3] === true)).toBe(true);
+    });
+
+    test('reflects a remote write into the cells and the tier glyph', () => {
+        const {sync, container} = mountMatrix();
+        const next = structuredClone(sync.getJSON(KEY));
+        next.e0[0] = true;
+        sync.setJSON(KEY, next);
+
+        expect(container.querySelector('[data-enchant="e0"][data-tier="0"]').checked).toBe(true);
+        expect(container.querySelector('[data-tier-toggle="0"]').textContent).toContain('T1');
+    });
+});
+
 describe('bindSettingControls reflection and teardown', () => {
     test('reflects a removal into the control', () => {
         localStorage.setItem('settingEnemiesBoss', 'false');

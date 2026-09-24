@@ -1,6 +1,13 @@
 import settingsSync from './SettingsSync.js';
 import {registerPage, reinitCurrentPage} from '../core/PageController.js';
 import {SETTINGS, registryEntry} from './SettingsRegistry.js';
+import {generateResourceGrid, tierState} from './ResourcesHelper.js';
+
+const GLYPHS = {all: '✓', some: '◐', none: '☐'};
+
+function renderedEnchants(tier) {
+    return tier < 3 ? ['e0'] : ['e0', 'e1', 'e2', 'e3', 'e4'];
+}
 
 const percent = value => `${Math.round(value * 100)}%`;
 
@@ -85,9 +92,42 @@ const KINDS = {
             }, {signal});
         },
     },
+    matrix: {
+        show(el, entry, value) {
+            if (!el.querySelector('[data-enchant]')) el.innerHTML = generateResourceGrid(entry);
+            for (const cell of el.querySelectorAll('[data-enchant]')) {
+                cell.checked = value[cell.dataset.enchant][Number(cell.dataset.tier)];
+            }
+            for (const button of el.querySelectorAll('[data-tier-toggle]')) {
+                const tier = Number(button.dataset.tierToggle);
+                const state = tierState(value, tier);
+                button.textContent = `${GLYPHS[state]}T${tier + 1}`;
+                button.classList.toggle('opacity-50', state === 'none');
+            }
+        },
+        listen(el, entry, sync, signal) {
+            el.addEventListener('change', event => {
+                const cell = event.target.closest('[data-enchant]');
+                if (!cell) return;
+                const next = structuredClone(sync.getJSON(entry.key));
+                next[cell.dataset.enchant][Number(cell.dataset.tier)] = cell.checked;
+                sync.setJSON(entry.key, next);
+            }, {signal});
+            el.addEventListener('click', event => {
+                const button = event.target.closest('[data-tier-toggle]');
+                if (!button) return;
+                const tier = Number(button.dataset.tierToggle);
+                const matrix = structuredClone(sync.getJSON(entry.key));
+                const turnOn = tierState(matrix, tier) !== 'all';
+                for (const enchant of renderedEnchants(tier)) matrix[enchant][tier] = turnOn;
+                sync.setJSON(entry.key, matrix);
+            }, {signal});
+        },
+    },
 };
 
-function kindOf(el) {
+function kindOf(el, entry) {
+    if (entry?.shape === 'matrix') return 'matrix';
     if (el.tagName === 'SELECT') return 'select';
     if (el.tagName === 'INPUT') return el.type;
     if (el.querySelector('input[type="radio"]')) return 'radio';
@@ -99,7 +139,7 @@ function render(root, sync, key) {
     if (!entry) return;
     const value = sync.get(key);
     for (const el of root.querySelectorAll(`[data-setting="${key}"]`)) {
-        const kind = KINDS[kindOf(el)];
+        const kind = KINDS[kindOf(el, entry)];
         if (!kind || (kind.textEntry && el === document.activeElement)) continue;
         kind.show(el, entry, value);
     }
@@ -130,7 +170,7 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
     const keys = new Set();
     for (const el of root.querySelectorAll('[data-setting]')) {
         const entry = registryEntry(el.dataset.setting);
-        const kind = KINDS[kindOf(el)];
+        const kind = KINDS[kindOf(el, entry)];
         if (!entry || !kind) continue;
         kind.listen(el, entry, sync, bound);
         keys.add(entry.key);
