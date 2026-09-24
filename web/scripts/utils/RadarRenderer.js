@@ -319,8 +319,8 @@ export class RadarRenderer {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         this.renderDistanceRings(ctx);
-        this.renderZoneInfo(ctx);
-        this.renderStatsBox(ctx);
+        if (settingsSync.getBool('settingRadarHudZoneInfo')) this.renderZoneInfo(ctx);
+        if (settingsSync.getBool('settingRadarHudStats')) this.renderStatsBox(ctx);
         this.renderThreatBorder(ctx);
         this.renderFlashOverlay(ctx);
     }
@@ -378,7 +378,7 @@ export class RadarRenderer {
     }
 
     renderZoneInfo(ctx) {
-        if (!this.map?.id) return;
+        if (!this.map || this.map.id === -1) return;
 
         const zone = zonesDatabase.getZone(this.map.id);
         const zoneName = zone?.name || this.map.id;
