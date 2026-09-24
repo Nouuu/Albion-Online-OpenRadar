@@ -83,7 +83,7 @@ export class MobsDrawing extends DrawingUtils
             }
             else if (mobOne.type == EnemyType.MistBoss)
             {
-                if (!settingsSync.getBool(mobOne.mistBoss?.setting)) continue;
+                if (!mobOne.mistBoss || !settingsSync.getBool(mobOne.mistBoss.setting)) continue;
 
                 imageName = mobOne.mistBoss.icon;
                 imageFolder = "Resources";

@@ -125,4 +125,19 @@ describe('MistsWispDrawing', () => {
 
         expect(drawing.interpolateEntity).toHaveBeenCalledTimes(2);
     });
+
+    // @verified 2026-09-24: a mist without an enchant value must not read an undefined-suffixed setting key.
+    test('a mist with an undefined enchant does not read an undefined-suffixed setting key', () => {
+        const error = vi.fn();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error};
+        settingsSync.getBool.mockImplementation(key => {
+            if (key.includes('undefined')) error('SettingsSyncUnknownKey', {key});
+            return true;
+        });
+        const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: undefined};
+
+        drawing.invalidate(ctx, [mist]);
+
+        expect(error).not.toHaveBeenCalled();
+    });
 });

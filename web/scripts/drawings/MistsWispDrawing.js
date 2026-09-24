@@ -16,7 +16,7 @@ export class MistsWispDrawing extends DrawingUtils {
         const yOffset = this.getMarkerSize(26);
 
         for (const m of mists) {
-            if (!settingsSync.getBool('settingMistsEnchant' + m.enchant)) continue;
+            if (m.enchant === undefined || m.enchant === null || !settingsSync.getBool('settingMistsEnchant' + m.enchant)) continue;
 
             const soloAllowed = settingsSync.getBool('settingMistsSolo') && m.type == 0;
             const duoAllowed = settingsSync.getBool('settingMistsDuo') && m.type == 1;

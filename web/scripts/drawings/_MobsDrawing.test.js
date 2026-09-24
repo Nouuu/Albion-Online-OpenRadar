@@ -503,4 +503,17 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         expect(drawing.drawFilledCircle).toHaveBeenCalledWith(ctx, 10, 20, 6, expect.any(String));
         expect(drawing.getMarkerSize).toHaveBeenCalledWith(6);
     });
+
+    // @verified 2026-09-24: a MistBoss-typed mob missing its mistBoss data must not read an undefined setting key.
+    test('MistBoss without mistBoss data does not read an undefined setting key', () => {
+        const error = vi.fn();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error};
+        settingsSync.getBool.mockImplementation(key => {
+            if (key === undefined) error('SettingsSyncUnknownKey', {key});
+            return true;
+        });
+        const brokenMistBoss = hostile({id: 30, type: EnemyType.MistBoss});
+        drawing.invalidate(ctx, [brokenMistBoss]);
+        expect(error).not.toHaveBeenCalled();
+    });
 });
