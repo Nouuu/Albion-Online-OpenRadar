@@ -329,3 +329,27 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(call[7]).toBe(false);               // static, not living
     });
 });
+
+describe('HarvestablesDrawing type ID overlay', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
+    });
+
+    test('draws the type ID when settingDebugResourcesTypeId is on', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
+        const drawing = buildDrawing();
+        const ctx = {};
+        drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        expect(drawing.drawText).toHaveBeenCalledWith(10, 40, '14', ctx);
+        expect(settingsSync.getBool).not.toHaveBeenCalledWith('livingResourcesID');
+    });
+
+    test('draws no type ID when settingDebugResourcesTypeId is off', () => {
+        settingsSync.getBool.mockImplementation(() => false);
+        const drawing = buildDrawing();
+        drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        expect(drawing.drawText).not.toHaveBeenCalled();
+    });
+});
