@@ -21,7 +21,7 @@ export function migrateSettings(storage) {
     }
 
     for (const {legacyKey, migration} of MIGRATION_ROWS) {
-        if ((COPIED.has(migration) || migration === 'remove') && storage.getItem(legacyKey) !== null) storage.removeItem(legacyKey);
+        if ((COPIED.has(migration) || migration === 'remove' || migration === 'backend') && storage.getItem(legacyKey) !== null) storage.removeItem(legacyKey);
     }
     storage.setItem(MARKER, '1');
 }

@@ -10,8 +10,8 @@ const MATRIX_ROWS = ['Fiber', 'Hide', 'Wood', 'Ore', 'Rock'].flatMap(resource =>
     [`settingResources${kind}${resource}`, 'json', DEFAULT_MATRIX, `setting${kind}${resource}Enchants`, 'product', {shape: 'matrix'}]));
 
 const NETWORK_PATHS = {
-    settingServerLogsEnabled: 'logging.serverLogsEnabled',
-    settingPcapRecording: 'logging.pcapRecording',
+    settingDebugBackendLogs: 'logging.serverLogsEnabled',
+    settingDebugPcapRecording: 'logging.pcapRecording',
 };
 
 const ROWS = [
@@ -106,8 +106,8 @@ const ROWS = [
     ['categoryRendering', 'bool', false, 'categoryRendering', 'remove'],
     ['settingLogToConsole', 'bool', false, 'settingLogToConsole', 'keep'],
     ['settingLogToServer', 'bool', false, 'settingLogToServer', 'keep'],
-    ['settingServerLogsEnabled', 'bool', false, 'settingServerLogsEnabled', 'backend'],
-    ['settingPcapRecording', 'bool', false, 'settingPcapRecording', 'backend'],
+    ['settingDebugBackendLogs', 'bool', false, 'settingServerLogsEnabled', 'backend'],
+    ['settingDebugPcapRecording', 'bool', false, 'settingPcapRecording', 'backend'],
     ['settingDebugWsCoalescing', 'bool', true, 'settingWsCoalescing', 'rename'],
     ['settingWsThrottling', 'bool', true, 'settingWsThrottling', 'remove'],
     ['settingUiRadarSettingsOpen', 'bool', false, null, 'new'],
@@ -205,6 +205,8 @@ const TEXTS = {
         [`settingLogCategory${area}`, [label, CATEGORY_TIP]])),
     settingLogToConsole: ['Browser Console (F12)', 'Print logs in the browser DevTools console.'],
     settingLogToServer: ['Save browser logs', 'Sends browser log entries that pass the level and category filters to the radar PC, in logs/debug/. ERROR and CRITICAL entries are also copied to logs/errors/.'],
+    settingDebugBackendLogs: ['Save backend logs', 'Writes one line per decoded game event to logs/sessions/. Only changeable from the PC running the radar.'],
+    settingDebugPcapRecording: ['Record Network Capture (pcap)', 'Records Albion game traffic (UDP 5056) to logs/captures/, one .pcap per capture interface. Only changeable from the PC running the radar.'],
     settingDebugWsCoalescing: ['Merge entity updates per frame', 'Keeps only the latest move, health and regeneration update per entity until the next frame is drawn.'],
     settingUiEnemiesClassicOpen: ['Classic Enemies'],
     settingUiEnemiesMistsOpen: ['Mists Bosses'],
@@ -256,8 +258,8 @@ const LOCATIONS = {
     'Settings > Logging': ['settingLogLevel', 'settingLogCategorySystem', 'settingLogCategoryNetwork', 'settingLogCategoryMap',
         'settingLogCategoryPlayers', 'settingLogCategoryMobs', 'settingLogCategoryResources', 'settingLogCategoryDungeons',
         'settingLogCategoryFishing', 'settingLogToConsole', 'settingLogToServer', 'settingUiSettingsLoggingOpen'],
-    'Settings > Debug > Backend logs': ['settingServerLogsEnabled'],
-    'Settings > Debug > Network traffic': ['settingPcapRecording', 'settingDebugWsCoalescing'],
+    'Settings > Debug > Backend logs': ['settingDebugBackendLogs'],
+    'Settings > Debug > Network traffic': ['settingDebugPcapRecording', 'settingDebugWsCoalescing'],
     'Settings > Debug': ['settingUiSettingsDebugOpen'],
     'Settings > Network': ['settingUiSettingsNetworkOpen'],
     'Layout > Sidebar': ['settingUiSidebarCollapsed'],

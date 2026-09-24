@@ -38,8 +38,6 @@
     "settingEnemiesNormal": "true",
     "settingEnemiesChampion": "true",
     "settingEnemiesBoss": "false",
-    "settingServerLogsEnabled": "true",
-    "settingPcapRecording": "false",
     "settingLogCategoryPlayers": "true",
     "settingLogToServer": "true",
     "settingPlayersShowHealthBars": "false",

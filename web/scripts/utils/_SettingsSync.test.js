@@ -174,8 +174,8 @@ describe('SettingsSync registry reads', () => {
         const error = vi.fn();
         vi.stubGlobal('logger', {error, warn: vi.fn(), info: vi.fn(), debug: vi.fn()});
         const s = await freshSync();
-        expect(s.getBool('settingServerLogsEnabled')).toBe(false);
-        expect(s.getBool('settingPcapRecording')).toBe(false);
+        expect(s.getBool('settingDebugBackendLogs')).toBe(false);
+        expect(s.getBool('settingDebugPcapRecording')).toBe(false);
         expect(error).not.toHaveBeenCalled();
     });
 });

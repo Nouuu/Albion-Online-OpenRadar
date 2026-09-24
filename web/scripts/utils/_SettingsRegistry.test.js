@@ -301,7 +301,7 @@ describe('SettingsRegistry control location', () => {
         ['settingMistsWisps', 'Chests', 'Mists'],
         ['settingDungeonsHellgate', 'Chests', 'Dungeons'],
         ['settingDebugEnemiesTier', 'Settings', 'Debug > Enemies'],
-        ['settingPcapRecording', 'Settings', 'Debug > Network traffic'],
+        ['settingDebugPcapRecording', 'Settings', 'Debug > Network traffic'],
         ['settingLogLevel', 'Settings', 'Logging'],
         ['settingUiSettingsNetworkOpen', 'Settings', 'Network'],
         ['settingUiSidebarCollapsed', 'Layout', 'Sidebar'],
