@@ -11,17 +11,15 @@ const PAGES_DIR = join(ROOT, 'internal/templates/pages');
 const LAYOUTS_DIR = join(ROOT, 'internal/templates/layouts');
 
 const EXCLUSIONS = [
-    {name: 'settings page, until its Debug regroup', page: 'settings', region: root => root},
     {name: 'radar controls row and inline script, until the radar settings panel', page: 'radar',
         region: root => root.querySelector('#canvasContainer').nextElementSibling},
 ];
 
 const NO_CONTROL_YET = {
-    'added by the settings Debug regroup': ['settingDebugEnemiesUnidentified', 'settingDebugEnemiesTypeId',
-        'settingDebugEnemiesTier', 'settingDebugEnemiesName', 'settingDebugEnemiesCategoryBadge',
-        'settingDebugResourcesTypeId', 'settingDebugResourcesDbName', 'settingDebugMistsWispIds'],
     'added by the radar settings panel': ['settingRadarFitToScreen', 'settingRadarRotation', 'settingRadarHudZoneInfo',
         'settingRadarHudStats', 'settingUiRadarSettingsOpen'],
+    'moved from the settings Display card to the radar settings panel': ['settingRadarMapBackground',
+        'settingRadarResourceTierBadges', 'settingRadarClusterRadius', 'settingRadarClusterMinSize'],
 };
 
 const CONTROL_COUNT_EXCEPTIONS = {settingPlayersDetect: 2, settingUiSidebarCollapsed: 0};
@@ -278,6 +276,54 @@ describe('enemies page', () => {
         expect(template).not.toContain('settingAllEnemies');
         expect(template).not.toContain('collapse-debug');
         expect(template).not.toContain('Debug &amp; Logging');
+    });
+});
+
+describe('settings page', () => {
+    const template = templateOf('settings');
+    const root = pages.find(page => page.name === 'settings').root;
+    const DEBUG_GROUPS = ['Enemies', 'Resources', 'Mists', 'Network traffic', 'Backend logs'];
+
+    function keysOf(group) {
+        return [...group.querySelectorAll('input')].map(el => el.dataset.setting ?? el.id).sort();
+    }
+
+    test('reads as logging, debug, network and reset options', () => {
+        expect(normalized(root.querySelector('h1 + p'))).toBe('Logging, debug, network and reset options.');
+    });
+
+    test('holds no Display card, no Clear Cache, no throttle and no Rendering category', () => {
+        expect(root.querySelector('[data-setting^="settingRadar"], [id^="settingRadar"]')).toBeNull();
+        for (const gone of ['clearCache', 'caches.', 'bindNumber', 'Health Throttling', 'settingWsThrottling',
+            'categoryRendering', 'Rendering']) {
+            expect(template).not.toContain(gone);
+        }
+    });
+
+    test('the Logging banner tells where backend and browser errors are saved', () => {
+        const logging = root.querySelector('[data-setting="settingUiSettingsLoggingOpen"]').closest('.collapse');
+        const banner = normalized(logging.querySelector('.collapse-content p'));
+        expect(banner).toContain('Backend errors are always saved to logs/errors/.');
+        expect(banner).toContain('Browser errors are saved only while this browser sends its logs (Settings > Logging > "Save browser logs").');
+        expect(template).not.toContain('Errors are always saved on the backend side');
+    });
+
+    test('the Logging, Debug and Network collapses are bound through data-setting', () => {
+        const collapses = [...root.querySelectorAll('.collapse > input[type="checkbox"]')].map(el => el.dataset.setting);
+        expect(collapses).toEqual(['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen']);
+    });
+
+    test('Debug groups Enemies, Resources, Mists, Network traffic and Backend logs, then Export', () => {
+        const debug = root.querySelector('[data-setting="settingUiSettingsDebugOpen"]').closest('.collapse')
+            .querySelector('.collapse-content');
+        const groups = [...debug.querySelectorAll('section')];
+        expect(groups.map(group => normalized(group.querySelector('h3')))).toEqual(DEBUG_GROUPS);
+        for (const [index, name] of DEBUG_GROUPS.entries()) {
+            const expected = SETTINGS.filter(entry => entry.page === 'Settings' && entry.section === `Debug > ${name}`)
+                .map(entry => entry.key).sort();
+            expect(keysOf(groups[index]), name).toEqual(expected);
+        }
+        expect(debug.lastElementChild.querySelector('#downloadLogsBtn')).not.toBeNull();
     });
 });
 

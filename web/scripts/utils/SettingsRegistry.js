@@ -199,15 +199,20 @@ const TEXTS = {
     settingDungeonsGroup: ['Group', 'Group random dungeon entrances, plus any entrance not recognized as solo, corrupted or hellgate. The E0 to E4 filters also apply.'],
     settingDungeonsCorrupted: ['Corrupted', 'Corrupted dungeon entrances (PvP)'],
     settingDungeonsHellgate: ['Hellgate', 'Hellgate portals (PvP)'],
-    settingLogLevel: ['', 'Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything.'],
-    ...Object.fromEntries(['System', 'Network', 'Map', 'Players', 'Mobs', 'Resources', 'Dungeons', 'Fishing'].map(area =>
-        [`settingLogCategory${area}`, ['', CATEGORY_TIP]])),
+    settingLogLevel: ['Log Level', 'Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything.'],
+    ...Object.fromEntries([['System', 'System'], ['Network', 'Network'], ['Map', 'Map'], ['Players', 'Players'], ['Mobs', 'Mobs'],
+        ['Resources', 'Harvestables'], ['Dungeons', 'Dungeons'], ['Fishing', 'Fishing']].map(([area, label]) =>
+        [`settingLogCategory${area}`, [label, CATEGORY_TIP]])),
+    settingLogToConsole: ['Browser Console (F12)', 'Print logs in the browser DevTools console.'],
     settingLogToServer: ['Save browser logs', 'Sends browser log entries that pass the level and category filters to the radar PC, in logs/debug/. ERROR and CRITICAL entries are also copied to logs/errors/.'],
     settingDebugWsCoalescing: ['Merge entity updates per frame', 'Keeps only the latest move, health and regeneration update per entity until the next frame is drawn.'],
     settingUiEnemiesClassicOpen: ['Classic Enemies'],
     settingUiEnemiesMistsOpen: ['Mists Bosses'],
     settingUiEnemiesOtherOpen: ['Other Enemies'],
     ...Object.fromEntries(['Fiber', 'Hide', 'Wood', 'Ore', 'Rock'].map(resource => [`settingUiResources${resource}Open`, [resource]])),
+    settingUiSettingsLoggingOpen: ['Logging'],
+    settingUiSettingsDebugOpen: ['Debug'],
+    settingUiSettingsNetworkOpen: ['Network'],
 };
 
 const LOCATIONS = {
