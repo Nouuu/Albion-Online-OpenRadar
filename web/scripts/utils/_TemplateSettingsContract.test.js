@@ -90,6 +90,7 @@ const TOOLTIPS = {
     settingChestsBlue: CHEST_TIP,
     settingChestsPurple: CHEST_TIP,
     settingChestsYellow: CHEST_TIP,
+    settingDebugResourcesTypeId: 'Draws the internal type ID on resource nodes and living resources (debug).',
     settingDebugWsCoalescing: 'Keeps only the latest move, health and regeneration update per entity until the next frame is drawn.',
     settingLogToServer: 'Sends browser log entries that pass the level and category filters to the radar PC, in logs/debug/. ERROR and CRITICAL entries are also copied to logs/errors/.',
     settingLogLevel: 'Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything.',

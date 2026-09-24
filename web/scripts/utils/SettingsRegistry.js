@@ -182,7 +182,7 @@ const TEXTS = {
     ...Object.fromEntries(MATRIX_ROWS.map(([key]) => [key, [key.includes('Living') ? 'Living' : 'Static']])),
     settingResourcesFishing: ['Show Fishing Pools', 'Shows fishing spots on the radar.'],
     settingResourcesShowHealthBars: ['Show health bars', 'Display health bar on living resources (mobs).'],
-    settingDebugResourcesTypeId: ['Show ID', 'Display internal ID for living resources (debug).'],
+    settingDebugResourcesTypeId: ['Show ID', 'Draws the internal type ID on resource nodes and living resources (debug).'],
     settingDebugResourcesDbName: ['Show DB Name', 'Display the DB uniqueName mapped from the wire typeId (debug, for offset/mapping verification).'],
     settingChestsGreen: ['Green', CHEST_TIP],
     settingChestsBlue: ['Blue', CHEST_TIP],
