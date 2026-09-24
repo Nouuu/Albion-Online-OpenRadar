@@ -1,4 +1,5 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
+import {migrateSettings} from "./SettingsMigration.js";
 
 const CHANNEL_NAME = 'openradar-settings';
 
@@ -200,6 +201,7 @@ let settingsSyncInstance = null;
 
 export function getSettingsSync() {
     if (!settingsSyncInstance) {
+        try { migrateSettings(localStorage); } catch { /* app loads on defaults */ }
         settingsSyncInstance = new SettingsSync();
         window.addEventListener('beforeunload', () => {
             if (settingsSyncInstance) settingsSyncInstance.destroy();
