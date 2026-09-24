@@ -279,6 +279,23 @@ describe('PlayersHandler', () => {
             expect(playSpy).toHaveBeenCalled();
         });
 
+        // @verified 2026-09-24: the PlayerDetected log reports the same threat verdict as the alert gate.
+        test.each([
+            ['repeat spawn of a known hostile without faction', true, [{1: 'Bob', 8: '', 53: 255, 51: null, 40: [], 43: []}, {1: 'Bob', 40: [], 43: []}], true],
+            ['hostile spawn with detection off', false, [{1: 'Bob', 8: '', 53: 255, 51: null, 40: [], 43: []}], false],
+        ])('synthetic: logged isThreat follows the alert gate on %s', (_label, detect, spawns, expected) => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getBool.mockImplementation(k => k === 'settingPlayersDetect' ? detect : true);
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+
+            spawns.forEach(params => handler.handleNewPlayerEvent(1, params));
+
+            const logged = window.logger.info.mock.calls.filter(([, event]) => event === 'PlayerDetected').at(-1)[2];
+            expect(logged.isThreat).toBe(expected);
+            expect(playSpy).toHaveBeenCalledTimes(expected ? spawns.length : 0);
+        });
+
         // @characterization 2026-04-18: settingAlertFlash=true and threat present appends a flash div to document.body.
         test('synthetic: settingAlertFlash=true with threat appends flash div to body', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');

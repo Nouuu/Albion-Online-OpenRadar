@@ -193,10 +193,9 @@ export class PlayersHandler {
             this.playersList.push(player);
         }
 
-        const mapId = window.currentMapId;
-        const pvpType = zonesDatabase.getPvpType(mapId);
+        const pvpType = zonesDatabase.getPvpType(window.currentMapId);
         const ignored = this.isIgnored({nickname, guildName, allianceName});
-        const isThreat = !ignored && this.isPlayerThreat(faction, pvpType);
+        const isThreat = this.isAlertThreat(id);
 
         window.logger?.info(CATEGORIES.PLAYERS, 'PlayerDetected', {
             id,
@@ -310,13 +309,17 @@ export class PlayersHandler {
         }
     }
 
-    triggerHostileAlert(id) {
+    isAlertThreat(id) {
         if (!settingsSync.getBool('settingPlayersDetect')) return false;
         const mapId = window.currentMapId;
         if (!mapId) return false;
         const player = this.playersList.find(p => p.id === id);
         if (!player || this.isIgnored(player)) return false;
-        if (!this.isPlayerThreat(player.faction, zonesDatabase.getPvpType(mapId))) return false;
+        return this.isPlayerThreat(player.faction, zonesDatabase.getPvpType(mapId));
+    }
+
+    triggerHostileAlert(id) {
+        if (!this.isAlertThreat(id)) return false;
 
         if (settingsSync.getBool('settingAlertFlash')) {
             this.triggerScreenFlash();
