@@ -78,16 +78,6 @@ const KINDS = {
             el.addEventListener('change', () => sync.set(entry.key, el.value), {signal});
         },
     },
-    radio: {
-        show(el, entry, value) {
-            for (const radio of el.querySelectorAll('input[type="radio"]')) radio.checked = radio.value === String(value);
-        },
-        listen(el, entry, sync, signal) {
-            el.addEventListener('change', event => {
-                if (event.target.matches('input[type="radio"]') && event.target.checked) sync.set(entry.key, event.target.value);
-            }, {signal});
-        },
-    },
     matrix: {
         show(el, entry, value) {
             if (!el.querySelector('[data-enchant]')) el.innerHTML = generateResourceGrid(entry);
@@ -175,7 +165,6 @@ function kindOf(el, entry) {
     if (entry?.shape === 'stringList') return 'list';
     if (el.tagName === 'SELECT') return 'select';
     if (el.tagName === 'INPUT') return el.type;
-    if (el.querySelector('input[type="radio"]')) return 'radio';
     return null;
 }
 

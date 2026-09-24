@@ -17,7 +17,6 @@ const LABELS = {
     settingRadarSize: 'Max size',
     settingRadarFitToScreen: 'Fit to screen',
     settingRadarIconSize: 'Icon size',
-    settingRadarRotation: 'Rotation',
     settingRadarMapBackground: 'Map background',
     settingRadarHudZoneInfo: 'Zone info box',
     settingRadarHudStats: 'Stats box',
@@ -45,7 +44,6 @@ const CATEGORY_TIP = 'Keep DEBUG and INFO entries of this area. WARN and above i
 const TOOLTIPS = {
     settingRadarSize: 'Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.',
     settingRadarFitToScreen: 'Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on.',
-    settingRadarRotation: 'Turns the radar clockwise by quarter turns, for a screen held sideways. The zone and stats boxes and Picture-in-Picture turn with it. The page and this panel stay upright.',
     settingRadarHudZoneInfo: 'Top-left box with the zone name, tier and a PvP marker.',
     settingRadarHudStats: 'Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on.',
     settingRadarResourceCount: 'Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish.',

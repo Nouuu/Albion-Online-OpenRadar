@@ -1,19 +1,13 @@
-// synthetic: pure sizing and rotation helpers, then the radar template mounted with stubbed layout and a fake ResizeObserver.
+// synthetic: pure sizing helpers, then the radar template mounted with stubbed layout and a fake ResizeObserver.
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import settingsSync from './SettingsSync.js';
-import {
-    computeRadarSize,
-    destroyRadarSettingsPanel,
-    initRadarSettingsPanel,
-    rotationDegrees,
-    rotationTransform,
-} from './RadarSettingsPanel.js';
+import {computeRadarSize, destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
 import {bindSettingControls} from './SettingControls.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
 
-const RADAR_KEYS = ['settingRadarSize', 'settingRadarFitToScreen', 'settingRadarRotation'];
+const RADAR_KEYS = ['settingRadarSize', 'settingRadarFitToScreen'];
 
 describe('computeRadarSize', () => {
     test.each([
@@ -27,22 +21,6 @@ describe('computeRadarSize', () => {
         [600, false, 512.7, 900, 512],
     ])('@verified 2026-09-24: size %s fit %s in %sx%s gives %s', (size, fit, availableWidth, availableHeight, expected) => {
         expect(computeRadarSize({size, fit, availableWidth, availableHeight})).toBe(expected);
-    });
-});
-
-describe('rotation helpers', () => {
-    test.each([
-        [0, 0, ''],
-        [90, 90, 'rotate(90deg)'],
-        [180, 180, 'rotate(180deg)'],
-        [270, 270, 'rotate(270deg)'],
-        [45, 0, ''],
-        ['90', 90, 'rotate(90deg)'],
-        [NaN, 0, ''],
-        [undefined, 0, ''],
-    ])('@verified 2026-09-24: %s normalizes to %s and transform "%s"', (value, degrees, transform) => {
-        expect(rotationDegrees(value)).toBe(degrees);
-        expect(rotationTransform(value)).toBe(transform);
     });
 });
 
@@ -177,9 +155,8 @@ describe('radar settings panel layout', () => {
         expect(observers[0].observe).toHaveBeenCalledWith(root);
     });
 
-    test('@verified 2026-09-24: htmx:afterSettle on #page-content restores size and rotation', () => {
+    test('@verified 2026-09-24: htmx:afterSettle on #page-content restores size', () => {
         stubLayout({width: 358});
-        settingsSync.set('settingRadarRotation', '90');
         initRadarSettingsPanel();
         canvases().forEach(canvas => {
             canvas.width = 500;
@@ -191,7 +168,6 @@ describe('radar settings panel layout', () => {
 
         expect(bitmaps()).toEqual(Array(4).fill([358, 358]));
         expect([container().style.width, container().style.height]).toEqual(['358px', '358px']);
-        expect(container().style.transform).toBe('rotate(90deg)');
     });
 
     test('@verified 2026-09-24: htmx:afterSettle on another target leaves the layout alone', () => {
@@ -306,25 +282,11 @@ describe('radar settings panel controls', () => {
         expect(sizeControls.map(el => el.disabled)).toEqual([false, false, false, false]);
     });
 
-    test('@verified 2026-09-24: rotation 90 through the radios turns only #canvasContainer', () => {
+    test('@verified 2026-09-24: nothing in the panel or the canvas carries a style transform', () => {
         bindAndInit();
-        const radio = root.querySelector('[data-setting="settingRadarRotation"] input[value="90"]');
-
-        radio.checked = true;
-        change(radio);
+        settingsSync.setBool('settingRadarFitToScreen', true);
 
         const turned = [root, ...root.querySelectorAll('*')].filter(el => el.style?.transform);
-        expect(turned.map(el => el.id)).toEqual(['canvasContainer']);
-        expect(container().style.transform).toBe('rotate(90deg)');
-    });
-
-    test('@verified 2026-09-24: a stored rotation of 45 draws upright with the 0 radio checked', () => {
-        settingsSync.set('settingRadarRotation', '45');
-
-        bindAndInit();
-
-        expect(container().style.transform).toBe('');
-        const checked = [...root.querySelectorAll('[data-setting="settingRadarRotation"] input:checked')];
-        expect(checked.map(el => el.value)).toEqual(['0']);
+        expect(turned).toEqual([]);
     });
 });

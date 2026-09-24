@@ -19,7 +19,6 @@ const ROWS = [
     ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 800, step: 50, unit: ' px'}],
     ['settingRadarFitToScreen', 'bool', false, null, 'new'],
     ['settingRadarIconSize', 'float', 1, 'settingIconSize', 'rename', {min: 0.5, max: 2, step: 0.1, unit: '%'}],
-    ['settingRadarRotation', 'enum', 0, null, 'new', {values: [0, 90, 180, 270]}],
     ['settingRadarMapBackground', 'bool', true, 'settingShowMap', 'fix'],
     ['settingRadarHudZoneInfo', 'bool', true, null, 'new'],
     ['settingRadarHudStats', 'bool', true, null, 'new'],
@@ -135,7 +134,6 @@ const TEXTS = {
     settingRadarSize: ['Max size', 'Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.'],
     settingRadarFitToScreen: ['Fit to screen', 'Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on.'],
     settingRadarIconSize: ['Icon size'],
-    settingRadarRotation: ['Rotation', 'Turns the radar clockwise by quarter turns, for a screen held sideways. The zone and stats boxes and Picture-in-Picture turn with it. The page and this panel stay upright.'],
     settingRadarMapBackground: ['Map background'],
     settingRadarHudZoneInfo: ['Zone info box', 'Top-left box with the zone name, tier and a PvP marker.'],
     settingRadarHudStats: ['Stats box', 'Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on.'],
@@ -218,8 +216,7 @@ const TEXTS = {
 };
 
 const LOCATIONS = {
-    'Radar > Radar settings > View': ['settingRadarZoom', 'settingRadarSize', 'settingRadarFitToScreen', 'settingRadarIconSize',
-        'settingRadarRotation'],
+    'Radar > Radar settings > View': ['settingRadarZoom', 'settingRadarSize', 'settingRadarFitToScreen', 'settingRadarIconSize'],
     'Radar > Radar settings > Display': ['settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats'],
     'Radar > Radar settings > Resources': ['settingRadarResourceCount', 'settingRadarResourceDistance',
         'settingRadarResourceTierBadges', 'settingRadarResourceClusters', 'settingRadarClusterRadius',

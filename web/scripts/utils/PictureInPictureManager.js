@@ -1,6 +1,4 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
-import settingsSync from './SettingsSync.js';
-import {rotationDegrees} from './RadarSettingsPanel.js';
 
 class PictureInPictureManager {
     constructor() {
@@ -171,22 +169,11 @@ class PictureInPictureManager {
         }
 
         this.pipCtx.clearRect(0, 0, this.size, this.size);
-        this.pipCtx.save();
-
-        const degrees = rotationDegrees(settingsSync.get('settingRadarRotation'));
-        if (degrees) {
-            const half = this.size / 2;
-            this.pipCtx.translate(half, half);
-            this.pipCtx.rotate(degrees * Math.PI / 180);
-            this.pipCtx.translate(-half, -half);
-        }
 
         if (mapCanvas) this.pipCtx.drawImage(mapCanvas, 0, 0);
         if (drawCanvas) this.pipCtx.drawImage(drawCanvas, 0, 0);
         if (ourPlayerCanvas) this.pipCtx.drawImage(ourPlayerCanvas, 0, 0);
         if (uiCanvas) this.pipCtx.drawImage(uiCanvas, 0, 0);
-
-        this.pipCtx.restore();
     }
 
     dispatchStatusEvent(status) {

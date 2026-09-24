@@ -60,7 +60,6 @@ describe('SettingsSync registry reads', () => {
         expect(s.getNumber('settingRadarClusterRadius')).toBe(30);
         expect(s.getFloat('settingRadarZoom')).toBe(1);
         expect(s.get('settingLogLevel')).toBe('WARN');
-        expect(s.get('settingRadarRotation')).toBe(0);
         expect(s.getJSON('settingResourcesStaticFiber').e2).toEqual(DEFAULT_ROW);
     });
 
@@ -92,27 +91,9 @@ describe('SettingsSync registry reads', () => {
     });
 
     test('an enum outside its values reads the default', async () => {
-        const s = await freshSync({settingLogLevel: 'VERBOSE', settingAlertSoundFile: 'missing.wav', settingRadarRotation: '45'});
+        const s = await freshSync({settingLogLevel: 'VERBOSE', settingAlertSoundFile: 'missing.wav'});
         expect(s.get('settingLogLevel')).toBe('WARN');
         expect(s.get('settingAlertSoundFile')).toBe('player.wav');
-        expect(s.get('settingRadarRotation')).toBe(0);
-    });
-
-    test('a stored rotation string compares numerically', async () => {
-        const s = await freshSync({settingRadarRotation: '90'});
-        expect(s.get('settingRadarRotation')).toBe(90);
-    });
-
-    test('a numeric enum value set in this tab reads back as that value', async () => {
-        const s = await freshSync();
-        s.set('settingRadarRotation', 180);
-        expect(s.get('settingRadarRotation')).toBe(180);
-    });
-
-    test('a numeric enum value outside the set reads the default', async () => {
-        const s = await freshSync();
-        s.set('settingRadarRotation', 45);
-        expect(s.get('settingRadarRotation')).toBe(0);
     });
 
     test('a JSON parse error reads the frozen default', async () => {

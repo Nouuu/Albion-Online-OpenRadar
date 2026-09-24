@@ -10,7 +10,6 @@ const TABLE = [
     ['settingCanvasSize', 'settingRadarSize', 'rename'],
     [null, 'settingRadarFitToScreen', 'new'],
     ['settingIconSize', 'settingRadarIconSize', 'rename'],
-    [null, 'settingRadarRotation', 'new'],
     ['settingShowMap', 'settingRadarMapBackground', 'fix'],
     [null, 'settingRadarHudZoneInfo', 'new'],
     [null, 'settingRadarHudStats', 'new'],
@@ -166,7 +165,7 @@ describe('SettingsRegistry', () => {
     test('defaults follow the registry table', () => {
         const expected = {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
-            settingRadarRotation: 0, settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
+            settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
             settingRadarHudStats: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
             settingRadarClusterRadius: 30, settingRadarClusterMinSize: 2,
@@ -257,7 +256,6 @@ describe('SettingsRegistry', () => {
     });
 
     test('enum entries list their allowed values and hold their default', () => {
-        expect(registryEntry('settingRadarRotation').values).toEqual([0, 90, 180, 270]);
         expect(registryEntry('settingLogLevel').values).toEqual(['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG']);
         for (const entry of SETTINGS.filter(e => e.type === 'enum')) {
             expect(entry.values, entry.key).toContain(entry.default);

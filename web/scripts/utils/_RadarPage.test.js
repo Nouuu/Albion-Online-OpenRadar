@@ -23,7 +23,7 @@ vi.mock('../core/WebSocketManager.js', () => ({
 vi.mock('../core/PlayerListRenderer.js', async importOriginal => ({...await importOriginal(), update: vi.fn()}));
 
 const RADAR_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../internal/templates/pages/radar.gohtml');
-const KEYS = ['settingRadarSize', 'settingRadarRotation', 'settingRadarHudStats', 'settingPlayersDetect'];
+const KEYS = ['settingRadarSize', 'settingRadarHudStats', 'settingPlayersDetect'];
 
 let page = null;
 let observers = [];
@@ -96,15 +96,14 @@ afterEach(async () => {
 });
 
 describe('radar page entry', () => {
-    test('@verified 2026-09-24: the panel applies size and rotation when DatabaseLoader.load rejects', async () => {
+    test('@verified 2026-09-24: the panel applies size when DatabaseLoader.load rejects', async () => {
         DatabaseLoader.load.mockRejectedValue(new Error('offline'));
         settingsSync.setNumber('settingRadarSize', 400);
-        settingsSync.set('settingRadarRotation', '90');
 
         await expect(page.init()).rejects.toThrow('offline');
 
         const container = root.querySelector('#canvasContainer');
-        expect([container.style.width, container.style.transform]).toEqual(['400px', 'rotate(90deg)']);
+        expect(container.style.width).toBe('400px');
         expect(observers).toHaveLength(1);
     });
 
@@ -133,7 +132,6 @@ describe('radar page entry', () => {
 
         document.body.dispatchEvent(new CustomEvent('htmx:afterSettle', {detail: {target: root}}));
         observers[0].callback([]);
-        settingsSync.set('settingRadarRotation', '90');
         settingsSync.setBool('settingRadarHudStats', false);
         settingsSync.setBool('settingPlayersDetect', false);
 

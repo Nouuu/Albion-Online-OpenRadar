@@ -2,7 +2,6 @@ import settingsSync from './SettingsSync.js';
 import {registryEntry} from './SettingsRegistry.js';
 
 const FIT_CAP = 1200;
-const QUARTER_TURNS = [90, 180, 270];
 
 function unbounded(value) {
     return Number.isFinite(value) ? value : Infinity;
@@ -14,17 +13,7 @@ export function computeRadarSize({size, fit, availableWidth, availableHeight}) {
     return Math.max(1, Math.floor(Math.min(cap, unbounded(availableWidth), unbounded(availableHeight))));
 }
 
-export function rotationDegrees(value) {
-    const degrees = Number(value);
-    return QUARTER_TURNS.includes(degrees) ? degrees : 0;
-}
-
-export function rotationTransform(value) {
-    const degrees = rotationDegrees(value);
-    return degrees ? `rotate(${degrees}deg)` : '';
-}
-
-const LAYOUT_KEYS = new Set(['settingRadarSize', 'settingRadarFitToScreen', 'settingRadarRotation']);
+const LAYOUT_KEYS = new Set(['settingRadarSize', 'settingRadarFitToScreen']);
 const SIZE_CONTROLS = '[data-setting="settingRadarSize"], [data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]';
 
 let state = null;
@@ -55,7 +44,6 @@ function applyLayout() {
 
     container.style.width = `${size}px`;
     container.style.height = `${size}px`;
-    container.style.transform = rotationTransform(settingsSync.get('settingRadarRotation'));
     for (const control of page.querySelectorAll(SIZE_CONTROLS)) control.disabled = fit;
 
     let changed = false;

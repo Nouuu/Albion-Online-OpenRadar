@@ -1,11 +1,9 @@
 // synthetic: drives the PictureInPictureManager singleton's compositeFrame directly with a recording context.
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import settingsSync from './SettingsSync.js';
 import {createRecordingContext} from '../__fixtures__/recordingContext.js';
 import pictureInPictureManager from './PictureInPictureManager.js';
 
 const SIZE = 500;
-const HALF = SIZE / 2;
 
 function makeCanvases() {
     return {
@@ -16,29 +14,7 @@ function makeCanvases() {
     };
 }
 
-function frame(canvases, rotateArgs) {
-    const calls = [
-        ['clearRect', 0, 0, SIZE, SIZE],
-        ['save'],
-    ];
-    if (rotateArgs !== null) {
-        calls.push(
-            ['translate', HALF, HALF],
-            ['rotate', rotateArgs],
-            ['translate', -HALF, -HALF],
-        );
-    }
-    calls.push(
-        ['drawImage', canvases.mapCanvas, 0, 0],
-        ['drawImage', canvases.drawCanvas, 0, 0],
-        ['drawImage', canvases.ourPlayerCanvas, 0, 0],
-        ['drawImage', canvases.uiCanvas, 0, 0],
-        ['restore'],
-    );
-    return calls;
-}
-
-describe('PictureInPictureManager.compositeFrame rotation', () => {
+describe('PictureInPictureManager.compositeFrame', () => {
     let ctx;
     let canvases;
 
@@ -62,21 +38,16 @@ describe('PictureInPictureManager.compositeFrame rotation', () => {
         pictureInPictureManager.canvasManager = null;
     });
 
-    test('@verified 2026-09-24: rotation 270 rotates about the frame center, twice over two frames', () => {
-        settingsSync.set('settingRadarRotation', '270');
-
-        pictureInPictureManager.compositeFrame();
+    test('@verified 2026-09-24: draws the four layers upright, with no rotate call', () => {
         pictureInPictureManager.compositeFrame();
 
-        const rotated = frame(canvases, 3 * Math.PI / 2);
-        expect(ctx.calls).toEqual([...rotated, ...rotated]);
-    });
-
-    test.each(['0', '45'])('@verified 2026-09-24: stored rotation %s gives no rotate call', (value) => {
-        settingsSync.set('settingRadarRotation', value);
-
-        pictureInPictureManager.compositeFrame();
-
-        expect(ctx.calls).toEqual(frame(canvases, null));
+        expect(ctx.calls).toEqual([
+            ['clearRect', 0, 0, SIZE, SIZE],
+            ['drawImage', canvases.mapCanvas, 0, 0],
+            ['drawImage', canvases.drawCanvas, 0, 0],
+            ['drawImage', canvases.ourPlayerCanvas, 0, 0],
+            ['drawImage', canvases.uiCanvas, 0, 0],
+        ]);
+        expect(ctx.calls.map(call => call[0])).not.toContain('rotate');
     });
 });

@@ -239,7 +239,7 @@ describe('bindSettingControls number (change only)', () => {
     });
 });
 
-describe('bindSettingControls select and radio', () => {
+describe('bindSettingControls select', () => {
     test('select fills options from the registry and writes on change', () => {
         const sync = newSync();
         const root = mount('<select data-setting="settingAlertSoundFile"></select>');
@@ -263,24 +263,6 @@ describe('bindSettingControls select and radio', () => {
 
         expect([...select.options].map(o => o.value)).toEqual(['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG']);
         expect(select.value).toBe('WARN');
-    });
-
-    test('radio group shows and writes the enum value', () => {
-        localStorage.setItem('settingRadarRotation', '180');
-        const sync = newSync();
-        const root = mount(`<div data-setting="settingRadarRotation">
-            ${[0, 90, 180, 270].map(v => `<input type="radio" name="rot" value="${v}">`).join('')}
-        </div>`);
-        bind(root, sync);
-        const radios = [...root.querySelectorAll('input')];
-
-        expect(radios.filter(r => r.checked).map(r => r.value)).toEqual(['180']);
-
-        radios[1].checked = true;
-        fire(radios[1], 'change');
-
-        expect(localStorage.getItem('settingRadarRotation')).toBe('90');
-        expect(sync.get('settingRadarRotation')).toBe(90);
     });
 });
 
