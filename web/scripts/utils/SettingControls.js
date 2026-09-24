@@ -144,6 +144,17 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
     bound.addEventListener('abort', () => sync.off('*', onChange), {once: true});
 }
 
+const PRESETS = {all: true, clear: false};
+
+const ENEMY_FILTERS = SETTINGS.filter(entry => entry.page === 'Enemies'
+    && ['Classic', 'Mists bosses', 'Other'].includes(entry.section)
+    && entry.type === 'bool' && entry.scope === 'setting' && entry.key !== 'settingEnemiesMinHealthFilter');
+
+export function applyEnemyPreset(name, sync = settingsSync) {
+    if (!Object.hasOwn(PRESETS, name)) return;
+    for (const entry of ENEMY_FILTERS) sync.setBool(entry.key, PRESETS[name]);
+}
+
 const registeredPages = new Set();
 
 export function registerBoundPage(name, {init, destroy} = {}) {

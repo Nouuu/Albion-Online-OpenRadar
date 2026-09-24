@@ -2,7 +2,7 @@
 
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {SettingsSync} from './SettingsSync.js';
-import {bindSettingControls, registerBoundPage} from './SettingControls.js';
+import {applyEnemyPreset, bindSettingControls, registerBoundPage} from './SettingControls.js';
 import {registerPage, reinitCurrentPage} from '../core/PageController.js';
 
 vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
@@ -398,5 +398,41 @@ describe('registerBoundPage', () => {
 
         expect(destroy).toHaveBeenCalledTimes(1);
         expect(seen).toBe(true);
+    });
+});
+
+describe('applyEnemyPreset', () => {
+    const ENEMY_FILTER_KEYS = [
+        'settingEnemiesAvalonianDrones',
+        'settingEnemiesBoss',
+        'settingEnemiesChampion',
+        'settingEnemiesEvent',
+        'settingEnemiesMiniBoss',
+        'settingEnemiesMistsCrystalSpider',
+        'settingEnemiesMistsFairyDragon',
+        'settingEnemiesMistsGriffin',
+        'settingEnemiesMistsVeilWeaver',
+        'settingEnemiesNormal',
+    ];
+
+    function storedKeys() {
+        return Object.keys(localStorage).filter(key => key !== 'settingSchemaVersion').sort();
+    }
+
+    test.each([['all', 'true'], ['clear', 'false']])('%s writes %s to exactly the 10 enemy filter keys', (name, stored) => {
+        const sync = newSync();
+
+        applyEnemyPreset(name, sync);
+
+        expect(storedKeys()).toEqual(ENEMY_FILTER_KEYS);
+        for (const key of ENEMY_FILTER_KEYS) expect(localStorage.getItem(key)).toBe(stored);
+    });
+
+    test.each(['bosses', 'miniboss', 'unknown'])('%s writes nothing', name => {
+        const sync = newSync();
+
+        applyEnemyPreset(name, sync);
+
+        expect(storedKeys()).toEqual([]);
     });
 });
