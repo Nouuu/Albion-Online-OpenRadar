@@ -8,7 +8,10 @@ import {
     rotationDegrees,
     rotationTransform,
 } from './RadarSettingsPanel.js';
+import {bindSettingControls} from './SettingControls.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
+
+vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
 
 const RADAR_KEYS = ['settingRadarSize', 'settingRadarFitToScreen', 'settingRadarRotation'];
 
@@ -254,5 +257,63 @@ describe('radar settings panel layout', () => {
 
         expect(bitmaps()).toEqual(Array(4).fill([500, 500]));
         expect(sizeEvents).toEqual([]);
+    });
+});
+
+describe('radar settings panel controls', () => {
+    let binding = null;
+
+    function bindAndInit() {
+        binding = new AbortController();
+        bindSettingControls(root, binding.signal);
+        initRadarSettingsPanel();
+    }
+
+    function change(el) {
+        el.dispatchEvent(new Event('change', {bubbles: true}));
+    }
+
+    afterEach(() => {
+        binding?.abort();
+        binding = null;
+    });
+
+    test('@verified 2026-09-24: Fit on disables the Size slider and its three buttons on the elements', () => {
+        bindAndInit();
+        const sizeControls = [...root.querySelectorAll(
+            '[data-setting="settingRadarSize"], [data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]')];
+        const fit = root.querySelector('[data-setting="settingRadarFitToScreen"]');
+        expect(sizeControls).toHaveLength(4);
+        expect(sizeControls.map(el => el.disabled)).toEqual([false, false, false, false]);
+
+        fit.checked = true;
+        change(fit);
+        expect(sizeControls.map(el => el.disabled)).toEqual([true, true, true, true]);
+
+        fit.checked = false;
+        change(fit);
+        expect(sizeControls.map(el => el.disabled)).toEqual([false, false, false, false]);
+    });
+
+    test('@verified 2026-09-24: rotation 90 through the radios turns only #canvasContainer', () => {
+        bindAndInit();
+        const radio = root.querySelector('[data-setting="settingRadarRotation"] input[value="90"]');
+
+        radio.checked = true;
+        change(radio);
+
+        const turned = [root, ...root.querySelectorAll('*')].filter(el => el.style?.transform);
+        expect(turned.map(el => el.id)).toEqual(['canvasContainer']);
+        expect(container().style.transform).toBe('rotate(90deg)');
+    });
+
+    test('@verified 2026-09-24: a stored rotation of 45 draws upright with the 0 radio checked', () => {
+        settingsSync.set('settingRadarRotation', '45');
+
+        bindAndInit();
+
+        expect(container().style.transform).toBe('');
+        const checked = [...root.querySelectorAll('[data-setting="settingRadarRotation"] input:checked')];
+        expect(checked.map(el => el.value)).toEqual(['0']);
     });
 });

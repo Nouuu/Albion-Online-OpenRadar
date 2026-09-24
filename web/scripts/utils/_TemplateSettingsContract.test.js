@@ -10,18 +10,6 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 const PAGES_DIR = join(ROOT, 'internal/templates/pages');
 const LAYOUTS_DIR = join(ROOT, 'internal/templates/layouts');
 
-const EXCLUSIONS = [
-    {name: 'radar controls row and inline script, until the radar settings panel', page: 'radar',
-        region: root => root.querySelector('#canvasContainer').nextElementSibling},
-];
-
-const NO_CONTROL_YET = {
-    'added by the radar settings panel': ['settingRadarFitToScreen', 'settingRadarRotation', 'settingRadarHudZoneInfo',
-        'settingRadarHudStats', 'settingUiRadarSettingsOpen'],
-    'moved from the settings Display card to the radar settings panel': ['settingRadarMapBackground',
-        'settingRadarResourceTierBadges', 'settingRadarClusterRadius', 'settingRadarClusterMinSize'],
-};
-
 const CONTROL_COUNT_EXCEPTIONS = {settingPlayersDetect: 2, settingUiSidebarCollapsed: 0};
 
 const UNBOUND_INPUTS = {
@@ -113,28 +101,17 @@ function scriptOf(name) {
 }
 
 function loadPages() {
-    const pages = [];
-    let skipped = '';
-    for (const name of pageNames()) {
-        const root = mountPage(name).cloneNode(true);
-        for (const exclusion of EXCLUSIONS.filter(e => e.page === name)) {
-            const region = exclusion.region(root);
-            skipped += region.outerHTML;
-            if (region === root) root.innerHTML = '';
-            else region.remove();
-        }
-        pages.push({name, root, excluded: EXCLUSIONS.some(e => e.page === name)});
-    }
+    const pages = pageNames().map(name => ({name, root: mountPage(name).cloneNode(true)}));
     for (const file of readdirSync(LAYOUTS_DIR)) {
         const root = document.createElement('div');
         root.innerHTML = readFileSync(join(LAYOUTS_DIR, file), 'utf8');
-        pages.push({name: `layouts/${file}`, root, excluded: false});
+        pages.push({name: `layouts/${file}`, root});
     }
     document.body.innerHTML = '';
-    return {pages, skipped};
+    return pages;
 }
 
-const {pages, skipped} = loadPages();
+const pages = loadPages();
 
 function all(selector) {
     return pages.flatMap(page => [...page.root.querySelectorAll(selector)].map(el => ({page: page.name, el})));
@@ -148,10 +125,6 @@ const controls = all('[data-setting]');
 
 function controlCount(key) {
     return controls.filter(({el}) => el.dataset.setting === key).length;
-}
-
-function inSkippedRegion(key) {
-    return skipped.includes(`id="${key}"`) || skipped.includes(`data-setting="${key}"`);
 }
 
 describe('template settings contract', () => {
@@ -215,13 +188,11 @@ describe('template settings contract', () => {
     });
 
     test('each setting key has one control, with the declared exceptions', () => {
-        const noControlYet = new Set(Object.values(NO_CONTROL_YET).flat());
         const drift = SETTINGS.filter(entry => ['setting', 'ui', 'backend'].includes(entry.scope) && !entry.pendingRemoval)
             .flatMap(({key}) => {
                 const count = controlCount(key);
                 const expected = CONTROL_COUNT_EXCEPTIONS[key] ?? 1;
                 if (count === expected) return [];
-                if (count === 0 && (noControlYet.has(key) || inSkippedRegion(key))) return [];
                 return [`${key}: ${count} controls, expected ${expected}`];
             });
         expect(drift).toEqual([]);
@@ -229,16 +200,11 @@ describe('template settings contract', () => {
 
     test('converted pages hold no input or select bound by id alone', () => {
         const allowed = new Set(Object.values(UNBOUND_INPUTS).flat());
-        const unbound = pages.filter(({name, excluded}) => !name.startsWith('layouts/') && !excluded)
+        const unbound = pages.filter(({name}) => !name.startsWith('layouts/'))
             .flatMap(({name, root}) => [...root.querySelectorAll('input[id]:not([data-setting]), select[id]:not([data-setting])')]
                 .filter(el => !allowed.has(el.id) && !el.closest('[data-setting]'))
                 .map(el => `${name}: ${el.id}`));
         expect(unbound).toEqual([]);
-    });
-
-    test('keys listed without a control have none yet', () => {
-        const bound = Object.values(NO_CONTROL_YET).flat().filter(key => controlCount(key) > 0);
-        expect(bound).toEqual([]);
     });
 
     test('removed keys have no control', () => {
@@ -249,7 +215,7 @@ describe('template settings contract', () => {
     });
 
     test('each converted page registers through registerBoundPage', () => {
-        const missing = pages.filter(({name, excluded}) => !name.startsWith('layouts/') && !excluded)
+        const missing = pages.filter(({name}) => !name.startsWith('layouts/'))
             .filter(({name}) => !scriptOf(name).includes(`registerBoundPage('${name}'`))
             .map(({name}) => name);
         expect(missing).toEqual([]);
