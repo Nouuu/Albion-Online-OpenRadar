@@ -3,10 +3,12 @@ package capture
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -314,6 +316,83 @@ func TestMutateConfig_PreservesUntouchedFields(t *testing.T) {
 	}
 	if got.Logging.PcapRecording {
 		t.Error("Logging.PcapRecording: want false after mutation, got true")
+	}
+}
+
+func TestMutateConfigConcurrent(t *testing.T) {
+	dir := t.TempDir()
+	if err := WriteConfig(dir, Config{}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	errs := make(chan error, 75)
+
+	for i := range 50 {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			name := fmt.Sprintf("iface-%d", n)
+			if err := MutateConfig(dir, func(cfg *Config) {
+				cfg.CaptureInterfaces = append(cfg.CaptureInterfaces, PersistedInterface{Name: name})
+			}); err != nil {
+				errs <- err
+			}
+		}(i)
+	}
+	for range 25 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := ReadConfig(dir); err != nil {
+				errs <- err
+			}
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		t.Errorf("concurrent config op failed: %v", err)
+	}
+
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("final ReadConfig: %v", err)
+	}
+	if len(got.CaptureInterfaces) != 50 {
+		t.Errorf("got %d entries, want 50", len(got.CaptureInterfaces))
+	}
+}
+
+func TestMigrateIPTxtKeepsLogging(t *testing.T) {
+	dir := t.TempDir()
+	if err := WriteConfig(dir, Config{
+		Logging: LoggingConfig{ServerLogsEnabled: true, PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	resolve := func(ip string) (PersistedInterface, error) {
+		return PersistedInterface{Name: `\Device\NPF_{X}`, Description: "Wi-Fi"}, nil
+	}
+	migrated, err := MigrateIPTxt(dir, resolve)
+	if err != nil {
+		t.Fatalf("MigrateIPTxt: %v", err)
+	}
+	if !migrated {
+		t.Fatal("expected migrated=true")
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if !got.Logging.ServerLogsEnabled || !got.Logging.PcapRecording {
+		t.Errorf("logging block lost after migration: %+v", got.Logging)
+	}
+	if len(got.CaptureInterfaces) != 1 || got.CaptureInterfaces[0].Name != `\Device\NPF_{X}` {
+		t.Errorf("migrated interface wrong: %+v", got.CaptureInterfaces)
 	}
 }
 

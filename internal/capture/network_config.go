@@ -8,7 +8,10 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
+
+var configMu sync.Mutex
 
 const (
 	configFilename   = "network.json"
@@ -31,6 +34,12 @@ type Config struct {
 }
 
 func ReadConfig(appDir string) (Config, error) {
+	configMu.Lock()
+	defer configMu.Unlock()
+	return readConfig(appDir)
+}
+
+func readConfig(appDir string) (Config, error) {
 	path := filepath.Join(appDir, configFilename)
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -47,6 +56,12 @@ func ReadConfig(appDir string) (Config, error) {
 }
 
 func WriteConfig(appDir string, cfg Config) error {
+	configMu.Lock()
+	defer configMu.Unlock()
+	return writeConfig(appDir, cfg)
+}
+
+func writeConfig(appDir string, cfg Config) error {
 	path := filepath.Join(appDir, configFilename)
 	tmp := path + ".tmp"
 	data, err := json.MarshalIndent(cfg, "", "  ")
@@ -65,12 +80,14 @@ func WriteConfig(appDir string, cfg Config) error {
 
 // MutateConfig reads the config, applies the mutator, and writes atomically.
 func MutateConfig(appDir string, mutate func(*Config)) error {
-	cfg, err := ReadConfig(appDir)
+	configMu.Lock()
+	defer configMu.Unlock()
+	cfg, err := readConfig(appDir)
 	if err != nil {
 		return err
 	}
 	mutate(&cfg)
-	return WriteConfig(appDir, cfg)
+	return writeConfig(appDir, cfg)
 }
 
 type IPResolver func(ip string) (PersistedInterface, error)
@@ -105,7 +122,8 @@ func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {
 		_ = os.Remove(ipPath)
 		return false, fmt.Errorf("resolve legacy ip %q: %w", ip, err)
 	}
-	cfg := Config{CaptureInterfaces: []PersistedInterface{entry}}
+	cfg := existing
+	cfg.CaptureInterfaces = []PersistedInterface{entry}
 	if err := WriteConfig(appDir, cfg); err != nil {
 		return false, err
 	}
