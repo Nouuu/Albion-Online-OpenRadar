@@ -4,6 +4,8 @@ const ENCHANTS = ['e0', 'e1', 'e2', 'e3', 'e4'];
 
 const DEFAULT_MATRIX = Object.fromEntries(ENCHANTS.map(e => [e, [false, false, false, true, true, true, true, true]]));
 
+export const ALL_FALSE_MATRIX_STRING = JSON.stringify(Object.fromEntries(ENCHANTS.map(e => [e, Array(8).fill(false)])));
+
 const MATRIX_ROWS = ['Fiber', 'Hide', 'Wood', 'Ore', 'Rock'].flatMap(resource => ['Static', 'Living'].map(kind =>
     [`settingResources${kind}${resource}`, 'json', DEFAULT_MATRIX, `setting${kind}${resource}Enchants`, 'product', {shape: 'matrix'}]));
 

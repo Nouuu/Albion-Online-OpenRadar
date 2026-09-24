@@ -45,13 +45,15 @@ describe('migrateSettings', () => {
         migrateSettings(storage);
         const touched = [...storage.setItem.mock.calls, ...storage.removeItem.mock.calls].map(([key]) => key);
         expect(touched.filter(key => key in keep)).toEqual([]);
-        expect(storage.snapshot()).toEqual({...keep, settingSchemaVersion: '1'});
+        expect(storage.snapshot()).toMatchObject({...keep, settingSchemaVersion: '1'});
     });
 
     test('the new value wins over the legacy one and the legacy key is deleted', () => {
         const storage = memoryStorage({settingDangerousPlayers: 'false', settingPlayersHostile: 'true'});
         migrateSettings(storage);
-        expect(storage.snapshot()).toEqual({settingPlayersHostile: 'true', settingSchemaVersion: '1'});
+        const store = storage.snapshot();
+        expect(store).toMatchObject({settingPlayersHostile: 'true', settingSchemaVersion: '1'});
+        expect(store).not.toHaveProperty('settingDangerousPlayers');
     });
 
     test('a legacy write after migration is copied only when the new key is absent', () => {
@@ -60,11 +62,10 @@ describe('migrateSettings', () => {
         storage.setItem('settingFlash', 'true');
         storage.setItem('settingSound', 'true');
         migrateSettings(storage);
-        expect(storage.snapshot()).toEqual({
-            settingAlertSound: 'false',
-            settingAlertFlash: 'true',
-            settingSchemaVersion: '1',
-        });
+        const store = storage.snapshot();
+        expect(store).toMatchObject({settingAlertSound: 'false', settingAlertFlash: 'true', settingSchemaVersion: '1'});
+        expect(store).not.toHaveProperty('settingSound');
+        expect(store).not.toHaveProperty('settingFlash');
     });
 
     test('the schema marker is written last', () => {
@@ -73,5 +74,41 @@ describe('migrateSettings', () => {
         expect(storage.setItem.mock.calls.at(-1)).toEqual(['settingSchemaVersion', '1']);
         expect(storage.setItem.mock.invocationCallOrder.at(-1))
             .toBeGreaterThan(Math.max(...storage.removeItem.mock.invocationCallOrder));
+    });
+
+    test('a legacy product key written by an old tab after migration is copied without fallbacks', () => {
+        const storage = memoryStorage({settingSchemaVersion: '1', settingRadarZoom: '2', settingFishing: 'true'});
+        migrateSettings(storage);
+        expect(storage.snapshot()).toEqual({
+            settingSchemaVersion: '1',
+            settingRadarZoom: '2',
+            settingResourcesFishing: 'true',
+        });
+    });
+
+    test('a profile holding only new keys gets no fallbacks', () => {
+        const storage = memoryStorage({settingPlayersHostile: 'false'});
+        migrateSettings(storage);
+        expect(storage.snapshot()).toEqual({settingPlayersHostile: 'false', settingSchemaVersion: '1'});
+    });
+
+    test.each(['gatherer', 'pvp', 'polluted'])('legacy-%s re-runs to the same store after legacy keys were deleted without the marker', name => {
+        const {expected} = loadProfile(name);
+        const {settingSchemaVersion, ...interrupted} = expected;
+        const storage = memoryStorage(interrupted);
+        migrateSettings(storage);
+        expect(storage.snapshot()).toEqual(expected);
+        expect(settingSchemaVersion).toBe('1');
+    });
+
+    test.each(['gatherer', 'pvp', 'polluted'])('legacy-%s run interrupted at its first delete re-runs to the expected store', name => {
+        const {input, expected} = loadProfile(name);
+        const storage = memoryStorage(input);
+        const removeItem = storage.removeItem;
+        storage.removeItem = vi.fn(() => { throw new Error('tab closed'); });
+        expect(() => migrateSettings(storage)).toThrow('tab closed');
+        storage.removeItem = removeItem;
+        migrateSettings(storage);
+        expect(storage.snapshot()).toEqual(expected);
     });
 });
