@@ -1,5 +1,147 @@
 import settingsSync from './SettingsSync.js';
-import {SETTINGS} from './SettingsRegistry.js';
+import {SETTINGS, registryEntry} from './SettingsRegistry.js';
+
+const percent = value => `${Math.round(value * 100)}%`;
+
+const READOUTS = {
+    settingRadarZoom: percent,
+    settingRadarIconSize: percent,
+    settingAlertSoundVolume: percent,
+    settingRadarSize: value => `${value}px`,
+    settingAlertSoundCooldown: value => `${value}ms`,
+};
+
+function snap(entry, value) {
+    const decimals = (String(entry.step).split('.')[1] ?? '').length;
+    const stepped = entry.min + Math.round((value - entry.min) / entry.step) * entry.step;
+    return Number(Math.min(entry.max, Math.max(entry.min, stepped)).toFixed(decimals));
+}
+
+function writeNumber(sync, entry, value) {
+    if (entry.type === 'int') sync.setNumber(entry.key, value);
+    else sync.setFloat(entry.key, value);
+}
+
+function showValue(el, entry, value) {
+    el.value = String(value);
+}
+
+const KINDS = {
+    checkbox: {
+        show(el, entry, value) {
+            el.checked = value;
+        },
+        listen(el, entry, sync, signal) {
+            el.addEventListener('change', () => sync.setBool(entry.key, el.checked), {signal});
+        },
+    },
+    range: {
+        show: showValue,
+        listen(el, entry, sync, signal) {
+            el.addEventListener('input', () => writeNumber(sync, entry, snap(entry, Number(el.value))), {signal});
+        },
+    },
+    number: {
+        textEntry: true,
+        show: showValue,
+        listen(el, entry, sync, signal) {
+            el.addEventListener('change', () => {
+                const typed = el.value.trim() === '' ? NaN : Number(el.value);
+                if (!Number.isFinite(typed)) {
+                    el.value = String(sync.get(entry.key));
+                    return;
+                }
+                const value = snap(entry, typed);
+                el.value = String(value);
+                writeNumber(sync, entry, value);
+            }, {signal});
+        },
+    },
+    select: {
+        show(el, entry, value) {
+            if (!el.options.length) {
+                const choices = entry.options?.map(({file, label}) => [file, label]) ?? entry.values.map(v => [v, v]);
+                for (const [optionValue, label] of choices) {
+                    const option = document.createElement('option');
+                    option.value = String(optionValue);
+                    option.textContent = String(label);
+                    el.append(option);
+                }
+            }
+            el.value = String(value);
+        },
+        listen(el, entry, sync, signal) {
+            el.addEventListener('change', () => sync.set(entry.key, el.value), {signal});
+        },
+    },
+    radio: {
+        show(el, entry, value) {
+            for (const radio of el.querySelectorAll('input[type="radio"]')) radio.checked = radio.value === String(value);
+        },
+        listen(el, entry, sync, signal) {
+            el.addEventListener('change', event => {
+                if (event.target.matches('input[type="radio"]') && event.target.checked) sync.set(entry.key, event.target.value);
+            }, {signal});
+        },
+    },
+};
+
+function kindOf(el) {
+    if (el.tagName === 'SELECT') return 'select';
+    if (el.tagName === 'INPUT') return el.type;
+    if (el.querySelector('input[type="radio"]')) return 'radio';
+    return null;
+}
+
+function render(root, sync, key) {
+    const entry = registryEntry(key);
+    if (!entry) return;
+    const value = sync.get(key);
+    for (const el of root.querySelectorAll(`[data-setting="${key}"]`)) {
+        const kind = KINDS[kindOf(el)];
+        if (!kind || (kind.textEntry && el === document.activeElement)) continue;
+        kind.show(el, entry, value);
+    }
+    for (const readout of root.querySelectorAll(`[data-value-for="${key}"]`)) {
+        readout.textContent = (READOUTS[key] ?? String)(value);
+    }
+}
+
+function onButton(root, sync, event) {
+    const button = event.target.closest('[data-nudge], [data-reset]');
+    if (!button || !root.contains(button)) return;
+    const entry = registryEntry(button.dataset.nudge ?? button.dataset.reset);
+    if (!entry) return;
+    const value = button.dataset.reset !== undefined
+        ? entry.default
+        : snap(entry, sync.get(entry.key) + Number(button.dataset.dir) * entry.step);
+    writeNumber(sync, entry, value);
+}
+
+const bindings = new WeakMap();
+
+export function bindSettingControls(root, signal, sync = settingsSync) {
+    bindings.get(root)?.abort();
+    const binding = new AbortController();
+    bindings.set(root, binding);
+    const bound = AbortSignal.any([signal, binding.signal]);
+
+    const keys = new Set();
+    for (const el of root.querySelectorAll('[data-setting]')) {
+        const entry = registryEntry(el.dataset.setting);
+        const kind = KINDS[kindOf(el)];
+        if (!entry || !kind) continue;
+        kind.listen(el, entry, sync, bound);
+        keys.add(entry.key);
+    }
+    for (const readout of root.querySelectorAll('[data-value-for]')) keys.add(readout.dataset.valueFor);
+    keys.forEach(key => render(root, sync, key));
+
+    root.addEventListener('click', event => onButton(root, sync, event), {signal: bound});
+    const onChange = key => render(root, sync, key);
+    sync.on('*', onChange);
+    bound.addEventListener('abort', () => sync.off('*', onChange), {once: true});
+}
 
 function exportableEntries() {
     return SETTINGS.filter(entry => (entry.scope === 'setting' || entry.scope === 'ui') && entry.key !== 'settingIgnoreList');
