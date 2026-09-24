@@ -410,3 +410,38 @@ func TestSettingsLogging_ConcurrentPostAndInterfacesPersist(t *testing.T) {
 		t.Errorf("runtime Reconfigure args %+v, want [eth0]", fm.reconfArgs)
 	}
 }
+
+type lockProbeRecorder struct {
+	fakeRecorder
+	applyMu  *sync.Mutex
+	acquired bool
+}
+
+func (r *lockProbeRecorder) StartRecording(dir string) error {
+	if r.acquired = r.applyMu.TryLock(); r.acquired {
+		r.applyMu.Unlock()
+	}
+	return r.fakeRecorder.StartRecording(dir)
+}
+
+func TestSettingsLogging_PostHoldsApplyMuDuringApply(t *testing.T) {
+	dir := t.TempDir()
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	applyMu := &sync.Mutex{}
+	rec := &lockProbeRecorder{applyMu: applyMu}
+	mux := http.NewServeMux()
+	NewSettingsAPI(dir, log, rec, t.TempDir(), applyMu).Register(mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader([]byte(`{"pcapRecording":true}`)))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200; body=%s", rr.Code, rr.Body.String())
+	}
+	if rec.acquired {
+		t.Error("applyMu was free during StartRecording, want held")
+	}
+}

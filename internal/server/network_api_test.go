@@ -14,7 +14,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -597,22 +596,23 @@ func TestNetworkSelect_ErrClosedAnswers503AndPersistsNothing(t *testing.T) {
 	}
 }
 
-func TestNetworkSelect_WaitsForApplyMu(t *testing.T) {
-	fm := &fakeManager{allInterfaces: []capture.NetworkInterface{{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"}}}
+func TestNetworkSelect_HoldsApplyMuDuringReconfigure(t *testing.T) {
 	applyMu := &sync.Mutex{}
+	var acquired bool
+	fm := &fakeManager{
+		allInterfaces: []capture.NetworkInterface{{Name: "a", Description: "Wi-Fi", Address: "10.0.0.1"}},
+		onReconfigure: func(*fakeManager) {
+			if acquired = applyMu.TryLock(); acquired {
+				applyMu.Unlock()
+			}
+		},
+	}
 	mux := newTestMux(NewNetworkAPI(fm, fm.allInterfaces, t.TempDir(), func() []string { return nil }, applyMu))
 
-	applyMu.Lock()
-	done := make(chan int)
-	go func() { done <- postSelect(t, mux, "a").Code }()
-	select {
-	case code := <-done:
-		applyMu.Unlock()
-		t.Fatalf("POST answered %d while applyMu was held", code)
-	case <-time.After(50 * time.Millisecond):
+	if rec := postSelect(t, mux, "a"); rec.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200; body=%s", rec.Code, rec.Body.String())
 	}
-	applyMu.Unlock()
-	if code := <-done; code != http.StatusOK {
-		t.Errorf("status %d after unlock, want 200", code)
+	if acquired {
+		t.Error("applyMu was free during Reconfigure, want held")
 	}
 }
