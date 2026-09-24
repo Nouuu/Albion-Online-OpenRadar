@@ -91,6 +91,9 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   handler twice. Affects all seven pages, predates 2.2.3. Fix is one owner for the arrival init, not two.
 - **`/api/settings/server-logs`**. Replaced by `/api/settings/logging` in 2.2. The old path returns 404 with no
   compatibility shim. Noted in case an old bug report mentions it.
+- **`npm run lint` crashes on every `.gohtml` file**. ESLint 10.11 with `eslint-plugin-html` 8.2 throws
+  `Cannot read private member #ruleDefinitions` while linting any template, unrelated to file content. Reproduces on
+  an untouched file. `npx eslint web/scripts/` alone still works.
 
 ## Permanent limitations
 
