@@ -134,6 +134,16 @@ function renderPlayerCard(player, threatType = null) {
     return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
 }
 
+function computeCardKey(player) {
+    const equipment = Array.isArray(player.equipments) ? player.equipments.join(',') : '';
+    const spells = Array.isArray(player.spells) ? player.spells.join(',') : '';
+    const healthAvailable = player.currentHealth > 0 && player.initialHealth > 0 ? 1 : 0;
+    const showEquipment = window.settingsSync?.getBool('settingPlayersShowEquipment') ? 1 : 0;
+    const showSpells = window.settingsSync?.getBool('settingPlayersShowSpells') ? 1 : 0;
+    const showHealthBars = window.settingsSync?.getBool('settingPlayersShowHealthBars') ? 1 : 0;
+    return `${equipment}|${spells}|${healthAvailable}|${showEquipment}|${showSpells}|${showHealthBars}`;
+}
+
 function updateSectionPlayers(listContainer, players, threatType) {
     // 1. Build Map of existing cards in ONE query (not N queries in loop)
     const existingCards = new Map();
@@ -158,8 +168,9 @@ function updateSectionPlayers(listContainer, players, threatType) {
     for (const player of players) {
         const existingCard = existingCards.get(player.id);
         const lastRender = lastRenderedPlayerIds.get(player.id);
+        const key = computeCardKey(player);
 
-        if (existingCard && lastRender) {
+        if (existingCard && lastRender && lastRender.key === key) {
             // Update existing card - minimal DOM operations
             const timeEl = existingCard.querySelector('[data-time]');
             if (timeEl) {
@@ -173,6 +184,11 @@ function updateSectionPlayers(listContainer, players, threatType) {
                     healthBar.style.width = `${pct}%`;
                 }
             }
+        } else if (existingCard) {
+            // Card key changed (equipment, spells, health availability or a display setting) - rebuild in place
+            const template = document.createElement('template');
+            template.innerHTML = renderPlayerCard(player, threatType).trim();
+            existingCard.replaceWith(template.content.firstChild);
         } else {
             // Create new card in fragment (off-DOM)
             const template = document.createElement('template');
@@ -180,7 +196,7 @@ function updateSectionPlayers(listContainer, players, threatType) {
             fragment.appendChild(template.content.firstChild);
         }
 
-        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth});
+        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth, key});
     }
 
     // 4. Batch DOM operations: removals first, then single append

@@ -87,6 +87,7 @@ afterEach(async () => {
     await page.destroy();
     remote?.destroy();
     remote = null;
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     KEYS.forEach(key => settingsSync.remove(key));
     document.body.innerHTML = '';
@@ -229,6 +230,18 @@ describe('player detection listener', () => {
         settingsSync.setBool('settingPlayersDetect', false);
 
         expect(error).not.toHaveBeenCalled();
+    });
+});
+
+describe('player list tick', () => {
+    test('@verified 2026-09-24: the tick refreshes the list on every interval, even when nothing changed', async () => {
+        vi.useFakeTimers({toFake: ['setInterval', 'clearInterval']});
+        await page.init();
+
+        await vi.advanceTimersByTimeAsync(1500);
+        await vi.advanceTimersByTimeAsync(1500);
+
+        expect(PlayerListRenderer.update).toHaveBeenCalledTimes(2);
     });
 });
 

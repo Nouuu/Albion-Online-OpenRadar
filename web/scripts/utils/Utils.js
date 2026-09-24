@@ -39,7 +39,6 @@ let eventQueue = null;
 let playerListIntervalId = null;
 let cleanupIntervalId = null;
 let buttonClickHandler = null;
-let lastPlayerListHash = '';
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
@@ -228,12 +227,7 @@ export async function initRadar() {
         EventRouter.setRadarRenderer(radarRenderer);
 
         playerListIntervalId = setInterval(() => {
-            const players = handlers.players?.getFilteredPlayers?.() || [];
-            const hash = `${players.length}:` + players.map(p => `${p.id}:${p.currentHealth}:${p.mounted ? 1 : 0}`).join(',');
-            if (hash !== lastPlayerListHash) {
-                lastPlayerListHash = hash;
-                PlayerListRenderer.update(handlers.players);
-            }
+            PlayerListRenderer.update(handlers.players);
         }, 1500);
         cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
 
@@ -313,7 +307,6 @@ export function destroyRadar() {
 
     PlayerListRenderer.reset();
     EventRouter.reset();
-    lastPlayerListHash = '';
 
     isInitialized = false;
     isDestroying = false;
