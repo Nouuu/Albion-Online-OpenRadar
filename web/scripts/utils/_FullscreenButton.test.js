@@ -146,6 +146,16 @@ describe('exitFullscreenIfActive', () => {
         FullscreenButton.exitFullscreenIfActive();
         expect(document.exitFullscreen).not.toHaveBeenCalled();
     });
+
+    test('logs a rejected exit instead of leaving it unhandled', async () => {
+        stub(document, 'fullscreenElement', document.documentElement);
+        stub(document, 'exitFullscreen', vi.fn(() => Promise.reject(new Error('denied'))));
+
+        FullscreenButton.exitFullscreenIfActive();
+
+        await vi.waitFor(() => expect(window.logger.warn).toHaveBeenCalledWith(
+            expect.anything(), 'FullscreenExitFailed', {error: 'denied'}));
+    });
 });
 
 describe('header.gohtml string contract', () => {

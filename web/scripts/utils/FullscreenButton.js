@@ -38,5 +38,6 @@ export function initFullscreenButton(button) {
 }
 
 export function exitFullscreenIfActive() {
-    if (document.fullscreenElement) document.exitFullscreen();
+    if (!document.fullscreenElement) return;
+    document.exitFullscreen()?.catch(error => window.logger?.warn(CATEGORIES.SYSTEM, 'FullscreenExitFailed', {error: error?.message}));
 }
