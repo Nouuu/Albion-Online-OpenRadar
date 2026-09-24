@@ -34,7 +34,7 @@ func NewSettingsAPI(appDir string, log *logger.Logger, recorder Recorder, captur
 
 func (a *SettingsAPI) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/settings/logging", a.handleGet)
-	mux.HandleFunc("POST /api/settings/logging", a.handlePost)
+	mux.HandleFunc("POST /api/settings/logging", hostOnly(a.handlePost))
 }
 
 func (a *SettingsAPI) handleGet(w http.ResponseWriter, _ *http.Request) {

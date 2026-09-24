@@ -2,15 +2,20 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
 	"testing"
 
 	"github.com/nospy/albion-openradar/internal/capture"
+	"github.com/nospy/albion-openradar/internal/logger"
 )
 
 type fakeManager struct {
@@ -294,6 +299,114 @@ func TestNetworkAPI_RefreshConcurrentSafe(t *testing.T) {
 		})
 	}
 	wg.Wait()
+}
+
+func TestIsHost(t *testing.T) {
+	cases := []struct {
+		name       string
+		remoteAddr string
+		localAddr  net.Addr
+		forwarded  string
+		want       bool
+	}{
+		{name: "loopback v4", remoteAddr: "127.0.0.1:1234", want: true},
+		{name: "loopback v6", remoteAddr: "[::1]:5555", want: true},
+		{name: "remote equals local", remoteAddr: "192.168.1.42:5555", localAddr: &net.TCPAddr{IP: net.ParseIP("192.168.1.42")}, want: true},
+		{name: "lan without local match", remoteAddr: "192.168.1.42:5555", want: false},
+		{name: "lan with forwarded-for ignored", remoteAddr: "192.168.1.99:5555", forwarded: "127.0.0.1", want: false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, "/x", nil)
+			req.RemoteAddr = tc.remoteAddr
+			if tc.forwarded != "" {
+				req.Header.Set("X-Forwarded-For", tc.forwarded)
+			}
+			if tc.localAddr != nil {
+				req = req.WithContext(context.WithValue(req.Context(), http.LocalAddrContextKey, tc.localAddr))
+			}
+			if got := isHost(req); got != tc.want {
+				t.Errorf("isHost() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestHostOnly_RejectsLANOnThreePostRoutes(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{ServerLogsEnabled: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	before, err := os.ReadFile(filepath.Join(dir, "network.json"))
+	if err != nil {
+		t.Fatalf("read seed file: %v", err)
+	}
+
+	fm := &fakeManager{}
+	netAPI := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	settingsAPI := NewSettingsAPI(dir, log, nil, "")
+
+	mux := http.NewServeMux()
+	netAPI.Register(mux)
+	settingsAPI.Register(mux)
+
+	routes := []struct {
+		path string
+		body []byte
+	}{
+		{"/api/settings/logging", []byte(`{"serverLogsEnabled":true}`)},
+		{"/api/network/refresh", nil},
+		{"/api/network/interfaces", []byte(`{"names":[]}`)},
+	}
+	for _, rt := range routes {
+		t.Run(rt.path, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodPost, rt.path, bytes.NewReader(rt.body))
+			req.RemoteAddr = "192.168.1.42:5555"
+			rec := httptest.NewRecorder()
+			mux.ServeHTTP(rec, req)
+			if rec.Code != http.StatusForbidden {
+				t.Fatalf("status %d, want 403", rec.Code)
+			}
+			if got := strings.TrimSpace(rec.Body.String()); got != hostOnlyMessage {
+				t.Errorf("body = %q, want %q", got, hostOnlyMessage)
+			}
+		})
+	}
+
+	if len(fm.reconfArgs) != 0 {
+		t.Errorf("Reconfigure should not have been called, got %+v", fm.reconfArgs)
+	}
+	if log.IsEnabled() {
+		t.Error("logger state changed by rejected LAN POST")
+	}
+	after, err := os.ReadFile(filepath.Join(dir, "network.json"))
+	if err != nil {
+		t.Fatalf("read file after: %v", err)
+	}
+	if string(before) != string(after) {
+		t.Errorf("network.json changed by rejected LAN POST")
+	}
+}
+
+func TestHostOnly_GETsStayOpenFromLAN(t *testing.T) {
+	fm := &fakeManager{}
+	dir := t.TempDir()
+	api := NewNetworkAPI(fm, nil, dir, func() []string { return nil })
+	mux := newTestMux(api)
+
+	for _, path := range []string{"/api/network/interfaces", "/api/network/state"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req.RemoteAddr = "192.168.1.42:5555"
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Errorf("GET %s from LAN: status %d, want 200", path, rec.Code)
+		}
+	}
 }
 
 func TestIsLoopback(t *testing.T) {

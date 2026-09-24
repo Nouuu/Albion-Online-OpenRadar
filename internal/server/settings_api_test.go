@@ -95,6 +95,7 @@ func TestSettingsLogging_PostUpdatesPersistAndApply(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"serverLogsEnabled": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -139,6 +140,7 @@ func TestSettingsLogging_PostPartialBody(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -167,6 +169,7 @@ func TestSettingsLogging_PostInvalidJson(t *testing.T) {
 	mux, _ := newSettingsTestMux(t, dir)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader([]byte("{not json")))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -194,6 +197,7 @@ func TestSettingsLogging_PostPreservesNetworkInterfaces(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -246,6 +250,7 @@ func TestSettingsLogging_PostStartsRecording(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rr := httptest.NewRecorder()
 	mux.ServeHTTP(rr, req)
 
@@ -274,6 +279,7 @@ func TestSettingsLogging_PostStopsRecording(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": false})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rr := httptest.NewRecorder()
 	mux.ServeHTTP(rr, req)
 

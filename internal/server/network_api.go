@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/netip"
 	"slices"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/nospy/albion-openradar/internal/capture"
 )
+
+const hostOnlyMessage = "Only the PC running the radar can change this."
 
 type NetworkManager interface {
 	State() capture.State
@@ -33,9 +36,9 @@ func NewNetworkAPI(mgr NetworkManager, all []capture.NetworkInterface, appDir st
 
 func (a *NetworkAPI) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/network/interfaces", a.handleList)
-	mux.HandleFunc("POST /api/network/interfaces", a.handleSelect)
+	mux.HandleFunc("POST /api/network/interfaces", hostOnly(a.handleSelect))
 	mux.HandleFunc("GET /api/network/state", a.handleState)
-	mux.HandleFunc("POST /api/network/refresh", a.handleRefresh)
+	mux.HandleFunc("POST /api/network/refresh", hostOnly(a.handleRefresh))
 }
 
 type ifaceRow struct {
@@ -100,10 +103,6 @@ type selectBody struct {
 }
 
 func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
-	if !isLoopback(r.RemoteAddr) {
-		http.Error(w, "capture interfaces can only be changed from the host PC", http.StatusForbidden)
-		return
-	}
 	var body selectBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid body: "+err.Error(), http.StatusBadRequest)
@@ -169,4 +168,29 @@ func isLoopback(remoteAddr string) bool {
 	}
 	ip, err := netip.ParseAddr(strings.TrimSpace(remoteAddr))
 	return err == nil && ip.IsLoopback()
+}
+
+func isHost(r *http.Request) bool {
+	if isLoopback(r.RemoteAddr) {
+		return true
+	}
+	remote, err := netip.ParseAddrPort(r.RemoteAddr)
+	if err != nil {
+		return false
+	}
+	local, ok := r.Context().Value(http.LocalAddrContextKey).(*net.TCPAddr)
+	if !ok {
+		return false
+	}
+	return remote.Addr().Unmap() == local.AddrPort().Addr().Unmap()
+}
+
+func hostOnly(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isHost(r) {
+			http.Error(w, hostOnlyMessage, http.StatusForbidden)
+			return
+		}
+		h(w, r)
+	}
 }
