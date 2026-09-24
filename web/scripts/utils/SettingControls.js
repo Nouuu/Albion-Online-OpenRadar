@@ -9,15 +9,11 @@ function renderedEnchants(tier) {
     return tier < 3 ? ['e0'] : ['e0', 'e1', 'e2', 'e3', 'e4'];
 }
 
-const percent = value => `${Math.round(value * 100)}%`;
-
-const READOUTS = {
-    settingRadarZoom: percent,
-    settingRadarIconSize: percent,
-    settingAlertSoundVolume: percent,
-    settingRadarSize: value => `${value}px`,
-    settingAlertSoundCooldown: value => `${value}ms`,
-};
+function formatReadout(entry, value) {
+    if (entry.unit === '%') return `${Math.round(value * 100)}%`;
+    if (entry.unit) return `${value}${entry.unit}`;
+    return String(value);
+}
 
 function snap(entry, value) {
     const decimals = (String(entry.step).split('.')[1] ?? '').length;
@@ -144,7 +140,7 @@ function render(root, sync, key) {
         kind.show(el, entry, value);
     }
     for (const readout of root.querySelectorAll(`[data-value-for="${key}"]`)) {
-        readout.textContent = (READOUTS[key] ?? String)(value);
+        readout.textContent = formatReadout(entry, value);
     }
 }
 

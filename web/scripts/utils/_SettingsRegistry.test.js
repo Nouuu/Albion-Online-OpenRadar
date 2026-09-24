@@ -236,6 +236,20 @@ describe('SettingsRegistry', () => {
         }
     });
 
+    test('readout units live on the registry row', () => {
+        const units = {
+            settingRadarZoom: '%',
+            settingRadarSize: 'px',
+            settingRadarIconSize: '%',
+            settingAlertSoundVolume: '%',
+            settingAlertSoundCooldown: 'ms',
+        };
+        for (const [key, unit] of Object.entries(units)) {
+            expect(registryEntry(key).unit, key).toBe(unit);
+        }
+        expect(registryEntry('settingRadarClusterRadius').unit).toBeUndefined();
+    });
+
     test('enum entries list their allowed values and hold their default', () => {
         expect(registryEntry('settingRadarRotation').values).toEqual([0, 90, 180, 270]);
         expect(registryEntry('settingLogLevel').values).toEqual(['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG']);
