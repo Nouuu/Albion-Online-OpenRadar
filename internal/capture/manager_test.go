@@ -455,6 +455,9 @@ func TestManager_Reconfigure_RecordingFailureResetsState(t *testing.T) {
 	if got := recordingCapturers(m); len(got) != 0 {
 		t.Errorf("capturers still recording: %v", got)
 	}
+	if e, ok := m.State().LastErrors["late"]; ok {
+		t.Errorf("lastErrors[late] = %q, want no entry for a capturing interface", e)
+	}
 	m.Close(t.Context())
 }
 

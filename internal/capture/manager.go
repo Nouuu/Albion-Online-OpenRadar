@@ -106,7 +106,6 @@ func (m *Manager) Reconfigure(target []NetworkInterface) error {
 		delete(m.lastErrors, name)
 		if m.recordingEnabled && recErr == nil {
 			if rErr := c.StartRecording(m.recordingDir); rErr != nil {
-				m.lastErrors[name] = rErr.Error()
 				recErr = fmt.Errorf("pcap recording could not start on %s: %w", name, rErr)
 			}
 		}
