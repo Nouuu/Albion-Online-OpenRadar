@@ -314,6 +314,10 @@ func TestIsHost(t *testing.T) {
 		{name: "remote equals local", remoteAddr: "192.168.1.42:5555", localAddr: &net.TCPAddr{IP: net.ParseIP("192.168.1.42")}, want: true},
 		{name: "lan without local match", remoteAddr: "192.168.1.42:5555", want: false},
 		{name: "lan with forwarded-for ignored", remoteAddr: "192.168.1.99:5555", forwarded: "127.0.0.1", want: false},
+		{name: "unparseable remote", remoteAddr: "not-an-address", localAddr: &net.TCPAddr{}, want: false},
+		{name: "4-in-6 remote equals local v4", remoteAddr: "[::ffff:192.168.1.42]:5555", localAddr: &net.TCPAddr{IP: net.IP{192, 168, 1, 42}}, want: true},
+		{name: "zone id matches", remoteAddr: "[fe80::1%eth0]:5555", localAddr: &net.TCPAddr{IP: net.ParseIP("fe80::1"), Zone: "eth0"}, want: true},
+		{name: "local addr wrong type", remoteAddr: "192.168.1.42:5555", localAddr: &net.UDPAddr{IP: net.ParseIP("192.168.1.42")}, want: false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
