@@ -1,5 +1,10 @@
 // synthetic: the Fullscreen API is not implemented by happy-dom, stubbed per test with Object.defineProperty.
+import {readFileSync} from 'node:fs';
+import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+
+const HEADER_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../internal/templates/layouts/header.gohtml');
 
 function mountButton(page = 'radar') {
     document.body.innerHTML = `
@@ -140,5 +145,17 @@ describe('exitFullscreenIfActive', () => {
     test('does nothing when not active', () => {
         FullscreenButton.exitFullscreenIfActive();
         expect(document.exitFullscreen).not.toHaveBeenCalled();
+    });
+});
+
+describe('header.gohtml string contract', () => {
+    const header = readFileSync(HEADER_PATH, 'utf8');
+
+    test('holds the fullscreen button', () => {
+        expect(header).toContain('id="fullscreenToggleBtn"');
+    });
+
+    test('holds the init call', () => {
+        expect(header).toContain('initFullscreenButton');
     });
 });
