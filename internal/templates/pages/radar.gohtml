@@ -29,85 +29,120 @@
                 </div>
                 <div class="collapse-content @container text-sm text-base-content/80">
                     <div class="grid grid-cols-1 @2xl:grid-cols-2 gap-x-8 gap-y-6 pt-1">
-                        <section class="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 gap-y-2.5 items-center content-start">
-                            <h3 class="col-span-full text-[11px] font-semibold uppercase tracking-wider text-base-content/40">View</h3>
-                            <div class="grid grid-cols-subgrid col-span-3 items-center">
-                                <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarZoom" class="truncate">Zoom</span></span>
-                                <div class="flex items-center gap-1 min-w-0">
-                                    <button type="button" data-nudge="settingRadarZoom" data-dir="-1" aria-label="Decrease zoom" class="btn btn-ghost btn-xs btn-square"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                                    <input type="range" data-setting="settingRadarZoom" min="0.1" max="3" step="0.1" aria-label="Zoom" class="range range-primary range-xs flex-1 min-w-12">
-                                    <button type="button" data-nudge="settingRadarZoom" data-dir="1" aria-label="Increase zoom" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarZoom" class="min-w-12 shrink-0 whitespace-nowrap text-right text-xs font-mono tabular-nums text-base-content/60"></span>
-                                </div>
-                                <button type="button" data-reset="settingRadarZoom" aria-label="Reset zoom" title="Reset zoom" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-base-content"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
-                            </div>
-                            <div class="grid grid-cols-subgrid col-span-3 items-center">
-                                <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarSize" class="truncate">Max size</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarSize" data-tip="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                <div class="flex items-center gap-1 min-w-0">
-                                    <button type="button" data-nudge="settingRadarSize" data-dir="-1" aria-label="Decrease max size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                                    <input type="range" data-setting="settingRadarSize" min="300" max="800" step="50" aria-label="Max size" class="range range-primary range-xs flex-1 min-w-12">
-                                    <button type="button" data-nudge="settingRadarSize" data-dir="1" aria-label="Increase max size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarSize" class="min-w-12 shrink-0 whitespace-nowrap text-right text-xs font-mono tabular-nums text-base-content/60"></span>
-                                </div>
-                                <button type="button" data-reset="settingRadarSize" aria-label="Reset max size" title="Reset max size" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-base-content"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
-                            </div>
-                            <label class="grid grid-cols-subgrid col-span-3 items-center cursor-pointer">
-                                <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarFitToScreen" class="truncate">Fit to screen</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarFitToScreen" data-tip="Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                <input type="checkbox" data-setting="settingRadarFitToScreen" class="toggle toggle-primary toggle-sm">
-                            </label>
-                            <div class="grid grid-cols-subgrid col-span-3 items-center">
-                                <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarIconSize" class="truncate">Icon size</span></span>
-                                <div class="flex items-center gap-1 min-w-0">
-                                    <button type="button" data-nudge="settingRadarIconSize" data-dir="-1" aria-label="Decrease icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                                    <input type="range" data-setting="settingRadarIconSize" min="0.5" max="2" step="0.1" aria-label="Icon size" class="range range-primary range-xs flex-1 min-w-12">
-                                    <button type="button" data-nudge="settingRadarIconSize" data-dir="1" aria-label="Increase icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarIconSize" class="min-w-12 shrink-0 whitespace-nowrap text-right text-xs font-mono tabular-nums text-base-content/60"></span>
-                                </div>
-                                <button type="button" data-reset="settingRadarIconSize" aria-label="Reset icon size" title="Reset icon size" class="btn btn-ghost btn-xs btn-square text-base-content/50 hover:text-base-content"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                        <section>
+                            <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                                <i data-lucide="monitor" class="w-4 h-4"></i>
+                                View
+                            </h3>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 p-2 rounded bg-base-300">
+                                    <i data-lucide="zoom-in" class="w-5 h-5"></i>
+                                    <span data-setting-label="settingRadarZoom" class="text-base-content/80 font-medium whitespace-nowrap">Zoom</span>
+                                    <input type="range" data-setting="settingRadarZoom" min="0.1" max="3" step="0.1" aria-label="Zoom" class="range range-primary range-xs ml-auto w-full max-w-64">
+                                    <span data-value-for="settingRadarZoom" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
+                                </label>
+                                <label class="flex items-center gap-3 p-2 rounded bg-base-300">
+                                    <i data-lucide="maximize" class="w-5 h-5"></i>
+                                    <span data-setting-label="settingRadarSize" class="text-base-content/80 font-medium whitespace-nowrap">Max size</span>
+                                    <div class="tooltip" data-setting-tip="settingRadarSize" data-tip="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.">
+                                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                                    </div>
+                                    <input type="range" data-setting="settingRadarSize" min="300" max="800" step="50" aria-label="Max size" class="range range-primary range-xs ml-auto w-full max-w-64">
+                                    <span data-value-for="settingRadarSize" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
+                                </label>
+                                <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                    <input type="checkbox" data-setting="settingRadarFitToScreen" class="toggle toggle-primary toggle-sm">
+                                    <span data-setting-label="settingRadarFitToScreen" class="text-base-content/80 text-xs group-hover:text-base-content">Fit to screen</span>
+                                    <div class="tooltip" data-setting-tip="settingRadarFitToScreen" data-tip="Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on.">
+                                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                    </div>
+                                </label>
+                                <label class="flex items-center gap-3 p-2 rounded bg-base-300">
+                                    <i data-lucide="image" class="w-5 h-5"></i>
+                                    <span data-setting-label="settingRadarIconSize" class="text-base-content/80 font-medium whitespace-nowrap">Icon size</span>
+                                    <input type="range" data-setting="settingRadarIconSize" min="0.5" max="2" step="0.1" aria-label="Icon size" class="range range-primary range-xs ml-auto w-full max-w-64">
+                                    <span data-value-for="settingRadarIconSize" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
+                                </label>
                             </div>
                         </section>
                         <div class="space-y-6 @2xl:border-l @2xl:border-base-content/5 @2xl:pl-8">
-                            <section class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2.5 items-center">
-                                <h3 class="col-span-full text-[11px] font-semibold uppercase tracking-wider text-base-content/40">Display</h3>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarMapBackground" class="truncate">Map background</span></span>
-                                    <input type="checkbox" data-setting="settingRadarMapBackground" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarHudZoneInfo" class="truncate">Zone info box</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarHudZoneInfo" data-tip="Top-left box with the zone name, tier and a PvP marker."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                    <input type="checkbox" data-setting="settingRadarHudZoneInfo" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarHudStats" class="truncate">Stats box</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarHudStats" data-tip="Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                    <input type="checkbox" data-setting="settingRadarHudStats" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
+                            <section>
+                                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                    Display
+                                </h3>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarMapBackground" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarMapBackground" class="text-base-content/80 text-xs group-hover:text-base-content">Map background</span>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarHudZoneInfo" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarHudZoneInfo" class="text-base-content/80 text-xs group-hover:text-base-content">Zone info box</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarHudZoneInfo" data-tip="Top-left box with the zone name, tier and a PvP marker.">
+                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarHudStats" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarHudStats" class="text-base-content/80 text-xs group-hover:text-base-content">Stats box</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarHudStats" data-tip="Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on.">
+                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        </div>
+                                    </label>
+                                </div>
                             </section>
-                            <section class="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2.5 items-center">
-                                <h3 class="col-span-full text-[11px] font-semibold uppercase tracking-wider text-base-content/40">Resources</h3>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarResourceCount" class="truncate">Resource count</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarResourceCount" data-tip="Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                    <input type="checkbox" data-setting="settingRadarResourceCount" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarResourceDistance" class="truncate">Resource distance</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarResourceDistance" data-tip="Distance in meters beside each resource: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                    <input type="checkbox" data-setting="settingRadarResourceDistance" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarResourceTierBadges" class="truncate">Resource tier color badges</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarResourceTierBadges" data-tip="Replaces resource icons with squares colored by resource type, showing tier and enchantment. Living creatures get a gold border."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                    <input type="checkbox" data-setting="settingRadarResourceTierBadges" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
-                                <label class="grid grid-cols-subgrid col-span-2 items-center cursor-pointer">
-                                    <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarResourceClusters" class="truncate">Resource clusters</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarResourceClusters" data-tip="Rings groups of nearby resource nodes of the same type and tier, with the node count, total quantity and distance. Only nodes your resource filters show are grouped."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                    <input type="checkbox" data-setting="settingRadarResourceClusters" class="toggle toggle-primary toggle-sm justify-self-end">
-                                </label>
-                                <div class="grid grid-cols-subgrid col-span-2 gap-y-2.5 ml-1.5 pl-3 border-l border-base-content/10">
-                                    <div class="grid grid-cols-subgrid col-span-2 items-center">
-                                        <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarClusterRadius" class="truncate">Cluster radius (m)</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarClusterRadius" data-tip="Resources of the same type and tier within this distance of a node are grouped. Default: 30 m."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                        <input type="number" data-setting="settingRadarClusterRadius" data-enabled-by="settingRadarResourceClusters" min="10" max="100" step="5" aria-label="Cluster radius (m)" class="input input-xs w-20 justify-self-end text-right tabular-nums">
-                                    </div>
-                                    <div class="grid grid-cols-subgrid col-span-2 items-center">
-                                        <span class="flex items-center gap-1.5 min-w-0"><span data-setting-label="settingRadarClusterMinSize" class="truncate">Min nodes per cluster</span> <span class="tooltip tooltip-right" data-setting-tip="settingRadarClusterMinSize" data-tip="Smallest group drawn as a cluster. Default: 2."><i data-lucide="info" class="w-3 h-3 opacity-40"></i></span></span>
-                                        <input type="number" data-setting="settingRadarClusterMinSize" data-enabled-by="settingRadarResourceClusters" min="2" max="10" step="1" aria-label="Min nodes per cluster" class="input input-xs w-20 justify-self-end text-right tabular-nums">
+                            <section>
+                                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                                    <i data-lucide="leaf" class="w-4 h-4"></i>
+                                    Resources
+                                </h3>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarResourceCount" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarResourceCount" class="text-base-content/80 text-xs group-hover:text-base-content">Resource count</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarResourceCount" data-tip="Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish.">
+                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarResourceDistance" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarResourceDistance" class="text-base-content/80 text-xs group-hover:text-base-content">Resource distance</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarResourceDistance" data-tip="Distance in meters beside each resource: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m.">
+                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarResourceTierBadges" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarResourceTierBadges" class="text-base-content/80 text-xs group-hover:text-base-content">Resource tier color badges</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarResourceTierBadges" data-tip="Replaces resource icons with squares colored by resource type, showing tier and enchantment. Living creatures get a gold border.">
+                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
+                                        <input type="checkbox" data-setting="settingRadarResourceClusters" class="toggle toggle-primary toggle-sm">
+                                        <span data-setting-label="settingRadarResourceClusters" class="text-base-content/80 text-xs group-hover:text-base-content">Resource clusters</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarResourceClusters" data-tip="Rings groups of nearby resource nodes of the same type and tier, with the node count, total quantity and distance. Only nodes your resource filters show are grouped.">
+                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        </div>
+                                    </label>
+                                    <div class="ml-8 mt-2 space-y-2">
+                                        <label class="flex items-center gap-3">
+                                            <input type="number" data-setting="settingRadarClusterRadius" data-enabled-by="settingRadarResourceClusters"
+                                                   min="10" max="100" step="5" aria-label="Cluster radius (m)" class="input input-bordered input-sm w-32 disabled:opacity-50">
+                                            <span data-setting-label="settingRadarClusterRadius" class="text-base-content/60 text-sm">Cluster radius (m)</span>
+                                            <div class="tooltip" data-setting-tip="settingRadarClusterRadius" data-tip="Resources of the same type and tier within this distance of a node are grouped. Default: 30 m.">
+                                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center gap-3">
+                                            <input type="number" data-setting="settingRadarClusterMinSize" data-enabled-by="settingRadarResourceClusters"
+                                                   min="2" max="10" step="1" aria-label="Min nodes per cluster" class="input input-bordered input-sm w-32 disabled:opacity-50">
+                                            <span data-setting-label="settingRadarClusterMinSize" class="text-base-content/60 text-sm">Min nodes per cluster</span>
+                                            <div class="tooltip" data-setting-tip="settingRadarClusterMinSize" data-tip="Smallest group drawn as a cluster. Default: 2.">
+                                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            </div>
+                                        </label>
                                     </div>
                                 </div>
                             </section>

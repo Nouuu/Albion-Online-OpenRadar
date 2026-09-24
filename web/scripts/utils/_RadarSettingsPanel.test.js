@@ -265,21 +265,19 @@ describe('radar settings panel controls', () => {
         binding = null;
     });
 
-    test('@verified 2026-09-24: Fit on disables the Size slider and its three buttons on the elements', () => {
+    test('@verified 2026-09-24: Fit on disables the Size slider', () => {
         bindAndInit();
-        const sizeControls = [...root.querySelectorAll(
-            '[data-setting="settingRadarSize"], [data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]')];
+        const size = root.querySelector('[data-setting="settingRadarSize"]');
         const fit = root.querySelector('[data-setting="settingRadarFitToScreen"]');
-        expect(sizeControls).toHaveLength(4);
-        expect(sizeControls.map(el => el.disabled)).toEqual([false, false, false, false]);
+        expect(size.disabled).toBe(false);
 
         fit.checked = true;
         change(fit);
-        expect(sizeControls.map(el => el.disabled)).toEqual([true, true, true, true]);
+        expect(size.disabled).toBe(true);
 
         fit.checked = false;
         change(fit);
-        expect(sizeControls.map(el => el.disabled)).toEqual([false, false, false, false]);
+        expect(size.disabled).toBe(false);
     });
 
     test('@verified 2026-09-24: nothing in the panel or the canvas carries a style transform', () => {
