@@ -353,3 +353,31 @@ describe('HarvestablesDrawing type ID overlay', () => {
         expect(drawing.drawText).not.toHaveBeenCalled();
     });
 });
+
+describe('HarvestablesDrawing distance badge against its tooltip', () => {
+    function badgeFill(distance) {
+        const drawing = new HarvestablesDrawing();
+        drawing.getScaledFontSize = () => 9;
+        drawing.getScaledSize = size => size;
+        drawing.getMarkerSize = size => size;
+        const fills = [];
+        const ctx = {
+            save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, quadraticCurveTo() {}, closePath() {},
+            stroke() {}, fillText() {},
+            measureText: text => ({width: text.length}),
+            fill() { fills.push(this.fillStyle); },
+        };
+        drawing.drawDistanceIndicator(ctx, 0, 0, distance);
+        return fills[0] ?? 'hidden';
+    }
+
+    test.each([
+        [6, 'hidden'],
+        [27, 'rgba(0,200,0,0.85)'],
+        [30, 'rgba(255,200,0,0.85)'],
+        [57, 'rgba(255,200,0,0.85)'],
+        [60, 'rgba(255,100,0,0.85)'],
+    ])('%s game units draws %s: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m', (distance, fill) => {
+        expect(badgeFill(distance)).toBe(fill);
+    });
+});
