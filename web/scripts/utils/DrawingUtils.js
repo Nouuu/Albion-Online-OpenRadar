@@ -14,7 +14,6 @@ export class DrawingUtils {
     }
 
     getZoomLevel() {
-        if (typeof window !== 'undefined' && window.innerWidth < 640) return 0.9;
         return settingsSync.getFloat('settingRadarZoom');
     }
     getIconSizeMultiplier() {

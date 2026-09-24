@@ -348,8 +348,7 @@ export class RadarRenderer {
         const canvasSize = ctx.canvas.width;
         const center = canvasSize / 2;
         const distances = [10, 20];
-        const isSmall = typeof window !== 'undefined' && window.innerWidth < 640;
-        const zoomLevel = isSmall ? 0.9 : settingsSync.getFloat('settingRadarZoom');
+        const zoomLevel = this.drawingUtils.getZoomLevel();
         const pixelsPerMeter = (canvasSize / 60) * zoomLevel;
 
         ctx.save();

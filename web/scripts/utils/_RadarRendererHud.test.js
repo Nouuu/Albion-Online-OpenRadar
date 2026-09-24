@@ -1,10 +1,11 @@
 // pcap-derived: router/change-cluster-bz.json (zone 0317, black), router/change-cluster.json (zone "0000", safe),
-// players/spawn.json, replayed through real handlers and EventRouter.
+// players/spawn.json and harvestables/batch-spawn.json, replayed through real handlers and EventRouter.
 import {describe, test, expect, beforeAll, beforeEach, vi} from 'vitest';
 import {readFileSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
+import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 import {createRecordingContext} from '../__fixtures__/recordingContext.js';
 import * as EventRouter from '../core/EventRouter.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
@@ -12,17 +13,30 @@ import zonesDatabase from '../data/ZonesDatabase.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const zonesJsonPath = join(here, '..', '..', 'ao-bin-dumps', 'zones.json');
 
+function allTrue() {
+    return {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
+}
+
 vi.mock('./SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(),
         getFloat: vi.fn(),
         getNumber: vi.fn(),
-        getJSON: vi.fn(() => null),
+        getJSON: vi.fn(() => allTrue()),
+    },
+}));
+
+vi.mock('./ImageCache.js', () => ({
+    default: {
+        GetPreloadedImage: vi.fn(() => null),
+        preloadImageAndAddToList: vi.fn(() => Promise.resolve()),
     },
 }));
 
 const {RadarRenderer} = await import('./RadarRenderer.js');
 const {DrawingUtils} = await import('./DrawingUtils.js');
+const {HarvestablesDrawing} = await import('../drawings/HarvestablesDrawing.js');
+const {HarvestablesHandler} = await import('../handlers/HarvestablesHandler.js');
 const {PlayersHandler} = await import('../handlers/PlayersHandler.js');
 const settingsSync = (await import('./SettingsSync.js')).default;
 
@@ -149,5 +163,75 @@ describe('RadarRenderer HUD gates and zone guard (US2, FR-019, FR-020)', () => {
         renderer.renderZoneInfo(ctx);
 
         expect(ctx.calls.some(c => c[0] === 'strokeRect' && c[1] === 10 && c[2] === 10)).toBe(true);
+    });
+});
+
+describe('RadarRenderer and DrawingUtils single zoom source (US3, FR-028)', () => {
+    let renderer;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        renderer = new RadarRenderer({handlers: {}, drawings: {}, drawingUtils: new DrawingUtils()});
+        ctx = createRecordingContext(makeCanvas(500));
+    });
+
+    // @verified 2026-09-24: FR-028, getZoomLevel is the single zoom source, no innerWidth override.
+    test('getZoomLevel ignores innerWidth and returns the registry zoom', () => {
+        window.innerWidth = 390;
+        mockSettings({float: {settingRadarZoom: 2}});
+
+        expect(renderer.drawingUtils.getZoomLevel()).toBe(2);
+    });
+
+    // @verified 2026-09-24: FR-028, the 10 m ring radius scales with the single zoom source and the 20 m ring
+    // is dropped once it no longer fits inside the canvas, independent of innerWidth.
+    test('10 m ring radius scales with zoom and drops the 20 m ring', () => {
+        window.innerWidth = 390;
+        mockSettings({float: {settingRadarZoom: 2}});
+
+        renderer.renderDistanceRings(ctx);
+
+        const arcs = ctx.calls.filter(c => c[0] === 'arc');
+        expect(arcs).toHaveLength(1);
+        expect(arcs[0][3]).toBeCloseTo(166.67, 2);
+        expect(ctx.calls.some(c => c[0] === 'fillText' && c[1] === '10m')).toBe(true);
+        expect(ctx.calls.some(c => c[0] === 'fillText' && c[1] === '20m')).toBe(false);
+    });
+
+    // @verified 2026-09-24: pcap-derived. harvestables/batch-spawn.json fed through the real handler; doubling
+    // the registry zoom must double every drawn entity's pixel offset from the canvas center (FR-028).
+    test('harvestable draw offsets from center double when zoom doubles', async () => {
+        installRealDatabasesOnWindow();
+        const handler = new HarvestablesHandler();
+        const fixture = await loadFixture('harvestables', 'batch-spawn');
+        for (const message of fixture.messages) {
+            handler.newSimpleHarvestableObject(normalizeParams(message.parameters));
+        }
+
+        const drawing = new HarvestablesDrawing();
+        drawing.interpolate(handler.harvestableList, 0, 0, 1);
+
+        mockSettings({float: {settingRadarZoom: 1}});
+        const ctxZoom1 = createRecordingContext(makeCanvas(500));
+        drawing.invalidate(ctxZoom1, handler.harvestableList);
+        const arcsZoom1 = ctxZoom1.calls.filter(c => c[0] === 'arc');
+
+        mockSettings({float: {settingRadarZoom: 2}});
+        const ctxZoom2 = createRecordingContext(makeCanvas(500));
+        drawing.invalidate(ctxZoom2, handler.harvestableList);
+        const arcsZoom2 = ctxZoom2.calls.filter(c => c[0] === 'arc');
+
+        expect(arcsZoom1.length).toBeGreaterThan(0);
+        expect(arcsZoom2).toHaveLength(arcsZoom1.length);
+
+        const center = 250;
+        for (let i = 0; i < arcsZoom1.length; i++) {
+            const [, x1, y1] = arcsZoom1[i];
+            const [, x2, y2] = arcsZoom2[i];
+            expect(x2 - center).toBeCloseTo((x1 - center) * 2, 5);
+            expect(y2 - center).toBeCloseTo((y1 - center) * 2, 5);
+        }
     });
 });
