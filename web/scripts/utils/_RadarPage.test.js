@@ -5,13 +5,15 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 import settingsSync, {SettingsSync} from './SettingsSync.js';
-import {destroyRadarPage, initRadarPage} from './Utils.js';
+import {clearHandlers, destroyRadarPage, initRadarPage} from './Utils.js';
 import {registerBoundPage} from './SettingControls.js';
 import {registerPage} from '../core/PageController.js';
 import * as DatabaseLoader from '../core/DatabaseLoader.js';
+import * as EventRouter from '../core/EventRouter.js';
 import * as PlayerListRenderer from '../core/PlayerListRenderer.js';
 import * as WebSocketManager from '../core/WebSocketManager.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
+import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 
 vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
 vi.mock('../core/DatabaseLoader.js', () => ({load: vi.fn()}));
@@ -251,5 +253,53 @@ describe('radar.gohtml registration', () => {
 
         expect(template).toContain("registerBoundPage('radar', {init: initRadarPage, destroy: destroyRadarPage})");
         expect(template).not.toContain('settingsSync.on(');
+    });
+});
+
+describe('static entity cleanup (FR-057)', () => {
+    // pcap-derived: dungeons/spawn.json message[0] (dungeon), message[2] (Knightfall portal via mistsDungeon.addPortal),
+    // chests/spawn.json message[0] via addChestEvent (fixture 252=391, current NewLootChest=393, code drift),
+    // wispcage/spawn.json message[0].
+    test('@synthetic 2026-09-24: clearHandlers after router/change-cluster.json empties dungeon, chest, cage and Knightfall lists', async () => {
+        await page.init();
+
+        const dungeonFix = await loadFixture('dungeons', 'spawn');
+        window.handlers.dungeons.dungeonEvent(normalizeParams(dungeonFix.messages[0].parameters));
+        const portal = normalizeParams(dungeonFix.messages[2].parameters);
+        window.handlers.mistsDungeon.addPortal(portal[0], portal[1][0], portal[1][1], portal[16]);
+
+        const chestFix = await loadFixture('chests', 'spawn');
+        window.handlers.chests.addChestEvent(normalizeParams(chestFix.messages[0].parameters));
+
+        const cageFix = await loadFixture('wispcage', 'spawn');
+        window.handlers.wispCage.newCageEvent(normalizeParams(cageFix.messages[0].parameters));
+
+        expect(window.handlers.dungeons.dungeonList).toHaveLength(1);
+        expect(window.handlers.mistsDungeon.portalList).toHaveLength(1);
+        expect(window.handlers.chests.chestsList).toHaveLength(1);
+        expect(window.handlers.wispCage.cages).toHaveLength(1);
+
+        const clusterFix = await loadFixture('router', 'change-cluster');
+        const p = normalizeParams(clusterFix.messages[1].parameters);
+        EventRouter.onResponse(p, () => clearHandlers(true));
+
+        expect(window.handlers.dungeons.dungeonList).toHaveLength(0);
+        expect(window.handlers.mistsDungeon.portalList).toHaveLength(0);
+        expect(window.handlers.chests.chestsList).toHaveLength(0);
+        expect(window.handlers.wispCage.cages).toHaveLength(0);
+    });
+
+    // synthetic: idle age crossing the 30 minute static-entity threshold, no fixture carries elapsed time.
+    test('@synthetic 2026-09-24: a Knightfall portal idle 10 minutes stays, idle 31 minutes is removed by cleanupStaleEntities', async () => {
+        vi.useFakeTimers({toFake: ['setInterval', 'clearInterval', 'Date']});
+        await page.init();
+
+        window.handlers.mistsDungeon.addPortal(2579, 205, 225, 'MISTS_DUNGEON_SOLO_YELLOW');
+
+        await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+        expect(window.handlers.mistsDungeon.portalList).toHaveLength(1);
+
+        await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
+        expect(window.handlers.mistsDungeon.portalList).toHaveLength(0);
     });
 });
