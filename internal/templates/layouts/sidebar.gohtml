@@ -3,7 +3,7 @@
     id="desktop-sidebar"
     onmouseenter="window.sidebar.onEnter()"
     onmouseleave="window.sidebar.onLeave()"
-    class="hidden md:flex flex-col z-20 flex-shrink-0 overflow-y-auto bg-base-200 border-r border-base-content/[0.03] sidebar-transition"
+    class="hidden md:flex flex-col z-20 flex-shrink-0 overflow-y-auto bg-base-200 border-r border-base-content/[0.03] sidebar-transition phone-landscape:hidden"
     style="width: 16rem;">
 
     <div class="flex items-center justify-between p-4 border-b border-base-content/[0.03]">
@@ -45,7 +45,7 @@
 </aside>
 
 <aside id="mobile-sidebar"
-    class="mobile-sidebar fixed inset-y-0 left-0 z-40 w-64 bg-base-200 border-r border-base-content/[0.03] md:hidden">
+    class="mobile-sidebar fixed inset-y-0 left-0 z-40 w-64 bg-base-200 border-r border-base-content/[0.03] md:hidden phone-landscape:block">
 
     <div class="flex items-center justify-between p-4 border-b border-base-content/[0.03]">
         <a href="/" class="flex items-center gap-3">

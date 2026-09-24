@@ -9,6 +9,8 @@
 @source "../../internal/templates/**/*.gohtml";
 @source "../scripts/**/*.js";
 
+@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 500px));
+
 /* Custom theme extending DaisyUI dark theme */
 @theme {
     /* Tier colors for resources */

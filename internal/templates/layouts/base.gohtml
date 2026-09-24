@@ -109,14 +109,14 @@
     </style>
 </head>
 <body class="bg-base-100 text-base-content font-display">
-    <div class="flex h-screen">
+    <div class="flex h-dvh">
         {{template "layouts/sidebar.gohtml" .}}
 
         <div class="flex-1 flex flex-col overflow-hidden">
             {{template "layouts/header.gohtml" .}}
 
             <main id="page-content"
-                  class="flex-1 overflow-y-auto p-2 sm:p-6 bg-base-100"
+                  class="flex-1 overflow-y-auto p-2 sm:p-6 phone-landscape:p-2 bg-base-100"
                   data-page="{{.Page}}"
                   hx-swap="innerHTML transition:true"
                   hx-swap-oob="true">
@@ -145,7 +145,7 @@
 
     <div id="mobile-overlay"
          onclick="window.sidebar.closeMobile()"
-         class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden">
+         class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden phone-landscape:block">
     </div>
 
     <script>
