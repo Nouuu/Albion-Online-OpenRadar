@@ -517,3 +517,11 @@ describe('MobsDrawing hostile/drone/events filter at render (moved from spawn)',
         expect(error).not.toHaveBeenCalled();
     });
 });
+
+describe('MediumEnemy removal', () => {
+    test('EnemyType has no MediumEnemy, and its old value gets no color and no name', () => {
+        expect(EnemyType.MediumEnemy).toBeUndefined();
+        expect(new MobsDrawing().getEnemyColor(3)).toBe('#4169E1');
+        expect(new MobsHandler().getEnemyTypeName(3)).toBe('Unknown(3)');
+    });
+});

@@ -252,7 +252,6 @@ export class MobsDrawing extends DrawingUtils
             LivingHarvestable: 0,
             LivingSkinnable: 1,
             Enemy: 2,           // Normal - Green
-            MediumEnemy: 3,     // Medium - Yellow
             EnchantedEnemy: 4,  // Enchanted - Purple
             MiniBoss: 5,        // MiniBoss - Orange
             Boss: 6,            // Boss - Red
@@ -264,8 +263,6 @@ export class MobsDrawing extends DrawingUtils
         switch (enemyType) {
             case EnemyType.Enemy:           // Normal
                 return "#00FF00"; // Green 🟢
-            case EnemyType.MediumEnemy:     // Medium
-                return "#FFFF00"; // Yellow 🟡
             case EnemyType.EnchantedEnemy:  // Enchanted
                 return "#9370DB"; // Purple 🟣
             case EnemyType.MiniBoss:        // MiniBoss
