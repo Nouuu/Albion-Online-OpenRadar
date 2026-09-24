@@ -106,11 +106,15 @@ func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {
 		_ = os.Remove(ipPath)
 		return false, nil
 	}
-	existing, err := ReadConfig(appDir)
+
+	configMu.Lock()
+	defer configMu.Unlock()
+
+	cfg, err := readConfig(appDir)
 	if err != nil {
-		return false, fmt.Errorf("read existing config before migration: %w", err)
+		return false, err
 	}
-	if len(existing.CaptureInterfaces) > 0 {
+	if len(cfg.CaptureInterfaces) > 0 {
 		_ = os.Remove(ipPath)
 		return false, nil
 	}
@@ -122,9 +126,8 @@ func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {
 		_ = os.Remove(ipPath)
 		return false, fmt.Errorf("resolve legacy ip %q: %w", ip, err)
 	}
-	cfg := existing
 	cfg.CaptureInterfaces = []PersistedInterface{entry}
-	if err := WriteConfig(appDir, cfg); err != nil {
+	if err := writeConfig(appDir, cfg); err != nil {
 		return false, err
 	}
 	_ = os.Remove(ipPath)

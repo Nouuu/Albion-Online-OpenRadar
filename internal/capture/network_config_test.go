@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -104,6 +105,15 @@ func TestMigrateSkipsWhenConfigPopulated(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42\n"), 0o644); err != nil {
 		t.Fatalf("WriteFile ip.txt: %v", err)
 	}
+	configPath := filepath.Join(dir, "network.json")
+	before, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("ReadFile before: %v", err)
+	}
+	infoBefore, err := os.Stat(configPath)
+	if err != nil {
+		t.Fatalf("Stat before: %v", err)
+	}
 	resolve := func(ip string) (PersistedInterface, error) {
 		t.Fatalf("resolver should not be called when config is already populated; got ip=%q", ip)
 		return PersistedInterface{}, nil
@@ -124,6 +134,20 @@ func TestMigrateSkipsWhenConfigPopulated(t *testing.T) {
 	}
 	if len(got.CaptureInterfaces) != 1 || got.CaptureInterfaces[0].Description != "Existing" {
 		t.Errorf("network.json should be unchanged, got %+v", got)
+	}
+	after, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("ReadFile after: %v", err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Error("network.json bytes changed on populated-config skip")
+	}
+	infoAfter, err := os.Stat(configPath)
+	if err != nil {
+		t.Fatalf("Stat after: %v", err)
+	}
+	if !infoBefore.ModTime().Equal(infoAfter.ModTime()) {
+		t.Error("network.json mtime changed on populated-config skip")
 	}
 }
 
@@ -166,6 +190,9 @@ func TestMigrateNilResolverWithNonEmptyIPTxt(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); err != nil {
 		t.Errorf("ip.txt should be preserved for retry, err=%v", err)
 	}
+	if _, err := os.Stat(filepath.Join(dir, "network.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("network.json should not be created on nil-resolver error, err=%v", err)
+	}
 }
 
 func TestMigrateResolverError(t *testing.T) {
@@ -189,6 +216,9 @@ func TestMigrateResolverError(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("ip.txt should be deleted on resolver error, err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "network.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("network.json should not be created on resolver error, err=%v", err)
 	}
 }
 
