@@ -10,6 +10,7 @@ import {registerBoundPage} from './SettingControls.js';
 import {registerPage} from '../core/PageController.js';
 import * as DatabaseLoader from '../core/DatabaseLoader.js';
 import * as PlayerListRenderer from '../core/PlayerListRenderer.js';
+import * as WebSocketManager from '../core/WebSocketManager.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
@@ -145,6 +146,19 @@ describe('radar page entry', () => {
         await page.destroy();
 
         expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
+    });
+
+    test('@verified 2026-09-24: destroy releases the panel, then exits fullscreen, then tears the radar down', async () => {
+        await page.init();
+        stub(document, 'fullscreenElement', document.documentElement);
+        WebSocketManager.disconnect.mockClear();
+
+        await page.destroy();
+
+        const order = [observers[0].disconnect, document.exitFullscreen, WebSocketManager.disconnect]
+            .map(fn => fn.mock.invocationCallOrder[0]);
+        expect(order.every(Number.isFinite)).toBe(true);
+        expect([...order].sort((a, b) => a - b)).toEqual(order);
     });
 
     test('@verified 2026-09-24: destroy leaves fullscreen alone when it is not active', async () => {
