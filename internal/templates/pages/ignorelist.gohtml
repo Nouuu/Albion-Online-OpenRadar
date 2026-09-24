@@ -116,7 +116,7 @@
                 const name = input.value.trim();
                 if (!name) return;
 
-                const list = getIgnoreList();
+                const list = structuredClone(getIgnoreList());
                 if (list.includes(name)) {
                     input.value = '';
                     return;

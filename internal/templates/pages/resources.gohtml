@@ -267,8 +267,9 @@
                             element,
                             checked: enchants[enchantLevel][i],
                             onChange: () => {
-                                enchants[enchantLevel][i] = element.checked;
-                                settingsSync.setJSON(storageKey, enchants);
+                                const next = structuredClone(settingsSync.getJSON(storageKey));
+                                next[enchantLevel][i] = element.checked;
+                                settingsSync.setJSON(storageKey, next);
                                 updateTierButtonState(config.prefix, i);
                             }
                         });
