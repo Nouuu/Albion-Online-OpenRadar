@@ -75,9 +75,6 @@ describe('bindSettingControls checkbox', () => {
 describe('bindSettingControls range', () => {
     const markup = `
         <input type="range" min="0.1" max="3" step="0.1" data-setting="settingRadarZoom">
-        <button data-nudge="settingRadarZoom" data-dir="-1">-</button>
-        <button data-nudge="settingRadarZoom" data-dir="1">+</button>
-        <button data-reset="settingRadarZoom">Reset</button>
         <span data-value-for="settingRadarZoom"></span>`;
 
     test('shows value and readout, writes on input', () => {
@@ -101,51 +98,6 @@ describe('bindSettingControls range', () => {
         const root = mount(`<span data-value-for="settingAlertSoundCooldown"></span><span data-value-for="settingRadarSize"></span>`);
         bind(root, newSync());
         expect([...root.querySelectorAll('[data-value-for]')].map(el => el.textContent)).toEqual(['500 ms', '500 px']);
-    });
-
-    test('nudge steps and clamps, reset writes the default', () => {
-        localStorage.setItem('settingRadarZoom', '2.9');
-        const sync = newSync();
-        const root = mount(markup);
-        bind(root, sync);
-        const slider = root.querySelector('input');
-        const [down, up] = root.querySelectorAll('[data-nudge]');
-
-        up.click();
-        expect(localStorage.getItem('settingRadarZoom')).toBe('3');
-        up.click();
-        expect(localStorage.getItem('settingRadarZoom')).toBe('3');
-        down.click();
-        expect(localStorage.getItem('settingRadarZoom')).toBe('2.9');
-        expect(slider.value).toBe('2.9');
-
-        root.querySelector('[data-reset]').click();
-        expect(localStorage.getItem('settingRadarZoom')).toBe('1');
-        expect(slider.value).toBe('1');
-    });
-
-    test('a nudge button without a valid data-dir writes nothing', () => {
-        const sync = newSync();
-        const root = mount(markup + '<button data-nudge="settingRadarZoom">no dir</button>');
-        bind(root, sync);
-
-        root.querySelectorAll('[data-nudge]')[2].click();
-
-        expect(localStorage.getItem('settingRadarZoom')).toBeNull();
-    });
-
-    test('a focused slider still moves on nudge', () => {
-        const sync = newSync();
-        const root = mount(markup);
-        bind(root, sync);
-        const slider = root.querySelector('input');
-        slider.focus();
-
-        root.querySelectorAll('[data-nudge]')[1].click();
-
-        expect(document.activeElement).toBe(slider);
-        expect(slider.value).toBe('1.1');
-        expect(root.querySelector('[data-value-for]').textContent).toBe('110%');
     });
 
     test('int slider writes with setNumber', () => {
@@ -379,14 +331,17 @@ describe('bindSettingControls reflection and teardown', () => {
     test('double bind on the same root leaves one set', () => {
         const sync = newSync();
         const before = wildcardCount(sync);
-        const root = mount('<button data-nudge="settingRadarSize" data-dir="1">+</button>'
-            + '<input type="range" min="300" max="800" step="50" data-setting="settingRadarSize">');
+        const root = mount('<input type="range" min="300" max="800" step="50" data-setting="settingRadarSize">');
         const first = new AbortController();
         bindSettingControls(root, first.signal, sync);
         bind(root, sync);
 
         expect(wildcardCount(sync)).toBe(before + 1);
-        root.querySelector('button').click();
+        const broadcast = vi.spyOn(sync, 'broadcast');
+        const slider = root.querySelector('input');
+        slider.value = '550';
+        fire(slider, 'input');
+        expect(broadcast).toHaveBeenCalledTimes(1);
         expect(localStorage.getItem('settingRadarSize')).toBe('550');
 
         controller.abort();

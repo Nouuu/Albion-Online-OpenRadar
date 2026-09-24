@@ -187,21 +187,7 @@ function render(root, sync, key) {
 
 function onButton(root, sync, event) {
     const preset = event.target.closest('[data-enemy-preset]');
-    if (preset && root.contains(preset)) {
-        applyEnemyPreset(preset.dataset.enemyPreset, sync);
-        return;
-    }
-    const button = event.target.closest('[data-nudge], [data-reset]');
-    if (!button || !root.contains(button)) return;
-    const entry = registryEntry(button.dataset.nudge ?? button.dataset.reset);
-    if (!entry) return;
-    if (button.dataset.reset !== undefined) {
-        writeNumber(sync, entry, entry.default);
-        return;
-    }
-    const dir = Number(button.dataset.dir);
-    if (!Number.isFinite(dir)) return;
-    writeNumber(sync, entry, snap(entry, sync.get(entry.key) + dir * entry.step));
+    if (preset && root.contains(preset)) applyEnemyPreset(preset.dataset.enemyPreset, sync);
 }
 
 const bindings = new WeakMap();
