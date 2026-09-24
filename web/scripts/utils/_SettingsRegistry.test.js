@@ -1,6 +1,7 @@
 // synthetic: registry shape checked against the spec Settings Registry table.
 import {describe, test, expect} from 'vitest';
 import {SETTINGS, registryEntry, registryDefault, LEGACY_REMOVED, MIGRATION_ROWS} from './SettingsRegistry.js';
+import {ALERT_SOUNDS, DEFAULT_SOUND} from './AlertSoundCatalog.js';
 
 const KEY_PATTERN = /^setting(Radar|Players|Alert|Ignore|Enemies|Resources|Chests|Mists|Dungeons|Log|Debug|Ui)[A-Z][A-Za-z0-9]*$/;
 
@@ -154,6 +155,100 @@ describe('SettingsRegistry', () => {
 
     test('registryDefault throws on an unknown key', () => {
         expect(() => registryDefault('settingUnknownKey')).toThrow();
+    });
+
+    test('defaults follow the registry table', () => {
+        const expected = {
+            settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
+            settingRadarRotation: 0, settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
+            settingRadarHudStats: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
+            settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
+            settingRadarClusterRadius: 30, settingRadarClusterMinSize: 2,
+            settingPlayersDetect: true, settingPlayersShowEquipment: true, settingPlayersShowSpells: false,
+            settingPlayersShowHealthBars: true, settingPlayersPassive: true, settingPlayersFaction: true,
+            settingPlayersHostile: true, settingPlayersMaxDisplayed: 50,
+            settingAlertFlash: false, settingAlertBorder: false, settingAlertSound: false,
+            settingAlertSoundFile: 'player.wav', settingAlertSoundVolume: 1, settingAlertSoundCooldown: 500,
+            settingIgnoreList: [],
+            settingEnemiesNormal: false, settingEnemiesChampion: true, settingEnemiesMiniBoss: true,
+            settingEnemiesBoss: true, settingEnemiesMinHealthFilter: false, settingEnemiesMinHealth: 2100,
+            settingEnemiesMistsCrystalSpider: true, settingEnemiesMistsFairyDragon: true,
+            settingEnemiesMistsVeilWeaver: true, settingEnemiesMistsGriffin: true,
+            settingEnemiesAvalonianDrones: false, settingEnemiesEvent: false, settingEnemiesShowHealthBars: false,
+            settingDebugEnemiesUnidentified: false, settingDebugEnemiesTypeId: false, settingDebugEnemiesTier: false,
+            settingDebugEnemiesName: false, settingDebugEnemiesCategoryBadge: false,
+            settingResourcesFishing: true, settingResourcesShowHealthBars: false,
+            settingDebugResourcesTypeId: false, settingDebugResourcesDbName: false,
+            settingChestsGreen: true, settingChestsBlue: true, settingChestsPurple: true, settingChestsYellow: true,
+            settingMistsSolo: true, settingMistsDuo: true, settingMistsEnchant0: true, settingMistsEnchant1: true,
+            settingMistsEnchant2: true, settingMistsEnchant3: true, settingMistsEnchant4: true,
+            settingMistsWispCages: true, settingMistsWisps: true, settingMistsKnightfallAbbey: true,
+            settingDebugMistsWispIds: false,
+            settingDungeonsSolo: true, settingDungeonsGroup: true, settingDungeonsEnchant0: true,
+            settingDungeonsEnchant1: true, settingDungeonsEnchant2: true, settingDungeonsEnchant3: true,
+            settingDungeonsEnchant4: true, settingDungeonsCorrupted: true, settingDungeonsHellgate: true,
+            settingLogLevel: 'WARN', settingLogCategorySystem: false, settingLogCategoryNetwork: false,
+            settingLogCategoryMap: false, settingLogCategoryPlayers: false, settingLogCategoryMobs: false,
+            settingLogCategoryResources: false, settingLogCategoryDungeons: false, settingLogCategoryFishing: false,
+            settingLogToConsole: false, settingLogToServer: false, settingDebugWsCoalescing: true,
+            settingUiRadarSettingsOpen: false, settingUiEnemiesClassicOpen: true, settingUiEnemiesMistsOpen: true,
+            settingUiEnemiesOtherOpen: false, settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
+            settingUiResourcesWoodOpen: false, settingUiResourcesOreOpen: false, settingUiResourcesRockOpen: false,
+            settingUiSettingsLoggingOpen: false, settingUiSettingsDebugOpen: false,
+            settingUiSettingsNetworkOpen: false, settingUiSidebarCollapsed: false,
+        };
+        for (const [key, value] of Object.entries(expected)) {
+            expect(registryDefault(key), key).toEqual(value);
+        }
+    });
+
+    test('every resource matrix defaults to T4 to T8 on for enchant 0 to 4', () => {
+        const row = [false, false, false, true, true, true, true, true];
+        const matrices = SETTINGS.filter(e => e.key.startsWith('settingResourcesStatic') || e.key.startsWith('settingResourcesLiving'));
+        expect(matrices).toHaveLength(10);
+        for (const entry of matrices) {
+            expect(entry.type).toBe('json');
+            expect(entry.shape).toBe('matrix');
+            expect(entry.default).toEqual({e0: row, e1: row, e2: row, e3: row, e4: row});
+        }
+        expect(registryEntry('settingIgnoreList').shape).toBe('stringList');
+    });
+
+    test('numeric entries carry the registry bounds', () => {
+        const bounds = {
+            settingRadarZoom: [0.1, 3, 0.1],
+            settingRadarSize: [300, 800, 50],
+            settingRadarIconSize: [0.5, 2, 0.1],
+            settingRadarClusterRadius: [10, 100, 5],
+            settingRadarClusterMinSize: [2, 10, 1],
+            settingEnemiesMinHealth: [100, 1000000, 100],
+            settingPlayersMaxDisplayed: [1, 100, 1],
+            settingAlertSoundVolume: [0, 1, 0.05],
+            settingAlertSoundCooldown: [0, 3000, 100],
+        };
+        const numeric = SETTINGS.filter(e => e.type === 'int' || e.type === 'float').map(e => e.key);
+        expect(numeric.sort()).toEqual(Object.keys(bounds).sort());
+        for (const [key, [min, max, step]] of Object.entries(bounds)) {
+            const entry = registryEntry(key);
+            expect({min: entry.min, max: entry.max, step: entry.step}, key).toEqual({min, max, step});
+            expect(entry.default).toBeGreaterThanOrEqual(min);
+            expect(entry.default).toBeLessThanOrEqual(max);
+        }
+    });
+
+    test('enum entries list their allowed values and hold their default', () => {
+        expect(registryEntry('settingRadarRotation').values).toEqual([0, 90, 180, 270]);
+        expect(registryEntry('settingLogLevel').values).toEqual(['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG']);
+        for (const entry of SETTINGS.filter(e => e.type === 'enum')) {
+            expect(entry.values, entry.key).toContain(entry.default);
+        }
+    });
+
+    test('the alert sound entry takes its default and values from the catalog', () => {
+        const entry = registryEntry('settingAlertSoundFile');
+        expect(entry.default).toBe(DEFAULT_SOUND);
+        expect(entry.values).toEqual(ALERT_SOUNDS.map(s => s.file));
+        expect(entry.options).toEqual(ALERT_SOUNDS);
     });
 
     test('registry is deep frozen, matrix rows included', () => {
