@@ -210,7 +210,7 @@ export class RadarRenderer {
                     );
                     this.lastClusterUpdate = currentTime;
                 } catch (e) {
-                    window.logger?.error(CATEGORIES.RENDERING, 'cluster_compute_failed', e);
+                    window.logger?.error(CATEGORIES.HARVESTABLES, 'cluster_compute_failed', e);
                 }
             }
 
@@ -301,7 +301,7 @@ export class RadarRenderer {
                         this.drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
                     }
                 } catch (e) {
-                    window.logger?.error(CATEGORIES.RENDERING, 'cluster_draw_failed', e);
+                    window.logger?.error(CATEGORIES.HARVESTABLES, 'cluster_draw_failed', e);
                 }
             }
         }

@@ -525,3 +525,18 @@ describe('MediumEnemy removal', () => {
         expect(new MobsHandler().getEnemyTypeName(3)).toBe('Unknown(3)');
     });
 });
+
+describe('MobsDrawing debug log category', () => {
+    test('a hostile circle logs its draw details under MOBS', () => {
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        settingsSync.getBool.mockImplementation(key => key !== 'settingEnemiesMinHealthFilter');
+        const drawing = new MobsDrawing();
+        drawing.transformPoint = vi.fn((x, y) => ({x, y}));
+        drawing.drawFilledCircle = vi.fn();
+        drawing.drawTextItems = vi.fn();
+        drawing.drawHealthBar = vi.fn();
+        const mob = {id: 1, typeId: 5, type: EnemyType.Enemy, identified: true, hX: 0, hY: 0, maxHealth: 100, getCurrentHP: () => 50};
+        drawing.invalidate({measureText: () => ({width: 1})}, [mob]);
+        expect(window.logger.debug).toHaveBeenCalledWith('MOBS', 'mob_draw_details', expect.objectContaining({id: 1}));
+    });
+});

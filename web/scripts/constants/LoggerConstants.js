@@ -15,8 +15,7 @@ export const CATEGORIES = {
     MOBS: 'MOBS',
     HARVESTABLES: 'HARVESTABLES',
     DUNGEONS: 'DUNGEONS',
-    FISHING: 'FISHING',
-    RENDERING: 'RENDERING'
+    FISHING: 'FISHING'
 };
 
 export const CATEGORY_SETTINGS = {
@@ -27,6 +26,5 @@ export const CATEGORY_SETTINGS = {
     MOBS: 'settingLogCategoryMobs',
     HARVESTABLES: 'settingLogCategoryResources',
     DUNGEONS: 'settingLogCategoryDungeons',
-    FISHING: 'settingLogCategoryFishing',
-    RENDERING: 'categoryRendering'
+    FISHING: 'settingLogCategoryFishing'
 };

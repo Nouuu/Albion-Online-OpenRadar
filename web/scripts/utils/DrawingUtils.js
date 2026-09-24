@@ -404,7 +404,7 @@ export class DrawingUtils {
             ctx.beginPath(); ctx.arc(cx, cy, (visualRadius - 6) * pulse, 0, 2 * Math.PI); ctx.stroke();
             ctx.restore();
         } catch (e) {
-            window.logger?.error(CATEGORIES.RENDERING, 'cluster_draw_failed', e);
+            window.logger?.error(CATEGORIES.HARVESTABLES, 'cluster_draw_failed', e);
         }
     }
 

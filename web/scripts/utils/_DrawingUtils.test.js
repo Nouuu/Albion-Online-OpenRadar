@@ -322,3 +322,13 @@ describe('DrawingUtils.drawResourceBadge', () => {
     });
 });
 
+
+describe('DrawingUtils cluster ring errors', () => {
+    test('a failed cluster ring draw logs under HARVESTABLES', () => {
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        const utils = new DrawingUtils();
+        utils.transformPoint = () => { throw new Error('boom'); };
+        utils.drawClusterRingsFromCluster({}, {count: 2, resources: [{hX: 1, hY: 1}, {hX: 2, hY: 2}]});
+        expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_draw_failed', expect.any(Error));
+    });
+});

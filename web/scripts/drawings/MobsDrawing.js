@@ -124,7 +124,7 @@ export class MobsDrawing extends DrawingUtils
 
                 // 🐛 DEBUG: Log color assignment (only once per mob to avoid spam)
                 if (!mobOne._debugLogged) {
-                    window.logger?.debug(CATEGORIES.RENDERING, 'mob_draw_details', {
+                    window.logger?.debug(CATEGORIES.MOBS, 'mob_draw_details', {
                         id: mobOne.id,
                         typeId: mobOne.typeId,
                         type: mobOne.type,

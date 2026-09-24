@@ -245,6 +245,15 @@ describe('template settings contract', () => {
             .filter(file => readFileSync(file, 'utf8').includes('RENDERING'));
         expect(hits).toEqual([]);
     });
+
+    test('no script under web/scripts holds the RENDERING token', () => {
+        const self = fileURLToPath(import.meta.url);
+        const hits = readdirSync(join(ROOT, 'web/scripts'), {recursive: true})
+            .map(file => join(ROOT, 'web/scripts', file))
+            .filter(file => file.endsWith('.js') && file !== self)
+            .filter(file => readFileSync(file, 'utf8').includes('RENDERING'));
+        expect(hits).toEqual([]);
+    });
 });
 
 describe('page removals', () => {

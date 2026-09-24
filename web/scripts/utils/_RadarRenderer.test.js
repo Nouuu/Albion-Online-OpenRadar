@@ -212,3 +212,33 @@ describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state',
         expect(renderer._collectClusterCandidates()).toHaveLength(0);
     });
 });
+
+describe('RadarRenderer cluster errors', () => {
+    function clusterRenderer(drawingUtils) {
+        const renderer = new RadarRenderer({handlers: {}, drawings: {}, drawingUtils});
+        renderer.contexts = {drawCanvas: {}};
+        renderer.canvasManager = {clearDynamicLayers: vi.fn()};
+        renderer.renderUI = vi.fn();
+        return renderer;
+    }
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        settingsSync.getBool.mockImplementation(() => true);
+    });
+
+    test('a failed cluster pass logs under HARVESTABLES', () => {
+        clusterRenderer({detectClusters: vi.fn(() => { throw new Error('boom'); })}).render();
+        expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_compute_failed', expect.any(Error));
+    });
+
+    test('a failed cluster info box logs under HARVESTABLES', () => {
+        clusterRenderer({
+            detectClusters: vi.fn(() => [{count: 2}]),
+            drawClusterRingsFromCluster: vi.fn(),
+            drawClusterInfoBox: vi.fn(() => { throw new Error('boom'); }),
+        }).render();
+        expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_draw_failed', expect.any(Error));
+    });
+});
