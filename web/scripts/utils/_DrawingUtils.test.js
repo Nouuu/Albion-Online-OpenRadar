@@ -1,6 +1,7 @@
 // synthetic: unit tests on DrawingUtils helpers (size scaling, image rendering, badge primitives).
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
+import {registryDefault} from './SettingsRegistry.js';
 
 vi.mock('./SettingsSync.js', () => ({
     default: {
@@ -75,7 +76,7 @@ describe('DrawingUtils marker scaling helpers', () => {
 
     // @verified 2026-05-01: with default multiplier and unit zoom/scale, getMarkerSize returns base.
     test('getMarkerSize returns base when all factors are 1', () => {
-        settingsSync.getFloat.mockReturnValue(null);
+        settingsSync.getFloat.mockReturnValue(registryDefault('settingRadarIconSize'));
         expect(utils.getMarkerSize(40)).toBe(40);
         expect(utils.getMarkerSize(7)).toBe(7);
     });
@@ -107,7 +108,7 @@ describe('DrawingUtils.DrawCustomImage uses marker scaling', () => {
 
     // @verified 2026-05-01: with a preloaded image, ctx.drawImage uses getMarkerSize-derived size.
     test('drawImage size equals getMarkerSize(size) when iconSize=1.0', () => {
-        settingsSync.getFloat.mockReturnValue(null);
+        settingsSync.getFloat.mockReturnValue(registryDefault('settingRadarIconSize'));
         imageCache.GetPreloadedImage.mockReturnValue(preloadedImage);
         utils.DrawCustomImage(ctx, 100, 100, 'fiber_5_2', 'Resources', 40);
         expect(ctx.drawImage).toHaveBeenCalledWith(preloadedImage, 100 - 20, 100 - 20, 40, 40);
@@ -266,7 +267,7 @@ describe('DrawingUtils.drawResourceBadge', () => {
         utils = new DrawingUtils();
         utils.getZoomLevel = vi.fn(() => 1.0);
         utils.getCanvasScale = vi.fn(() => 1.0);
-        settingsSync.getFloat.mockReturnValue(null);
+        settingsSync.getFloat.mockReturnValue(registryDefault('settingRadarIconSize'));
         ctx = {
             save: vi.fn(),
             restore: vi.fn(),

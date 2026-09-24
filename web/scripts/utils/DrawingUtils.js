@@ -18,8 +18,7 @@ export class DrawingUtils {
         return settingsSync.getFloat('settingRadarZoom');
     }
     getIconSizeMultiplier() {
-        const v = settingsSync.getFloat('settingRadarIconSize');
-        return v && !Number.isNaN(v) ? v : 1.0;
+        return settingsSync.getFloat('settingRadarIconSize');
     }
     getCanvasScale() { return this.getCanvasSize() / 500; }
     getScaledSize(baseSize) { return baseSize * this.getZoomLevel() * this.getCanvasScale(); }

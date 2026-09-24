@@ -2,10 +2,12 @@
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
-        getFloat: vi.fn(() => null),
+        getFloat: vi.fn(key => registryDefault(key)),
     },
 }));
 
