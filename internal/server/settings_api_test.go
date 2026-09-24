@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -58,29 +59,59 @@ func newSettingsTestMux(t *testing.T, dir string) (*http.ServeMux, *logger.Logge
 
 func TestSettingsLogging_GetReturnsCurrentConfig(t *testing.T) {
 	dir := t.TempDir()
+	// File says the opposite of the runtime state; GET must report the runtime.
 	if err := capture.WriteConfig(dir, capture.Config{
-		Logging: capture.LoggingConfig{ServerLogsEnabled: true, PcapRecording: false},
+		Logging: capture.LoggingConfig{ServerLogsEnabled: false, PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	log.SetEnabled(true)
+	rec := &fakeRecorder{recording: false}
+	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200", rr.Code)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["serverLogsEnabled"] != true {
+		t.Errorf("serverLogsEnabled=%v, want true (runtime, not file)", body["serverLogsEnabled"])
+	}
+	if body["pcapRecording"] != false {
+		t.Errorf("pcapRecording=%v, want false (runtime, not file)", body["pcapRecording"])
+	}
+}
+
+func TestSettingsLogging_GetNilRecorderReportsFalse(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{PcapRecording: true},
 	}); err != nil {
 		t.Fatalf("seed config: %v", err)
 	}
 	mux, _ := newSettingsTestMux(t, dir)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status %d, want 200", rec.Code)
-	}
 	var body map[string]any
-	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body["serverLogsEnabled"] != true {
-		t.Errorf("serverLogsEnabled=%v, want true", body["serverLogsEnabled"])
-	}
 	if body["pcapRecording"] != false {
-		t.Errorf("pcapRecording=%v, want false", body["pcapRecording"])
+		t.Errorf("pcapRecording=%v, want false with nil recorder", body["pcapRecording"])
 	}
 }
 
@@ -288,5 +319,105 @@ func TestSettingsLogging_PostStopsRecording(t *testing.T) {
 	}
 	if rec.IsRecording() {
 		t.Error("recorder.IsRecording() == true after POST pcapRecording=false")
+	}
+}
+
+func TestSettingsLogging_PostStartFailureReportsFalse(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{PcapRecording: false},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	rec := &fakeRecorder{startErr: errors.New("no permission")}
+	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500", rr.Code)
+	}
+
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if cfg.Logging.PcapRecording {
+		t.Error("network.json: pcapRecording should be false after start failure")
+	}
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
+	getRR := httptest.NewRecorder()
+	mux.ServeHTTP(getRR, getReq)
+	var getBody map[string]any
+	if err := json.NewDecoder(getRR.Body).Decode(&getBody); err != nil {
+		t.Fatalf("decode get: %v", err)
+	}
+	if getBody["pcapRecording"] != false {
+		t.Errorf("GET pcapRecording=%v, want false after start failure", getBody["pcapRecording"])
+	}
+}
+
+func TestSettingsLogging_ConcurrentPostAndInterfacesPersist(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{ServerLogsEnabled: false, PcapRecording: false},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	mux, log := newSettingsTestMux(t, dir)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		body, _ := json.Marshal(map[string]any{"serverLogsEnabled": true})
+		req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+		req.RemoteAddr = "127.0.0.1:1234"
+		rr := httptest.NewRecorder()
+		mux.ServeHTTP(rr, req)
+	}()
+	go func() {
+		defer wg.Done()
+		// Stands in for the interfaces POST, which does not share applyMu yet.
+		_ = capture.MutateConfig(dir, func(cfg *capture.Config) {
+			cfg.CaptureInterfaces = []capture.PersistedInterface{{Name: "eth0"}}
+		})
+	}()
+	wg.Wait()
+
+	if !log.IsEnabled() {
+		t.Error("logger.IsEnabled() == false after concurrent POST, want true")
+	}
+
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if !cfg.Logging.ServerLogsEnabled {
+		t.Error("network.json: serverLogsEnabled not persisted after concurrent write")
+	}
+	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Name != "eth0" {
+		t.Errorf("CaptureInterfaces lost in concurrent write: %+v", cfg.CaptureInterfaces)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+	var respBody map[string]any
+	if err := json.NewDecoder(rr.Body).Decode(&respBody); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if respBody["serverLogsEnabled"] != true {
+		t.Errorf("GET serverLogsEnabled=%v, want true", respBody["serverLogsEnabled"])
 	}
 }

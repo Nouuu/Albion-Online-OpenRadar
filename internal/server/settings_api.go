@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -20,6 +21,7 @@ type SettingsAPI struct {
 	logger     *logger.Logger
 	recorder   Recorder
 	captureDir string
+	applyMu    sync.Mutex
 }
 
 // NewSettingsAPI creates a SettingsAPI. recorder may be nil (recording calls are skipped).
@@ -38,12 +40,15 @@ func (a *SettingsAPI) Register(mux *http.ServeMux) {
 }
 
 func (a *SettingsAPI) handleGet(w http.ResponseWriter, _ *http.Request) {
-	cfg, err := capture.ReadConfig(a.appDir)
-	if err != nil {
-		http.Error(w, "read config: "+err.Error(), http.StatusInternalServerError)
-		return
+	writeJSON(w, http.StatusOK, a.runtimeLogging())
+}
+
+// runtimeLogging reports what is actually running, not what network.json says.
+func (a *SettingsAPI) runtimeLogging() capture.LoggingConfig {
+	return capture.LoggingConfig{
+		ServerLogsEnabled: a.logger != nil && a.logger.IsEnabled(),
+		PcapRecording:     a.recorder != nil && a.recorder.IsRecording(),
 	}
-	writeJSON(w, http.StatusOK, cfg.Logging)
 }
 
 type loggingPatch struct {
@@ -58,7 +63,9 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newLogging capture.LoggingConfig
+	a.applyMu.Lock()
+	defer a.applyMu.Unlock()
+
 	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 		if patch.ServerLogsEnabled != nil {
 			cfg.Logging.ServerLogsEnabled = *patch.ServerLogsEnabled
@@ -66,7 +73,6 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		if patch.PcapRecording != nil {
 			cfg.Logging.PcapRecording = *patch.PcapRecording
 		}
-		newLogging = cfg.Logging
 	}); err != nil {
 		http.Error(w, "write config: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -93,5 +99,5 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusOK, newLogging)
+	writeJSON(w, http.StatusOK, a.runtimeLogging())
 }
