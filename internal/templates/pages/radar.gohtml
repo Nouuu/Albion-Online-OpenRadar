@@ -38,6 +38,17 @@
                         <input type="checkbox" id="settingResourceClusters" class="checkbox checkbox-primary checkbox-xs">
                         <span class="text-base-content/60 group-hover:text-base-content transition-colors">Clusters</span>
                     </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer group" title="Show fame gained per kill and session fame/hour">
+                        <input type="checkbox" id="settingFameTracker" class="checkbox checkbox-primary checkbox-xs">
+                        <span class="text-base-content/60 group-hover:text-base-content transition-colors">Fame</span>
+                    </label>
+                    <button id="fameReset" class="btn btn-ghost btn-xs text-xs" title="Reset session fame and silver">Reset fame</button>
+                </div>
+                <!-- Fame goal -->
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-base-content/50 whitespace-nowrap">Fame goal:</span>
+                    <input type="text" id="settingFameGoal" placeholder="e.g. 1m or 500k" class="input input-bordered input-xs w-28 font-mono" title="Session fame target. Clear it to hide the goal bar.">
+                    <span id="fameGoalHint" class="text-xs text-base-content/60 font-mono whitespace-nowrap"></span>
                 </div>
                 <!-- Zoom control -->
                 <div class="hidden sm:flex items-center gap-2">
@@ -47,6 +58,15 @@
                     <button id="zoomIn" class="btn btn-ghost btn-xs">+</button>
                     <span id="zoomValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
                     <button id="zoomReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
+                </div>
+                <!-- Fame text size control -->
+                <div class="hidden sm:flex items-center gap-2">
+                    <span class="text-xs text-base-content/50">Fame text:</span>
+                    <button id="fameSizeDown" class="btn btn-ghost btn-xs">−</button>
+                    <input type="range" id="settingFameTextSize" min="0.5" max="3" step="0.1" value="1" class="range range-primary range-xs w-24">
+                    <button id="fameSizeUp" class="btn btn-ghost btn-xs">+</button>
+                    <span id="fameSizeValue" class="text-xs text-base-content/60 font-mono w-10">100%</span>
+                    <button id="fameSizeReset" class="btn btn-ghost btn-xs text-xs">Reset</button>
                 </div>
                 <!-- Size control -->
                 <div class="hidden sm:flex items-center gap-2">
@@ -192,6 +212,50 @@ window.onGlobalsReady(function() {
             addListener(el, 'change', () => settingsSync.setBool(id, el.checked));
         }
     });
+
+    // Fame tracker: on by default
+    const fameToggle = document.getElementById('settingFameTracker');
+    if (fameToggle) {
+        fameToggle.checked = settingsSync.getBool('settingFameTracker', true);
+        addListener(fameToggle, 'change', () => settingsSync.setBool('settingFameTracker', fameToggle.checked));
+    }
+    const fameReset = document.getElementById('fameReset');
+    if (fameReset) {
+        addListener(fameReset, 'click', () => window.fameHandler?.resetSession());
+    }
+
+    // Fame goal: accepts 1000000, 1,000,000, 500k, 1.5m
+    const fameGoal = document.getElementById('settingFameGoal');
+    const fameGoalHint = document.getElementById('fameGoalHint');
+    if (fameGoal) import('/scripts/handlers/FameHandler.js').then(({parseFameAmount}) => {
+        const showGoalHint = () => {
+            const text = fameGoal.value.trim();
+            const goal = parseFameAmount(text);
+            fameGoalHint.textContent = !text ? '' : goal > 0 ? `= ${goal.toLocaleString('en-US')}` : 'invalid';
+            fameGoal.classList.toggle('input-error', !!text && goal <= 0);
+        };
+        fameGoal.value = settingsSync.get('settingFameGoal', '') || '';
+        showGoalHint();
+        addListener(fameGoal, 'input', () => {
+            showGoalHint();
+            settingsSync.set('settingFameGoal', fameGoal.value.trim());
+        });
+    });
+
+    // Fame text size
+    const fameSize = document.getElementById('settingFameTextSize');
+    const fameSizeValue = document.getElementById('fameSizeValue');
+    function setFameSize(value) {
+        value = Math.round(Math.max(0.5, Math.min(3, value)) * 10) / 10;
+        settingsSync.setFloat('settingFameTextSize', value);
+        if (fameSize) fameSize.value = value;
+        if (fameSizeValue) fameSizeValue.textContent = `${Math.round(value * 100)}%`;
+    }
+    setFameSize(settingsSync.getFloat('settingFameTextSize') || 1.0);
+    addListener(fameSize, 'input', () => setFameSize(parseFloat(fameSize.value)));
+    addListener(document.getElementById('fameSizeDown'), 'click', () => setFameSize((settingsSync.getFloat('settingFameTextSize') || 1.0) - 0.1));
+    addListener(document.getElementById('fameSizeUp'), 'click', () => setFameSize((settingsSync.getFloat('settingFameTextSize') || 1.0) + 0.1));
+    addListener(document.getElementById('fameSizeReset'), 'click', () => setFameSize(1.0));
 
     // Zoom controls
     const zoomSlider = document.getElementById('settingRadarZoom');

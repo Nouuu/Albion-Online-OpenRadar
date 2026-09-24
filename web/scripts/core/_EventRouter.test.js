@@ -65,7 +65,8 @@ describe('EventRouter', () => {
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
             wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
-            mistsDungeonHandler: {addPortal: vi.fn(), removePortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()}
+            mistsDungeonHandler: {addPortal: vi.fn(), removePortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()},
+            fameHandler: {onUpdateFame: vi.fn(), onUpdateMoney: vi.fn()}
         };
 
         map = {id: -1, hX: 0, hY: 0, isBZ: false};
@@ -1036,6 +1037,24 @@ describe('EventRouter', () => {
 
             expect(handlers.wispCageHandler.cageOpenedEvent).toHaveBeenCalledWith(p);
         });
+
+        // @verified 2026-09-19: layout read from the harvestables/finished.pcap capture
+        test('onEvent routes UpdateFame (P[252]=82) to fameHandler.onUpdateFame', () => {
+            const p = {0: 12081, 1: 116240036717, 2: 300000, 252: EventCodes.UpdateFame};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.fameHandler.onUpdateFame).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-09-19: layout read from the router/change-cluster.pcap capture
+        test('onEvent routes UpdateMoney (P[252]=81) to fameHandler.onUpdateMoney', () => {
+            const p = {0: 6740, 1: 109353757954, 2: 5000000, 252: EventCodes.UpdateMoney};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.fameHandler.onUpdateMoney).toHaveBeenCalledWith(p);
+        });
     });
 
     // -------------------------------------------------------------------------
@@ -1051,8 +1070,6 @@ describe('EventRouter', () => {
             ['NewSimpleItem', EventCodes.NewSimpleItem],
             ['NewEquipmentItem', EventCodes.NewEquipmentItem],
             ['NewJournalItem', EventCodes.NewJournalItem],
-            ['UpdateFame', EventCodes.UpdateFame],
-            ['UpdateMoney', EventCodes.UpdateMoney],
         ];
 
         // @verified 2026-04-18: all these codes are explicit no-ops in the switch table
