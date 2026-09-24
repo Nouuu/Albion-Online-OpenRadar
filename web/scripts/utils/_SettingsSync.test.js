@@ -109,6 +109,12 @@ describe('SettingsSync registry reads', () => {
         expect(s.get('settingRadarRotation')).toBe(180);
     });
 
+    test('a numeric enum value outside the set reads the default', async () => {
+        const s = await freshSync();
+        s.set('settingRadarRotation', 45);
+        expect(s.get('settingRadarRotation')).toBe(0);
+    });
+
     test('a JSON parse error reads the frozen default', async () => {
         const s = await freshSync({settingResourcesStaticFiber: '{broken', settingIgnoreList: 'nope'});
         const matrix = s.getJSON('settingResourcesStaticFiber');
