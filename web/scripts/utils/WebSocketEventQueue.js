@@ -1,24 +1,17 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 const COALESCABLE_EVENTS = new Set([3, 6, 91]);
-const THROTTLED_EVENTS = { 6: 50, 91: 100 };
 
 export class WebSocketEventQueue {
     constructor() {
         this.eventQueue = new Map();
-        this.throttleMap = new Map();
         this.flushScheduled = false;
         this.flushCallback = null;
         this.rafId = null;  // Track RAF for cleanup
-        this.cleanupInterval = setInterval(() => this.cleanupThrottleMap(), 30000);
     }
 
     get enableCoalescing() {
         return window.settingsSync?.getBool('settingDebugWsCoalescing');
-    }
-
-    get enableThrottling() {
-        return window.settingsSync?.getBool('settingWsThrottling');
     }
 
     setFlushCallback(callback) {
@@ -53,15 +46,6 @@ export class WebSocketEventQueue {
         const eventCode = params[252];
         const entityId = params[0];
 
-        if (this.enableThrottling && THROTTLED_EVENTS[eventCode]) {
-            const throttleKey = `${eventCode}-${entityId}`;
-            const lastProcessed = this.throttleMap.get(throttleKey) || 0;
-            const now = performance.now();
-
-            if (now - lastProcessed < THROTTLED_EVENTS[eventCode]) return;
-            this.throttleMap.set(throttleKey, now);
-        }
-
         const queueKey = this.enableCoalescing && COALESCABLE_EVENTS.has(eventCode)
             ? `${eventCode}-${entityId}`
             : `${eventCode}-${performance.now()}-${Math.random()}`;
@@ -94,13 +78,6 @@ export class WebSocketEventQueue {
         this.eventQueue.clear();
     }
 
-    cleanupThrottleMap() {
-        const now = performance.now();
-        for (const [key, timestamp] of this.throttleMap) {
-            if (now - timestamp > 5000) this.throttleMap.delete(key);
-        }
-    }
-
     destroy() {
         // Cancel pending RAF first
         if (this.rafId !== null) {
@@ -109,12 +86,7 @@ export class WebSocketEventQueue {
         }
         this.flushScheduled = false;
 
-        if (this.cleanupInterval) {
-            clearInterval(this.cleanupInterval);
-            this.cleanupInterval = null;
-        }
         this.eventQueue.clear();
-        this.throttleMap.clear();
         this.flushCallback = null;
     }
 }
