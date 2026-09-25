@@ -151,6 +151,18 @@ describe('template settings contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('every tooltip icon takes keyboard focus and is named by its tip', () => {
+        const drift = all('[data-setting-tip]').flatMap(({page, el}) => {
+            const focusables = el.querySelectorAll('[tabindex]');
+            const target = focusables[0];
+            const ok = focusables.length === 1 && target.getAttribute('tabindex') === '0'
+                && target.getAttribute('role') === 'img' && target.getAttribute('aria-label') === el.dataset.tip
+                && target.querySelector('i') !== null && !el.hasAttribute('tabindex');
+            return ok ? [] : [`${page}: ${el.dataset.settingTip}`];
+        });
+        expect(drift).toEqual([]);
+    });
+
     test('every bound control with a registry tooltip shows it on the same page', () => {
         const missing = controls.filter(({page, el}) => registryEntry(el.dataset.setting)?.tooltip
             && !all(`[data-setting-tip="${el.dataset.setting}"]`).some(tip => tip.page === page))
@@ -433,7 +445,7 @@ describe('settings control tile contract', () => {
     });
 
     test('a hidden tooltip bubble and tail take no layout space', () => {
-        const hidden = String.raw`\.tooltip:not\(:hover\):not\(:focus-within\):not\(\.tooltip-open\)`;
+        const hidden = String.raw`\.tooltip:not\(:hover\):not\(:has\(:focus-visible\)\):not\(\.tooltip-open\)`;
         expect(inputCss).toMatch(new RegExp(String.raw`${hidden}::before,\s*${hidden}::after\s*\{\s*display: none;\s*}`));
     });
 });

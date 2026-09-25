@@ -45,7 +45,7 @@
                                     <i data-lucide="maximize" class="w-4 h-4 text-base-content/50"></i>
                                     <span data-setting-label="settingRadarSize" class="text-base-content/80 text-xs group-hover:text-base-content whitespace-nowrap">Max size</span>
                                     <div class="tooltip" data-setting-tip="settingRadarSize" data-tip="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.">
-                                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        <span tabindex="0" role="img" aria-label="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
                                     <input type="range" data-setting="settingRadarSize" min="300" max="800" step="50" aria-label="Max size" class="range range-primary range-xs ml-auto w-full max-w-64">
                                     <span data-value-for="settingRadarSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
@@ -54,7 +54,7 @@
                                     <input type="checkbox" data-setting="settingRadarFitToScreen" class="toggle toggle-primary toggle-sm">
                                     <span data-setting-label="settingRadarFitToScreen" class="text-base-content/80 text-xs group-hover:text-base-content">Fit to screen</span>
                                     <div class="tooltip" data-setting-tip="settingRadarFitToScreen" data-tip="Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on.">
-                                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                        <span tabindex="0" role="img" aria-label="Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
@@ -80,14 +80,14 @@
                                         <input type="checkbox" data-setting="settingRadarHudZoneInfo" class="toggle toggle-primary toggle-sm">
                                         <span data-setting-label="settingRadarHudZoneInfo" class="text-base-content/80 text-xs group-hover:text-base-content">Zone info box</span>
                                         <div class="tooltip" data-setting-tip="settingRadarHudZoneInfo" data-tip="Top-left box with the zone name, tier and a PvP marker.">
-                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            <span tabindex="0" role="img" aria-label="Top-left box with the zone name, tier and a PvP marker." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarHudStats" class="toggle toggle-primary toggle-sm">
                                         <span data-setting-label="settingRadarHudStats" class="text-base-content/80 text-xs group-hover:text-base-content">Stats box</span>
                                         <div class="tooltip" data-setting-tip="settingRadarHudStats" data-tip="Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on.">
-                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            <span tabindex="0" role="img" aria-label="Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                 </div>
@@ -102,28 +102,28 @@
                                         <input type="checkbox" data-setting="settingRadarResourceCount" class="toggle toggle-primary toggle-sm">
                                         <span data-setting-label="settingRadarResourceCount" class="text-base-content/80 text-xs group-hover:text-base-content">Resource count</span>
                                         <div class="tooltip" data-setting-tip="settingRadarResourceCount" data-tip="Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish.">
-                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            <span tabindex="0" role="img" aria-label="Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarResourceDistance" class="toggle toggle-primary toggle-sm">
                                         <span data-setting-label="settingRadarResourceDistance" class="text-base-content/80 text-xs group-hover:text-base-content">Resource distance</span>
                                         <div class="tooltip" data-setting-tip="settingRadarResourceDistance" data-tip="Distance in meters beside each resource: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m.">
-                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            <span tabindex="0" role="img" aria-label="Distance in meters beside each resource: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarResourceTierBadges" class="toggle toggle-primary toggle-sm">
                                         <span data-setting-label="settingRadarResourceTierBadges" class="text-base-content/80 text-xs group-hover:text-base-content">Resource tier color badges</span>
                                         <div class="tooltip" data-setting-tip="settingRadarResourceTierBadges" data-tip="Replaces resource icons with squares colored by resource type, showing tier and enchantment. Living creatures get a gold border.">
-                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            <span tabindex="0" role="img" aria-label="Replaces resource icons with squares colored by resource type, showing tier and enchantment. Living creatures get a gold border." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarResourceClusters" class="toggle toggle-primary toggle-sm">
                                         <span data-setting-label="settingRadarResourceClusters" class="text-base-content/80 text-xs group-hover:text-base-content">Resource clusters</span>
                                         <div class="tooltip" data-setting-tip="settingRadarResourceClusters" data-tip="Rings groups of nearby resource nodes of the same type and tier, with the node count, total quantity and distance. Only nodes your resource filters show are grouped.">
-                                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                            <span tabindex="0" role="img" aria-label="Rings groups of nearby resource nodes of the same type and tier, with the node count, total quantity and distance. Only nodes your resource filters show are grouped." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <div class="ml-8 mt-2 space-y-2">
@@ -132,7 +132,7 @@
                                                    min="10" max="100" step="5" aria-label="Cluster radius (m)" class="input input-bordered input-sm w-32 disabled:opacity-50">
                                             <span data-setting-label="settingRadarClusterRadius" class="text-base-content/60 text-sm">Cluster radius (m)</span>
                                             <div class="tooltip" data-setting-tip="settingRadarClusterRadius" data-tip="Resources of the same type and tier within this distance of a node are grouped. Default: 30 m.">
-                                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                                <span tabindex="0" role="img" aria-label="Resources of the same type and tier within this distance of a node are grouped. Default: 30 m." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                             </div>
                                         </label>
                                         <label class="flex flex-wrap items-center gap-3">
@@ -140,7 +140,7 @@
                                                    min="2" max="10" step="1" aria-label="Min nodes per cluster" class="input input-bordered input-sm w-32 disabled:opacity-50">
                                             <span data-setting-label="settingRadarClusterMinSize" class="text-base-content/60 text-sm">Min nodes per cluster</span>
                                             <div class="tooltip" data-setting-tip="settingRadarClusterMinSize" data-tip="Smallest group drawn as a cluster. Default: 2.">
-                                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                                                <span tabindex="0" role="img" aria-label="Smallest group drawn as a cluster. Default: 2." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                             </div>
                                         </label>
                                     </div>
@@ -163,7 +163,7 @@
                         <input type="checkbox" id="settingPlayersDetect" data-setting="settingPlayersDetect" class="toggle toggle-primary toggle-sm">
                         <span data-setting-label="settingPlayersDetect" class="text-base-content/80 text-xs group-hover:text-base-content">Detect players</span>
                         <div class="tooltip" data-setting-tip="settingPlayersDetect" data-tip="Tracks players in range. Off: no player list, no player counts, no flash, border or sound.">
-                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            <span tabindex="0" role="img" aria-label="Tracks players in range. Off: no player list, no player counts, no flash, border or sound." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
                     </label>
                 </h3>

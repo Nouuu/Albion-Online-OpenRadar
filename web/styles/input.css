@@ -36,7 +36,7 @@
     translate: var(--tt-nudge, 0) 0;
 }
 
-.tooltip:not(:hover):not(:focus-within):not(.tooltip-open)::before,
-.tooltip:not(:hover):not(:focus-within):not(.tooltip-open)::after {
+.tooltip:not(:hover):not(:has(:focus-visible)):not(.tooltip-open)::before,
+.tooltip:not(:hover):not(:has(:focus-visible)):not(.tooltip-open)::after {
     display: none;
 }
