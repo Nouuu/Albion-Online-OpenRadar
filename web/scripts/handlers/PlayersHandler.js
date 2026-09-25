@@ -425,6 +425,6 @@ export class PlayersHandler {
         if (!settingsSync.getBool('settingPlayersDetect')) return [];
         const pvpType = zonesDatabase.getPvpType(window.currentMapId);
         const entries = settingsSync.getJSON('settingIgnoreList');
-        return this.playersList.filter(p => !this.isIgnored(p, entries) && this.isPlayerThreat(p.faction, pvpType));
+        return this.playersList.filter(p => this.isPlayerThreat(p.faction, pvpType) && !this.isIgnored(p, entries));
     }
 }

@@ -886,6 +886,17 @@ describe('PlayersHandler', () => {
 
             expect(handler.getThreatPlayers()).toHaveLength(2);
         });
+
+        // @verified 2026-09-25: the zone check runs first, so a non-threat never scans the ignore list.
+        test('synthetic: red zone never matches a passive player against the ignore list', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+            const ignoredSpy = vi.spyOn(handler, 'isIgnored');
+
+            expect(handler.getThreatPlayers().map(p => p.id)).toEqual([2]);
+            expect(ignoredSpy.mock.calls.map(([player]) => player.id)).toEqual([2]);
+        });
     });
 
     // pcap-derived: players/spawn.json (8 spawns) and players/faction-spawn.json (4 spawns) replayed in zone 0317,
