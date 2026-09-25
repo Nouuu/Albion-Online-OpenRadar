@@ -26,10 +26,15 @@ export class NetworkSettingsHandler {
         this.render();
     }
 
+    isLocked() {
+        return this.container.hasAttribute('data-locked');
+    }
+
     render() {
+        const locked = this.isLocked();
         const activeNames = new Set((this.state?.captureInterfaces ?? []).map(c => c.name));
         const banner = this.renderBanner();
-        const rows = this.interfaces.map(i => this.renderRow(i, activeNames.has(i.name))).join('');
+        const rows = this.interfaces.map(i => this.renderRow(i, activeNames.has(i.name), locked)).join('');
         const lan = (this.state?.lanAddresses ?? []).map(a => {
             const safe = escapeHTML(a);
             return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary break-all">http://${safe}:5001/</a></li>`;
@@ -40,9 +45,10 @@ export class NetworkSettingsHandler {
             <h3 class="text-base font-semibold mt-2">Capture interfaces</h3>
             <p class="text-sm opacity-70 mb-2">Captured packets are merged across all checked interfaces. Tick at least one to start capture.</p>
             <div class="flex flex-col gap-1">${rows}</div>
-            <div class="flex flex-wrap gap-2 mt-3">
-                <button class="btn btn-sm" data-action="refresh">Refresh list</button>
+            <div class="flex flex-wrap items-center gap-2 mt-3">
+                <button class="btn btn-sm" data-action="refresh"${locked ? ' disabled' : ''}>Refresh list</button>
                 <button class="btn btn-sm btn-primary" data-action="apply" disabled>Apply changes</button>
+                ${locked ? '<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>' : ''}
             </div>
             <h3 class="text-base font-semibold mt-6">LAN access</h3>
             <p class="text-sm opacity-70">Reachable from devices on the same local network. Independent of the capture interfaces above.</p>
@@ -76,13 +82,13 @@ export class NetworkSettingsHandler {
         return `<div class="alert alert-success mb-2">✓ Capturing on ${n} interface${n > 1 ? 's' : ''}.</div>`;
     }
 
-    renderRow(iface, checked) {
+    renderRow(iface, checked, locked) {
         const badge = BADGES[iface.category] ?? BADGES.other;
         const label = BADGE_LABEL[iface.category] ?? BADGE_LABEL.other;
         const unavail = iface.isAvailable ? '' : ' <span class="opacity-60">(unavailable)</span>';
         return `
             <label class="flex flex-wrap items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${escapeHTML(iface.name)}">
-                <input type="checkbox" class="checkbox checkbox-sm" ${checked ? 'checked' : ''} ${iface.isAvailable ? '' : 'disabled'}>
+                <input type="checkbox" class="checkbox checkbox-sm" ${checked ? 'checked' : ''} ${iface.isAvailable && !locked ? '' : 'disabled'}>
                 <span class="badge badge-outline">${badge} ${label}</span>
                 <span class="flex-1">${escapeHTML(iface.description || iface.name)}${unavail}</span>
                 <span class="opacity-60 text-sm">${escapeHTML(iface.address || '')}</span>

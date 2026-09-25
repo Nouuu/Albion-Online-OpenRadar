@@ -239,6 +239,34 @@ describe('NetworkSettingsHandler', () => {
         expect(container.querySelector('[data-iface="new"]')).toBeTruthy();
     });
 
+    test('locked network section disables controls and shows the reason, on load and on a later render', async () => {
+        container.setAttribute('data-locked', '');
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})})
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        expect(container.querySelector('[data-iface="a"] input').disabled).toBe(true);
+        expect(container.querySelector('[data-action="refresh"]').disabled).toBe(true);
+        expect(container.querySelector('[data-action="apply"]').disabled).toBe(true);
+        expect(container.textContent).toContain('Only the PC running the radar can change this.');
+
+        await h.load();
+
+        expect(container.querySelector('[data-iface="a"] input').disabled).toBe(true);
+        expect(container.querySelector('[data-action="refresh"]').disabled).toBe(true);
+        expect(container.querySelector('[data-action="apply"]').disabled).toBe(true);
+        expect(container.textContent).toContain('Only the PC running the radar can change this.');
+    });
+
     test('escapes html in interface description', async () => {
         globalThis.fetch
             .mockResolvedValueOnce({ok: true, json: async () => [
