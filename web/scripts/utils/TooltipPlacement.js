@@ -10,8 +10,8 @@ export function placeTooltip(icon, size, clip, margin = MARGIN) {
 
 function place(target) {
     const tip = target.closest?.('.tooltip[data-tip]');
-    const content = document.getElementById('page-content');
-    if (!tip || !content) return;
+    const content = tip?.closest('#page-content');
+    if (!content) return;
     const bubble = window.getComputedStyle(tip, '::before');
     const size = {width: parseFloat(bubble.width), height: parseFloat(bubble.height)};
     if (!Number.isFinite(size.width) || !Number.isFinite(size.height)) return;
