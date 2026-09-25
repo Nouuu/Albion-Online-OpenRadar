@@ -25,9 +25,9 @@ Portal names follow the pattern `MISTS_<TYPE>_<COLOR>`:
 - `<TYPE>` is one of `SOLO`, `DUO`.
 - `<COLOR>` is the PvP zone tag: `YELLOW`, `GREEN`, `BLUE`, `PURPLE`, `RED`. **It is not the rarity.**
 
-`MobsHandler.AddMist` reads the rarity from `Parameters[33]` and stores it as `mist.enchant`. Values 0 to 4 map to Common, Uncommon, Rare, Epic, Legendary. Live evidence from a "Peu commun" YELLOW portal confirmed the path on 2026-04-23 (green `mist_1` icon). Settings gate uses `settingMistsEnchant<enchant>`.
+`MobsHandler.NewMobEvent` reads the rarity from `Parameters[34]` and passes it into `AddMist`, which stores it as `mist.enchant`. Values 0 to 4 map to Common, Uncommon, Rare, Epic, Legendary. Live evidence from a "Peu commun" YELLOW portal confirmed the path on 2026-04-23 (green `mist_1` icon), back when the enchant sat at `Parameters[33]`; Dragonfire (2026-08-31) shifted it to `[34]`. Settings gate uses `settingMistsEnchant<enchant>`.
 
-Pre-patch captures also carried the rarity in `Parameters[8]` (evidence behind the PR #78 dungeon enchant fix). Since the 2026-06-29 patch, `Parameters[8]` on portal NewMob events holds an `[x, y]` position instead (2026-07-05 capture, typeId 116). Only Common portals (`Parameters[33]=0`) were observed post-patch, so the rarity slot still needs confirmation against a non-Common portal.
+Pre-patch captures also carried the rarity in `Parameters[8]` (evidence behind the PR #78 dungeon enchant fix). Since the 2026-06-29 patch and before Dragonfire, `Parameters[8]` on portal NewMob events held an `[x, y]` position instead (2026-07-05 capture, typeId 116), with the enchant still at `Parameters[33]` at that time. Only Common portals (`Parameters[33]=0` in that capture) were observed in that window, so the rarity slot needed confirmation against a non-Common portal; the 2026-09-03 capture below settled it at the post-Dragonfire index.
 
 ## Feu follet rendering
 

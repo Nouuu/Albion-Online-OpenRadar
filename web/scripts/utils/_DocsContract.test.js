@@ -7,8 +7,6 @@ import {MIGRATION_ROWS} from './SettingsRegistry.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 
-const NETWORK_JSON_FIELDS = new Set(['serverLogsEnabled', 'pcapRecording']);
-
 function toPosix(p) {
     return p.split('\\').join('/');
 }
@@ -40,8 +38,7 @@ function docFiles() {
 
 const legacyTokens = MIGRATION_ROWS
     .filter(row => row.migration !== 'keep' && row.legacyKey !== null && row.legacyKey !== row.key)
-    .map(row => row.legacyKey)
-    .filter(legacyKey => !NETWORK_JSON_FIELDS.has(legacyKey));
+    .map(row => row.legacyKey);
 
 describe('docs contract', () => {
     // @verified 2026-09-25: FR-075, every renamed setting key stays out of shipped docs under its old name.

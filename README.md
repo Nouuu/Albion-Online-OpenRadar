@@ -221,11 +221,11 @@ internet.
     <td align="center"><em>PiP floating window</em></td>
   </tr>
   <tr>
-    <td><img src="docs/images/settings.png" alt="Settings" width="400"></td>
+    <td><img src="docs/images/settings.png" alt="Logging and debug settings" width="400"></td>
     <td><img src="docs/images/resources.png" alt="Resources" width="400"></td>
   </tr>
   <tr>
-    <td align="center"><em>Settings page</em></td>
+    <td align="center"><em>Logging and debug settings</em></td>
     <td align="center"><em>Resource filtering</em></td>
   </tr>
   <tr>
