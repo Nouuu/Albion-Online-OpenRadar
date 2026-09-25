@@ -483,3 +483,19 @@ describe('settings control tile contract', () => {
         expect(inputCss).toMatch(new RegExp(String.raw`${hidden}::before,\s*${hidden}::after\s*\{\s*display: none;\s*}`));
     });
 });
+
+describe('radar settings panel sections', () => {
+    const NAV_ICONS = Object.fromEntries([...readFileSync(join(ROOT, 'internal/templates/data.go'), 'utf8')
+        .matchAll(/Label: "([^"]+)", Icon: "([^"]+)"/g)].map(([, label, icon]) => [label, icon]));
+    const panel = pages.find(page => page.name === 'radar').root.querySelector('#radarSettingsPanel');
+
+    test('a section named like a sidebar entry uses its sidebar icon', () => {
+        const drift = [...panel.querySelectorAll('section > h3')].flatMap(h3 => {
+            const name = normalized(h3);
+            const icon = h3.querySelector('i[data-lucide]').dataset.lucide;
+            return NAV_ICONS[name] && NAV_ICONS[name] !== icon ? [`${name}: ${icon} vs ${NAV_ICONS[name]}`] : [];
+        });
+        expect(Object.keys(NAV_ICONS)).toContain('Resources');
+        expect(drift).toEqual([]);
+    });
+});
