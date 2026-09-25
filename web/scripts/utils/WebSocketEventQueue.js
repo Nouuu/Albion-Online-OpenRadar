@@ -1,4 +1,5 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
+import settingsSync from './SettingsSync.js';
 
 const COALESCABLE_EVENTS = new Set([3, 6, 91]);
 
@@ -11,7 +12,7 @@ export class WebSocketEventQueue {
     }
 
     get enableCoalescing() {
-        return window.settingsSync?.getBool('settingDebugWsCoalescing');
+        return settingsSync.getBool('settingDebugWsCoalescing');
     }
 
     setFlushCallback(callback) {

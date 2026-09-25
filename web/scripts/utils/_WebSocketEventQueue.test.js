@@ -1,6 +1,6 @@
 // synthetic: hand-built WebSocket batches fed to the queue, frames flushed by hand.
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
-import {registryDefault} from './SettingsRegistry.js';
+import settingsSync from './SettingsSync.js';
 import {WebSocketEventQueue} from './WebSocketEventQueue.js';
 
 function event(code, id, value) {
@@ -18,7 +18,7 @@ describe('WebSocketEventQueue', () => {
     beforeEach(() => {
         vi.stubGlobal('requestAnimationFrame', vi.fn(() => 1));
         vi.stubGlobal('cancelAnimationFrame', vi.fn());
-        vi.stubGlobal('settingsSync', {getBool: vi.fn(key => registryDefault(key))});
+        settingsSync.remove('settingDebugWsCoalescing');
         delivered = [];
         queue = new WebSocketEventQueue();
         queue.setFlushCallback((type, params) => delivered.push(`${params[252]}:${params[0]}:${params[1]}`));
@@ -27,6 +27,7 @@ describe('WebSocketEventQueue', () => {
     afterEach(() => {
         queue.destroy();
         vi.unstubAllGlobals();
+        settingsSync.remove('settingDebugWsCoalescing');
     });
 
     test('coalescing keeps the latest move, health and regeneration event per entity in a frame', () => {
@@ -52,5 +53,19 @@ describe('WebSocketEventQueue', () => {
             queue.flush();
         }
         expect(delivered).toEqual(['6:1:a', '91:1:a', '6:1:b', '91:1:b', '6:1:c', '91:1:c']);
+    });
+
+    test('coalescing stays on by default without the settingsSync global', () => {
+        vi.stubGlobal('settingsSync', undefined);
+        queue.queueRawMessage(batch(event(3, 1, 'a'), event(3, 1, 'b')));
+        queue.flush();
+        expect(delivered).toEqual(['3:1:b']);
+    });
+
+    test('turning coalescing off delivers every move', () => {
+        settingsSync.setBool('settingDebugWsCoalescing', false);
+        queue.queueRawMessage(batch(event(3, 1, 'a'), event(3, 1, 'b')));
+        queue.flush();
+        expect(delivered).toEqual(['3:1:a', '3:1:b']);
     });
 });
