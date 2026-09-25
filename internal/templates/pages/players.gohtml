@@ -24,7 +24,7 @@
                 <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
                 Display
             </h2>
-            <div class="space-y-2">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingPlayersDetect" aria-labelledby="label-settingPlayersDetect" class="toggle toggle-primary toggle-sm">
                     <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
@@ -68,70 +68,74 @@
                 Alerts
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-2">
+                <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="monitor" class="w-4 h-4"></i>
                         Screen
                     </h3>
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                        <input type="checkbox" data-setting="settingAlertFlash" aria-labelledby="label-settingAlertFlash" class="toggle toggle-primary toggle-sm">
-                        <i data-lucide="zap" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingAlertFlash" data-setting-label="settingAlertFlash" class="text-base-content/80 text-xs group-hover:text-base-content">Screen Flash</span>
-                        <div class="tooltip" data-setting-tip="settingAlertFlash" data-tip="Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it.">
-                            <span tabindex="0" role="img" aria-label="Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                        <input type="checkbox" data-setting="settingAlertBorder" aria-labelledby="label-settingAlertBorder" class="toggle toggle-primary toggle-sm">
-                        <i data-lucide="square-dashed" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingAlertBorder" data-setting-label="settingAlertBorder" class="text-base-content/80 text-xs group-hover:text-base-content">Pulsating Border While Hostile Nearby</span>
-                        <div class="tooltip" data-setting-tip="settingAlertBorder" data-tip="Pulses a red border around the radar while a threat is in range. Ignored names do not count.">
-                            <span tabindex="0" role="img" aria-label="Pulses a red border around the radar while a threat is in range. Ignored names do not count." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                    </label>
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                            <input type="checkbox" data-setting="settingAlertFlash" aria-labelledby="label-settingAlertFlash" class="toggle toggle-primary toggle-sm">
+                            <i data-lucide="zap" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingAlertFlash" data-setting-label="settingAlertFlash" class="text-base-content/80 text-xs group-hover:text-base-content">Screen Flash</span>
+                            <div class="tooltip" data-setting-tip="settingAlertFlash" data-tip="Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it.">
+                                <span tabindex="0" role="img" aria-label="Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                            <input type="checkbox" data-setting="settingAlertBorder" aria-labelledby="label-settingAlertBorder" class="toggle toggle-primary toggle-sm">
+                            <i data-lucide="square-dashed" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingAlertBorder" data-setting-label="settingAlertBorder" class="text-base-content/80 text-xs group-hover:text-base-content">Pulsating Border While Hostile Nearby</span>
+                            <div class="tooltip" data-setting-tip="settingAlertBorder" data-tip="Pulses a red border around the radar while a threat is in range. Ignored names do not count.">
+                                <span tabindex="0" role="img" aria-label="Pulses a red border around the radar while a threat is in range. Ignored names do not count." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-                <div class="space-y-2">
+                <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="volume-2" class="w-4 h-4"></i>
                         Sound
                     </h3>
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
-                        <input type="checkbox" data-setting="settingAlertSound" aria-labelledby="label-settingAlertSound" class="toggle toggle-primary toggle-sm">
-                        <i data-lucide="volume-2" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingAlertSound" data-setting-label="settingAlertSound" class="text-base-content/80 text-xs group-hover:text-base-content">Sound Alert</span>
-                        <div class="tooltip" data-setting-tip="settingAlertSound" data-tip="Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it.">
-                            <span tabindex="0" role="img" aria-label="Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
+                            <input type="checkbox" data-setting="settingAlertSound" aria-labelledby="label-settingAlertSound" class="toggle toggle-primary toggle-sm">
+                            <i data-lucide="volume-2" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingAlertSound" data-setting-label="settingAlertSound" class="text-base-content/80 text-xs group-hover:text-base-content">Sound Alert</span>
+                            <div class="tooltip" data-setting-tip="settingAlertSound" data-tip="Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it.">
+                                <span tabindex="0" role="img" aria-label="Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                            <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
+                            <label for="settingAlertSoundFile" data-setting-label="settingAlertSoundFile" class="text-base-content/80 text-xs whitespace-nowrap">Sound</label>
+                            <select id="settingAlertSoundFile" data-setting="settingAlertSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
+                            <button id="previewSound" type="button" class="btn btn-ghost btn-xs btn-square"
+                                    aria-label="Play the selected alert sound">
+                                <i data-lucide="play" class="w-4 h-4"></i>
+                            </button>
                         </div>
-                    </label>
-                    <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
-                        <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
-                        <label for="settingAlertSoundFile" data-setting-label="settingAlertSoundFile" class="text-base-content/80 text-xs whitespace-nowrap">Sound</label>
-                        <select id="settingAlertSoundFile" data-setting="settingAlertSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
-                        <button id="previewSound" type="button" class="btn btn-ghost btn-xs btn-square"
-                                aria-label="Play the selected alert sound">
-                            <i data-lucide="play" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
-                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingAlertSoundVolume" data-setting-label="settingAlertSoundVolume" class="text-base-content/80 text-xs whitespace-nowrap">Volume</span>
-                        <button type="button" data-nudge="settingAlertSoundVolume" data-dir="-1" aria-label="Decrease volume" title="Decrease volume" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                        <input type="range" data-setting="settingAlertSoundVolume" aria-labelledby="label-settingAlertSoundVolume" min="0" max="1" step="0.05" class="range range-primary range-xs min-w-0 w-full max-w-64">
-                        <button type="button" data-nudge="settingAlertSoundVolume" data-dir="1" aria-label="Increase volume" title="Increase volume" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                        <span data-value-for="settingAlertSoundVolume" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
-                        <button type="button" data-reset="settingAlertSoundVolume" aria-label="Reset volume" title="Reset volume" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
-                    </div>
-                    <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
-                        <i data-lucide="hourglass" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingAlertSoundCooldown" data-setting-label="settingAlertSoundCooldown" class="text-base-content/80 text-xs whitespace-nowrap">Cooldown</span>
-                        <div class="tooltip" data-setting-tip="settingAlertSoundCooldown" data-tip="Minimum delay between two alert sounds. At zero, every alert plays.">
-                            <span tabindex="0" role="img" aria-label="Minimum delay between two alert sounds. At zero, every alert plays." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                        <div class="col-span-full flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                            <i data-lucide="sliders-horizontal" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingAlertSoundVolume" data-setting-label="settingAlertSoundVolume" class="text-base-content/80 text-xs whitespace-nowrap">Volume</span>
+                            <button type="button" data-nudge="settingAlertSoundVolume" data-dir="-1" aria-label="Decrease volume" title="Decrease volume" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                            <input type="range" data-setting="settingAlertSoundVolume" aria-labelledby="label-settingAlertSoundVolume" min="0" max="1" step="0.05" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                            <button type="button" data-nudge="settingAlertSoundVolume" data-dir="1" aria-label="Increase volume" title="Increase volume" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                            <span data-value-for="settingAlertSoundVolume" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
+                            <button type="button" data-reset="settingAlertSoundVolume" aria-label="Reset volume" title="Reset volume" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                         </div>
-                        <button type="button" data-nudge="settingAlertSoundCooldown" data-dir="-1" aria-label="Decrease cooldown" title="Decrease cooldown" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                        <input type="range" data-setting="settingAlertSoundCooldown" aria-labelledby="label-settingAlertSoundCooldown" min="0" max="3000" step="100" class="range range-primary range-xs min-w-0 w-full max-w-64">
-                        <button type="button" data-nudge="settingAlertSoundCooldown" data-dir="1" aria-label="Increase cooldown" title="Increase cooldown" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                        <span data-value-for="settingAlertSoundCooldown" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
-                        <button type="button" data-reset="settingAlertSoundCooldown" aria-label="Reset cooldown" title="Reset cooldown" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                        <div class="col-span-full flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                            <i data-lucide="hourglass" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingAlertSoundCooldown" data-setting-label="settingAlertSoundCooldown" class="text-base-content/80 text-xs whitespace-nowrap">Cooldown</span>
+                            <div class="tooltip" data-setting-tip="settingAlertSoundCooldown" data-tip="Minimum delay between two alert sounds. At zero, every alert plays.">
+                                <span tabindex="0" role="img" aria-label="Minimum delay between two alert sounds. At zero, every alert plays." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                            <button type="button" data-nudge="settingAlertSoundCooldown" data-dir="-1" aria-label="Decrease cooldown" title="Decrease cooldown" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                            <input type="range" data-setting="settingAlertSoundCooldown" aria-labelledby="label-settingAlertSoundCooldown" min="0" max="3000" step="100" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                            <button type="button" data-nudge="settingAlertSoundCooldown" data-dir="1" aria-label="Increase cooldown" title="Increase cooldown" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                            <span data-value-for="settingAlertSoundCooldown" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
+                            <button type="button" data-reset="settingAlertSoundCooldown" aria-label="Reset cooldown" title="Reset cooldown" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -144,7 +148,7 @@
                 <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
                 Player Types
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingPlayersPassive" aria-labelledby="label-settingPlayersPassive" class="checkbox checkbox-success checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-success"></span>
@@ -179,15 +183,17 @@
                 <i data-lucide="sliders-horizontal" class="w-5 h-5 text-primary"></i>
                 Limits
             </h2>
-            <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors max-w-sm">
-                <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
-                <span id="label-settingPlayersMaxDisplayed" data-setting-label="settingPlayersMaxDisplayed" class="text-base-content/80 text-xs group-hover:text-base-content">Maximum Players Displayed</span>
-                <div class="tooltip" data-setting-tip="settingPlayersMaxDisplayed" data-tip="Maximum number of players to display (1-100). Default: 50">
-                    <span tabindex="0" role="img" aria-label="Maximum number of players to display (1-100). Default: 50" class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                </div>
-                <input type="number" data-setting="settingPlayersMaxDisplayed" aria-labelledby="label-settingPlayersMaxDisplayed" min="1" max="100" step="1"
-                       class="input input-bordered input-sm w-32 disabled:opacity-50 ml-auto">
-            </label>
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingPlayersMaxDisplayed" data-setting-label="settingPlayersMaxDisplayed" class="text-base-content/80 text-xs group-hover:text-base-content">Maximum Players Displayed</span>
+                    <div class="tooltip" data-setting-tip="settingPlayersMaxDisplayed" data-tip="Maximum number of players to display (1-100). Default: 50">
+                        <span tabindex="0" role="img" aria-label="Maximum number of players to display (1-100). Default: 50" class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                    </div>
+                    <input type="number" data-setting="settingPlayersMaxDisplayed" aria-labelledby="label-settingPlayersMaxDisplayed" min="1" max="100" step="1"
+                           class="input input-bordered input-sm w-32 disabled:opacity-50 ml-auto">
+                </label>
+            </div>
         </div>
     </div>
 </div>

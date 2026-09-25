@@ -517,6 +517,39 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    const TILE_GRID = ['grid', 'grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))]', 'gap-2'];
+    const tiles = pages.flatMap(({name, root}) => [...root.querySelectorAll('.flex.items-center.p-2.rounded-lg')]
+        .filter(el => el.querySelector('[data-setting]') && !el.closest('h1, h2, h3'))
+        .map(el => ({page: name, el})));
+
+    test('every tile list is an equal-width auto-fill grid', () => {
+        const drift = tiles.flatMap(({page, el}) => {
+            const list = el.parentElement;
+            const ok = TILE_GRID.every(name => list.classList.contains(name))
+                && [...list.classList].filter(name => name.startsWith('grid-cols-') || /:grid-cols-/.test(name)).length === 1;
+            return ok ? [] : [`${page}: ${el.querySelector('[data-setting]').dataset.setting} in "${list.className}"`];
+        });
+        expect(tiles.length).toBeGreaterThan(80);
+        expect(drift).toEqual([]);
+    });
+
+    test('every slider row spans the full tile grid', () => {
+        const drift = tiles.filter(({el}) => el.querySelector('input[type="range"]') && !el.classList.contains('col-span-full'))
+            .map(({page, el}) => `${page}: ${el.querySelector('[data-setting]').dataset.setting}`);
+        expect(drift).toEqual([]);
+    });
+
+    test('a gated sub-row spans the grid right after the tile of its toggle', () => {
+        const drift = all('[data-enabled-by]').flatMap(({page, el}) => {
+            const row = el.closest('.col-span-full');
+            const toggle = row?.previousElementSibling;
+            const ok = toggle?.querySelector(`input[type="checkbox"][data-setting="${el.dataset.enabledBy}"]`)
+                && tiles.some(tile => tile.el === toggle) && TILE_GRID.every(name => row.parentElement.classList.contains(name));
+            return ok ? [] : [`${page}: ${el.dataset.setting}`];
+        });
+        expect(drift).toEqual([]);
+    });
+
     test('every number input is input-bordered input-sm', () => {
         const drift = all('input[type="number"][data-setting]').flatMap(({page, el}) => {
             const issues = [];

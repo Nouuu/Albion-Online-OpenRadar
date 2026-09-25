@@ -68,7 +68,7 @@ describe('phone layout contract', () => {
         expect(flexWrap(exportRow)).toBe(true);
         expect(exportRow.querySelector('span').className).toContain('max-w-max');
         const categoryGrid = document.querySelector('[data-setting="settingLogCategorySystem"]').closest('.grid');
-        expect(categoryGrid.classList.contains('grid-cols-1')).toBe(true);
+        expect(categoryGrid.classList.contains('grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))]')).toBe(true);
     });
 
     test('the mobile drawer footer stays in flow above a scrolling nav', () => {

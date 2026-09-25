@@ -22,7 +22,7 @@
                 Chests
             </h2>
             <p class="text-base-content/60 text-sm mb-4">Select which chest rarities to display on the radar.</p>
-            <div class="flex flex-wrap gap-2">
+            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingChestsGreen" aria-labelledby="label-settingChestsGreen" class="checkbox checkbox-primary checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-tier-2"></span>
@@ -72,7 +72,7 @@
                         <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
                         Type
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingMistsSolo" aria-labelledby="label-settingMistsSolo" class="checkbox checkbox-primary checkbox-xs">
                             <i data-lucide="user" class="w-4 h-4 text-base-content/50"></i>
@@ -97,7 +97,7 @@
                         <i data-lucide="sparkles" class="w-4 h-4 text-base-content/50"></i>
                         Enchant Level
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingMistsEnchant0" class="checkbox checkbox-primary checkbox-xs">
                             <span id="label-settingMistsEnchant0" data-setting-label="settingMistsEnchant0" class="text-base-content/80 text-xs group-hover:text-base-content">E0</span>
@@ -121,32 +121,34 @@
                     </div>
                 </div>
 
-                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" data-setting="settingMistsWispCages" aria-labelledby="label-settingMistsWispCages" class="toggle toggle-primary toggle-sm">
-                    <i data-lucide="box" class="w-4 h-4 text-base-content/50"></i>
-                    <span id="label-settingMistsWispCages" data-setting-label="settingMistsWispCages" class="text-base-content/80 text-xs group-hover:text-base-content">Show Wisp Cages</span>
-                    <div class="tooltip" data-setting-tip="settingMistsWispCages" data-tip="Display wisp cages locations in mists">
-                        <span tabindex="0" role="img" aria-label="Display wisp cages locations in mists" class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
-                </label>
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingMistsWispCages" aria-labelledby="label-settingMistsWispCages" class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="box" class="w-4 h-4 text-base-content/50"></i>
+                        <span id="label-settingMistsWispCages" data-setting-label="settingMistsWispCages" class="text-base-content/80 text-xs group-hover:text-base-content">Show Wisp Cages</span>
+                        <div class="tooltip" data-setting-tip="settingMistsWispCages" data-tip="Display wisp cages locations in mists">
+                            <span tabindex="0" role="img" aria-label="Display wisp cages locations in mists" class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                        </div>
+                    </label>
 
-                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" data-setting="settingMistsWisps" aria-labelledby="label-settingMistsWisps" class="toggle toggle-primary toggle-sm">
-                    <i data-lucide="sparkles" class="w-4 h-4 text-base-content/50"></i>
-                    <span id="label-settingMistsWisps" data-setting-label="settingMistsWisps" class="text-base-content/80 text-xs group-hover:text-base-content">Wisp signs (pre-portal)</span>
-                    <div class="tooltip" data-setting-tip="settingMistsWisps" data-tip="Shows the wisp signs that appear before a Mists portal opens. The Solo/Duo and rarity filters also apply.">
-                        <span tabindex="0" role="img" aria-label="Shows the wisp signs that appear before a Mists portal opens. The Solo/Duo and rarity filters also apply." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
-                </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingMistsWisps" aria-labelledby="label-settingMistsWisps" class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-base-content/50"></i>
+                        <span id="label-settingMistsWisps" data-setting-label="settingMistsWisps" class="text-base-content/80 text-xs group-hover:text-base-content">Wisp signs (pre-portal)</span>
+                        <div class="tooltip" data-setting-tip="settingMistsWisps" data-tip="Shows the wisp signs that appear before a Mists portal opens. The Solo/Duo and rarity filters also apply.">
+                            <span tabindex="0" role="img" aria-label="Shows the wisp signs that appear before a Mists portal opens. The Solo/Duo and rarity filters also apply." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                        </div>
+                    </label>
 
-                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" data-setting="settingMistsKnightfallAbbey" aria-labelledby="label-settingMistsKnightfallAbbey" class="toggle toggle-primary toggle-sm">
-                    <i data-lucide="church" class="w-4 h-4 text-base-content/50"></i>
-                    <span id="label-settingMistsKnightfallAbbey" data-setting-label="settingMistsKnightfallAbbey" class="text-base-content/80 text-xs group-hover:text-base-content">Show Knightfall Abbey</span>
-                    <div class="tooltip" data-setting-tip="settingMistsKnightfallAbbey" data-tip="Shows Knightfall Abbey entrances.">
-                        <span tabindex="0" role="img" aria-label="Shows Knightfall Abbey entrances." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
-                </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingMistsKnightfallAbbey" aria-labelledby="label-settingMistsKnightfallAbbey" class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="church" class="w-4 h-4 text-base-content/50"></i>
+                        <span id="label-settingMistsKnightfallAbbey" data-setting-label="settingMistsKnightfallAbbey" class="text-base-content/80 text-xs group-hover:text-base-content">Show Knightfall Abbey</span>
+                        <div class="tooltip" data-setting-tip="settingMistsKnightfallAbbey" data-tip="Shows Knightfall Abbey entrances.">
+                            <span tabindex="0" role="img" aria-label="Shows Knightfall Abbey entrances." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                        </div>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -164,7 +166,7 @@
                         <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
                         Type
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingDungeonsSolo" aria-labelledby="label-settingDungeonsSolo" class="checkbox checkbox-primary checkbox-xs">
                             <i data-lucide="user" class="w-4 h-4 text-base-content/50"></i>
@@ -189,7 +191,7 @@
                         <i data-lucide="sparkles" class="w-4 h-4 text-base-content/50"></i>
                         Enchant Level
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingDungeonsEnchant0" class="checkbox checkbox-primary checkbox-xs">
                             <span id="label-settingDungeonsEnchant0" data-setting-label="settingDungeonsEnchant0" class="text-base-content/80 text-xs group-hover:text-base-content">E0</span>
@@ -218,7 +220,7 @@
                         <i data-lucide="flame" class="w-4 h-4 text-base-content/50"></i>
                         Special
                     </h3>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingDungeonsCorrupted" aria-labelledby="label-settingDungeonsCorrupted" class="checkbox checkbox-primary checkbox-xs">
                             <span class="w-3 h-3 rounded-full bg-error"></span>

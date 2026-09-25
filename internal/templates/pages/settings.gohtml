@@ -60,7 +60,7 @@
                         <i data-lucide="monitor" class="w-4 h-4"></i>
                         Output
                     </h3>
-                    <div class="space-y-2">
+                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingLogToConsole" aria-labelledby="label-settingLogToConsole" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="terminal" class="w-4 h-4 text-base-content/50"></i>
@@ -87,7 +87,7 @@
                     Category Filters
                     <span class="text-xs text-base-content/50 font-normal">(applies to DEBUG & INFO only)</span>
                 </h3>
-                <div class="grid grid-cols-1 min-[21rem]:grid-cols-2 md:grid-cols-3 gap-2">
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingLogCategorySystem" aria-labelledby="label-settingLogCategorySystem" class="checkbox checkbox-primary checkbox-xs">
                             <span id="label-settingLogCategorySystem" data-setting-label="settingLogCategorySystem" class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
@@ -162,7 +162,7 @@
                     <i data-lucide="swords" class="w-4 h-4"></i>
                     Enemies
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugEnemiesUnidentified" aria-labelledby="label-settingDebugEnemiesUnidentified" class="toggle toggle-primary toggle-sm">
                         <span id="label-settingDebugEnemiesUnidentified" data-setting-label="settingDebugEnemiesUnidentified" class="text-base-content/80 text-xs group-hover:text-base-content">Show unidentified enemies</span>
@@ -193,7 +193,7 @@
                     <i data-lucide="leaf" class="w-4 h-4"></i>
                     Resources
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugResourcesTypeId" aria-labelledby="label-settingDebugResourcesTypeId" class="toggle toggle-primary toggle-sm">
                         <span id="label-settingDebugResourcesTypeId" data-setting-label="settingDebugResourcesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
@@ -215,7 +215,7 @@
                     <i data-lucide="cloud-fog" class="w-4 h-4"></i>
                     Mists
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugMistsWispIds" class="toggle toggle-primary toggle-sm">
                         <span id="label-settingDebugMistsWispIds" data-setting-label="settingDebugMistsWispIds" class="text-base-content/80 text-xs group-hover:text-base-content">Show wisp ID (debug)</span>
@@ -227,7 +227,7 @@
                     <i data-lucide="zap" class="w-4 h-4"></i>
                     Network traffic
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugWsCoalescing" aria-labelledby="label-settingDebugWsCoalescing" class="toggle toggle-primary toggle-sm">
                         <span id="label-settingDebugWsCoalescing" data-setting-label="settingDebugWsCoalescing" class="text-base-content/80 text-xs group-hover:text-base-content">Merge entity updates per frame</span>
@@ -251,7 +251,7 @@
                     <i data-lucide="hard-drive" class="w-4 h-4"></i>
                     Backend logs
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" aria-labelledby="label-settingDebugBackendLogs" id="settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
                         <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
