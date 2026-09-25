@@ -282,6 +282,20 @@ describe('radar settings panel controls', () => {
         expect(size.disabled).toBe(false);
     });
 
+    test('@verified 2026-09-26: Fit on disables the Size nudge and reset buttons, the other sliders keep theirs', () => {
+        bindAndInit();
+        const sizeButtons = [...root.querySelectorAll('[data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]')];
+        const zoomButtons = [...root.querySelectorAll('[data-nudge="settingRadarZoom"], [data-reset="settingRadarZoom"]')];
+        expect(sizeButtons).toHaveLength(3);
+
+        settingsSync.setBool('settingRadarFitToScreen', true);
+        expect(sizeButtons.map(button => button.disabled)).toEqual([true, true, true]);
+        expect(zoomButtons.map(button => button.disabled)).toEqual([false, false, false]);
+
+        settingsSync.setBool('settingRadarFitToScreen', false);
+        expect(sizeButtons.map(button => button.disabled)).toEqual([false, false, false]);
+    });
+
     test('@verified 2026-09-24: nothing in the panel or the canvas carries a style transform', () => {
         bindAndInit();
         settingsSync.setBool('settingRadarFitToScreen', true);

@@ -193,7 +193,21 @@ function showStored(el, sync) {
 
 function onButton(root, sync, event) {
     const preset = event.target.closest('[data-enemy-preset]');
-    if (preset && root.contains(preset)) applyEnemyPreset(preset.dataset.enemyPreset, sync);
+    if (preset && root.contains(preset)) {
+        applyEnemyPreset(preset.dataset.enemyPreset, sync);
+        return;
+    }
+    const button = event.target.closest('[data-nudge], [data-reset]');
+    if (!button || !root.contains(button)) return;
+    const entry = localEntry(button.dataset.nudge ?? button.dataset.reset);
+    if (entry?.step === undefined) return;
+    if (button.dataset.reset !== undefined) {
+        writeNumber(sync, entry, entry.default);
+        return;
+    }
+    const dir = Number(button.dataset.dir);
+    if (dir !== 1 && dir !== -1) return;
+    writeNumber(sync, entry, snap(entry, sync.get(entry.key) + dir * entry.step));
 }
 
 const bindings = new WeakMap();

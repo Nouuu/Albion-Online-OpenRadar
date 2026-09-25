@@ -463,6 +463,60 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('every range has one minus, one plus and one reset button on its key, named after its label', () => {
+        const SHAPES = [['nudge', '-1', 'minus', 'Decrease'], ['nudge', '1', 'plus', 'Increase'], ['reset', null, 'rotate-ccw', 'Reset']];
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('input[type="range"][data-setting]')].flatMap(el => {
+            const key = el.dataset.setting;
+            const noun = registryEntry(key).label.toLowerCase();
+            return SHAPES.flatMap(([kind, dir, icon, verb]) => {
+                const selector = dir === null ? `[data-reset="${key}"]` : `[data-nudge="${key}"][data-dir="${dir}"]`;
+                const found = [...root.querySelectorAll(selector)];
+                if (found.length !== 1) return [`${name}: ${key} has ${found.length} ${icon} buttons`];
+                const [button] = found;
+                const glyph = button.querySelector('i[data-lucide]');
+                const ok = button.tagName === 'BUTTON' && button.type === 'button'
+                    && ['btn', 'btn-ghost', 'btn-xs', 'btn-square'].every(c => button.classList.contains(c))
+                    && button.getAttribute('aria-label') === `${verb} ${noun}` && button.title === `${verb} ${noun}`
+                    && glyph?.dataset.lucide === icon && glyph.classList.contains('w-3') && glyph.classList.contains('h-3')
+                    && !button.closest('label') && !button.hasAttribute('tabindex')
+                    && button.parentElement === el.parentElement;
+                return ok ? [] : [`${name}: ${key} ${kind} ${icon} button shape`];
+            });
+        }));
+        expect(drift).toEqual([]);
+    });
+
+    test('nudge and reset buttons only point at a bound range on their page', () => {
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('[data-nudge], [data-reset]')].flatMap(button => {
+            const key = button.dataset.nudge ?? button.dataset.reset;
+            return root.querySelector(`input[type="range"][data-setting="${key}"]`) ? [] : [`${name}: ${key}`];
+        }));
+        expect(drift).toEqual([]);
+    });
+
+    test('every range sits in a slider row named by its label: icon, label, tip, minus, range, plus, readout, reset', () => {
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('input[type="range"][data-setting]')].flatMap(el => {
+            const key = el.dataset.setting;
+            const row = el.parentElement;
+            const order = [...row.children].map(child => {
+                if (child.matches('i[data-lucide]')) return 'icon';
+                if (child.matches(`[data-setting-label="${key}"]`)) return 'label';
+                if (child.matches(`[data-setting-tip="${key}"]`)) return 'tip';
+                if (child.matches(`[data-nudge="${key}"][data-dir="-1"]`)) return 'minus';
+                if (child === el) return 'range';
+                if (child.matches(`[data-nudge="${key}"][data-dir="1"]`)) return 'plus';
+                if (child.matches(`[data-value-for="${key}"]`)) return 'readout';
+                if (child.matches(`[data-reset="${key}"]`)) return 'reset';
+                return child.tagName;
+            }).filter(part => part !== 'tip').join(' ');
+            const c = row.classList;
+            const tile = row.tagName === 'DIV' && ['flex', 'items-center', 'p-2', 'rounded-lg', 'bg-base-300'].every(name => c.contains(name));
+            const named = el.getAttribute('aria-labelledby') === `label-${key}` && !el.hasAttribute('aria-label');
+            return tile && named && order === 'icon label minus range plus readout reset' ? [] : [`${name}: ${key} "${order}"`];
+        }));
+        expect(drift).toEqual([]);
+    });
+
     test('every number input is input-bordered input-sm', () => {
         const drift = all('input[type="number"][data-setting]').flatMap(({page, el}) => {
             const issues = [];

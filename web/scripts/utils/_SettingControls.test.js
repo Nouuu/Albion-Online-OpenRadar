@@ -111,6 +111,91 @@ describe('bindSettingControls range', () => {
 
         expect(localStorage.getItem('settingRadarSize')).toBe('650');
     });
+
+    const buttons = `
+        <button type="button" data-nudge="settingRadarZoom" data-dir="-1"><i></i></button>
+        <button type="button" data-nudge="settingRadarZoom" data-dir="1"><i></i></button>
+        <button type="button" data-reset="settingRadarZoom"><i></i></button>`;
+
+    function nudgeRow(stored) {
+        if (stored !== undefined) localStorage.setItem('settingRadarZoom', stored);
+        const root = mount(markup + buttons);
+        bind(root, newSync());
+        const [down, up, reset] = root.querySelectorAll('button');
+        return {root, down, up, reset, slider: root.querySelector('input')};
+    }
+
+    test('nudge moves by the registry step and updates slider and readout', () => {
+        const {root, down, up, slider} = nudgeRow('1.5');
+
+        up.click();
+        expect(localStorage.getItem('settingRadarZoom')).toBe('1.6');
+        expect(slider.value).toBe('1.6');
+        expect(root.querySelector('[data-value-for]').textContent).toBe('160%');
+
+        down.querySelector('i').click();
+        down.click();
+        expect(localStorage.getItem('settingRadarZoom')).toBe('1.4');
+    });
+
+    test('nudge clamps at the registry max', () => {
+        const {up} = nudgeRow('2.9');
+        up.click();
+        up.click();
+        expect(localStorage.getItem('settingRadarZoom')).toBe('3');
+    });
+
+    test('nudge clamps at the registry min', () => {
+        const {down} = nudgeRow('0.2');
+        down.click();
+        down.click();
+        expect(localStorage.getItem('settingRadarZoom')).toBe('0.1');
+    });
+
+    test('reset writes the registry default', () => {
+        const {reset, slider} = nudgeRow('2.5');
+
+        reset.querySelector('i').click();
+
+        expect(localStorage.getItem('settingRadarZoom')).toBe('1');
+        expect(slider.value).toBe('1');
+    });
+
+    test('an int slider nudges with setNumber', () => {
+        const root = mount('<input type="range" min="300" max="1200" step="50" data-setting="settingRadarSize">'
+            + '<button type="button" data-nudge="settingRadarSize" data-dir="1"></button>');
+        bind(root, newSync());
+
+        root.querySelector('button').click();
+
+        expect(localStorage.getItem('settingRadarSize')).toBe('550');
+    });
+
+    test.each([['missing', null], ['text', 'up'], ['zero', '0'], ['two', '2'], ['half', '0.5']])(
+        'a nudge with a %s data-dir writes nothing', (_, dir) => {
+            const root = mount(markup + `<button type="button" data-nudge="settingRadarZoom"${dir === null ? '' : ` data-dir="${dir}"`}></button>`);
+            const sync = newSync();
+            bind(root, sync);
+            const broadcast = vi.spyOn(sync, 'broadcast');
+
+            root.querySelector('button').click();
+
+            expect(broadcast).not.toHaveBeenCalled();
+            expect(localStorage.getItem('settingRadarZoom')).toBeNull();
+        });
+
+    test('nudge and reset on an unknown or backend key write nothing', () => {
+        const root = mount('<button type="button" data-nudge="settingNope" data-dir="1"></button>'
+            + '<button type="button" data-reset="settingNope"></button>'
+            + '<button type="button" data-reset="settingDebugBackendLogs"></button>');
+        const sync = newSync();
+        bind(root, sync);
+        const broadcast = vi.spyOn(sync, 'broadcast');
+
+        root.querySelectorAll('button').forEach(button => button.click());
+
+        expect(broadcast).not.toHaveBeenCalled();
+    });
 });
 
 describe('bindSettingControls number (change only)', () => {

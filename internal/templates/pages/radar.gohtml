@@ -35,21 +35,27 @@
                                 View
                             </h3>
                             <div class="space-y-2">
-                                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                                <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="zoom-in" class="w-4 h-4 text-base-content/50"></i>
-                                    <span id="label-settingRadarZoom" data-setting-label="settingRadarZoom" class="text-base-content/80 text-xs group-hover:text-base-content whitespace-nowrap">Zoom</span>
-                                    <input type="range" data-setting="settingRadarZoom" min="0.1" max="3" step="0.1" aria-label="Zoom" class="range range-primary range-xs ml-auto w-full max-w-64">
+                                    <span id="label-settingRadarZoom" data-setting-label="settingRadarZoom" class="text-base-content/80 text-xs whitespace-nowrap">Zoom</span>
+                                    <button type="button" data-nudge="settingRadarZoom" data-dir="-1" aria-label="Decrease zoom" title="Decrease zoom" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarZoom" aria-labelledby="label-settingRadarZoom" min="0.1" max="3" step="0.1" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarZoom" data-dir="1" aria-label="Increase zoom" title="Increase zoom" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
                                     <span data-value-for="settingRadarZoom" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
-                                </label>
-                                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                                    <button type="button" data-reset="settingRadarZoom" aria-label="Reset zoom" title="Reset zoom" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
+                                <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="maximize" class="w-4 h-4 text-base-content/50"></i>
-                                    <span id="label-settingRadarSize" data-setting-label="settingRadarSize" class="text-base-content/80 text-xs group-hover:text-base-content whitespace-nowrap">Max size</span>
+                                    <span id="label-settingRadarSize" data-setting-label="settingRadarSize" class="text-base-content/80 text-xs whitespace-nowrap">Max size</span>
                                     <div class="tooltip" data-setting-tip="settingRadarSize" data-tip="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.">
                                         <span tabindex="0" role="img" aria-label="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
-                                    <input type="range" data-setting="settingRadarSize" min="300" max="1200" step="50" aria-label="Max size" class="range range-primary range-xs ml-auto w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarSize" data-dir="-1" aria-label="Decrease max size" title="Decrease max size" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarSize" aria-labelledby="label-settingRadarSize" min="300" max="1200" step="50" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarSize" data-dir="1" aria-label="Increase max size" title="Increase max size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
                                     <span data-value-for="settingRadarSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
-                                </label>
+                                    <button type="button" data-reset="settingRadarSize" aria-label="Reset max size" title="Reset max size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
                                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                     <input type="checkbox" data-setting="settingRadarFitToScreen" aria-labelledby="label-settingRadarFitToScreen" class="toggle toggle-primary toggle-sm">
                                     <span id="label-settingRadarFitToScreen" data-setting-label="settingRadarFitToScreen" class="text-base-content/80 text-xs group-hover:text-base-content">Fit to screen</span>
@@ -57,12 +63,15 @@
                                         <span tabindex="0" role="img" aria-label="Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
                                 </label>
-                                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                                <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="image" class="w-4 h-4 text-base-content/50"></i>
-                                    <span id="label-settingRadarIconSize" data-setting-label="settingRadarIconSize" class="text-base-content/80 text-xs group-hover:text-base-content whitespace-nowrap">Icon size</span>
-                                    <input type="range" data-setting="settingRadarIconSize" min="0.5" max="2" step="0.1" aria-label="Icon size" class="range range-primary range-xs ml-auto w-full max-w-64">
+                                    <span id="label-settingRadarIconSize" data-setting-label="settingRadarIconSize" class="text-base-content/80 text-xs whitespace-nowrap">Icon size</span>
+                                    <button type="button" data-nudge="settingRadarIconSize" data-dir="-1" aria-label="Decrease icon size" title="Decrease icon size" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarIconSize" aria-labelledby="label-settingRadarIconSize" min="0.5" max="2" step="0.1" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarIconSize" data-dir="1" aria-label="Increase icon size" title="Increase icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
                                     <span data-value-for="settingRadarIconSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
-                                </label>
+                                    <button type="button" data-reset="settingRadarIconSize" aria-label="Reset icon size" title="Reset icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
                             </div>
                         </section>
                         <div class="space-y-6 @2xl:border-l @2xl:border-base-content/5 @2xl:pl-8">

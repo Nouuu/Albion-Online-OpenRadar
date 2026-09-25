@@ -14,7 +14,7 @@ export function computeRadarSize({size, fit, availableWidth, availableHeight}) {
 }
 
 const LAYOUT_KEYS = new Set(['settingRadarSize', 'settingRadarFitToScreen']);
-const SIZE_CONTROLS = '[data-setting="settingRadarSize"]';
+const SIZE_CONTROLS = '[data-setting="settingRadarSize"], [data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]';
 
 let state = null;
 
