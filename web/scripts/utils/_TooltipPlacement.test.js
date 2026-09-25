@@ -10,8 +10,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 const inputCss = readFileSync(join(ROOT, 'web/styles/input.css'), 'utf8');
 const baseLayout = readFileSync(join(ROOT, 'internal/templates/layouts/base.gohtml'), 'utf8');
 
-const clip = {left: 0, right: 380, top: 60};
-const icon = (left, top = 400) => ({left, top, width: 12});
+const clip = {left: 0, right: 380, top: 60, bottom: 800};
+const icon = (left, top = 400) => ({left, top, width: 12, height: 12});
 const size = {width: 256, height: 60};
 
 describe('placeTooltip', () => {
@@ -37,6 +37,13 @@ describe('placeTooltip', () => {
     test('a bubble with no room above opens below', () => {
         expect(placeTooltip(icon(184, 100), size, clip).below).toBe(true);
     });
+
+    test('a bubble that fits on neither side opens on the roomier side', () => {
+        const short = {...clip, bottom: 300};
+        const tall = {width: 256, height: 200};
+        expect(placeTooltip(icon(184, 200), tall, short).below).toBe(false);
+        expect(placeTooltip(icon(184, 120), tall, short).below).toBe(true);
+    });
 });
 
 describe('bindTooltipPlacement', () => {
@@ -51,6 +58,7 @@ describe('bindTooltipPlacement', () => {
         const tip = main.querySelector('.tooltip');
         main.getBoundingClientRect = () => ({left: 0, top: 60, right: 380, bottom: 800, width: 380, height: 740});
         Object.defineProperty(main, 'clientWidth', {value: 380});
+        Object.defineProperty(main, 'clientHeight', {value: 740});
         tip.getBoundingClientRect = () => ({left: 330, top: 100, right: 342, bottom: 112, width: 12, height: 12});
         vi.spyOn(window, 'getComputedStyle').mockReturnValue({width: '256px', height: '60px'});
         return {main, tip};
