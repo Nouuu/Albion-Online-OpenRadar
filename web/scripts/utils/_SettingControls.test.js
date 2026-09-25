@@ -490,6 +490,36 @@ describe('resources page', () => {
     });
 });
 
+describe('settings page backend toggles', () => {
+    const BACKEND_KEYS = ['settingDebugBackendLogs', 'settingDebugPcapRecording'];
+
+    test('ticking a backend toggle stores nothing in this browser', () => {
+        const root = mountPage('settings');
+        bind(root, newSync());
+
+        for (const key of BACKEND_KEYS) {
+            const toggle = root.querySelector(`[data-setting="${key}"]`);
+            toggle.checked = true;
+            fire(toggle, 'change');
+        }
+
+        expect(BACKEND_KEYS.map(key => localStorage.getItem(key))).toEqual([null, null]);
+    });
+
+    test('a stored or broadcast value never reaches a backend toggle', () => {
+        BACKEND_KEYS.forEach(key => localStorage.setItem(key, 'true'));
+        const sync = newSync();
+        const root = mountPage('settings');
+        bind(root, sync);
+        const toggles = BACKEND_KEYS.map(key => root.querySelector(`[data-setting="${key}"]`));
+        expect(toggles.map(toggle => toggle.checked)).toEqual([false, false]);
+
+        BACKEND_KEYS.forEach(key => sync.handleMessage({type: 'setting-changed', key, value: 'true'}));
+
+        expect(toggles.map(toggle => toggle.checked)).toEqual([false, false]);
+    });
+});
+
 describe('bindSettingControls ignore list', () => {
     const KEY = 'settingIgnoreList';
     const markup = `<div data-setting="${KEY}">

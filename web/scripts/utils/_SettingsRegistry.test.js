@@ -125,10 +125,8 @@ const TABLE = [
 ];
 
 describe('SettingsRegistry', () => {
-    test('every key matches the domain pattern unless pending removal, and is unique', () => {
-        for (const entry of SETTINGS) {
-            if (!entry.pendingRemoval) expect(entry.key).toMatch(KEY_PATTERN);
-        }
+    test('every key matches the domain pattern and is unique', () => {
+        for (const entry of SETTINGS) expect(entry.key).toMatch(KEY_PATTERN);
         const keys = SETTINGS.map(e => e.key);
         expect(new Set(keys).size).toBe(keys.length);
     });

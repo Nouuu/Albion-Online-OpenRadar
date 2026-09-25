@@ -168,8 +168,13 @@ function kindOf(el, entry) {
     return null;
 }
 
-function render(root, sync, key) {
+function localEntry(key) {
     const entry = registryEntry(key);
+    return entry?.scope === 'backend' ? undefined : entry;
+}
+
+function render(root, sync, key) {
+    const entry = localEntry(key);
     if (!entry) return;
     const value = sync.get(key);
     for (const el of root.querySelectorAll(`[data-setting="${key}"]`)) {
@@ -202,7 +207,7 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
 
     const keys = new Set();
     for (const el of root.querySelectorAll('[data-setting]')) {
-        const entry = registryEntry(el.dataset.setting);
+        const entry = localEntry(el.dataset.setting);
         const kind = KINDS[kindOf(el, entry)];
         if (!entry || !kind) continue;
         kind.listen(el, entry, sync, bound);

@@ -216,7 +216,7 @@ describe('template settings contract', () => {
     });
 
     test('each setting key has one control, with the declared exceptions', () => {
-        const drift = SETTINGS.filter(entry => ['setting', 'ui', 'backend'].includes(entry.scope) && !entry.pendingRemoval)
+        const drift = SETTINGS.filter(entry => ['setting', 'ui', 'backend'].includes(entry.scope))
             .flatMap(({key}) => {
                 const count = controlCount(key);
                 const expected = CONTROL_COUNT_EXCEPTIONS[key] ?? 1;

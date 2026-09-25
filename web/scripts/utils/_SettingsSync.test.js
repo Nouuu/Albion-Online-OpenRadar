@@ -150,15 +150,6 @@ describe('SettingsSync registry reads', () => {
         expect(error).toHaveBeenCalledTimes(1);
         expect(error.mock.calls[0][2]).toEqual({key: 'settingTypo'});
     });
-
-    test('a pending removal key reads quietly', async () => {
-        const error = vi.fn();
-        vi.stubGlobal('logger', {error, warn: vi.fn(), info: vi.fn(), debug: vi.fn()});
-        const s = await freshSync();
-        expect(s.getBool('settingDebugBackendLogs')).toBe(false);
-        expect(s.getBool('settingDebugPcapRecording')).toBe(false);
-        expect(error).not.toHaveBeenCalled();
-    });
 });
 
 describe('SettingsSync storage fallback', () => {

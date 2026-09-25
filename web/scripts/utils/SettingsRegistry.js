@@ -297,7 +297,6 @@ export const SETTINGS = deepFreeze(ROWS.filter(row => row[4] !== 'remove').map((
     migration,
     legacyKey,
     networkPath: NETWORK_PATHS[key] ?? null,
-    pendingRemoval: migration === 'backend',
 })));
 
 const BY_KEY = new Map(SETTINGS.map(entry => [entry.key, entry]));
