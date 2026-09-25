@@ -1,13 +1,9 @@
 import settingsSync from './SettingsSync.js';
 import {registerPage, reinitCurrentPage} from '../core/PageController.js';
 import {SETTINGS, registryEntry} from './SettingsRegistry.js';
-import {generateResourceGrid, tierState} from './ResourcesHelper.js';
+import {generateResourceGrid, renderedEnchants, tierState} from './ResourcesHelper.js';
 
 const GLYPHS = {all: '✓', some: '◐', none: '☐'};
-
-function renderedEnchants(tier) {
-    return tier < 3 ? ['e0'] : ['e0', 'e1', 'e2', 'e3', 'e4'];
-}
 
 function formatReadout(entry, value) {
     if (entry.unit === '%') return `${Math.round(value * 100)}%`;

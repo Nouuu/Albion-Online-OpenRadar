@@ -1,6 +1,6 @@
 const ENCHANTS = ['e0', 'e1', 'e2', 'e3', 'e4'];
 
-function renderedEnchants(tier) {
+export function renderedEnchants(tier) {
     return tier < 3 ? ['e0'] : ENCHANTS;
 }
 
