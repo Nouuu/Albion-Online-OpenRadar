@@ -327,6 +327,11 @@ describe('settings page', () => {
         expect(template).not.toContain('setBool("settingPcapRecording"');
     });
 
+    test('the network poll preserves unapplied ticks instead of overwriting them', () => {
+        const script = scriptOf('settings');
+        expect(script).toMatch(/networkHandler\.load\(true\)/);
+    });
+
     test('the Logging banner tells where backend and browser errors are saved', () => {
         const logging = root.querySelector('[data-setting="settingUiSettingsLoggingOpen"]').closest('.collapse');
         const banner = normalized(logging.querySelector('.collapse-content p'));

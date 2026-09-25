@@ -267,6 +267,56 @@ describe('NetworkSettingsHandler', () => {
         expect(container.textContent).toContain('Only the PC running the radar can change this.');
     });
 
+    test('a poll reload keeps a checkbox the user ticked but has not applied', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+                {name: 'b', description: 'Eth', address: '2', category: 'ethernet', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})})
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+                {name: 'b', description: 'Eth', address: '2', category: 'ethernet', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        container.querySelector('[data-iface="b"] input').click();
+        expect(container.querySelector('[data-action="apply"]').disabled).toBe(false);
+
+        await h.load(true);
+
+        expect(container.querySelector('[data-iface="a"] input').checked).toBe(true);
+        expect(container.querySelector('[data-iface="b"] input').checked).toBe(true);
+        expect(container.querySelector('[data-action="apply"]').disabled).toBe(false);
+    });
+
+    test('a plain reload drops an unapplied tick and reflects the server truth', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+                {name: 'b', description: 'Eth', address: '2', category: 'ethernet', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})})
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: true, isAvailable: true},
+                {name: 'b', description: 'Eth', address: '2', category: 'ethernet', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        container.querySelector('[data-iface="b"] input').click();
+        await h.load();
+
+        expect(container.querySelector('[data-iface="a"] input').checked).toBe(true);
+        expect(container.querySelector('[data-iface="b"] input').checked).toBe(false);
+        expect(container.querySelector('[data-action="apply"]').disabled).toBe(true);
+    });
+
     test('escapes html in interface description', async () => {
         globalThis.fetch
             .mockResolvedValueOnce({ok: true, json: async () => [

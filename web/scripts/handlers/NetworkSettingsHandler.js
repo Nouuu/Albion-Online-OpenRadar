@@ -10,9 +10,10 @@ export class NetworkSettingsHandler {
         this.container = container;
         this.interfaces = [];
         this.state = null;
+        this.pendingSelection = null;
     }
 
-    async load() {
+    async load(preservePending = false) {
         const [ifacesRes, stateRes] = await Promise.all([
             fetch('/api/network/interfaces'),
             fetch('/api/network/state'),
@@ -23,6 +24,7 @@ export class NetworkSettingsHandler {
         }
         this.interfaces = await ifacesRes.json();
         this.state = await stateRes.json();
+        if (!preservePending) this.pendingSelection = null;
         this.render();
     }
 
@@ -33,8 +35,9 @@ export class NetworkSettingsHandler {
     render() {
         const locked = this.isLocked();
         const activeNames = new Set((this.state?.captureInterfaces ?? []).map(c => c.name));
+        const checkedNames = this.pendingSelection ?? activeNames;
         const banner = this.renderBanner();
-        const rows = this.interfaces.map(i => this.renderRow(i, activeNames.has(i.name), locked)).join('');
+        const rows = this.interfaces.map(i => this.renderRow(i, checkedNames.has(i.name), locked)).join('');
         const lan = (this.state?.lanAddresses ?? []).map(a => {
             const safe = escapeHTML(a);
             return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary break-all">http://${safe}:5001/</a></li>`;
@@ -55,6 +58,7 @@ export class NetworkSettingsHandler {
             <ul class="list-disc pl-5">${lan || '<li class="opacity-60">No LAN address detected.</li>'}</ul>
         `;
         this.bindEvents();
+        this.updateApplyState();
     }
 
     renderExitLagNotice() {
@@ -110,8 +114,9 @@ export class NetworkSettingsHandler {
         const selected = [...this.selectedNames()].sort();
         const current = (this.state?.captureInterfaces ?? []).map(c => c.name).sort();
         const same = selected.length === current.length && selected.every((n, i) => n === current[i]);
+        this.pendingSelection = same ? null : new Set(selected);
         const btn = this.container.querySelector('[data-action="apply"]');
-        if (btn) btn.disabled = same;
+        if (btn) btn.disabled = same || this.isLocked();
     }
 
     selectedNames() {
