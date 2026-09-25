@@ -328,3 +328,107 @@ describe('registry labels and tooltips', () => {
         expect(registryEntry(key).tooltip).toBe(tooltip);
     });
 });
+
+describe('settings control tile contract', () => {
+    const COLOR_CLASS = /^checkbox-(primary|secondary|accent|info|success|warning|error)$/;
+    const ALLOWED_COLORS = {
+        settingPlayersPassive: 'checkbox-success',
+        settingPlayersFaction: 'checkbox-info',
+        settingPlayersHostile: 'checkbox-error',
+        settingEnemiesNormal: 'checkbox-info',
+        settingEnemiesChampion: 'checkbox-secondary',
+        settingEnemiesMiniBoss: 'checkbox-warning',
+        settingEnemiesBoss: 'checkbox-error',
+    };
+    const inputCss = readFileSync(join(ROOT, 'web/styles/input.css'), 'utf8');
+    const booleans = all('label > input[type="checkbox"][data-setting]');
+
+    function booleanClassIssue(el) {
+        const classes = [...el.classList];
+        if (classes.includes('toggle')) {
+            return classes.length === 3 && classes.includes('toggle-primary') && classes.includes('toggle-sm')
+                ? null : `toggle classes "${classes.join(' ')}"`;
+        }
+        if (classes.includes('checkbox')) {
+            if (!classes.includes('checkbox-xs')) return `missing checkbox-xs in "${classes.join(' ')}"`;
+            const colors = classes.filter(name => COLOR_CLASS.test(name));
+            if (colors.length !== 1) return `expected one color class, got "${colors.join(',')}"`;
+            const expected = ALLOWED_COLORS[el.dataset.setting] ?? 'checkbox-primary';
+            return colors[0] === expected ? null : `color "${colors[0]}" expected "${expected}"`;
+        }
+        return `neither toggle nor checkbox: "${classes.join(' ')}"`;
+    }
+
+    function rowShapeIssue(el) {
+        const label = el.parentElement;
+        if (!label || label.tagName !== 'LABEL') return 'is not a direct child of a label';
+        const c = label.classList;
+        const neutral = c.contains('rounded-lg') && c.contains('bg-base-300') && c.contains('cursor-pointer') && c.contains('group');
+        const alert = (c.contains('bg-error/10') || c.contains('bg-warning/10'))
+            && c.contains('border') && c.contains('cursor-pointer') && c.contains('group');
+        return neutral || alert ? null : `label classes "${label.className}" are not the neutral tile or the alert card`;
+    }
+
+    test('every boolean control is toggle-primary toggle-sm or checkbox checkbox-xs with one color class', () => {
+        const drift = booleans.flatMap(({page, el}) => {
+            const issue = booleanClassIssue(el);
+            return issue ? [`${page}: ${el.dataset.setting} - ${issue}`] : [];
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('every boolean control sits inside the neutral tile or the alert card', () => {
+        const drift = booleans.flatMap(({page, el}) => {
+            const issue = rowShapeIssue(el);
+            return issue ? [`${page}: ${el.dataset.setting} - ${issue}`] : [];
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('every data-setting-tip is a div.tooltip with a w-3 h-3 opacity-50 icon', () => {
+        const drift = all('[data-setting-tip]').flatMap(({page, el}) => {
+            const issues = [];
+            if (el.tagName !== 'DIV' || !el.classList.contains('tooltip')) issues.push('is not a div.tooltip');
+            const icon = el.querySelector('i');
+            if (!icon) issues.push('has no icon');
+            else if (!icon.classList.contains('w-3') || !icon.classList.contains('h-3') || !icon.classList.contains('opacity-50')) {
+                issues.push(`icon classes "${icon.className}"`);
+            }
+            return issues.map(issue => `${page}: ${el.dataset.settingTip} - ${issue}`);
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('every range is range-primary range-xs with a tabular-nums whitespace-nowrap readout', () => {
+        const ranges = all('input[type="range"][data-setting]');
+        const readouts = all('[data-value-for]');
+        const drift = ranges.flatMap(({page, el}) => {
+            const issues = [];
+            if (!el.classList.contains('range-primary')) issues.push('missing range-primary');
+            if (!el.classList.contains('range-xs')) issues.push('missing range-xs');
+            const readout = readouts.find(r => r.page === page && r.el.dataset.valueFor === el.dataset.setting);
+            if (!readout) {
+                issues.push('has no readout');
+            } else {
+                if (!readout.el.classList.contains('tabular-nums')) issues.push('readout missing tabular-nums');
+                if (!readout.el.classList.contains('whitespace-nowrap')) issues.push('readout missing whitespace-nowrap');
+            }
+            return issues.map(issue => `${page}: ${el.dataset.setting} - ${issue}`);
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('every number input is input-bordered input-sm', () => {
+        const drift = all('input[type="number"][data-setting]').flatMap(({page, el}) => {
+            const issues = [];
+            if (!el.classList.contains('input-bordered')) issues.push('missing input-bordered');
+            if (!el.classList.contains('input-sm')) issues.push('missing input-sm');
+            return issues.map(issue => `${page}: ${el.dataset.setting} - ${issue}`);
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('the tooltip bubble caps its width so it cannot leave the viewport', () => {
+        expect(inputCss).toMatch(/\.tooltip\[data-tip]:before\s*\{\s*max-width:\s*min\(/);
+    });
+});
