@@ -103,6 +103,16 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   static position (and therefore its layout box) lands one line below the `.flex.h-dvh` wrapper, contributing
   1 px of overflow. Cosmetic, but it fails a byte-exact `scrollHeight <= innerHeight` check.
 
+- **`enableCoalescing` reads `undefined` without `window.settingsSync`**. `WebSocketEventQueue.js` reads the global
+  instead of importing `settingsSync`, so a failed module load turns coalescing off. Import it like every other
+  consumer.
+- **Sidebar init depends on the SettingsSync module graph**. `window.sidebar.init()` in `base.gohtml` reads
+  `window.settingsSync`. If that module fails to load, init throws and `lucide.createIcons()` never runs, so the
+  layout loses its icons.
+- **Dead PiP resize listener**. `PictureInPictureManager.js` listens for `canvasSizeChanged` on `document`, while
+  `RadarSettingsPanel.js` dispatches it on `window`. Harmless because `compositeFrame` resyncs the size every frame.
+  Delete the listener.
+
 ## Permanent limitations
 
 - **Player live positions**. Encrypted by XOR with a KeySync `XorCode` that is itself wrapped in Photon AES. Out of
