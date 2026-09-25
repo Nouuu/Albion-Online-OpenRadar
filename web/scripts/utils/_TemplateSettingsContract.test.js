@@ -540,6 +540,17 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('no slider row sits in a column split by viewport width', () => {
+        const drift = tiles.filter(({el}) => el.querySelector('input[type="range"]')).flatMap(({page, el}) => {
+            const split = [];
+            for (let node = el.parentElement; node; node = node.parentElement) {
+                split.push(...[...node.classList].filter(name => /^(sm|md|lg|xl|2xl):grid-cols-/.test(name)));
+            }
+            return split.length ? [`${page}: ${el.querySelector('[data-setting]').dataset.setting} under ${split.join(' ')}`] : [];
+        });
+        expect(drift).toEqual([]);
+    });
+
     test('a gated sub-row spans the grid right after the tile of its toggle', () => {
         const drift = all('[data-enabled-by]').flatMap(({page, el}) => {
             const row = el.closest('.col-span-full');
