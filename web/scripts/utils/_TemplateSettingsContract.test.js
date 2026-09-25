@@ -600,3 +600,13 @@ describe('radar settings panel sections', () => {
         expect(drift).toEqual([]);
     });
 });
+
+describe('keyboard focus ring', () => {
+    const appCss = readFileSync(join(ROOT, 'web/styles/app.css'), 'utf8');
+
+    test('the global focus-visible outline uses a color token the daisyUI 5 theme defines', () => {
+        const rule = appCss.match(/^:focus-visible\s*\{([^}]*)}/m)?.[1] ?? '';
+        expect(rule).toMatch(/outline:\s*2px solid var\(--color-primary\);/);
+        expect(appCss).not.toMatch(/var\(--p\)/);
+    });
+});
