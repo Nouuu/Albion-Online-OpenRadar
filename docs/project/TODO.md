@@ -1,7 +1,7 @@
 # OpenRadar Roadmap
 
 **Last release**: 2.2.2
-**Last update**: 2026-08-14
+**Last update**: 2026-09-25
 
 ## Detection systems status
 
@@ -118,6 +118,16 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
 - **Settings section collapse checkboxes have no accessible name**. The `<input type="checkbox"
   data-setting="settingUiSettings*Open">` toggles on the Logging, Debug and Network collapses on `/settings` carry no
   `aria-label` or `aria-labelledby`, and are not wrapped in a `<label>`. Same on `main`.
+- **`initRadar` concurrent re-entry**. `isInitialized` (`Utils.js`) is set true only after the `DatabaseLoader.load()`
+  await resolves. Two overlapping calls to `initRadar` both pass the guard and run the setup twice, leaking the first
+  call's intervals.
+- **`Utils.js` binds a `#button` click handler that nothing renders**. No template defines an element with that id, so
+  the listener is dead code.
+- **`PlayerListRenderer` never re-renders an existing card's mounted badge, faction or name**. `computeCardKey` covers
+  equipment, spells and health availability but not those three fields, so a player who mounts or turns hostile keeps
+  its old card until it leaves the list and respawns.
+- **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
+  `handleNewPlayerEvent`; the method is exercised only by its own test.
 
 ## Permanent limitations
 

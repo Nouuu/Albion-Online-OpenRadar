@@ -127,7 +127,7 @@ hard-refresh the page (Ctrl+F5) after upgrading.
 ### Can two PCs share one radar?
 
 Yes. Run the binary on the PC that plays Albion, then open the `(LAN)` URL from the startup banner on the other device. The threat alert sound comes out of the PC running the radar, not the device showing the page.
-Capture settings stay locked to the host for safety, so the second device gets a read-only view.
+Network interfaces, backend logs and pcap recording can only be changed from the PC running the radar. Another device can open Settings, but those controls are disabled.
 
 ### Is there a macOS build?
 
@@ -158,7 +158,7 @@ call and your risk.
 | **Mists**     | Solo and Duo portals with rarity, feu follets (wisp signs), wisp cages, Knightfall Abbey        |
 | **Dungeons**  | Solo, Group, Corrupted, Hellgate, with per-enchant filters E0-E4                                |
 | **Fishing**   | Spawns detected and drawn                                                                       |
-| **Chests**    | Drawn on the radar. Rarity is stored but not yet colour-coded (#29)                             |
+| **Chests**    | Drawn on the radar, color-coded from the chest name. A chest whose name matches no known rarity is not drawn |
 
 ### Threat alerts
 
@@ -167,12 +167,13 @@ The alert gate depends on where you are:
 | Zone type      | Alerts on                                     |
 |----------------|-----------------------------------------------|
 | Safe           | nothing                                       |
-| Yellow, Red    | PvP-flagged players only                      |
+| Yellow, Red    | hostile-flagged players only (faction warfare flags do not alert) |
 | Black          | every player                                  |
 
 Roads of Avalon always count as Black. A Mist counts as Black when you entered it through a lethal entrance or from a
-red zone, Yellow otherwise, which is what the game does. A triggered alert flashes the screen, pulses the radar border
-and plays a sound. Players on your ignore list never trigger it.
+red zone, Yellow otherwise, which is what the game does. An alert flashes the screen and plays a sound, each with its
+own toggle on the Players page. While a threat is around, the radar border pulses red. Players on your ignore list
+never flash, sound or pulse the border. Alerts need player detection on.
 
 Players appear in the players list with their gear and item power. They are **not** drawn on the radar itself: Albion
 encrypts live positions, see [Known limitations](#known-limitations).
@@ -181,15 +182,16 @@ encrypts live positions, see [Known limitations](#known-limitations).
 
 ## Radar Controls
 
-| Control    | Range                                     |
-|------------|-------------------------------------------|
-| Size       | 300px to 800px                            |
-| Zoom       | 0.1x to 3x                                |
-| Icon size  | 0.5x to 2x                                |
-| Rings      | distance markers at 10m and 20m           |
-| Zone       | current zone name and PvP type            |
-| Stats      | player, resource and mob counts           |
-| PiP        | Picture-in-Picture floating window        |
+| Control       | Range                                        |
+|---------------|-----------------------------------------------|
+| Size          | 300px to 800px                               |
+| Zoom          | 0.1x to 3x                                   |
+| Icon size     | 0.5x to 2x                                   |
+| Fit to screen | toggle, fills the window up to 1200px        |
+| Zone info     | toggle, zone name, tier and PvP marker       |
+| Stats         | toggle, resource, mob and player counts      |
+| Fullscreen    | header button                                |
+| PiP           | Picture-in-Picture floating window           |
 
 **Picture-in-Picture**: playing fullscreen? Pop the radar into a floating always-on-top window. One click, native
 browser PiP. Alerts mirror onto it.
@@ -211,11 +213,11 @@ internet.
     <td align="center"><em>Detecting resources and mobs</em></td>
   </tr>
   <tr>
-    <td><img src="docs/images/radar_3.png" alt="Radar zoomed" width="400"></td>
+    <td><img src="docs/images/radar_3.png" alt="Radar settings panel" width="400"></td>
     <td><img src="docs/images/pip.jpg" alt="Picture-in-Picture" width="400"></td>
   </tr>
   <tr>
-    <td align="center"><em>Zoom controls</em></td>
+    <td align="center"><em>Radar settings panel</em></td>
     <td align="center"><em>PiP floating window</em></td>
   </tr>
   <tr>
@@ -257,7 +259,7 @@ the fix ships as a patch release.
 - **Player positions**: Albion encrypts movement data. Players are detected and listed, but their live positions cannot
   be placed on the radar without a Photon MITM proxy, which is out of scope. See
   [PLAYER_POSITIONS_MITM.md](docs/technical/PLAYER_POSITIONS_MITM.md).
-- **Some Black Zone maps**: background tiles are missing for zone IDs 4000+. Turn the map background off in settings.
+- **Some Black Zone maps**: background tiles are missing for zone IDs 4000+. Turn off Map background in the radar settings panel on the Radar page.
 - **Event 46 timing**: `HarvestableChangeState` can skip sizes or arrive late depending on server batching. The radar
   shows what the wire delivers. States the server skipped are unrecoverable.
 

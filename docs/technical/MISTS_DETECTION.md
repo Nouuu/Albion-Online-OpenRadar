@@ -2,7 +2,7 @@
 
 How OpenRadar detects portals, feu follets (wisp signs), and wisp cages in the Mists biome.
 
-*Last verified against code: 2026-08-14. Codes are post 2026-06-29 patch, which shifted everything at or above 248 by +2.*
+*Last verified against code: 2026-09-25. Codes are post 2026-06-29 patch, which shifted everything at or above 248 by +2.*
 
 ## Detection surface
 
@@ -25,7 +25,7 @@ Portal names follow the pattern `MISTS_<TYPE>_<COLOR>`:
 - `<TYPE>` is one of `SOLO`, `DUO`.
 - `<COLOR>` is the PvP zone tag: `YELLOW`, `GREEN`, `BLUE`, `PURPLE`, `RED`. **It is not the rarity.**
 
-`MobsHandler.AddMist` reads the rarity from `Parameters[33]` and stores it as `mist.enchant`. Values 0 to 4 map to Common, Uncommon, Rare, Epic, Legendary. Live evidence from a "Peu commun" YELLOW portal confirmed the path on 2026-04-23 (green `mist_1` icon). Settings gate uses `settingMistE<enchant>`.
+`MobsHandler.AddMist` reads the rarity from `Parameters[33]` and stores it as `mist.enchant`. Values 0 to 4 map to Common, Uncommon, Rare, Epic, Legendary. Live evidence from a "Peu commun" YELLOW portal confirmed the path on 2026-04-23 (green `mist_1` icon). Settings gate uses `settingMistsEnchant<enchant>`.
 
 Pre-patch captures also carried the rarity in `Parameters[8]` (evidence behind the PR #78 dungeon enchant fix). Since the 2026-06-29 patch, `Parameters[8]` on portal NewMob events holds an `[x, y]` position instead (2026-07-05 capture, typeId 116). Only Common portals (`Parameters[33]=0`) were observed post-patch, so the rarity slot still needs confirmation against a non-Common portal.
 
@@ -33,10 +33,10 @@ Pre-patch captures also carried the rarity in `Parameters[8]` (evidence behind t
 
 `MistsWispDrawing.invalidate` iterates `mobs.mistList` and gates each entry through:
 
-1. `settingWispSpawn` master toggle (early return when off).
-2. `settingMistSolo` or `settingMistDuo` based on the portal type substring.
-3. `settingMistE<rarity>` based on `mist.enchant`.
-4. `settingWispSpawnDebugID` (optional overlay of the entity id for live capture work).
+1. `settingMistsWisps` master toggle (early return when off).
+2. `settingMistsEnchant<rarity>` based on `mist.enchant`.
+3. `settingMistsSolo` or `settingMistsDuo` based on the portal type.
+4. `settingDebugMistsWispIds` (optional overlay of the entity id for live capture work).
 
 The image is `mist_<enchant>.webp`. The drawing reuses the portal asset rather than a dedicated `wisp_sign.webp`.
 
