@@ -258,7 +258,7 @@ describe('static entity cleanup', () => {
     // pcap-derived: dungeons/spawn.json message[0] (dungeon), message[2] (Knightfall portal via mistsDungeon.addPortal),
     // chests/spawn.json message[0] via addChestEvent (fixture 252=391, current NewLootChest=393, code drift),
     // wispcage/spawn.json message[0].
-    test('@synthetic 2026-09-24: clearHandlers after router/change-cluster.json empties dungeon, chest, cage and Knightfall lists', async () => {
+    test('@verified 2026-09-24: clearHandlers after router/change-cluster.json empties dungeon, chest, cage and Knightfall lists', async () => {
         await page.init();
 
         const dungeonFix = await loadFixture('dungeons', 'spawn');
@@ -288,7 +288,7 @@ describe('static entity cleanup', () => {
     });
 
     // synthetic: idle age crossing the 30 minute static-entity threshold, no fixture carries elapsed time.
-    test('@synthetic 2026-09-24: a Knightfall portal idle 10 minutes stays, idle 31 minutes is removed by cleanupStaleEntities', async () => {
+    test('@verified 2026-09-24: a Knightfall portal idle 10 minutes stays, idle 31 minutes is removed by cleanupStaleEntities', async () => {
         vi.useFakeTimers({toFake: ['setInterval', 'clearInterval', 'Date']});
         await page.init();
 
