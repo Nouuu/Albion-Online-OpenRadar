@@ -24,37 +24,37 @@
                 <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
                 Display
             </h2>
-            <div class="space-y-3">
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" data-setting="settingPlayersDetect" class="checkbox checkbox-primary">
-                    <i data-lucide="users" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span data-setting-label="settingPlayersDetect" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Detect players</span>
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersDetect" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
+                    <span data-setting-label="settingPlayersDetect" class="text-base-content/80 text-xs group-hover:text-base-content">Detect players</span>
                     <div class="tooltip" data-setting-tip="settingPlayersDetect" data-tip="Tracks players in range. Off: no player list, no player counts, no flash, border or sound.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" data-setting="settingPlayersShowEquipment" class="checkbox checkbox-primary">
-                    <i data-lucide="backpack" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span data-setting-label="settingPlayersShowEquipment" class="text-base-content/80 group-hover:text-base-content transition-colors">Show Equipment</span>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersShowEquipment" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="backpack" class="w-4 h-4 text-base-content/50"></i>
+                    <span data-setting-label="settingPlayersShowEquipment" class="text-base-content/80 text-xs group-hover:text-base-content">Show Equipment</span>
                     <div class="tooltip" data-setting-tip="settingPlayersShowEquipment" data-tip="Shows the equipment the other player is carrying.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" data-setting="settingPlayersShowSpells" class="checkbox checkbox-primary">
-                    <i data-lucide="wand-2" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span data-setting-label="settingPlayersShowSpells" class="text-base-content/80 group-hover:text-base-content transition-colors">Show Spells</span>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersShowSpells" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="wand-2" class="w-4 h-4 text-base-content/50"></i>
+                    <span data-setting-label="settingPlayersShowSpells" class="text-base-content/80 text-xs group-hover:text-base-content">Show Spells</span>
                     <div class="tooltip" data-setting-tip="settingPlayersShowSpells" data-tip="Shows active and passive spells on player cards.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" data-setting="settingPlayersShowHealthBars" class="checkbox checkbox-primary">
-                    <i data-lucide="heart-pulse" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
-                    <span data-setting-label="settingPlayersShowHealthBars" class="text-base-content/80 group-hover:text-base-content transition-colors">Show health bars</span>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersShowHealthBars" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="heart-pulse" class="w-4 h-4 text-base-content/50"></i>
+                    <span data-setting-label="settingPlayersShowHealthBars" class="text-base-content/80 text-xs group-hover:text-base-content">Show health bars</span>
                     <div class="tooltip" data-setting-tip="settingPlayersShowHealthBars" data-tip="Shows health bar on player cards when health data is available.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
             </div>
@@ -68,66 +68,66 @@
                 Alerts
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-3">
-                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-error/80">
+                <div class="space-y-2">
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="monitor" class="w-4 h-4"></i>
                         Screen
                     </h3>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                        <input type="checkbox" data-setting="settingAlertFlash" class="checkbox checkbox-error">
-                        <i data-lucide="zap" class="w-5 h-5 text-error"></i>
-                        <span data-setting-label="settingAlertFlash" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Screen Flash</span>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                        <input type="checkbox" data-setting="settingAlertFlash" class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="zap" class="w-4 h-4 text-base-content/50"></i>
+                        <span data-setting-label="settingAlertFlash" class="text-base-content/80 text-xs group-hover:text-base-content">Screen Flash</span>
                         <div class="tooltip" data-setting-tip="settingAlertFlash" data-tip="Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it.">
-                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                     </label>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
-                        <input type="checkbox" data-setting="settingAlertBorder" class="checkbox checkbox-error">
-                        <i data-lucide="square-dashed" class="w-5 h-5 text-error"></i>
-                        <span data-setting-label="settingAlertBorder" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Pulsating Border While Hostile Nearby</span>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-error/10 border border-error/20 cursor-pointer group hover:bg-error/20 transition-colors">
+                        <input type="checkbox" data-setting="settingAlertBorder" class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="square-dashed" class="w-4 h-4 text-base-content/50"></i>
+                        <span data-setting-label="settingAlertBorder" class="text-base-content/80 text-xs group-hover:text-base-content">Pulsating Border While Hostile Nearby</span>
                         <div class="tooltip" data-setting-tip="settingAlertBorder" data-tip="Pulses a red border around the radar while a threat is in range. Ignored names do not count.">
-                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                     </label>
                 </div>
-                <div class="space-y-3">
-                    <h3 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-warning/80">
+                <div class="space-y-2">
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="volume-2" class="w-4 h-4"></i>
                         Sound
                     </h3>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
-                        <input type="checkbox" data-setting="settingAlertSound" class="checkbox checkbox-warning">
-                        <i data-lucide="volume-2" class="w-5 h-5 text-warning"></i>
-                        <span data-setting-label="settingAlertSound" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Sound Alert</span>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-warning/10 border border-warning/20 cursor-pointer group hover:bg-warning/20 transition-colors">
+                        <input type="checkbox" data-setting="settingAlertSound" class="toggle toggle-primary toggle-sm">
+                        <i data-lucide="volume-2" class="w-4 h-4 text-base-content/50"></i>
+                        <span data-setting-label="settingAlertSound" class="text-base-content/80 text-xs group-hover:text-base-content">Sound Alert</span>
                         <div class="tooltip" data-setting-tip="settingAlertSound" data-tip="Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it.">
-                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                     </label>
-                    <div class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-                        <i data-lucide="list" class="w-5 h-5 text-warning"></i>
-                        <label for="settingAlertSoundFile" data-setting-label="settingAlertSoundFile" class="text-base-content/80 font-medium whitespace-nowrap">Sound</label>
+                    <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                        <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
+                        <label for="settingAlertSoundFile" data-setting-label="settingAlertSoundFile" class="text-base-content/80 text-xs whitespace-nowrap">Sound</label>
                         <select id="settingAlertSoundFile" data-setting="settingAlertSoundFile" class="select select-bordered select-sm ml-auto w-full max-w-56"></select>
-                        <button id="previewSound" type="button" class="btn btn-ghost btn-sm btn-square"
+                        <button id="previewSound" type="button" class="btn btn-ghost btn-xs btn-square"
                                 aria-label="Play the selected alert sound">
                             <i data-lucide="play" class="w-4 h-4"></i>
                         </button>
                     </div>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-                        <i data-lucide="sliders-horizontal" class="w-5 h-5 text-warning"></i>
-                        <span data-setting-label="settingAlertSoundVolume" class="text-base-content/80 font-medium whitespace-nowrap">Volume</span>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-base-content/50"></i>
+                        <span data-setting-label="settingAlertSoundVolume" class="text-base-content/80 text-xs group-hover:text-base-content whitespace-nowrap">Volume</span>
                         <input type="range" data-setting="settingAlertSoundVolume" min="0" max="1" step="0.05"
-                               class="range range-warning range-xs ml-auto w-full max-w-64">
-                        <span data-value-for="settingAlertSoundVolume" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
+                               class="range range-primary range-xs ml-auto w-full max-w-64">
+                        <span data-value-for="settingAlertSoundVolume" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
                     </label>
-                    <label class="flex items-center gap-3 p-3 rounded-lg bg-warning/10 border border-warning/20">
-                        <i data-lucide="hourglass" class="w-5 h-5 text-warning"></i>
-                        <span data-setting-label="settingAlertSoundCooldown" class="text-base-content/80 font-medium whitespace-nowrap">Cooldown</span>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <i data-lucide="hourglass" class="w-4 h-4 text-base-content/50"></i>
+                        <span data-setting-label="settingAlertSoundCooldown" class="text-base-content/80 text-xs group-hover:text-base-content whitespace-nowrap">Cooldown</span>
                         <div class="tooltip" data-setting-tip="settingAlertSoundCooldown" data-tip="Minimum delay between two alert sounds. At zero, every alert plays.">
-                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                         </div>
                         <input type="range" data-setting="settingAlertSoundCooldown" min="0" max="3000" step="100"
-                               class="range range-warning range-xs ml-auto w-full max-w-64">
-                        <span data-value-for="settingAlertSoundCooldown" class="text-xs text-base-content/60 font-mono w-14 text-right"></span>
+                               class="range range-primary range-xs ml-auto w-full max-w-64">
+                        <span data-value-for="settingAlertSoundCooldown" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
                     </label>
                 </div>
             </div>
@@ -140,29 +140,29 @@
                 <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
                 Player Types
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
-                    <input type="checkbox" data-setting="settingPlayersPassive" class="checkbox checkbox-success">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersPassive" class="checkbox checkbox-success checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-success"></span>
-                    <span data-setting-label="settingPlayersPassive" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Passive</span>
+                    <span data-setting-label="settingPlayersPassive" class="text-base-content/80 text-xs group-hover:text-base-content">Passive</span>
                     <div class="tooltip" data-setting-tip="settingPlayersPassive" data-tip="Show players who are not flagged for PvP.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
-                    <input type="checkbox" data-setting="settingPlayersFaction" class="checkbox checkbox-info">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersFaction" class="checkbox checkbox-info checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-info"></span>
-                    <span data-setting-label="settingPlayersFaction" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Faction</span>
+                    <span data-setting-label="settingPlayersFaction" class="text-base-content/80 text-xs group-hover:text-base-content">Faction</span>
                     <div class="tooltip" data-setting-tip="settingPlayersFaction" data-tip="Show players flagged for faction warfare.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
-                <label class="flex items-center gap-3 p-3 rounded-lg cursor-pointer group hover:bg-base-300/50 transition-colors">
-                    <input type="checkbox" data-setting="settingPlayersHostile" class="checkbox checkbox-error">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingPlayersHostile" class="checkbox checkbox-error checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-error"></span>
-                    <span data-setting-label="settingPlayersHostile" class="text-base-content/80 group-hover:text-base-content transition-colors font-medium">Hostile</span>
+                    <span data-setting-label="settingPlayersHostile" class="text-base-content/80 text-xs group-hover:text-base-content">Hostile</span>
                     <div class="tooltip" data-setting-tip="settingPlayersHostile" data-tip="Lists hostile-flagged players. In black zones every player counts as hostile, so this shows or hides all of them. Does not change alerts.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                        <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
                     </div>
                 </label>
             </div>
@@ -175,19 +175,15 @@
                 <i data-lucide="sliders-horizontal" class="w-5 h-5 text-primary"></i>
                 Limits
             </h2>
-            <div class="max-w-xs">
-                <label class="block">
-                    <span class="flex items-center gap-2 text-base-content/80 mb-2">
-                        <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
-                        <span data-setting-label="settingPlayersMaxDisplayed">Maximum Players Displayed</span>
-                        <div class="tooltip" data-setting-tip="settingPlayersMaxDisplayed" data-tip="Maximum number of players to display (1-100). Default: 50">
-                            <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                        </div>
-                    </span>
-                    <input type="number" data-setting="settingPlayersMaxDisplayed" min="1" max="100" step="1"
-                           class="input input-bordered w-full">
-                </label>
-            </div>
+            <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors max-w-xs">
+                <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
+                <span data-setting-label="settingPlayersMaxDisplayed" class="text-base-content/80 text-xs group-hover:text-base-content">Maximum Players Displayed</span>
+                <div class="tooltip" data-setting-tip="settingPlayersMaxDisplayed" data-tip="Maximum number of players to display (1-100). Default: 50">
+                    <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                </div>
+                <input type="number" data-setting="settingPlayersMaxDisplayed" min="1" max="100" step="1"
+                       class="input input-bordered input-sm w-32 disabled:opacity-50 ml-auto">
+            </label>
         </div>
     </div>
 </div>
