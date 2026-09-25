@@ -115,6 +115,21 @@ describe('NetworkSettingsHandler', () => {
         expect(links[1].href).toContain('10.0.0.3');
     });
 
+    test('rows, action buttons and LAN links wrap instead of widening a narrow page', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Intel(R) I211 Gigabit Network Connection', address: '192.168.1.37', category: 'ethernet', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: ['192.168.1.37'], status: 'running'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        expect(container.querySelector('[data-iface="a"]').classList.contains('flex-wrap')).toBe(true);
+        expect(container.querySelector('[data-action="refresh"]').parentElement.classList.contains('flex-wrap')).toBe(true);
+        expect(container.querySelector('[data-lan-url]').classList.contains('break-all')).toBe(true);
+    });
+
     test('shows awaiting banner when capture is not running', async () => {
         globalThis.fetch
             .mockResolvedValueOnce({ok: true, json: async () => []})

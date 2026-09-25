@@ -87,7 +87,7 @@
                     Category Filters
                     <span class="text-xs text-base-content/50 font-normal">(applies to DEBUG & INFO only)</span>
                 </h3>
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div class="grid grid-cols-1 min-[21rem]:grid-cols-2 md:grid-cols-3 gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingLogCategorySystem" class="checkbox checkbox-primary checkbox-xs">
                             <span data-setting-label="settingLogCategorySystem" class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
@@ -263,12 +263,12 @@
                     </label>
                 </div>
             </section>
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-4">
                 <button id="downloadLogsBtn" class="btn btn-primary btn-sm">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     Export Debug Data
                 </button>
-                <span class="text-xs text-base-content/50">Downloads registry settings, UI state and backend logging values as JSON. The ignore list is not included.</span>
+                <span class="flex-1 basis-40 max-w-max text-xs text-base-content/50">Downloads registry settings, UI state and backend logging values as JSON. The ignore list is not included.</span>
             </div>
         </div>
     </div>

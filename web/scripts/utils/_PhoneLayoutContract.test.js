@@ -49,6 +49,26 @@ describe('phone layout contract', () => {
         expect(main).toContain('overflow-y-auto');
     });
 
+    test('rows that set the page minimum width wrap on narrow screens', () => {
+        const flexWrap = el => el?.classList.contains('flex-wrap');
+        mountPage('radar');
+        expect(flexWrap(document.querySelector('#playersSection h3'))).toBe(true);
+        for (const key of ['settingRadarClusterRadius', 'settingRadarClusterMinSize']) {
+            expect(flexWrap(document.querySelector(`[data-setting="${key}"]`).closest('label')), key).toBe(true);
+        }
+        mountPage('enemies');
+        const titles = [...document.querySelectorAll('.collapse-title')].filter(t => t.querySelector('.badge'));
+        expect(titles.length).toBeGreaterThan(0);
+        expect(titles.every(flexWrap)).toBe(true);
+        expect(flexWrap(document.querySelector('[data-setting="settingEnemiesMinHealth"]').closest('label'))).toBe(true);
+        mountPage('settings');
+        const exportRow = document.getElementById('downloadLogsBtn').parentElement;
+        expect(flexWrap(exportRow)).toBe(true);
+        expect(exportRow.querySelector('span').className).toContain('max-w-max');
+        const categoryGrid = document.querySelector('[data-setting="settingLogCategorySystem"]').closest('.grid');
+        expect(categoryGrid.classList.contains('grid-cols-1')).toBe(true);
+    });
+
     test('the mobile drawer footer stays in flow above a scrolling nav', () => {
         const root = loadLayout('sidebar.gohtml');
         const aside = root.querySelector('#mobile-sidebar');

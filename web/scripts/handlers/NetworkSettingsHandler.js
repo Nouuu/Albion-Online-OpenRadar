@@ -32,7 +32,7 @@ export class NetworkSettingsHandler {
         const rows = this.interfaces.map(i => this.renderRow(i, activeNames.has(i.name))).join('');
         const lan = (this.state?.lanAddresses ?? []).map(a => {
             const safe = escapeHTML(a);
-            return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary">http://${safe}:5001/</a></li>`;
+            return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary break-all">http://${safe}:5001/</a></li>`;
         }).join('');
         this.container.innerHTML = `
             ${banner}
@@ -40,7 +40,7 @@ export class NetworkSettingsHandler {
             <h3 class="text-base font-semibold mt-2">Capture interfaces</h3>
             <p class="text-sm opacity-70 mb-2">Captured packets are merged across all checked interfaces. Tick at least one to start capture.</p>
             <div class="flex flex-col gap-1">${rows}</div>
-            <div class="flex gap-2 mt-3">
+            <div class="flex flex-wrap gap-2 mt-3">
                 <button class="btn btn-sm" data-action="refresh">Refresh list</button>
                 <button class="btn btn-sm btn-primary" data-action="apply" disabled>Apply changes</button>
             </div>
@@ -81,7 +81,7 @@ export class NetworkSettingsHandler {
         const label = BADGE_LABEL[iface.category] ?? BADGE_LABEL.other;
         const unavail = iface.isAvailable ? '' : ' <span class="opacity-60">(unavailable)</span>';
         return `
-            <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${escapeHTML(iface.name)}">
+            <label class="flex flex-wrap items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${escapeHTML(iface.name)}">
                 <input type="checkbox" class="checkbox checkbox-sm" ${checked ? 'checked' : ''} ${iface.isAvailable ? '' : 'disabled'}>
                 <span class="badge badge-outline">${badge} ${label}</span>
                 <span class="flex-1">${escapeHTML(iface.description || iface.name)}${unavail}</span>
