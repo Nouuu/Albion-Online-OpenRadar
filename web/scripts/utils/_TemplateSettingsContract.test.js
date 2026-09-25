@@ -464,7 +464,8 @@ describe('settings control tile contract', () => {
     });
 
     test('the tooltip bubble caps its width to the viewport minus a gutter', () => {
-        expect(inputCss).toMatch(/\.tooltip\[data-tip]:before\s*\{\s*max-width:\s*min\(16rem, calc\(100vw - 2rem\)\);\s*}/);
+        expect(inputCss).toMatch(/\.tooltip\[data-tip]::before\s*\{\s*max-width:\s*min\(16rem, calc\(100vw - 2rem\)\);[^}]*}/);
+        expect(inputCss.match(/\.tooltip\[data-tip]/g)).toHaveLength(1);
     });
 
     test('a hidden tooltip bubble and tail take no layout space', () => {

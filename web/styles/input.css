@@ -28,11 +28,8 @@
     --font-mono: 'JetBrains Mono', monospace;
 }
 
-.tooltip[data-tip]:before {
-    max-width: min(16rem, calc(100vw - 2rem));
-}
-
 .tooltip[data-tip]::before {
+    max-width: min(16rem, calc(100vw - 2rem));
     translate: var(--tt-nudge, 0) 0;
 }
 

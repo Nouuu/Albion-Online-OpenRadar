@@ -124,7 +124,7 @@ describe('bindTooltipPlacement', () => {
 
 describe('tooltip placement wiring', () => {
     test('the bubble applies the nudge as a translate', () => {
-        expect(inputCss).toMatch(/\.tooltip\[data-tip]::before\s*\{\s*translate:\s*var\(--tt-nudge, 0\) 0;\s*}/);
+        expect(inputCss).toMatch(/\.tooltip\[data-tip]::before\s*\{[^}]*translate:\s*var\(--tt-nudge, 0\) 0;\s*}/);
     });
 
     test('base.gohtml loads the placement module', () => {
