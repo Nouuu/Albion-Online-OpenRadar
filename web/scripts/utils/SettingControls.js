@@ -42,7 +42,6 @@ const KINDS = {
         },
     },
     number: {
-        textEntry: true,
         show: showValue,
         listen(el, entry, sync, signal) {
             el.addEventListener('change', () => {
@@ -175,7 +174,7 @@ function render(root, sync, key) {
     const value = sync.get(key);
     for (const el of root.querySelectorAll(`[data-setting="${key}"]`)) {
         const kind = KINDS[kindOf(el, entry)];
-        if (!kind || (kind.textEntry && el === document.activeElement)) continue;
+        if (!kind || el === document.activeElement) continue;
         kind.show(el, entry, value);
     }
     for (const readout of root.querySelectorAll(`[data-value-for="${key}"]`)) {
@@ -184,6 +183,12 @@ function render(root, sync, key) {
     for (const dependent of root.querySelectorAll(`[data-enabled-by="${key}"]`)) {
         dependent.disabled = value !== true;
     }
+}
+
+function showStored(el, sync) {
+    const entry = localEntry(el.dataset?.setting);
+    const kind = KINDS[kindOf(el, entry)];
+    if (entry && kind) kind.show(el, entry, sync.get(entry.key));
 }
 
 function onButton(root, sync, event) {
@@ -214,6 +219,7 @@ export function bindSettingControls(root, signal, sync = settingsSync) {
     keys.forEach(key => render(root, sync, key));
 
     root.addEventListener('click', event => onButton(root, sync, event), {signal: bound});
+    root.addEventListener('focusout', event => showStored(event.target, sync), {signal: bound});
     const onChange = key => render(root, sync, key);
     sync.on('*', onChange);
     bound.addEventListener('abort', () => sync.off('*', onChange), {once: true});

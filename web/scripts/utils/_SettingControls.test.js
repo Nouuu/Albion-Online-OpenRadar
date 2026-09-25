@@ -191,6 +191,39 @@ describe('bindSettingControls number (change only)', () => {
     });
 });
 
+describe('bindSettingControls focus guard', () => {
+    test.each([
+        ['slider', '<input type="range" min="0.1" max="3" step="0.1" data-setting="settingRadarZoom">', el => el.value, '1', sync => sync.setFloat('settingRadarZoom', 2), '2'],
+        ['checkbox', '<input type="checkbox" data-setting="settingEnemiesNormal">', el => el.checked, false, sync => sync.setBool('settingEnemiesNormal', true), true],
+        ['select', '<select data-setting="settingLogLevel"></select>', el => el.value, 'WARN', sync => sync.set('settingLogLevel', 'DEBUG'), 'DEBUG'],
+    ])('a focused %s is not rewritten by a change elsewhere, and catches up on blur', (_, markup, read, before, write, after) => {
+        const sync = newSync();
+        const root = mount(markup);
+        bind(root, sync);
+        const el = root.querySelector('[data-setting]');
+        el.focus();
+
+        write(sync);
+        expect(read(el)).toBe(before);
+
+        el.blur();
+        expect(read(el)).toBe(after);
+    });
+
+    test('a focused number field catches up on blur', () => {
+        const sync = newSync();
+        const root = mount('<input type="number" data-setting="settingEnemiesMinHealth">');
+        bind(root, sync);
+        const input = root.querySelector('input');
+        input.focus();
+
+        sync.setNumber('settingEnemiesMinHealth', 5000);
+        input.blur();
+
+        expect(input.value).toBe('5000');
+    });
+});
+
 describe('bindSettingControls select', () => {
     test('select fills options from the registry and writes on change', () => {
         const sync = newSync();
