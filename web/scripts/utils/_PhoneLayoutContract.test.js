@@ -17,7 +17,7 @@ function loadLayout(name) {
 
 describe('phone layout contract', () => {
     test('input.css declares the phone-landscape custom variant', () => {
-        expect(inputCss).toContain('@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 500px));');
+        expect(inputCss).toContain('@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse));');
     });
 
     test('base.gohtml uses h-dvh, not h-screen', () => {
