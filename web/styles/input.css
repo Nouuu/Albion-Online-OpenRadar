@@ -27,3 +27,7 @@
     --font-display: 'Space Grotesk', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
 }
+
+.tooltip[data-tip]:before {
+    max-width: min(16rem, 25vw);
+}
