@@ -163,6 +163,29 @@ describe('template settings contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('a control whose label holds a tooltip is named by its label text only', () => {
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('label [data-setting]')].flatMap(el => {
+            const label = el.closest('label');
+            if (!label.querySelector('.tooltip')) return [];
+            const text = label.querySelector(`[data-setting-label="${el.dataset.setting}"]`);
+            const id = el.getAttribute('aria-labelledby');
+            const target = id ? root.querySelector(`[id="${id}"]`) : null;
+            const ok = text !== null && (id
+                ? target === text && !target.querySelector('.tooltip')
+                : el.getAttribute('aria-label') === normalized(text));
+            return ok ? [] : [`${name}: ${el.dataset.setting}`];
+        }));
+        expect(drift).toEqual([]);
+    });
+
+    test('ids are unique on every page', () => {
+        const dupes = pages.flatMap(({name, root}) => {
+            const ids = [...root.querySelectorAll('[id]')].map(el => el.id);
+            return ids.filter((id, index) => ids.indexOf(id) !== index).map(id => `${name}: ${id}`);
+        });
+        expect(dupes).toEqual([]);
+    });
+
     test('every bound control with a registry tooltip shows it on the same page', () => {
         const missing = controls.filter(({page, el}) => registryEntry(el.dataset.setting)?.tooltip
             && !all(`[data-setting-tip="${el.dataset.setting}"]`).some(tip => tip.page === page))

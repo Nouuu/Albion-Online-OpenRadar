@@ -33,7 +33,7 @@
         <input type="checkbox" data-setting="settingUiSettingsLoggingOpen"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="scroll-text" class="w-5 h-5 text-info"></i>
-            <span data-setting-label="settingUiSettingsLoggingOpen">Logging</span>
+            <span id="label-settingUiSettingsLoggingOpen" data-setting-label="settingUiSettingsLoggingOpen">Logging</span>
         </div>
         <div class="collapse-content">
             <p class="text-xs text-base-content/60 mt-1 pb-2">Logs land in <code>logs/sessions/</code>, <code>logs/debug/</code>, <code>logs/errors/</code>. Backend errors are always saved to <code>logs/errors/</code>. Browser errors are saved only while this browser sends its logs (Settings &gt; Logging &gt; "Save browser logs").</p>
@@ -41,7 +41,7 @@
                 <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                        <span data-setting-label="settingLogLevel">Log Level</span>
+                        <span id="label-settingLogLevel" data-setting-label="settingLogLevel">Log Level</span>
                         <div class="tooltip" data-setting-tip="settingLogLevel" data-tip="Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything.">
                             <span tabindex="0" role="img" aria-label="Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
@@ -62,17 +62,17 @@
                     </h3>
                     <div class="space-y-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogToConsole" class="toggle toggle-primary toggle-sm">
+                            <input type="checkbox" data-setting="settingLogToConsole" aria-labelledby="label-settingLogToConsole" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="terminal" class="w-4 h-4 text-base-content/50"></i>
-                            <span data-setting-label="settingLogToConsole" class="text-base-content/80 text-xs group-hover:text-base-content">Browser Console (F12)</span>
+                            <span id="label-settingLogToConsole" data-setting-label="settingLogToConsole" class="text-base-content/80 text-xs group-hover:text-base-content">Browser Console (F12)</span>
                             <div class="tooltip" data-setting-tip="settingLogToConsole" data-tip="Print logs in the browser DevTools console.">
                                 <span tabindex="0" role="img" aria-label="Print logs in the browser DevTools console." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogToServer" class="toggle toggle-primary toggle-sm">
+                            <input type="checkbox" data-setting="settingLogToServer" aria-labelledby="label-settingLogToServer" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="server" class="w-4 h-4 text-base-content/50"></i>
-                            <span data-setting-label="settingLogToServer" class="text-base-content/80 text-xs group-hover:text-base-content">Save browser logs</span>
+                            <span id="label-settingLogToServer" data-setting-label="settingLogToServer" class="text-base-content/80 text-xs group-hover:text-base-content">Save browser logs</span>
                             <div class="tooltip" data-setting-tip="settingLogToServer" data-tip="Sends browser log entries that pass the level and category filters to the radar PC, in logs/debug/. ERROR and CRITICAL entries are also copied to logs/errors/.">
                                 <span tabindex="0" role="img" aria-label="Sends browser log entries that pass the level and category filters to the radar PC, in logs/debug/. ERROR and CRITICAL entries are also copied to logs/errors/." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
@@ -89,57 +89,57 @@
                 </h3>
                 <div class="grid grid-cols-1 min-[21rem]:grid-cols-2 md:grid-cols-3 gap-2">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategorySystem" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategorySystem" class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
+                            <input type="checkbox" data-setting="settingLogCategorySystem" aria-labelledby="label-settingLogCategorySystem" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategorySystem" data-setting-label="settingLogCategorySystem" class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
                             <div class="tooltip" data-setting-tip="settingLogCategorySystem" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryNetwork" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryNetwork" class="text-base-content/80 text-xs group-hover:text-base-content">Network</span>
+                            <input type="checkbox" data-setting="settingLogCategoryNetwork" aria-labelledby="label-settingLogCategoryNetwork" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryNetwork" data-setting-label="settingLogCategoryNetwork" class="text-base-content/80 text-xs group-hover:text-base-content">Network</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryNetwork" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryMap" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryMap" class="text-base-content/80 text-xs group-hover:text-base-content">Map</span>
+                            <input type="checkbox" data-setting="settingLogCategoryMap" aria-labelledby="label-settingLogCategoryMap" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryMap" data-setting-label="settingLogCategoryMap" class="text-base-content/80 text-xs group-hover:text-base-content">Map</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryMap" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryPlayers" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryPlayers" class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
+                            <input type="checkbox" data-setting="settingLogCategoryPlayers" aria-labelledby="label-settingLogCategoryPlayers" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryPlayers" data-setting-label="settingLogCategoryPlayers" class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryPlayers" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryMobs" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryMobs" class="text-base-content/80 text-xs group-hover:text-base-content">Mobs</span>
+                            <input type="checkbox" data-setting="settingLogCategoryMobs" aria-labelledby="label-settingLogCategoryMobs" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryMobs" data-setting-label="settingLogCategoryMobs" class="text-base-content/80 text-xs group-hover:text-base-content">Mobs</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryMobs" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryResources" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryResources" class="text-base-content/80 text-xs group-hover:text-base-content">Harvestables</span>
+                            <input type="checkbox" data-setting="settingLogCategoryResources" aria-labelledby="label-settingLogCategoryResources" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryResources" data-setting-label="settingLogCategoryResources" class="text-base-content/80 text-xs group-hover:text-base-content">Harvestables</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryResources" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryDungeons" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryDungeons" class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
+                            <input type="checkbox" data-setting="settingLogCategoryDungeons" aria-labelledby="label-settingLogCategoryDungeons" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryDungeons" data-setting-label="settingLogCategoryDungeons" class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryDungeons" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                            <input type="checkbox" data-setting="settingLogCategoryFishing" class="checkbox checkbox-primary checkbox-xs">
-                            <span data-setting-label="settingLogCategoryFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
+                            <input type="checkbox" data-setting="settingLogCategoryFishing" aria-labelledby="label-settingLogCategoryFishing" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryFishing" data-setting-label="settingLogCategoryFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
                             <div class="tooltip" data-setting-tip="settingLogCategoryFishing" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
                                 <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
@@ -153,7 +153,7 @@
         <input type="checkbox" data-setting="settingUiSettingsDebugOpen"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="bug" class="w-5 h-5 text-warning"></i>
-            <span data-setting-label="settingUiSettingsDebugOpen">Debug</span>
+            <span id="label-settingUiSettingsDebugOpen" data-setting-label="settingUiSettingsDebugOpen">Debug</span>
             <span class="text-xs text-base-content/50 ml-auto mr-6">Advanced</span>
         </div>
         <div class="collapse-content space-y-4">
@@ -164,27 +164,27 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugEnemiesUnidentified" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugEnemiesUnidentified" class="text-base-content/80 text-xs group-hover:text-base-content">Show unidentified enemies</span>
+                        <input type="checkbox" data-setting="settingDebugEnemiesUnidentified" aria-labelledby="label-settingDebugEnemiesUnidentified" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugEnemiesUnidentified" data-setting-label="settingDebugEnemiesUnidentified" class="text-base-content/80 text-xs group-hover:text-base-content">Show unidentified enemies</span>
                         <div class="tooltip" data-setting-tip="settingDebugEnemiesUnidentified" data-tip="Shows enemies whose type is missing from the bundled mob data, usually new mobs after a game update. The Normal to Boss filters do not apply to them.">
                             <span tabindex="0" role="img" aria-label="Shows enemies whose type is missing from the bundled mob data, usually new mobs after a game update. The Normal to Boss filters do not apply to them." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugEnemiesTypeId" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugEnemiesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
+                        <span id="label-settingDebugEnemiesTypeId" data-setting-label="settingDebugEnemiesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugEnemiesTier" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugEnemiesTier" class="text-base-content/80 text-xs group-hover:text-base-content">Show Tier</span>
+                        <span id="label-settingDebugEnemiesTier" data-setting-label="settingDebugEnemiesTier" class="text-base-content/80 text-xs group-hover:text-base-content">Show Tier</span>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugEnemiesName" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugEnemiesName" class="text-base-content/80 text-xs group-hover:text-base-content">Show Name</span>
+                        <span id="label-settingDebugEnemiesName" data-setting-label="settingDebugEnemiesName" class="text-base-content/80 text-xs group-hover:text-base-content">Show Name</span>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugEnemiesCategoryBadge" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugEnemiesCategoryBadge" class="text-base-content/80 text-xs group-hover:text-base-content">Show Category Badge</span>
+                        <span id="label-settingDebugEnemiesCategoryBadge" data-setting-label="settingDebugEnemiesCategoryBadge" class="text-base-content/80 text-xs group-hover:text-base-content">Show Category Badge</span>
                     </label>
                 </div>
             </section>
@@ -195,15 +195,15 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugResourcesTypeId" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugResourcesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
+                        <input type="checkbox" data-setting="settingDebugResourcesTypeId" aria-labelledby="label-settingDebugResourcesTypeId" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugResourcesTypeId" data-setting-label="settingDebugResourcesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
                         <div class="tooltip" data-setting-tip="settingDebugResourcesTypeId" data-tip="Draws the internal type ID on resource nodes and living resources (debug).">
                             <span tabindex="0" role="img" aria-label="Draws the internal type ID on resource nodes and living resources (debug)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugResourcesDbName" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugResourcesDbName" class="text-base-content/80 text-xs group-hover:text-base-content">Show DB Name</span>
+                        <input type="checkbox" data-setting="settingDebugResourcesDbName" aria-labelledby="label-settingDebugResourcesDbName" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugResourcesDbName" data-setting-label="settingDebugResourcesDbName" class="text-base-content/80 text-xs group-hover:text-base-content">Show DB Name</span>
                         <div class="tooltip" data-setting-tip="settingDebugResourcesDbName" data-tip="Display the DB uniqueName mapped from the wire typeId (debug, for offset/mapping verification).">
                             <span tabindex="0" role="img" aria-label="Display the DB uniqueName mapped from the wire typeId (debug, for offset/mapping verification)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
@@ -218,7 +218,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugMistsWispIds" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugMistsWispIds" class="text-base-content/80 text-xs group-hover:text-base-content">Show wisp ID (debug)</span>
+                        <span id="label-settingDebugMistsWispIds" data-setting-label="settingDebugMistsWispIds" class="text-base-content/80 text-xs group-hover:text-base-content">Show wisp ID (debug)</span>
                     </label>
                 </div>
             </section>
@@ -229,16 +229,16 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugWsCoalescing" class="toggle toggle-primary toggle-sm">
-                        <span data-setting-label="settingDebugWsCoalescing" class="text-base-content/80 text-xs group-hover:text-base-content">Merge entity updates per frame</span>
+                        <input type="checkbox" data-setting="settingDebugWsCoalescing" aria-labelledby="label-settingDebugWsCoalescing" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugWsCoalescing" data-setting-label="settingDebugWsCoalescing" class="text-base-content/80 text-xs group-hover:text-base-content">Merge entity updates per frame</span>
                         <div class="tooltip" data-setting-tip="settingDebugWsCoalescing" data-tip="Keeps only the latest move, health and regeneration update per entity until the next frame is drawn.">
                             <span tabindex="0" role="img" aria-label="Keeps only the latest move, health and regeneration update per entity until the next frame is drawn." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
                     </label>
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" id="settingDebugPcapRecording" data-setting="settingDebugPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                        <input type="checkbox" aria-labelledby="label-settingDebugPcapRecording" id="settingDebugPcapRecording" data-setting="settingDebugPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
                         <i data-lucide="circle-dot" class="w-4 h-4 text-base-content/50"></i>
-                        <span data-setting-label="settingDebugPcapRecording" class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
+                        <span id="label-settingDebugPcapRecording" data-setting-label="settingDebugPcapRecording" class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
                         <div class="tooltip" data-setting-tip="settingDebugPcapRecording" data-tip="Records Albion game traffic (UDP 5056) to logs/captures/, one .pcap per capture interface. Only changeable from the PC running the radar.">
                             <span tabindex="0" role="img" aria-label="Records Albion game traffic (UDP 5056) to logs/captures/, one .pcap per capture interface. Only changeable from the PC running the radar." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
@@ -253,9 +253,9 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" id="settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                        <input type="checkbox" aria-labelledby="label-settingDebugBackendLogs" id="settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
                         <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
-                        <span data-setting-label="settingDebugBackendLogs" class="text-base-content/80 text-xs group-hover:text-base-content">Save backend logs</span>
+                        <span id="label-settingDebugBackendLogs" data-setting-label="settingDebugBackendLogs" class="text-base-content/80 text-xs group-hover:text-base-content">Save backend logs</span>
                         <div class="tooltip" data-setting-tip="settingDebugBackendLogs" data-tip="Writes one line per decoded game event to logs/sessions/. Only changeable from the PC running the radar.">
                             <span tabindex="0" role="img" aria-label="Writes one line per decoded game event to logs/sessions/. Only changeable from the PC running the radar." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
@@ -277,7 +277,7 @@
         <input type="checkbox" data-setting="settingUiSettingsNetworkOpen"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="wifi" class="w-5 h-5 text-primary"></i>
-            <span data-setting-label="settingUiSettingsNetworkOpen">Network</span>
+            <span id="label-settingUiSettingsNetworkOpen" data-setting-label="settingUiSettingsNetworkOpen">Network</span>
         </div>
         <div class="collapse-content">
             <div id="network-section" class="text-base-content/80"{{if not .IsHost}} data-locked{{end}}>Loading network configuration…</div>

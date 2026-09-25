@@ -13,7 +13,7 @@
         <input type="checkbox" data-setting="settingUiResourcesFiberOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="flower-2" class="w-5 h-5 text-green-400"></i>
-            <span data-setting-label="settingUiResourcesFiberOpen">Fiber</span>
+            <span id="label-settingUiResourcesFiberOpen" data-setting-label="settingUiResourcesFiberOpen">Fiber</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -27,7 +27,7 @@
         <input type="checkbox" data-setting="settingUiResourcesHideOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="rabbit" class="w-5 h-5 text-amber-400"></i>
-            <span data-setting-label="settingUiResourcesHideOpen">Hide</span>
+            <span id="label-settingUiResourcesHideOpen" data-setting-label="settingUiResourcesHideOpen">Hide</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -41,7 +41,7 @@
         <input type="checkbox" data-setting="settingUiResourcesWoodOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="tree-pine" class="w-5 h-5 text-emerald-400"></i>
-            <span data-setting-label="settingUiResourcesWoodOpen">Wood</span>
+            <span id="label-settingUiResourcesWoodOpen" data-setting-label="settingUiResourcesWoodOpen">Wood</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -55,7 +55,7 @@
         <input type="checkbox" data-setting="settingUiResourcesOreOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="gem" class="w-5 h-5 text-blue-400"></i>
-            <span data-setting-label="settingUiResourcesOreOpen">Ore</span>
+            <span id="label-settingUiResourcesOreOpen" data-setting-label="settingUiResourcesOreOpen">Ore</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -69,7 +69,7 @@
         <input type="checkbox" data-setting="settingUiResourcesRockOpen" />
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="mountain" class="w-5 h-5 text-gray-400"></i>
-            <span data-setting-label="settingUiResourcesRockOpen">Rock</span>
+            <span id="label-settingUiResourcesRockOpen" data-setting-label="settingUiResourcesRockOpen">Rock</span>
         </div>
         <div class="collapse-content">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -86,8 +86,8 @@
                 Other
             </h2>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                <input type="checkbox" data-setting="settingResourcesFishing" class="toggle toggle-primary toggle-sm">
-                <span data-setting-label="settingResourcesFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Show Fishing Pools</span>
+                <input type="checkbox" data-setting="settingResourcesFishing" aria-labelledby="label-settingResourcesFishing" class="toggle toggle-primary toggle-sm">
+                <span id="label-settingResourcesFishing" data-setting-label="settingResourcesFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Show Fishing Pools</span>
                 <div class="tooltip" data-setting-tip="settingResourcesFishing" data-tip="Shows fishing spots on the radar.">
                     <span tabindex="0" role="img" aria-label="Shows fishing spots on the radar." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                 </div>
@@ -102,8 +102,8 @@
                 Display
             </h2>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                <input type="checkbox" data-setting="settingResourcesShowHealthBars" class="toggle toggle-primary toggle-sm">
-                <span data-setting-label="settingResourcesShowHealthBars" class="text-base-content/80 text-xs group-hover:text-base-content">Show health bars</span>
+                <input type="checkbox" data-setting="settingResourcesShowHealthBars" aria-labelledby="label-settingResourcesShowHealthBars" class="toggle toggle-primary toggle-sm">
+                <span id="label-settingResourcesShowHealthBars" data-setting-label="settingResourcesShowHealthBars" class="text-base-content/80 text-xs group-hover:text-base-content">Show health bars</span>
                 <div class="tooltip" data-setting-tip="settingResourcesShowHealthBars" data-tip="Display health bar on living resources (mobs).">
                     <span tabindex="0" role="img" aria-label="Display health bar on living resources (mobs)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                 </div>
