@@ -56,7 +56,7 @@ describe('MobsHandler', () => {
             expect(handler.mistList[0].type).toBe(0);
         });
 
-        test('pcap-derived portal-wisp: duo uncommon wisp carries its enchant from Parameters[34]', async () => {
+        test('pcap-derived portal-wisp: duo wisp carries enchant value 2 from Parameters[34]', async () => {
             const fx = await loadFixture('mists', 'portal-wisp-spawn');
             const msg = fx.messages.find(m => m.parameters['33'] === 'MISTS_DUO_BLACK');
             expect(msg).toBeDefined();
@@ -1134,7 +1134,7 @@ describe('MobsHandler', () => {
             expect(handler.getSize().mists).toBe(1);
         });
 
-        // @verified 2026-09-03: feu follet rarity arrives via Parameters[34] since Dragonfire; the duo uncommon portal in the 2026-09-03 capture carries 2.
+        // @verified 2026-09-03: feu follet rarity arrives via Parameters[34] since Dragonfire; the duo portal in the 2026-09-03 capture carries 2.
         test('MIST-6: AddMist forwards Parameters[34] to Mist.enchant', () => {
             handler.NewMobEvent(normalizeParams({'0': 9410, '1': 94, '2': 255, '7': [0, 0], '13': 1, '33': 'MISTS_SOLO_YELLOW', '34': 0}));
             expect(handler.mistList[0].enchant).toBe(0);
