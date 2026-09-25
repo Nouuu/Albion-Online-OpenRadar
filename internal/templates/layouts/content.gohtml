@@ -14,25 +14,8 @@
         {{range .NavItems}}'{{.Path}}': {{.Active}},{{end}}
     };
 
-    ['desktop-nav', 'mobile-nav'].forEach(function(navId) {
-        var nav = document.getElementById(navId);
-        if (!nav) return;
-
-        nav.querySelectorAll('a[href]').forEach(function(link) {
-            var path = link.getAttribute('href');
-            var isActive = pages[path] || false;
-
-            // Remove all state classes
-            link.classList.remove('text-primary', 'border-l-2', 'border-primary', '-ml-px', 'pl-2.5');
-            link.classList.remove('text-base-content/60', 'hover:text-base-content/80', 'hover:bg-base-content/[0.02]');
-
-            if (isActive) {
-                link.classList.add('text-primary', 'border-l-2', 'border-primary', '-ml-px', 'pl-2.5');
-            } else {
-                link.classList.add('text-base-content/60', 'hover:text-base-content/80', 'hover:bg-base-content/[0.02]');
-            }
-        });
-    });
+    var active = Object.keys(pages).filter(function(path) { return pages[path]; })[0];
+    window.sidebar.markActive(active);
 })();
 </script>
 

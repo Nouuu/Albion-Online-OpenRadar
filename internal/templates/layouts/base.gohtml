@@ -99,6 +99,16 @@
                 if (sidebar) {
                     sidebar.style.width = this.isExpanded ? '16rem' : '5rem';
                 }
+            },
+
+            navActive: ['text-primary', 'border-l-2', 'border-primary', '-ml-px', 'pl-2.5'],
+            navInactive: ['text-base-content/60', 'hover:text-base-content/80', 'hover:bg-base-content/[0.02]'],
+
+            markActive(path) {
+                document.querySelectorAll('#desktop-nav a[href], #mobile-nav a[href]').forEach(link => {
+                    link.classList.remove(...this.navActive, ...this.navInactive);
+                    link.classList.add(...(link.getAttribute('href') === path ? this.navActive : this.navInactive));
+                });
             }
         };
     </script>
@@ -179,19 +189,9 @@
         });
 
         // Update sidebar active state on navigation
-        document.addEventListener('htmx:pushedIntoHistory', (_e) => {
-            const currentPath = window.location.pathname;
-            const baseClasses = 'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors';
-            const activeClasses = 'text-primary border-l-2 border-primary -ml-px pl-2.5';
-            const inactiveClasses = 'text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]';
-
-            document.querySelectorAll('#desktop-nav a, #mobile-nav a').forEach(link => {
-                const linkPath = link.getAttribute('href');
-                const isActive = linkPath === currentPath;
-
-                link.className = baseClasses + ' ' + (isActive ? activeClasses : inactiveClasses);
-            });
-        });
+        for (const event of ['htmx:pushedIntoHistory', 'htmx:historyRestore']) {
+            document.addEventListener(event, () => window.sidebar.markActive(window.location.pathname));
+        }
     </script>
 </body>
 </html>
