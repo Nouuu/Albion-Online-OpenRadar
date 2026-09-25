@@ -138,7 +138,7 @@ export class NetworkSettingsHandler {
             if (!res.ok) {
                 const txt = await res.text();
                 window.toast?.error?.(`Apply failed: ${txt}`);
-                if (btn) btn.disabled = false;
+                await this.load();
                 return;
             }
             window.toast?.success?.('Capture interfaces updated.');

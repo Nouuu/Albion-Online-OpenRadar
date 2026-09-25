@@ -182,13 +182,17 @@ describe('NetworkSettingsHandler', () => {
         expect(btn.disabled).toBe(false);
     });
 
-    test('apply shows error toast on backend 400', async () => {
+    test('apply shows error toast on backend 400 then reloads to the server truth', async () => {
         globalThis.fetch
             .mockResolvedValueOnce({ok: true, json: async () => [
                 {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: false, isAvailable: true},
             ]})
             .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})})
-            .mockResolvedValueOnce({ok: false, status: 400, text: async () => 'unknown interface names: [zzz]'});
+            .mockResolvedValueOnce({ok: false, status: 400, text: async () => 'unknown interface names: [zzz]'})
+            .mockResolvedValueOnce({ok: true, json: async () => [
+                {name: 'a', description: 'Wi-Fi', address: '1', category: 'wifi', isPersisted: false, isAvailable: true},
+            ]})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [], lanAddresses: [], status: 'awaiting_interfaces'})});
 
         const errorToast = vi.fn();
         window.toast = {error: errorToast, success: vi.fn()};
@@ -199,6 +203,9 @@ describe('NetworkSettingsHandler', () => {
         await h.apply();
 
         expect(errorToast).toHaveBeenCalledWith(expect.stringContaining('unknown interface names'));
+        expect(globalThis.fetch).toHaveBeenCalledTimes(5);
+        expect(container.querySelector('[data-iface="a"] input').checked).toBe(false);
+        expect(container.querySelector('[data-action="apply"]').disabled).toBe(true);
     });
 
     test('apply handles network failure (fetch throws)', async () => {
