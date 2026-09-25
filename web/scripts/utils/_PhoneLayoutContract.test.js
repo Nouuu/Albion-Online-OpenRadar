@@ -32,10 +32,12 @@ describe('phone layout contract', () => {
         expect(panel.outerHTML).not.toContain('hidden sm:');
     });
 
-    test('radar canvases carry no sm:m-2.5 and the container carries ring-2', () => {
+    test('radar canvases carry no sm:m-2.5 and the container carries ring-2 and never outgrows the page', () => {
         mountPage('radar');
         const container = document.getElementById('canvasContainer');
         expect(container.className).toContain('ring-2');
+        expect(container.className).toContain('max-w-full');
+        expect(container.className).toContain('overflow-hidden');
         for (const canvas of container.querySelectorAll('canvas')) {
             expect(canvas.className).not.toContain('sm:m-2.5');
         }
