@@ -663,6 +663,18 @@ describe('radar settings panel sections', () => {
     });
 });
 
+describe('settings debug sections', () => {
+    const NAV_ICONS = Object.fromEntries([...readFileSync(join(ROOT, 'internal/templates/data.go'), 'utf8')
+        .matchAll(/Label: "([^"]+)", Icon: "([^"]+)"/g)].map(([, label, icon]) => [label, icon]));
+    const debug = pages.find(page => page.name === 'settings').root
+        .querySelector('[data-setting="settingUiSettingsDebugOpen"]').closest('.collapse');
+
+    test('the debug Resources section uses the sidebar Resources icon', () => {
+        const h3 = [...debug.querySelectorAll('section > h3')].find(el => normalized(el) === 'Resources');
+        expect(h3.querySelector('i[data-lucide]').dataset.lucide).toBe(NAV_ICONS.Resources);
+    });
+});
+
 describe('keyboard focus ring', () => {
     const appCss = readFileSync(join(ROOT, 'web/styles/app.css'), 'utf8');
 
