@@ -112,7 +112,7 @@ func MigrateIPTxt(appDir string, resolve IPResolver) (bool, error) {
 
 	cfg, err := readConfig(appDir)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("read existing config before migration: %w", err)
 	}
 	if len(cfg.CaptureInterfaces) > 0 {
 		_ = os.Remove(ipPath)

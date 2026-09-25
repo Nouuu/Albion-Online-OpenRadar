@@ -85,6 +85,20 @@ func TestMigrateFromIPTxt(t *testing.T) {
 	}
 }
 
+func TestMigrateIPTxtWrapsConfigReadError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "network.json"), []byte("{"), 0o644); err != nil {
+		t.Fatalf("WriteFile network.json: %v", err)
+	}
+	_, err := MigrateIPTxt(dir, nil)
+	if err == nil || !strings.Contains(err.Error(), "read existing config before migration: ") {
+		t.Fatalf("MigrateIPTxt error = %v, want the config read wrapped", err)
+	}
+}
+
 func TestMigrateNoIPTxt(t *testing.T) {
 	dir := t.TempDir()
 	migrated, err := MigrateIPTxt(dir, nil)
