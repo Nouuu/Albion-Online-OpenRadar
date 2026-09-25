@@ -28,9 +28,6 @@
                         <input type="checkbox" data-setting="settingEnemiesNormal" aria-labelledby="label-settingEnemiesNormal" class="checkbox checkbox-info checkbox-xs">
                         <span class="w-3 h-3 rounded-full bg-tier-3"></span>
                         <span id="label-settingEnemiesNormal" data-setting-label="settingEnemiesNormal" class="text-base-content/80 text-xs group-hover:text-base-content">Normal</span>
-                        <div class="tooltip" data-setting-tip="settingEnemiesNormal" data-tip="Show basic enemies (low threat, easiest to kill).">
-                            <span tabindex="0" role="img" aria-label="Show basic enemies (low threat, easiest to kill)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
                     </label>
 
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
@@ -46,18 +43,12 @@
                         <input type="checkbox" data-setting="settingEnemiesMiniBoss" aria-labelledby="label-settingEnemiesMiniBoss" class="checkbox checkbox-warning checkbox-xs">
                         <span class="w-3 h-3 rounded-full bg-tier-5"></span>
                         <span id="label-settingEnemiesMiniBoss" data-setting-label="settingEnemiesMiniBoss" class="text-base-content/80 text-xs group-hover:text-base-content">Mini-Boss</span>
-                        <div class="tooltip" data-setting-tip="settingEnemiesMiniBoss" data-tip="Show mini-bosses (strong enemies, valuable loot).">
-                            <span tabindex="0" role="img" aria-label="Show mini-bosses (strong enemies, valuable loot)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
                     </label>
 
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingEnemiesBoss" aria-labelledby="label-settingEnemiesBoss" class="checkbox checkbox-error checkbox-xs">
                         <span class="w-3 h-3 rounded-full bg-tier-7"></span>
                         <span id="label-settingEnemiesBoss" data-setting-label="settingEnemiesBoss" class="text-base-content/80 text-xs group-hover:text-base-content">Boss</span>
-                        <div class="tooltip" data-setting-tip="settingEnemiesBoss" data-tip="Show boss enemies (very high threat, best loot).">
-                            <span tabindex="0" role="img" aria-label="Show boss enemies (very high threat, best loot)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
                     </label>
                 </div>
 
@@ -66,8 +57,8 @@
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingEnemiesMinHealthFilter" aria-labelledby="label-settingEnemiesMinHealthFilter" class="toggle toggle-primary toggle-sm">
                             <span id="label-settingEnemiesMinHealthFilter" data-setting-label="settingEnemiesMinHealthFilter" class="text-base-content/80 text-xs group-hover:text-base-content">Show enemies with minimum HP</span>
-                            <div class="tooltip" data-setting-tip="settingEnemiesMinHealthFilter" data-tip="Hides Normal to Boss enemies and unidentified enemies whose maximum HP is below the threshold. Drones, Mists bosses, event enemies and living resources are not filtered.">
-                                <span tabindex="0" role="img" aria-label="Hides Normal to Boss enemies and unidentified enemies whose maximum HP is below the threshold. Drones, Mists bosses, event enemies and living resources are not filtered." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            <div class="tooltip" data-setting-tip="settingEnemiesMinHealthFilter" data-tip="Hides low-HP Normal-Boss enemies. Drones, Mists bosses, events, living resources exempt.">
+                                <span tabindex="0" role="img" aria-label="Hides low-HP Normal-Boss enemies. Drones, Mists bosses, events, living resources exempt." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
 
@@ -98,36 +89,24 @@
                     <input type="checkbox" data-setting="settingEnemiesMistsCrystalSpider" aria-labelledby="label-settingEnemiesMistsCrystalSpider" class="checkbox checkbox-primary checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-tier-4"></span>
                     <span id="label-settingEnemiesMistsCrystalSpider" data-setting-label="settingEnemiesMistsCrystalSpider" class="text-base-content/80 text-xs group-hover:text-base-content">Crystal Spider</span>
-                    <div class="tooltip" data-setting-tip="settingEnemiesMistsCrystalSpider" data-tip="Show Crystal Spider bosses (Mists exclusive).">
-                        <span tabindex="0" role="img" aria-label="Show Crystal Spider bosses (Mists exclusive)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
                 </label>
 
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesMistsFairyDragon" aria-labelledby="label-settingEnemiesMistsFairyDragon" class="checkbox checkbox-primary checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-tier-4"></span>
                     <span id="label-settingEnemiesMistsFairyDragon" data-setting-label="settingEnemiesMistsFairyDragon" class="text-base-content/80 text-xs group-hover:text-base-content">Fairy Dragon</span>
-                    <div class="tooltip" data-setting-tip="settingEnemiesMistsFairyDragon" data-tip="Show Fairy Dragon bosses (Mists exclusive).">
-                        <span tabindex="0" role="img" aria-label="Show Fairy Dragon bosses (Mists exclusive)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
                 </label>
 
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesMistsVeilWeaver" aria-labelledby="label-settingEnemiesMistsVeilWeaver" class="checkbox checkbox-primary checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-tier-4"></span>
                     <span id="label-settingEnemiesMistsVeilWeaver" data-setting-label="settingEnemiesMistsVeilWeaver" class="text-base-content/80 text-xs group-hover:text-base-content">Veil Weaver</span>
-                    <div class="tooltip" data-setting-tip="settingEnemiesMistsVeilWeaver" data-tip="Show Veil Weaver bosses (Mists exclusive).">
-                        <span tabindex="0" role="img" aria-label="Show Veil Weaver bosses (Mists exclusive)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
                 </label>
 
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesMistsGriffin" aria-labelledby="label-settingEnemiesMistsGriffin" class="checkbox checkbox-primary checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-tier-4"></span>
                     <span id="label-settingEnemiesMistsGriffin" data-setting-label="settingEnemiesMistsGriffin" class="text-base-content/80 text-xs group-hover:text-base-content">Griffin</span>
-                    <div class="tooltip" data-setting-tip="settingEnemiesMistsGriffin" data-tip="Show Griffin bosses (Mists exclusive).">
-                        <span tabindex="0" role="img" aria-label="Show Griffin bosses (Mists exclusive)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                    </div>
                 </label>
             </div>
         </div>

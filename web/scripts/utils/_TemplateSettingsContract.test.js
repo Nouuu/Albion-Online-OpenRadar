@@ -39,46 +39,46 @@ const LABELS = {
 };
 
 const NOT_DETECTED = 'Not detected yet: no mob is classified as this type today.';
-const CHEST_TIP = 'Loot chests of this rarity. The rarity is read from the chest name, so some chests are not shown.';
 const CATEGORY_TIP = 'Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.';
 
 const TOOLTIPS = {
-    settingRadarSize: 'Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.',
-    settingRadarFitToScreen: 'Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on.',
+    settingRadarSize: 'Width and height in pixels, shrunk on small windows. Ignored while Fit to screen is on.',
+    settingRadarFitToScreen: 'Largest square that fits the window, up to 1200 px, next to the player list when it sits beside. Overrides Max size.',
     settingRadarHudZoneInfo: 'Top-left box with the zone name, tier and a PvP marker.',
-    settingRadarHudStats: 'Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on.',
+    settingRadarHudStats: 'Top-right box: resource and mob counts, plus player count when detection is on.',
     settingRadarPlayersBeside: 'Shows the player list to the right of the radar when the window is wide enough.',
-    settingRadarResourceCount: 'Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish.',
-    settingRadarResourceDistance: 'Distance in meters beside each resource: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m.',
-    settingRadarResourceTierBadges: 'Replaces resource icons with squares colored by resource type, showing tier and enchantment. Living creatures get a gold border.',
-    settingRadarClusterRadius: 'Resources of the same type and tier within this distance of a node are grouped. Default: 30 m.',
+    settingRadarResourceCount: 'Estimated count from size/tier, bonuses excluded. Fishing shows spawned/total fish.',
+    settingRadarResourceDistance: 'Distance in meters: hidden under 2 m, green under 10 m, yellow 10-19 m, orange 20 m+.',
+    settingRadarResourceTierBadges: 'Colored squares by type instead of icons, with tier. Living creatures get a gold border.',
+    settingRadarClusterRadius: 'Groups same-type, same-tier resources within this range. Default 30 m.',
     settingRadarClusterMinSize: 'Smallest group drawn as a cluster. Default: 2.',
-    settingRadarResourceClusters: 'Rings groups of nearby resource nodes of the same type and tier, with the node count, total quantity and distance. Only nodes your resource filters show are grouped.',
+    settingRadarResourceClusters: 'Circles groups of nearby same-type nodes, with count and distance. Only nodes your filters show are grouped.',
     settingPlayersDetect: 'Tracks players in range. Off: no player list, no player counts, no flash, border or sound.',
-    settingPlayersHostile: 'Lists hostile-flagged players. In black zones every player counts as hostile, so this shows or hides all of them. Does not change alerts.',
-    settingAlertFlash: 'Flashes the radar page red when a threat appears or turns hostile: a hostile-flagged player in yellow and red zones, any player in black zones, nobody in safe or unknown zones. Ignored names never trigger it.',
-    settingAlertSound: 'Plays the selected sound on the PC running the radar when a threat appears or turns hostile, with the same threat rule as the flash. Ignored names never trigger it.',
+    settingPlayersHostile: 'Players flagged hostile, meaning everyone in black zones. Does not affect alerts.',
+    settingAlertFlash: 'Flashes on threats: hostile players in yellow/red, anyone in black. Ignored names excluded.',
+    settingAlertSound: 'Plays the alert sound, same trigger rule as Screen Flash. Ignored names never trigger it.',
     settingAlertBorder: 'Pulses a red border around the radar while a threat is in range. Ignored names do not count.',
     settingAlertSoundCooldown: 'Minimum delay between two alert sounds. At zero, every alert plays.',
     settingEnemiesChampion: 'Champion mobs, and solo mobs in random dungeons.',
-    settingEnemiesMinHealthFilter: 'Hides Normal to Boss enemies and unidentified enemies whose maximum HP is below the threshold. Drones, Mists bosses, event enemies and living resources are not filtered.',
+    settingEnemiesMinHealthFilter: 'Hides low-HP Normal-Boss enemies. Drones, Mists bosses, events, living resources exempt.',
     settingEnemiesAvalonianDrones: NOT_DETECTED,
     settingEnemiesEvent: NOT_DETECTED,
-    settingDebugEnemiesUnidentified: 'Shows enemies whose type is missing from the bundled mob data, usually new mobs after a game update. The Normal to Boss filters do not apply to them.',
-    settingResourcesFishing: 'Shows fishing spots on the radar.',
-    settingMistsWisps: 'Shows the wisp signs that appear before a Mists portal opens. The Solo/Duo and rarity filters also apply.',
-    settingMistsKnightfallAbbey: 'Shows Knightfall Abbey entrances.',
-    settingDungeonsGroup: 'Group random dungeon entrances, plus any entrance not recognized as solo, corrupted or hellgate. The E0 to E4 filters also apply.',
-    settingChestsGreen: CHEST_TIP,
-    settingChestsBlue: CHEST_TIP,
-    settingChestsPurple: CHEST_TIP,
-    settingChestsYellow: CHEST_TIP,
+    settingDebugEnemiesUnidentified: 'Shows enemies missing from mob data, usually new post-update mobs. Type filters skip them.',
     settingDebugResourcesTypeId: 'Draws the internal type ID on resource nodes and living resources (debug).',
-    settingDebugWsCoalescing: 'Keeps only the latest move, health and regeneration update per entity until the next frame is drawn.',
-    settingLogToServer: 'Sends browser log entries that pass the level and category filters to the radar PC, in logs/debug/. ERROR and CRITICAL entries are also copied to logs/errors/.',
-    settingLogLevel: 'Lowest level sent to the console and to the server. DEBUG and INFO entries also need their category. OFF drops everything.',
+    settingDebugResourcesDbName: 'Shows the DB name mapped from the wire type ID (debug, for offset verification).',
+    settingDebugWsCoalescing: 'Keeps only the latest move, health and regen update per entity each frame.',
+    settingDebugBackendLogs: 'Logs one line per game event to logs/sessions/. Only changeable on the radar PC.',
+    settingDebugPcapRecording: 'Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting.',
+    settingLogToServer: 'Saves filtered entries to logs/debug/. Errors are also copied to logs/errors/.',
+    settingLogLevel: 'The lowest level shown, though DEBUG and INFO also need their category on. OFF disables all logging.',
     ...Object.fromEntries(SETTINGS.filter(entry => entry.key.startsWith('settingLogCategory')).map(entry => [entry.key, CATEGORY_TIP])),
 };
+
+const NO_TOOLTIP = ['settingPlayersShowEquipment', 'settingPlayersShowSpells', 'settingEnemiesNormal', 'settingEnemiesMiniBoss',
+    'settingEnemiesBoss', 'settingEnemiesMistsCrystalSpider', 'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver',
+    'settingEnemiesMistsGriffin', 'settingResourcesFishing', 'settingChestsGreen', 'settingChestsBlue', 'settingChestsPurple',
+    'settingChestsYellow', 'settingMistsSolo', 'settingMistsDuo', 'settingMistsWispCages', 'settingMistsWisps',
+    'settingMistsKnightfallAbbey', 'settingDungeonsSolo', 'settingDungeonsGroup', 'settingLogToConsole'];
 
 function templateOf(name) {
     return readFileSync(join(PAGES_DIR, `${name}.gohtml`), 'utf8');
@@ -373,6 +373,21 @@ describe('registry labels and tooltips', () => {
 
     test.each(Object.entries(TOOLTIPS))('%s carries its tooltip verbatim', (key, tooltip) => {
         expect(registryEntry(key).tooltip).toBe(tooltip);
+    });
+
+    test.each(NO_TOOLTIP)('%s has no tooltip and no info icon', key => {
+        expect(registryEntry(key).tooltip).toBe('');
+        expect(all(`[data-setting-tip="${key}"]`)).toEqual([]);
+    });
+
+    test('every tooltip has at most 2 sentences and 30 words', () => {
+        const long = SETTINGS.filter(entry => entry.tooltip).flatMap(({key, tooltip}) => {
+            const sentences = tooltip.split(/[.!?](?:\s+|$)/).filter(part => part.trim()).length;
+            const words = tooltip.trim().split(/\s+/).length;
+            return sentences <= 2 && words <= 30 ? [] : [`${key}: ${sentences} sentences, ${words} words`];
+        });
+        expect(SETTINGS.filter(entry => entry.tooltip).length).toBeGreaterThan(30);
+        expect(long).toEqual([]);
     });
 });
 
