@@ -159,7 +159,7 @@ function updateSectionPlayers(listContainer, players, threatType) {
         const existingCard = existingCards.get(player.id);
         const lastRender = lastRenderedPlayerIds.get(player.id);
 
-        if (existingCard && lastRender) {
+        if (existingCard && lastRender && lastRender.mounted === player.mounted) {
             // Update existing card - minimal DOM operations
             const timeEl = existingCard.querySelector('[data-time]');
             if (timeEl) {
@@ -173,6 +173,8 @@ function updateSectionPlayers(listContainer, players, threatType) {
                     healthBar.style.width = `${pct}%`;
                 }
             }
+        } else if (existingCard) {
+            existingCard.outerHTML = renderPlayerCard(player, threatType).trim();
         } else {
             // Create new card in fragment (off-DOM)
             const template = document.createElement('template');
@@ -180,7 +182,7 @@ function updateSectionPlayers(listContainer, players, threatType) {
             fragment.appendChild(template.content.firstChild);
         }
 
-        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth});
+        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth, mounted: player.mounted});
     }
 
     // 4. Batch DOM operations: removals first, then single append
