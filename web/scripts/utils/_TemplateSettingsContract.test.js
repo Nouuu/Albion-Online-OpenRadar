@@ -178,6 +178,16 @@ describe('template settings contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('every collapse toggle is named by its title', () => {
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > input[type="checkbox"]')].flatMap(el => {
+            const title = root.querySelector(`[data-setting-label="${el.dataset.setting}"]`);
+            const id = el.getAttribute('aria-labelledby');
+            const named = id ? root.querySelector(`[id="${id}"]`) === title : el.getAttribute('aria-label') === title?.textContent;
+            return title && named ? [] : [`${name}: ${el.dataset.setting}`];
+        }));
+        expect(drift).toEqual([]);
+    });
+
     test('ids are unique on every page', () => {
         const dupes = pages.flatMap(({name, root}) => {
             const ids = [...root.querySelectorAll('[id]')].map(el => el.id);

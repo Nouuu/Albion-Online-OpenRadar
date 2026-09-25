@@ -107,9 +107,6 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
 - **`NetworkSettingsHandler.load()` has no try/catch**. Its two fetches are not guarded, so an unreachable backend
   throws an unhandled `TypeError` on every 5 s poll tick. `apply()` and `refresh()` already wrap their fetch in
   try/catch, `load()` does not.
-- **Settings section collapse checkboxes have no accessible name**. The `<input type="checkbox"
-  data-setting="settingUiSettings*Open">` toggles on the Logging, Debug and Network collapses on `/settings` carry no
-  `aria-label` or `aria-labelledby`, and are not wrapped in a `<label>`. Same on `main`.
 - **`initRadar` concurrent re-entry**. `isInitialized` (`Utils.js`) is set true only after the `DatabaseLoader.load()`
   await resolves. Two overlapping calls to `initRadar` both pass the guard and run the setup twice, leaking the first
   call's intervals.
