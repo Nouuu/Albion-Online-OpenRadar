@@ -68,7 +68,7 @@ function mockSettings({bool = {}, float = {}, number = {}} = {}) {
     settingsSync.getNumber.mockImplementation(key => number[key] ?? 500);
 }
 
-describe('RadarRenderer HUD gates and zone guard (US2, FR-019, FR-020)', () => {
+describe('RadarRenderer HUD gates and zone guard', () => {
     let map;
     let handlers;
     let renderer;
@@ -145,7 +145,7 @@ describe('RadarRenderer HUD gates and zone guard (US2, FR-019, FR-020)', () => {
         expect(ctx.calls.some(c => c[0] === 'strokeRect' && c[2] === 10 && c[1] !== 10)).toBe(false);
     });
 
-    // @verified 2026-09-24: FR-020, the -1 sentinel (cold-start map object) must never draw the zone box.
+    // @verified 2026-09-24: the -1 sentinel (cold-start map object) must never draw the zone box.
     test('map.id -1 draws no zone box', () => {
         mockSettings();
         renderer.renderZoneInfo(ctx);
@@ -166,7 +166,7 @@ describe('RadarRenderer HUD gates and zone guard (US2, FR-019, FR-020)', () => {
     });
 });
 
-describe('RadarRenderer and DrawingUtils single zoom source (US3, FR-028)', () => {
+describe('RadarRenderer and DrawingUtils single zoom source', () => {
     let renderer;
     let ctx;
 
@@ -177,7 +177,7 @@ describe('RadarRenderer and DrawingUtils single zoom source (US3, FR-028)', () =
         ctx = createRecordingContext(makeCanvas(500));
     });
 
-    // @verified 2026-09-24: FR-028, getZoomLevel is the single zoom source, no innerWidth override.
+    // @verified 2026-09-24: getZoomLevel is the single zoom source, no innerWidth override.
     test('getZoomLevel ignores innerWidth and returns the registry zoom', () => {
         window.innerWidth = 390;
         mockSettings({float: {settingRadarZoom: 2}});
@@ -185,7 +185,7 @@ describe('RadarRenderer and DrawingUtils single zoom source (US3, FR-028)', () =
         expect(renderer.drawingUtils.getZoomLevel()).toBe(2);
     });
 
-    // @verified 2026-09-24: FR-028, the 10 m ring radius scales with the single zoom source and the 20 m ring
+    // @verified 2026-09-24: the 10 m ring radius scales with the single zoom source and the 20 m ring
     // is dropped once it no longer fits inside the canvas, independent of innerWidth.
     test('10 m ring radius scales with zoom and drops the 20 m ring', () => {
         window.innerWidth = 390;
@@ -201,7 +201,7 @@ describe('RadarRenderer and DrawingUtils single zoom source (US3, FR-028)', () =
     });
 
     // @verified 2026-09-24: pcap-derived. harvestables/batch-spawn.json fed through the real handler; doubling
-    // the registry zoom must double every drawn entity's pixel offset from the canvas center (FR-028).
+    // the registry zoom must double every drawn entity's pixel offset from the canvas center.
     test('harvestable draw offsets from center double when zoom doubles', async () => {
         installRealDatabasesOnWindow();
         const handler = new HarvestablesHandler();

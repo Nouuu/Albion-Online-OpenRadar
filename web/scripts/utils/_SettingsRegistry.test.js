@@ -1,4 +1,4 @@
-// synthetic: registry shape checked against the spec Settings Registry table.
+// synthetic: registry shape checked against the settings table.
 import {describe, test, expect} from 'vitest';
 import {SETTINGS, registryEntry, registryDefault, LEGACY_REMOVED, MIGRATION_ROWS} from './SettingsRegistry.js';
 import {ALERT_SOUNDS, DEFAULT_SOUND} from './AlertSoundCatalog.js';

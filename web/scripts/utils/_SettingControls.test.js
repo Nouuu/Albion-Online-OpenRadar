@@ -237,7 +237,7 @@ describe('bindSettingControls matrix', () => {
         expect(container.querySelector('[data-enchant="e4"][data-tier="3"]').checked).toBe(true);
     });
 
-    test('a cell change re-reads the key before writing (FR-018b)', () => {
+    test('a cell change re-reads the key before writing', () => {
         const {sync, container} = mountMatrix();
         const external = structuredClone(sync.getJSON(KEY));
         external.e0[0] = true;
@@ -650,7 +650,7 @@ describe('enemies page', () => {
         expect(field.disabled).toBe(true);
     });
 
-    test('turning on the min HP filter changes no other control (FR-046)', () => {
+    test('turning on the min HP filter changes no other control', () => {
         const {root} = mountEnemies();
         const before = checkedStates(root).filter(([key]) => key !== 'settingEnemiesMinHealthFilter');
         const filter = root.querySelector('[data-setting="settingEnemiesMinHealthFilter"]');

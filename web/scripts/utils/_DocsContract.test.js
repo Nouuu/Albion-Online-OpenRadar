@@ -41,7 +41,7 @@ const legacyTokens = MIGRATION_ROWS
     .map(row => row.legacyKey);
 
 describe('docs contract', () => {
-    // @verified 2026-09-25: FR-075, every renamed setting key stays out of shipped docs under its old name.
+    // @verified 2026-09-25: every renamed setting key stays out of shipped docs under its old name.
     test('no legacy setting key appears backticked in README or docs, outside releases', () => {
         const hits = [];
         for (const {absFile, relFile} of docFiles()) {
@@ -78,7 +78,7 @@ describe('docs contract', () => {
 
     const readme = read('README.md');
 
-    // @verified 2026-09-25: manual radar rotation and the Rings control were removed (owner decision 2026-09-24).
+    // @verified 2026-09-25: manual radar rotation and the Rings control were removed from the radar panel.
     test('README Radar Controls table has no Rings control', () => {
         expect(readme).not.toMatch(/\bRings\b/);
     });
