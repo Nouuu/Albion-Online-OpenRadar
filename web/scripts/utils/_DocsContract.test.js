@@ -3,7 +3,7 @@ import {readFileSync, readdirSync} from 'node:fs';
 import {dirname, join, relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe, test, expect} from 'vitest';
-import {MIGRATION_ROWS} from './SettingsRegistry.js';
+import {MIGRATION_ROWS, SETTINGS} from './SettingsRegistry.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 
@@ -81,6 +81,16 @@ describe('docs contract', () => {
     // @verified 2026-09-25: manual radar rotation and the Rings control were removed from the radar panel.
     test('README Radar Controls table has no Rings control', () => {
         expect(readme).not.toMatch(/\bRings\b/);
+    });
+
+    // @verified 2026-09-25: the radar page panel, read from the registry rows of its sections.
+    test('README Radar Controls table lists every radar panel control by its panel label', () => {
+        const section = readme.split('## Radar Controls')[1].split(/\r?\n\r?\n/)[1];
+        const rows = section.split(/\r?\n/).slice(2).map(line => line.split('|')[1].trim());
+        const panel = SETTINGS.filter(entry => entry.page === 'Radar' && entry.section.startsWith('Radar settings >'))
+            .map(entry => entry.label);
+        expect(rows).toEqual(expect.arrayContaining(panel));
+        expect(rows).not.toContain('Size');
     });
 
     // @verified 2026-09-25: internal/server/network_api.go, settings_api.go and settings.gohtml host-lock text.
