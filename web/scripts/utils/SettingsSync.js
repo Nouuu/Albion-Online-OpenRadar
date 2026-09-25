@@ -152,11 +152,8 @@ export class SettingsSync {
                 if (!Number.isFinite(parsed)) return entry.default;
                 return Math.min(entry.max, Math.max(entry.min, parsed));
             }
-            case 'enum': {
-                const text = String(raw);
-                const match = entry.values.find(v => typeof v === 'number' ? text.trim() !== '' && Number(text) === v : v === text);
-                return match === undefined ? entry.default : match;
-            }
+            case 'enum':
+                return entry.values.includes(String(raw)) ? String(raw) : entry.default;
             default:
                 return this._readJSON(key, entry, raw);
         }

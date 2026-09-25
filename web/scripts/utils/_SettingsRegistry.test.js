@@ -262,6 +262,12 @@ describe('SettingsRegistry', () => {
         }
     });
 
+    test('enum values are strings, so reads compare the stored text as is', () => {
+        for (const entry of SETTINGS.filter(e => e.type === 'enum')) {
+            expect(entry.values.every(v => typeof v === 'string'), entry.key).toBe(true);
+        }
+    });
+
     test('the alert sound entry takes its default and values from the catalog', () => {
         const entry = registryEntry('settingAlertSoundFile');
         expect(entry.default).toBe(DEFAULT_SOUND);
