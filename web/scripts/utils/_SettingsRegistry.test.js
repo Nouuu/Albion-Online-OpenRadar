@@ -13,6 +13,7 @@ const TABLE = [
     ['settingShowMap', 'settingRadarMapBackground', 'fix'],
     [null, 'settingRadarHudZoneInfo', 'new'],
     [null, 'settingRadarHudStats', 'new'],
+    [null, 'settingRadarPlayersBeside', 'new'],
     ['settingResourceCount', 'settingRadarResourceCount', 'rename'],
     ['settingResourceDistance', 'settingRadarResourceDistance', 'rename'],
     ['settingResourceColorBadges', 'settingRadarResourceTierBadges', 'rename'],
@@ -164,7 +165,7 @@ describe('SettingsRegistry', () => {
         const expected = {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
             settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
-            settingRadarHudStats: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
+            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
             settingRadarClusterRadius: 30, settingRadarClusterMinSize: 2,
             settingPlayersDetect: true, settingPlayersShowEquipment: true, settingPlayersShowSpells: false,
@@ -291,6 +292,7 @@ describe('SettingsRegistry control location', () => {
     test.each([
         ['settingRadarZoom', 'Radar', 'Radar settings > View'],
         ['settingRadarHudStats', 'Radar', 'Radar settings > Display'],
+        ['settingRadarPlayersBeside', 'Radar', 'Radar settings > Display'],
         ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
         ['settingPlayersDetect', 'Players', 'Display'],
         ['settingAlertSoundFile', 'Players', 'Alerts'],

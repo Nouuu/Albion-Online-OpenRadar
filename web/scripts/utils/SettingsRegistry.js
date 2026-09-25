@@ -22,6 +22,7 @@ const ROWS = [
     ['settingRadarMapBackground', 'bool', true, 'settingShowMap', 'fix'],
     ['settingRadarHudZoneInfo', 'bool', true, null, 'new'],
     ['settingRadarHudStats', 'bool', true, null, 'new'],
+    ['settingRadarPlayersBeside', 'bool', false, null, 'new'],
     ['settingRadarResourceCount', 'bool', false, 'settingResourceCount', 'rename'],
     ['settingRadarResourceDistance', 'bool', false, 'settingResourceDistance', 'rename'],
     ['settingRadarResourceTierBadges', 'bool', false, 'settingResourceColorBadges', 'rename'],
@@ -137,6 +138,7 @@ const TEXTS = {
     settingRadarMapBackground: ['Map background'],
     settingRadarHudZoneInfo: ['Zone info box', 'Top-left box with the zone name, tier and a PvP marker.'],
     settingRadarHudStats: ['Stats box', 'Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on.'],
+    settingRadarPlayersBeside: ['Players beside radar', 'Shows the player list to the right of the radar when the window is wide enough.'],
     settingRadarResourceCount: ['Resource count', 'Estimated quantity next to each resource node, from its size and tier, gathering bonuses not included. Fishing spots show spawned/total fish.'],
     settingRadarResourceDistance: ['Resource distance', 'Distance in meters beside each resource: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m.'],
     settingRadarResourceTierBadges: ['Resource tier color badges', 'Replaces resource icons with squares colored by resource type, showing tier and enchantment. Living creatures get a gold border.'],
@@ -217,7 +219,8 @@ const TEXTS = {
 
 const LOCATIONS = {
     'Radar > Radar settings > View': ['settingRadarZoom', 'settingRadarSize', 'settingRadarFitToScreen', 'settingRadarIconSize'],
-    'Radar > Radar settings > Display': ['settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats'],
+    'Radar > Radar settings > Display': ['settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats',
+        'settingRadarPlayersBeside'],
     'Radar > Radar settings > Resources': ['settingRadarResourceCount', 'settingRadarResourceDistance',
         'settingRadarResourceTierBadges', 'settingRadarResourceClusters', 'settingRadarClusterRadius',
         'settingRadarClusterMinSize'],

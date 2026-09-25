@@ -11,9 +11,9 @@
     grid-template-columns: 1fr;
 }
 </style>
-<div class="space-y-4">
+<div id="radarLayout" class="flex flex-col gap-4 data-[players-beside]:flex-row data-[players-beside]:items-start">
     <!-- Canvas Section -->
-    <div class="card bg-base-200">
+    <div class="card bg-base-200 shrink-0">
         <div class="card-body p-2 sm:p-4 phone-landscape:p-2 phone-landscape:flex-row phone-landscape:flex-wrap phone-landscape:items-start">
             <div id="canvasContainer" class="relative mx-auto shrink-0 max-w-full rounded-lg ring-2 ring-base-content/10" style="width: 500px; height: 500px;">
                 <canvas class="ttcan absolute top-0 left-0 max-w-full rounded-lg" id="mapCanvas" width="500" height="500" style="z-index: 1;"></canvas>
@@ -99,6 +99,13 @@
                                             <span tabindex="0" role="img" aria-label="Top-right box counting the resource nodes and mobs drawn, and the detected players when player detection is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                                        <input type="checkbox" data-setting="settingRadarPlayersBeside" aria-labelledby="label-settingRadarPlayersBeside" class="toggle toggle-primary toggle-sm">
+                                        <span id="label-settingRadarPlayersBeside" data-setting-label="settingRadarPlayersBeside" class="text-base-content/80 text-xs group-hover:text-base-content">Players beside radar</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarPlayersBeside" data-tip="Shows the player list to the right of the radar when the window is wide enough.">
+                                            <span tabindex="0" role="img" aria-label="Shows the player list to the right of the radar when the window is wide enough." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                        </div>
+                                    </label>
                                 </div>
                             </section>
                             <section>
@@ -163,7 +170,7 @@
     </div>
 
     <!-- Detected Players Section -->
-    <div id="playersSection" class="card bg-base-200">
+    <div id="playersSection" class="card bg-base-200 grow min-w-0">
         <div class="card-body">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <h3 class="text-xl font-semibold text-base-content flex flex-wrap items-center gap-3">

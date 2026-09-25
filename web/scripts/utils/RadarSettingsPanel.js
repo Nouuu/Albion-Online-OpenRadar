@@ -13,7 +13,17 @@ export function computeRadarSize({size, fit, availableWidth, availableHeight}) {
     return Math.max(1, Math.floor(Math.min(cap, unbounded(availableWidth), unbounded(availableHeight))));
 }
 
-const LAYOUT_KEYS = new Set(['settingRadarSize', 'settingRadarFitToScreen']);
+export function radarLayout({size, fit, beside, pageWidth, chrome, gap, listMin, availableHeight}) {
+    const stacked = computeRadarSize({size, fit, availableWidth: pageWidth - chrome, availableHeight});
+    if (!beside) return {size: stacked, beside: false};
+    const widthLeft = pageWidth - chrome - gap - listMin;
+    const next = computeRadarSize({size, fit, availableWidth: widthLeft, availableHeight});
+    const kept = computeRadarSize({size, fit: false, availableWidth: pageWidth - chrome, availableHeight});
+    return next >= kept ? {size: next, beside: true} : {size: stacked, beside: false};
+}
+
+const LIST_MIN_REM = 22;
+const LAYOUT_KEYS = new Set(['settingRadarSize', 'settingRadarFitToScreen', 'settingRadarPlayersBeside']);
 const SIZE_CONTROLS = '[data-setting="settingRadarSize"], [data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]';
 
 let state = null;
@@ -28,19 +38,32 @@ function chainTop(el) {
     return top;
 }
 
-function measure(container, page) {
+function measure(container, page, wrapper) {
     const body = container.parentElement;
-    const availableWidth = body.clientWidth - padding(body, 'paddingLeft') - padding(body, 'paddingRight');
     const availableHeight = page.clientHeight - padding(page, 'paddingBottom') - padding(body, 'paddingBottom')
         - (chainTop(container) - chainTop(page));
-    return {availableWidth, availableHeight};
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    return {
+        pageWidth: wrapper.clientWidth,
+        chrome: padding(body, 'paddingLeft') + padding(body, 'paddingRight'),
+        gap: parseFloat(getComputedStyle(wrapper).columnGap) || 0,
+        listMin: LIST_MIN_REM * rem,
+        availableHeight,
+    };
 }
 
 function applyLayout() {
     if (!state) return;
-    const {container, page} = state;
+    const {container, page, wrapper} = state;
     const fit = settingsSync.getBool('settingRadarFitToScreen');
-    const size = computeRadarSize({size: settingsSync.getNumber('settingRadarSize'), fit, ...measure(container, page)});
+    const frame = measure(container, page, wrapper);
+    const {size, beside} = radarLayout({
+        size: settingsSync.getNumber('settingRadarSize'), fit,
+        beside: settingsSync.getBool('settingRadarPlayersBeside'), ...frame,
+    });
+
+    wrapper.toggleAttribute('data-players-beside', beside);
+    container.closest('.card').style.width = beside ? `${size + frame.chrome}px` : '';
 
     container.style.width = `${size}px`;
     container.style.height = `${size}px`;
@@ -59,7 +82,8 @@ function applyLayout() {
 export function initRadarSettingsPanel() {
     const container = document.getElementById('canvasContainer');
     const page = document.getElementById('page-content');
-    if (!container || !page || state?.container === container) return;
+    const wrapper = document.getElementById('radarLayout');
+    if (!container || !page || !wrapper || state?.container === container) return;
     destroyRadarSettingsPanel();
 
     const controller = new AbortController();
@@ -67,7 +91,7 @@ export function initRadarSettingsPanel() {
     const observer = new ResizeObserver(() => {
         if (state?.container === container && container.isConnected) applyLayout();
     });
-    state = {container, page, controller, observer};
+    state = {container, page, wrapper, controller, observer};
 
     const onSetting = key => {
         if (LAYOUT_KEYS.has(key)) applyLayout();

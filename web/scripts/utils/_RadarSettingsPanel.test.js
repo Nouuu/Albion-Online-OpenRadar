@@ -1,13 +1,13 @@
 // synthetic: pure sizing helpers, then the radar template mounted with stubbed layout and a fake ResizeObserver.
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import settingsSync from './SettingsSync.js';
-import {computeRadarSize, destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
+import {computeRadarSize, destroyRadarSettingsPanel, initRadarSettingsPanel, radarLayout} from './RadarSettingsPanel.js';
 import {bindSettingControls} from './SettingControls.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 vi.mock('../core/PageController.js', () => ({registerPage: vi.fn(), reinitCurrentPage: vi.fn()}));
 
-const RADAR_KEYS = ['settingRadarSize', 'settingRadarFitToScreen'];
+const RADAR_KEYS = ['settingRadarSize', 'settingRadarFitToScreen', 'settingRadarPlayersBeside'];
 
 describe('computeRadarSize', () => {
     test.each([
@@ -23,6 +23,25 @@ describe('computeRadarSize', () => {
         [600, false, 512.7, 900, 512],
     ])('@verified 2026-09-24: size %s fit %s in %sx%s gives %s', (size, fit, availableWidth, availableHeight, expected) => {
         expect(computeRadarSize({size, fit, availableWidth, availableHeight})).toBe(expected);
+    });
+});
+
+describe('radarLayout', () => {
+    const frame = {chrome: 32, gap: 16, listMin: 352};
+    test.each([
+        ['off keeps the stack', false, 500, false, 1600, 900, 500, false],
+        ['room for the list keeps the size', true, 500, false, 1600, 900, 500, true],
+        ['a list squeezed below its minimum falls back', true, 800, false, 1100, 900, 800, false],
+        ['a height-capped radar keeps its size beside the list', true, 800, false, 1000, 500, 500, true],
+        ['Fit sizes the radar from the space left', true, 500, true, 1600, 900, 900, true],
+        ['Fit stays capped at 1200', true, 500, true, 1700, 2000, 1200, true],
+        ['Fit falls back when less than the minimum size is left', true, 500, true, 600, 900, 568, false],
+        ['Fit falls back when the width left is below Max size', true, 500, true, 709, 700, 677, false],
+        ['Fit beside keeps at least Max size', true, 500, true, 1125, 800, 725, true],
+        ['a phone falls back', true, 500, false, 358, 700, 326, false],
+    ])('@verified 2026-09-26: %s', (_, beside, size, fit, pageWidth, availableHeight, expectedSize, expectedBeside) => {
+        expect(radarLayout({size, fit, beside, pageWidth, availableHeight, ...frame}))
+            .toEqual({size: expectedSize, beside: expectedBeside});
     });
 });
 
@@ -48,7 +67,7 @@ function container() {
 }
 
 function stubLayout({width = 1000, height = 1000, top = 40} = {}) {
-    Object.defineProperty(container().parentElement, 'clientWidth', {value: width, configurable: true});
+    Object.defineProperty(root.querySelector('#radarLayout'), 'clientWidth', {value: width, configurable: true});
     Object.defineProperty(root, 'clientHeight', {value: height, configurable: true});
     Object.defineProperty(container(), 'offsetTop', {value: top, configurable: true});
 }
@@ -235,6 +254,55 @@ describe('radar settings panel layout', () => {
 
         expect(bitmaps()).toEqual(Array(4).fill([500, 500]));
         expect(sizeEvents).toEqual([]);
+    });
+
+    function layoutState() {
+        const wrapper = root.querySelector('#radarLayout');
+        return {beside: wrapper.hasAttribute('data-players-beside'), card: container().closest('.card').style.width};
+    }
+
+    test('@verified 2026-09-26: Players beside radar on a wide page moves the list beside a radar-sized card', () => {
+        stubLayout({width: 1600, height: 1000});
+        initRadarSettingsPanel();
+        expect(layoutState()).toEqual({beside: false, card: ''});
+
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        expect(layoutState()).toEqual({beside: true, card: '500px'});
+        expect(bitmaps()).toEqual(Array(4).fill([500, 500]));
+
+        settingsSync.setBool('settingRadarPlayersBeside', false);
+        expect(layoutState()).toEqual({beside: false, card: ''});
+    });
+
+    test('@verified 2026-09-26: Players beside radar falls back to the stack when the list would get less than 22rem', () => {
+        stubLayout({width: 800, height: 1000});
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        initRadarSettingsPanel();
+
+        expect(layoutState()).toEqual({beside: false, card: ''});
+        expect(bitmaps()).toEqual(Array(4).fill([500, 500]));
+    });
+
+    test('@verified 2026-09-26: Fit with the list beside sizes the radar from the width left', () => {
+        stubLayout({width: 1200, height: 1340});
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        settingsSync.setBool('settingRadarFitToScreen', true);
+        initRadarSettingsPanel();
+
+        expect(layoutState()).toEqual({beside: true, card: '848px'});
+        expect(bitmaps()).toEqual(Array(4).fill([848, 848]));
+    });
+
+    test('@verified 2026-09-26: a resize that squeezes the list returns to the stack', () => {
+        stubLayout({width: 1600, height: 1000});
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        initRadarSettingsPanel();
+        expect(layoutState().beside).toBe(true);
+
+        stubLayout({width: 700, height: 1000});
+        observers[0].callback([]);
+
+        expect(layoutState()).toEqual({beside: false, card: ''});
     });
 
     test('@verified 2026-09-24: the ResizeObserver callback does nothing once the container left the document', () => {

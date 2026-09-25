@@ -81,7 +81,7 @@ beforeEach(() => {
     DatabaseLoader.load.mockResolvedValue(undefined);
     PlayerListRenderer.update.mockClear();
     root = mountPage('radar');
-    Object.defineProperty(root.querySelector('#canvasContainer').parentElement, 'clientWidth', {value: 1000, configurable: true});
+    Object.defineProperty(root.querySelector('#radarLayout'), 'clientWidth', {value: 1000, configurable: true});
     Object.defineProperty(root, 'clientHeight', {value: 1000, configurable: true});
 });
 
