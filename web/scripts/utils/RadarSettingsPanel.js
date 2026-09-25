@@ -13,16 +13,18 @@ export function computeRadarSize({size, fit, availableWidth, availableHeight}) {
     return Math.max(1, Math.floor(Math.min(cap, unbounded(availableWidth), unbounded(availableHeight))));
 }
 
-export function radarLayout({size, fit, beside, pageWidth, chrome, gap, listMin, availableHeight}) {
+export function radarLayout({size, fit, beside, pageWidth, chrome, gap, listMin, cardMin, availableHeight}) {
     const stacked = computeRadarSize({size, fit, availableWidth: pageWidth - chrome, availableHeight});
     if (!beside) return {size: stacked, beside: false};
     const widthLeft = pageWidth - chrome - gap - listMin;
     const next = computeRadarSize({size, fit, availableWidth: widthLeft, availableHeight});
     const kept = computeRadarSize({size, fit: false, availableWidth: pageWidth - chrome, availableHeight});
-    return next >= kept ? {size: next, beside: true} : {size: stacked, beside: false};
+    const listFits = Math.max(next + chrome, cardMin) + gap + listMin <= pageWidth;
+    return next >= kept && listFits ? {size: next, beside: true} : {size: stacked, beside: false};
 }
 
 const LIST_MIN_REM = 22;
+const CARD_MIN_REM = 25;
 const LAYOUT_KEYS = new Set(['settingRadarSize', 'settingRadarFitToScreen', 'settingRadarPlayersBeside']);
 const SIZE_CONTROLS = '[data-setting="settingRadarSize"], [data-nudge="settingRadarSize"], [data-reset="settingRadarSize"]';
 
@@ -44,10 +46,11 @@ function measure(container, page, wrapper) {
         - (chainTop(container) - chainTop(page));
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
     return {
-        pageWidth: wrapper.clientWidth,
+        pageWidth: page.clientWidth - padding(page, 'paddingLeft') - padding(page, 'paddingRight'),
         chrome: padding(body, 'paddingLeft') + padding(body, 'paddingRight'),
         gap: parseFloat(getComputedStyle(wrapper).columnGap) || 0,
         listMin: LIST_MIN_REM * rem,
+        cardMin: CARD_MIN_REM * rem,
         availableHeight,
     };
 }
@@ -55,15 +58,16 @@ function measure(container, page, wrapper) {
 function applyLayout() {
     if (!state) return;
     const {container, page, wrapper} = state;
+    const setting = settingsSync.getNumber('settingRadarSize');
     const fit = settingsSync.getBool('settingRadarFitToScreen');
     const frame = measure(container, page, wrapper);
-    const {size, beside} = radarLayout({
-        size: settingsSync.getNumber('settingRadarSize'), fit,
-        beside: settingsSync.getBool('settingRadarPlayersBeside'), ...frame,
-    });
+    const layout = radarLayout({size: setting, fit, beside: settingsSync.getBool('settingRadarPlayersBeside'), ...frame});
 
-    wrapper.toggleAttribute('data-players-beside', beside);
-    container.closest('.card').style.width = beside ? `${size + frame.chrome}px` : '';
+    wrapper.toggleAttribute('data-players-beside', layout.beside);
+    const size = layout.beside ? layout.size : computeRadarSize({
+        size: setting, fit, availableWidth: wrapper.clientWidth - frame.chrome, availableHeight: frame.availableHeight,
+    });
+    container.closest('.card').style.width = layout.beside ? `${Math.max(size + frame.chrome, frame.cardMin)}px` : '';
 
     container.style.width = `${size}px`;
     container.style.height = `${size}px`;

@@ -1,4 +1,7 @@
 // synthetic: pure sizing helpers, then the radar template mounted with stubbed layout and a fake ResizeObserver.
+import {readFileSync} from 'node:fs';
+import {dirname, join} from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import settingsSync from './SettingsSync.js';
 import {computeRadarSize, destroyRadarSettingsPanel, initRadarSettingsPanel, radarLayout} from './RadarSettingsPanel.js';
@@ -27,7 +30,7 @@ describe('computeRadarSize', () => {
 });
 
 describe('radarLayout', () => {
-    const frame = {chrome: 32, gap: 16, listMin: 352};
+    const frame = {chrome: 32, gap: 16, listMin: 352, cardMin: 400};
     test.each([
         ['off keeps the stack', false, 500, false, 1600, 900, 500, false],
         ['room for the list keeps the size', true, 500, false, 1600, 900, 500, true],
@@ -39,6 +42,9 @@ describe('radarLayout', () => {
         ['Fit falls back when the width left is below Max size', true, 500, true, 709, 700, 677, false],
         ['Fit beside keeps at least Max size', true, 500, true, 1125, 800, 725, true],
         ['a phone falls back', true, 500, false, 358, 700, 326, false],
+        ['a small radar beside gets a card wide enough for its settings panel', true, 300, false, 800, 1000, 300, true],
+        ['a small radar falls back when its card minimum squeezes the list', true, 300, false, 750, 1000, 300, false],
+        ['a height-capped radar on a phone in landscape keeps the list beside', true, 500, false, 828, 300, 300, true],
     ])('@verified 2026-09-26: %s', (_, beside, size, fit, pageWidth, availableHeight, expectedSize, expectedBeside) => {
         expect(radarLayout({size, fit, beside, pageWidth, availableHeight, ...frame}))
             .toEqual({size: expectedSize, beside: expectedBeside});
@@ -66,8 +72,9 @@ function container() {
     return root.querySelector('#canvasContainer');
 }
 
-function stubLayout({width = 1000, height = 1000, top = 40} = {}) {
+function stubLayout({width = 1000, full = width, height = 1000, top = 40} = {}) {
     Object.defineProperty(root.querySelector('#radarLayout'), 'clientWidth', {value: width, configurable: true});
+    Object.defineProperty(root, 'clientWidth', {value: full, configurable: true});
     Object.defineProperty(root, 'clientHeight', {value: height, configurable: true});
     Object.defineProperty(container(), 'offsetTop', {value: top, configurable: true});
 }
@@ -293,6 +300,37 @@ describe('radar settings panel layout', () => {
         expect(bitmaps()).toEqual(Array(4).fill([848, 848]));
     });
 
+    test('@verified 2026-09-26: Players beside radar decides from the full page width, not the capped container', () => {
+        stubLayout({width: 800, full: 1600, height: 1000});
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        initRadarSettingsPanel();
+
+        expect(layoutState()).toEqual({beside: true, card: '500px'});
+    });
+
+    test('@verified 2026-09-26: back in the stack the radar is sized from the capped container again', () => {
+        stubLayout({width: 800, full: 1600, height: 1340});
+        settingsSync.setNumber('settingRadarSize', 1000);
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        initRadarSettingsPanel();
+        expect(bitmaps()).toEqual(Array(4).fill([1000, 1000]));
+
+        settingsSync.setBool('settingRadarPlayersBeside', false);
+
+        expect(layoutState()).toEqual({beside: false, card: ''});
+        expect(bitmaps()).toEqual(Array(4).fill([800, 800]));
+    });
+
+    test('@verified 2026-09-26: a small radar beside the list keeps a 25rem card for its settings panel', () => {
+        stubLayout({width: 1000, full: 1000, height: 1000});
+        settingsSync.setNumber('settingRadarSize', 300);
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        initRadarSettingsPanel();
+
+        expect(layoutState()).toEqual({beside: true, card: '400px'});
+        expect(bitmaps()).toEqual(Array(4).fill([300, 300]));
+    });
+
     test('@verified 2026-09-26: a resize that squeezes the list returns to the stack', () => {
         stubLayout({width: 1600, height: 1000});
         settingsSync.setBool('settingRadarPlayersBeside', true);
@@ -370,5 +408,32 @@ describe('radar settings panel controls', () => {
 
         const turned = [root, ...root.querySelectorAll('*')].filter(el => el.style?.transform);
         expect(turned).toEqual([]);
+    });
+});
+
+describe('page container while the list sits beside the radar', () => {
+    const LAYOUTS = join(dirname(fileURLToPath(import.meta.url)), '../../../internal/templates/layouts');
+    const UNCAP = 'has-[#radarLayout[data-players-beside]]:max-w-none';
+    const uncapped = el => [...document.querySelectorAll(`.container:has(${UNCAP.slice('has-['.length, -']:max-w-none'.length)})`)]
+        .includes(el);
+
+    test.each(['base.gohtml', 'content.gohtml'])('@verified 2026-09-26: %s drops the container cap only while the list sits beside', file => {
+        const source = readFileSync(join(LAYOUTS, file), 'utf8');
+        expect(source.match(/<div class="(container [^"]*)">/)[1].split(' ')).toEqual(['container', 'mx-auto', 'animate-in', UNCAP]);
+    });
+
+    test('@verified 2026-09-26: an htmx swap to another page gives the next page its capped container back', () => {
+        const wrap = document.createElement('div');
+        wrap.className = 'container';
+        wrap.append(mountPage('radar').querySelector('#radarLayout'));
+        document.body.replaceChildren(wrap);
+        expect(uncapped(wrap)).toBe(false);
+
+        wrap.querySelector('#radarLayout').toggleAttribute('data-players-beside', true);
+        expect(uncapped(wrap)).toBe(true);
+
+        wrap.replaceChildren(...mountPage('settings').children);
+        document.body.replaceChildren(wrap);
+        expect(uncapped(wrap)).toBe(false);
     });
 });

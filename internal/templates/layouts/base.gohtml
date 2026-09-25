@@ -122,7 +122,7 @@
                   data-is-host="{{.IsHost}}"
                   hx-swap="innerHTML transition:true"
                   hx-swap-oob="true">
-                <div class="container mx-auto animate-in">
+                <div class="container mx-auto animate-in has-[#radarLayout[data-players-beside]]:max-w-none">
                     {{if eq .Page "radar"}}{{template "pages/radar" .}}
                     {{else if eq .Page "players"}}{{template "pages/players" .}}
                     {{else if eq .Page "resources"}}{{template "pages/resources" .}}
