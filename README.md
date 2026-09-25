@@ -185,7 +185,7 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | Control                    | Range                                           |
 |----------------------------|-------------------------------------------------|
 | Zoom                       | 0.1x to 3x                                      |
-| Max size                   | 300px to 800px                                  |
+| Max size                   | 300px to 1200px                                 |
 | Fit to screen              | toggle, fills the window up to 1200px           |
 | Icon size                  | 0.5x to 2x                                      |
 | Map background             | toggle, zone map under the radar                |

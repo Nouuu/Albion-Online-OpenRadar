@@ -16,7 +16,7 @@ const NETWORK_PATHS = {
 
 const ROWS = [
     ['settingRadarZoom', 'float', 1, 'settingRadarZoom', 'keep', {min: 0.1, max: 3, step: 0.1, unit: '%'}],
-    ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 800, step: 50, unit: ' px'}],
+    ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 1200, step: 50, unit: ' px'}],
     ['settingRadarFitToScreen', 'bool', false, null, 'new'],
     ['settingRadarIconSize', 'float', 1, 'settingIconSize', 'rename', {min: 0.5, max: 2, step: 0.1, unit: '%'}],
     ['settingRadarMapBackground', 'bool', true, 'settingShowMap', 'fix'],

@@ -220,7 +220,7 @@ describe('SettingsRegistry', () => {
     test('numeric entries carry the registry bounds', () => {
         const bounds = {
             settingRadarZoom: [0.1, 3, 0.1],
-            settingRadarSize: [300, 800, 50],
+            settingRadarSize: [300, 1200, 50],
             settingRadarIconSize: [0.5, 2, 0.1],
             settingRadarClusterRadius: [10, 100, 5],
             settingRadarClusterMinSize: [2, 10, 1],
