@@ -41,9 +41,9 @@ describe('phone layout contract', () => {
         }
     });
 
-    test('#page-content never scrolls horizontally, only vertically', () => {
+    test('#page-content scrolls vertically and clips no tooltip bubble horizontally', () => {
         const main = baseLayout.match(/<main id="page-content"[\s\S]*?class="([^"]*)"/)[1];
-        expect(main).toContain('overflow-x-hidden');
+        expect(main).not.toContain('overflow-x-hidden');
         expect(main).toContain('overflow-y-auto');
     });
 

@@ -29,5 +29,14 @@
 }
 
 .tooltip[data-tip]:before {
-    max-width: min(16rem, 25vw);
+    max-width: min(16rem, calc(100vw - 2rem));
+}
+
+.tooltip[data-tip]::before {
+    translate: var(--tt-nudge, 0) 0;
+}
+
+.tooltip:not(:hover):not(:focus-within):not(.tooltip-open)::before,
+.tooltip:not(:hover):not(:focus-within):not(.tooltip-open)::after {
+    display: none;
 }

@@ -428,7 +428,12 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
-    test('the tooltip bubble caps its width so it cannot leave the viewport', () => {
-        expect(inputCss).toMatch(/\.tooltip\[data-tip]:before\s*\{\s*max-width:\s*min\(/);
+    test('the tooltip bubble caps its width to the viewport minus a gutter', () => {
+        expect(inputCss).toMatch(/\.tooltip\[data-tip]:before\s*\{\s*max-width:\s*min\(16rem, calc\(100vw - 2rem\)\);\s*}/);
+    });
+
+    test('a hidden tooltip bubble and tail take no layout space', () => {
+        const hidden = String.raw`\.tooltip:not\(:hover\):not\(:focus-within\):not\(\.tooltip-open\)`;
+        expect(inputCss).toMatch(new RegExp(String.raw`${hidden}::before,\s*${hidden}::after\s*\{\s*display: none;\s*}`));
     });
 });

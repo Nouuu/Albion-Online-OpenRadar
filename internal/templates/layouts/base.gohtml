@@ -41,6 +41,7 @@
     <script type="module" src="/scripts/core/PageController.js"></script>
     <script type="module" src="/scripts/utils/Toast.js"></script>
     <script type="module" src="/scripts/utils/Modal.js"></script>
+    <script type="module" src="/scripts/utils/TooltipPlacement.js"></script>
     <script src="/scripts/vendors/htmx.min.js"></script>
 
     <!-- Must be in head before sidebar template -->
@@ -116,7 +117,7 @@
             {{template "layouts/header.gohtml" .}}
 
             <main id="page-content"
-                  class="flex-1 overflow-x-hidden overflow-y-auto p-2 sm:p-6 phone-landscape:p-2 bg-base-100"
+                  class="flex-1 overflow-y-auto p-2 sm:p-6 phone-landscape:p-2 bg-base-100"
                   data-page="{{.Page}}"
                   data-is-host="{{.IsHost}}"
                   hx-swap="innerHTML transition:true"
