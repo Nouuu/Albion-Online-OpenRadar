@@ -303,55 +303,10 @@
 
 {{define "scripts/settings"}}
 <script>
-    import('/scripts/utils/SettingControls.js').then(({registerBoundPage, resetAllSettings, buildDebugExport}) => registerBoundPage('settings', {
-        async init({root, signal}) {
-            const settingsSync = window.settingsSync;
-            const byId = id => document.getElementById(id);
-
-            byId('downloadLogsBtn')?.addEventListener('click', async () => {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const debugData = await buildDebugExport(settingsSync, fetch);
-
-                const blob = new Blob([JSON.stringify(debugData, null, 2)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `openradar-debug-${timestamp}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            }, {signal});
-
-            byId('resetSettingsBtn')?.addEventListener('click', () => {
-                byId('modal-resetSettings').showModal();
-            }, {signal});
-
-            byId('confirmResetSettings')?.addEventListener('click', () => {
-                resetAllSettings(settingsSync);
-                byId('modal-resetSettings').close();
-                if (window.toast) window.toast.success('Settings reset successfully');
-                setTimeout(() => location.reload(), 500);
-            }, {signal});
-
-            const {BackendLoggingToggles} = await import('/scripts/utils/BackendLoggingToggles.js');
-            if (signal.aborted) return;
-            const hostContainer = root.querySelector('[data-is-host]');
-            if (hostContainer) {
-                const backendToggles = new BackendLoggingToggles(hostContainer);
-                signal.addEventListener('abort', () => backendToggles.destroy(), {once: true});
-                await backendToggles.load();
-                if (signal.aborted) return;
-            }
-
-            const {NetworkSettingsHandler} = await import('/scripts/handlers/NetworkSettingsHandler.js');
-            const networkContainer = byId('network-section');
-            if (!networkContainer || signal.aborted) return;
-            const networkHandler = new NetworkSettingsHandler(networkContainer);
-            networkHandler.load();
-            const networkPoll = setInterval(() => {
-                if (!document.hidden) networkHandler.load(true);
-            }, 5000);
-            signal.addEventListener('abort', () => clearInterval(networkPoll), {once: true});
-        },
-    }));
+    Promise.all([
+        import('/scripts/utils/SettingControls.js'),
+        import('/scripts/utils/SettingsPage.js'),
+    ]).then(([{registerBoundPage}, {initSettingsPage}]) =>
+        registerBoundPage('settings', {init: initSettingsPage}));
 </script>
 {{end}}
