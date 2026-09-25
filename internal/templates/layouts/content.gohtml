@@ -23,13 +23,13 @@
             var isActive = pages[path] || false;
 
             // Remove all state classes
-            link.classList.remove('bg-accent/10', 'text-accent', 'border-l-2', 'border-accent', '-ml-0.5', 'pl-3.5');
-            link.classList.remove('text-gray-400', 'hover:bg-overlay', 'hover:text-white');
+            link.classList.remove('text-primary', 'border-l-2', 'border-primary', '-ml-px', 'pl-2.5');
+            link.classList.remove('text-base-content/60', 'hover:text-base-content/80', 'hover:bg-base-content/[0.02]');
 
             if (isActive) {
-                link.classList.add('bg-accent/10', 'text-accent', 'border-l-2', 'border-accent', '-ml-0.5', 'pl-3.5');
+                link.classList.add('text-primary', 'border-l-2', 'border-primary', '-ml-px', 'pl-2.5');
             } else {
-                link.classList.add('text-gray-400', 'hover:bg-overlay', 'hover:text-white');
+                link.classList.add('text-base-content/60', 'hover:text-base-content/80', 'hover:bg-base-content/[0.02]');
             }
         });
     });
