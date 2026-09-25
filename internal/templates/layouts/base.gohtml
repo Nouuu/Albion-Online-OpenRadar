@@ -52,7 +52,7 @@
             hoverTimeout: null,
 
             init() {
-                this.collapsed = window.settingsSync.getBool('settingUiSidebarCollapsed');
+                this.collapsed = window.settingsSync?.getBool('settingUiSidebarCollapsed') === true;
                 this.updateClasses();
                 if (window.lucide) lucide.createIcons();
             },

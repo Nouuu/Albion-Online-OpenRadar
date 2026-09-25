@@ -76,8 +76,8 @@ describe('base layout sidebar contract', () => {
         expect(baseTemplate).not.toContain('localStorage');
     });
 
-    test('init and toggle go through settingsSync', () => {
-        expect(baseTemplate).toContain("settingsSync.getBool('settingUiSidebarCollapsed')");
+    test('init and toggle go through settingsSync, init survives a missing settingsSync', () => {
+        expect(baseTemplate).toContain("this.collapsed = window.settingsSync?.getBool('settingUiSidebarCollapsed') === true;");
         expect(baseTemplate).toContain("settingsSync.setBool('settingUiSidebarCollapsed'");
     });
 });
