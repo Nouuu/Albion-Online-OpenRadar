@@ -512,7 +512,8 @@ describe('settings control tile contract', () => {
             const c = row.classList;
             const tile = row.tagName === 'DIV' && ['flex', 'items-center', 'p-2', 'rounded-lg', 'bg-base-300'].every(name => c.contains(name));
             const named = el.getAttribute('aria-labelledby') === `label-${key}` && !el.hasAttribute('aria-label');
-            return tile && named && order === 'icon label minus range plus readout reset' ? [] : [`${name}: ${key} "${order}"`];
+            const iconKept = row.firstElementChild.classList.contains('shrink-0');
+            return tile && named && iconKept && order === 'icon label minus range plus readout reset' ? [] : [`${name}: ${key} "${order}"`];
         }));
         expect(drift).toEqual([]);
     });
