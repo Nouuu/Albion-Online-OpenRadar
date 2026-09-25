@@ -34,26 +34,27 @@
                                 <i data-lucide="monitor" class="w-4 h-4"></i>
                                 View
                             </h3>
-                            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
-                                <div class="col-span-full flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                            <div class="grid grid-cols-1 gap-2 max-w-2xl">
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="zoom-in" class="w-4 h-4 shrink-0 text-base-content/50"></i>
-                                    <span id="label-settingRadarZoom" data-setting-label="settingRadarZoom" class="text-base-content/80 text-xs whitespace-nowrap">Zoom</span>
+                                    <span id="label-settingRadarZoom" data-setting-label="settingRadarZoom" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Zoom</span>
+                                    <span class="w-3 shrink-0" aria-hidden="true"></span>
                                     <button type="button" data-nudge="settingRadarZoom" data-dir="-1" aria-label="Decrease zoom" title="Decrease zoom" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
                                     <input type="range" data-setting="settingRadarZoom" aria-labelledby="label-settingRadarZoom" min="0.1" max="3" step="0.1" class="range range-primary range-xs min-w-0 w-full max-w-64">
                                     <button type="button" data-nudge="settingRadarZoom" data-dir="1" aria-label="Increase zoom" title="Increase zoom" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarZoom" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
+                                    <span data-value-for="settingRadarZoom" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
                                     <button type="button" data-reset="settingRadarZoom" aria-label="Reset zoom" title="Reset zoom" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                                 </div>
-                                <div class="col-span-full flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="maximize" class="w-4 h-4 shrink-0 text-base-content/50"></i>
-                                    <span id="label-settingRadarSize" data-setting-label="settingRadarSize" class="text-base-content/80 text-xs whitespace-nowrap">Max size</span>
-                                    <div class="tooltip" data-setting-tip="settingRadarSize" data-tip="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.">
+                                    <span id="label-settingRadarSize" data-setting-label="settingRadarSize" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Max size</span>
+                                    <div class="tooltip shrink-0" data-setting-tip="settingRadarSize" data-tip="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on.">
                                         <span tabindex="0" role="img" aria-label="Width and height of the radar in pixels, reduced when the window is too small. Ignored while Fit to screen is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
                                     <button type="button" data-nudge="settingRadarSize" data-dir="-1" aria-label="Decrease max size" title="Decrease max size" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
                                     <input type="range" data-setting="settingRadarSize" aria-labelledby="label-settingRadarSize" min="300" max="1200" step="50" class="range range-primary range-xs min-w-0 w-full max-w-64">
                                     <button type="button" data-nudge="settingRadarSize" data-dir="1" aria-label="Increase max size" title="Increase max size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
+                                    <span data-value-for="settingRadarSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
                                     <button type="button" data-reset="settingRadarSize" aria-label="Reset max size" title="Reset max size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                                 </div>
                                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
@@ -63,13 +64,14 @@
                                         <span tabindex="0" role="img" aria-label="Makes the radar the largest square that fits the window, up to 1200 px. Max size is ignored while this is on." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
                                 </label>
-                                <div class="col-span-full flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="image" class="w-4 h-4 shrink-0 text-base-content/50"></i>
-                                    <span id="label-settingRadarIconSize" data-setting-label="settingRadarIconSize" class="text-base-content/80 text-xs whitespace-nowrap">Icon size</span>
+                                    <span id="label-settingRadarIconSize" data-setting-label="settingRadarIconSize" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Icon size</span>
+                                    <span class="w-3 shrink-0" aria-hidden="true"></span>
                                     <button type="button" data-nudge="settingRadarIconSize" data-dir="-1" aria-label="Decrease icon size" title="Decrease icon size" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
                                     <input type="range" data-setting="settingRadarIconSize" aria-labelledby="label-settingRadarIconSize" min="0.5" max="2" step="0.1" class="range range-primary range-xs min-w-0 w-full max-w-64">
                                     <button type="button" data-nudge="settingRadarIconSize" data-dir="1" aria-label="Increase icon size" title="Increase icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarIconSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 text-right whitespace-nowrap"></span>
+                                    <span data-value-for="settingRadarIconSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
                                     <button type="button" data-reset="settingRadarIconSize" aria-label="Reset icon size" title="Reset icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                                 </div>
                             </div>
@@ -80,7 +82,7 @@
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                     Display
                                 </h3>
-                                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                                <div class="grid grid-cols-1 gap-2 max-w-xl">
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarMapBackground" class="toggle toggle-primary toggle-sm">
                                         <span id="label-settingRadarMapBackground" data-setting-label="settingRadarMapBackground" class="text-base-content/80 text-xs group-hover:text-base-content">Map background</span>
@@ -113,7 +115,7 @@
                                     <i data-lucide="gem" class="w-4 h-4"></i>
                                     Resources
                                 </h3>
-                                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                                <div class="grid grid-cols-1 gap-2 max-w-xl">
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarResourceCount" aria-labelledby="label-settingRadarResourceCount" class="toggle toggle-primary toggle-sm">
                                         <span id="label-settingRadarResourceCount" data-setting-label="settingRadarResourceCount" class="text-base-content/80 text-xs group-hover:text-base-content">Resource count</span>
@@ -142,7 +144,7 @@
                                             <span tabindex="0" role="img" aria-label="Rings groups of nearby resource nodes of the same type and tier, with the node count, total quantity and distance. Only nodes your resource filters show are grouped." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
-                                    <div class="col-span-full ml-8 space-y-2">
+                                    <div class="ml-8 space-y-2">
                                         <label class="flex flex-wrap items-center gap-3">
                                             <input type="number" data-setting="settingRadarClusterRadius" data-enabled-by="settingRadarResourceClusters"
                                                    min="10" max="100" step="5" aria-label="Cluster radius (m)" class="input input-bordered input-sm w-32 disabled:opacity-50">

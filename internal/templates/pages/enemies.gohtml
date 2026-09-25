@@ -23,7 +23,7 @@
         </div>
         <div class="collapse-content">
             <div class="pt-2">
-                <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingEnemiesNormal" aria-labelledby="label-settingEnemiesNormal" class="checkbox checkbox-info checkbox-xs">
                         <span class="w-3 h-3 rounded-full bg-tier-3"></span>
@@ -62,7 +62,7 @@
                 </div>
 
                 <div class="border-t border-base-content/10 mt-4 pt-4">
-                    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+                    <div class="grid grid-cols-1 gap-2 max-w-xl">
                         <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                             <input type="checkbox" data-setting="settingEnemiesMinHealthFilter" aria-labelledby="label-settingEnemiesMinHealthFilter" class="toggle toggle-primary toggle-sm">
                             <span id="label-settingEnemiesMinHealthFilter" data-setting-label="settingEnemiesMinHealthFilter" class="text-base-content/80 text-xs group-hover:text-base-content">Show enemies with minimum HP</span>
@@ -71,7 +71,7 @@
                             </div>
                         </label>
 
-                        <div class="col-span-full ml-8">
+                        <div class="ml-8">
                             <label class="flex flex-wrap items-center gap-3">
                                 <input type="number" data-setting="settingEnemiesMinHealth" data-enabled-by="settingEnemiesMinHealthFilter"
                                        min="100" max="1000000" step="100"
@@ -93,7 +93,7 @@
             <span class="badge bg-warning/20 border-warning/40 text-warning gap-1"><i data-lucide="flask-conical" class="w-3 h-3"></i>Experimental</span>
         </div>
         <div class="collapse-content">
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 pt-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesMistsCrystalSpider" aria-labelledby="label-settingEnemiesMistsCrystalSpider" class="checkbox checkbox-primary checkbox-xs">
                     <span class="w-3 h-3 rounded-full bg-tier-4"></span>
@@ -141,7 +141,7 @@
             <span class="badge bg-warning/20 border-warning/40 text-warning gap-1"><i data-lucide="flask-conical" class="w-3 h-3"></i>Not validated yet</span>
         </div>
         <div class="collapse-content">
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 pt-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesAvalonianDrones" aria-labelledby="label-settingEnemiesAvalonianDrones" class="checkbox checkbox-primary checkbox-xs">
                     <span id="label-settingEnemiesAvalonianDrones" data-setting-label="settingEnemiesAvalonianDrones" class="text-base-content/80 text-xs group-hover:text-base-content">Avalonian Drones</span>
@@ -167,7 +167,7 @@
                 <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
                 Display
             </h2>
-            <div class="grid grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))] gap-2">
+            <div class="grid grid-cols-1 gap-2 max-w-xl">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesShowHealthBars" class="toggle toggle-primary toggle-sm">
                     <span id="label-settingEnemiesShowHealthBars" data-setting-label="settingEnemiesShowHealthBars" class="text-base-content/80 text-xs group-hover:text-base-content">Show health bars</span>

@@ -503,7 +503,7 @@ describe('settings control tile contract', () => {
             const order = [...row.children].map(child => {
                 if (child.matches('i[data-lucide]')) return 'icon';
                 if (child.matches(`[data-setting-label="${key}"]`)) return 'label';
-                if (child.matches(`[data-setting-tip="${key}"]`)) return 'tip';
+                if (child.matches(`[data-setting-tip="${key}"]`) || child.matches('span.w-3[aria-hidden="true"]')) return 'tip';
                 if (child.matches(`[data-nudge="${key}"][data-dir="-1"]`)) return 'minus';
                 if (child === el) return 'range';
                 if (child.matches(`[data-nudge="${key}"][data-dir="1"]`)) return 'plus';
@@ -520,24 +520,55 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
-    const TILE_GRID = ['grid', 'grid-cols-[repeat(auto-fill,minmax(min(16rem,100%),1fr))]', 'gap-2'];
+    const LIST_TYPES = {
+        items: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-3', 'gap-2'],
+        stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
+        sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
+    };
+    const LISTS = {
+        radar: {settingRadarZoom: 'sliders', settingRadarMapBackground: 'stack', settingRadarResourceCount: 'stack'},
+        players: {settingPlayersDetect: 'stack', settingAlertFlash: 'stack', settingAlertSound: 'sliders',
+            settingPlayersPassive: 'items', settingPlayersMaxDisplayed: 'stack'},
+        enemies: {settingEnemiesNormal: 'items', settingEnemiesMinHealthFilter: 'stack', settingEnemiesMistsCrystalSpider: 'items',
+            settingEnemiesAvalonianDrones: 'items', settingEnemiesShowHealthBars: 'stack'},
+        resources: {settingResourcesFishing: 'stack', settingResourcesShowHealthBars: 'stack'},
+        chests: {settingChestsGreen: 'items', settingMistsSolo: 'items', settingMistsEnchant0: 'items', settingMistsWispCages: 'stack',
+            settingDungeonsSolo: 'items', settingDungeonsEnchant0: 'items', settingDungeonsCorrupted: 'items'},
+        settings: {settingLogToConsole: 'stack', settingLogCategorySystem: 'items', settingDebugEnemiesUnidentified: 'stack',
+            settingDebugResourcesTypeId: 'stack', settingDebugMistsWispIds: 'stack', settingDebugWsCoalescing: 'stack',
+            settingDebugBackendLogs: 'stack'},
+    };
+    const LAYOUT_CLASS = /^(grid|gap-.*|max-w-.*|(\w+:)?grid-cols-.*)$/;
     const tiles = pages.flatMap(({name, root}) => [...root.querySelectorAll('.flex.items-center.p-2.rounded-lg')]
         .filter(el => el.querySelector('[data-setting]') && !el.closest('h1, h2, h3'))
         .map(el => ({page: name, el})));
+    const lists = pages.flatMap(({name, root}) => [...new Set(tiles.filter(tile => tile.page === name).map(tile => tile.el.parentElement))]
+        .map(list => ({page: name, list, first: list.querySelector('[data-setting]').dataset.setting, root})));
 
-    test('every tile list is an equal-width auto-fill grid', () => {
-        const drift = tiles.flatMap(({page, el}) => {
-            const list = el.parentElement;
-            const ok = TILE_GRID.every(name => list.classList.contains(name))
-                && [...list.classList].filter(name => name.startsWith('grid-cols-') || /:grid-cols-/.test(name)).length === 1;
-            return ok ? [] : [`${page}: ${el.querySelector('[data-setting]').dataset.setting} in "${list.className}"`];
-        });
+    function typeOf(list) {
+        const layout = [...list.classList].filter(name => LAYOUT_CLASS.test(name)).sort().join(' ');
+        return Object.keys(LIST_TYPES).find(type => [...LIST_TYPES[type]].sort().join(' ') === layout) ?? `"${layout}"`;
+    }
+
+    test('every tile list is classified and carries the class set of its type', () => {
+        const actual = Object.fromEntries(Object.keys(LISTS).map(page => [page,
+            Object.fromEntries(lists.filter(entry => entry.page === page).map(({first, list}) => [first, typeOf(list)]))]));
         expect(tiles.length).toBeGreaterThan(80);
+        expect(actual).toEqual(LISTS);
+    });
+
+    test('a list holding a slider row is the slider column, a list holding a gated sub-row is a single column', () => {
+        const drift = lists.flatMap(({page, list, first}) => {
+            const type = typeOf(list);
+            if (list.querySelector('input[type="range"]') && type !== 'sliders') return [`${page}: ${first} is ${type}`];
+            if (list.querySelector('[data-enabled-by]') && type !== 'stack') return [`${page}: ${first} is ${type}`];
+            return [];
+        });
         expect(drift).toEqual([]);
     });
 
-    test('every slider row spans the full tile grid', () => {
-        const drift = tiles.filter(({el}) => el.querySelector('input[type="range"]') && !el.classList.contains('col-span-full'))
+    test('no tile spans columns', () => {
+        const drift = tiles.filter(({el}) => [...el.classList].some(name => name.startsWith('col-span')))
             .map(({page, el}) => `${page}: ${el.querySelector('[data-setting]').dataset.setting}`);
         expect(drift).toEqual([]);
     });
@@ -553,12 +584,28 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
-    test('a gated sub-row spans the grid right after the tile of its toggle', () => {
+    test('every slider row has a fixed label column and a tip slot, so the ranges of a column line up', () => {
+        const drift = all('input[type="range"][data-setting]').flatMap(({page, el}) => {
+            const label = el.parentElement.querySelector(`[data-setting-label="${el.dataset.setting}"]`);
+            const slot = label?.nextElementSibling;
+            const readout = el.parentElement.querySelector(`[data-value-for="${el.dataset.setting}"]`);
+            const ok = ['w-16', 'shrink-0'].every(name => label.classList.contains(name))
+                && ['w-14', 'shrink-0'].every(name => readout?.classList.contains(name))
+                && (slot?.matches(`[data-setting-tip="${el.dataset.setting}"].shrink-0`)
+                    || (slot?.matches('span.w-3.shrink-0[aria-hidden="true"]') && slot.childElementCount === 0));
+            return ok ? [] : [`${page}: ${el.dataset.setting}`];
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('a gated sub-row sits in the single column of its toggle, right under it', () => {
         const drift = all('[data-enabled-by]').flatMap(({page, el}) => {
-            const row = el.closest('.col-span-full');
-            const toggle = row?.previousElementSibling;
-            const ok = toggle?.querySelector(`input[type="checkbox"][data-setting="${el.dataset.enabledBy}"]`)
-                && tiles.some(tile => tile.el === toggle) && TILE_GRID.every(name => row.parentElement.classList.contains(name));
+            const toggle = tiles.find(tile => tile.page === page
+                && tile.el.querySelector(`input[type="checkbox"][data-setting="${el.dataset.enabledBy}"]`))?.el;
+            let row = el;
+            while (row && row.parentElement !== toggle?.parentElement) row = row.parentElement;
+            const ok = toggle && row && row.previousElementSibling === toggle && typeOf(row.parentElement) === 'stack'
+                && ![...row.classList].some(name => name.startsWith('col-span'));
             return ok ? [] : [`${page}: ${el.dataset.setting}`];
         });
         expect(drift).toEqual([]);
