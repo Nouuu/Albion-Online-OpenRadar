@@ -180,6 +180,12 @@ describe('template settings contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('every collapse title leads with an icon', () => {
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > .collapse-title')]
+            .filter(title => !title.firstElementChild?.matches('i[data-lucide]')).map(title => `${name}: ${normalized(title)}`));
+        expect(drift).toEqual([]);
+    });
+
     test('every collapse toggle is named by its title', () => {
         const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > input[type="checkbox"]')].flatMap(el => {
             const title = root.querySelector(`[data-setting-label~="${el.dataset.setting}"]`);
