@@ -9,11 +9,6 @@ export const ALL_FALSE_MATRIX_STRING = JSON.stringify(Object.fromEntries(ENCHANT
 const MATRIX_ROWS = ['Fiber', 'Hide', 'Wood', 'Ore', 'Rock'].flatMap(resource => ['Static', 'Living'].map(kind =>
     [`settingResources${kind}${resource}`, 'json', DEFAULT_MATRIX, `setting${kind}${resource}Enchants`, 'product', {shape: 'matrix'}]));
 
-const NETWORK_PATHS = {
-    settingDebugBackendLogs: 'logging.serverLogsEnabled',
-    settingDebugPcapRecording: 'logging.pcapRecording',
-};
-
 const ROWS = [
     ['settingRadarZoom', 'float', 1, 'settingRadarZoom', 'keep', {min: 0.1, max: 3, step: 0.1, unit: '%'}],
     ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 1200, step: 50, unit: ' px'}],
@@ -329,7 +324,6 @@ export const SETTINGS = deepFreeze(ROWS.filter(row => row[4] !== 'remove').map((
     scope: scopeOf(key, legacyKey, migration),
     migration,
     legacyKey,
-    networkPath: NETWORK_PATHS[key] ?? null,
 })));
 
 const BY_KEY = new Map(SETTINGS.map(entry => [entry.key, entry]));
@@ -343,8 +337,6 @@ export function registryDefault(key) {
     if (!entry) throw new Error(`Unknown setting key: ${key}`);
     return entry.default;
 }
-
-export const LEGACY_REMOVED = deepFreeze(ROWS.filter(row => REMOVED.has(row[4])).map(row => row[3]));
 
 export const MIGRATION_ROWS = deepFreeze(ROWS.map(([key, , , legacyKey, migration]) =>
     ({legacyKey, key: REMOVED.has(migration) ? null : key, migration})));

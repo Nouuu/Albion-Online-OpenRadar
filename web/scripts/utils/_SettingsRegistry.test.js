@@ -1,6 +1,6 @@
 // synthetic: registry shape checked against the settings table.
 import {describe, test, expect} from 'vitest';
-import {SETTINGS, registryEntry, registryDefault, LEGACY_REMOVED, MIGRATION_ROWS} from './SettingsRegistry.js';
+import {SETTINGS, registryEntry, registryDefault, MIGRATION_ROWS} from './SettingsRegistry.js';
 import {ALERT_SOUNDS, DEFAULT_SOUND} from './AlertSoundCatalog.js';
 
 const KEY_PATTERN = /^setting(Radar|Players|Alert|Ignore|Enemies|Resources|Chests|Mists|Dungeons|Log|Debug|Ui)[A-Z][A-Za-z0-9]*$/;
@@ -152,11 +152,6 @@ describe('SettingsRegistry', () => {
 
     test('MIGRATION_ROWS maps the 130 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
-    });
-
-    test('LEGACY_REMOVED lists the remove and backend legacy keys', () => {
-        const expected = TABLE.filter(([, , m]) => m === 'remove' || m === 'backend').map(([legacyKey]) => legacyKey);
-        expect([...LEGACY_REMOVED].sort()).toEqual(expected.sort());
     });
 
     test('removed rows have no registry entry', () => {
