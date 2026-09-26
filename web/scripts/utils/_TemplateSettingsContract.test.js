@@ -311,7 +311,7 @@ describe('collapsible settings sections', () => {
     const ADVANCED_CLOSED = ['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen'];
     const isHeader = el => el.classList.contains('card') && el.querySelector('h1') !== null;
 
-    test.each(['enemies'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
+    test.each(['enemies', 'resources'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
         const root = pages.find(page => page.name === name).root;
         const container = root.querySelector('.space-y-6');
         const sections = [...container.children].filter(el => !isHeader(el) && !el.matches('[role="alert"]'));

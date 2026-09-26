@@ -120,6 +120,8 @@ const TABLE = [
     ['collapse-wood', 'settingUiResourcesWoodOpen', 'rename'],
     ['collapse-ore', 'settingUiResourcesOreOpen', 'rename'],
     ['collapse-rock', 'settingUiResourcesRockOpen', 'rename'],
+    [null, 'settingUiResourcesOtherOpen', 'new'],
+    [null, 'settingUiResourcesDisplayOpen', 'new'],
     ['collapse-settings-logging', 'settingUiSettingsLoggingOpen', 'rename'],
     ['collapse-settings-debug', 'settingUiSettingsDebugOpen', 'rename'],
     ['collapse-settings-network', 'settingUiSettingsNetworkOpen', 'rename'],
@@ -138,7 +140,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 118 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 120 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -200,6 +202,7 @@ describe('SettingsRegistry', () => {
             settingUiEnemiesOtherOpen: false, settingUiEnemiesDisplayOpen: true,
             settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
             settingUiResourcesWoodOpen: false, settingUiResourcesOreOpen: false, settingUiResourcesRockOpen: false,
+            settingUiResourcesOtherOpen: true, settingUiResourcesDisplayOpen: true,
             settingUiSettingsLoggingOpen: false, settingUiSettingsDebugOpen: false,
             settingUiSettingsNetworkOpen: false, settingUiSidebarCollapsed: false,
         };
@@ -305,6 +308,8 @@ describe('SettingsRegistry control location', () => {
         ['settingUiEnemiesDisplayOpen', 'Enemies', 'Display'],
         ['settingResourcesLivingRock', 'Resources', 'Rock > Living'],
         ['settingResourcesFishing', 'Resources', 'Other'],
+        ['settingUiResourcesOtherOpen', 'Resources', 'Other'],
+        ['settingUiResourcesDisplayOpen', 'Resources', 'Display'],
         ['settingMistsWisps', 'Chests', 'Mists'],
         ['settingDungeonsHellgate', 'Chests', 'Dungeons'],
         ['settingDebugEnemiesTier', 'Settings', 'Debug > Enemies'],

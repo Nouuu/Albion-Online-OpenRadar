@@ -79,12 +79,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="fish" class="w-5 h-5 text-primary"></i>
-                Other
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiResourcesOtherOpen" aria-labelledby="label-settingUiResourcesOtherOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="fish" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiResourcesOtherOpen" data-setting-label="settingUiResourcesOtherOpen">Other</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-1 gap-2 max-w-xl">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingResourcesFishing" aria-labelledby="label-settingResourcesFishing" class="toggle toggle-primary toggle-sm">
@@ -94,12 +95,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
-                Display
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiResourcesDisplayOpen" aria-labelledby="label-settingUiResourcesDisplayOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiResourcesDisplayOpen" data-setting-label="settingUiResourcesDisplayOpen">Display</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-1 gap-2 max-w-xl">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingResourcesShowHealthBars" aria-labelledby="label-settingResourcesShowHealthBars" class="toggle toggle-primary toggle-sm">
