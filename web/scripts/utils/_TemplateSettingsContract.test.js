@@ -573,7 +573,7 @@ describe('settings control tile contract', () => {
     const LIST_TYPES = {
         items: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-3', 'gap-2'],
         pair: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-2'],
-        panel: ['grid', 'grid-cols-1', '@lg:grid-cols-2', '@3xl:grid-cols-3', 'gap-2'],
+        panel: ['grid', 'grid-cols-1', '@sm:grid-cols-2', '@xl:grid-cols-3', 'gap-2'],
         stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
         sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
     };
