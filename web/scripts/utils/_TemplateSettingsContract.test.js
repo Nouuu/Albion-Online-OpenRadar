@@ -537,6 +537,7 @@ describe('settings control tile contract', () => {
 
     const LIST_TYPES = {
         items: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-3', 'gap-2'],
+        pair: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-2'],
         stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
         sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
     };
@@ -545,10 +546,10 @@ describe('settings control tile contract', () => {
         players: {settingPlayersDetect: 'stack', settingAlertFlash: 'stack', settingAlertSound: 'sliders',
             settingPlayersPassive: 'items', settingPlayersMaxDisplayed: 'stack'},
         enemies: {settingEnemiesNormal: 'items', settingEnemiesMinHealthFilter: 'stack', settingEnemiesMistsCrystalSpider: 'items',
-            settingEnemiesAvalonianDrones: 'items', settingEnemiesShowHealthBars: 'stack'},
+            settingEnemiesAvalonianDrones: 'pair', settingEnemiesShowHealthBars: 'stack'},
         resources: {settingResourcesFishing: 'stack', settingResourcesShowHealthBars: 'stack'},
-        chests: {settingChestsGreen: 'items', settingMistsSolo: 'items', settingMistsEnchant0: 'items', settingMistsWispCages: 'stack',
-            settingDungeonsSolo: 'items', settingDungeonsEnchant0: 'items', settingDungeonsCorrupted: 'items'},
+        chests: {settingChestsGreen: 'items', settingMistsSolo: 'pair', settingMistsEnchant0: 'items', settingMistsWispCages: 'stack',
+            settingDungeonsSolo: 'pair', settingDungeonsEnchant0: 'items', settingDungeonsCorrupted: 'pair'},
         settings: {settingLogToConsole: 'stack', settingLogCategorySystem: 'items', settingDebugEnemiesUnidentified: 'stack',
             settingDebugResourcesTypeId: 'stack', settingDebugMistsWispIds: 'stack', settingDebugWsCoalescing: 'stack',
             settingDebugBackendLogs: 'stack'},
@@ -578,6 +579,16 @@ describe('settings control tile contract', () => {
             if (list.querySelector('input[type="range"]') && type !== 'sliders') return [`${page}: ${first} is ${type}`];
             if (list.querySelector('[data-enabled-by]') && type !== 'stack') return [`${page}: ${first} is ${type}`];
             return [];
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('an item grid never has more columns than tiles', () => {
+        const MAX_COLUMNS = {items: 3, pair: 2};
+        const drift = lists.flatMap(({page, list, first}) => {
+            const columns = MAX_COLUMNS[typeOf(list)];
+            const count = [...list.children].filter(child => tiles.some(tile => tile.el === child)).length;
+            return columns && count < columns ? [`${page}: ${first} has ${count} tiles in ${columns} columns`] : [];
         });
         expect(drift).toEqual([]);
     });
