@@ -1,5 +1,5 @@
 // synthetic: source text and template markup, not a capture.
-import {readFileSync} from 'node:fs';
+import {readFileSync, readdirSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe, expect, test} from 'vitest';
@@ -8,6 +8,11 @@ import {mountPage} from '../__fixtures__/pageMarkup.js';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 const inputCss = readFileSync(join(ROOT, 'web/styles/input.css'), 'utf8');
 const baseLayout = readFileSync(join(ROOT, 'internal/templates/layouts/base.gohtml'), 'utf8');
+const PAGES_DIR = join(ROOT, 'internal/templates/pages');
+
+function pageNames() {
+    return readdirSync(PAGES_DIR).filter(file => file.endsWith('.gohtml')).map(file => file.replace('.gohtml', ''));
+}
 
 function loadLayout(name) {
     const root = document.createElement('div');
@@ -58,10 +63,13 @@ describe('phone layout contract', () => {
         for (const key of ['settingRadarClusterRadius', 'settingRadarClusterMinSize']) {
             expect(flexWrap(document.querySelector(`[data-setting="${key}"]`).closest('label')), key).toBe(true);
         }
+        const badgedTitles = pageNames().flatMap(name => {
+            mountPage(name);
+            return [...document.querySelectorAll('.collapse-title')].filter(t => t.querySelector('.badge'));
+        });
+        expect(badgedTitles.length).toBeGreaterThan(0);
+        expect(badgedTitles.every(flexWrap)).toBe(true);
         mountPage('enemies');
-        const titles = [...document.querySelectorAll('.collapse-title')].filter(t => t.querySelector('.badge'));
-        expect(titles.length).toBeGreaterThan(0);
-        expect(titles.every(flexWrap)).toBe(true);
         expect(flexWrap(document.querySelector('[data-setting="settingEnemiesMinHealth"]').closest('label'))).toBe(true);
         mountPage('settings');
         const exportRow = document.getElementById('downloadLogsBtn').parentElement;
