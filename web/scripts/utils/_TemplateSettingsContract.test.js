@@ -633,6 +633,15 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('inside one tile list, every tile has a leading icon or none has', () => {
+        const drift = lists.flatMap(({page, list, first}) => {
+            const rows = [...list.children].filter(child => tiles.some(tile => tile.el === child));
+            const withIcon = rows.filter(row => row.querySelector(':scope > i[data-lucide]')).length;
+            return withIcon === 0 || withIcon === rows.length ? [] : [`${page}: ${first} ${withIcon}/${rows.length}`];
+        });
+        expect(drift).toEqual([]);
+    });
+
     test('a number input tile keeps its label on one line', () => {
         const drift = tiles.filter(({el}) => el.querySelector('input[type="number"]')).flatMap(({page, el}) => {
             const key = el.querySelector('input[type="number"]').dataset.setting;
@@ -741,6 +750,12 @@ describe('settings debug sections', () => {
             return icon === NAV_ICONS[normalized(h3)] ? [] : [`${normalized(h3)}: ${icon} vs ${NAV_ICONS[normalized(h3)]}`];
         });
         expect(named.map(normalized)).toEqual(['Enemies', 'Resources']);
+        expect(drift).toEqual([]);
+    });
+
+    test('debug tiles carry no leading icon', () => {
+        const drift = [...debug.querySelectorAll('section label')].filter(label => label.querySelector(':scope > i[data-lucide]'))
+            .map(label => label.querySelector('[data-setting]').dataset.setting);
         expect(drift).toEqual([]);
     });
 
