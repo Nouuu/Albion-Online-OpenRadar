@@ -574,21 +574,9 @@ describe('settings control tile contract', () => {
         items: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-3', 'gap-2'],
         pair: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-2'],
         panel: ['grid', 'grid-cols-1', '@sm:grid-cols-2', '@xl:grid-cols-3', 'gap-2'],
+        panelPair: ['grid', 'grid-cols-1', '@sm:grid-cols-2', 'gap-2'],
         stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
         sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
-    };
-    const LISTS = {
-        radar: {settingRadarZoom: 'sliders', settingRadarMapBackground: 'panel', settingRadarResourceCount: 'panel'},
-        players: {settingPlayersDetect: 'items', settingAlertFlash: 'stack', settingAlertSound: 'sliders',
-            settingPlayersPassive: 'items', settingPlayersMaxDisplayed: 'stack'},
-        enemies: {settingEnemiesNormal: 'items', settingEnemiesMinHealthFilter: 'stack', settingEnemiesMistsCrystalSpider: 'items',
-            settingEnemiesAvalonianDrones: 'pair', settingEnemiesShowHealthBars: 'stack'},
-        resources: {settingResourcesFishing: 'stack', settingResourcesShowHealthBars: 'stack'},
-        chests: {settingChestsGreen: 'items', settingMistsSolo: 'pair', settingMistsEnchant0: 'items', settingMistsWispCages: 'stack',
-            settingDungeonsSolo: 'pair', settingDungeonsEnchant0: 'items', settingDungeonsCorrupted: 'pair'},
-        settings: {settingLogToConsole: 'stack', settingLogCategorySystem: 'items', settingDebugEnemiesUnidentified: 'items',
-            settingDebugResourcesTypeId: 'pair', settingDebugMistsWispIds: 'stack', settingDebugWsCoalescing: 'pair',
-            settingDebugBackendLogs: 'stack'},
     };
     const LAYOUT_CLASS = /^(grid|gap-.*|max-w-.*|(@?\w+:)?grid-cols-.*)$/;
     const tiles = pages.flatMap(({name, root}) => [...root.querySelectorAll('.flex.items-center.p-2.rounded-lg')]
@@ -602,11 +590,30 @@ describe('settings control tile contract', () => {
         return Object.keys(LIST_TYPES).find(type => [...LIST_TYPES[type]].sort().join(' ') === layout) ?? `"${layout}"`;
     }
 
-    test('every tile list is classified and carries the class set of its type', () => {
-        const actual = Object.fromEntries(Object.keys(LISTS).map(page => [page,
-            Object.fromEntries(lists.filter(entry => entry.page === page).map(({first, list}) => [first, typeOf(list)]))]));
+    function sameNatureCount(list) {
+        const kinds = [...list.children].filter(child => tiles.some(tile => tile.el === child))
+            .map(tile => tile.querySelector('[data-setting]'))
+            .map(el => el.type === 'checkbox' ? el.classList.contains('toggle') ? 'toggle' : 'checkbox' : el.type);
+        return Math.max(0, ...kinds.map(kind => kinds.filter(other => other === kind).length));
+    }
+
+    function expectedTypes(list) {
+        if (list.querySelector('input[type="range"]')) return ['sliders'];
+        const count = sameNatureCount(list);
+        if (count < 2) return ['stack'];
+        return count === 2 ? ['pair', 'panelPair'] : ['items', 'panel'];
+    }
+
+    test('a list of 2 or more same-nature tiles is an item grid capped at its count, a single tile is a stack', () => {
+        const drift = lists.flatMap(({page, list, first}) => {
+            const type = typeOf(list);
+            const expected = expectedTypes(list);
+            if (!expected.includes(type)) return [`${page}: ${first} is ${type}, expected ${expected.join(' or ')}`];
+            if (type.startsWith('panel') && !list.parentElement.closest('.\\@container')) return [`${page}: ${first} has no @container`];
+            return [];
+        });
         expect(tiles.length).toBeGreaterThan(80);
-        expect(actual).toEqual(LISTS);
+        expect(drift).toEqual([]);
     });
 
     test('a list holding a slider row is the slider column, a gated sub-row spans the full list', () => {
@@ -621,7 +628,7 @@ describe('settings control tile contract', () => {
     });
 
     test('an item grid never has more columns than tiles', () => {
-        const MAX_COLUMNS = {items: 3, pair: 2};
+        const MAX_COLUMNS = {items: 3, pair: 2, panel: 3, panelPair: 2};
         const drift = lists.flatMap(({page, list, first}) => {
             const columns = MAX_COLUMNS[typeOf(list)];
             const count = [...list.children].filter(child => tiles.some(tile => tile.el === child)).length;
