@@ -125,6 +125,7 @@ const TABLE = [
     ['collapse-settings-logging', 'settingUiSettingsLoggingOpen', 'rename'],
     ['collapse-settings-debug', 'settingUiSettingsDebugOpen', 'rename'],
     ['collapse-settings-network', 'settingUiSettingsNetworkOpen', 'rename'],
+    [null, 'settingUiSettingsDangerZoneOpen', 'new'],
     ['sidebarCollapsed', 'settingUiSidebarCollapsed', 'rename'],
 ];
 
@@ -140,7 +141,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 120 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 121 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -204,7 +205,7 @@ describe('SettingsRegistry', () => {
             settingUiResourcesWoodOpen: false, settingUiResourcesOreOpen: false, settingUiResourcesRockOpen: false,
             settingUiResourcesOtherOpen: true, settingUiResourcesDisplayOpen: true,
             settingUiSettingsLoggingOpen: false, settingUiSettingsDebugOpen: false,
-            settingUiSettingsNetworkOpen: false, settingUiSidebarCollapsed: false,
+            settingUiSettingsNetworkOpen: false, settingUiSettingsDangerZoneOpen: true, settingUiSidebarCollapsed: false,
         };
         for (const [key, value] of Object.entries(expected)) {
             expect(registryDefault(key), key).toEqual(value);
@@ -316,6 +317,7 @@ describe('SettingsRegistry control location', () => {
         ['settingDebugPcapRecording', 'Settings', 'Debug > Network traffic'],
         ['settingLogLevel', 'Settings', 'Logging'],
         ['settingUiSettingsNetworkOpen', 'Settings', 'Network'],
+        ['settingUiSettingsDangerZoneOpen', 'Settings', 'Danger Zone'],
         ['settingUiSidebarCollapsed', 'Layout', 'Sidebar'],
     ])('%s is on page %s, section %s', (key, page, section) => {
         expect(registryEntry(key)).toMatchObject({page, section});

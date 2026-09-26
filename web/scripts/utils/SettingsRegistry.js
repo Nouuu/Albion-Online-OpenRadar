@@ -126,6 +126,7 @@ const ROWS = [
     ['settingUiSettingsLoggingOpen', 'bool', false, 'collapse-settings-logging', 'rename'],
     ['settingUiSettingsDebugOpen', 'bool', false, 'collapse-settings-debug', 'rename'],
     ['settingUiSettingsNetworkOpen', 'bool', false, 'collapse-settings-network', 'rename'],
+    ['settingUiSettingsDangerZoneOpen', 'bool', true, null, 'new'],
     ['settingUiSidebarCollapsed', 'bool', false, 'sidebarCollapsed', 'rename'],
 ];
 
@@ -220,6 +221,7 @@ const TEXTS = {
     settingUiSettingsLoggingOpen: ['Logging'],
     settingUiSettingsDebugOpen: ['Debug'],
     settingUiSettingsNetworkOpen: ['Network'],
+    settingUiSettingsDangerZoneOpen: ['Danger Zone'],
 };
 
 const LOCATIONS = {
@@ -267,6 +269,7 @@ const LOCATIONS = {
     'Settings > Debug > Network traffic': ['settingDebugPcapRecording', 'settingDebugWsCoalescing'],
     'Settings > Debug': ['settingUiSettingsDebugOpen'],
     'Settings > Network': ['settingUiSettingsNetworkOpen'],
+    'Settings > Danger Zone': ['settingUiSettingsDangerZoneOpen'],
     'Layout > Sidebar': ['settingUiSidebarCollapsed'],
 };
 

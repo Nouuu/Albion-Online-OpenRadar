@@ -281,12 +281,13 @@
         </div>
     </div>
 
-    <div class="card bg-error/5 border border-error/20">
-        <div class="card-body">
-            <h2 class="text-lg font-semibold text-error mb-3 flex items-center gap-2">
-                <i data-lucide="alert-octagon" class="w-5 h-5"></i>
-                Danger Zone
-            </h2>
+    <div class="collapse collapse-arrow bg-error/5 border border-error/20 rounded-xl">
+        <input type="checkbox" data-setting="settingUiSettingsDangerZoneOpen" aria-labelledby="label-settingUiSettingsDangerZoneOpen"/>
+        <div class="collapse-title text-lg font-semibold text-error flex items-center gap-2">
+            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+            <span id="label-settingUiSettingsDangerZoneOpen" data-setting-label="settingUiSettingsDangerZoneOpen">Danger Zone</span>
+        </div>
+        <div class="collapse-content">
             <div class="flex flex-wrap gap-3">
                 <button id="resetSettingsBtn" class="btn btn-outline btn-error btn-sm">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>

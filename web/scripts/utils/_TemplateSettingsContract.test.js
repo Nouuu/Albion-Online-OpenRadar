@@ -311,7 +311,7 @@ describe('collapsible settings sections', () => {
     const ADVANCED_CLOSED = ['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen'];
     const isHeader = el => el.classList.contains('card') && el.querySelector('h1') !== null;
 
-    test.each(['enemies', 'resources'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
+    test.each(['enemies', 'resources', 'settings'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
         const root = pages.find(page => page.name === name).root;
         const container = root.querySelector('.space-y-6');
         const sections = [...container.children].filter(el => !isHeader(el) && !el.matches('[role="alert"]'));
@@ -368,9 +368,10 @@ describe('settings page', () => {
         expect(template).not.toContain('Errors are always saved on the backend side');
     });
 
-    test('the Logging, Debug and Network collapses are bound through data-setting', () => {
+    test('the Logging, Debug, Network and Danger Zone collapses are bound through data-setting', () => {
         const collapses = [...root.querySelectorAll('.collapse > input[type="checkbox"]')].map(el => el.dataset.setting);
-        expect(collapses).toEqual(['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen']);
+        expect(collapses).toEqual(['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen',
+            'settingUiSettingsDangerZoneOpen']);
     });
 
     test('Debug groups Enemies, Resources, Mists, Network traffic and Backend logs, then Export', () => {
