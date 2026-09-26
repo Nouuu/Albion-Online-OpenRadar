@@ -15,12 +15,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="archive" class="w-5 h-5 text-warning"></i>
-                Chests
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiChestsChestsOpen" aria-labelledby="label-settingUiChestsChestsOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="archive" class="w-5 h-5 text-warning"></i>
+            <span id="label-settingUiChestsChestsOpen" data-setting-label="settingUiChestsChestsOpen">Chests</span>
+        </div>
+        <div class="collapse-content">
             <p class="text-base-content/60 text-sm mb-4">Select which chest rarities to display on the radar.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
@@ -47,13 +48,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="cloud-fog" class="w-5 h-5 text-secondary"></i>
-                Mists
-            </h2>
-
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiChestsMistsOpen" aria-labelledby="label-settingUiChestsMistsOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="cloud-fog" class="w-5 h-5 text-secondary"></i>
+            <span id="label-settingUiChestsMistsOpen" data-setting-label="settingUiChestsMistsOpen">Mists</span>
+        </div>
+        <div class="collapse-content">
             <div class="space-y-4">
                 <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
@@ -126,13 +127,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="door-open" class="w-5 h-5 text-primary"></i>
-                Dungeons
-            </h2>
-
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiChestsDungeonsOpen" aria-labelledby="label-settingUiChestsDungeonsOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="door-open" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiChestsDungeonsOpen" data-setting-label="settingUiChestsDungeonsOpen">Dungeons</span>
+        </div>
+        <div class="collapse-content">
             <div class="space-y-4">
                 <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">

@@ -114,6 +114,9 @@ const TABLE = [
     [null, 'settingUiPlayersAlertsOpen', 'new'],
     [null, 'settingUiPlayersPlayerTypesOpen', 'new'],
     [null, 'settingUiPlayersLimitsOpen', 'new'],
+    [null, 'settingUiChestsChestsOpen', 'new'],
+    [null, 'settingUiChestsMistsOpen', 'new'],
+    [null, 'settingUiChestsDungeonsOpen', 'new'],
     ['collapse-classic', 'settingUiEnemiesClassicOpen', 'rename'],
     ['collapse-mists', 'settingUiEnemiesMistsOpen', 'rename'],
     ['collapse-other', 'settingUiEnemiesOtherOpen', 'rename'],
@@ -145,7 +148,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 125 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 128 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -206,6 +209,7 @@ describe('SettingsRegistry', () => {
             settingUiRadarSettingsOpen: false,
             settingUiPlayersDisplayOpen: true, settingUiPlayersAlertsOpen: true,
             settingUiPlayersPlayerTypesOpen: true, settingUiPlayersLimitsOpen: true,
+            settingUiChestsChestsOpen: true, settingUiChestsMistsOpen: true, settingUiChestsDungeonsOpen: true,
             settingUiEnemiesClassicOpen: true, settingUiEnemiesMistsOpen: true,
             settingUiEnemiesOtherOpen: false, settingUiEnemiesDisplayOpen: true,
             settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
@@ -323,7 +327,10 @@ describe('SettingsRegistry control location', () => {
         ['settingUiResourcesOtherOpen', 'Resources', 'Other'],
         ['settingUiResourcesDisplayOpen', 'Resources', 'Display'],
         ['settingMistsWisps', 'Chests', 'Mists'],
+        ['settingUiChestsChestsOpen', 'Chests', 'Chests'],
+        ['settingUiChestsMistsOpen', 'Chests', 'Mists'],
         ['settingDungeonsHellgate', 'Chests', 'Dungeons'],
+        ['settingUiChestsDungeonsOpen', 'Chests', 'Dungeons'],
         ['settingDebugEnemiesTier', 'Settings', 'Debug > Enemies'],
         ['settingDebugPcapRecording', 'Settings', 'Debug > Network traffic'],
         ['settingLogLevel', 'Settings', 'Logging'],
