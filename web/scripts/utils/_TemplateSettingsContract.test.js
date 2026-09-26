@@ -130,16 +130,16 @@ describe('template settings contract', () => {
     });
 
     test('every label element shows the registry label', () => {
-        const drift = all('[data-setting-label]').flatMap(({page, el}) => {
-            const label = registryEntry(el.dataset.settingLabel)?.label;
-            return label && normalized(el) === label ? [] : [`${page}: ${el.dataset.settingLabel} "${normalized(el)}" vs "${label}"`];
-        });
+        const drift = all('[data-setting-label]').flatMap(({page, el}) => el.dataset.settingLabel.split(' ').flatMap(key => {
+            const label = registryEntry(key)?.label;
+            return label && normalized(el) === label ? [] : [`${page}: ${key} "${normalized(el)}" vs "${label}"`];
+        }));
         expect(drift).toEqual([]);
     });
 
     test('every bound control outside a matrix has its label on the same page', () => {
         const missing = controls.filter(({page, el}) => registryEntry(el.dataset.setting)?.shape !== 'matrix'
-            && !all(`[data-setting-label="${el.dataset.setting}"]`).some(label => label.page === page))
+            && !all(`[data-setting-label~="${el.dataset.setting}"]`).some(label => label.page === page))
             .map(({page, el}) => `${page}: ${el.dataset.setting}`);
         expect(missing).toEqual([]);
     });
@@ -182,7 +182,7 @@ describe('template settings contract', () => {
 
     test('every collapse toggle is named by its title', () => {
         const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > input[type="checkbox"]')].flatMap(el => {
-            const title = root.querySelector(`[data-setting-label="${el.dataset.setting}"]`);
+            const title = root.querySelector(`[data-setting-label~="${el.dataset.setting}"]`);
             const id = el.getAttribute('aria-labelledby');
             const named = id ? root.querySelector(`[id="${id}"]`) === title : el.getAttribute('aria-label') === title?.textContent;
             return title && named ? [] : [`${name}: ${el.dataset.setting}`];
