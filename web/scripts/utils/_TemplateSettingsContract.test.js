@@ -593,6 +593,16 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('every div row of a slider list keeps the slider row gap and a fixed leading icon', () => {
+        const drift = lists.filter(({list}) => typeOf(list) === 'sliders').flatMap(({page, list}) =>
+            [...list.children].filter(row => row.tagName === 'DIV').flatMap(row => {
+                const ok = ['gap-1.5', 'sm:gap-2'].every(name => row.classList.contains(name)) && !row.classList.contains('gap-2')
+                    && row.firstElementChild.matches('i[data-lucide].shrink-0');
+                return ok ? [] : [`${page}: ${row.querySelector('[data-setting]').dataset.setting}`];
+            }));
+        expect(drift).toEqual([]);
+    });
+
     test('no tile spans columns', () => {
         const drift = tiles.filter(({el}) => [...el.classList].some(name => name.startsWith('col-span')))
             .map(({page, el}) => `${page}: ${el.querySelector('[data-setting]').dataset.setting}`);
