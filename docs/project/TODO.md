@@ -55,9 +55,8 @@
 Findings from PR cycles that need pcap-backed investigation before anyone can fix them.
 
 - **Chest rarity slot** (#29). See backlog above.
-- **Feu follet rarity values**. The rarity sits at `Parameters[34]` since Dragonfire. The 2026-09-03 duo portal carries
-  value 2, which the 0 to 4 map reads as Rare, but it was noted as Uncommon. Needs a capture that pairs each value
-  with the rarity shown in game.
+- **Feu follet rarity slot**. Every fixture sample is Common (`Parameters[33]=0`). Live play shows an Uncommon portal
+  labelled as such in game, so the rarity is carried somewhere. Needs a multi-rarity capture.
 - **Mists cluster rarity**. Zone-level rarity lives in the `ChangeCluster` operation response `Parameters[3]` byte
   array, last byte. Plumbing it needs a Mists capture with the opcode 41 response and a cluster-rarity store.
 - **Alert gate on unknown zones** (#65, closed but the behaviour stands). `zonesDatabase.getPvpType` falls back to
