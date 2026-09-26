@@ -560,23 +560,24 @@ describe('settings control tile contract', () => {
     const LIST_TYPES = {
         items: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'xl:grid-cols-3', 'gap-2'],
         pair: ['grid', 'grid-cols-1', 'sm:grid-cols-2', 'gap-2'],
+        panel: ['grid', 'grid-cols-1', '@lg:grid-cols-2', '@3xl:grid-cols-3', 'gap-2'],
         stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
         sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
     };
     const LISTS = {
-        radar: {settingRadarZoom: 'sliders', settingRadarMapBackground: 'stack', settingRadarResourceCount: 'stack'},
-        players: {settingPlayersDetect: 'stack', settingAlertFlash: 'stack', settingAlertSound: 'sliders',
+        radar: {settingRadarZoom: 'sliders', settingRadarMapBackground: 'panel', settingRadarResourceCount: 'panel'},
+        players: {settingPlayersDetect: 'items', settingAlertFlash: 'stack', settingAlertSound: 'sliders',
             settingPlayersPassive: 'items', settingPlayersMaxDisplayed: 'stack'},
         enemies: {settingEnemiesNormal: 'items', settingEnemiesMinHealthFilter: 'stack', settingEnemiesMistsCrystalSpider: 'items',
             settingEnemiesAvalonianDrones: 'pair', settingEnemiesShowHealthBars: 'stack'},
         resources: {settingResourcesFishing: 'stack', settingResourcesShowHealthBars: 'stack'},
         chests: {settingChestsGreen: 'items', settingMistsSolo: 'pair', settingMistsEnchant0: 'items', settingMistsWispCages: 'stack',
             settingDungeonsSolo: 'pair', settingDungeonsEnchant0: 'items', settingDungeonsCorrupted: 'pair'},
-        settings: {settingLogToConsole: 'stack', settingLogCategorySystem: 'items', settingDebugEnemiesUnidentified: 'stack',
-            settingDebugResourcesTypeId: 'stack', settingDebugMistsWispIds: 'stack', settingDebugWsCoalescing: 'stack',
+        settings: {settingLogToConsole: 'stack', settingLogCategorySystem: 'items', settingDebugEnemiesUnidentified: 'items',
+            settingDebugResourcesTypeId: 'pair', settingDebugMistsWispIds: 'stack', settingDebugWsCoalescing: 'pair',
             settingDebugBackendLogs: 'stack'},
     };
-    const LAYOUT_CLASS = /^(grid|gap-.*|max-w-.*|(\w+:)?grid-cols-.*)$/;
+    const LAYOUT_CLASS = /^(grid|gap-.*|max-w-.*|(@?\w+:)?grid-cols-.*)$/;
     const tiles = pages.flatMap(({name, root}) => [...root.querySelectorAll('.flex.items-center.p-2.rounded-lg')]
         .filter(el => el.querySelector('[data-setting]') && !el.closest('h1, h2, h3'))
         .map(el => ({page: name, el})));
@@ -595,11 +596,12 @@ describe('settings control tile contract', () => {
         expect(actual).toEqual(LISTS);
     });
 
-    test('a list holding a slider row is the slider column, a list holding a gated sub-row is a single column', () => {
+    test('a list holding a slider row is the slider column, a gated sub-row spans the full list', () => {
         const drift = lists.flatMap(({page, list, first}) => {
             const type = typeOf(list);
             if (list.querySelector('input[type="range"]') && type !== 'sliders') return [`${page}: ${first} is ${type}`];
-            if (list.querySelector('[data-enabled-by]') && type !== 'stack') return [`${page}: ${first} is ${type}`];
+            const subRows = [...list.children].filter(child => child.querySelector('[data-enabled-by]'));
+            if (type !== 'stack' && subRows.some(row => !row.classList.contains('col-span-full'))) return [`${page}: ${first} is ${type}`];
             return [];
         });
         expect(drift).toEqual([]);
@@ -662,8 +664,9 @@ describe('settings control tile contract', () => {
                 && tile.el.querySelector(`input[type="checkbox"][data-setting="${el.dataset.enabledBy}"]`))?.el;
             let row = el;
             while (row && row.parentElement !== toggle?.parentElement) row = row.parentElement;
-            const ok = toggle && row && row.previousElementSibling === toggle && typeOf(row.parentElement) === 'stack'
-                && ![...row.classList].some(name => name.startsWith('col-span'));
+            const spans = [...row?.classList ?? []].filter(name => name.startsWith('col-span'));
+            const ok = toggle && row && row.previousElementSibling === toggle
+                && (typeOf(row.parentElement) === 'stack' ? spans.length === 0 : spans.join() === 'col-span-full');
             return ok ? [] : [`${page}: ${el.dataset.setting}`];
         });
         expect(drift).toEqual([]);
@@ -720,6 +723,14 @@ describe('settings debug sections', () => {
         });
         expect(named.map(normalized)).toEqual(['Enemies', 'Resources']);
         expect(drift).toEqual([]);
+    });
+
+    test('Enemies spans the card and the other groups sit two per row on wide screens', () => {
+        const sections = [...debug.querySelectorAll('section')];
+        const grid = sections[1].parentElement;
+        expect(sections[0].parentElement.classList.contains('collapse-content')).toBe(true);
+        expect(sections.slice(1).every(section => section.parentElement === grid)).toBe(true);
+        expect([...grid.classList].sort()).toEqual(['2xl:grid-cols-2', 'gap-6', 'grid', 'grid-cols-1']);
     });
 });
 

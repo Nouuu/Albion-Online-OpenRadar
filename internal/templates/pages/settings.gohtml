@@ -159,7 +159,7 @@
                     <i data-lucide="skull" class="w-4 h-4"></i>
                     Enemies
                 </h3>
-                <div class="grid grid-cols-1 gap-2 max-w-xl">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                         <input type="checkbox" data-setting="settingDebugEnemiesUnidentified" aria-labelledby="label-settingDebugEnemiesUnidentified" class="toggle toggle-primary toggle-sm">
                         <span id="label-settingDebugEnemiesUnidentified" data-setting-label="settingDebugEnemiesUnidentified" class="text-base-content/80 text-xs group-hover:text-base-content">Show unidentified enemies</span>
@@ -185,81 +185,83 @@
                     </label>
                 </div>
             </section>
-            <section>
-                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-                    <i data-lucide="gem" class="w-4 h-4"></i>
-                    Resources
-                </h3>
-                <div class="grid grid-cols-1 gap-2 max-w-xl">
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugResourcesTypeId" aria-labelledby="label-settingDebugResourcesTypeId" class="toggle toggle-primary toggle-sm">
-                        <span id="label-settingDebugResourcesTypeId" data-setting-label="settingDebugResourcesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
-                        <div class="tooltip" data-setting-tip="settingDebugResourcesTypeId" data-tip="Draws the internal type ID on resource nodes and living resources (debug).">
-                            <span tabindex="0" role="img" aria-label="Draws the internal type ID on resource nodes and living resources (debug)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugResourcesDbName" aria-labelledby="label-settingDebugResourcesDbName" class="toggle toggle-primary toggle-sm">
-                        <span id="label-settingDebugResourcesDbName" data-setting-label="settingDebugResourcesDbName" class="text-base-content/80 text-xs group-hover:text-base-content">Show DB Name</span>
-                        <div class="tooltip" data-setting-tip="settingDebugResourcesDbName" data-tip="Shows the DB name mapped from the wire type ID (debug, for offset verification).">
-                            <span tabindex="0" role="img" aria-label="Shows the DB name mapped from the wire type ID (debug, for offset verification)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                    </label>
-                </div>
-            </section>
-            <section>
-                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-                    <i data-lucide="cloud-fog" class="w-4 h-4"></i>
-                    Mists
-                </h3>
-                <div class="grid grid-cols-1 gap-2 max-w-xl">
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugMistsWispIds" class="toggle toggle-primary toggle-sm">
-                        <span id="label-settingDebugMistsWispIds" data-setting-label="settingDebugMistsWispIds" class="text-base-content/80 text-xs group-hover:text-base-content">Show wisp ID (debug)</span>
-                    </label>
-                </div>
-            </section>
-            <section>
-                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4"></i>
-                    Network traffic
-                </h3>
-                <div class="grid grid-cols-1 gap-2 max-w-xl">
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" data-setting="settingDebugWsCoalescing" aria-labelledby="label-settingDebugWsCoalescing" class="toggle toggle-primary toggle-sm">
-                        <span id="label-settingDebugWsCoalescing" data-setting-label="settingDebugWsCoalescing" class="text-base-content/80 text-xs group-hover:text-base-content">Merge entity updates per frame</span>
-                        <div class="tooltip" data-setting-tip="settingDebugWsCoalescing" data-tip="Keeps only the latest move, health and regen update per entity each frame.">
-                            <span tabindex="0" role="img" aria-label="Keeps only the latest move, health and regen update per entity each frame." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" aria-labelledby="label-settingDebugPcapRecording" id="settingDebugPcapRecording" data-setting="settingDebugPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
-                        <i data-lucide="circle-dot" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingDebugPcapRecording" data-setting-label="settingDebugPcapRecording" class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
-                        <div class="tooltip" data-setting-tip="settingDebugPcapRecording" data-tip="Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting.">
-                            <span tabindex="0" role="img" aria-label="Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                        {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
-                    </label>
-                </div>
-            </section>
-            <section>
-                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-                    <i data-lucide="hard-drive" class="w-4 h-4"></i>
-                    Backend logs
-                </h3>
-                <div class="grid grid-cols-1 gap-2 max-w-xl">
-                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                        <input type="checkbox" aria-labelledby="label-settingDebugBackendLogs" id="settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
-                        <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
-                        <span id="label-settingDebugBackendLogs" data-setting-label="settingDebugBackendLogs" class="text-base-content/80 text-xs group-hover:text-base-content">Save backend logs</span>
-                        <div class="tooltip" data-setting-tip="settingDebugBackendLogs" data-tip="Logs one line per game event to logs/sessions/. Only changeable on the radar PC.">
-                            <span tabindex="0" role="img" aria-label="Logs one line per game event to logs/sessions/. Only changeable on the radar PC." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
-                        </div>
-                        {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
-                    </label>
-                </div>
-            </section>
+            <div class="grid grid-cols-1 2xl:grid-cols-2 gap-6">
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="gem" class="w-4 h-4"></i>
+                        Resources
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugResourcesTypeId" aria-labelledby="label-settingDebugResourcesTypeId" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugResourcesTypeId" data-setting-label="settingDebugResourcesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
+                            <div class="tooltip" data-setting-tip="settingDebugResourcesTypeId" data-tip="Draws the internal type ID on resource nodes and living resources (debug).">
+                                <span tabindex="0" role="img" aria-label="Draws the internal type ID on resource nodes and living resources (debug)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugResourcesDbName" aria-labelledby="label-settingDebugResourcesDbName" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugResourcesDbName" data-setting-label="settingDebugResourcesDbName" class="text-base-content/80 text-xs group-hover:text-base-content">Show DB Name</span>
+                            <div class="tooltip" data-setting-tip="settingDebugResourcesDbName" data-tip="Shows the DB name mapped from the wire type ID (debug, for offset verification).">
+                                <span tabindex="0" role="img" aria-label="Shows the DB name mapped from the wire type ID (debug, for offset verification)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="cloud-fog" class="w-4 h-4"></i>
+                        Mists
+                    </h3>
+                    <div class="grid grid-cols-1 gap-2 max-w-xl">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugMistsWispIds" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugMistsWispIds" data-setting-label="settingDebugMistsWispIds" class="text-base-content/80 text-xs group-hover:text-base-content">Show wisp ID (debug)</span>
+                        </label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        Network traffic
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugWsCoalescing" aria-labelledby="label-settingDebugWsCoalescing" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugWsCoalescing" data-setting-label="settingDebugWsCoalescing" class="text-base-content/80 text-xs group-hover:text-base-content">Merge entity updates per frame</span>
+                            <div class="tooltip" data-setting-tip="settingDebugWsCoalescing" data-tip="Keeps only the latest move, health and regen update per entity each frame.">
+                                <span tabindex="0" role="img" aria-label="Keeps only the latest move, health and regen update per entity each frame." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" aria-labelledby="label-settingDebugPcapRecording" id="settingDebugPcapRecording" data-setting="settingDebugPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                            <i data-lucide="circle-dot" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingDebugPcapRecording" data-setting-label="settingDebugPcapRecording" class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
+                            <div class="tooltip" data-setting-tip="settingDebugPcapRecording" data-tip="Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting.">
+                                <span tabindex="0" role="img" aria-label="Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                            {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
+                        </label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                        Backend logs
+                    </h3>
+                    <div class="grid grid-cols-1 gap-2 max-w-xl">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" aria-labelledby="label-settingDebugBackendLogs" id="settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                            <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
+                            <span id="label-settingDebugBackendLogs" data-setting-label="settingDebugBackendLogs" class="text-base-content/80 text-xs group-hover:text-base-content">Save backend logs</span>
+                            <div class="tooltip" data-setting-tip="settingDebugBackendLogs" data-tip="Logs one line per game event to logs/sessions/. Only changeable on the radar PC.">
+                                <span tabindex="0" role="img" aria-label="Logs one line per game event to logs/sessions/. Only changeable on the radar PC." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                            {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
+                        </label>
+                    </div>
+                </section>
+            </div>
             <div class="flex flex-wrap items-center gap-4">
                 <button id="downloadLogsBtn" class="btn btn-primary btn-sm">
                     <i data-lucide="download" class="w-4 h-4"></i>

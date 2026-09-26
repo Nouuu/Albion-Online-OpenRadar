@@ -76,13 +76,13 @@
                                 </div>
                             </div>
                         </section>
-                        <div class="space-y-6 @2xl:border-l @2xl:border-base-content/5 @2xl:pl-8">
+                        <div class="@container space-y-6 @2xl:border-l @2xl:border-base-content/5 @2xl:pl-8">
                             <section>
                                 <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                     Display
                                 </h3>
-                                <div class="grid grid-cols-1 gap-2 max-w-xl">
+                                <div class="grid grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3 gap-2">
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarMapBackground" class="toggle toggle-primary toggle-sm">
                                         <span id="label-settingRadarMapBackground" data-setting-label="settingRadarMapBackground" class="text-base-content/80 text-xs group-hover:text-base-content">Map background</span>
@@ -115,7 +115,7 @@
                                     <i data-lucide="gem" class="w-4 h-4"></i>
                                     Resources
                                 </h3>
-                                <div class="grid grid-cols-1 gap-2 max-w-xl">
+                                <div class="grid grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3 gap-2">
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarResourceCount" aria-labelledby="label-settingRadarResourceCount" class="toggle toggle-primary toggle-sm">
                                         <span id="label-settingRadarResourceCount" data-setting-label="settingRadarResourceCount" class="text-base-content/80 text-xs group-hover:text-base-content">Resource count</span>
@@ -144,7 +144,7 @@
                                             <span tabindex="0" role="img" aria-label="Circles groups of nearby same-type nodes, with count and distance. Only nodes your filters show are grouped." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
-                                    <div class="ml-8 space-y-2">
+                                    <div class="col-span-full ml-8 space-y-2">
                                         <label class="flex flex-wrap items-center gap-3">
                                             <input type="number" data-setting="settingRadarClusterRadius" data-enabled-by="settingRadarResourceClusters"
                                                    min="10" max="100" step="5" aria-label="Cluster radius (m)" class="input input-bordered input-sm w-32 disabled:opacity-50">
