@@ -602,7 +602,7 @@ describe('resources page', () => {
         bind(root, newSync());
 
         expect(root.querySelectorAll('[data-enchant="e0"][data-tier="3"]')).toHaveLength(10);
-        expect([...root.querySelectorAll('h4')].map(h => h.textContent.trim())).toEqual(
+        expect([...root.querySelectorAll('h4')].map(h => h.textContent.trim().split(/\s+/).pop())).toEqual(
             ['Static', 'Living', 'Static', 'Living', 'Static', 'Living', 'Static', 'Living', 'Static', 'Living']);
         expect([...root.querySelectorAll('[data-enchant="e0"][data-tier="3"]')].every(cell => cell.checked)).toBe(true);
     });

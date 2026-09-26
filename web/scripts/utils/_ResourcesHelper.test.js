@@ -16,6 +16,13 @@ describe('generateResourceGrid', () => {
         expect(grid.querySelector('h4').textContent).toContain('Static');
     });
 
+    test('leads the Static heading with a pick and the Living heading with a leaf', () => {
+        const heading = label => parse(generateResourceGrid({key: `settingResources${label}Fiber`, label})).querySelector('h4');
+
+        expect(heading('Static').firstElementChild.textContent).toBe('⛏️');
+        expect(heading('Living').firstElementChild.textContent).toBe('🌿');
+    });
+
     test('renders e0 for every tier, e1 to e4 only for T4 to T8', () => {
         const grid = parse(generateResourceGrid({key: 'settingResourcesStaticFiber', label: 'Static'}));
 

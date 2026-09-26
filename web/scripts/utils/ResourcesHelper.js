@@ -22,7 +22,10 @@ export function generateResourceGrid(entry) {
     }).join('');
 
     return `<div class="bg-base-300 rounded-lg p-3">
-        <h4 class="text-sm mb-2 font-medium text-base-content">${entry.label}</h4>
+        <h4 class="text-sm mb-2 font-medium text-base-content flex items-center gap-2">
+            <span class="text-xs">${entry.label === 'Living' ? '🌿' : '⛏️'}</span>
+            ${entry.label}
+        </h4>
         <div class="grid" style="grid-template-columns: 24px 1fr; gap: 4px;">
             <div class="grid gap-1 items-center">
                 <span class="text-[10px] text-base-content/50 h-5"></span>
