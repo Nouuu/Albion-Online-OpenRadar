@@ -117,6 +117,8 @@ const TABLE = [
     [null, 'settingUiChestsChestsOpen', 'new'],
     [null, 'settingUiChestsMistsOpen', 'new'],
     [null, 'settingUiChestsDungeonsOpen', 'new'],
+    [null, 'settingUiIgnoreListAddNameOpen', 'new'],
+    [null, 'settingUiIgnoreListIgnoredNamesOpen', 'new'],
     ['collapse-classic', 'settingUiEnemiesClassicOpen', 'rename'],
     ['collapse-mists', 'settingUiEnemiesMistsOpen', 'rename'],
     ['collapse-other', 'settingUiEnemiesOtherOpen', 'rename'],
@@ -148,7 +150,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 128 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 130 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -210,6 +212,7 @@ describe('SettingsRegistry', () => {
             settingUiPlayersDisplayOpen: true, settingUiPlayersAlertsOpen: true,
             settingUiPlayersPlayerTypesOpen: true, settingUiPlayersLimitsOpen: true,
             settingUiChestsChestsOpen: true, settingUiChestsMistsOpen: true, settingUiChestsDungeonsOpen: true,
+            settingUiIgnoreListAddNameOpen: true, settingUiIgnoreListIgnoredNamesOpen: true,
             settingUiEnemiesClassicOpen: true, settingUiEnemiesMistsOpen: true,
             settingUiEnemiesOtherOpen: false, settingUiEnemiesDisplayOpen: true,
             settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
@@ -318,6 +321,8 @@ describe('SettingsRegistry control location', () => {
         ['settingUiPlayersPlayerTypesOpen', 'Players', 'Player types'],
         ['settingUiPlayersLimitsOpen', 'Players', 'Limits'],
         ['settingIgnoreList', 'Ignore List', ''],
+        ['settingUiIgnoreListAddNameOpen', 'Ignore List', 'Add name'],
+        ['settingUiIgnoreListIgnoredNamesOpen', 'Ignore List', 'Ignored names'],
         ['settingEnemiesMistsGriffin', 'Enemies', 'Mists bosses'],
         ['settingEnemiesEvent', 'Enemies', 'Other'],
         ['settingUiEnemiesClassicOpen', 'Enemies', 'Classic'],

@@ -7,9 +7,12 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4">Add name</h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiIgnoreListAddNameOpen" aria-labelledby="label-settingUiIgnoreListAddNameOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <span id="label-settingUiIgnoreListAddNameOpen" data-setting-label="settingUiIgnoreListAddNameOpen">Add name</span>
+        </div>
+        <div class="collapse-content">
             <div class="flex gap-3">
                 <input type="text" data-ignore-input placeholder="Player, guild or alliance name"
                        class="input input-bordered flex-1">
@@ -18,13 +21,14 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <div class="flex items-center justify-between mb-4">
-                <h2 data-setting-label="settingIgnoreList" class="text-xl font-semibold text-base-content">Ignored names</h2>
-                <span data-ignore-count class="badge badge-ghost font-mono"></span>
-            </div>
-
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiIgnoreListIgnoredNamesOpen" aria-labelledby="label-settingUiIgnoreListIgnoredNamesOpen"/>
+        <div class="collapse-title text-xl font-semibold flex flex-wrap items-center gap-2">
+            <span id="label-settingUiIgnoreListIgnoredNamesOpen" data-setting-label="settingUiIgnoreListIgnoredNamesOpen">Ignored names</span>
+            <span data-ignore-count class="badge badge-ghost font-mono"></span>
+            <span class="hidden" data-setting-label="settingIgnoreList">Ignored names</span>
+        </div>
+        <div class="collapse-content">
             <div class="space-y-2">
                 <p data-ignore-empty class="text-base-content/50 text-center py-8 italic">The ignore list is empty</p>
                 <div data-ignore-items class="space-y-2"></div>

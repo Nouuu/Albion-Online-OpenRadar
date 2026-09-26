@@ -720,7 +720,8 @@ describe('ignorelist page', () => {
         expect(text).toContain('Names on this list never trigger the alert sound, the screen flash or the red border. Ignored players still appear in the player list.');
         expect(text).not.toContain("Manage players that won't trigger alerts or be shown on radar.");
         expect(text).not.toContain('A player name, a guild name or an alliance name all work.');
-        expect([...root.querySelectorAll('h2')].map(h => h.textContent.trim())).toEqual(['Add name', 'Ignored names']);
+        expect(root.querySelector('[data-setting-label="settingUiIgnoreListAddNameOpen"]').textContent.trim()).toBe('Add name');
+        expect(root.querySelector('[data-setting-label="settingUiIgnoreListIgnoredNamesOpen"]').textContent.trim()).toBe('Ignored names');
         expect(root.querySelector('[data-ignore-add]').textContent.trim()).toBe('Add name');
         expect(root.querySelector('[data-ignore-input]').placeholder).toBe('Player, guild or alliance name');
         expect(root.querySelector('[data-ignore-empty]').textContent.trim()).toBe('The ignore list is empty');
