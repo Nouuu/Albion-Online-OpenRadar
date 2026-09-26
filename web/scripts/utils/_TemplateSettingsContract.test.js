@@ -43,7 +43,7 @@ const CATEGORY_TIP = 'Keep DEBUG and INFO entries of this area. WARN and above i
 
 const TOOLTIPS = {
     settingRadarSize: 'Width and height in pixels, shrunk on small windows. Ignored while Fit to screen is on.',
-    settingRadarFitToScreen: 'Largest square that fits the window, up to 1200 px, next to the player list when it sits beside. Overrides Max size.',
+    settingRadarFitToScreen: 'Largest square that fits the window, up to 1200 px, next to the player list when the list sits beside. Overrides Max size.',
     settingRadarHudZoneInfo: 'Top-left box with the zone name, tier and a PvP marker.',
     settingRadarHudStats: 'Top-right box: resource and mob counts, plus player count when detection is on.',
     settingRadarPlayersBeside: 'Shows the player list to the right of the radar when the window is wide enough.',
@@ -56,11 +56,11 @@ const TOOLTIPS = {
     settingPlayersDetect: 'Tracks players in range. Off: no player list, no player counts, no flash, border or sound.',
     settingPlayersHostile: 'Players flagged hostile, meaning everyone in black zones. Does not affect alerts.',
     settingAlertFlash: 'Flashes on threats: hostile players in yellow/red, anyone in black. Ignored names excluded.',
-    settingAlertSound: 'Plays the alert sound, same trigger rule as Screen Flash. Ignored names never trigger it.',
+    settingAlertSound: 'Plays the alert sound on the radar PC, same trigger rule as Screen Flash. Ignored names never trigger it.',
     settingAlertBorder: 'Pulses a red border around the radar while a threat is in range. Ignored names do not count.',
     settingAlertSoundCooldown: 'Minimum delay between two alert sounds. At zero, every alert plays.',
     settingEnemiesChampion: 'Champion mobs, and solo mobs in random dungeons.',
-    settingEnemiesMinHealthFilter: 'Hides low-HP Normal-Boss enemies. Drones, Mists bosses, events, living resources exempt.',
+    settingEnemiesMinHealthFilter: 'Hides enemies whose max HP is below the minimum, unidentified ones included. Drones, Mists bosses, events and living resources are exempt.',
     settingEnemiesAvalonianDrones: NOT_DETECTED,
     settingEnemiesEvent: NOT_DETECTED,
     settingDebugEnemiesUnidentified: 'Shows enemies missing from mob data, usually new post-update mobs. Type filters skip them.',
@@ -69,7 +69,7 @@ const TOOLTIPS = {
     settingDebugWsCoalescing: 'Keeps only the latest move, health and regen update per entity each frame.',
     settingDebugBackendLogs: 'Logs one line per game event to logs/sessions/. Only changeable on the radar PC.',
     settingDebugPcapRecording: 'Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting.',
-    settingLogToServer: 'Saves filtered entries to logs/debug/. Errors are also copied to logs/errors/.',
+    settingLogToServer: 'Saves filtered entries on the radar PC in logs/debug/. Errors are also copied to logs/errors/.',
     settingLogLevel: 'The lowest level shown, though DEBUG and INFO also need their category on. OFF disables all logging.',
     ...Object.fromEntries(SETTINGS.filter(entry => entry.key.startsWith('settingLogCategory')).map(entry => [entry.key, CATEGORY_TIP])),
 };
