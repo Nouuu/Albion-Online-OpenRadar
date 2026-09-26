@@ -307,6 +307,13 @@ describe('enemies page', () => {
         expect(template).not.toMatch(/>\s*Bosses\s*<\/button>/);
     });
 
+    test('Display ends with links to the Logging and Debug sections of Settings', () => {
+        const display = root.querySelector('[data-setting="settingUiEnemiesDisplayOpen"]').closest('.collapse');
+        const links = [...display.querySelector('.collapse-content').lastElementChild.querySelectorAll('a')];
+        expect(links.map(a => [a.getAttribute('href'), normalized(a)]))
+            .toEqual([['/settings', 'Settings > Logging'], ['/settings', 'Settings > Debug']]);
+    });
+
     test('holds no All checkbox, no Debug collapse and no stale logging tip', () => {
         expect(template).not.toContain('settingAllEnemies');
         expect(template).not.toContain('collapse-debug');
