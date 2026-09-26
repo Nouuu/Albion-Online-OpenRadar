@@ -78,7 +78,7 @@ describe('docs contract', () => {
 
     const readme = read('README.md');
 
-    // @verified 2026-09-25: manual radar rotation and the Rings control were removed from the radar panel.
+    // @verified 2026-09-25: the Rings control was removed from the radar panel.
     test('README Radar Controls table has no Rings control', () => {
         expect(readme).not.toMatch(/\bRings\b/);
     });

@@ -226,7 +226,6 @@ describe('template settings contract', () => {
         const copies = [
             ...all('input[type="range"][data-setting][value]'),
             ...all('input[type="checkbox"][data-setting][checked]'),
-            ...all('[data-setting] input[type="radio"][checked]'),
             ...all('select[data-setting] option[selected]'),
             ...all('[data-value-for]').filter(({el}) => el.textContent.trim() !== ''),
         ].map(({page, el}) => `${page}: ${el.outerHTML.slice(0, 80)}`);

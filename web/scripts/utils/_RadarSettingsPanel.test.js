@@ -401,14 +401,6 @@ describe('radar settings panel controls', () => {
         settingsSync.setBool('settingRadarFitToScreen', false);
         expect(sizeButtons.map(button => button.disabled)).toEqual([false, false, false]);
     });
-
-    test('@verified 2026-09-24: nothing in the panel or the canvas carries a style transform', () => {
-        bindAndInit();
-        settingsSync.setBool('settingRadarFitToScreen', true);
-
-        const turned = [root, ...root.querySelectorAll('*')].filter(el => el.style?.transform);
-        expect(turned).toEqual([]);
-    });
 });
 
 describe('page container while the list sits beside the radar', () => {

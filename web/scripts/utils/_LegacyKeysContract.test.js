@@ -20,10 +20,6 @@ const EXCLUDED_DIR_PREFIXES = [
     'web/scripts/__fixtures__/settings/',
 ];
 
-const KNOWN_EXCEPTIONS = [
-    {file: 'internal/templates/layouts/base.gohtml', legacyKey: 'sidebarCollapsed', allowed: 1},
-];
-
 const LEGACY_BUILDER_PREFIXES = ['settingStatic', 'settingLiving', 'settingMistE', 'settingDungeonE'];
 
 const SCAN_ROOTS = ['web/scripts', 'internal/templates'];
@@ -67,8 +63,7 @@ describe('legacy setting keys contract', () => {
                 const count = (content.match(re) ?? []).length;
                 if (count === 0) continue;
 
-                const exception = KNOWN_EXCEPTIONS.find(e => e.file === relFile && e.legacyKey === legacyKey);
-                const allowed = exception ? exception.allowed : 0;
+                const allowed = 0;
                 if (count > allowed) {
                     hits.push(`${relFile}: found "${legacyKey}" ${count}x, expected "${key}"`);
                 }
