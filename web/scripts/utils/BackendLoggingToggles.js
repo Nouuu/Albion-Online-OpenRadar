@@ -80,29 +80,20 @@ export class BackendLoggingToggles {
         if (this.destroyed) return;
         const input = event.target;
         const field = input === this.backend ? 'serverLogsEnabled' : 'pcapRecording';
-        let resp;
         try {
-            resp = await fetch(ENDPOINT, {
+            const resp = await fetch(ENDPOINT, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({[field]: input.checked}),
             });
+            if (!resp.ok) throw new Error(await resp.text());
+            const data = await resp.json();
+            if (this.destroyed) return;
+            this.applyState(data);
         } catch (err) {
             if (this.destroyed) return;
             window.toast?.error?.(err?.message ?? String(err));
             await this.load();
-            return;
         }
-        if (this.destroyed) return;
-        if (!resp.ok) {
-            const text = await resp.text();
-            if (this.destroyed) return;
-            window.toast?.error?.(text);
-            await this.load();
-            return;
-        }
-        const data = await resp.json();
-        if (this.destroyed) return;
-        this.applyState(data);
     }
 }
