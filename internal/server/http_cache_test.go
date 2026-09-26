@@ -362,12 +362,12 @@ func TestSettingsHostLock(t *testing.T) {
 				t.Error(`host response missing data-is-host="true"`)
 			}
 
-			for _, id := range []string{"settingDebugBackendLogs", "settingDebugPcapRecording"} {
-				if !strings.Contains(lan, `id="`+id+`" data-setting="`+id+`" class="toggle toggle-primary toggle-sm" disabled`) {
-					t.Errorf("LAN response: %s is not disabled", id)
+			for _, key := range []string{"settingDebugBackendLogs", "settingDebugPcapRecording"} {
+				if !strings.Contains(lan, `data-setting="`+key+`" class="toggle toggle-primary toggle-sm" disabled`) {
+					t.Errorf("LAN response: %s is not disabled", key)
 				}
-				if strings.Contains(host, `id="`+id+`" data-setting="`+id+`" class="toggle toggle-primary toggle-sm" disabled`) {
-					t.Errorf("host response: %s must not be disabled", id)
+				if strings.Contains(host, `data-setting="`+key+`" class="toggle toggle-primary toggle-sm" disabled`) {
+					t.Errorf("host response: %s must not be disabled", key)
 				}
 			}
 
