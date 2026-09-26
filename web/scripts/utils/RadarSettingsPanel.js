@@ -68,6 +68,8 @@ function applyLayout() {
         size: setting, fit, availableWidth: wrapper.clientWidth - frame.chrome, availableHeight: frame.availableHeight,
     });
     container.closest('.card').style.width = layout.beside ? `${Math.max(size + frame.chrome, frame.cardMin)}px` : '';
+    wrapper.querySelector('#playersSection').style.maxHeight = layout.beside
+        ? `${page.clientHeight - padding(page, 'paddingBottom') - (chainTop(wrapper) - chainTop(page))}px` : '';
 
     container.style.width = `${size}px`;
     container.style.height = `${size}px`;

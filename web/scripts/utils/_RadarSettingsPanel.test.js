@@ -343,6 +343,21 @@ describe('radar settings panel layout', () => {
         expect(layoutState()).toEqual({beside: false, card: ''});
     });
 
+    test('@verified 2026-09-26: the list beside the radar is capped at the page height left under the header, the stack is not', () => {
+        stubLayout({width: 1600, height: 900});
+        root.style.paddingBottom = '24px';
+        Object.defineProperty(root.querySelector('#radarLayout'), 'offsetTop', {value: 24, configurable: true});
+        const section = root.querySelector('#playersSection');
+        initRadarSettingsPanel();
+        expect(section.style.maxHeight).toBe('');
+
+        settingsSync.setBool('settingRadarPlayersBeside', true);
+        expect(section.style.maxHeight).toBe('852px');
+
+        settingsSync.setBool('settingRadarPlayersBeside', false);
+        expect(section.style.maxHeight).toBe('');
+    });
+
     test('@verified 2026-09-24: the ResizeObserver callback does nothing once the container left the document', () => {
         initRadarSettingsPanel();
         root.remove();
@@ -400,6 +415,19 @@ describe('radar settings panel controls', () => {
 
         settingsSync.setBool('settingRadarFitToScreen', false);
         expect(sizeButtons.map(button => button.disabled)).toEqual([false, false, false]);
+    });
+});
+
+describe('player list height while the list sits beside the radar', () => {
+    test.each(['hostileList', 'factionList', 'passiveList'])('@verified 2026-09-26: #%s keeps its 400 px cap in the stack and drops it only beside', id => {
+        const classes = mountPage('radar').querySelector(`#${id}`).classList;
+        expect(classes.contains('max-h-[400px]')).toBe(true);
+        expect(classes.contains('in-data-[players-beside]:max-h-none')).toBe(true);
+    });
+
+    test('@verified 2026-09-26: #playersSection scrolls only beside', () => {
+        const classes = [...mountPage('radar').querySelector('#playersSection').classList];
+        expect(classes.filter(name => name.includes('overflow'))).toEqual(['in-data-[players-beside]:overflow-y-auto']);
     });
 });
 
