@@ -3,7 +3,7 @@ import {readFileSync, readdirSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe, expect, test} from 'vitest';
-import {MIGRATION_ROWS, SETTINGS, registryEntry} from './SettingsRegistry.js';
+import {MIGRATION_ROWS, SETTINGS, registryDefault, registryEntry} from './SettingsRegistry.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
@@ -304,6 +304,27 @@ describe('enemies page', () => {
     test('holds no All checkbox, no Debug collapse and no stale logging tip', () => {
         expect(template).not.toContain('settingAllEnemies');
         expect(template).not.toContain('collapse-debug');
+    });
+});
+
+describe('collapsible settings sections', () => {
+    const ADVANCED_CLOSED = ['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen'];
+    const isHeader = el => el.classList.contains('card') && el.querySelector('h1') !== null;
+
+    test.each(['enemies'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
+        const root = pages.find(page => page.name === name).root;
+        const container = root.querySelector('.space-y-6');
+        const sections = [...container.children].filter(el => !isHeader(el) && !el.matches('[role="alert"]'));
+        expect(sections.length).toBeGreaterThan(0);
+        for (const section of sections) {
+            expect(section.classList.contains('collapse'), section.outerHTML.slice(0, 80)).toBe(true);
+            const checkbox = section.querySelector(':scope > input[type="checkbox"][data-setting]');
+            const key = checkbox?.dataset.setting;
+            expect(key, section.outerHTML.slice(0, 80)).toMatch(/^settingUi[A-Z][A-Za-z0-9]*Open$/);
+            if (MIGRATION_ROWS.find(row => row.key === key)?.migration === 'new') {
+                expect(registryDefault(key), key).toBe(!ADVANCED_CLOSED.includes(key));
+            }
+        }
     });
 });
 

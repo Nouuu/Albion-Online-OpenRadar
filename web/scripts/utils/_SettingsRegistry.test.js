@@ -113,6 +113,7 @@ const TABLE = [
     ['collapse-classic', 'settingUiEnemiesClassicOpen', 'rename'],
     ['collapse-mists', 'settingUiEnemiesMistsOpen', 'rename'],
     ['collapse-other', 'settingUiEnemiesOtherOpen', 'rename'],
+    [null, 'settingUiEnemiesDisplayOpen', 'new'],
     ['collapse-debug', null, 'remove'],
     ['collapse-fiber', 'settingUiResourcesFiberOpen', 'rename'],
     ['collapse-hide', 'settingUiResourcesHideOpen', 'rename'],
@@ -137,7 +138,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 117 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 118 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -196,7 +197,8 @@ describe('SettingsRegistry', () => {
             settingLogCategoryResources: false, settingLogCategoryDungeons: false, settingLogCategoryFishing: false,
             settingLogToConsole: false, settingLogToServer: false, settingDebugWsCoalescing: true,
             settingUiRadarSettingsOpen: false, settingUiEnemiesClassicOpen: true, settingUiEnemiesMistsOpen: true,
-            settingUiEnemiesOtherOpen: false, settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
+            settingUiEnemiesOtherOpen: false, settingUiEnemiesDisplayOpen: true,
+            settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
             settingUiResourcesWoodOpen: false, settingUiResourcesOreOpen: false, settingUiResourcesRockOpen: false,
             settingUiSettingsLoggingOpen: false, settingUiSettingsDebugOpen: false,
             settingUiSettingsNetworkOpen: false, settingUiSidebarCollapsed: false,
@@ -300,6 +302,7 @@ describe('SettingsRegistry control location', () => {
         ['settingEnemiesMistsGriffin', 'Enemies', 'Mists bosses'],
         ['settingEnemiesEvent', 'Enemies', 'Other'],
         ['settingUiEnemiesClassicOpen', 'Enemies', 'Classic'],
+        ['settingUiEnemiesDisplayOpen', 'Enemies', 'Display'],
         ['settingResourcesLivingRock', 'Resources', 'Rock > Living'],
         ['settingResourcesFishing', 'Resources', 'Other'],
         ['settingMistsWisps', 'Chests', 'Mists'],

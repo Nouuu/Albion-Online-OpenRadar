@@ -140,12 +140,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
-                Display
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiEnemiesDisplayOpen" aria-labelledby="label-settingUiEnemiesDisplayOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiEnemiesDisplayOpen" data-setting-label="settingUiEnemiesDisplayOpen">Display</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-1 gap-2 max-w-xl">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingEnemiesShowHealthBars" class="toggle toggle-primary toggle-sm">

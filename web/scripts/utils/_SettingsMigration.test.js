@@ -4,6 +4,7 @@ import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe, test, expect, vi} from 'vitest';
 import {migrateSettings} from './SettingsMigration.js';
+import {MIGRATION_ROWS} from './SettingsRegistry.js';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '../__fixtures__/settings');
 
@@ -91,6 +92,16 @@ describe('migrateSettings', () => {
             settingRadarZoom: '2',
             settingResourcesFishing: 'true',
         });
+    });
+
+    test('new rows are absent from every migrated profile', () => {
+        const newKeys = MIGRATION_ROWS.filter(row => row.migration === 'new').map(row => row.key);
+        for (const name of ['fresh', 'gatherer', 'pvp', 'polluted']) {
+            const storage = memoryStorage(loadProfile(name).input);
+            migrateSettings(storage);
+            const snapshot = storage.snapshot();
+            for (const key of newKeys) expect(snapshot, `${name}: ${key}`).not.toHaveProperty(key);
+        }
     });
 
     test('a profile holding only new keys gets no fallbacks', () => {
