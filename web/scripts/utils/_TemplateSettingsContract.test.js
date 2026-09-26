@@ -669,9 +669,14 @@ describe('settings debug sections', () => {
     const debug = pages.find(page => page.name === 'settings').root
         .querySelector('[data-setting="settingUiSettingsDebugOpen"]').closest('.collapse');
 
-    test('the debug Resources section uses the sidebar Resources icon', () => {
-        const h3 = [...debug.querySelectorAll('section > h3')].find(el => normalized(el) === 'Resources');
-        expect(h3.querySelector('i[data-lucide]').dataset.lucide).toBe(NAV_ICONS.Resources);
+    test('a debug section named like a sidebar entry uses its sidebar icon', () => {
+        const named = [...debug.querySelectorAll('section > h3')].filter(h3 => NAV_ICONS[normalized(h3)]);
+        const drift = named.flatMap(h3 => {
+            const icon = h3.querySelector('i[data-lucide]').dataset.lucide;
+            return icon === NAV_ICONS[normalized(h3)] ? [] : [`${normalized(h3)}: ${icon} vs ${NAV_ICONS[normalized(h3)]}`];
+        });
+        expect(named.map(normalized)).toEqual(['Enemies', 'Resources']);
+        expect(drift).toEqual([]);
     });
 });
 
