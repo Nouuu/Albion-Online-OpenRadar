@@ -314,7 +314,7 @@ describe('enemies page', () => {
             .toEqual([['/settings', 'Settings > Logging'], ['/settings', 'Settings > Debug']]);
     });
 
-    test('holds no All checkbox, no Debug collapse and no stale logging tip', () => {
+    test('holds no All checkbox and no Debug collapse', () => {
         expect(template).not.toContain('settingAllEnemies');
         expect(template).not.toContain('collapse-debug');
     });
