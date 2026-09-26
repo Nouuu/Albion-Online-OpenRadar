@@ -8,7 +8,7 @@
             </div>
             <h3 class="text-lg font-semibold text-base-content">Reset All Settings</h3>
         </div>
-        <p class="text-base-content/60 mb-6">This will reset all settings to their default values and reload the page. This action cannot be undone.</p>
+        <p class="text-base-content/60 mb-6">Resets every radar setting and layout preference in this browser to its default, then reloads. Your ignore list is kept. Capture interfaces, backend logs and pcap recording are saved on the radar PC and are not changed.</p>
         <div class="modal-action">
             <form method="dialog">
                 <button class="btn btn-ghost">Cancel</button>
@@ -21,324 +21,277 @@
     </form>
 </dialog>
 
-<dialog id="modal-clearCache" class="modal">
-    <div class="modal-box bg-base-200">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="p-2 rounded-lg bg-warning/10">
-                <i data-lucide="trash-2" class="w-6 h-6 text-warning"></i>
-            </div>
-            <h3 class="text-lg font-semibold text-base-content">Clear Browser Cache</h3>
-        </div>
-        <p class="text-base-content/60 mb-6">This will clear the browser cache for this site. Cached images and data will need to be reloaded.</p>
-        <div class="modal-action">
-            <form method="dialog">
-                <button class="btn btn-ghost">Cancel</button>
-            </form>
-            <button id="confirmClearCache" class="btn btn-warning">Clear Cache</button>
-        </div>
-    </div>
-    <form method="dialog" class="modal-backdrop">
-        <button>close</button>
-    </form>
-</dialog>
-
-<div class="space-y-6 stagger">
-    <!-- Page Header -->
+<div class="space-y-6 stagger" data-is-host="{{.IsHost}}">
     <div class="card bg-base-200">
         <div class="card-body">
             <h1 class="text-3xl font-bold text-base-content">Settings</h1>
-            <p class="text-base-content/60 mt-2">Configure radar display and debug options.</p>
+            <p class="text-base-content/60 mt-2">Logging, debug, network and reset options.</p>
         </div>
     </div>
 
-    <!-- Display Settings -->
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
-                Display
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <!-- Map Background -->
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" id="settingShowMap" class="checkbox checkbox-primary checkbox-sm">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
-                        <i data-lucide="map" class="w-4 h-4 text-base-content/50"></i>
-                        Map Background
-                    </span>
-                    <div class="tooltip" data-tip="Display the Albion Online map as background on the radar.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <!-- Resource Count -->
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" id="settingResourceCount" class="checkbox checkbox-primary checkbox-sm">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
-                        <i data-lucide="hash" class="w-4 h-4 text-base-content/50"></i>
-                        Resource Count
-                    </span>
-                    <div class="tooltip" data-tip="Shows total quantity including gathering bonuses.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <!-- Distance Indicator -->
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" id="settingResourceDistance" class="checkbox checkbox-primary checkbox-sm">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
-                        <i data-lucide="ruler" class="w-4 h-4 text-base-content/50"></i>
-                        Distance Indicator
-                    </span>
-                    <div class="tooltip" data-tip="Color-coded: Green (<20m), Yellow (20-40m), Red (>40m).">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-
-                <!-- Resource Color Badges -->
-                <label class="flex items-center gap-3 p-3 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                    <input type="checkbox" id="settingResourceColorBadges" class="checkbox checkbox-primary checkbox-sm">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
-                        <i data-lucide="palette" class="w-4 h-4 text-base-content/50"></i>
-                        Resource Color Badges
-                    </span>
-                    <div class="tooltip" data-tip="Replace resource icons with colored tier badges (better visibility). Living variants get a gold border.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-            </div>
-
-            <!-- Cluster Settings (sub-section) -->
-            <div class="mt-4 p-4 rounded-lg bg-base-300">
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <input type="checkbox" id="settingResourceClusters" class="checkbox checkbox-primary checkbox-sm">
-                    <span class="text-base-content/80 group-hover:text-base-content transition-colors flex items-center gap-2">
-                        <i data-lucide="group" class="w-4 h-4 text-base-content/50"></i>
-                        Resource Clusters
-                    </span>
-                    <div class="tooltip" data-tip="Groups nearby resources for efficient harvesting routes.">
-                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
-                    </div>
-                </label>
-                <div class="mt-3 ml-8 flex flex-wrap gap-4">
-                    <label class="flex items-center gap-2">
-                        <span class="text-base-content/60 text-xs">Radius</span>
-                        <input id="settingClusterRadius" type="number" min="10" max="100" step="5" placeholder="30"
-                               class="input input-bordered input-xs w-20">
-                        <span class="text-base-content/50 text-xs">m</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <span class="text-base-content/60 text-xs">Min size</span>
-                        <input id="settingClusterMinSize" type="number" min="2" max="10" step="1" placeholder="2"
-                               class="input input-bordered input-xs w-16">
-                    </label>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Logging Settings -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="collapse-logging"/>
+        <input type="checkbox" data-setting="settingUiSettingsLoggingOpen" aria-labelledby="label-settingUiSettingsLoggingOpen"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="scroll-text" class="w-5 h-5 text-info"></i>
-            Logging
+            <span id="label-settingUiSettingsLoggingOpen" data-setting-label="settingUiSettingsLoggingOpen">Logging</span>
         </div>
         <div class="collapse-content">
-            <p class="text-xs text-base-content/60 mt-1 pb-2">Logs land in <code>logs/sessions/</code>, <code>logs/debug/</code>, <code>logs/errors/</code>. Errors are always saved on the backend side.</p>
+            <p class="text-xs text-base-content/60 mt-1 pb-2">Logs land in <code>logs/sessions/</code>, <code>logs/debug/</code>, <code>logs/errors/</code>. Backend errors are always saved to <code>logs/errors/</code>. Browser errors are saved only while this browser sends its logs (Settings &gt; Logging &gt; "Save browser logs").</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <!-- Log Level -->
                 <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
-                        Log Level
+                        <span id="label-settingLogLevel" data-setting-label="settingLogLevel">Log Level</span>
+                        <div class="tooltip" data-setting-tip="settingLogLevel" data-tip="The lowest level shown, though DEBUG and INFO also need their category on. OFF disables all logging.">
+                            <span tabindex="0" role="img" aria-label="The lowest level shown, though DEBUG and INFO also need their category on. OFF disables all logging." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                        </div>
                     </h3>
-                    <select id="logLevel" class="select select-bordered select-sm w-full max-w-xs">
+                    <select data-setting="settingLogLevel" class="select select-bordered select-sm w-full max-w-xs">
                         <option value="OFF">OFF - No logs</option>
                         <option value="ERROR">ERROR - Errors only</option>
-                        <option value="WARN" selected>WARN - Warnings & Errors</option>
+                        <option value="WARN">WARN - Warnings & Errors</option>
                         <option value="INFO">INFO - Info, Warnings & Errors</option>
                         <option value="DEBUG">DEBUG - Everything</option>
                     </select>
-                    <p class="text-xs text-base-content/50 mt-2">Controls minimum log level displayed</p>
                 </div>
 
-                <!-- Output Destination -->
-                <div>
+                <div class="@container">
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                         <i data-lucide="monitor" class="w-4 h-4"></i>
                         Output
                     </h3>
-                    <div class="space-y-2">
-                        <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingLogToConsole" class="toggle toggle-primary toggle-sm">
+                    <div class="grid grid-cols-1 @sm:grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogToConsole" aria-labelledby="label-settingLogToConsole" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="terminal" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 text-sm group-hover:text-base-content">Browser Console (F12)</span>
-                            <div class="tooltip" data-tip="Print logs in the browser DevTools console.">
-                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                            </div>
+                            <span id="label-settingLogToConsole" data-setting-label="settingLogToConsole" class="text-base-content/80 text-xs group-hover:text-base-content">Browser Console (F12)</span>
                         </label>
-                        <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                            <input type="checkbox" id="settingLogToServer" class="toggle toggle-primary toggle-sm">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogToServer" aria-labelledby="label-settingLogToServer" class="toggle toggle-primary toggle-sm">
                             <i data-lucide="server" class="w-4 h-4 text-base-content/50"></i>
-                            <span class="text-base-content/80 text-sm group-hover:text-base-content">Server Logs (JSONL)</span>
-                            <div class="tooltip" data-tip="Send frontend logs to the backend (saved to logs/debug/; errors go to logs/errors/ too).">
-                                <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                            <span id="label-settingLogToServer" data-setting-label="settingLogToServer" class="text-base-content/80 text-xs group-hover:text-base-content">Save browser logs</span>
+                            <div class="tooltip" data-setting-tip="settingLogToServer" data-tip="Saves filtered entries on the radar PC in logs/debug/. Errors are also copied to logs/errors/.">
+                                <span tabindex="0" role="img" aria-label="Saves filtered entries on the radar PC in logs/debug/. Errors are also copied to logs/errors/." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                             </div>
                         </label>
                     </div>
                 </div>
             </div>
 
-            <!-- Category Filters -->
             <div class="mt-4">
                 <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                     <i data-lucide="filter" class="w-4 h-4"></i>
                     Category Filters
                     <span class="text-xs text-base-content/50 font-normal">(applies to DEBUG & INFO only)</span>
                 </h3>
-                <div class="grid grid-cols-3 gap-2">
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categorySystem" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryNetwork" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Network</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryMap" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Map</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryPlayers" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryMobs" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Mobs</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryHarvestables" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Harvestables</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryDungeons" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryFishing" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
-                    </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="categoryRendering" class="checkbox checkbox-primary checkbox-xs">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Rendering</span>
-                    </label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategorySystem" aria-labelledby="label-settingLogCategorySystem" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategorySystem" data-setting-label="settingLogCategorySystem" class="text-base-content/80 text-xs group-hover:text-base-content">System</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategorySystem" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryNetwork" aria-labelledby="label-settingLogCategoryNetwork" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryNetwork" data-setting-label="settingLogCategoryNetwork" class="text-base-content/80 text-xs group-hover:text-base-content">Network</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryNetwork" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryMap" aria-labelledby="label-settingLogCategoryMap" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryMap" data-setting-label="settingLogCategoryMap" class="text-base-content/80 text-xs group-hover:text-base-content">Map</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryMap" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryPlayers" aria-labelledby="label-settingLogCategoryPlayers" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryPlayers" data-setting-label="settingLogCategoryPlayers" class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryPlayers" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryMobs" aria-labelledby="label-settingLogCategoryMobs" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryMobs" data-setting-label="settingLogCategoryMobs" class="text-base-content/80 text-xs group-hover:text-base-content">Mobs</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryMobs" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryResources" aria-labelledby="label-settingLogCategoryResources" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryResources" data-setting-label="settingLogCategoryResources" class="text-base-content/80 text-xs group-hover:text-base-content">Harvestables</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryResources" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryDungeons" aria-labelledby="label-settingLogCategoryDungeons" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryDungeons" data-setting-label="settingLogCategoryDungeons" class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryDungeons" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingLogCategoryFishing" aria-labelledby="label-settingLogCategoryFishing" class="checkbox checkbox-primary checkbox-xs">
+                            <span id="label-settingLogCategoryFishing" data-setting-label="settingLogCategoryFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
+                            <div class="tooltip" data-setting-tip="settingLogCategoryFishing" data-tip="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter.">
+                                <span tabindex="0" role="img" aria-label="Keep DEBUG and INFO entries of this area. WARN and above ignore this filter." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Debug -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="collapse-debug"/>
+        <input type="checkbox" data-setting="settingUiSettingsDebugOpen" aria-labelledby="label-settingUiSettingsDebugOpen"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="bug" class="w-5 h-5 text-warning"></i>
-            Debug
+            <span id="label-settingUiSettingsDebugOpen" data-setting-label="settingUiSettingsDebugOpen">Debug</span>
             <span class="text-xs text-base-content/50 ml-auto mr-6">Advanced</span>
         </div>
-        <div class="collapse-content">
-            <div class="pt-2">
-                <!-- Server-side Recording -->
-                <div class="mb-4">
-                    <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingServerLogsEnabled"
-                               class="toggle toggle-primary toggle-sm">
-                        <i data-lucide="hard-drive" class="w-4 h-4 text-base-content/50"></i>
-                        <span class="text-base-content/80 text-sm group-hover:text-base-content">Save Backend Logs</span>
-                        <div class="tooltip"
-                             data-tip="Save backend (Go) logs to logs/sessions/. Errors are always saved to logs/errors/.">
-                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                        </div>
-                    </label>
-                </div>
-                <div class="mb-4">
-                    <label class="flex items-center gap-3 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingPcapRecording"
-                               class="toggle toggle-primary toggle-sm">
-                        <i data-lucide="circle-dot" class="w-4 h-4 text-base-content/50"></i>
-                        <span class="text-base-content/80 text-sm group-hover:text-base-content">Record Network Capture (pcap)</span>
-                        <div class="tooltip"
-                             data-tip="Record the raw network capture to logs/captures/. Useful for debugging without running tcpdump externally.">
-                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <!-- WebSocket Performance -->
-            <div class="mt-4">
+        <div class="collapse-content space-y-4">
+            <section>
                 <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
-                    <i data-lucide="zap" class="w-4 h-4"></i>
-                    WebSocket Performance
+                    <i data-lucide="skull" class="w-4 h-4"></i>
+                    Enemies
                 </h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingWsCoalescing" class="toggle toggle-primary toggle-sm">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Event Coalescing</span>
-                        <div class="tooltip" data-tip="Groups Move/Health events per entity per frame.">
-                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingDebugEnemiesUnidentified" aria-labelledby="label-settingDebugEnemiesUnidentified" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugEnemiesUnidentified" data-setting-label="settingDebugEnemiesUnidentified" class="text-base-content/80 text-xs group-hover:text-base-content">Show unidentified enemies</span>
+                        <div class="tooltip" data-setting-tip="settingDebugEnemiesUnidentified" data-tip="Shows enemies missing from mob data, usually new post-update mobs. Type filters skip them.">
+                            <span tabindex="0" role="img" aria-label="Shows enemies missing from mob data, usually new post-update mobs. Type filters skip them." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                         </div>
                     </label>
-                    <label class="flex items-center gap-2 p-2 rounded bg-base-300 cursor-pointer group hover:bg-base-300/70">
-                        <input type="checkbox" id="settingWsThrottling" class="toggle toggle-primary toggle-sm">
-                        <span class="text-base-content/80 text-xs group-hover:text-base-content">Health Throttling</span>
-                        <div class="tooltip" data-tip="Limits health updates to 20/sec per entity.">
-                            <i data-lucide="info" class="w-3 h-3 opacity-50"></i>
-                        </div>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingDebugEnemiesTypeId" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugEnemiesTypeId" data-setting-label="settingDebugEnemiesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingDebugEnemiesTier" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugEnemiesTier" data-setting-label="settingDebugEnemiesTier" class="text-base-content/80 text-xs group-hover:text-base-content">Show Tier</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingDebugEnemiesName" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugEnemiesName" data-setting-label="settingDebugEnemiesName" class="text-base-content/80 text-xs group-hover:text-base-content">Show Name</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                        <input type="checkbox" data-setting="settingDebugEnemiesCategoryBadge" class="toggle toggle-primary toggle-sm">
+                        <span id="label-settingDebugEnemiesCategoryBadge" data-setting-label="settingDebugEnemiesCategoryBadge" class="text-base-content/80 text-xs group-hover:text-base-content">Show Category Badge</span>
                     </label>
                 </div>
+            </section>
+            <div class="grid grid-cols-1 2xl:grid-cols-2 gap-6">
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="gem" class="w-4 h-4"></i>
+                        Resources
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugResourcesTypeId" aria-labelledby="label-settingDebugResourcesTypeId" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugResourcesTypeId" data-setting-label="settingDebugResourcesTypeId" class="text-base-content/80 text-xs group-hover:text-base-content">Show ID</span>
+                            <div class="tooltip" data-setting-tip="settingDebugResourcesTypeId" data-tip="Draws the internal type ID on resource nodes and living resources (debug).">
+                                <span tabindex="0" role="img" aria-label="Draws the internal type ID on resource nodes and living resources (debug)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugResourcesDbName" aria-labelledby="label-settingDebugResourcesDbName" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugResourcesDbName" data-setting-label="settingDebugResourcesDbName" class="text-base-content/80 text-xs group-hover:text-base-content">Show DB Name</span>
+                            <div class="tooltip" data-setting-tip="settingDebugResourcesDbName" data-tip="Shows the DB name mapped from the wire type ID (debug, for offset verification).">
+                                <span tabindex="0" role="img" aria-label="Shows the DB name mapped from the wire type ID (debug, for offset verification)." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="cloud-fog" class="w-4 h-4"></i>
+                        Mists
+                    </h3>
+                    <div class="grid grid-cols-1 gap-2 max-w-xl">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugMistsWispIds" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugMistsWispIds" data-setting-label="settingDebugMistsWispIds" class="text-base-content/80 text-xs group-hover:text-base-content">Show wisp ID (debug)</span>
+                        </label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        Network traffic
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" data-setting="settingDebugWsCoalescing" aria-labelledby="label-settingDebugWsCoalescing" class="toggle toggle-primary toggle-sm">
+                            <span id="label-settingDebugWsCoalescing" data-setting-label="settingDebugWsCoalescing" class="text-base-content/80 text-xs group-hover:text-base-content">Merge entity updates per frame</span>
+                            <div class="tooltip" data-setting-tip="settingDebugWsCoalescing" data-tip="Keeps only the latest move, health and regen update per entity each frame.">
+                                <span tabindex="0" role="img" aria-label="Keeps only the latest move, health and regen update per entity each frame." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" aria-labelledby="label-settingDebugPcapRecording" data-setting="settingDebugPcapRecording" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                            <span id="label-settingDebugPcapRecording" data-setting-label="settingDebugPcapRecording" class="text-base-content/80 text-xs group-hover:text-base-content">Record Network Capture (pcap)</span>
+                            <div class="tooltip" data-setting-tip="settingDebugPcapRecording" data-tip="Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting.">
+                                <span tabindex="0" role="img" aria-label="Records UDP 5056 traffic to logs/captures/, one file per interface. PC-only setting." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                            {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
+                        </label>
+                    </div>
+                </section>
+                <section>
+                    <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="w-4 h-4"></i>
+                        Backend logs
+                    </h3>
+                    <div class="grid grid-cols-1 gap-2 max-w-xl">
+                        <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                            <input type="checkbox" aria-labelledby="label-settingDebugBackendLogs" data-setting="settingDebugBackendLogs" class="toggle toggle-primary toggle-sm"{{if not .IsHost}} disabled{{end}}>
+                            <span id="label-settingDebugBackendLogs" data-setting-label="settingDebugBackendLogs" class="text-base-content/80 text-xs group-hover:text-base-content">Save backend logs</span>
+                            <div class="tooltip" data-setting-tip="settingDebugBackendLogs" data-tip="Logs one line per game event to logs/sessions/. Only changeable on the radar PC.">
+                                <span tabindex="0" role="img" aria-label="Logs one line per game event to logs/sessions/. Only changeable on the radar PC." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                            </div>
+                            {{if not .IsHost}}<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>{{end}}
+                        </label>
+                    </div>
+                </section>
             </div>
-
-            <!-- Export -->
-            <div class="mt-4 flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-4">
                 <button id="downloadLogsBtn" class="btn btn-primary btn-sm">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     Export Debug Data
                 </button>
-                <span class="text-xs text-base-content/50">Download settings and session info as JSON</span>
+                <span class="flex-1 basis-40 max-w-max text-xs text-base-content/50">Downloads registry settings, UI state and backend logging values as JSON. The ignore list is not included.</span>
             </div>
         </div>
     </div>
 
-    <!-- Network Settings -->
     <div class="collapse collapse-arrow bg-base-200 rounded-xl">
-        <input type="checkbox" id="collapse-network"/>
+        <input type="checkbox" data-setting="settingUiSettingsNetworkOpen" aria-labelledby="label-settingUiSettingsNetworkOpen"/>
         <div class="collapse-title text-xl font-semibold flex items-center gap-2">
             <i data-lucide="wifi" class="w-5 h-5 text-primary"></i>
-            Network
+            <span id="label-settingUiSettingsNetworkOpen" data-setting-label="settingUiSettingsNetworkOpen">Network</span>
         </div>
         <div class="collapse-content">
-            <div id="network-section" class="text-base-content/80">Loading network configuration…</div>
+            <div id="network-section" class="text-base-content/80"{{if not .IsHost}} data-locked{{end}}>Loading network configuration…</div>
         </div>
     </div>
 
-    <!-- Danger Zone -->
-    <div class="card bg-error/5 border border-error/20">
-        <div class="card-body">
-            <h2 class="text-lg font-semibold text-error mb-3 flex items-center gap-2">
-                <i data-lucide="alert-octagon" class="w-5 h-5"></i>
-                Danger Zone
-            </h2>
+    <div class="collapse collapse-arrow bg-error/5 border border-error/20 rounded-xl">
+        <input type="checkbox" data-setting="settingUiSettingsDangerZoneOpen" aria-labelledby="label-settingUiSettingsDangerZoneOpen"/>
+        <div class="collapse-title text-lg font-semibold text-error flex items-center gap-2">
+            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+            <span id="label-settingUiSettingsDangerZoneOpen" data-setting-label="settingUiSettingsDangerZoneOpen">Danger Zone</span>
+        </div>
+        <div class="collapse-content">
             <div class="flex flex-wrap gap-3">
                 <button id="resetSettingsBtn" class="btn btn-outline btn-error btn-sm">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                     Reset All Settings
-                </button>
-                <button id="clearCacheBtn" class="btn btn-outline btn-ghost btn-sm">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    Clear Cache
                 </button>
             </div>
         </div>
@@ -348,218 +301,10 @@
 
 {{define "scripts/settings"}}
 <script>
-    (async function () {
-        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
-
-        let cleanup = [];
-
-        async function initSettingsPage() {
-            const settingsSync = window.settingsSync;
-            cleanup = [];
-
-            function addListener(el, event, handler) {
-                if (el) {
-                    el.addEventListener(event, handler);
-                    cleanup.push(() => el.removeEventListener(event, handler));
-                }
-            }
-
-            // Collapse state persistence
-            const collapseDebug = document.getElementById('collapse-debug');
-            if (collapseDebug) {
-                collapseDebug.checked = settingsSync.getBool('collapse-settings-debug', false);
-                addListener(collapseDebug, 'change', () => settingsSync.setBool('collapse-settings-debug', collapseDebug.checked));
-            }
-
-            const collapseLogging = document.getElementById('collapse-logging');
-            if (collapseLogging) {
-                collapseLogging.checked = settingsSync.getBool('collapse-settings-logging', false);
-                addListener(collapseLogging, 'change', () => settingsSync.setBool('collapse-settings-logging', collapseLogging.checked));
-            }
-
-            const collapseNetwork = document.getElementById('collapse-network');
-            if (collapseNetwork) {
-                collapseNetwork.checked = settingsSync.getBool('collapse-settings-network', false);
-                addListener(collapseNetwork, 'change', () => settingsSync.setBool('collapse-settings-network', collapseNetwork.checked));
-            }
-
-            // Log level dropdown
-            const logLevelEl = document.getElementById('logLevel');
-            if (logLevelEl) {
-                logLevelEl.value = settingsSync.get('logLevel') || 'WARN';
-                addListener(logLevelEl, 'change', () => settingsSync.set('logLevel', logLevelEl.value));
-            }
-
-            const bindCheckbox = (id, onChange) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.checked = settingsSync.getBool(id);
-                    addListener(el, "change", (e) => {
-                        settingsSync.setBool(id, e.target.checked);
-                        if (onChange) onChange(e.target.checked);
-                    });
-                }
-            };
-
-            const bindNumber = (id, defaultVal) => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.value = settingsSync.getNumber(id, defaultVal);
-                    addListener(el, "input", () => settingsSync.setNumber(id, Number(el.value)));
-                }
-            };
-
-            async function fetchBackendSettings(endpoint) {
-                try {
-                    const resp = await fetch(endpoint);
-                    if (!resp.ok) {
-                        console.warn(`[Settings] ${endpoint} returned ${resp.status}, falling back to localStorage`);
-                        return null;
-                    }
-                    return await resp.json();
-                } catch (err) {
-                    console.warn(`[Settings] ${endpoint} fetch failed:`, err);
-                    return null;
-                }
-            }
-
-            function bindBackendCheckbox(id, endpoint, fieldName) {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.checked = settingsSync.getBool(id);
-                addListener(el, "change", async (e) => {
-                    const checked = e.target.checked;
-                    settingsSync.setBool(id, checked);
-                    try {
-                        await fetch(endpoint, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({[fieldName]: checked})
-                        });
-                    } catch (err) {
-                        console.warn(`[Settings] POST ${endpoint} failed:`, err);
-                    }
-                });
-            }
-
-            const loggingSettings = await fetchBackendSettings('/api/settings/logging');
-            if (loggingSettings) {
-                settingsSync.setBool("settingServerLogsEnabled", loggingSettings.serverLogsEnabled);
-                settingsSync.setBool("settingPcapRecording", loggingSettings.pcapRecording);
-            }
-
-            // Map display setting
-            bindCheckbox("settingShowMap");
-
-            // Resource overlay settings
-            bindCheckbox("settingResourceCount");
-            bindCheckbox("settingResourceDistance");
-            bindCheckbox("settingResourceColorBadges");
-            bindCheckbox("settingResourceClusters");
-            bindNumber("settingClusterRadius", 30);
-            bindNumber("settingClusterMinSize", 2);
-
-            // Category filters (Logging section)
-            bindCheckbox("categorySystem");
-            bindCheckbox("categoryNetwork");
-            bindCheckbox("categoryMap");
-            bindCheckbox("categoryPlayers");
-            bindCheckbox("categoryMobs");
-            bindCheckbox("categoryHarvestables");
-            bindCheckbox("categoryDungeons");
-            bindCheckbox("categoryFishing");
-            bindCheckbox("categoryRendering");
-
-            // Console & Server settings
-            bindCheckbox("settingLogToConsole");
-            bindCheckbox("settingLogToServer");
-
-            // WebSocket performance (default: enabled)
-            if (settingsSync.get("settingWsCoalescing") === null) settingsSync.setBool("settingWsCoalescing", true);
-            if (settingsSync.get("settingWsThrottling") === null) settingsSync.setBool("settingWsThrottling", true);
-            bindCheckbox("settingWsCoalescing");
-            bindCheckbox("settingWsThrottling");
-
-            bindBackendCheckbox("settingServerLogsEnabled", "/api/settings/logging", "serverLogsEnabled");
-            bindBackendCheckbox("settingPcapRecording", "/api/settings/logging", "pcapRecording");
-
-            // Download debug logs
-            const downloadBtn = document.getElementById('downloadLogsBtn');
-            addListener(downloadBtn, 'click', () => {
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                const debugData = {
-                    timestamp,
-                    session: {
-                        userAgent: navigator.userAgent,
-                        screenResolution: `${window.screen.width}x${window.screen.height}`,
-                        language: navigator.language
-                    },
-                    localStorage: Object.keys(localStorage).reduce((acc, key) => {
-                        if (key.startsWith('setting')) acc[key] = localStorage.getItem(key);
-                        return acc;
-                    }, {})
-                };
-
-                const blob = new Blob([JSON.stringify(debugData, null, 2)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `openradar-debug-${timestamp}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-
-            // Reset settings - using DaisyUI modal
-            addListener(document.getElementById("resetSettingsBtn"), "click", () => {
-                document.getElementById('modal-resetSettings').showModal();
-            });
-
-            addListener(document.getElementById("confirmResetSettings"), "click", () => {
-                localStorage.clear();
-                document.getElementById('modal-resetSettings').close();
-                if (window.toast) window.toast.success('Settings reset successfully');
-                setTimeout(() => location.reload(), 500);
-            });
-
-            // Clear cache - using DaisyUI modal
-            addListener(document.getElementById("clearCacheBtn"), "click", () => {
-                document.getElementById('modal-clearCache').showModal();
-            });
-
-            addListener(document.getElementById("confirmClearCache"), "click", () => {
-                caches.keys().then(names => {
-                    names.forEach(name => caches.delete(name));
-                });
-                document.getElementById('modal-clearCache').close();
-                if (window.toast) window.toast.success('Cache cleared');
-            });
-
-            // Network section: dynamic interface selection
-            import('/scripts/handlers/NetworkSettingsHandler.js').then(({NetworkSettingsHandler}) => {
-                const networkContainer = document.getElementById('network-section');
-                if (networkContainer) {
-                    const networkHandler = new NetworkSettingsHandler(networkContainer);
-                    networkHandler.load();
-                    const networkPoll = setInterval(() => {
-                        if (!document.hidden) networkHandler.load();
-                    }, 5000);
-                    cleanup.push(() => clearInterval(networkPoll));
-                }
-            });
-        }
-
-        function destroySettingsPage() {
-            cleanup.forEach(fn => fn());
-            cleanup = [];
-        }
-
-        if (!window._settingsPageRegistered) {
-            registerPage('settings', {init: initSettingsPage, destroy: destroySettingsPage});
-            window._settingsPageRegistered = true;
-        }
-
-        // Wait for globals (settingsSync) to be ready before reinitializing
-        window.onGlobalsReady(() => reinitCurrentPage());
-    })();
+    Promise.all([
+        import('/scripts/utils/SettingControls.js'),
+        import('/scripts/utils/SettingsPage.js'),
+    ]).then(([{registerBoundPage}, {initSettingsPage}]) =>
+        registerBoundPage('settings', {init: initSettingsPage}));
 </script>
 {{end}}

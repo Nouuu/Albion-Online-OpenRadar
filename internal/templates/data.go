@@ -9,6 +9,7 @@ type PageData struct {
 
 	// Application metadata
 	Version string // Application version
+	IsHost  bool   // Whether the request comes from the PC running the radar
 
 	// Navigation items
 	NavItems []NavItem
@@ -66,6 +67,12 @@ func (p *PageData) WithVersion(version string) *PageData {
 // WithData sets the page-specific data and returns the PageData for chaining
 func (p *PageData) WithData(data any) *PageData {
 	p.Data = data
+	return p
+}
+
+// WithIsHost sets the host flag and returns the PageData for chaining
+func (p *PageData) WithIsHost(isHost bool) *PageData {
+	p.IsHost = isHost
 	return p
 }
 

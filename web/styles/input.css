@@ -9,6 +9,8 @@
 @source "../../internal/templates/**/*.gohtml";
 @source "../scripts/**/*.js";
 
+@custom-variant phone-landscape (@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse));
+
 /* Custom theme extending DaisyUI dark theme */
 @theme {
     /* Tier colors for resources */
@@ -24,4 +26,14 @@
     /* Fonts */
     --font-display: 'Space Grotesk', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+}
+
+.tooltip[data-tip]::before {
+    max-width: min(16rem, calc(100vw - 2rem));
+    translate: var(--tt-nudge, 0) 0;
+}
+
+.tooltip:not(:hover):not(:has(:focus-visible)):not(.tooltip-open)::before,
+.tooltip:not(:hover):not(:has(:focus-visible)):not(.tooltip-open)::after {
+    display: none;
 }

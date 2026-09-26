@@ -95,18 +95,7 @@ func runApp(cfg Config) bool {
 	}
 
 	cfgPersisted, _ := capture.ReadConfig(appDir)
-	target := resolvePersisted(cfgPersisted, allIfaces, cfg.ipAddr)
-	if len(target) == 0 {
-		target = autoPickDefaults(allIfaces)
-		if len(target) > 0 {
-			toPersist := make([]capture.PersistedInterface, 0, len(target))
-			for _, i := range target {
-				toPersist = append(toPersist, capture.PersistedInterface{Name: i.Name, Description: i.Description})
-			}
-			_ = capture.WriteConfig(appDir, capture.Config{CaptureInterfaces: toPersist})
-			logger.PrintInfo("NET", "Auto-selected %d interface(s). Change in /settings if needed.", len(target))
-		}
-	}
+	target := bootInterfaces(appDir, cfgPersisted, allIfaces, cfg.ipAddr)
 
 	manager := capture.NewManager(ctx)
 
@@ -453,6 +442,35 @@ func resolvePersisted(cfg capture.Config, all []capture.NetworkInterface, ipOver
 		}
 	}
 	return out
+}
+
+func bootInterfaces(appDir string, persisted capture.Config, all []capture.NetworkInterface, ipOverride string) []capture.NetworkInterface {
+	target := resolvePersisted(persisted, all, ipOverride)
+	if len(target) > 0 {
+		return target
+	}
+
+	target = autoPickDefaults(all)
+	if len(target) == 0 {
+		return target
+	}
+
+	if ipOverride != "" {
+		logger.PrintWarn("NET", "No interface matches -ip %s, auto-selecting for this run only.", ipOverride)
+		return target
+	}
+
+	toPersist := make([]capture.PersistedInterface, 0, len(target))
+	for _, i := range target {
+		toPersist = append(toPersist, capture.PersistedInterface{Name: i.Name, Description: i.Description})
+	}
+	if err := capture.MutateConfig(appDir, func(cfg *capture.Config) {
+		cfg.CaptureInterfaces = toPersist
+	}); err != nil {
+		logger.PrintWarn("NET", "Could not persist auto-selected interfaces: %v", err)
+	}
+	logger.PrintInfo("NET", "Auto-selected %d interface(s). Change in /settings if needed.", len(target))
+	return target
 }
 
 func autoPickDefaults(all []capture.NetworkInterface) []capture.NetworkInterface {

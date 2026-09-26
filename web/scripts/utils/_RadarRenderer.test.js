@@ -5,11 +5,13 @@ import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
+const {registryDefault} = await vi.hoisted(() => import('./SettingsRegistry.js'));
+
 vi.mock('./SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
         getJSON: vi.fn(() => null),
-        getNumber: vi.fn((_k, d) => d ?? 0),
+        getNumber: vi.fn(key => registryDefault(key)),
     },
 }));
 vi.mock('./CanvasManager.js', () => ({
@@ -50,7 +52,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // @verified 2026-04-24: pure-static harvestable with Static settings off is dropped from cluster input so
     // cluster rings stop surrounding entities the drawings already skip (Important #1 in PR #82 review).
     test('pure static harvestable with Static off is excluded from cluster candidates', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allFalse() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allFalse() : null);
         const renderer = makeRenderer({
             harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
@@ -60,7 +62,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 
     // @verified 2026-04-24: pure-static harvestable with Static on is kept.
     test('pure static harvestable with Static on is kept in cluster candidates', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
             harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
@@ -71,8 +73,8 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // @verified 2026-04-24: living harvestable (mobileTypeId=real typeId) consults Living key, not Static.
     test('living harvestable with Living on but Static off is kept', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allTrue();
-            if (key === 'settingStaticFiberEnchants') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
             return null;
         });
         const renderer = makeRenderer({
@@ -86,8 +88,8 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // living resources the same way they surround static ones.
     test('living mob with Living on is kept in cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allTrue();
-            if (key === 'settingStaticFiberEnchants') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
             return null;
         });
         const renderer = makeRenderer({
@@ -99,7 +101,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 
     // @verified 2026-08-02: skinnable living mob (Hide) with Living on reaches the cluster input.
     test('living skinnable mob with Living on is kept in cluster candidates', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingLivingHideEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesLivingHide' ? allTrue() : null);
         const renderer = makeRenderer({
             mobsList: [{id: 12, name: 'Hide', tier: 6, enchantmentLevel: 2, type: EnemyType.LivingSkinnable, hX: 1, hY: 1}],
         });
@@ -110,8 +112,8 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     // @verified 2026-04-24: living mob with Living off is excluded even if Static is on, matching MobsDrawing.
     test('living mob with Living off is excluded from cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allFalse();
-            if (key === 'settingStaticFiberEnchants') return allTrue();
+            if (key === 'settingResourcesLivingFiber') return allFalse();
+            if (key === 'settingResourcesStaticFiber') return allTrue();
             return null;
         });
         const renderer = makeRenderer({
@@ -133,7 +135,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 
     // @verified 2026-04-24: batch-spawn sentinel mobileTypeId=null routes as pure-static.
     test('batch-spawn harvestable (mobileTypeId=null) is gated by Static setting', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
             harvestableList: [{id: 3, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: null, hX: 1, hY: 1}],
         });
@@ -143,11 +145,11 @@ describe('RadarRenderer._collectClusterCandidates', () => {
 });
 
 const LIVING_KEYS = [
-    'settingLivingHideEnchants',
-    'settingLivingWoodEnchants',
-    'settingLivingRockEnchants',
-    'settingLivingOreEnchants',
-    'settingLivingFiberEnchants',
+    'settingResourcesLivingHide',
+    'settingResourcesLivingWood',
+    'settingResourcesLivingRock',
+    'settingResourcesLivingOre',
+    'settingResourcesLivingFiber',
 ];
 
 describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state', () => {
@@ -187,11 +189,11 @@ describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state',
     // @verified 2026-09-03: per-family gating holds on decoded state. The 2026-09-03 capture carries 10 Hide,
     // 4 Log, 8 Rock, 4 Ore, 4 Fiber, so enabling one family admits exactly that family.
     test.each([
-        ['settingLivingHideEnchants', 'Hide', 10],
-        ['settingLivingWoodEnchants', 'Log', 4],
-        ['settingLivingRockEnchants', 'Rock', 8],
-        ['settingLivingOreEnchants', 'Ore', 4],
-        ['settingLivingFiberEnchants', 'Fiber', 4],
+        ['settingResourcesLivingHide', 'Hide', 10],
+        ['settingResourcesLivingWood', 'Log', 4],
+        ['settingResourcesLivingRock', 'Rock', 8],
+        ['settingResourcesLivingOre', 'Ore', 4],
+        ['settingResourcesLivingFiber', 'Fiber', 4],
     ])('%s alone admits only the %s living resources (%i)', (settingKey, family, expected) => {
         settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
         const renderer = makeRenderer({mobsList});
@@ -208,5 +210,35 @@ describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state',
         const renderer = makeRenderer({mobsList});
 
         expect(renderer._collectClusterCandidates()).toHaveLength(0);
+    });
+});
+
+describe('RadarRenderer cluster errors', () => {
+    function clusterRenderer(drawingUtils) {
+        const renderer = new RadarRenderer({handlers: {}, drawings: {}, drawingUtils});
+        renderer.contexts = {drawCanvas: {}};
+        renderer.canvasManager = {clearDynamicLayers: vi.fn()};
+        renderer.renderUI = vi.fn();
+        return renderer;
+    }
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        settingsSync.getBool.mockImplementation(() => true);
+    });
+
+    test('a failed cluster pass logs under HARVESTABLES', () => {
+        clusterRenderer({detectClusters: vi.fn(() => { throw new Error('boom'); })}).render();
+        expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_compute_failed', expect.any(Error));
+    });
+
+    test('a failed cluster info box logs under HARVESTABLES', () => {
+        clusterRenderer({
+            detectClusters: vi.fn(() => [{count: 2}]),
+            drawClusterRingsFromCluster: vi.fn(),
+            drawClusterInfoBox: vi.fn(() => { throw new Error('boom'); }),
+        }).render();
+        expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_draw_failed', expect.any(Error));
     });
 });

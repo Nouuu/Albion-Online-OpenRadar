@@ -71,7 +71,7 @@ function renderPlayerCard(player, threatType = null) {
 
     // Equipment section
     let equipHtml = '';
-    if (window.settingsSync?.getBool('settingItems') && Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
+    if (window.settingsSync?.getBool('settingPlayersShowEquipment') && Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
         const validEquipments = player.equipments
             .map((itemId, index) => ({itemId, index}))
             .filter(({itemId, index}) => (index <= 4 || index === 8) && itemId && itemId > 0);
@@ -98,7 +98,7 @@ function renderPlayerCard(player, threatType = null) {
 
     // Spells section
     let spellsHtml = '';
-    if (window.settingsSync?.getBool('settingShowSpells') && Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
+    if (window.settingsSync?.getBool('settingPlayersShowSpells') && Array.isArray(player.spells) && player.spells.length > 0 && window.spellsDatabase) {
         const validSpells = player.spells.filter(id => id && id > 0 && id !== 65535);
         if (validSpells.length > 0) {
             const spells = validSpells.map(spellIndex => {
@@ -117,7 +117,7 @@ function renderPlayerCard(player, threatType = null) {
 
     // Health bar
     let healthHtml = '';
-    if (window.settingsSync?.getBool('settingShowPlayerHealthBar') && player.currentHealth > 0 && player.initialHealth > 0) {
+    if (window.settingsSync?.getBool('settingPlayersShowHealthBars') && player.currentHealth > 0 && player.initialHealth > 0) {
         const pct = Math.round((player.currentHealth / player.initialHealth) * 100);
         const colorClass = pct > 60 ? 'bg-gradient-to-r from-success to-green-500'
             : pct > 30 ? 'bg-gradient-to-r from-warning to-amber-500'
@@ -132,6 +132,22 @@ function renderPlayerCard(player, threatType = null) {
     const accentBarClass = `bg-${playerTypeColor}`;
 
     return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+}
+
+function computeCardKey(player) {
+    const equipment = Array.isArray(player.equipments) ? player.equipments.join(',') : '';
+    const spells = Array.isArray(player.spells) ? player.spells.join(',') : '';
+    const healthAvailable = player.currentHealth > 0 && player.initialHealth > 0 ? 1 : 0;
+    const showEquipment = window.settingsSync?.getBool('settingPlayersShowEquipment') ? 1 : 0;
+    const showSpells = window.settingsSync?.getBool('settingPlayersShowSpells') ? 1 : 0;
+    const showHealthBars = window.settingsSync?.getBool('settingPlayersShowHealthBars') ? 1 : 0;
+    return `${equipment}|${spells}|${healthAvailable}|${showEquipment}|${showSpells}|${showHealthBars}`;
+}
+
+function buildCardElement(player, threatType) {
+    const template = document.createElement('template');
+    template.innerHTML = renderPlayerCard(player, threatType).trim();
+    return template.content.firstChild;
 }
 
 function updateSectionPlayers(listContainer, players, threatType) {
@@ -158,8 +174,9 @@ function updateSectionPlayers(listContainer, players, threatType) {
     for (const player of players) {
         const existingCard = existingCards.get(player.id);
         const lastRender = lastRenderedPlayerIds.get(player.id);
+        const key = computeCardKey(player);
 
-        if (existingCard && lastRender) {
+        if (existingCard && lastRender && lastRender.key === key) {
             // Update existing card - minimal DOM operations
             const timeEl = existingCard.querySelector('[data-time]');
             if (timeEl) {
@@ -173,14 +190,15 @@ function updateSectionPlayers(listContainer, players, threatType) {
                     healthBar.style.width = `${pct}%`;
                 }
             }
+        } else if (existingCard) {
+            // Card key changed (equipment, spells, health availability or a display setting) - rebuild in place
+            existingCard.replaceWith(buildCardElement(player, threatType));
         } else {
             // Create new card in fragment (off-DOM)
-            const template = document.createElement('template');
-            template.innerHTML = renderPlayerCard(player, threatType).trim();
-            fragment.appendChild(template.content.firstChild);
+            fragment.appendChild(buildCardElement(player, threatType));
         }
 
-        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth});
+        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth, key});
     }
 
     // 4. Batch DOM operations: removals first, then single append
@@ -229,9 +247,9 @@ export function update(playersHandler) {
     const total = counts.hostile + counts.faction + counts.passive;
 
     // Get filter settings
-    const showHostile = window.settingsSync?.getBool('settingDangerousPlayers') ?? true;
-    const showFaction = window.settingsSync?.getBool('settingFactionPlayers') ?? true;
-    const showPassive = window.settingsSync?.getBool('settingPassivePlayers') ?? true;
+    const showHostile = window.settingsSync?.getBool('settingPlayersHostile');
+    const showFaction = window.settingsSync?.getBool('settingPlayersFaction');
+    const showPassive = window.settingsSync?.getBool('settingPlayersPassive');
 
     // Update stats values
     const countsChanged = counts.hostile !== _lastPlayerCounts.hostile ||

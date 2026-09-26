@@ -2,10 +2,12 @@
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
-        getFloat: vi.fn(() => null),
+        getFloat: vi.fn(key => registryDefault(key)),
     },
 }));
 
@@ -28,9 +30,9 @@ describe('MistsWispDrawing', () => {
         ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
     });
 
-    // @verified 2026-04-23: master gate settingWispSpawn=false skips all feu follet rendering.
-    test('MIST-1: settingWispSpawn=false skips all feu follets regardless of filters', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingWispSpawn');
+    // @verified 2026-04-23: master gate settingMistsWisps=false skips all feu follet rendering.
+    test('MIST-1: settingMistsWisps=false skips all feu follets regardless of filters', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsWisps');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
 
         drawing.invalidate(ctx, [mist]);
@@ -39,7 +41,7 @@ describe('MistsWispDrawing', () => {
         expect(drawing.drawTextItems).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-23: solo E0 feu follet renders mist_0 when settingMistSolo+settingMistE0 pass.
+    // @verified 2026-04-23: solo E0 feu follet renders mist_0 when settingMistsSolo+settingMistsEnchant0 pass.
     test('MIST-1: solo enchant 0 renders mist_0', () => {
         settingsSync.getBool.mockImplementation(() => true);
         const mist = {id: 223827, hX: 10, hY: 20, type: 0, enchant: 0};
@@ -51,9 +53,9 @@ describe('MistsWispDrawing', () => {
         );
     });
 
-    // @verified 2026-04-23: enchant filter gate. settingMistE0=false skips an E0 feu follet.
-    test('MIST-1: settingMistE0=false skips the E0 feu follet', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingMistE0');
+    // @verified 2026-04-23: enchant filter gate. settingMistsEnchant0=false skips an E0 feu follet.
+    test('MIST-1: settingMistsEnchant0=false skips the E0 feu follet', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsEnchant0');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
 
         drawing.invalidate(ctx, [mist]);
@@ -61,9 +63,9 @@ describe('MistsWispDrawing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-23: type filter gate. settingMistSolo=false skips a solo feu follet even with E0 on.
-    test('MIST-1: settingMistSolo=false skips solo feu follet', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingMistSolo');
+    // @verified 2026-04-23: type filter gate. settingMistsSolo=false skips a solo feu follet even with E0 on.
+    test('MIST-1: settingMistsSolo=false skips solo feu follet', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsSolo');
         const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: 0};
 
         drawing.invalidate(ctx, [mist]);
@@ -71,8 +73,8 @@ describe('MistsWispDrawing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-23: duo type uses settingMistDuo gate.
-    test('MIST-1: duo feu follet renders when settingMistDuo=true', () => {
+    // @verified 2026-04-23: duo type uses settingMistsDuo gate.
+    test('MIST-1: duo feu follet renders when settingMistsDuo=true', () => {
         settingsSync.getBool.mockImplementation(() => true);
         const mist = {id: 1, hX: 10, hY: 20, type: 1, enchant: 1};
 
@@ -83,9 +85,9 @@ describe('MistsWispDrawing', () => {
         );
     });
 
-    // @verified 2026-04-23: duo feu follet skipped when settingMistDuo=false.
-    test('MIST-1: settingMistDuo=false skips duo feu follet', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingMistDuo');
+    // @verified 2026-04-23: duo feu follet skipped when settingMistsDuo=false.
+    test('MIST-1: settingMistsDuo=false skips duo feu follet', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsDuo');
         const mist = {id: 1, hX: 10, hY: 20, type: 1, enchant: 0};
 
         drawing.invalidate(ctx, [mist]);
@@ -93,8 +95,8 @@ describe('MistsWispDrawing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // @verified 2026-04-23: settingWispSpawnDebugID=true draws id text below the mist.
-    test('MIST-1: settingWispSpawnDebugID=true draws id text below', () => {
+    // @verified 2026-04-23: settingDebugMistsWispIds=true draws id text below the mist.
+    test('MIST-1: settingDebugMistsWispIds=true draws id text below', () => {
         settingsSync.getBool.mockImplementation(() => true);
         const mist = {id: 223827, hX: 10, hY: 20, type: 0, enchant: 0};
 
@@ -105,9 +107,9 @@ describe('MistsWispDrawing', () => {
         );
     });
 
-    // @verified 2026-04-23: settingWispSpawnDebugID=false suppresses the id text overlay.
-    test('MIST-1: settingWispSpawnDebugID=false does not draw id text', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingWispSpawnDebugID');
+    // @verified 2026-04-23: settingDebugMistsWispIds=false suppresses the id text overlay.
+    test('MIST-1: settingDebugMistsWispIds=false does not draw id text', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingDebugMistsWispIds');
         const mist = {id: 223827, hX: 10, hY: 20, type: 0, enchant: 0};
 
         drawing.invalidate(ctx, [mist]);
@@ -122,5 +124,20 @@ describe('MistsWispDrawing', () => {
         drawing.interpolate(mists, 0, 0, 0.5);
 
         expect(drawing.interpolateEntity).toHaveBeenCalledTimes(2);
+    });
+
+    // @verified 2026-09-24: a mist without an enchant value must not read an undefined-suffixed setting key.
+    test('a mist with an undefined enchant does not read an undefined-suffixed setting key', () => {
+        const error = vi.fn();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error};
+        settingsSync.getBool.mockImplementation(key => {
+            if (key.includes('undefined')) error('SettingsSyncUnknownKey', {key});
+            return true;
+        });
+        const mist = {id: 1, hX: 10, hY: 20, type: 0, enchant: undefined};
+
+        drawing.invalidate(ctx, [mist]);
+
+        expect(error).not.toHaveBeenCalled();
     });
 });

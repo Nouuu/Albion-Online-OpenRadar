@@ -23,6 +23,10 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 import {createRadarRenderer} from './RadarRenderer.js';
 import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 import pictureInPictureManager from './PictureInPictureManager.js';
+import {destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
+import {exitFullscreenIfActive} from './FullscreenButton.js';
+import {startScreenWakeLock, stopScreenWakeLock} from './ScreenWakeLock.js';
+import settingsSync from './SettingsSync.js';
 
 import * as WebSocketManager from '../core/WebSocketManager.js';
 import * as DatabaseLoader from '../core/DatabaseLoader.js';
@@ -36,7 +40,6 @@ let eventQueue = null;
 let playerListIntervalId = null;
 let cleanupIntervalId = null;
 let buttonClickHandler = null;
-let lastPlayerListHash = '';
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
@@ -53,22 +56,32 @@ let drawingUtils = null;
 let map = null;
 
 const STALE_ENTITY_MAX_AGE = 300000;
+const STATIC_ENTITY_MAX_AGE = 30 * 60 * 1000;
 
-function cleanupStaleEntities() {
+export function cleanupStaleEntities() {
     const cleanedPlayers = handlers.players?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedMobs = handlers.mobs?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedFishing = handlers.fishing?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const cleanedChests = handlers.chests?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
+    const cleanedDungeons = handlers.dungeons?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
+    const cleanedCages = handlers.wispCage?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
+    const cleanedPortals = handlers.mistsDungeon?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
 
     const activePlayerIds = new Set(handlers.players?.getFilteredPlayers?.().map(p => p.id) || []);
     const cleanedRenderCache = PlayerListRenderer.cleanupStaleCache(activePlayerIds);
 
-    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedFishing || cleanedRenderCache) {
+    if (cleanedPlayers || cleanedMobs || cleanedHarvestables || cleanedFishing
+        || cleanedChests || cleanedDungeons || cleanedCages || cleanedPortals || cleanedRenderCache) {
         window.logger?.debug(CATEGORIES.SYSTEM, 'StaleEntityCleanup', {
             players: cleanedPlayers,
             mobs: cleanedMobs,
             harvestables: cleanedHarvestables,
             fishing: cleanedFishing,
+            chests: cleanedChests,
+            dungeons: cleanedDungeons,
+            cages: cleanedCages,
+            portals: cleanedPortals,
             renderCache: cleanedRenderCache
         });
     }
@@ -122,7 +135,7 @@ function initializeRadarRenderer() {
     return true;
 }
 
-function clearHandlers(preserveSession = false) {
+export function clearHandlers(preserveSession = false) {
     handlers.chests.chestsList = [];
     handlers.dungeons.dungeonList = [];
     handlers.fishing.Clear();
@@ -130,6 +143,7 @@ function clearHandlers(preserveSession = false) {
     handlers.mobs.Clear();
     handlers.players.Clear();
     handlers.wispCage.Clear();
+    handlers.mistsDungeon.Clear();
 
     if (!preserveSession) {
         try {
@@ -225,12 +239,7 @@ export async function initRadar() {
         EventRouter.setRadarRenderer(radarRenderer);
 
         playerListIntervalId = setInterval(() => {
-            const players = handlers.players?.getFilteredPlayers?.() || [];
-            const hash = `${players.length}:` + players.map(p => `${p.id}:${p.currentHealth}:${p.mounted ? 1 : 0}`).join(',');
-            if (hash !== lastPlayerListHash) {
-                lastPlayerListHash = hash;
-                PlayerListRenderer.update(handlers.players);
-            }
+            PlayerListRenderer.update(handlers.players);
         }, 1500);
         cleanupIntervalId = setInterval(cleanupStaleEntities, 60000);
 
@@ -310,11 +319,62 @@ export function destroyRadar() {
 
     PlayerListRenderer.reset();
     EventRouter.reset();
-    lastPlayerListHash = '';
 
     isInitialized = false;
     isDestroying = false;
     window.logger?.info(CATEGORIES.SYSTEM, 'RadarDestroyed', {});
+}
+
+let pageRoot = null;
+
+function showPlayers() {
+    const visible = settingsSync.getBool('settingPlayersDetect');
+    const list = pageRoot?.querySelector('#playersListContainer');
+    const stats = pageRoot?.querySelector('#playerStats');
+    if (list) list.style.display = visible ? 'block' : 'none';
+    stats?.classList.toggle('!hidden', !visible);
+    if (visible && handlers.players) PlayerListRenderer.update(handlers.players);
+}
+
+export async function initRadarPage({root, signal}) {
+    try {
+        initRadarSettingsPanel();
+    } catch (error) {
+        window.logger?.error(CATEGORIES.SYSTEM, 'RadarSettingsPanelInitFailed', {error: error?.message});
+    }
+
+    try {
+        startScreenWakeLock();
+    } catch (error) {
+        window.logger?.error(CATEGORIES.SYSTEM, 'ScreenWakeLockInitFailed', {error: error?.message});
+    }
+
+    pageRoot = root;
+    showPlayers();
+    settingsSync.off('settingPlayersDetect', showPlayers);
+    settingsSync.on('settingPlayersDetect', showPlayers);
+    signal.addEventListener('abort', () => {
+        settingsSync.off('settingPlayersDetect', showPlayers);
+        pageRoot = null;
+    }, {once: true});
+
+    await initRadar();
+}
+
+export async function destroyRadarPage() {
+    try {
+        try {
+            try {
+                destroyRadarSettingsPanel();
+            } finally {
+                exitFullscreenIfActive();
+            }
+        } finally {
+            stopScreenWakeLock();
+        }
+    } finally {
+        destroyRadar();
+    }
 }
 
 window.addEventListener('beforeunload', () => {

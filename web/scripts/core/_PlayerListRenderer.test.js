@@ -2,10 +2,12 @@ import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
 
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
+
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
         getBool: vi.fn(() => true),
-        getNumber: vi.fn((_k, d) => d),
+        getNumber: vi.fn(key => registryDefault(key)),
         getJSON: vi.fn(() => null),
     },
 }));
@@ -89,5 +91,78 @@ describe('player equipment resolves to the correct items', () => {
         await new Promise(resolve => requestAnimationFrame(resolve));
 
         expect(document.body.innerHTML).toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
+    });
+});
+
+// pcap-derived: the equipment fixture from the 2026-07-24 capture
+// synthetic: spawn parameters for the spells and health bar scenarios, not isolated in the corpus
+
+describe('player card refreshes on a display setting change without a new spawn', () => {
+    let handler;
+
+    beforeEach(() => {
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        window.currentMapId = 'safe-zone-01';
+        window.itemsDatabase = loadRealItemsDatabase();
+        handler = new PlayersHandler();
+        document.body.innerHTML = '<div id="playersList"><div id="playersPassive"><div id="passiveList"></div></div></div>';
+    });
+
+    test('card shows equipment after Show equipment is ticked, on the next refresh, without a new spawn', async () => {
+        const renderer = await import('./PlayerListRenderer.js');
+        const fx = await loadFixture('players', 'equipment');
+        const msg = fx.messages[0];
+        const id = msg.parameters['0'];
+
+        window.settingsSync = {getBool: key => key !== 'settingPlayersShowEquipment'};
+        handler.handleNewPlayerEvent(id, {1: 'Geared', 8: '', 53: 0, 51: null, 40: [], 43: []});
+        handler.updateItems(id, normalizeParams(msg.parameters));
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.body.innerHTML).not.toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
+
+        window.settingsSync = {getBool: () => true};
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.body.innerHTML).toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
+    });
+
+    test('card shows spells after Show spells is ticked, on the next refresh, without a new spawn', async () => {
+        const renderer = await import('./PlayerListRenderer.js');
+        window.spellsDatabase = {getSpellByIndex: vi.fn(() => ({uniqueName: 'SPELL_FIREBALL', uiSprite: 'SPELL_GENERIC'}))};
+        window.settingsSync = {getBool: key => key !== 'settingPlayersShowSpells'};
+
+        const id = 90001;
+        handler.handleNewPlayerEvent(id, {1: 'Caster', 8: '', 53: 0, 51: null, 40: [], 43: [12, 34]});
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.body.innerHTML).not.toContain('/images/Spells/SPELL_GENERIC.webp');
+
+        window.settingsSync = {getBool: () => true};
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.body.innerHTML).toContain('/images/Spells/SPELL_GENERIC.webp');
+    });
+
+    test('card shows a health bar once health becomes available, on the next refresh, without a new spawn', async () => {
+        const renderer = await import('./PlayerListRenderer.js');
+        window.settingsSync = {getBool: () => true};
+
+        const id = 90002;
+        handler.handleNewPlayerEvent(id, {1: 'Fresh', 8: '', 53: 0, 51: null, 40: [], 43: []});
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.body.innerHTML).not.toContain('data-health-bar');
+
+        handler.UpdatePlayerHealth({0: id, 2: 80, 3: 100});
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.body.innerHTML).toContain('data-health-bar');
     });
 });
