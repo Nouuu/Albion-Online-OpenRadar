@@ -149,14 +149,21 @@ describe('radar page entry', () => {
         expect(document.exitFullscreen).toHaveBeenCalledTimes(1);
     });
 
-    test('@verified 2026-09-24: destroy releases the panel, then exits fullscreen, then tears the radar down', async () => {
+    test('@verified 2026-09-26: destroy releases the panel, exits fullscreen, releases the wake lock, then tears the radar down', async () => {
+        const sentinel = {release: vi.fn(async () => {})};
+        stub(navigator, 'wakeLock', {request: vi.fn(async () => sentinel)});
+        stub(window, 'isSecureContext', true);
         await page.init();
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(navigator.wakeLock.request).toHaveBeenCalledWith('screen');
         stub(document, 'fullscreenElement', document.documentElement);
         WebSocketManager.disconnect.mockClear();
 
         await page.destroy();
+        stub(navigator, 'wakeLock', undefined);
+        stub(window, 'isSecureContext', false);
 
-        const order = [observers[0].disconnect, document.exitFullscreen, WebSocketManager.disconnect]
+        const order = [observers[0].disconnect, document.exitFullscreen, sentinel.release, WebSocketManager.disconnect]
             .map(fn => fn.mock.invocationCallOrder[0]);
         expect(order.every(Number.isFinite)).toBe(true);
         expect([...order].sort((a, b) => a - b)).toEqual(order);

@@ -192,6 +192,7 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | Zone info box              | toggle, zone name, tier and PvP marker          |
 | Stats box                  | toggle, resource, mob and player counts         |
 | Players beside radar       | toggle, player list right of the radar if room  |
+| Keep screen awake          | toggle, screen stays on while the radar is open |
 | Resource count             | toggle, estimated quantity per node             |
 | Resource distance          | toggle, distance in meters per node             |
 | Resource tier color badges | toggle, colored squares with tier and enchant   |

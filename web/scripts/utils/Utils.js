@@ -25,6 +25,7 @@ import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 import pictureInPictureManager from './PictureInPictureManager.js';
 import {destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
 import {exitFullscreenIfActive} from './FullscreenButton.js';
+import {startScreenWakeLock, stopScreenWakeLock} from './ScreenWakeLock.js';
 import settingsSync from './SettingsSync.js';
 
 import * as WebSocketManager from '../core/WebSocketManager.js';
@@ -342,6 +343,12 @@ export async function initRadarPage({root, signal}) {
         window.logger?.error(CATEGORIES.SYSTEM, 'RadarSettingsPanelInitFailed', {error: error?.message});
     }
 
+    try {
+        startScreenWakeLock();
+    } catch (error) {
+        window.logger?.error(CATEGORIES.SYSTEM, 'ScreenWakeLockInitFailed', {error: error?.message});
+    }
+
     pageRoot = root;
     showPlayers();
     settingsSync.off('settingPlayersDetect', showPlayers);
@@ -357,9 +364,13 @@ export async function initRadarPage({root, signal}) {
 export async function destroyRadarPage() {
     try {
         try {
-            destroyRadarSettingsPanel();
+            try {
+                destroyRadarSettingsPanel();
+            } finally {
+                exitFullscreenIfActive();
+            }
         } finally {
-            exitFullscreenIfActive();
+            stopScreenWakeLock();
         }
     } finally {
         destroyRadar();
