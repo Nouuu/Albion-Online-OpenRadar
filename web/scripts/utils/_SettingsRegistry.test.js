@@ -110,6 +110,10 @@ const TABLE = [
     ['settingWsCoalescing', 'settingDebugWsCoalescing', 'rename'],
     ['settingWsThrottling', null, 'remove'],
     [null, 'settingUiRadarSettingsOpen', 'new'],
+    [null, 'settingUiPlayersDisplayOpen', 'new'],
+    [null, 'settingUiPlayersAlertsOpen', 'new'],
+    [null, 'settingUiPlayersPlayerTypesOpen', 'new'],
+    [null, 'settingUiPlayersLimitsOpen', 'new'],
     ['collapse-classic', 'settingUiEnemiesClassicOpen', 'rename'],
     ['collapse-mists', 'settingUiEnemiesMistsOpen', 'rename'],
     ['collapse-other', 'settingUiEnemiesOtherOpen', 'rename'],
@@ -141,7 +145,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 121 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 125 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -199,7 +203,10 @@ describe('SettingsRegistry', () => {
             settingLogCategoryMap: false, settingLogCategoryPlayers: false, settingLogCategoryMobs: false,
             settingLogCategoryResources: false, settingLogCategoryDungeons: false, settingLogCategoryFishing: false,
             settingLogToConsole: false, settingLogToServer: false, settingDebugWsCoalescing: true,
-            settingUiRadarSettingsOpen: false, settingUiEnemiesClassicOpen: true, settingUiEnemiesMistsOpen: true,
+            settingUiRadarSettingsOpen: false,
+            settingUiPlayersDisplayOpen: true, settingUiPlayersAlertsOpen: true,
+            settingUiPlayersPlayerTypesOpen: true, settingUiPlayersLimitsOpen: true,
+            settingUiEnemiesClassicOpen: true, settingUiEnemiesMistsOpen: true,
             settingUiEnemiesOtherOpen: false, settingUiEnemiesDisplayOpen: true,
             settingUiResourcesFiberOpen: true, settingUiResourcesHideOpen: false,
             settingUiResourcesWoodOpen: false, settingUiResourcesOreOpen: false, settingUiResourcesRockOpen: false,
@@ -301,7 +308,11 @@ describe('SettingsRegistry control location', () => {
         ['settingRadarPlayersBeside', 'Radar', 'Radar settings > Display'],
         ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
         ['settingPlayersDetect', 'Players', 'Display'],
+        ['settingUiPlayersDisplayOpen', 'Players', 'Display'],
         ['settingAlertSoundFile', 'Players', 'Alerts'],
+        ['settingUiPlayersAlertsOpen', 'Players', 'Alerts'],
+        ['settingUiPlayersPlayerTypesOpen', 'Players', 'Player types'],
+        ['settingUiPlayersLimitsOpen', 'Players', 'Limits'],
         ['settingIgnoreList', 'Ignore List', ''],
         ['settingEnemiesMistsGriffin', 'Enemies', 'Mists bosses'],
         ['settingEnemiesEvent', 'Enemies', 'Other'],

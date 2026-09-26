@@ -18,12 +18,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
-                Display
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiPlayersDisplayOpen" aria-labelledby="label-settingUiPlayersDisplayOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="eye" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiPlayersDisplayOpen" data-setting-label="settingUiPlayersDisplayOpen">Display</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-1 gap-2 max-w-xl">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingPlayersDetect" aria-labelledby="label-settingPlayersDetect" class="toggle toggle-primary toggle-sm">
@@ -55,12 +56,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="bell" class="w-5 h-5 text-warning"></i>
-                Alerts
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiPlayersAlertsOpen" aria-labelledby="label-settingUiPlayersAlertsOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="bell" class="w-5 h-5 text-warning"></i>
+            <span id="label-settingUiPlayersAlertsOpen" data-setting-label="settingUiPlayersAlertsOpen">Alerts</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-[repeat(auto-fit,minmax(min(24rem,100%),1fr))] gap-4">
                 <div>
                     <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
@@ -137,12 +139,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
-                Player Types
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiPlayersPlayerTypesOpen" aria-labelledby="label-settingUiPlayersPlayerTypesOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="shield" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiPlayersPlayerTypesOpen" data-setting-label="settingUiPlayersPlayerTypesOpen">Player Types</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <input type="checkbox" data-setting="settingPlayersPassive" aria-labelledby="label-settingPlayersPassive" class="checkbox checkbox-success checkbox-xs">
@@ -172,12 +175,13 @@
         </div>
     </div>
 
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4 flex items-center gap-2">
-                <i data-lucide="sliders-horizontal" class="w-5 h-5 text-primary"></i>
-                Limits
-            </h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiPlayersLimitsOpen" aria-labelledby="label-settingUiPlayersLimitsOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="sliders-horizontal" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiPlayersLimitsOpen" data-setting-label="settingUiPlayersLimitsOpen">Limits</span>
+        </div>
+        <div class="collapse-content">
             <div class="grid grid-cols-1 gap-2 max-w-xl">
                 <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                     <i data-lucide="list" class="w-4 h-4 text-base-content/50"></i>
