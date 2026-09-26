@@ -633,6 +633,25 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('a number input tile keeps its label on one line', () => {
+        const drift = tiles.filter(({el}) => el.querySelector('input[type="number"]')).flatMap(({page, el}) => {
+            const key = el.querySelector('input[type="number"]').dataset.setting;
+            return el.querySelector(`[data-setting-label="${key}"]`)?.classList.contains('whitespace-nowrap') ? [] : [`${page}: ${key}`];
+        });
+        expect(drift).toEqual([]);
+    });
+
+    test('every gated sub-row is the min HP row: indented, input first, then its text-xs label', () => {
+        const drift = all('[data-enabled-by]').flatMap(({page, el}) => {
+            const row = el.parentElement;
+            const ok = row.tagName === 'LABEL' && row.firstElementChild === el && row.parentElement.classList.contains('ml-8')
+                && ['input', 'input-bordered', 'input-sm', 'w-32'].every(name => el.classList.contains(name))
+                && el.nextElementSibling?.matches(`[data-setting-label="${el.dataset.setting}"].text-xs`);
+            return ok ? [] : [`${page}: ${el.dataset.setting}`];
+        });
+        expect(drift).toEqual([]);
+    });
+
     test('no slider row sits in a column split by viewport width', () => {
         const drift = tiles.filter(({el}) => el.querySelector('input[type="range"]')).flatMap(({page, el}) => {
             const split = [];
