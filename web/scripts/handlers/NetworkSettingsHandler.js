@@ -91,11 +91,11 @@ export class NetworkSettingsHandler {
         const label = BADGE_LABEL[iface.category] ?? BADGE_LABEL.other;
         const unavail = iface.isAvailable ? '' : ' <span class="opacity-60">(unavailable)</span>';
         return `
-            <label class="flex flex-wrap items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${escapeHTML(iface.name)}">
-                <input type="checkbox" class="checkbox checkbox-sm" ${checked ? 'checked' : ''} ${iface.isAvailable && !locked ? '' : 'disabled'}>
-                <span class="badge badge-outline">${badge} ${label}</span>
-                <span class="flex-1">${escapeHTML(iface.description || iface.name)}${unavail}</span>
-                <span class="opacity-60 text-sm">${escapeHTML(iface.address || '')}</span>
+            <label class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors" data-iface="${escapeHTML(iface.name)}">
+                <input type="checkbox" class="checkbox checkbox-primary checkbox-xs" ${checked ? 'checked' : ''} ${iface.isAvailable && !locked ? '' : 'disabled'}>
+                <span class="badge badge-outline badge-sm">${badge} ${label}</span>
+                <span class="flex-1 min-w-0 text-base-content/80 text-xs group-hover:text-base-content">${escapeHTML(iface.description || iface.name)}${unavail}</span>
+                <span class="opacity-60 text-xs whitespace-nowrap">${escapeHTML(iface.address || '')}</span>
             </label>
         `;
     }

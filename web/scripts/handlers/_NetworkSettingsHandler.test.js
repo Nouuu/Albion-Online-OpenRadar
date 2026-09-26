@@ -130,6 +130,24 @@ describe('NetworkSettingsHandler', () => {
         expect(container.querySelector('[data-lan-url]').classList.contains('break-all')).toBe(true);
     });
 
+    test('each row is a checkbox tile whose address stays on the line while the name wraps in place', async () => {
+        globalThis.fetch
+            .mockResolvedValueOnce({ok: true, json: async () => ([
+                {name: 'a', description: 'Intel(R) I211 Gigabit Network Connection', address: '192.168.1.37', category: 'ethernet', isPersisted: true, isAvailable: true},
+            ])})
+            .mockResolvedValueOnce({ok: true, json: async () => ({captureInterfaces: [{name: 'a'}], lanAddresses: [], status: 'running'})});
+
+        const h = new NetworkSettingsHandler(container);
+        await h.load();
+
+        const row = container.querySelector('[data-iface="a"]');
+        const [box, , name, address] = row.children;
+        expect([...row.classList]).toEqual(expect.arrayContaining(['flex', 'items-center', 'gap-2', 'p-2', 'rounded-lg', 'bg-base-300', 'cursor-pointer']));
+        expect([...box.classList].sort()).toEqual(['checkbox', 'checkbox-primary', 'checkbox-xs']);
+        expect(name.classList.contains('min-w-0')).toBe(true);
+        expect(address.classList.contains('whitespace-nowrap')).toBe(true);
+    });
+
     test('shows awaiting banner when capture is not running', async () => {
         globalThis.fetch
             .mockResolvedValueOnce({ok: true, json: async () => []})
