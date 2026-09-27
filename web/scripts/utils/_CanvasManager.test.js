@@ -1,6 +1,7 @@
-// synthetic: pure DOM-mocked tests for the centering fix.
+// synthetic: DOM-mocked canvases with a recording 2D context.
 import {beforeEach, describe, test, expect, vi} from 'vitest';
-import {createCanvasManager, clampForViewport} from './CanvasManager.js';
+import {createCanvasManager} from './CanvasManager.js';
+import {installRecordingContext} from '../__fixtures__/recordingContext.js';
 
 beforeEach(() => {
     document.body.innerHTML = '';
@@ -28,50 +29,22 @@ describe('CanvasManager.setupOurPlayerCanvas', () => {
     });
 });
 
-describe('clampForViewport', () => {
-    test('@verified 2026-04-25: returns size when ample room', () => {
-        const cardBody = document.createElement('div');
-        cardBody.style.width = '800px';
-        cardBody.style.padding = '0px';
-        Object.defineProperty(cardBody, 'clientWidth', {value: 800, configurable: true});
-        const container = document.createElement('div');
-        cardBody.appendChild(container);
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-        document.body.appendChild(cardBody);
+describe('CanvasManager canvasSizeChanged listener', () => {
+    test('@verified 2026-09-24: only redraws the player dot and leaves the bitmaps to the panel', () => {
+        const getContext = installRecordingContext();
+        document.body.innerHTML = ['mapCanvas', 'drawCanvas', 'ourPlayerCanvas', 'uiCanvas']
+            .map(id => `<canvas id="${id}" width="500" height="500"></canvas>`).join('');
+        const mgr = createCanvasManager();
+        mgr.initialize();
+        const dot = mgr.getContext('ourPlayerCanvas');
+        dot.calls.length = 0;
 
-        Object.defineProperty(window, 'innerWidth', {value: 1280, configurable: true});
+        window.dispatchEvent(new CustomEvent('canvasSizeChanged', {detail: {size: 300}}));
 
-        expect(clampForViewport(500, canvas)).toBe(500);
-    });
-
-    test('@verified 2026-04-25: clamps to inner width on narrow viewport', () => {
-        const cardBody = document.createElement('div');
-        Object.defineProperty(cardBody, 'clientWidth', {value: 343, configurable: true});
-        const container = document.createElement('div');
-        cardBody.appendChild(container);
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-        document.body.appendChild(cardBody);
-
-        Object.defineProperty(window, 'innerWidth', {value: 375, configurable: true});
-
-        const result = clampForViewport(500, canvas);
-        expect(result).toBeLessThanOrEqual(343);
-        expect(result).toBeGreaterThanOrEqual(200);
-    });
-
-    test('@verified 2026-04-25: never returns below 200 floor', () => {
-        const cardBody = document.createElement('div');
-        Object.defineProperty(cardBody, 'clientWidth', {value: 100, configurable: true});
-        const container = document.createElement('div');
-        cardBody.appendChild(container);
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-        document.body.appendChild(cardBody);
-
-        Object.defineProperty(window, 'innerWidth', {value: 200, configurable: true});
-
-        expect(clampForViewport(500, canvas)).toBe(200);
+        expect(Object.values(mgr.getAllCanvases()).map(canvas => [canvas.width, canvas.height]))
+            .toEqual(Array(4).fill([500, 500]));
+        expect(dot.calls).toContainEqual(['arc', 250, 250, 5, 0, 2 * Math.PI]);
+        mgr.destroy();
+        getContext.mockRestore();
     });
 });
