@@ -1,41 +1,38 @@
 {{define "pages/ignorelist"}}
-<div class="space-y-6 stagger">
-    <!-- Page Header -->
+<div class="space-y-6 stagger" data-setting="settingIgnoreList">
     <div class="card bg-base-200">
         <div class="card-body">
             <h1 class="text-3xl font-bold text-base-content">Ignore List</h1>
-            <p class="text-base-content/60 mt-2">Manage players that won't trigger alerts or be shown on radar.</p>
+            <p class="text-base-content/60 mt-2">Names on this list never trigger the alert sound, the screen flash or the red border. Ignored players still appear in the player list.</p>
         </div>
     </div>
 
-    <!-- Add Player -->
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <h2 class="text-xl font-semibold text-base-content mb-4">Add Player</h2>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiIgnoreListAddNameOpen" aria-labelledby="label-settingUiIgnoreListAddNameOpen"/>
+        <div class="collapse-title text-xl font-semibold flex items-center gap-2">
+            <i data-lucide="user-plus" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiIgnoreListAddNameOpen" data-setting-label="settingUiIgnoreListAddNameOpen">Add name</span>
+        </div>
+        <div class="collapse-content">
             <div class="flex gap-3">
-                <input type="text"
-                       id="ignorePlayerInput"
-                       placeholder="Enter player name..."
+                <input type="text" data-ignore-input placeholder="Player, guild or alliance name"
                        class="input input-bordered flex-1">
-                <button id="addIgnoreBtn" class="btn btn-primary">Add</button>
+                <button type="button" data-ignore-add class="btn btn-primary">Add name</button>
             </div>
-            <p class="text-xs text-base-content/50 mt-2">Players on this list will not trigger sound alerts or screen flashes. A player name, a guild name or an alliance name all work.</p>
         </div>
     </div>
 
-    <!-- Ignored Players List -->
-    <div class="card bg-base-200">
-        <div class="card-body">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-semibold text-base-content">Ignored Players</h2>
-                <span id="ignoreCount" class="badge badge-ghost font-mono">0</span>
-            </div>
-
-            <div id="ignoreListContainer" class="space-y-2">
-                <!-- Players will be rendered here -->
-                <p id="emptyIgnoreList" class="text-base-content/50 text-center py-8 italic">
-                    No players on ignore list
-                </p>
+    <div class="collapse collapse-arrow bg-base-200 rounded-xl">
+        <input type="checkbox" data-setting="settingUiIgnoreListIgnoredNamesOpen" aria-labelledby="label-settingUiIgnoreListIgnoredNamesOpen"/>
+        <div class="collapse-title text-xl font-semibold flex flex-wrap items-center gap-2">
+            <i data-lucide="user-x" class="w-5 h-5 text-primary"></i>
+            <span id="label-settingUiIgnoreListIgnoredNamesOpen" data-setting-label="settingUiIgnoreListIgnoredNamesOpen settingIgnoreList">Ignored names</span>
+            <span data-ignore-count class="badge badge-ghost font-mono"></span>
+        </div>
+        <div class="collapse-content">
+            <div class="space-y-2">
+                <p data-ignore-empty class="text-base-content/50 text-center py-8 italic">The ignore list is empty</p>
+                <div data-ignore-items class="space-y-2"></div>
             </div>
         </div>
     </div>
@@ -44,113 +41,6 @@
 
 {{define "scripts/ignorelist"}}
 <script>
-    (async function () {
-        const {registerPage, reinitCurrentPage} = await import('/scripts/core/PageController.js');
-
-        let cleanup = [];
-
-        function initIgnoreListPage() {
-            const settingsSync = window.settingsSync;
-            cleanup = [];
-
-            function addListener(el, event, handler) {
-                if (el) {
-                    el.addEventListener(event, handler);
-                    cleanup.push(() => el.removeEventListener(event, handler));
-                }
-            }
-
-            const input = document.getElementById('ignorePlayerInput');
-            const addBtn = document.getElementById('addIgnoreBtn');
-            const container = document.getElementById('ignoreListContainer');
-            const countEl = document.getElementById('ignoreCount');
-            const emptyEl = document.getElementById('emptyIgnoreList');
-
-            function getIgnoreList() {
-                return settingsSync.getJSON('ignoreList', []);
-            }
-
-            function saveIgnoreList(list) {
-                settingsSync.setJSON('ignoreList', list);
-                renderList();
-            }
-
-            function escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            function renderList() {
-                const list = getIgnoreList();
-                countEl.textContent = list.length;
-
-                // Clear existing player items (also removes their event listeners)
-                container.querySelectorAll('.player-item').forEach(el => el.remove());
-
-                if (list.length === 0) {
-                    emptyEl.style.display = 'block';
-                    return;
-                }
-
-                emptyEl.style.display = 'none';
-
-                list.forEach((name, index) => {
-                    const div = document.createElement('div');
-                    div.className = 'player-item flex items-center justify-between p-3 bg-base-300 rounded-lg group';
-                    div.innerHTML = `
-                    <span class="text-base-content font-medium">${escapeHtml(name)}</span>
-                    <button class="remove-btn btn btn-ghost btn-xs text-error opacity-0 group-hover:opacity-100 transition-opacity">
-                        Remove
-                    </button>
-                `;
-                    div.querySelector('.remove-btn').addEventListener('click', () => {
-                        const newList = getIgnoreList().filter((_, i) => i !== index);
-                        saveIgnoreList(newList);
-                    });
-                    container.appendChild(div);
-                });
-            }
-
-            function addPlayer() {
-                const name = input.value.trim();
-                if (!name) return;
-
-                const list = getIgnoreList();
-                if (list.includes(name)) {
-                    input.value = '';
-                    return;
-                }
-
-                list.push(name);
-                saveIgnoreList(list);
-                input.value = '';
-            }
-
-            addListener(addBtn, 'click', addPlayer);
-            addListener(input, 'keypress', (e) => {
-                if (e.key === 'Enter') addPlayer();
-            });
-
-            renderList();
-        }
-
-        function destroyIgnoreListPage() {
-            cleanup.forEach(fn => fn());
-            cleanup = [];
-            // Clear dynamically created elements (removes their listeners too)
-            const container = document.getElementById('ignoreListContainer');
-            if (container) {
-                container.querySelectorAll('.player-item').forEach(el => el.remove());
-            }
-        }
-
-        if (!window._ignorelistPageRegistered) {
-            registerPage('ignorelist', {init: initIgnoreListPage, destroy: destroyIgnoreListPage});
-            window._ignorelistPageRegistered = true;
-        }
-
-        window.onGlobalsReady(() => reinitCurrentPage());
-    })();
+    import('/scripts/utils/SettingControls.js').then(({registerBoundPage}) => registerBoundPage('ignorelist'));
 </script>
 {{end}}
