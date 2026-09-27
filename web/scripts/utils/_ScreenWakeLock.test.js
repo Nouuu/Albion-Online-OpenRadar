@@ -1,5 +1,6 @@
 // synthetic: navigator.wakeLock, isSecureContext and HTMLMediaElement.play are stubbed per test; happy-dom has none
 // of the Screen Wake Lock API and never decodes media.
+import {Buffer} from 'node:buffer';
 import {createHash} from 'node:crypto';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import settingsSync from './SettingsSync.js';
