@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/netip"
 	"slices"
@@ -10,11 +12,15 @@ import (
 	"sync"
 
 	"github.com/nospy/albion-openradar/internal/capture"
+	"github.com/nospy/albion-openradar/internal/logger"
 )
+
+const hostOnlyMessage = "Only the PC running the radar can change this."
 
 type NetworkManager interface {
 	State() capture.State
 	Reconfigure([]capture.NetworkInterface) error
+	IsRecording() bool
 }
 
 type LANAddrFn func() []string
@@ -25,17 +31,18 @@ type NetworkAPI struct {
 	all      []capture.NetworkInterface
 	appDir   string
 	lanAddrs LANAddrFn
+	applyMu  *sync.Mutex
 }
 
-func NewNetworkAPI(mgr NetworkManager, all []capture.NetworkInterface, appDir string, lan LANAddrFn) *NetworkAPI {
-	return &NetworkAPI{mgr: mgr, all: all, appDir: appDir, lanAddrs: lan}
+func NewNetworkAPI(mgr NetworkManager, all []capture.NetworkInterface, appDir string, lan LANAddrFn, applyMu *sync.Mutex) *NetworkAPI {
+	return &NetworkAPI{mgr: mgr, all: all, appDir: appDir, lanAddrs: lan, applyMu: applyMu}
 }
 
 func (a *NetworkAPI) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/network/interfaces", a.handleList)
-	mux.HandleFunc("POST /api/network/interfaces", a.handleSelect)
+	mux.HandleFunc("POST /api/network/interfaces", hostOnly(a.handleSelect))
 	mux.HandleFunc("GET /api/network/state", a.handleState)
-	mux.HandleFunc("POST /api/network/refresh", a.handleRefresh)
+	mux.HandleFunc("POST /api/network/refresh", hostOnly(a.handleRefresh))
 }
 
 type ifaceRow struct {
@@ -100,10 +107,6 @@ type selectBody struct {
 }
 
 func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
-	if !isLoopback(r.RemoteAddr) {
-		http.Error(w, "capture interfaces can only be changed from the host PC", http.StatusForbidden)
-		return
-	}
 	var body selectBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "invalid body: "+err.Error(), http.StatusBadRequest)
@@ -128,18 +131,42 @@ func (a *NetworkAPI) handleSelect(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("unknown interface names: %v", unknown), http.StatusBadRequest)
 		return
 	}
-	if err := a.mgr.Reconfigure(desired); err != nil {
-		http.Error(w, "reconfigure: "+err.Error(), http.StatusInternalServerError)
+	a.applyMu.Lock()
+	defer a.applyMu.Unlock()
+
+	wasRecording := a.mgr.IsRecording()
+	reconfErr := a.mgr.Reconfigure(desired)
+	if errors.Is(reconfErr, capture.ErrClosed) {
+		http.Error(w, "reconfigure: "+reconfErr.Error(), http.StatusServiceUnavailable)
 		return
 	}
-	persisted := make([]capture.PersistedInterface, 0, len(desired))
-	for _, i := range desired {
+	opened := desired
+	if reconfErr != nil {
+		active := make(map[string]bool)
+		for _, c := range a.mgr.State().Active {
+			active[c.Name] = true
+		}
+		opened = slices.DeleteFunc(slices.Clone(desired), func(i capture.NetworkInterface) bool { return !active[i.Name] })
+	}
+	persisted := make([]capture.PersistedInterface, 0, len(opened))
+	for _, i := range opened {
 		persisted = append(persisted, capture.PersistedInterface{Name: i.Name, Description: i.Description})
+	}
+	recording := a.mgr.IsRecording()
+	if wasRecording && !recording {
+		logger.PrintWarn("PKT", "pcap recording stopped during interface apply: %v", reconfErr)
 	}
 	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 		cfg.CaptureInterfaces = persisted
+		if !recording {
+			cfg.Logging.PcapRecording = false
+		}
 	}); err != nil {
-		http.Error(w, "persist: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.Join(fmt.Errorf("persist: %w", err), reconfErr).Error(), http.StatusInternalServerError)
+		return
+	}
+	if reconfErr != nil {
+		http.Error(w, "reconfigure: "+reconfErr.Error(), http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
@@ -169,4 +196,29 @@ func isLoopback(remoteAddr string) bool {
 	}
 	ip, err := netip.ParseAddr(strings.TrimSpace(remoteAddr))
 	return err == nil && ip.IsLoopback()
+}
+
+func isHost(r *http.Request) bool {
+	if isLoopback(r.RemoteAddr) {
+		return true
+	}
+	remote, err := netip.ParseAddrPort(r.RemoteAddr)
+	if err != nil {
+		return false
+	}
+	local, ok := r.Context().Value(http.LocalAddrContextKey).(*net.TCPAddr)
+	if !ok {
+		return false
+	}
+	return remote.Addr().Unmap() == local.AddrPort().Addr().Unmap()
+}
+
+func hostOnly(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !isHost(r) {
+			http.Error(w, hostOnlyMessage, http.StatusForbidden)
+			return
+		}
+		h(w, r)
+	}
 }
