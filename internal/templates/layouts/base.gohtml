@@ -29,25 +29,9 @@
     <script type="module">
         import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
         import settingsSync from '/scripts/utils/SettingsSync.js';
-        import {
-            attachCheckboxListeners,
-            generateResourceGrid,
-            initializeTierButtonStates,
-            updateTierButtonState,
-            selectAllTierEnchants,
-            getResourceStorageKey
-        } from '/scripts/utils/ResourcesHelper.js';
 
         window.CATEGORIES = CATEGORIES;
         window.settingsSync = settingsSync;
-        window.ResourcesHelper = {
-            attachCheckboxListeners,
-            generateResourceGrid,
-            initializeTierButtonStates,
-            updateTierButtonState,
-            selectAllTierEnchants,
-            getResourceStorageKey
-        };
 
         window.__globalsReady = true;
         document.dispatchEvent(new CustomEvent('globalsReady'));
@@ -57,23 +41,25 @@
     <script type="module" src="/scripts/core/PageController.js"></script>
     <script type="module" src="/scripts/utils/Toast.js"></script>
     <script type="module" src="/scripts/utils/Modal.js"></script>
+    <script type="module" src="/scripts/utils/TooltipPlacement.js"></script>
     <script src="/scripts/vendors/htmx.min.js"></script>
 
     <!-- Must be in head before sidebar template -->
     <script>
         window.sidebar = {
-            collapsed: localStorage.getItem('sidebarCollapsed') === 'true',
+            collapsed: false,
             hoverExpanded: false,
             hoverTimeout: null,
 
             init() {
+                this.collapsed = window.settingsSync?.getBool('settingUiSidebarCollapsed') === true;
                 this.updateClasses();
                 if (window.lucide) lucide.createIcons();
             },
 
             toggle() {
                 this.collapsed = !this.collapsed;
-                localStorage.setItem('sidebarCollapsed', this.collapsed);
+                window.settingsSync.setBool('settingUiSidebarCollapsed', this.collapsed);
                 this.updateClasses();
             },
 
@@ -113,6 +99,16 @@
                 if (sidebar) {
                     sidebar.style.width = this.isExpanded ? '16rem' : '5rem';
                 }
+            },
+
+            navActive: ['text-primary', 'border-l-2', 'border-primary', '-ml-px', 'pl-2.5'],
+            navInactive: ['text-base-content/60', 'hover:text-base-content/80', 'hover:bg-base-content/[0.02]'],
+
+            markActive(path) {
+                document.querySelectorAll('#desktop-nav a[href], #mobile-nav a[href]').forEach(link => {
+                    link.classList.remove(...this.navActive, ...this.navInactive);
+                    link.classList.add(...(link.getAttribute('href') === path ? this.navActive : this.navInactive));
+                });
             }
         };
     </script>
@@ -124,18 +120,19 @@
     </style>
 </head>
 <body class="bg-base-100 text-base-content font-display">
-    <div class="flex h-screen">
+    <div class="flex h-dvh">
         {{template "layouts/sidebar.gohtml" .}}
 
         <div class="flex-1 flex flex-col overflow-hidden">
             {{template "layouts/header.gohtml" .}}
 
             <main id="page-content"
-                  class="flex-1 overflow-y-auto p-2 sm:p-6 bg-base-100"
+                  class="flex-1 overflow-y-auto p-2 sm:p-6 phone-landscape:p-2 bg-base-100"
                   data-page="{{.Page}}"
+                  data-is-host="{{.IsHost}}"
                   hx-swap="innerHTML transition:true"
                   hx-swap-oob="true">
-                <div class="container mx-auto animate-in">
+                <div class="container mx-auto animate-in has-[#radarLayout[data-players-beside]]:max-w-none">
                     {{if eq .Page "radar"}}{{template "pages/radar" .}}
                     {{else if eq .Page "players"}}{{template "pages/players" .}}
                     {{else if eq .Page "resources"}}{{template "pages/resources" .}}
@@ -160,7 +157,7 @@
 
     <div id="mobile-overlay"
          onclick="window.sidebar.closeMobile()"
-         class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden">
+         class="mobile-menu-overlay fixed inset-0 z-30 bg-black/50 md:hidden phone-landscape:block">
     </div>
 
     <script>
@@ -192,19 +189,9 @@
         });
 
         // Update sidebar active state on navigation
-        document.addEventListener('htmx:pushedIntoHistory', (_e) => {
-            const currentPath = window.location.pathname;
-            const baseClasses = 'flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors';
-            const activeClasses = 'text-primary border-l-2 border-primary -ml-px pl-2.5';
-            const inactiveClasses = 'text-base-content/60 hover:text-base-content/80 hover:bg-base-content/[0.02]';
-
-            document.querySelectorAll('#desktop-nav a, #mobile-nav a').forEach(link => {
-                const linkPath = link.getAttribute('href');
-                const isActive = linkPath === currentPath;
-
-                link.className = baseClasses + ' ' + (isActive ? activeClasses : inactiveClasses);
-            });
-        });
+        for (const event of ['htmx:pushedIntoHistory', 'htmx:historyRestore']) {
+            document.addEventListener(event, () => window.sidebar.markActive(window.location.pathname));
+        }
     </script>
 </body>
 </html>

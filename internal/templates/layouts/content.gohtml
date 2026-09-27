@@ -14,29 +14,12 @@
         {{range .NavItems}}'{{.Path}}': {{.Active}},{{end}}
     };
 
-    ['desktop-nav', 'mobile-nav'].forEach(function(navId) {
-        var nav = document.getElementById(navId);
-        if (!nav) return;
-
-        nav.querySelectorAll('a[href]').forEach(function(link) {
-            var path = link.getAttribute('href');
-            var isActive = pages[path] || false;
-
-            // Remove all state classes
-            link.classList.remove('bg-accent/10', 'text-accent', 'border-l-2', 'border-accent', '-ml-0.5', 'pl-3.5');
-            link.classList.remove('text-gray-400', 'hover:bg-overlay', 'hover:text-white');
-
-            if (isActive) {
-                link.classList.add('bg-accent/10', 'text-accent', 'border-l-2', 'border-accent', '-ml-0.5', 'pl-3.5');
-            } else {
-                link.classList.add('text-gray-400', 'hover:bg-overlay', 'hover:text-white');
-            }
-        });
-    });
+    var active = Object.keys(pages).filter(function(path) { return pages[path]; })[0];
+    window.sidebar.markActive(active);
 })();
 </script>
 
-<div class="container mx-auto animate-in">
+<div class="container mx-auto animate-in has-[#radarLayout[data-players-beside]]:max-w-none">
     {{if eq .Page "radar"}}{{template "pages/radar" .}}
     {{else if eq .Page "players"}}{{template "pages/players" .}}
     {{else if eq .Page "resources"}}{{template "pages/resources" .}}
