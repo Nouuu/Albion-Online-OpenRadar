@@ -1,7 +1,7 @@
 # OpenRadar Roadmap
 
 **Last release**: 2.2.2
-**Last update**: 2026-08-14
+**Last update**: 2026-09-25
 
 ## Detection systems status
 
@@ -84,13 +84,41 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   The settings page shows the state, the terminal dashboard does not.
 - **`alreadyIgnoredPlayers`**. Dead field on `PlayersHandler`, nothing populates it. The ignore gate reads the setting
   the page actually writes (#161). Remove the field.
-- **Page init runs twice on SPA arrival**. Every page script ends with
-  `window.onGlobalsReady(() => reinitCurrentPage())` while `PageController` also inits on `htmx:afterSettle`. Both
-  fire on arrival, and the second init resets the page `cleanup` array while the first set of listeners stays
-  attached. Measured on the players page: after one round trip, a single click on the preview button fires the
-  handler twice. Affects all seven pages, predates 2.2.3. Fix is one owner for the arrival init, not two.
+- **Two owners for page arrival init**. `registerBoundPage` calls `reinitCurrentPage()` while `PageController` also
+  inits on `DOMContentLoaded` and `htmx:afterSettle`. Every page now goes through `registerBoundPage`, which aborts the
+  previous activation before it binds again, so listeners no longer double: the players preview button fires once per
+  click after three SPA round trips. The init callback can still run twice on a full load, which only matters for init
+  code with effects outside the abort signal. Radar `initRadar` is guarded by `isInitialized`. The reported "first click
+  on the radar settings collapse does not stick" did not reproduce: it came from writing `localStorage` directly past
+  the `settingsSync` cache, or from clicking during the HTMX swap before the binder ran. Fix is still one owner for
+  the arrival init.
 - **`/api/settings/server-logs`**. Replaced by `/api/settings/logging` in 2.2. The old path returns 404 with no
   compatibility shim. Noted in case an old bug report mentions it.
+- **`npm run lint` crashes on every `.gohtml` file**. ESLint 10.11 with `eslint-plugin-html` 8.2 throws
+  `Cannot read private member #ruleDefinitions` while linting any template, unrelated to file content. Reproduces on
+  an untouched file. `npx eslint web/scripts/` alone still works.
+- **Hidden PiP video adds 1 px to every page's scroll height**. `document.documentElement.scrollHeight` is
+  `innerHeight + 1` on every viewport tested. Cause: the PictureInPictureManager appends a `<video
+  style="position: absolute; ... width: 1px; height: 1px;">` directly to `<body>` with no `top` set, so its
+  static position (and therefore its layout box) lands one line below the `.flex.h-dvh` wrapper, contributing
+  1 px of overflow. Cosmetic, but it fails a byte-exact `scrollHeight <= innerHeight` check.
+
+- **Dead PiP resize listener**. `PictureInPictureManager.js` listens for `canvasSizeChanged` on `document`, while
+  `RadarSettingsPanel.js` dispatches it on `window`. Harmless because `compositeFrame` resyncs the size every frame.
+  Delete the listener.
+- **`NetworkSettingsHandler.load()` has no try/catch**. Its two fetches are not guarded, so an unreachable backend
+  throws an unhandled `TypeError` on every 5 s poll tick. `apply()` and `refresh()` already wrap their fetch in
+  try/catch, `load()` does not.
+- **`initRadar` concurrent re-entry**. `isInitialized` (`Utils.js`) is set true only after the `DatabaseLoader.load()`
+  await resolves. Two overlapping calls to `initRadar` both pass the guard and run the setup twice, leaking the first
+  call's intervals.
+- **`Utils.js` binds a `#button` click handler that nothing renders**. No template defines an element with that id, so
+  the listener is dead code.
+- **`PlayerListRenderer` never re-renders an existing card's mounted badge, faction or name**. `computeCardKey` covers
+  equipment, spells and health availability but not those three fields, so a player who mounts or turns hostile keeps
+  its old card until it leaves the list and respawns.
+- **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
+  `handleNewPlayerEvent`; the method is exercised only by its own test.
 
 ## Permanent limitations
 
