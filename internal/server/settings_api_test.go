@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -50,7 +51,7 @@ func newSettingsTestMux(t *testing.T, dir string) (*http.ServeMux, *logger.Logge
 	t.Helper()
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
-	api := NewSettingsAPI(dir, log, nil, "")
+	api := NewSettingsAPI(dir, log, nil, "", &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 	return mux, log
@@ -59,28 +60,57 @@ func newSettingsTestMux(t *testing.T, dir string) (*http.ServeMux, *logger.Logge
 func TestSettingsLogging_GetReturnsCurrentConfig(t *testing.T) {
 	dir := t.TempDir()
 	if err := capture.WriteConfig(dir, capture.Config{
-		Logging: capture.LoggingConfig{ServerLogsEnabled: true, PcapRecording: false},
+		Logging: capture.LoggingConfig{ServerLogsEnabled: false, PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	log.SetEnabled(true)
+	rec := &fakeRecorder{recording: false}
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200", rr.Code)
+	}
+	var body map[string]any
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["serverLogsEnabled"] != true {
+		t.Errorf("serverLogsEnabled=%v, want true (runtime, not file)", body["serverLogsEnabled"])
+	}
+	if body["pcapRecording"] != false {
+		t.Errorf("pcapRecording=%v, want false (runtime, not file)", body["pcapRecording"])
+	}
+}
+
+func TestSettingsLogging_GetNilRecorderReportsFalse(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{PcapRecording: true},
 	}); err != nil {
 		t.Fatalf("seed config: %v", err)
 	}
 	mux, _ := newSettingsTestMux(t, dir)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, req)
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status %d, want 200", rec.Code)
-	}
 	var body map[string]any
-	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(rr.Body).Decode(&body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body["serverLogsEnabled"] != true {
-		t.Errorf("serverLogsEnabled=%v, want true", body["serverLogsEnabled"])
-	}
 	if body["pcapRecording"] != false {
-		t.Errorf("pcapRecording=%v, want false", body["pcapRecording"])
+		t.Errorf("pcapRecording=%v, want false with nil recorder", body["pcapRecording"])
 	}
 }
 
@@ -95,6 +125,7 @@ func TestSettingsLogging_PostUpdatesPersistAndApply(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"serverLogsEnabled": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -139,6 +170,7 @@ func TestSettingsLogging_PostPartialBody(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -167,6 +199,7 @@ func TestSettingsLogging_PostInvalidJson(t *testing.T) {
 	mux, _ := newSettingsTestMux(t, dir)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader([]byte("{not json")))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -194,6 +227,7 @@ func TestSettingsLogging_PostPreservesNetworkInterfaces(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -240,12 +274,13 @@ func TestSettingsLogging_PostStartsRecording(t *testing.T) {
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
 	rec := &fakeRecorder{}
-	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rr := httptest.NewRecorder()
 	mux.ServeHTTP(rr, req)
 
@@ -268,12 +303,13 @@ func TestSettingsLogging_PostStopsRecording(t *testing.T) {
 	log := logger.New(t.TempDir(), false)
 	t.Cleanup(func() { log.Stop() })
 	rec := &fakeRecorder{recording: true}
-	api := NewSettingsAPI(dir, log, rec, t.TempDir())
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
 	mux := http.NewServeMux()
 	api.Register(mux)
 
 	body, _ := json.Marshal(map[string]any{"pcapRecording": false})
 	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
 	rr := httptest.NewRecorder()
 	mux.ServeHTTP(rr, req)
 
@@ -282,5 +318,130 @@ func TestSettingsLogging_PostStopsRecording(t *testing.T) {
 	}
 	if rec.IsRecording() {
 		t.Error("recorder.IsRecording() == true after POST pcapRecording=false")
+	}
+}
+
+func TestSettingsLogging_PostStartFailureReportsFalse(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{
+		Logging: capture.LoggingConfig{PcapRecording: false},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	rec := &fakeRecorder{startErr: errors.New("no permission")}
+	api := NewSettingsAPI(dir, log, rec, t.TempDir(), &sync.Mutex{})
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500", rr.Code)
+	}
+
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if cfg.Logging.PcapRecording {
+		t.Error("network.json: pcapRecording should be false after start failure")
+	}
+
+	getReq := httptest.NewRequest(http.MethodGet, "/api/settings/logging", http.NoBody)
+	getRR := httptest.NewRecorder()
+	mux.ServeHTTP(getRR, getReq)
+	var getBody map[string]any
+	if err := json.NewDecoder(getRR.Body).Decode(&getBody); err != nil {
+		t.Fatalf("decode get: %v", err)
+	}
+	if getBody["pcapRecording"] != false {
+		t.Errorf("GET pcapRecording=%v, want false after start failure", getBody["pcapRecording"])
+	}
+}
+
+func TestSettingsLogging_ConcurrentPostAndInterfacesPersist(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	fm := &fakeManager{allInterfaces: []capture.NetworkInterface{{Name: "eth0", Description: "Ethernet", Address: "10.0.0.1"}}}
+	applyMu := &sync.Mutex{}
+	mux := http.NewServeMux()
+	NewSettingsAPI(dir, log, nil, "", applyMu).Register(mux)
+	NewNetworkAPI(fm, fm.allInterfaces, dir, func() []string { return nil }, applyMu).Register(mux)
+
+	var logging, ifaces *httptest.ResponseRecorder
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader([]byte(`{"serverLogsEnabled":true}`)))
+		req.RemoteAddr = "127.0.0.1:1234"
+		logging = httptest.NewRecorder()
+		mux.ServeHTTP(logging, req)
+	})
+	wg.Go(func() { ifaces = postSelect(t, mux, "eth0") })
+	wg.Wait()
+
+	if logging.Code != http.StatusOK || ifaces.Code != http.StatusOK {
+		t.Fatalf("logging %d %s, interfaces %d %s", logging.Code, logging.Body, ifaces.Code, ifaces.Body)
+	}
+	if !log.IsEnabled() {
+		t.Error("logger.IsEnabled() == false after concurrent POST, want true")
+	}
+	cfg, err := capture.ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	if !cfg.Logging.ServerLogsEnabled {
+		t.Error("network.json: serverLogsEnabled not persisted after concurrent write")
+	}
+	if len(cfg.CaptureInterfaces) != 1 || cfg.CaptureInterfaces[0].Name != "eth0" {
+		t.Errorf("CaptureInterfaces lost in concurrent write: %+v", cfg.CaptureInterfaces)
+	}
+	if len(fm.reconfArgs) != 1 || fm.reconfArgs[0].Name != "eth0" {
+		t.Errorf("runtime Reconfigure args %+v, want [eth0]", fm.reconfArgs)
+	}
+}
+
+type lockProbeRecorder struct {
+	fakeRecorder
+	applyMu  *sync.Mutex
+	acquired bool
+}
+
+func (r *lockProbeRecorder) StartRecording(dir string) error {
+	if r.acquired = r.applyMu.TryLock(); r.acquired {
+		r.applyMu.Unlock()
+	}
+	return r.fakeRecorder.StartRecording(dir)
+}
+
+func TestSettingsLogging_PostHoldsApplyMuDuringApply(t *testing.T) {
+	dir := t.TempDir()
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	applyMu := &sync.Mutex{}
+	rec := &lockProbeRecorder{applyMu: applyMu}
+	mux := http.NewServeMux()
+	NewSettingsAPI(dir, log, rec, t.TempDir(), applyMu).Register(mux)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader([]byte(`{"pcapRecording":true}`)))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Fatalf("status %d, want 200; body=%s", rr.Code, rr.Body.String())
+	}
+	if rec.acquired {
+		t.Error("applyMu was free during StartRecording, want held")
 	}
 }

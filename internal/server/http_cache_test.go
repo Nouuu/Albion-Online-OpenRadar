@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -96,13 +98,24 @@ func newTestServerBuild(t *testing.T, version, buildTime string, devMode bool) *
 		assetID: buildID(version, buildTime),
 		devMode: devMode,
 	}
-	s.settingsAPI = NewSettingsAPI(t.TempDir(), log, nil, t.TempDir())
+	s.settingsAPI = NewSettingsAPI(t.TempDir(), log, nil, t.TempDir(), &sync.Mutex{})
 	s.setupRoutes()
 	return s
 }
 
 func do(s *HTTPServer, method, path string, headers map[string]string) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(method, path, http.NoBody)
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	rec := httptest.NewRecorder()
+	s.mux.ServeHTTP(rec, req)
+	return rec
+}
+
+func doAsHost(s *HTTPServer, method, path string, headers map[string]string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(method, path, http.NoBody)
+	req.RemoteAddr = "127.0.0.1:54321"
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
@@ -323,6 +336,53 @@ func TestStaleIfNoneMatchReturnsFullBody(t *testing.T) {
 			}
 			if rec.Body.Len() == 0 {
 				t.Error("body is empty, want the asset")
+			}
+		})
+	}
+}
+
+func TestSettingsHostLock(t *testing.T) {
+	s := newTestServer(t, "2.2.3", false)
+
+	for _, tc := range []struct {
+		name    string
+		headers map[string]string
+	}{
+		{"full page", nil},
+		{"htmx partial", map[string]string{"Hx-Request": "true"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			lan := do(s, http.MethodGet, "/settings", tc.headers).Body.String()
+			host := doAsHost(s, http.MethodGet, "/settings", tc.headers).Body.String()
+
+			if !strings.Contains(lan, `data-is-host="false"`) {
+				t.Error(`LAN response missing data-is-host="false"`)
+			}
+			if !strings.Contains(host, `data-is-host="true"`) {
+				t.Error(`host response missing data-is-host="true"`)
+			}
+
+			for _, key := range []string{"settingDebugBackendLogs", "settingDebugPcapRecording"} {
+				if !strings.Contains(lan, `data-setting="`+key+`" class="toggle toggle-primary toggle-sm" disabled`) {
+					t.Errorf("LAN response: %s is not disabled", key)
+				}
+				if strings.Contains(host, `data-setting="`+key+`" class="toggle toggle-primary toggle-sm" disabled`) {
+					t.Errorf("host response: %s must not be disabled", key)
+				}
+			}
+
+			if !strings.Contains(lan, "Only the PC running the radar can change this.") {
+				t.Error("LAN response missing the host-lock reason text")
+			}
+			if strings.Contains(host, "Only the PC running the radar can change this.") {
+				t.Error("host response must not show the host-lock reason text")
+			}
+
+			if !strings.Contains(lan, `id="network-section" class="text-base-content/80" data-locked`) {
+				t.Error("LAN response: network-section missing data-locked")
+			}
+			if strings.Contains(host, "data-locked") {
+				t.Error("host response must not carry data-locked")
 			}
 		})
 	}
