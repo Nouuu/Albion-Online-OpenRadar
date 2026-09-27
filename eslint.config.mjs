@@ -13,7 +13,6 @@ const browserGlobals = {
     // App globals exposed in base.gohtml
     CATEGORIES: "readonly",
     settingsSync: "readonly",
-    ResourcesHelper: "readonly",
     logger: "readonly"
 };
 
