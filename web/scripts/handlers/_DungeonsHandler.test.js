@@ -45,7 +45,7 @@ describe('DungeonsHandler', () => {
 
         // @verified 2026-09-03: pcap-derived, same capture. The portal a wisp opens arrives with
         // param[6]="SHARED_MIST_WISP_PORTAL_MOB", MISTS_DUO_BLACK at [3] and [16], enchant 2 at [9]. It is a
-        // Mists group entrance: DungeonType.Group, gated by settingMistDuo and settingMistE2.
+        // Mists group entrance: DungeonType.Group, gated by settingMistsDuo and settingMistsEnchant2.
         test('pcap-derived spawn: MISTS_DUO_BLACK wisp portal maps to a Mists Group entrance with enchant 2', async () => {
             const fx = await loadFixture('dungeons', 'spawn');
             const msg = fx.messages.find(m => m.parameters['6'] === 'SHARED_MIST_WISP_PORTAL_MOB');
@@ -59,7 +59,7 @@ describe('DungeonsHandler', () => {
             expect(d.name).toBe('MISTS_DUO_BLACK');
             expect(d.type).toBe(1); // DungeonType.Group
             expect(d.enchant).toBe(2);
-            expect(settingsSync.getBool).toHaveBeenCalledWith('settingMistE2');
+            expect(d.settingKeys).toEqual(['settingMistsDuo', 'settingMistsEnchant2']);
         });
 
         // @verified 2026-09-03: pcap-derived, same capture. Re-firing the wisp portal event deduplicates on id.
@@ -103,59 +103,53 @@ describe('DungeonsHandler', () => {
         });
     });
 
-    describe('addDungeon settings gates', () => {
-        // @verified 2026-04-18: settingDungeonCorrupted=false drops corrupted dungeon.
-        test('synthetic: settingDungeonCorrupted=false for corrupted dungeon drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonCorrupted');
-
+    describe('addDungeon settings gates move to draw time, handler always keeps the entry', () => {
+        // @verified 2026-09-24: corrupted dungeon is kept with settingKeys=['settingDungeonsCorrupted']; the gate applies at draw time.
+        test('synthetic: corrupted dungeon keeps the entry with settingKeys settingDungeonsCorrupted', () => {
             handler.addDungeon(10, 0, 0, 'CORRUPTED_SOLO_NONLETHAL', 0);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toEqual(['settingDungeonsCorrupted']);
         });
 
-        // @verified 2026-04-18: settingDungeonSolo=false drops solo dungeon.
-        test('synthetic: settingDungeonSolo=false for solo drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonSolo');
-
+        // @verified 2026-09-24: solo dungeon is kept with settingKeys=['settingDungeonsSolo', 'settingDungeonsEnchant0'].
+        test('synthetic: solo dungeon keeps the entry with settingKeys settingDungeonsSolo and settingDungeonsEnchant0', () => {
             handler.addDungeon(11, 0, 0, 'T5_PORTAL_ROYAL_SOLO', 0);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toEqual(['settingDungeonsSolo', 'settingDungeonsEnchant0']);
         });
 
-        // @verified 2026-04-23: settingDungeonE<enchant>=false for solo drops insertion even when settingDungeonSolo=true.
-        test('synthetic: settingDungeonE0=false for solo at enchant 0 drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonE0');
-
+        // @verified 2026-09-24: the enchant key travels with the entry regardless of enchant value.
+        test('synthetic: solo dungeon at enchant 0 keeps settingDungeonsEnchant0 in settingKeys', () => {
             handler.addDungeon(12, 0, 0, 'T5_PORTAL_ROYAL_SOLO', 0);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toContain('settingDungeonsEnchant0');
         });
 
-        // @verified 2026-04-18: settingDungeonHellgate=false drops hellgate dungeon.
-        test('synthetic: settingDungeonHellgate=false for hellgate drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonHellgate');
-
+        // @verified 2026-09-24: hellgate dungeon is kept with settingKeys=['settingDungeonsHellgate'].
+        test('synthetic: hellgate dungeon keeps the entry with settingKeys settingDungeonsHellgate', () => {
             handler.addDungeon(13, 0, 0, 'HELLGATE_2V2_NON_LETHAL', 0);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toEqual(['settingDungeonsHellgate']);
         });
 
-        // @verified 2026-04-18: settingDungeonDuo=false drops group dungeon.
-        test('synthetic: settingDungeonDuo=false for group drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonDuo');
-
+        // @verified 2026-09-24: group dungeon is kept with settingKeys=['settingDungeonsGroup', 'settingDungeonsEnchant0'].
+        test('synthetic: group dungeon keeps the entry with settingKeys settingDungeonsGroup and settingDungeonsEnchant0', () => {
             handler.addDungeon(14, 0, 0, 'T5_MORGANA', 0);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toEqual(['settingDungeonsGroup', 'settingDungeonsEnchant0']);
         });
 
-        // @verified 2026-04-23: settingDungeonE<enchant>=false for group drops insertion even when settingDungeonDuo=true.
-        test('synthetic: settingDungeonE2=false for group at enchant 2 drops insertion', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonE2');
-
+        // @verified 2026-09-24: the enchant key travels with the entry for a non-zero enchant too.
+        test('synthetic: group dungeon at enchant 2 keeps settingDungeonsEnchant2 in settingKeys', () => {
             handler.addDungeon(15, 0, 0, 'T5_MORGANA', 2);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toContain('settingDungeonsEnchant2');
         });
     });
 
@@ -208,31 +202,28 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList[0].drawName).toBe('dungeon_0');
         });
 
-        // @verified 2026-04-23: settingMistSolo=false drops MISTS solo portal.
-        test('MIST-6: settingMistSolo=false drops MISTS_SOLO portal', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingMistSolo');
-
-            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 0);
-
-            expect(handler.dungeonList).toHaveLength(0);
-        });
-
-        // @verified 2026-04-23: settingMistE<rarity>=false drops MISTS portal matching that rarity.
-        test('MIST-6: settingMistE1=false drops Peu commun MISTS portal', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingMistE1');
-
-            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 1);
-
-            expect(handler.dungeonList).toHaveLength(0);
-        });
-
-        // @verified 2026-04-23: MISTS portal is NOT filtered by settingDungeonSolo (decoupled from standard dungeons).
-        test('MIST-6: settingDungeonSolo=false does NOT drop MISTS_SOLO portal', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonSolo');
-
+        // @verified 2026-09-24: MISTS solo portal is kept with settingKeys=['settingMistsSolo', 'settingMistsEnchant0']; the gate moved to draw time.
+        test('MIST-6: MISTS_SOLO portal keeps the entry with settingKeys settingMistsSolo and settingMistsEnchant0', () => {
             handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 0);
 
             expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toEqual(['settingMistsSolo', 'settingMistsEnchant0']);
+        });
+
+        // @verified 2026-09-24: the rarity key travels with the entry for the Peu commun (enchant 1) case too.
+        test('MIST-6: Peu commun MISTS portal keeps settingMistsEnchant1 in settingKeys', () => {
+            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 1);
+
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toContain('settingMistsEnchant1');
+        });
+
+        // @verified 2026-09-24: MISTS portal settingKeys never include settingDungeonsSolo (decoupled from standard dungeons).
+        test('MIST-6: MISTS_SOLO portal settingKeys do not include settingDungeonsSolo', () => {
+            handler.addDungeon(1, 0, 0, 'MISTS_SOLO_YELLOW', 0);
+
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).not.toContain('settingDungeonsSolo');
         });
 
         // @verified 2026-09-03: T6_MORGANA enchant 2 is read from Parameters[9], never from the [7] variant id.
@@ -244,8 +235,8 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList[0].drawName).toBe('group_2');
         });
 
-        // @verified 2026-04-23: MISTS_DUO_<TYPE> maps to Group type (DungeonType.Group=1) and uses settingMistDuo.
-        test('MIST-6: MISTS_DUO_YELLOW routes to Group type gated by settingMistDuo', () => {
+        // @verified 2026-04-23: MISTS_DUO_<TYPE> maps to Group type (DungeonType.Group=1); settingMistsDuo now applies at draw time.
+        test('MIST-6: MISTS_DUO_YELLOW routes to Group type with settingKeys settingMistsDuo and settingMistsEnchant2', () => {
             handler.addDungeon(1, 0, 0, 'MISTS_DUO_YELLOW', 2);
 
             expect(handler.dungeonList).toHaveLength(1);
@@ -254,13 +245,12 @@ describe('DungeonsHandler', () => {
             expect(handler.dungeonList[0].drawName).toBe('group_2');
         });
 
-        // @verified 2026-04-23: settingMistDuo=false drops MISTS duo portal.
-        test('MIST-6: settingMistDuo=false drops MISTS_DUO portal', () => {
-            settingsSync.getBool.mockImplementation(key => key !== 'settingMistDuo');
-
+        // @verified 2026-09-24: MISTS duo portal is kept with settingKeys=['settingMistsDuo', 'settingMistsEnchant0']; the gate moved to draw time.
+        test('MIST-6: MISTS_DUO portal keeps the entry with settingKeys settingMistsDuo and settingMistsEnchant0', () => {
             handler.addDungeon(1, 0, 0, 'MISTS_DUO_YELLOW', 0);
 
-            expect(handler.dungeonList).toHaveLength(0);
+            expect(handler.dungeonList).toHaveLength(1);
+            expect(handler.dungeonList[0].settingKeys).toEqual(['settingMistsDuo', 'settingMistsEnchant0']);
         });
 
         // @verified 2026-09-03: pcap-derived (dungeons/spawn.json, capture 2026-09-03). The
