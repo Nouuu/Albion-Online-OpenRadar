@@ -25,9 +25,9 @@ describe('ChestsDrawing', () => {
         ctx = {};
     });
 
-    // @verified 2026-04-23: setting key is settingChestGreen.
-    test('settingChestGreen=true with standard chestName renders green asset', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingChestGreen');
+    // @verified 2026-04-23: setting key is settingChestsGreen.
+    test('settingChestsGreen=true with standard chestName renders green asset', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingChestsGreen');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_STANDARD_01'};
 
         drawing.invalidate(ctx, [chest]);
@@ -35,9 +35,9 @@ describe('ChestsDrawing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'green', 'Resources', 35);
     });
 
-    // @verified 2026-04-23: setting key is settingChestBlue.
-    test('settingChestBlue=true with uncommon chestName renders blue asset', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingChestBlue');
+    // @verified 2026-04-23: setting key is settingChestsBlue.
+    test('settingChestsBlue=true with uncommon chestName renders blue asset', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingChestsBlue');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_UNCOMMON_02'};
 
         drawing.invalidate(ctx, [chest]);
@@ -45,9 +45,9 @@ describe('ChestsDrawing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'blue', 'Resources', 35);
     });
 
-    // @verified 2026-04-23: setting key is settingChestPurple.
-    test('settingChestPurple=true with rare chestName renders rare asset', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingChestPurple');
+    // @verified 2026-04-23: setting key is settingChestsPurple.
+    test('settingChestsPurple=true with rare chestName renders rare asset', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingChestsPurple');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_RARE_03'};
 
         drawing.invalidate(ctx, [chest]);
@@ -55,9 +55,9 @@ describe('ChestsDrawing', () => {
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'rare', 'Resources', 35);
     });
 
-    // @verified 2026-04-23: setting key is settingChestYellow.
-    test('settingChestYellow=true with legendary chestName renders legendary asset', () => {
-        settingsSync.getBool.mockImplementation(key => key === 'settingChestYellow');
+    // @verified 2026-04-23: setting key is settingChestsYellow.
+    test('settingChestsYellow=true with legendary chestName renders legendary asset', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingChestsYellow');
         const chest = {hX: 10, hY: 20, chestName: 'TREASURE_LEGENDARY_04'};
 
         drawing.invalidate(ctx, [chest]);
