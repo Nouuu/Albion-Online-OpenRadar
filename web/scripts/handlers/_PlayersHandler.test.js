@@ -1,18 +1,23 @@
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
-import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
+import {loadRealItemsDatabase, loadRealZonesDatabase} from '../__fixtures__/realDatabases.js';
+import {mountPage} from '../__fixtures__/pageMarkup.js';
+import * as PlayerListRenderer from '../core/PlayerListRenderer.js';
+
+const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
 
 vi.mock('../utils/SettingsSync.js', () => ({
     default: {
-        get: vi.fn((_k, d) => d),
+        get: vi.fn(key => registryDefault(key)),
         getBool: vi.fn(() => true),
-        getNumber: vi.fn((_k, d) => d),
-        getFloat: vi.fn((_k, d) => d),
+        getNumber: vi.fn(key => registryDefault(key)),
+        getFloat: vi.fn(key => registryDefault(key)),
         getJSON: vi.fn(() => null),
     },
 }));
 
-vi.mock('../data/ZonesDatabase.js', () => ({
+vi.mock('../data/ZonesDatabase.js', async importOriginal => ({
+    ...await importOriginal(),
     default: {
         getPvpType: vi.fn(() => 'safe'),
     },
@@ -29,7 +34,7 @@ describe('PlayersHandler', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         settingsSync.getBool.mockReturnValue(true);
-        settingsSync.getNumber.mockImplementation((_k, d) => d);
+        settingsSync.getNumber.mockImplementation(key => registryDefault(key));
         zonesDatabase.getPvpType.mockReturnValue('safe');
 
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
@@ -127,24 +132,32 @@ describe('PlayersHandler', () => {
             expect(result).toBe(2);
         });
 
-        // @verified 2026-04-18: settingShowPlayers=false causes early return with no entity added.
-        test('synthetic: settingShowPlayers=false skips detection and returns 2', () => {
-            settingsSync.getBool.mockImplementation(k => k !== 'settingShowPlayers');
+        // @verified 2026-09-24: detection off still tracks the player, so turning it on shows the list at once,
+        // while the alert gate stays shut.
+        test('synthetic: settingPlayersDetect=false tracks the player without alerting and returns 2', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getBool.mockImplementation(k => k !== 'settingPlayersDetect');
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
 
-            const result = handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            const result = handler.handleNewPlayerEvent(1, {1: 'Bob', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
-            expect(handler.getSize()).toBe(0);
+            expect(handler.getSize()).toBe(1);
             expect(result).toBe(2);
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-04-18: when list is at max capacity, new spawn is silently dropped.
-        test('synthetic: list at maxPlayers capacity prevents insertion', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingMaxPlayersDisplay' ? 2 : d);
-            handler.handleNewPlayerEvent(1, {1: 'A', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            handler.handleNewPlayerEvent(2, {1: 'B', 8: '', 53: 0, 51: null, 40: [], 43: []});
-            handler.handleNewPlayerEvent(3, {1: 'C', 8: '', 53: 0, 51: null, 40: [], 43: []});
+        // @verified 2026-09-24: tracking stops at a fixed 100; Max players only caps the displayed list.
+        test('synthetic: tracking caps at 100 while Max players caps the displayed list', () => {
+            settingsSync.getNumber.mockImplementation(k => k === 'settingPlayersMaxDisplayed' ? 2 : registryDefault(k));
+            for (let id = 1; id <= 101; id++) {
+                handler.handleNewPlayerEvent(id, {1: `P${id}`, 8: '', 53: 0, 51: null, 40: [], 43: []});
+            }
 
-            expect(handler.getSize()).toBe(2);
+            expect(handler.getSize()).toBe(100);
+            expect(handler.playersList.some(p => p.id === 101)).toBe(false);
+            expect(handler.getPlayersByType().passive.map(p => p.id)).toEqual([1, 2]);
         });
 
         // @verified 2026-04-18: passive player in safe zone does not trigger audio.
@@ -198,11 +211,11 @@ describe('PlayersHandler', () => {
             expect(playSpy).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-04-18: when both settingFlash and settingSound are false, no DOM flash element is created and no audio fires.
-        test('synthetic: settingFlash=false and settingSound=false suppress all alerts in red zone', () => {
+        // @verified 2026-04-18: when both settingAlertFlash and settingAlertSound are false, no DOM flash element is created and no audio fires.
+        test('synthetic: settingAlertFlash=false and settingAlertSound=false suppress all alerts in red zone', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             settingsSync.getBool.mockImplementation(k => {
-                if (k === 'settingFlash' || k === 'settingSound') return false;
+                if (k === 'settingAlertFlash' || k === 'settingAlertSound') return false;
                 return true;
             });
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
@@ -220,9 +233,9 @@ describe('PlayersHandler', () => {
             ['nickname', ['Ignored'], {1: 'Ignored', 8: 'SomeGuild', 51: 'SomeAlliance'}],
             ['guild', ['IgnoredGuild'], {1: 'Someone', 8: 'IgnoredGuild', 51: 'SomeAlliance'}],
             ['alliance', ['IgnoredAlliance'], {1: 'Someone', 8: 'SomeGuild', 51: 'IgnoredAlliance'}],
-        ])('synthetic: player ignored by %s does not alert in red zone', (_label, ignoreList, identity) => {
+        ])('synthetic: player ignored by %s does not alert in red zone', (_label, settingIgnoreList, identity) => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ignoreList : null);
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? settingIgnoreList : null);
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
             const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
 
@@ -235,7 +248,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-08-02: the match is case and whitespace insensitive, so a list entry typed by hand still hits.
         test('synthetic: ignore list match is case and whitespace insensitive', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['  iGnOrEd  '] : null);
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['  iGnOrEd  '] : null);
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Ignored', 8: '', 53: 255, 51: null, 40: [], 43: []});
@@ -247,7 +260,7 @@ describe('PlayersHandler', () => {
         // cannot silence every threat once the user adds a single name.
         test('synthetic: non-matching ignore list still alerts in red zone', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['SomeoneElse'] : null);
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['SomeoneElse'] : null);
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
@@ -258,7 +271,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-08-02: an empty guild must not match an empty ignore entry, which would ignore everyone.
         test('synthetic: blank identity fields do not match a blank ignore entry', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['   '] : null);
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['   '] : null);
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
@@ -266,10 +279,27 @@ describe('PlayersHandler', () => {
             expect(playSpy).toHaveBeenCalled();
         });
 
-        // @characterization 2026-04-18: settingFlash=true and threat present appends a flash div to document.body.
-        test('synthetic: settingFlash=true with threat appends flash div to body', () => {
+        // @verified 2026-09-24: the PlayerDetected log reports the same threat verdict as the alert gate.
+        test.each([
+            ['repeat spawn of a known hostile without faction', true, [{1: 'Bob', 8: '', 53: 255, 51: null, 40: [], 43: []}, {1: 'Bob', 40: [], 43: []}], true],
+            ['hostile spawn with detection off', false, [{1: 'Bob', 8: '', 53: 255, 51: null, 40: [], 43: []}], false],
+        ])('synthetic: logged isThreat follows the alert gate on %s', (_label, detect, spawns, expected) => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getBool.mockImplementation(k => k !== 'settingSound');
+            settingsSync.getBool.mockImplementation(k => k === 'settingPlayersDetect' ? detect : true);
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+
+            spawns.forEach(params => handler.handleNewPlayerEvent(1, params));
+
+            const logged = window.logger.info.mock.calls.filter(([, event]) => event === 'PlayerDetected').at(-1)[2];
+            expect(logged.isThreat).toBe(expected);
+            expect(playSpy).toHaveBeenCalledTimes(expected ? spawns.length : 0);
+        });
+
+        // @characterization 2026-04-18: settingAlertFlash=true and threat present appends a flash div to document.body.
+        test('synthetic: settingAlertFlash=true with threat appends flash div to body', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            settingsSync.getBool.mockImplementation(k => k !== 'settingAlertSound');
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
@@ -419,7 +449,7 @@ describe('PlayersHandler', () => {
         // list the Ignore List page actually writes was never read at all.
         test('synthetic PLAY-2: ignored player does not trigger alert on faction change in red zone', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['Alice'] : null);
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['Alice'] : null);
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
@@ -431,7 +461,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-08-02: a player absent from the ignore list still alerts on the same transition.
         test('synthetic: non-ignored player still triggers alert on faction change in red zone', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
-            settingsSync.getJSON.mockImplementation(k => k === 'ignoreList' ? ['SomeoneElse'] : null);
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['SomeoneElse'] : null);
             handler.handleNewPlayerEvent(1, {1: 'Alice', 8: '', 53: 0, 51: null, 40: [], 43: []});
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
 
@@ -666,21 +696,21 @@ describe('PlayersHandler', () => {
     // getFilteredPlayers
     // ---------------------------------------------------------------------------
     describe('getFilteredPlayers', () => {
-        // @verified 2026-04-18: in black zone with settingDangerousPlayers=false, list is empty regardless of player faction.
-        test('synthetic: black zone with settingDangerousPlayers=false returns empty list', () => {
+        // @verified 2026-04-18: in black zone with settingPlayersHostile=false, list is empty regardless of player faction.
+        test('synthetic: black zone with settingPlayersHostile=false returns empty list', () => {
             zonesDatabase.getPvpType.mockReturnValue('black');
-            settingsSync.getBool.mockImplementation(k => k !== 'settingDangerousPlayers');
+            settingsSync.getBool.mockImplementation(k => k !== 'settingPlayersHostile');
             handler.handleNewPlayerEvent(1, {1: 'A', 8: '', 53: 0, 51: null, 40: [], 43: []});
             handler.handleNewPlayerEvent(2, {1: 'B', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
             expect(handler.getFilteredPlayers()).toHaveLength(0);
         });
 
-        // @verified 2026-04-18: in red zone with settingPassivePlayers=false, passive players are removed but hostile kept.
-        test('synthetic: red zone with settingPassivePlayers=false removes passive, keeps hostile', () => {
+        // @verified 2026-04-18: in red zone with settingPlayersPassive=false, passive players are removed but hostile kept.
+        test('synthetic: red zone with settingPlayersPassive=false removes passive, keeps hostile', () => {
             zonesDatabase.getPvpType.mockReturnValue('red');
             settingsSync.getBool.mockImplementation(k => {
-                if (k === 'settingPassivePlayers') return false;
+                if (k === 'settingPlayersPassive') return false;
                 return true;
             });
             handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
@@ -776,7 +806,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-08-23: a burst of detections is one alert. The gate lives here, on the detection
         // path, so a sound played from the settings page can never suppress a real threat alert.
         test('synthetic: a detection under the cooldown does not play', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 500 : d);
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingAlertSoundCooldown' ? 500 : d);
             const fetchMock = stubBackend();
             vi.useFakeTimers();
 
@@ -794,7 +824,7 @@ describe('PlayersHandler', () => {
 
         // @verified 2026-08-23: the interval is a player setting, not a constant baked into the code.
         test('synthetic: the cooldown comes from settings', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 2000 : d);
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingAlertSoundCooldown' ? 2000 : d);
             const fetchMock = stubBackend();
             vi.useFakeTimers();
 
@@ -807,7 +837,7 @@ describe('PlayersHandler', () => {
 
         // @verified 2026-08-23: zero means the player wants every detection to sound.
         test('synthetic: a cooldown of zero plays every detection', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingSoundCooldown' ? 0 : d);
+            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingAlertSoundCooldown' ? 0 : d);
             const fetchMock = stubBackend();
             vi.useFakeTimers();
 
@@ -855,6 +885,118 @@ describe('PlayersHandler', () => {
             handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
 
             expect(handler.getThreatPlayers()).toHaveLength(2);
+        });
+
+        // @verified 2026-09-25: the zone check runs first, so a non-threat never scans the ignore list.
+        test('synthetic: red zone never matches a passive player against the ignore list', () => {
+            zonesDatabase.getPvpType.mockReturnValue('red');
+            handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
+            handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
+            const ignoredSpy = vi.spyOn(handler, 'isIgnored');
+
+            expect(handler.getThreatPlayers().map(p => p.id)).toEqual([2]);
+            expect(ignoredSpy.mock.calls.map(([player]) => player.id)).toEqual([2]);
+        });
+    });
+
+    // pcap-derived: players/spawn.json (8 spawns) and players/faction-spawn.json (4 spawns) replayed in zone 0317,
+    // a black zone in the real zones database; synthetic: the faction flip and the 1500 ms list tick.
+    describe('detection switch, threat list and display cap', () => {
+        const realZones = loadRealZonesDatabase();
+        let detect;
+
+        const spawnAll = async scenario => {
+            const fx = await loadFixture('players', scenario);
+            for (const msg of fx.messages) {
+                const p = normalizeParams(msg.parameters);
+                handler.handleNewPlayerEvent(p[0], p);
+            }
+            return fx.messages.map(m => m.parameters['0']);
+        };
+
+        const cards = () => document.querySelectorAll('#hostileList [data-player-id]').length;
+
+        beforeEach(() => {
+            detect = true;
+            settingsSync.getBool.mockImplementation(k => k === 'settingPlayersDetect' ? detect : true);
+            zonesDatabase.getPvpType.mockImplementation(id => realZones.getPvpType(id));
+            window.currentMapId = '0317';
+            window.settingsSync = settingsSync;
+            mountPage('radar');
+            PlayerListRenderer.reset();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+            PlayerListRenderer.reset();
+            delete window.settingsSync;
+            document.body.innerHTML = '';
+        });
+
+        // @verified 2026-09-24: players seen while detection is off show on the first list tick after it turns on,
+        // and turning it on raises no alert for them.
+        test('detection off then on in 0317 lists the 8 spawns after one tick with no flash or sound', async () => {
+            vi.useFakeTimers();
+            detect = false;
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+            await spawnAll('spawn');
+            setInterval(() => PlayerListRenderer.update(handler), 1500);
+
+            detect = true;
+            vi.advanceTimersByTime(1500);
+            vi.advanceTimersToNextFrame();
+
+            expect(cards()).toBe(8);
+            expect(handler.getThreatPlayers()).toHaveLength(8);
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
+        });
+
+        // @verified 2026-09-24: with detection off, a tracked player turning hostile fires no flash, sound or border.
+        test('detection off: a tracked player turning hostile raises no flash, sound or border', async () => {
+            detect = false;
+            const [id] = await spawnAll('spawn');
+            const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
+            const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
+
+            handler.updatePlayerFaction(id, 255);
+
+            expect(handler.playersList.find(p => p.id === id)?.faction).toBe(255);
+            expect(playSpy).not.toHaveBeenCalled();
+            expect(flashSpy).not.toHaveBeenCalled();
+            expect(handler.getThreatPlayers()).toEqual([]);
+        });
+
+        // @verified 2026-09-24: the threat list honors the ignore list; 1441 belongs to the ignored guild.
+        test('faction-spawn in 0317 with ignore list ["Treasure Map"] returns 3 threats, not 1441', async () => {
+            settingsSync.getJSON.mockImplementation(k => k === 'settingIgnoreList' ? ['Treasure Map'] : null);
+            await spawnAll('faction-spawn');
+
+            const ids = handler.getThreatPlayers().map(p => p.id);
+
+            expect(ids).toHaveLength(3);
+            expect(ids).not.toContain(1441);
+        });
+
+        // @verified 2026-09-24: Max players caps the cards and #playerStats; the HUD row counts every filtered player.
+        test('Max players 2 then 50 shows 2 then 8, #playerStats follows, the HUD row counts all', async () => {
+            vi.useFakeTimers();
+            settingsSync.getNumber.mockImplementation(k => k === 'settingPlayersMaxDisplayed' ? 2 : registryDefault(k));
+            await spawnAll('spawn');
+
+            PlayerListRenderer.update(handler);
+            vi.advanceTimersToNextFrame();
+            expect(cards()).toBe(2);
+            expect(document.getElementById('statHostile').textContent).toBe('2');
+            expect(handler.getFilteredPlayers()).toHaveLength(8);
+
+            settingsSync.getNumber.mockImplementation(k => registryDefault(k));
+            PlayerListRenderer.update(handler);
+            vi.advanceTimersToNextFrame();
+            expect(cards()).toBe(8);
+            expect(document.getElementById('statHostile').textContent).toBe('8');
+            expect(handler.getFilteredPlayers()).toHaveLength(8);
         });
     });
 });
