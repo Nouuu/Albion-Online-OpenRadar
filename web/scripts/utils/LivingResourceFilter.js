@@ -1,17 +1,17 @@
 const LIVING_SETTINGS_KEY_BY_NAME = {
-    Fiber: 'settingLivingFiberEnchants',
-    Hide: 'settingLivingHideEnchants',
-    Log: 'settingLivingWoodEnchants',
-    Ore: 'settingLivingOreEnchants',
-    Rock: 'settingLivingRockEnchants',
+    Fiber: 'settingResourcesLivingFiber',
+    Hide: 'settingResourcesLivingHide',
+    Log: 'settingResourcesLivingWood',
+    Ore: 'settingResourcesLivingOre',
+    Rock: 'settingResourcesLivingRock',
 };
 
 const STATIC_SETTINGS_KEY_BY_NAME = {
-    Fiber: 'settingStaticFiberEnchants',
-    Hide: 'settingStaticHideEnchants',
-    Log: 'settingStaticWoodEnchants',
-    Ore: 'settingStaticOreEnchants',
-    Rock: 'settingStaticRockEnchants',
+    Fiber: 'settingResourcesStaticFiber',
+    Hide: 'settingResourcesStaticHide',
+    Log: 'settingResourcesStaticWood',
+    Ore: 'settingResourcesStaticOre',
+    Rock: 'settingResourcesStaticRock',
 };
 
 function resolveSettingsCell(entity, getSetting, keyMap) {

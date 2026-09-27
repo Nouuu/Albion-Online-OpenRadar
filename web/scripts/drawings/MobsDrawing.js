@@ -32,8 +32,8 @@ export class MobsDrawing extends DrawingUtils
             let imageFolder = undefined;
 
             /* Set by default to enemy, since there are more, so we don't add at each case */
-            let drawHealthBar = settingsSync.getBool("settingEnemiesHealthBar");
-            let drawId = settingsSync.getBool("settingEnemiesID");
+            let drawHealthBar = settingsSync.getBool("settingEnemiesShowHealthBars");
+            let drawId = settingsSync.getBool("settingDebugEnemiesTypeId");
             let isLivingResource = false;
 
             if (mobOne.type == EnemyType.LivingSkinnable || mobOne.type == EnemyType.LivingHarvestable)
@@ -49,20 +49,20 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources";
                 }
 
-                drawHealthBar = settingsSync.getBool("settingLivingResourcesHealthBar");
-                drawId = settingsSync.getBool("settingLivingResourcesID");
+                drawHealthBar = settingsSync.getBool("settingResourcesShowHealthBars");
+                drawId = settingsSync.getBool("settingDebugResourcesTypeId");
             }
             else if (mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Boss)
             {
                 if (!mobOne.identified) {
-                    if (settingsSync.getBool("settingShowUnmanagedEnemies") === false) continue;
+                    if (settingsSync.getBool("settingDebugEnemiesUnidentified") === false) continue;
                 } else {
                     const settingName = getSettingNameForEnemyType(mobOne.type);
                     if (settingName && settingsSync.getBool(settingName) === false) continue;
                 }
 
-                if (settingsSync.getBool("settingShowMinimumHealthEnemies")) {
-                    const threshold = settingsSync.getNumber("settingTextMinimumHealthEnemies", 2100);
+                if (settingsSync.getBool("settingEnemiesMinHealthFilter")) {
+                    const threshold = settingsSync.getNumber("settingEnemiesMinHealth");
                     if ((mobOne.maxHealth ?? 0) < threshold) continue;
                 }
 
@@ -70,28 +70,28 @@ export class MobsDrawing extends DrawingUtils
                 // imageName stays undefined to trigger the colored circle rendering below
                 // The color is determined by mob.type (Enemy=green, EnchantedEnemy=purple, MiniBoss=orange, Boss=red)
 
-                drawId = settingsSync.getBool("settingEnemiesID");
+                drawId = settingsSync.getBool("settingDebugEnemiesTypeId");
             }
             else if (mobOne.type == EnemyType.Drone)
             {
-                if (!settingsSync.getBool("settingAvaloneDrones")) continue;
+                if (!settingsSync.getBool("settingEnemiesAvalonianDrones")) continue;
 
                 // Use color-coded circles for drones (not images)
                 // imageName stays undefined to trigger the colored circle rendering below
 
-                drawId = settingsSync.getBool("settingEnemiesID");
+                drawId = settingsSync.getBool("settingDebugEnemiesTypeId");
             }
             else if (mobOne.type == EnemyType.MistBoss)
             {
-                if (!settingsSync.getBool(mobOne.mistBoss?.setting)) continue;
+                if (!mobOne.mistBoss || !settingsSync.getBool(mobOne.mistBoss.setting)) continue;
 
                 imageName = mobOne.mistBoss.icon;
                 imageFolder = "Resources";
-                drawId = settingsSync.getBool("settingEnemiesID");
+                drawId = settingsSync.getBool("settingDebugEnemiesTypeId");
             }
             else if (mobOne.type == EnemyType.Events)
             {
-                if (!settingsSync.getBool("settingShowEventEnemies")) continue;
+                if (!settingsSync.getBool("settingEnemiesEvent")) continue;
 
                 // Only set imageName if mob has been identified (has name from mobinfo)
                 // Otherwise leave undefined and fallback blue circle will be drawn
@@ -100,13 +100,13 @@ export class MobsDrawing extends DrawingUtils
                     imageFolder = "Resources";
                 }
 
-                drawId = settingsSync.getBool("settingEnemiesID");
+                drawId = settingsSync.getBool("settingDebugEnemiesTypeId");
             }
 
             this.lastVisibleCount++;
 
             if (imageName !== undefined && imageFolder !== undefined) {
-                const useBadge = isLivingResource && settingsSync.getBool('settingResourceColorBadges');
+                const useBadge = isLivingResource && settingsSync.getBool('settingRadarResourceTierBadges');
                 const category = useBadge ? this.getResourceCategory(mobOne.name) : null;
                 const baseSize = isLivingResource ? 32 : 40;
                 if (useBadge && category) {
@@ -124,7 +124,7 @@ export class MobsDrawing extends DrawingUtils
 
                 // 🐛 DEBUG: Log color assignment (only once per mob to avoid spam)
                 if (!mobOne._debugLogged) {
-                    window.logger?.debug(CATEGORIES.RENDERING, 'mob_draw_details', {
+                    window.logger?.debug(CATEGORIES.MOBS, 'mob_draw_details', {
                         id: mobOne.id,
                         typeId: mobOne.typeId,
                         type: mobOne.type,
@@ -137,7 +137,7 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // 📍 Distance indicator for living resources (if enabled) - use game-units (hX/hY)
-            if (isLivingResource && settingsSync.getBool("settingResourceDistance"))
+            if (isLivingResource && settingsSync.getBool("settingRadarResourceDistance"))
             {
                 const distanceGameUnits = this.calculateDistance(mobOne.hX, mobOne.hY, 0, 0);
                 this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
@@ -174,7 +174,7 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // Display DB uniqueName for living resources (diagnostic overlay)
-            if (isLivingResource && settingsSync.getBool("settingLivingResourcesName") && mobOne.uniqueName) {
+            if (isLivingResource && settingsSync.getBool("settingDebugResourcesDbName") && mobOne.uniqueName) {
                 const nameText = mobOne.uniqueName;
                 ctx.font = `${fontSize9} ${this.fontFamily}`;
                 const nameWidth = ctx.measureText(nameText).width;
@@ -183,7 +183,7 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // Display Tier (for hostile mobs only, not living resources)
-            if (settingsSync.getBool("settingEnemiesTier") && mobOne.tier > 0 &&
+            if (settingsSync.getBool("settingDebugEnemiesTier") && mobOne.tier > 0 &&
                 mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
                 const tierText = `T${mobOne.tier}`;
                 ctx.font = `${fontSize10} ${this.fontFamily}`;
@@ -193,7 +193,7 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // Display Name (localized if available, fallback to technical name)
-            if (settingsSync.getBool("settingEnemiesName") && mobOne.name &&
+            if (settingsSync.getBool("settingDebugEnemiesName") && mobOne.name &&
                 mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
                 // Try to get localized name first
                 let displayName = null;
@@ -218,12 +218,12 @@ export class MobsDrawing extends DrawingUtils
             }
 
             // Display Category Badge
-            if (settingsSync.getBool("settingEnemiesCategoryBadge") && mobOne.category &&
+            if (settingsSync.getBool("settingDebugEnemiesCategoryBadge") && mobOne.category &&
                 mobOne.type >= EnemyType.Enemy && mobOne.type <= EnemyType.Events) {
                 // Format category for display (uppercase, short)
                 let badgeText = mobOne.category.toUpperCase();
                 // Use abbreviated versions for common categories
-                const categoryMap = {
+                const categoryAbbreviations = {
                     'BOSS': '👑',
                     'MINIBOSS': '⭐',
                     'CHAMPION': '💎',
@@ -232,7 +232,7 @@ export class MobsDrawing extends DrawingUtils
                     'STANDARD': 'STD',
                     'TRASH': 'TRA'
                 };
-                badgeText = categoryMap[badgeText] || badgeText.substring(0, 3);
+                badgeText = categoryAbbreviations[badgeText] || badgeText.substring(0, 3);
 
                 ctx.font = `${fontSize10} ${this.fontFamily}`;
                 const badgeWidth = ctx.measureText(badgeText).width;
@@ -252,7 +252,6 @@ export class MobsDrawing extends DrawingUtils
             LivingHarvestable: 0,
             LivingSkinnable: 1,
             Enemy: 2,           // Normal - Green
-            MediumEnemy: 3,     // Medium - Yellow
             EnchantedEnemy: 4,  // Enchanted - Purple
             MiniBoss: 5,        // MiniBoss - Orange
             Boss: 6,            // Boss - Red
@@ -264,8 +263,6 @@ export class MobsDrawing extends DrawingUtils
         switch (enemyType) {
             case EnemyType.Enemy:           // Normal
                 return "#00FF00"; // Green 🟢
-            case EnemyType.MediumEnemy:     // Medium
-                return "#FFFF00"; // Yellow 🟡
             case EnemyType.EnchantedEnemy:  // Enchanted
                 return "#9370DB"; // Purple 🟣
             case EnemyType.MiniBoss:        // MiniBoss
