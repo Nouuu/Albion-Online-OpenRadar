@@ -20,7 +20,11 @@ vi.mock('../utils/ImageCache.js', () => ({
 }));
 
 const {DungeonsHandler} = await import('../handlers/DungeonsHandler.js');
+const {MistsDungeonHandler} = await import('../handlers/MistsDungeonHandler.js');
+const {MobsHandler} = await import('../handlers/MobsHandler.js');
 const {DungeonsDrawing} = await import('./DungeonsDrawing.js');
+const {MistsDungeonDrawing} = await import('./MistsDungeonDrawing.js');
+const {MistsWispDrawing} = await import('./MistsWispDrawing.js');
 const EventRouter = await import('../core/EventRouter.js');
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 
@@ -129,6 +133,84 @@ describe('DungeonsDrawing', () => {
         drawing.draw(ctx, dungeonsHandler.dungeonList);
 
         expect(drawnSrcs(ctx).some(s => s.includes('group_2.webp'))).toBe(true);
+    });
+
+    test('@verified 2026-10-08: pcap-derived: settingDungeonsEnchant1=false drops the 5418 T7_KEEPER image, back to true draws it again with no new event', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingDungeonsEnchant1');
+        drawing.draw(ctx, dungeonsHandler.dungeonList);
+        expect(drawnSrcs(ctx).some(s => s.includes('group_1.webp'))).toBe(false);
+        expect(drawnSrcs(ctx).some(s => s.includes('group_2.webp'))).toBe(true);
+        ctx.calls.length = 0;
+
+        settingsSync.getBool.mockReturnValue(true);
+        drawing.draw(ctx, dungeonsHandler.dungeonList);
+
+        expect(drawnSrcs(ctx).some(s => s.includes('group_1.webp'))).toBe(true);
+    });
+});
+
+// pcap-derived fixtures: dungeons/spawn.json (Knightfall entrance 2579) and mists/portal-wisp-spawn.json (wisps 2505 and
+// 5306), dispatched through EventRouter.onEvent into a real MistsDungeonHandler and MobsHandler
+describe('Mists drawings fed by EventRouter', () => {
+    let mistsDungeonHandler;
+    let mobsHandler;
+    let ctx;
+
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        settingsSync.getBool.mockReturnValue(true);
+        settingsSync.getFloat.mockReturnValue(1);
+        settingsSync.getNumber.mockReturnValue(500);
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+
+        mistsDungeonHandler = new MistsDungeonHandler();
+        mobsHandler = new MobsHandler();
+        ctx = newCtx();
+
+        EventRouter.reset();
+        EventRouter.init({
+            handlers: {
+                playersHandler: {}, mobsHandler, harvestablesHandler: {}, chestsHandler: {},
+                dungeonsHandler: new DungeonsHandler(), fishingHandler: {}, wispCageHandler: {}, mistsDungeonHandler,
+            },
+            map: {id: -1, hX: 0, hY: 0, isBZ: false},
+            radarRenderer: null,
+        });
+
+        for (const [handler, scenario] of [['dungeons', 'spawn'], ['mists', 'portal-wisp-spawn']]) {
+            const fx = await loadFixture(handler, scenario);
+            for (const msg of fx.messages) {
+                EventRouter.onEvent(normalizeParams(msg.parameters));
+            }
+        }
+    });
+
+    test('@verified 2026-10-08: pcap-derived: settingMistsKnightfallAbbey=false hides the 2579 Knightfall portal, back to true draws it with no new event', () => {
+        const drawing = new MistsDungeonDrawing();
+        expect(mistsDungeonHandler.portalList.map(p => p.id)).toEqual([2579]);
+
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsKnightfallAbbey');
+        drawing.draw(ctx, mistsDungeonHandler.portalList);
+        expect(drawnSrcs(ctx)).toEqual([]);
+
+        settingsSync.getBool.mockReturnValue(true);
+        drawing.draw(ctx, mistsDungeonHandler.portalList);
+
+        expect(drawnSrcs(ctx)).toEqual(['/images/Resources/mists_abbey.webp']);
+    });
+
+    test('@verified 2026-10-08: pcap-derived: settingMistsWisps=false hides the 2505 and 5306 wisps, back to true draws both with no new event', () => {
+        const drawing = new MistsWispDrawing();
+        expect(mobsHandler.mistList.map(m => m.id)).toEqual([2505, 5306]);
+
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsWisps');
+        drawing.invalidate(ctx, mobsHandler.mistList);
+        expect(drawnSrcs(ctx)).toEqual([]);
+
+        settingsSync.getBool.mockReturnValue(true);
+        drawing.invalidate(ctx, mobsHandler.mistList);
+
+        expect(drawnSrcs(ctx)).toEqual(['/images/Resources/mist_0.webp', '/images/Resources/mist_2.webp']);
     });
 });
 
