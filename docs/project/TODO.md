@@ -1,7 +1,7 @@
 # OpenRadar Roadmap
 
 **Last release**: 2.2.2
-**Last update**: 2026-09-25
+**Last update**: 2026-10-08
 
 ## Detection systems status
 
@@ -119,6 +119,36 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   its old card until it leaves the list and respawns.
 - **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
   `handleNewPlayerEvent`; the method is exercised only by its own test.
+- **Radar canvases ignore `devicePixelRatio`**. `RadarSettingsPanel.js` sets each canvas backing store to its CSS size,
+  so the radar is blurry on HiDPI screens and under Windows display scaling.
+- **Distance rings and entities use different scales**. `renderDistanceRings` derives pixels per meter from the canvas
+  width, `transformPoint` from a fixed factor per game unit. The 10 m and 20 m rings match entity distances only on a
+  canvas of about 800 px.
+- **`MapsDrawing` background fill reads `ctx.width`**. A 2D context has no `width`, so the dark fill behind the map
+  image never paints. It should read `ctx.canvas.width`.
+- **`lucide.createIcons({nodes})` re-renders every icon**. The vendored lucide takes `root`, not `nodes`, so the
+  `htmx:afterSwap` hook in `base.gohtml`, `Modal.js` and `Toast.js` fall back to `document` and rescan the whole page.
+- **Header PiP icon is a detached node**. `header.gohtml` keeps a reference to `<i id="pipIcon">`, which lucide
+  replaces with an `<svg>` on first render. `updatePipButton` then sets `data-lucide` on the detached element, so the
+  icon never switches.
+- **Rock E4 controls with no matching item**. The resource grids show E4 for every family, but the item catalog has
+  no rock above enchant 3.
+- **Unidentified mobs never reach their colour branch**. A mob with no database entry keeps `EnemyType.Enemy`, so
+  `getEnemyColor` paints it green like a Normal enemy. The royal blue "unknown" default is never used for them.
+- **Avalon treasure drones fall into Normal**. Their category is `treasuredrones`, which `_getEnemyTypeFromCategory`
+  does not handle, so they get the default `Enemy` type. Nothing assigns `EnemyType.Drone`, so the Avalonian Drones
+  toggle and the cyan colour never apply.
+- **Knightfall handler test covers a path the router never takes**. `_DungeonsHandler.test.js` feeds the abbey
+  entrance (`MISTS_DUNGEON_SOLO_YELLOW` at `Parameters[16]`) to `dungeonEvent`, while `EventRouter` sends every
+  `MISTS_DUNGEON` tag to `mistsDungeonHandler.addPortal`.
+- **A missing saved adapter is not listed**. `GET /api/network/interfaces` builds its rows from the interfaces present
+  now, so an adapter saved in `network.json` that is gone disappears instead of showing as unavailable.
+- **Release line at the top of this file is stale**. It says 2.2.2; the latest release is 2.2.3.
+- **Page container wrapper is duplicated**. `base.gohtml` and `content.gohtml` each carry the same
+  `container mx-auto animate-in` div and page switch, so a change has to land in both.
+- **DaisyUI version differs between release and local builds**. `package-lock.json` pins 5.7.16, which `npm ci` and
+  the release CSS use. A local `node_modules` can hold a later 5.7.x (5.7.43 on the dev machine), so local CSS can
+  differ from the shipped one.
 
 ## Permanent limitations
 
