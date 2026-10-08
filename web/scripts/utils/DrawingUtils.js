@@ -479,7 +479,7 @@ export class DrawingUtils {
         return Math.ceil((meters / SCALE_FACTOR) * 3);
     }
 
-    detectClusters(resources, clusterRadius = 30, minClusterSize = 2) {
+    detectClusters(resources, clusterRadius, minClusterSize) {
         if (!resources || resources.length === 0) return [];
         const gameUnitsRadius = this.metersToGameUnits(clusterRadius);
         const clusters = [];

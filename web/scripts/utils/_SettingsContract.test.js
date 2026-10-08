@@ -58,6 +58,29 @@ describe('settings access contract', () => {
         expect(hits).toEqual([]);
     });
 
+    test('no function fed a setting by its caller repeats a default for that parameter', () => {
+        const files = productionFiles().map(({abs, rel}) => ({rel, content: readFileSync(abs, 'utf8')}));
+        const fed = files.flatMap(({content}) => [...content.matchAll(GETTER)].flatMap(match => {
+            let depth = 0;
+            let index = 0;
+            for (let i = match.index - 1; i >= 0; i--) {
+                const ch = content[i];
+                if (')]}'.includes(ch)) depth++;
+                else if ('([{'.includes(ch)) {
+                    if (depth === 0) return ch === '(' ? [{name: content.slice(0, i).match(/(\w+)\s*$/)?.[1], index}] : [];
+                    depth--;
+                } else if (depth === 0 && ch === ';') return [];
+                else if (depth === 0 && ch === ',') index++;
+            }
+            return [];
+        })).filter(({name}) => name && !/^(if|for|while|switch)$/.test(name));
+        const hits = files.flatMap(({rel, content}) => fed.flatMap(({name, index}) =>
+            [...content.matchAll(new RegExp(String.raw`(?:function\s+${name}|^\s*${name})\s*\(([^)]*)\)\s*\{`, 'gm'))]
+                .filter(definition => /^\s*[\w$]+\s*=(?!=)/.test(definition[1].split(',')[index] ?? ''))
+                .map(definition => `${rel}:${lineOf(content, definition.index + definition[0].indexOf(name))} ${name} parameter ${index} has a default`)));
+        expect(hits).toEqual([]);
+    });
+
     test('localStorage is only touched by the settings store', () => {
         const hits = [];
         for (const {abs, rel} of productionFiles()) {
