@@ -307,4 +307,24 @@ describe('static entity cleanup', () => {
         await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
         expect(window.handlers.mistsDungeon.portalList).toHaveLength(0);
     });
+
+    // pcap-derived: dungeons/spawn.json, chests/spawn.json (via addChestEvent) and wispcage/spawn.json message[0];
+    // synthetic: the idle age, no fixture carries elapsed time.
+    test.each([
+        ['a dungeon entrance', 'dungeons', (h, p) => h.dungeons.dungeonEvent(p), h => h.dungeons.dungeonList],
+        ['a chest', 'chests', (h, p) => h.chests.addChestEvent(p), h => h.chests.chestsList],
+        ['a wisp cage', 'wispcage', (h, p) => h.wispCage.newCageEvent(p), h => h.wispCage.cages],
+    ])('@verified 2026-10-08: %s idle 10 minutes stays, idle 31 minutes is removed by cleanupStaleEntities', async (_, folder, add, list) => {
+        const fixture = await loadFixture(folder, 'spawn');
+        vi.useFakeTimers({toFake: ['setInterval', 'clearInterval', 'Date']});
+        await page.init();
+
+        add(window.handlers, normalizeParams(fixture.messages[0].parameters));
+
+        await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+        expect(list(window.handlers)).toHaveLength(1);
+
+        await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
+        expect(list(window.handlers)).toHaveLength(0);
+    });
 });
