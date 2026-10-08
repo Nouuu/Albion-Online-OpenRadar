@@ -188,6 +188,23 @@ describe('template settings contract', () => {
         expect(drift).toEqual([]);
     });
 
+    test('every bound input or select is named by a label element, inside a label or not', () => {
+        const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('input, select')]
+            .filter(el => el.closest('[data-setting]')).flatMap(el => {
+                const key = el.dataset.setting;
+                const isLabel = label => label?.matches('[data-setting-label]') === true && normalized(label) !== ''
+                    && (!key || label.dataset.settingLabel.split(' ').includes(key));
+                const id = el.getAttribute('aria-labelledby');
+                const wrapper = el.closest('label') ?? (el.id ? root.querySelector(`label[for="${el.id}"]`) : null);
+                const own = key ? root.querySelector(`[data-setting-label~="${key}"]`) : null;
+                const ok = id ? isLabel(root.querySelector(`[id="${id}"]`))
+                    : el.hasAttribute('aria-label') ? isLabel(own) && el.getAttribute('aria-label') === normalized(own)
+                        : isLabel(wrapper?.matches('[data-setting-label]') ? wrapper : wrapper?.querySelector('[data-setting-label]'));
+                return ok ? [] : [`${name}: ${key ?? el.outerHTML.slice(0, 60)}`];
+            }));
+        expect(drift).toEqual([]);
+    });
+
     test('every collapse title leads with an icon', () => {
         const drift = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > .collapse-title')]
             .filter(title => !title.firstElementChild?.matches('i[data-lucide]')).map(title => `${name}: ${normalized(title)}`));
