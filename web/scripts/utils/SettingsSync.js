@@ -29,6 +29,7 @@ export class SettingsSync {
         this.cache = new Map();
         this.jsonCache = new Map();
         this.unknownKeys = new Set();
+        this.storageError = null;
 
         this._boundMessageHandler = (event) => this.handleMessage(event.data);
         this._boundStorageHandler = (event) => {
@@ -67,11 +68,7 @@ export class SettingsSync {
 
     _storage(operation, key, value) {
         try { return localStorage[operation](key, value); } catch (error) {
-            window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncStorageFailed', {
-                key,
-                operation,
-                error: error?.message || error
-            });
+            this.storageError ??= {key, operation, error: error?.message || error};
             return null;
         }
     }
@@ -147,6 +144,7 @@ export class SettingsSync {
 
     read(key) {
         this._reportMigrationError();
+        this._reportStorageError();
         const entry = registryEntry(key);
         if (!entry) {
             this._reportUnknownKey(key);
@@ -190,6 +188,12 @@ export class SettingsSync {
         if (!window.logger || this.unknownKeys.has(key)) return;
         this.unknownKeys.add(key);
         window.logger.error(CATEGORIES.SYSTEM, 'SettingsSyncUnknownKey', {key});
+    }
+
+    _reportStorageError() {
+        if (!this.storageError || this.storageReported || !window.logger) return;
+        this.storageReported = true;
+        window.logger.error(CATEGORIES.SYSTEM, 'SettingsSyncStorageFailed', this.storageError);
     }
 
     _reportMigrationError() {

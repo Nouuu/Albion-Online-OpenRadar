@@ -23,18 +23,14 @@ describe('SettingsSync singleton migration', () => {
         expect(localStorage.getItem('settingDangerousPlayers')).toBeNull();
     });
 
-    test('a throwing storage leaves the module loadable', async () => {
+    test('a throwing storage leaves the module loadable and the app on defaults', async () => {
         const fail = () => { throw new Error('storage denied'); };
         vi.stubGlobal('localStorage', {getItem: fail, setItem: fail, removeItem: fail, key: fail, length: 0});
         const module = await import('./SettingsSync.js');
         sync = module.default;
         expect(sync).toBeInstanceOf(module.SettingsSync);
-    });
-
-    test('@verified 2026-10-10: a throwing storage reads defaults and keeps writes for the session', async () => {
-        const fail = () => { throw new Error('storage denied'); };
-        vi.stubGlobal('localStorage', {getItem: fail, setItem: fail, removeItem: fail, key: fail, length: 0});
-        ({default: sync} = await import('./SettingsSync.js'));
+        const error = vi.fn(() => { sync.getBool('settingLogToConsole'); });
+        vi.stubGlobal('logger', {error, warn: vi.fn(), info: vi.fn(), debug: vi.fn()});
         const seen = vi.fn();
         sync.on('settingAlertFlash', seen);
         expect(sync.getBool('settingPlayersHostile')).toBe(true);
@@ -43,6 +39,7 @@ describe('SettingsSync singleton migration', () => {
         expect(seen).toHaveBeenCalledWith('settingAlertFlash', 'true');
         expect(() => sync.remove('settingAlertFlash')).not.toThrow();
         expect(sync.getBool('settingAlertFlash')).toBe(false);
+        expect(error.mock.calls.filter(call => call[1] === 'SettingsSyncStorageFailed')).toHaveLength(1);
     });
 
     test('a migration error is logged once the logger exists', async () => {
