@@ -234,6 +234,7 @@ describe('synthetic dungeon type variants at draw time (message 1 with Parameter
         ctx = newCtx();
     });
 
+    // @verified 2026-10-10: each gate key of a dungeon type hides its marker alone, and the marker returns when it is back on.
     test.each([
         ['Dungeons Solo', 'T5_PORTAL_ROYAL_SOLO', 1, ['settingDungeonsSolo', 'settingDungeonsEnchant1'], 'dungeon_1'],
         ['Dungeons Corrupted', 'CORRUPTED_SOLO_NONLETHAL', 0, ['settingDungeonsCorrupted'], 'corrupt'],
@@ -242,8 +243,8 @@ describe('synthetic dungeon type variants at draw time (message 1 with Parameter
         ['Dungeons Group enchant 3', 'T5_MORGANA', 3, ['settingDungeonsGroup', 'settingDungeonsEnchant3'], 'group_3'],
         ['Dungeons Group enchant 4', 'T5_MORGANA', 4, ['settingDungeonsGroup', 'settingDungeonsEnchant4'], 'group_4'],
         ['Mists Solo', 'MISTS_SOLO_YELLOW', 0, ['settingMistsSolo', 'settingMistsEnchant0'], 'dungeon_0'],
-    ].flatMap(([label, name, enchant, gateKeys, drawName]) => gateKeys.map(gateKey => [label, name, enchant, gateKey, drawName])))(
-        'synthetic: %s keeps the entry and %s alone off hides it at draw time', (label, name, enchant, gateKey, drawName) => {
+    ].flatMap(([label, name, enchant, gateKeys, drawName]) => gateKeys.map(gateKey => [label, gateKey, name, enchant, drawName])))(
+        'synthetic: %s keeps the entry and %s alone off hides it at draw time', (label, gateKey, name, enchant, drawName) => {
         handler.dungeonEvent({...baseParams, 3: name, 9: enchant});
         expect(handler.dungeonList).toHaveLength(1);
 

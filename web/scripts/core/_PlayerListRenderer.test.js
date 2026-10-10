@@ -220,6 +220,7 @@ describe('player card refreshes on a display setting change without a new spawn'
         expect(document.body.innerHTML).toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
     });
 
+    // @verified 2026-10-10: the spells row appears on the next refresh after Show spells is ticked, with no new spawn.
     test('card shows spells after Show spells is ticked, on the next refresh, without a new spawn', async () => {
         const renderer = await import('./PlayerListRenderer.js');
         window.spellsDatabase = await loadRealSpellsDatabase();
