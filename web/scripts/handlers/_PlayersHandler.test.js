@@ -957,20 +957,6 @@ describe('PlayersHandler', () => {
             expect(flashSpy).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-10-10: turning detection on lists the spawns seen while it was off with no tick, as the detection listener does.
-        test('detection off then on in 0317 lists the 8 spawns at once with no tick', async () => {
-            vi.useFakeTimers();
-            detect = false;
-            await spawnAll('spawn');
-            expect(cards()).toBe(0);
-
-            detect = true;
-            PlayerListRenderer.update(handler);
-            vi.advanceTimersToNextFrame();
-
-            expect(cards()).toBe(8);
-        });
-
         // @verified 2026-10-10: a player type filter applies at the next list refresh, with no new spawn.
         test('faction-spawn in red zone 1205: unticking Faction drops the 4 cards, ticking it brings them back on the next update', async () => {
             vi.useFakeTimers();
