@@ -66,7 +66,7 @@ Per-interface guarantees: `MutateConfig` reads, mutates, and writes under a sing
 
 `Capturer.StartRecording(dir)`, `StopRecording()`, `IsRecording()` are exposed on each capturer. `Manager.StartRecording`/`StopRecording`/`IsRecording` propagate to all active capturers and remember the recording-enabled flag so future capturers added by `Reconfigure` start recording too.
 
-`Manager.StartRecording` is all or nothing: calling it while already recording is a no-op, and if one capturer fails to start, the Manager stops recording on every capturer and resets its state. The settings handler then writes `pcapRecording: false`, so the next `GET` reports the real, stopped state; if that write fails, its error is appended to the 500 body. The interfaces handler writes the same `false` after a `Reconfigure` that leaves the Manager not recording.
+`Manager.StartRecording` is all or nothing: calling it while already recording is a no-op, and if one capturer fails to start, the Manager stops recording on every capturer and resets its state. The settings handler then writes `pcapRecording: false`, so the next start does not try to record again; if that write fails, its error is appended to the 500 body. The interfaces handler writes the same `false` after a `Reconfigure` that leaves the Manager not recording.
 
 Each active capturer writes its own pcap file. Filename uses the capturer's interface name sanitized through a `[^A-Za-z0-9_-]` to `_` regex. A start-stop-start cycle on the same interface produces two distinct files.
 
