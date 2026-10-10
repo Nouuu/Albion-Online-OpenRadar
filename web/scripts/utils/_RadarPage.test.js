@@ -21,7 +21,10 @@ vi.mock('../core/DatabaseLoader.js', () => ({load: vi.fn()}));
 vi.mock('../core/WebSocketManager.js', () => ({
     connect: vi.fn(), disconnect: vi.fn(), setMessageCallback: vi.fn(), getStatus: vi.fn(),
 }));
-vi.mock('../core/PlayerListRenderer.js', async importOriginal => ({...await importOriginal(), update: vi.fn()}));
+vi.mock('../core/PlayerListRenderer.js', async importOriginal => {
+    const actual = await importOriginal();
+    return {...actual, update: vi.fn(actual.update)};
+});
 vi.mock('./RadarSettingsPanel.js', async importOriginal => {
     const actual = await importOriginal();
     return {...actual, initRadarSettingsPanel: vi.fn(actual.initRadarSettingsPanel)};
@@ -265,6 +268,28 @@ describe('player detection listener', () => {
         await vi.waitFor(() => expect(playersHidden()).toEqual([false, false]));
         expect(PlayerListRenderer.update).toHaveBeenCalledTimes(1);
         expect(PlayerListRenderer.update).toHaveBeenCalledWith(window.playersHandler);
+    });
+
+    // @verified 2026-10-10: pcap-derived. players/spawn.json (8 passive players) seen while detection is off
+    // list at once through the real listener and the real renderer, with no tick.
+    test('turning detection on through settingsSync lists the 8 spawns of players/spawn.json with no tick', async () => {
+        window.settingsSync = settingsSync;
+        settingsSync.setBool('settingPlayersDetect', false);
+        await page.init();
+        const fx = await loadFixture('players', 'spawn');
+        for (const msg of fx.messages) {
+            const p = normalizeParams(msg.parameters);
+            window.handlers.players.handleNewPlayerEvent(p[0], p);
+        }
+        const cards = () => root.querySelectorAll('#playersList [data-player-id]').length;
+        expect(cards()).toBe(0);
+
+        settingsSync.setBool('settingPlayersDetect', true);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        expect(PlayerListRenderer.update).toHaveBeenCalledTimes(1);
+        expect(cards()).toBe(8);
+        delete window.settingsSync;
     });
 
     test('@verified 2026-09-24: the listener is null safe when the players markup is gone', async () => {
