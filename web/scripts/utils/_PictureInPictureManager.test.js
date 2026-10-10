@@ -64,3 +64,17 @@ describe('PictureInPictureManager.compositeFrame', () => {
         expect(ctx.calls[0]).toEqual(['clearRect', 0, 0, narrow, narrow]);
     });
 });
+
+describe('PictureInPictureManager.createVideoElement', () => {
+    afterEach(() => {
+        pictureInPictureManager.videoElement?.remove();
+        pictureInPictureManager.videoElement = null;
+    });
+
+    test('@verified 2026-10-10: the hidden video is pinned to the top left so it adds no page scroll', () => {
+        pictureInPictureManager.createVideoElement();
+        const style = pictureInPictureManager.videoElement.style;
+        expect([style.position, style.top, style.left]).toEqual(['absolute', '0px', '0px']);
+        expect([style.opacity, style.pointerEvents]).toEqual(['0', 'none']);
+    });
+});
