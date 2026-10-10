@@ -221,7 +221,7 @@ Two-phase broadcast (RLock for send, Lock for cleanup), 100 client soft limit, g
 
 ### SPA navigation
 
-HTMX swaps page partials without full reloads. Pages call `registerBoundPage(name, {init, destroy})` from `SettingControls.js`, which registers the page with `PageController` once and binds its `data-setting` controls on each activation. Every handler installs listeners via `addListener(el, evt, fn)` and removes them on `destroy()` to prevent the listener leaks that bit the Jan 2026 churn.
+HTMX swaps page partials without full reloads. Pages call `registerBoundPage(name, {init, destroy})` from `SettingControls.js`, which registers the page with `PageController` once and binds its `data-setting` controls on each activation. `registerBoundPage` hands `init` an AbortController `signal`. Page modules attach their listeners with `{signal}`, and leaving the page aborts it, which removes them all.
 
 ### WebSocket client
 
