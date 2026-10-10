@@ -6,6 +6,9 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 
@@ -443,5 +446,42 @@ func TestSettingsLogging_PostHoldsApplyMuDuringApply(t *testing.T) {
 	}
 	if rec.acquired {
 		t.Error("applyMu was free during StartRecording, want held")
+	}
+}
+
+type corruptingRecorder struct {
+	fakeRecorder
+	dir string
+}
+
+func (r *corruptingRecorder) StartRecording(string) error {
+	if err := os.WriteFile(filepath.Join(r.dir, "network.json"), []byte("{not json"), 0o644); err != nil {
+		return err
+	}
+	return errors.New("no permission")
+}
+
+func TestSettingsLogging_PostStartFailureReportsPersistFailure(t *testing.T) {
+	dir := t.TempDir()
+	if err := capture.WriteConfig(dir, capture.Config{}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	api := NewSettingsAPI(dir, log, &corruptingRecorder{dir: dir}, t.TempDir(), &sync.Mutex{})
+	mux := http.NewServeMux()
+	api.Register(mux)
+
+	body, _ := json.Marshal(map[string]any{"pcapRecording": true})
+	req := httptest.NewRequest(http.MethodPost, "/api/settings/logging", bytes.NewReader(body))
+	req.RemoteAddr = "127.0.0.1:1234"
+	rr := httptest.NewRecorder()
+	mux.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500", rr.Code)
+	}
+	if !strings.Contains(rr.Body.String(), "no permission") || !strings.Contains(rr.Body.String(), "persist") {
+		t.Errorf("body must carry the start error and the persist failure: %s", rr.Body.String())
 	}
 }

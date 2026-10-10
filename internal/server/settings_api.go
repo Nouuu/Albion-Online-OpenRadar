@@ -86,10 +86,13 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		if *patch.PcapRecording {
 			if err := a.recorder.StartRecording(a.captureDir); err != nil {
 				logger.PrintWarn("PKT", "pcap recording could not start: %v", err)
-				_ = capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
+				msg := "pcap recording failed: " + err.Error()
+				if pErr := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 					cfg.Logging.PcapRecording = false
-				})
-				http.Error(w, "pcap recording failed: "+err.Error(), http.StatusInternalServerError)
+				}); pErr != nil {
+					msg += "; persist: " + pErr.Error()
+				}
+				http.Error(w, msg, http.StatusInternalServerError)
 				return
 			}
 		} else {
