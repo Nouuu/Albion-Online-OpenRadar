@@ -221,7 +221,7 @@ Two-phase broadcast (RLock for send, Lock for cleanup), 100 client soft limit, g
 
 ### SPA navigation
 
-HTMX swaps page partials without full reloads. `PageController.registerPage(name, {init, destroy})` orchestrates init/destroy cycles. Every handler installs listeners via `addListener(el, evt, fn)` and removes them on `destroy()` to prevent the listener leaks that bit the Jan 2026 churn.
+HTMX swaps page partials without full reloads. Pages call `registerBoundPage(name, {init, destroy})` from `SettingControls.js`, which registers the page with `PageController` once and binds its `data-setting` controls on each activation. Every handler installs listeners via `addListener(el, evt, fn)` and removes them on `destroy()` to prevent the listener leaks that bit the Jan 2026 churn.
 
 ### WebSocket client
 
@@ -258,7 +258,7 @@ class XHandler {
 
 Drawing skeleton: extends `DrawingUtils`. `interpolate(entities, lpX, lpY, t)` calls `interpolateEntity` per entry. `invalidate(ctx, entities)` reads settings via `settingsSync.getBool(...)` and draws via inherited `DrawCustomImage`, `drawFilledCircle`, `transformPoint`.
 
-Page registration: in the page gohtml `<script>`, import `registerPage` and `reinitCurrentPage` from `PageController`. Guard the registration with a `window._<name>Registered` flag to avoid double-register on SPA navigation. Call `window.onGlobalsReady(() => reinitCurrentPage())`.
+Page registration: in the page gohtml `<script>`, dynamic-import `registerBoundPage` from `SettingControls.js` and call `registerBoundPage('<name>', {init, destroy})`. It registers once per page name, so SPA navigation does not double-register.
 
 Imports:
 

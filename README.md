@@ -184,10 +184,10 @@ encrypts live positions, see [Known limitations](#known-limitations).
 
 | Control                    | Range                                           |
 |----------------------------|-------------------------------------------------|
-| Zoom                       | 0.1x to 3x                                      |
+| Zoom                       | 10% to 300%                                     |
 | Max size                   | 300px to 1200px                                 |
 | Fit to screen              | toggle, fills the window up to 1200px           |
-| Icon size                  | 0.5x to 2x                                      |
+| Icon size                  | 50% to 200%                                     |
 | Map background             | toggle, zone map under the radar                |
 | Zone info box              | toggle, zone name, tier and PvP marker          |
 | Stats box                  | toggle, resource, mob and player counts         |
