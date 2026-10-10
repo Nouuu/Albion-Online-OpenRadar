@@ -16,7 +16,7 @@ export function generateResourceGrid(entry) {
     const enchantRows = ENCHANTS.map(enchant => {
         const cells = Array.from({length: 8}, (_, tier) => {
             if (enchant !== 'e0' && tier < 3) return '<span class="w-4 h-4"></span>';
-            return `<input type="checkbox" class="checkbox checkbox-primary checkbox-xs" data-enchant="${enchant}" data-tier="${tier}">`;
+            return `<input type="checkbox" class="checkbox checkbox-primary checkbox-xs" data-enchant="${enchant}" data-tier="${tier}" aria-label="T${tier + 1} ${enchant.toUpperCase()}">`;
         }).join('');
         return `<div class="grid grid-cols-8 gap-1 justify-items-center">${cells}</div>`;
     }).join('');

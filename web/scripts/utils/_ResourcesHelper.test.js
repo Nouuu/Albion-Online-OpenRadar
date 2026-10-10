@@ -39,6 +39,20 @@ describe('generateResourceGrid', () => {
         }
     });
 
+    test('names every cell by its tier and enchant, as the headers show them', () => {
+        const grid = parse(generateResourceGrid({key: 'settingResourcesStaticFiber', label: 'Static'}));
+        const headers = [...grid.querySelectorAll('span')].map(span => span.textContent.trim());
+        const cells = [...grid.querySelectorAll('[data-enchant]')];
+
+        expect(cells).toHaveLength(28);
+        for (const cell of cells) {
+            const [tier, enchant] = [`T${Number(cell.dataset.tier) + 1}`, cell.dataset.enchant.toUpperCase()];
+            expect(headers).toContain(tier);
+            expect(headers).toContain(enchant);
+            expect(cell.getAttribute('aria-label')).toBe(`${tier} ${enchant}`);
+        }
+    });
+
     test('cells and tier buttons carry no ids', () => {
         const grid = parse(generateResourceGrid({key: 'settingResourcesStaticFiber', label: 'Static'}));
 
