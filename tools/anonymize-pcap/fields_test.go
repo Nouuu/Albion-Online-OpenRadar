@@ -106,3 +106,19 @@ func TestIdentityFields_CoverNicknameGuildAndAllianceOnEvent29(t *testing.T) {
 func TestIdentityFields_DoNotCoverTheAccessModeField(t *testing.T) {
 	require.NotContains(t, identityFields, fieldRef{kindEvent, 210, 5})
 }
+
+func TestIdentityFields_CoverTheGameEventText(t *testing.T) {
+	require.Contains(t, identityFields, fieldRef{kindEvent, 163, 2})
+}
+
+func TestIdentityFields_CoverChatAndTheCharacterIdentifier(t *testing.T) {
+	for _, want := range []fieldRef{
+		{kindEvent, 74, 0},
+		{kindEvent, 74, 1},
+		{kindEvent, 29, 64},
+		{kindEvent, 30, 6},
+		{kindEvent, 98, 3},
+	} {
+		require.Contains(t, identityFields, want)
+	}
+}

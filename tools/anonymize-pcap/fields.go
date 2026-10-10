@@ -25,12 +25,18 @@ var identityFields = []fieldRef{
 	{kindEvent, 29, 1},    // nickname
 	{kindEvent, 29, 8},    // guild name
 	{kindEvent, 29, 51},   // alliance tag
+	{kindEvent, 29, 64},   // character identifier
 	{kindEvent, 30, 5},    // nickname
+	{kindEvent, 30, 6},    // crafter nickname since the Dragonfire index shift
 	{kindEvent, 45, 11},   // harvestable owner nickname
 	{kindEvent, 45, 12},   // harvestable owner nickname
+	{kindEvent, 74, 0},    // chat nickname
+	{kindEvent, 74, 1},    // chat text
+	{kindEvent, 98, 3},    // corpse owner nickname
 	{kindEvent, 103, 2},   // local player nickname
 	{kindEvent, 103, 15},  // local player nickname
 	{kindEvent, 104, 1},   // nickname
+	{kindEvent, 163, 2},   // duel notice text naming both players
 	{kindEvent, 210, 6},   // guild name
 	{kindEvent, 277, 2},   // nickname
 	{kindEvent, 294, 1},   // nickname
