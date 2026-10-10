@@ -905,7 +905,7 @@ describe('PlayersHandler', () => {
     });
 
     // pcap-derived: players/spawn.json (8 spawns) and players/faction-spawn.json (4 spawns) replayed in zone 0317,
-    // a black zone in the real zones database; synthetic: the faction flip and the 1500 ms list tick.
+    // a black zone in the real zones database, and in red zone 1205 for the faction test; synthetic: the faction flip and the 1500 ms list tick.
     describe('detection switch, threat list and display cap', () => {
         let detect;
 

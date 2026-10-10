@@ -43,6 +43,7 @@ function lineOf(content, index) {
 }
 
 describe('settings access contract', () => {
+    // @verified 2026-10-10: a getter call with a default argument or a literal fallback hides the registry default.
     test('no settingsSync getter takes a caller default or a literal fallback', () => {
         const hits = [];
         for (const {abs, rel} of productionFiles()) {
@@ -58,6 +59,7 @@ describe('settings access contract', () => {
         expect(hits).toEqual([]);
     });
 
+    // @verified 2026-10-10: a parameter fed from a setting must not carry its own copy of the default.
     test('no function fed a setting by its caller repeats a default for that parameter', () => {
         const files = productionFiles().map(({abs, rel}) => ({rel, content: readFileSync(abs, 'utf8')}));
         const fed = files.flatMap(({rel: callerFile, content}) => [...content.matchAll(GETTER)].flatMap(match => {
