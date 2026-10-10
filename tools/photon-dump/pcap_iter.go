@@ -12,7 +12,7 @@ import (
 )
 
 // iteratePcap calls fn on each UDP payload; non-UDP packets are skipped.
-func iteratePcap(path string, fn func(payload []byte) error) error {
+func iteratePcap(path string, fn func(payload []byte, srcPort, dstPort uint16) error) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("open %s: %w", path, err)
@@ -35,7 +35,7 @@ func iteratePcap(path string, fn func(payload []byte) error) error {
 		if udp == nil {
 			continue
 		}
-		if err := fn(udp.Payload); err != nil {
+		if err := fn(udp.Payload, uint16(udp.SrcPort), uint16(udp.DstPort)); err != nil {
 			return err
 		}
 	}

@@ -31,7 +31,7 @@ func runInventory(in, outPath string) error {
 		},
 	)
 
-	if err := iteratePcap(in, func(payload []byte) error {
+	if err := iteratePcap(in, func(payload []byte, _, _ uint16) error {
 		parser.ReceivePacket(payload)
 		return nil
 	}); err != nil {

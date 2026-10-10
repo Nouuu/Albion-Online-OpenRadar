@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nospy/albion-openradar/internal/photon"
+	"github.com/nospy/albion-openradar/internal/photon/eventcodes"
 )
 
 func TestMatchEvent_CodeOnly(t *testing.T) {
@@ -60,4 +61,14 @@ func TestMatchEvent_WildcardCode(t *testing.T) {
 	m := MatchCriteria{Kind: "event", Code: -1}
 	ev := &photon.EventData{Code: 1, Parameters: map[byte]any{252: int64(29)}}
 	require.True(t, matchesEvent(m, ev))
+}
+
+func TestEventWithIDs_MatchesEachIDAtItsIndex(t *testing.T) {
+	m := eventWithIDs(eventcodes.CastSpell, map[byte]int{0: 1255088, 1: 1255088})
+	self := &photon.EventData{Code: 1, Parameters: map[byte]any{252: int64(eventcodes.CastSpell), 0: int32(1255088), 1: int64(1255088)}}
+	other := &photon.EventData{Code: 1, Parameters: map[byte]any{252: int64(eventcodes.CastSpell), 0: int32(1255088), 1: int32(7)}}
+	missing := &photon.EventData{Code: 1, Parameters: map[byte]any{252: int64(eventcodes.CastSpell), 0: int32(1255088)}}
+	require.True(t, matchesEvent(m, self))
+	require.False(t, matchesEvent(m, other))
+	require.False(t, matchesEvent(m, missing))
 }
