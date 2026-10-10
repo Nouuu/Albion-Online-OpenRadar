@@ -17,6 +17,11 @@ vi.mock('../data/ZonesDatabase.js', () => ({
 }));
 
 const {PlayersHandler} = await import('../handlers/PlayersHandler.js');
+const PlayerListRenderer = await import('./PlayerListRenderer.js');
+const realSettingsSync = (await vi.importActual('../utils/SettingsSync.js')).default;
+
+const FILTER_KEYS = ['settingPassivePlayers', 'settingFactionPlayers', 'settingDangerousPlayers'];
+const STAT_IDS = ['statHostileContainer', 'statFactionContainer', 'statPassiveContainer'];
 
 // pcap-derived: the equipment fixture from the 2026-07-24 capture
 // synthetic: the spawn parameters that seed the player before the equipment message
@@ -89,5 +94,46 @@ describe('player equipment resolves to the correct items', () => {
         await new Promise(resolve => requestAnimationFrame(resolve));
 
         expect(document.body.innerHTML).toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
+    });
+});
+
+// synthetic: an empty players handler; window.settingsSync is the real SettingsSync over happy-dom localStorage
+
+describe('player list class stats follow the class filters', () => {
+    beforeEach(() => {
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        window.settingsSync = realSettingsSync;
+        FILTER_KEYS.forEach(key => realSettingsSync.remove(key));
+        document.body.innerHTML = `<div id="playerStats">${STAT_IDS.map(id => `<div id="${id}"></div>`).join('')}</div><div id="playersList"></div>`;
+        PlayerListRenderer.reset();
+    });
+
+    const hiddenStats = () => STAT_IDS.filter(id => document.getElementById(id).classList.contains('hidden'));
+
+    // @verified 2026-09-23: base.gohtml sets window.settingsSync to the SettingsSync singleton on every page, whose getBool
+    // returns false for a key never written, so an untouched class filter hides its stat like one set to false.
+    test.each([
+        ['unset', null, STAT_IDS],
+        ['false', false, STAT_IDS],
+        ['true', true, []],
+    ])('synthetic: class filters %s', (_label, value, hidden) => {
+        if (value !== null) FILTER_KEYS.forEach(key => realSettingsSync.setBool(key, value));
+
+        PlayerListRenderer.update(new PlayersHandler());
+
+        expect(hiddenStats()).toEqual(hidden);
+    });
+
+    // @verified 2026-09-23: each class filter of the players page shows its own stat only.
+    test.each([
+        ['settingDangerousPlayers', 'statHostileContainer'],
+        ['settingFactionPlayers', 'statFactionContainer'],
+        ['settingPassivePlayers', 'statPassiveContainer'],
+    ])('synthetic: only %s ticked shows %s', (key, shown) => {
+        realSettingsSync.setBool(key, true);
+
+        PlayerListRenderer.update(new PlayersHandler());
+
+        expect(hiddenStats()).toEqual(STAT_IDS.filter(id => id !== shown));
     });
 });
