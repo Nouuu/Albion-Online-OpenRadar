@@ -1,6 +1,6 @@
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
-import {loadRealItemsDatabase} from '../__fixtures__/realDatabases.js';
+import {loadRealItemsDatabase, loadRealSpellsDatabase} from '../__fixtures__/realDatabases.js';
 
 const {registryDefault} = await vi.hoisted(() => import('../utils/SettingsRegistry.js'));
 
@@ -222,21 +222,22 @@ describe('player card refreshes on a display setting change without a new spawn'
 
     test('card shows spells after Show spells is ticked, on the next refresh, without a new spawn', async () => {
         const renderer = await import('./PlayerListRenderer.js');
-        window.spellsDatabase = {getSpellByIndex: vi.fn(() => ({uniqueName: 'SPELL_FIREBALL', uiSprite: 'SPELL_GENERIC'}))};
+        window.spellsDatabase = await loadRealSpellsDatabase();
         window.settingsSync = {getBool: key => key !== 'settingPlayersShowSpells'};
 
         const id = 90001;
-        handler.handleNewPlayerEvent(id, {1: 'Caster', 8: '', 53: 0, 51: null, 40: [], 43: [12, 34]});
+        handler.handleNewPlayerEvent(id, {1: 'Caster', 8: '', 53: 0, 51: null, 40: [], 43: [1, 2]});
 
         renderer.reset();
         renderer.update(handler);
         await new Promise(resolve => requestAnimationFrame(resolve));
-        expect(document.body.innerHTML).not.toContain('/images/Spells/SPELL_GENERIC.webp');
+        expect(document.body.innerHTML).not.toContain('/images/Spells/PASSIVE_NOATTACK.webp');
 
         window.settingsSync = {getBool: () => true};
         renderer.update(handler);
         await new Promise(resolve => requestAnimationFrame(resolve));
-        expect(document.body.innerHTML).toContain('/images/Spells/SPELL_GENERIC.webp');
+        expect(document.body.innerHTML).toContain('/images/Spells/PASSIVE_NOATTACK.webp');
+        expect(document.body.innerHTML).toContain('/images/Spells/PASSIVE_DAZE.webp');
     });
 
     test.each([
