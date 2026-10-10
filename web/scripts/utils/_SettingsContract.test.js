@@ -74,8 +74,10 @@ describe('settings access contract', () => {
             }
             return [];
         })).filter(({name}) => name && !/^(if|for|while|switch)$/.test(name));
-        const hits = files.flatMap(({rel, content}) => fed.filter(({onlyIn}) => !onlyIn || onlyIn === rel).flatMap(({name, index}) =>
-            [...content.matchAll(new RegExp(String.raw`(?:function\s+${name}|^\s*${name})\s*\(([^)]*)\)\s*\{`, 'gm'))]
+        const definitions = (content, name) => [...content.matchAll(new RegExp(String.raw`(?:function\s+${name}|^\s*${name})\s*\(([^)]*)\)\s*\{`, 'gm'))];
+        const hasOwnDefinition = ({onlyIn, name}) => onlyIn && definitions(files.find(file => file.rel === onlyIn).content, name).length > 0;
+        const hits = files.flatMap(({rel, content}) => fed.filter(entry => !hasOwnDefinition(entry) || entry.onlyIn === rel).flatMap(({name, index}) =>
+            definitions(content, name)
                 .filter(definition => /^\s*[\w$]+\s*=(?!=)/.test(definition[1].split(',')[index] ?? ''))
                 .map(definition => `${rel}:${lineOf(content, definition.index + definition[0].indexOf(name))} ${name} parameter ${index} has a default`)));
         expect(hits).toEqual([]);
