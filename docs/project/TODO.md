@@ -48,9 +48,14 @@
       renders. Documented for a long time, never written. The SPA lifecycle regressions it would catch are currently
       covered only by unit tests and a manual pass.
 - [ ] Memory profile over very long sessions.
-- [ ] **Mocked zone answers in `_PlayersHandler.test.js`**. Sixteen older tests fake `zonesDatabase.getPvpType` as red
-      instead of reading the real zones database through `loadRealZonesDatabase`.
+- [ ] **Mocked zone answers in `_PlayersHandler.test.js`**. Sixteen older tests fake `zonesDatabase.getPvpType` as red,
+      four as black, and the top-level `beforeEach` defaults it to safe, instead of reading the real zones database
+      through `loadRealZonesDatabase`.
 - [ ] Black Zone portal transitions sometimes drop the cluster id.
+- [ ] **Resource matrix cell names repeat**. "T4 E1" appears on every resource grid with nothing naming the grid. A
+      `role="group"` labelled by the grid heading would tell them apart.
+- [ ] **HUD test mock fallbacks**. `mockSettings` in `_RadarRendererHud.test.js` falls back to literal values (`false`,
+      `500`, `1`) for unset keys instead of `registryDefault(key)`.
 
 ## Open observations
 
