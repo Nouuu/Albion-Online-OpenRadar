@@ -65,9 +65,20 @@ export class SettingsSync {
         window.logger?.info(CATEGORIES.SYSTEM, 'SettingsSync_UsingStorageFallback', {});
     }
 
+    _storage(operation, key, value) {
+        try { return localStorage[operation](key, value); } catch (error) {
+            window.logger?.error(CATEGORIES.SYSTEM, 'SettingsSyncStorageFailed', {
+                key,
+                operation,
+                error: error?.message || error
+            });
+            return null;
+        }
+    }
+
     _getCached(key) {
         if (this.cache.has(key)) return this.cache.get(key);
-        const value = localStorage.getItem(key);
+        const value = this._storage('getItem', key);
         this.cache.set(key, value);
         return value;
     }
@@ -104,7 +115,7 @@ export class SettingsSync {
     }
 
     broadcast(key, value) {
-        localStorage.setItem(key, value);
+        this._storage('setItem', key, value);
 
         if (this.channel && this.isInitialized) {
             try {
@@ -218,7 +229,7 @@ export class SettingsSync {
     }
 
     remove(key) {
-        localStorage.removeItem(key);
+        this._storage('removeItem', key);
 
         if (this.channel && this.isInitialized) {
             try {

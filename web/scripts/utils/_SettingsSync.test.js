@@ -31,6 +31,20 @@ describe('SettingsSync singleton migration', () => {
         expect(sync).toBeInstanceOf(module.SettingsSync);
     });
 
+    test('@verified 2026-10-10: a throwing storage reads defaults and keeps writes for the session', async () => {
+        const fail = () => { throw new Error('storage denied'); };
+        vi.stubGlobal('localStorage', {getItem: fail, setItem: fail, removeItem: fail, key: fail, length: 0});
+        ({default: sync} = await import('./SettingsSync.js'));
+        const seen = vi.fn();
+        sync.on('settingAlertFlash', seen);
+        expect(sync.getBool('settingPlayersHostile')).toBe(true);
+        expect(() => sync.setBool('settingAlertFlash', true)).not.toThrow();
+        expect(sync.getBool('settingAlertFlash')).toBe(true);
+        expect(seen).toHaveBeenCalledWith('settingAlertFlash', 'true');
+        expect(() => sync.remove('settingAlertFlash')).not.toThrow();
+        expect(sync.getBool('settingAlertFlash')).toBe(false);
+    });
+
     test('a migration error is logged once the logger exists', async () => {
         vi.doMock('./SettingsMigration.js', () => ({migrateSettings: () => { throw new Error('quota'); }}));
         ({default: sync} = await import('./SettingsSync.js'));
