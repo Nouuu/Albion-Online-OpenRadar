@@ -242,11 +242,12 @@ describe('synthetic dungeon type variants at draw time (message 1 with Parameter
         ['Dungeons Group enchant 3', 'T5_MORGANA', 3, ['settingDungeonsGroup', 'settingDungeonsEnchant3'], 'group_3'],
         ['Dungeons Group enchant 4', 'T5_MORGANA', 4, ['settingDungeonsGroup', 'settingDungeonsEnchant4'], 'group_4'],
         ['Mists Solo', 'MISTS_SOLO_YELLOW', 0, ['settingMistsSolo', 'settingMistsEnchant0'], 'dungeon_0'],
-    ])('synthetic: %s keeps the entry and gates it at draw time', (label, name, enchant, gateKeys, drawName) => {
+    ].flatMap(([label, name, enchant, gateKeys, drawName]) => gateKeys.map(gateKey => [label, name, enchant, gateKey, drawName])))(
+        'synthetic: %s keeps the entry and %s alone off hides it at draw time', (label, name, enchant, gateKey, drawName) => {
         handler.dungeonEvent({...baseParams, 3: name, 9: enchant});
         expect(handler.dungeonList).toHaveLength(1);
 
-        settingsSync.getBool.mockImplementation(key => !gateKeys.includes(key));
+        settingsSync.getBool.mockImplementation(key => key !== gateKey);
         drawing.draw(ctx, handler.dungeonList);
         expect(drawnSrcs(ctx).some(s => s.includes(`${drawName}.webp`))).toBe(false);
 
