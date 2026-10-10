@@ -294,4 +294,77 @@ describe('player card refreshes on a display setting change without a new spawn'
         await new Promise(resolve => requestAnimationFrame(resolve));
         expect(document.body.innerHTML).toContain('data-health-bar');
     });
+
+    // @verified 2026-10-10: Show Health Bars is part of the card key, so ticking it rebuilds the card on the next refresh.
+    // synthetic: a player with health, the corpus holds no health update.
+    test('Show Health Bars off then on rebuilds the card with its bar on the next refresh', async () => {
+        const renderer = await import('./PlayerListRenderer.js');
+        window.settingsSync = {getBool: key => key !== 'settingPlayersShowHealthBars'};
+        const id = 90003;
+        handler.handleNewPlayerEvent(id, {1: 'Hurt', 8: '', 53: 0, 51: null, 40: [], 43: []});
+        handler.UpdatePlayerHealth({0: id, 2: 80, 3: 100});
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const first = document.querySelector('[data-player-id]');
+        expect(document.body.innerHTML).not.toContain('data-health-bar');
+
+        window.settingsSync = {getBool: () => true};
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        expect(document.querySelector('[data-player-id]')).not.toBe(first);
+        expect(document.body.innerHTML).toContain('data-health-bar');
+    });
+
+    // @verified 2026-10-10: equipment that arrives after the first render rebuilds the card on the next refresh.
+    // pcap-derived: players/equipment.json message 0; synthetic: the bare spawn that precedes it.
+    test('equipment arriving after the first render rebuilds the card on the next refresh', async () => {
+        const renderer = await import('./PlayerListRenderer.js');
+        const msg = (await loadFixture('players', 'equipment')).messages[0];
+        const id = msg.parameters['0'];
+        window.settingsSync = {getBool: () => true};
+        handler.handleNewPlayerEvent(id, {1: 'Geared', 8: '', 53: 0, 51: null, 40: [], 43: []});
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const first = document.querySelector('[data-player-id]');
+        expect(document.body.innerHTML).not.toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
+
+        handler.updateItems(id, normalizeParams(msg.parameters));
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        expect(document.querySelector('[data-player-id]')).not.toBe(first);
+        expect(document.body.innerHTML).toContain('/images/Items/T4_HEAD_LEATHER_SET2.webp');
+    });
+
+    // @verified 2026-10-10: a repeat spawn that carries other spells rebuilds the card on the next refresh.
+    // pcap-derived: the spell lists of players/spawn.json messages 0 and 1, replayed under one player id.
+    test('spells changing on a repeat spawn rebuild the card on the next refresh', async () => {
+        const renderer = await import('./PlayerListRenderer.js');
+        const [one, two] = (await loadFixture('players', 'spawn')).messages.map(msg => normalizeParams(msg.parameters));
+        window.spellsDatabase = await loadRealSpellsDatabase();
+        window.settingsSync = {getBool: () => true};
+        const names = list => list.filter(index => index > 0 && index !== 65535)
+            .map(index => window.spellsDatabase.getSpellByIndex(index)?.uniqueName);
+        const onlyTwo = names(two[43]).find(name => !names(one[43]).includes(name));
+        expect(onlyTwo).toBeTruthy();
+        handler.handleNewPlayerEvent(one[0], one);
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const first = document.querySelector('[data-player-id]');
+        expect(document.body.innerHTML).not.toContain(`title="${onlyTwo}"`);
+
+        handler.handleNewPlayerEvent(one[0], {...one, 43: two[43]});
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        expect(document.querySelector('[data-player-id]')).not.toBe(first);
+        expect(document.body.innerHTML).toContain(`title="${onlyTwo}"`);
+    });
 });
