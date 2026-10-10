@@ -4,6 +4,7 @@ export class ZonesDatabase {
   constructor() {
     this.zones = {};
     this.overrides = new Map();
+    this.unresolved = new Set();
     this.loaded = false;
     this.stats = {
       totalZones: 0,
@@ -71,14 +72,27 @@ export class ZonesDatabase {
       const baseId = id.split("-")[0];
       raw = this.zones[baseId] || null;
     }
+    if (!raw) this._recordUnresolved(id);
     return this._applyAvalonRoadsRule(raw);
   }
 
-  // Roads of Avalon are full-loot PvP regardless of origin. zones.json tags TUNNEL_ROYAL
-  // and TUNNEL_ROYAL_RED as safe/red, overridden here.
+  // An unresolved id answers safe, which disables the threat gate, the flash and the sound at
+  // once. Recorded once per id because lookups run per detection and per frame.
+  _recordUnresolved(id) {
+    if (this.unresolved.has(id)) return;
+    this.unresolved.add(id);
+    window.logger?.warn(CATEGORIES.MAP, "ZoneUnresolved", { mapId: id });
+  }
+
+  forgetUnresolved() {
+    this.unresolved.clear();
+  }
+
+  // Roads of Avalon are full-loot PvP regardless of origin. Every TUNNEL_ family is a Roads map,
+  // and zones.json tags several of them safe or red.
   _applyAvalonRoadsRule(zone) {
     if (!zone) return null;
-    if (zone.type === "TUNNEL_ROYAL" || zone.type === "TUNNEL_ROYAL_RED") {
+    if (String(zone.type).startsWith("TUNNEL_")) {
       return { ...zone, pvpType: "black" };
     }
     return zone;
