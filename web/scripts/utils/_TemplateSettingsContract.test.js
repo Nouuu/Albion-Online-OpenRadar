@@ -40,6 +40,7 @@ const LABELS = {
     settingDebugEnemiesUnidentified: 'Show unidentified enemies',
     settingDebugPlayersIds: 'Show Player IDs',
     settingLogToServer: 'Save browser logs',
+    settingDebugBackendLogs: 'Save backend logs',
     settingDebugWsCoalescing: 'Merge entity updates per frame',
 };
 
@@ -86,7 +87,7 @@ const NO_TOOLTIP = ['settingPlayersShowEquipment', 'settingPlayersShowSpells', '
     'settingEnemiesBoss', 'settingEnemiesMistsCrystalSpider', 'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver',
     'settingEnemiesMistsGriffin', 'settingResourcesFishing', 'settingChestsGreen', 'settingChestsBlue', 'settingChestsPurple',
     'settingChestsYellow', 'settingMistsSolo', 'settingMistsDuo', 'settingMistsWispCages', 'settingMistsWisps',
-    'settingMistsKnightfallAbbey', 'settingDungeonsSolo', 'settingDungeonsGroup', 'settingLogToConsole'];
+    'settingMistsKnightfallAbbey', 'settingDungeonsSolo', 'settingDungeonsGroup', 'settingLogToConsole', 'settingDebugPlayersIds'];
 
 function templateOf(name) {
     return readFileSync(join(PAGES_DIR, `${name}.gohtml`), 'utf8');
@@ -171,6 +172,12 @@ describe('template settings contract', () => {
             return ok ? [] : [`${page}: ${el.dataset.settingTip}`];
         });
         expect(drift).toEqual([]);
+    });
+
+    test('every tooltip carries data-setting-tip, so the registry and focus checks reach it', () => {
+        const tooltips = all('.tooltip[data-tip]');
+        expect(tooltips.length).toBeGreaterThan(30);
+        expect(tooltips.filter(({el}) => !el.hasAttribute('data-setting-tip')).map(({page, el}) => `${page}: ${el.dataset.tip}`)).toEqual([]);
     });
 
     test('a control whose label holds a tooltip is named by its label text only', () => {
@@ -349,8 +356,16 @@ describe('collapsible settings sections', () => {
     const PRE_EXISTING_CLOSED = ['settingUiEnemiesOtherOpen', 'settingUiResourcesHideOpen', 'settingUiResourcesWoodOpen',
         'settingUiResourcesOreOpen', 'settingUiResourcesRockOpen'];
     const isHeader = el => el.classList.contains('card') && el.querySelector('h1') !== null;
+    const SETTINGS_PAGES = ['enemies', 'resources', 'settings', 'players', 'chests', 'ignorelist'];
 
-    test.each(['enemies', 'resources', 'settings', 'players', 'chests', 'ignorelist'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
+    test.each(SETTINGS_PAGES)('%s: every collapse toggle is named by aria-labelledby="label-<key>", never aria-label', name => {
+        const toggles = [...pages.find(page => page.name === name).root.querySelectorAll('.collapse > input[type="checkbox"]')];
+        expect(toggles.length).toBeGreaterThan(0);
+        expect(toggles.filter(el => el.getAttribute('aria-labelledby') !== `label-${el.dataset.setting}` || el.hasAttribute('aria-label'))
+            .map(el => el.dataset.setting)).toEqual([]);
+    });
+
+    test.each(SETTINGS_PAGES)('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
         const root = pages.find(page => page.name === name).root;
         const container = root.querySelector('.space-y-6');
         const sections = [...container.children].filter(el => !isHeader(el) && !el.matches('[role="alert"]'));
@@ -423,6 +438,11 @@ describe('settings page', () => {
         }
         expect(debug.lastElementChild.querySelector('#downloadLogsBtn')).not.toBeNull();
     });
+
+    test('the Export hint lists the registry settings, UI state and backend logging values, without the ignore list', () => {
+        expect(normalized(root.querySelector('#downloadLogsBtn').nextElementSibling))
+            .toBe('Downloads registry settings, UI state and backend logging values as JSON. The ignore list is not included.');
+    });
 });
 
 describe('registry labels and tooltips', () => {
@@ -462,7 +482,28 @@ describe('settings control tile contract', () => {
         settingEnemiesBoss: 'checkbox-error',
     };
     const inputCss = readFileSync(join(ROOT, 'web/styles/input.css'), 'utf8');
-    const booleans = all('label > input[type="checkbox"][data-setting]');
+    const booleans = all('input[type="checkbox"][data-setting]').filter(({el}) => !el.matches('.collapse > input'));
+    const ALERT_KEYS = ['settingAlertFlash', 'settingAlertBorder', 'settingAlertSound'];
+    const KIND = {
+        toggle: ['settingRadarFitToScreen', 'settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats',
+            'settingRadarPlayersBeside', 'settingRadarKeepAwake', 'settingRadarResourceCount', 'settingRadarResourceDistance',
+            'settingRadarResourceTierBadges', 'settingRadarResourceClusters', 'settingPlayersDetect', 'settingPlayersShowEquipment',
+            'settingPlayersShowSpells', 'settingPlayersShowGuild', 'settingPlayersShowTotalIp', 'settingPlayersShowMounted',
+            'settingPlayersShowHealthBars', 'settingAlertFlash', 'settingAlertBorder', 'settingAlertSound',
+            'settingEnemiesMinHealthFilter', 'settingEnemiesShowHealthBars', 'settingResourcesFishing', 'settingResourcesShowHealthBars',
+            'settingMistsWispCages', 'settingMistsWisps', 'settingMistsKnightfallAbbey', 'settingLogToConsole', 'settingLogToServer',
+            'settingDebugEnemiesUnidentified', 'settingDebugEnemiesTypeId', 'settingDebugEnemiesTier', 'settingDebugEnemiesName',
+            'settingDebugEnemiesCategoryBadge', 'settingDebugResourcesTypeId', 'settingDebugResourcesDbName', 'settingDebugPlayersIds',
+            'settingDebugMistsWispIds', 'settingDebugWsCoalescing', 'settingDebugPcapRecording', 'settingDebugBackendLogs'],
+        checkbox: ['settingPlayersPassive', 'settingPlayersFaction', 'settingPlayersHostile', 'settingEnemiesNormal',
+            'settingEnemiesChampion', 'settingEnemiesMiniBoss', 'settingEnemiesBoss', 'settingEnemiesMistsCrystalSpider',
+            'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver', 'settingEnemiesMistsGriffin',
+            'settingEnemiesAvalonianDrones', 'settingEnemiesEvent', 'settingChestsGreen', 'settingChestsBlue', 'settingChestsPurple',
+            'settingChestsYellow', 'settingMistsSolo', 'settingMistsDuo', 'settingDungeonsSolo', 'settingDungeonsGroup',
+            'settingDungeonsCorrupted', 'settingDungeonsHellgate',
+            ...[0, 1, 2, 3, 4].flatMap(level => [`settingMistsEnchant${level}`, `settingDungeonsEnchant${level}`]),
+            ...SETTINGS.filter(entry => entry.key.startsWith('settingLogCategory')).map(entry => entry.key)],
+    };
 
     function booleanClassIssue(el) {
         const classes = [...el.classList];
@@ -485,9 +526,9 @@ describe('settings control tile contract', () => {
         if (!label || label.tagName !== 'LABEL') return 'is not a direct child of a label';
         const c = label.classList;
         const neutral = c.contains('rounded-lg') && c.contains('bg-base-300') && c.contains('cursor-pointer') && c.contains('group');
-        const alert = (c.contains('bg-error/10') || c.contains('bg-warning/10'))
+        const alert = ALERT_KEYS.includes(el.dataset.setting) && (c.contains('bg-error/10') || c.contains('bg-warning/10'))
             && c.contains('border') && c.contains('cursor-pointer') && c.contains('group');
-        return neutral || alert ? null : `label classes "${label.className}" are not the neutral tile or the alert card`;
+        return neutral || alert ? null : `label classes "${label.className}" are not the neutral tile or the card of an alert key`;
     }
 
     test('every boolean control is toggle-primary toggle-sm or checkbox checkbox-xs with one color class', () => {
@@ -504,6 +545,25 @@ describe('settings control tile contract', () => {
             return issue ? [`${page}: ${el.dataset.setting} - ${issue}`] : [];
         });
         expect(drift).toEqual([]);
+    });
+
+    test('every boolean control keeps the kind its key has: a toggle for a feature, a checkbox for a list item', () => {
+        const kindOf = el => ['toggle', 'checkbox'].find(kind => el.classList.contains(kind)) ?? 'neither';
+        const expected = key => Object.keys(KIND).find(kind => KIND[kind].includes(key));
+        const drift = booleans.filter(({el}) => kindOf(el) !== expected(el.dataset.setting))
+            .map(({page, el}) => `${page}: ${el.dataset.setting} is ${kindOf(el)}, expected ${expected(el.dataset.setting)}`);
+        const unused = Object.values(KIND).flat().filter(key => !booleans.some(({el}) => el.dataset.setting === key));
+        expect(drift).toEqual([]);
+        expect(unused).toEqual([]);
+    });
+
+    test('every boolean tile leads with its control, and every tile label is text-xs', () => {
+        const late = booleans.filter(({el}) => el.parentElement.firstElementChild !== el).map(({page, el}) => `${page}: ${el.dataset.setting}`);
+        const rows = [...tiles, ...booleans.map(({page, el}) => ({page, el: el.parentElement}))];
+        const loose = rows.flatMap(({page, el}) => [...el.querySelectorAll('[data-setting-label]')]
+            .filter(label => !label.classList.contains('text-xs')).map(label => `${page}: ${label.dataset.settingLabel}`));
+        expect(late).toEqual([]);
+        expect([...new Set(loose)]).toEqual([]);
     });
 
     test('every data-setting-tip is a div.tooltip with a w-3 h-3 opacity-50 icon', () => {
@@ -816,6 +876,21 @@ describe('settings debug sections', () => {
         expect(sections[0].parentElement.classList.contains('collapse-content')).toBe(true);
         expect(sections.slice(1).every(section => section.parentElement === grid)).toBe(true);
         expect([...grid.classList].sort()).toEqual(['2xl:grid-cols-2', 'gap-6', 'grid', 'grid-cols-1']);
+    });
+});
+
+describe('collapse title icons', () => {
+    const NAV_ICONS = Object.fromEntries([...readFileSync(join(ROOT, 'internal/templates/data.go'), 'utf8')
+        .matchAll(/Label: "([^"]+)", Icon: "([^"]+)"/g)].map(([, label, icon]) => [label, icon]));
+
+    test('a collapse titled like a sidebar entry uses its sidebar icon', () => {
+        const named = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > .collapse-title')]
+            .map(title => ({name, title, label: normalized(title.querySelector('[data-setting-label]'))}))
+            .filter(({label}) => NAV_ICONS[label]));
+        const drift = named.filter(({title, label}) => title.firstElementChild?.dataset.lucide !== NAV_ICONS[label])
+            .map(({name, label}) => `${name}: ${label}`);
+        expect(named.map(({name, label}) => `${name}: ${label}`)).toEqual(['chests: Chests']);
+        expect(drift).toEqual([]);
     });
 });
 
