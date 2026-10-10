@@ -134,6 +134,18 @@ describe('RadarRenderer HUD gates and zone guard', () => {
         expect(ctx.calls.some(c => c[0] === 'strokeRect' && c[2] === 10 && c[1] !== 10)).toBe(true);
     });
 
+    // @verified 2026-10-10: zone info off draws no zone name text, the counters stay.
+    test('zone info off draws no zone name fillText', () => {
+        renderer.setMap({id: '0317'});
+        mockSettings({bool: {settingRadarHudZoneInfo: false, settingRadarHudStats: true}});
+
+        renderer.renderUI();
+
+        const texts = ctx.calls.filter(c => c[0] === 'fillText').map(c => String(c[1]));
+        expect(texts.some(text => text.includes(zonesDatabase.getZone('0317').name))).toBe(false);
+        expect(texts.some(text => text.includes('resources'))).toBe(true);
+    });
+
     // @verified 2026-09-24: stats alone off leaves the zone box (10,10) intact.
     test('stats off alone hides only the stats box', () => {
         renderer.setMap({id: '0317'});
@@ -143,6 +155,18 @@ describe('RadarRenderer HUD gates and zone guard', () => {
 
         expect(ctx.calls.some(c => c[0] === 'strokeRect' && c[1] === 10 && c[2] === 10)).toBe(true);
         expect(ctx.calls.some(c => c[0] === 'strokeRect' && c[2] === 10 && c[1] !== 10)).toBe(false);
+    });
+
+    // @verified 2026-10-10: stats off draws no counter text, the zone name stays.
+    test('stats off draws no counter fillText', () => {
+        renderer.setMap({id: '0317'});
+        mockSettings({bool: {settingRadarHudZoneInfo: true, settingRadarHudStats: false}});
+
+        renderer.renderUI();
+
+        const texts = ctx.calls.filter(c => c[0] === 'fillText').map(c => String(c[1]));
+        expect(texts.some(text => /players|resources|mobs/.test(text))).toBe(false);
+        expect(texts.some(text => text.includes(zonesDatabase.getZone('0317').name))).toBe(true);
     });
 
     // @verified 2026-10-10: pcap-derived. players/spawn.json in zone 0317 holds 8 players; Max players caps the

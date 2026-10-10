@@ -120,7 +120,8 @@ describe('radar settings panel layout', () => {
         expect(sizeEvents).toEqual([]);
     });
 
-    test('@verified 2026-09-24: first init in a 358 px card sizes the four bitmaps and fires one size event', () => {
+    test('@verified 2026-09-24: first init in a 358 px card with Size 800 sizes the four bitmaps and fires one size event', () => {
+        settingsSync.setNumber('settingRadarSize', 800);
         stubLayout({width: 358});
 
         initRadarSettingsPanel();
@@ -128,6 +129,7 @@ describe('radar settings panel layout', () => {
         expect(bitmaps()).toEqual(Array(4).fill([358, 358]));
         expect([container().style.width, container().style.height]).toEqual(['358px', '358px']);
         expect(sizeEvents).toEqual([358]);
+        expect(settingsSync.getNumber('settingRadarSize')).toBe(800);
     });
 
     test('@verified 2026-09-24: available height is the page height minus the container offset', () => {

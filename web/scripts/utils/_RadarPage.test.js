@@ -12,6 +12,7 @@ import * as DatabaseLoader from '../core/DatabaseLoader.js';
 import * as EventRouter from '../core/EventRouter.js';
 import * as PlayerListRenderer from '../core/PlayerListRenderer.js';
 import * as WebSocketManager from '../core/WebSocketManager.js';
+import {initRadarSettingsPanel} from './RadarSettingsPanel.js';
 import {mountPage} from '../__fixtures__/pageMarkup.js';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 
@@ -21,6 +22,10 @@ vi.mock('../core/WebSocketManager.js', () => ({
     connect: vi.fn(), disconnect: vi.fn(), setMessageCallback: vi.fn(), getStatus: vi.fn(),
 }));
 vi.mock('../core/PlayerListRenderer.js', async importOriginal => ({...await importOriginal(), update: vi.fn()}));
+vi.mock('./RadarSettingsPanel.js', async importOriginal => {
+    const actual = await importOriginal();
+    return {...actual, initRadarSettingsPanel: vi.fn(actual.initRadarSettingsPanel)};
+});
 
 const RADAR_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../internal/templates/pages/radar.gohtml');
 const KEYS = ['settingRadarSize', 'settingRadarHudStats', 'settingPlayersDetect'];
@@ -105,6 +110,41 @@ describe('radar page entry', () => {
         const container = root.querySelector('#canvasContainer');
         expect(container.style.width).toBe('400px');
         expect(observers).toHaveLength(1);
+    });
+
+    test('@verified 2026-10-10: the panel collapse opens after a failed load', async () => {
+        DatabaseLoader.load.mockRejectedValue(new Error('offline'));
+        await expect(page.init()).rejects.toThrow('offline');
+        const collapse = root.querySelector('[data-setting="settingUiRadarSettingsOpen"]');
+        expect(collapse.checked).toBe(false);
+
+        settingsSync.setBool('settingUiRadarSettingsOpen', true);
+
+        expect(collapse.checked).toBe(true);
+        settingsSync.remove('settingUiRadarSettingsOpen');
+    });
+
+    test('@verified 2026-10-10: a throwing panel init is logged, then the wake lock, the detection listener and initRadar still run in that order', async () => {
+        const error = vi.fn();
+        vi.stubGlobal('logger', {error, warn: vi.fn(), info: vi.fn(), debug: vi.fn()});
+        const request = vi.fn(async () => ({release: vi.fn(async () => {})}));
+        stub(navigator, 'wakeLock', {request});
+        stub(window, 'isSecureContext', true);
+        initRadarSettingsPanel.mockImplementationOnce(() => { throw new Error('panel'); });
+        const on = vi.spyOn(settingsSync, 'on');
+
+        await page.init();
+        stub(navigator, 'wakeLock', undefined);
+        stub(window, 'isSecureContext', false);
+
+        expect(error).toHaveBeenCalledWith(expect.anything(), 'RadarSettingsPanelInitFailed', {error: 'panel'});
+        const listener = on.mock.calls.findIndex(([key]) => key === 'settingPlayersDetect');
+        expect(listener).toBeGreaterThanOrEqual(0);
+        const order = [error, request, DatabaseLoader.load].map(fn => fn.mock.invocationCallOrder[0]);
+        order.splice(2, 0, on.mock.invocationCallOrder[listener]);
+        expect(order.every(Number.isFinite)).toBe(true);
+        expect([...order].sort((a, b) => a - b)).toEqual(order);
+        on.mockRestore();
     });
 
     test('@verified 2026-09-24: leaving after a failed load releases the panel and page listeners', async () => {
