@@ -346,6 +346,8 @@ describe('enemies page', () => {
 
 describe('collapsible settings sections', () => {
     const ADVANCED_CLOSED = ['settingUiSettingsLoggingOpen', 'settingUiSettingsDebugOpen', 'settingUiSettingsNetworkOpen'];
+    const PRE_EXISTING_CLOSED = ['settingUiEnemiesOtherOpen', 'settingUiResourcesHideOpen', 'settingUiResourcesWoodOpen',
+        'settingUiResourcesOreOpen', 'settingUiResourcesRockOpen'];
     const isHeader = el => el.classList.contains('card') && el.querySelector('h1') !== null;
 
     test.each(['enemies', 'resources', 'settings', 'players', 'chests', 'ignorelist'])('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
@@ -358,9 +360,7 @@ describe('collapsible settings sections', () => {
             const checkbox = section.querySelector(':scope > input[type="checkbox"][data-setting]');
             const key = checkbox?.dataset.setting;
             expect(key, section.outerHTML.slice(0, 80)).toMatch(/^settingUi[A-Z][A-Za-z0-9]*Open$/);
-            if (MIGRATION_ROWS.find(row => row.key === key)?.migration === 'new') {
-                expect(registryDefault(key), key).toBe(!ADVANCED_CLOSED.includes(key));
-            }
+            expect(registryDefault(key), key).toBe(![...ADVANCED_CLOSED, ...PRE_EXISTING_CLOSED].includes(key));
         }
     });
 });
