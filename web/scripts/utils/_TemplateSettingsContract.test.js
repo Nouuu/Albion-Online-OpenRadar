@@ -174,6 +174,7 @@ describe('template settings contract', () => {
         expect(drift).toEqual([]);
     });
 
+    // @verified 2026-10-10: every tooltip holds at most 2 sentences and 30 words and takes focus, checked on data-setting-tip only.
     test('every tooltip carries data-setting-tip, so the registry and focus checks reach it', () => {
         const tooltips = all('.tooltip[data-tip]');
         expect(tooltips.length).toBeGreaterThan(30);
@@ -358,6 +359,7 @@ describe('collapsible settings sections', () => {
     const isHeader = el => el.classList.contains('card') && el.querySelector('h1') !== null;
     const SETTINGS_PAGES = ['enemies', 'resources', 'settings', 'players', 'chests', 'ignorelist'];
 
+    // @verified 2026-10-10: a collapse checkbox is named through aria-labelledby on its label-<key> title, per the settings DOM contract.
     test.each(SETTINGS_PAGES)('%s: every collapse toggle is named by aria-labelledby="label-<key>", never aria-label', name => {
         const toggles = [...pages.find(page => page.name === name).root.querySelectorAll('.collapse > input[type="checkbox"]')];
         expect(toggles.length).toBeGreaterThan(0);
@@ -365,6 +367,7 @@ describe('collapsible settings sections', () => {
             .map(el => el.dataset.setting)).toEqual([]);
     });
 
+    // @verified 2026-10-10: sections open by default except Logging, Debug, Network and collapses that predate the rule.
     test.each(SETTINGS_PAGES)('%s: every top-level section is a collapse bound to a settingUi*Open key', name => {
         const root = pages.find(page => page.name === name).root;
         const container = root.querySelector('.space-y-6');
@@ -439,6 +442,7 @@ describe('settings page', () => {
         expect(debug.lastElementChild.querySelector('#downloadLogsBtn')).not.toBeNull();
     });
 
+    // @verified 2026-10-10: the Export hint lists registry settings, UI state and backend logging values, without the ignore list.
     test('the Export hint lists the registry settings, UI state and backend logging values, without the ignore list', () => {
         expect(normalized(root.querySelector('#downloadLogsBtn').nextElementSibling))
             .toBe('Downloads registry settings, UI state and backend logging values as JSON. The ignore list is not included.');
@@ -547,6 +551,7 @@ describe('settings control tile contract', () => {
         expect(drift).toEqual([]);
     });
 
+    // @verified 2026-10-10: a toggle switches a feature on or off, a checkbox selects items in a list.
     test('every boolean control keeps the kind its key has: a toggle for a feature, a checkbox for a list item', () => {
         const kindOf = el => ['toggle', 'checkbox'].find(kind => el.classList.contains(kind)) ?? 'neither';
         const expected = key => Object.keys(KIND).find(kind => KIND[kind].includes(key));
@@ -557,6 +562,7 @@ describe('settings control tile contract', () => {
         expect(unused).toEqual([]);
     });
 
+    // @verified 2026-10-10: a boolean row is a tile with the control first, and density is text-xs.
     test('every boolean tile leads with its control, and every tile label is text-xs', () => {
         const late = booleans.filter(({el}) => el.parentElement.firstElementChild !== el).map(({page, el}) => `${page}: ${el.dataset.setting}`);
         const rows = [...tiles, ...booleans.map(({page, el}) => ({page, el: el.parentElement}))];
@@ -883,6 +889,7 @@ describe('collapse title icons', () => {
     const NAV_ICONS = Object.fromEntries([...readFileSync(join(ROOT, 'internal/templates/data.go'), 'utf8')
         .matchAll(/Label: "([^"]+)", Icon: "([^"]+)"/g)].map(([, label, icon]) => [label, icon]));
 
+    // @verified 2026-10-10: a section icon matches the sidebar icon of the same domain.
     test('a collapse titled like a sidebar entry uses its sidebar icon', () => {
         const named = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > .collapse-title')]
             .map(title => ({name, title, label: normalized(title.querySelector('[data-setting-label]'))}))
@@ -907,6 +914,7 @@ describe('card sub-groups', () => {
         .filter(({headings}) => headings.length >= 2)
         .map(card => ({...card, title: `${name}: ${normalized(card.content.parentElement.querySelector(':scope > .collapse-title [data-setting-label]'))}`})));
 
+    // @verified 2026-10-10: sub-groups of one card sit side by side on wide screens, reusing a pattern in use.
     test('a card with two or more sub-groups puts them side by side on wide screens, through a sub-group grid in use', () => {
         const drift = cards.filter(({content, headings}) => ![...content.querySelectorAll('.grid')]
             .filter(grid => SUBGROUP_GRIDS.includes(layoutOf(grid)))
