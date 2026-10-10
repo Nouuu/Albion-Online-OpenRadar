@@ -819,6 +819,30 @@ describe('settings debug sections', () => {
     });
 });
 
+describe('card sub-groups', () => {
+    const SUBGROUP_GRIDS = [
+        ['grid', 'grid-cols-1', '2xl:grid-cols-2', 'gap-6'],
+        ['grid', 'grid-cols-1', 'md:grid-cols-2', 'gap-6'],
+        ['grid', 'grid-cols-[repeat(auto-fit,minmax(min(24rem,100%),1fr))]', 'gap-4'],
+        ['grid', 'grid-cols-1', '@2xl:grid-cols-2', 'gap-x-8', 'gap-y-6'],
+    ].map(classes => classes.sort().join(' '));
+    const layoutOf = el => [...el.classList].filter(name => /^(grid|gap-.*|(@?\w+:)?grid-cols-.*)$/.test(name)).sort().join(' ');
+    const cards = pages.flatMap(({name, root}) => [...root.querySelectorAll('.collapse > .collapse-content')]
+        .map(content => ({name, content, headings: [...content.querySelectorAll('h3')]}))
+        .filter(({headings}) => headings.length >= 2)
+        .map(card => ({...card, title: `${name}: ${normalized(card.content.parentElement.querySelector(':scope > .collapse-title [data-setting-label]'))}`})));
+
+    test('a card with two or more sub-groups puts them side by side on wide screens, through a sub-group grid in use', () => {
+        const drift = cards.filter(({content, headings}) => ![...content.querySelectorAll('.grid')]
+            .filter(grid => SUBGROUP_GRIDS.includes(layoutOf(grid)))
+            .some(grid => [...grid.children].filter(child => headings.some(h3 => child.contains(h3))).length >= 2))
+            .map(({title}) => title);
+        expect(cards.map(({title}) => title)).toEqual(['chests: Mists', 'chests: Dungeons', 'players: Alerts', 'radar: Radar settings',
+            'settings: Logging', 'settings: Debug']);
+        expect(drift).toEqual([]);
+    });
+});
+
 describe('keyboard focus ring', () => {
     const appCss = readFileSync(join(ROOT, 'web/styles/app.css'), 'utf8');
 
