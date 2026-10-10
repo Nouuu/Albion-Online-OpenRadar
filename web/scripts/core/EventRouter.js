@@ -211,12 +211,15 @@ function handleLegacyMapChangeResponse(Parameters) {
     applyMapChange(newMapId, 'MapChanged');
 }
 
+const JOIN_LOCAL_ID = 0;
+
 function handleJoinResponse(Parameters, clearHandlersCallback) {
     decodeJoinPosition(Parameters[9]);
     if (typeof Parameters[8] === 'string' && Parameters[8].length > 0) {
         applyMapChange(Parameters[8], 'MapChangedFromJoinMap');
     }
     clearHandlersCallback();
+    handlers?.actionsHandler?.setLocalId(Parameters[JOIN_LOCAL_ID]);
 }
 
 const EVENT_NAMES_BY_CODE = new Map(Object.entries(EventCodes).map(([name, code]) => [code, name]));
@@ -346,6 +349,7 @@ export function onEvent(Parameters) {
             fishingHandler.removeFish(id);
             wispCageHandler.removeCage(id);
             handlers.mistsDungeonHandler?.removePortal(id);
+            handlers.actionsHandler?.removePlayer(id);
             break;
 
         case EventCodes.Move:
@@ -353,10 +357,12 @@ export function onEvent(Parameters) {
             const posY = Parameters[5];
             mobsHandler.updateMistPosition(id, posX, posY);
             mobsHandler.updateMobPosition(id, posX, posY);
+            handlers.actionsHandler?.onOtherEntity(id);
             break;
 
         case EventCodes.NewCharacter:
             playersHandler.handleNewPlayerEvent(id, Parameters);
+            handlers.actionsHandler?.onOtherEntity(id);
             break;
 
         case EventCodes.NewSimpleHarvestableObjectList:
@@ -419,6 +425,7 @@ export function onEvent(Parameters) {
         }
             playersHandler.UpdatePlayerLooseHealth(Parameters);
             mobsHandler.updateMobHealth(Parameters);
+            handlers.actionsHandler?.onHealthUpdate(Parameters);
             break;
 
         case EventCodes.HealthUpdates:
@@ -427,6 +434,11 @@ export function onEvent(Parameters) {
                 allParameters: Parameters
             });
             mobsHandler.updateMobHealthBulk(Parameters);
+            handlers.actionsHandler?.onHealthUpdates(Parameters);
+            break;
+
+        case EventCodes.Attack:
+            handlers.actionsHandler?.onAttack(Parameters);
             break;
 
         case EventCodes.CharacterEquipmentChanged:
@@ -435,10 +447,36 @@ export function onEvent(Parameters) {
 
         case EventCodes.NewMob:
             mobsHandler.NewMobEvent(Parameters);
+            handlers.actionsHandler?.onOtherEntity(id);
             break;
 
         case EventCodes.Mounted:
             playersHandler.handleMountedPlayerEvent(id, Parameters);
+            handlers.actionsHandler?.onMounted(id);
+            break;
+
+        case EventCodes.CastSpell:
+            handlers.actionsHandler?.onCastSpell(Parameters);
+            break;
+
+        case EventCodes.CastSpells:
+            handlers.actionsHandler?.onCastSpells(Parameters);
+            break;
+
+        case EventCodes.CastStart:
+            handlers.actionsHandler?.onCastStart(Parameters);
+            break;
+
+        case EventCodes.ForcedMovement:
+            handlers.actionsHandler?.onForcedMovement(Parameters);
+            break;
+
+        case EventCodes.Teleport:
+            handlers.actionsHandler?.onTeleport(Parameters);
+            break;
+
+        case EventCodes.Respawn:
+            handlers.actionsHandler?.onRespawn(Parameters);
             break;
 
         case EventCodes.NewRandomDungeonExit: {

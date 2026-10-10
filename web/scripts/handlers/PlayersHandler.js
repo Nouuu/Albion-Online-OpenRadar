@@ -3,6 +3,8 @@ import zonesDatabase from "../data/ZonesDatabase.js";
 import settingsSync from "../utils/SettingsSync.js";
 import alertSound from "../utils/AlertSound.js";
 
+const ATTACK_FLAG_MS = 10000;
+
 class Player {
     constructor(posX, posY, id, nickname, guildName1, faction, allianceName, equipments, spells) {
         this.posX = posX;
@@ -23,6 +25,8 @@ class Player {
         this.mounted = false;
         this.detectedAt = Date.now();
         this.lastUpdateTime = Date.now();
+        this.lastActionAt = 0;
+        this.attackingUntil = 0;
     }
 
     touch() {
@@ -132,6 +136,33 @@ export class PlayersHandler {
         if (pvpType === 'black') return true;
         if (pvpType === 'red' || pvpType === 'yellow') return faction === 255;
         return faction === 255;
+    }
+
+    isDangerous(player) {
+        return !this.isIgnored(player) && this.isPlayerThreat(player.faction, zonesDatabase.getPvpType(window.currentMapId));
+    }
+
+    getPlayer(id) {
+        return this.playersList.find(p => p.id === id);
+    }
+
+    noteAction(id) {
+        const player = this.getPlayer(id);
+        if (!player) return;
+        player.lastActionAt = Date.now();
+        player.touch();
+    }
+
+    flagAttacker(id) {
+        const player = this.getPlayer(id);
+        if (!player) return;
+        player.attackingUntil = Date.now() + ATTACK_FLAG_MS;
+        this.noteAction(id);
+    }
+
+    clearAttacker(id) {
+        const player = this.getPlayer(id);
+        if (player) player.attackingUntil = 0;
     }
 
     updateItems(id, Parameters) {

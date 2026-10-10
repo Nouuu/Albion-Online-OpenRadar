@@ -8,6 +8,7 @@ import {WispCageDrawing} from '../drawings/WispCageDrawing.js';
 import {MistsWispDrawing} from '../drawings/MistsWispDrawing.js';
 import {FishingDrawing} from '../drawings/FishingDrawing.js';
 import {MistsDungeonDrawing} from '../drawings/MistsDungeonDrawing.js';
+import {ActionsDrawing} from '../drawings/ActionsDrawing.js';
 
 import {PlayersHandler} from '../handlers/PlayersHandler.js';
 import {WispCageHandler} from '../handlers/WispCageHandler.js';
@@ -16,6 +17,7 @@ import {MobsHandler} from '../handlers/MobsHandler.js';
 import {ChestsHandler} from '../handlers/ChestsHandler.js';
 import {HarvestablesHandler} from '../handlers/HarvestablesHandler.js';
 import {MistsDungeonHandler} from '../handlers/MistsDungeonHandler.js';
+import {ActionsHandler} from '../handlers/ActionsHandler.js';
 import {MapH} from './Map.js';
 import {DungeonsHandler} from '../handlers/DungeonsHandler.js';
 import {DrawingUtils} from './DrawingUtils.js';
@@ -40,13 +42,13 @@ let lastPlayerListHash = '';
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
-    dungeons: null, wispCage: null, fishing: null, mistsDungeon: null
+    dungeons: null, wispCage: null, fishing: null, mistsDungeon: null, actions: null
 };
 
 let drawings = {
     harvestables: null, mobs: null, players: null, chests: null,
     dungeons: null, wispCage: null, mistsWisp: null, fishing: null, maps: null,
-    mistsDungeon: null
+    mistsDungeon: null, actions: null
 };
 
 let drawingUtils = null;
@@ -96,7 +98,8 @@ function initializeRadarRenderer() {
             dungeonsHandler: handlers.dungeons,
             wispCageHandler: handlers.wispCage,
             fishingHandler: handlers.fishing,
-            mistsDungeonHandler: handlers.mistsDungeon
+            mistsDungeonHandler: handlers.mistsDungeon,
+            actionsHandler: handlers.actions
         },
         drawings: {
             mapsDrawing: drawings.maps,
@@ -108,7 +111,8 @@ function initializeRadarRenderer() {
             wispCageDrawing: drawings.wispCage,
             fishingDrawing: drawings.fishing,
             mistsWispDrawing: drawings.mistsWisp,
-            mistsDungeonDrawing: drawings.mistsDungeon
+            mistsDungeonDrawing: drawings.mistsDungeon,
+            actionsDrawing: drawings.actions
         },
         drawingUtils
     });
@@ -130,6 +134,7 @@ function clearHandlers(preserveSession = false) {
     handlers.mobs.Clear();
     handlers.players.Clear();
     handlers.wispCage.Clear();
+    handlers.actions.clear();
 
     if (!preserveSession) {
         try {
@@ -166,6 +171,7 @@ export async function initRadar() {
         handlers.wispCage = new WispCageHandler();
         handlers.fishing = new FishingHandler();
         handlers.mistsDungeon = new MistsDungeonHandler();
+        handlers.actions = new ActionsHandler(handlers.players);
 
         drawings.maps = new MapDrawing();
         drawings.harvestables = new HarvestablesDrawing();
@@ -177,6 +183,7 @@ export async function initRadar() {
         drawings.mistsWisp = new MistsWispDrawing();
         drawings.fishing = new FishingDrawing();
         drawings.mistsDungeon = new MistsDungeonDrawing();
+        drawings.actions = new ActionsDrawing();
 
         window.harvestablesHandler = handlers.harvestables;
         window.mobsHandler = handlers.mobs;
@@ -192,7 +199,8 @@ export async function initRadar() {
                 dungeonsHandler: handlers.dungeons,
                 fishingHandler: handlers.fishing,
                 wispCageHandler: handlers.wispCage,
-                mistsDungeonHandler: handlers.mistsDungeon
+                mistsDungeonHandler: handlers.mistsDungeon,
+                actionsHandler: handlers.actions
             },
             map,
             radarRenderer: null
@@ -226,7 +234,8 @@ export async function initRadar() {
 
         playerListIntervalId = setInterval(() => {
             const players = handlers.players?.getFilteredPlayers?.() || [];
-            const hash = `${players.length}:` + players.map(p => `${p.id}:${p.currentHealth}:${p.mounted ? 1 : 0}`).join(',');
+            const now = Date.now();
+            const hash = `${players.length}:` + players.map(p => `${p.id}:${p.currentHealth}:${p.mounted ? 1 : 0}:${p.lastActionAt}:${p.attackingUntil > now ? 1 : 0}`).join(',');
             if (hash !== lastPlayerListHash) {
                 lastPlayerListHash = hash;
                 PlayerListRenderer.update(handlers.players);

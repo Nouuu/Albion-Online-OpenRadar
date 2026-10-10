@@ -60,6 +60,14 @@
                         <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
                     </div>
                 </label>
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <input type="checkbox" id="settingShowPlayerActions" class="checkbox checkbox-primary">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-base-content/50 group-hover:text-primary transition-colors"></i>
+                    <span class="text-base-content/80 group-hover:text-base-content transition-colors">Show Player Actions</span>
+                    <div class="tooltip" data-tip="Marks on the radar, for 10 seconds, where a player cast a spell, mounted, teleported, respawned or was pushed.">
+                        <i data-lucide="info" class="w-4 h-4 opacity-50"></i>
+                    </div>
+                </label>
             </div>
         </div>
     </div>
@@ -232,7 +240,7 @@
                 }
             };
 
-            ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar",
+            ["settingShowPlayers", "settingItems", "settingShowSpells", "settingShowPlayerHealthBar", "settingShowPlayerActions",
                 "settingSound", "settingFlash", "settingFlashDangerousPlayer", "settingPassivePlayers", "settingFactionPlayers",
                 "settingDangerousPlayers"].forEach(bindCheckbox);
 

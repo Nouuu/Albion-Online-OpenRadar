@@ -1,7 +1,8 @@
 // synthetic + pcap-derived: the first describe stubs entity shapes to reach the living/static filter gate; the second
 // replays real NewMob payloads through MobsHandler so the living path is proven on decoded state, not on a hand-built mob.
+// synthetic: the actions describe stubs the actions handler and drawing to pin what the renderer hands the drawing.
 
-import {describe, test, expect, beforeEach, vi} from 'vitest';
+import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
 
@@ -208,5 +209,71 @@ describe('RadarRenderer._collectClusterCandidates on decoded MobsHandler state',
         const renderer = makeRenderer({mobsList});
 
         expect(renderer._collectClusterCandidates()).toHaveLength(0);
+    });
+});
+
+describe('RadarRenderer action markers', () => {
+    let markers;
+    let byType;
+    let renderer;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        settingsSync.getBool.mockImplementation(key => key !== 'settingResourceClusters');
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        markers = [{playerId: 7, x: 5, y: 6}];
+        byType = {hostile: [{id: 7}], faction: [], passive: []};
+        renderer = new RadarRenderer({
+            handlers: {
+                actionsHandler: {markerList: markers, getMarkers: vi.fn(() => markers)},
+                playersHandler: {getPlayersByType: vi.fn(() => byType), getFilteredPlayers: vi.fn(() => [])},
+            },
+            drawings: {actionsDrawing: {interpolate: vi.fn(), invalidate: vi.fn()}},
+            drawingUtils: {detectClusters: vi.fn(() => [])},
+        });
+        renderer.canvasManager = {clearDynamicLayers: vi.fn()};
+        renderer.contexts = {drawCanvas: {}};
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    // @verified 2026-09-23: the frame purges expired markers, then the drawing gets the live ones on the draw layer with
+    // the players by class, so it applies the class filters and the zone rule of the list.
+    test('render hands the live markers and the players by class to the drawing on the draw layer', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(50_000);
+
+        renderer.render();
+
+        expect(renderer.handlers.actionsHandler.getMarkers).toHaveBeenCalledWith(50_000);
+        expect(renderer.drawings.actionsDrawing.invalidate).toHaveBeenCalledWith(renderer.contexts.drawCanvas, markers, byType);
+    });
+
+    // @verified 2026-10-10: the actions switch is off by default, so a frame with nothing to draw still purges the expired
+    // markers but skips building the players by class.
+    test.each([
+        ['settingShowPlayerActions off', key => key !== 'settingResourceClusters' && key !== 'settingShowPlayerActions', markers => markers],
+        ['settingShowPlayers off', key => key !== 'settingResourceClusters' && key !== 'settingShowPlayers', markers => markers],
+        ['no live marker', key => key !== 'settingResourceClusters', () => []],
+    ])('with %s the frame purges the markers and never builds the players by class', (_label, getBool, live) => {
+        settingsSync.getBool.mockImplementation(getBool);
+        renderer.handlers.actionsHandler.getMarkers.mockImplementation(() => live(markers));
+
+        renderer.render();
+
+        expect(renderer.handlers.actionsHandler.getMarkers).toHaveBeenCalled();
+        expect(renderer.handlers.playersHandler.getPlayersByType).not.toHaveBeenCalled();
+        expect(renderer.drawings.actionsDrawing.invalidate).not.toHaveBeenCalled();
+    });
+
+    // @verified 2026-09-23: markers hold world positions, so every frame places them against the local player.
+    test('update places the markers against the local player position', () => {
+        renderer.setLocalPlayerPosition(3, 4);
+
+        renderer.update();
+
+        expect(renderer.drawings.actionsDrawing.interpolate).toHaveBeenCalledWith(markers, 3, 4, expect.any(Number));
     });
 });

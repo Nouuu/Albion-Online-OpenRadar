@@ -934,6 +934,79 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
+    // onEvent Attack (13), HealthUpdate (6), HealthUpdates (7) to ActionsHandler
+    // -------------------------------------------------------------------------
+    describe('onEvent attack and health to ActionsHandler', () => {
+        beforeEach(() => {
+            handlers.actionsHandler = {onAttack: vi.fn(), onHealthUpdate: vi.fn(), onHealthUpdates: vi.fn()};
+        });
+
+        // @verified 2026-09-23: Attack reaches ActionsHandler with its parameters untouched.
+        test('Attack (P[252]=13) dispatches actionsHandler.onAttack', () => {
+            // synthetic: attacker 7 on target 9
+            const p = {0: 7, 2: 9, 252: EventCodes.Attack};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.actionsHandler.onAttack).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-09-23: pcap-derived actions fixtures, a real message of each code reaches its method untouched.
+        test.each([
+            ['Attack', EventCodes.Attack, 'onAttack', 'attack-between-players'],
+            ['HealthUpdate', EventCodes.HealthUpdate, 'onHealthUpdate', 'health-update'],
+            ['HealthUpdates', EventCodes.HealthUpdates, 'onHealthUpdates', 'health-updates'],
+        ])('%s (%i) pcap-derived: dispatches actionsHandler.%s', async (_name, code, method, scenario) => {
+            // pcap-derived: actions/<scenario>.json, first message of the code
+            const fix = await loadFixture('actions', scenario);
+            const p = normalizeParams(fix.messages.find(m => m.kind === 'event' && m.parameters['252'] === code).parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.actionsHandler[method]).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-09-23: ActionsHandler runs after the existing player and mob calls, which stay.
+        test('HealthUpdate: onHealthUpdate runs after UpdatePlayerLooseHealth and updateMobHealth', () => {
+            // synthetic: player 7 hits entity 1001
+            const p = {0: 1001, 2: -50, 6: 7, 252: EventCodes.HealthUpdate};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.playersHandler.UpdatePlayerLooseHealth).toHaveBeenCalledWith(p);
+            expect(handlers.mobsHandler.updateMobHealth).toHaveBeenCalledWith(p);
+            expect(handlers.actionsHandler.onHealthUpdate).toHaveBeenCalledWith(p);
+            expect(handlers.actionsHandler.onHealthUpdate.mock.invocationCallOrder[0])
+                .toBeGreaterThan(handlers.mobsHandler.updateMobHealth.mock.invocationCallOrder[0]);
+        });
+
+        // @verified 2026-09-23: ActionsHandler runs after the existing mob bulk call, which stays.
+        test('HealthUpdates: onHealthUpdates runs after updateMobHealthBulk', () => {
+            // synthetic: one target, two entries
+            const p = {0: 1001, 2: [-50, 20], 6: [7, 8], 252: EventCodes.HealthUpdates};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.mobsHandler.updateMobHealthBulk).toHaveBeenCalledWith(p);
+            expect(handlers.actionsHandler.onHealthUpdates).toHaveBeenCalledWith(p);
+            expect(handlers.actionsHandler.onHealthUpdates.mock.invocationCallOrder[0])
+                .toBeGreaterThan(handlers.mobsHandler.updateMobHealthBulk.mock.invocationCallOrder[0]);
+        });
+
+        // @verified 2026-09-23: a page without ActionsHandler keeps routing these events.
+        test('Attack and health updates without an actionsHandler do not throw', () => {
+            // synthetic
+            delete handlers.actionsHandler;
+
+            expect(() => {
+                EventRouter.onEvent({0: 7, 2: 9, 252: EventCodes.Attack});
+                EventRouter.onEvent({0: 1001, 252: EventCodes.HealthUpdate});
+                EventRouter.onEvent({0: 1001, 252: EventCodes.HealthUpdates});
+            }).not.toThrow();
+        });
+    });
+
+    // -------------------------------------------------------------------------
     // onEvent NewRandomDungeonExit (325)
     // -------------------------------------------------------------------------
     describe('onEvent NewRandomDungeonExit', () => {
@@ -1035,6 +1108,122 @@ describe('EventRouter', () => {
             EventRouter.onEvent(p);
 
             expect(handlers.wispCageHandler.cageOpenedEvent).toHaveBeenCalledWith(p);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // onEvent player actions (ActionsHandler)
+    // -------------------------------------------------------------------------
+    describe('onEvent player actions', () => {
+        beforeEach(() => {
+            handlers.actionsHandler = {
+                onCastSpell: vi.fn(),
+                onCastSpells: vi.fn(),
+                onCastStart: vi.fn(),
+                onForcedMovement: vi.fn(),
+                onTeleport: vi.fn(),
+                onRespawn: vi.fn(),
+                onMounted: vi.fn(),
+                removePlayer: vi.fn(),
+                setLocalId: vi.fn(),
+                onOtherEntity: vi.fn()
+            };
+        });
+
+        // @verified 2026-10-10: synthetic. Move, NewCharacter and NewMob name an entity that is not the local player
+        // (none carries the local id in the 2026-10-10 capture); each hands its id to onOtherEntity after its own call.
+        test.each([
+            ['Move', EventCodes.Move, 'mobsHandler', 'updateMobPosition'],
+            ['NewCharacter', EventCodes.NewCharacter, 'playersHandler', 'handleNewPlayerEvent'],
+            ['NewMob', EventCodes.NewMob, 'mobsHandler', 'NewMobEvent'],
+        ])('%s hands its id to onOtherEntity', (_name, code, handler, method) => {
+            EventRouter.onEvent({0: 42, 252: code});
+
+            expect(handlers.actionsHandler.onOtherEntity).toHaveBeenCalledWith(42);
+            expect(handlers[handler][method].mock.invocationCallOrder[0])
+                .toBeLessThan(handlers.actionsHandler.onOtherEntity.mock.invocationCallOrder[0]);
+        });
+
+        // @verified 2026-09-23: synthetic. Each action event reaches its ActionsHandler method with the raw parameters,
+        // codes read from the generated enum.
+        test.each([
+            ['CastSpell', EventCodes.CastSpell, 'onCastSpell'],
+            ['CastSpells', EventCodes.CastSpells, 'onCastSpells'],
+            ['CastStart', EventCodes.CastStart, 'onCastStart'],
+            ['ForcedMovement', EventCodes.ForcedMovement, 'onForcedMovement'],
+            ['Teleport', EventCodes.Teleport, 'onTeleport'],
+            ['Respawn', EventCodes.Respawn, 'onRespawn'],
+        ])('%s (%i) dispatches actionsHandler.%s', (_name, code, method) => {
+            const p = {0: 7, 252: code};
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.actionsHandler[method]).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-09-23: pcap-derived actions fixtures. The cut events carry the current codes and dispatch
+        // the same way as the synthetic ones.
+        test.each([
+            ['self-cast', EventCodes.CastSpell, 'onCastSpell'],
+            ['cast-spells', EventCodes.CastSpells, 'onCastSpells'],
+            ['cast-start-target', EventCodes.CastStart, 'onCastStart'],
+            ['forced-movement', EventCodes.ForcedMovement, 'onForcedMovement'],
+            ['teleport', EventCodes.Teleport, 'onTeleport'],
+            ['respawn', EventCodes.Respawn, 'onRespawn'],
+        ])('pcap-derived actions/%s: event %i dispatches actionsHandler.%s', async (scenario, code, method) => {
+            const fix = await loadFixture('actions', scenario);
+            const msg = fix.messages.find(m => m.kind === 'event' && m.parameters['252'] === code);
+            const p = normalizeParams(msg.parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.actionsHandler[method]).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-09-23: pcap-derived players/mounted.json message[0]. Mounted keeps its PlayersHandler call and
+        // also hands the rider id to ActionsHandler.
+        test('Mounted dispatches handleMountedPlayerEvent and actionsHandler.onMounted', async () => {
+            const fix = await loadFixture('players', 'mounted');
+            const p = normalizeParams(fix.messages[0].parameters);
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.playersHandler.handleMountedPlayerEvent).toHaveBeenCalledWith(p[0], p);
+            expect(handlers.actionsHandler.onMounted).toHaveBeenCalledWith(p[0]);
+        });
+
+        // @verified 2026-09-23: synthetic. Leave keeps its removals and also drops the player's marker.
+        test('Leave also calls actionsHandler.removePlayer', () => {
+            EventRouter.onEvent({0: 42, 252: EventCodes.Leave});
+
+            expect(handlers.playersHandler.removePlayer).toHaveBeenCalledWith(42);
+            expect(handlers.actionsHandler.removePlayer).toHaveBeenCalledWith(42);
+        });
+
+        // @verified 2026-09-23: synthetic. A page that builds no ActionsHandler keeps routing every action event.
+        test('action events do not throw without an actionsHandler', () => {
+            delete handlers.actionsHandler;
+
+            expect(() => {
+                for (const code of [EventCodes.CastSpell, EventCodes.CastSpells, EventCodes.CastStart,
+                    EventCodes.ForcedMovement, EventCodes.Teleport, EventCodes.Respawn]) {
+                    EventRouter.onEvent({0: 7, 252: code});
+                }
+            }).not.toThrow();
+        });
+
+        // @verified 2026-09-23: pcap-derived router/join-finished.json message[0]. Join response Parameters[0] is the
+        // local id, the caster of the local self-casts in actions/local-self-cast.json; it is handed over after the
+        // handler clear so the clear cannot drop it.
+        test('Join response hands Parameters[0] to setLocalId after clearing the handlers', async () => {
+            const fix = await loadFixture('router', 'join-finished');
+            const p = normalizeParams(fix.messages[0].parameters);
+
+            EventRouter.onResponse(p, clearHandlers);
+
+            expect(handlers.actionsHandler.setLocalId).toHaveBeenCalledWith(p[0]);
+            expect(clearHandlers.mock.invocationCallOrder[0])
+                .toBeLessThan(handlers.actionsHandler.setLocalId.mock.invocationCallOrder[0]);
         });
     });
 
