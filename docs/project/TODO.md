@@ -99,12 +99,6 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
 - **`npm run lint` crashes on every `.gohtml` file**. ESLint 10.11 with `eslint-plugin-html` 8.2 throws
   `Cannot read private member #ruleDefinitions` while linting any template, unrelated to file content. Reproduces on
   an untouched file. `npx eslint web/scripts/` alone still works.
-- **Hidden PiP video adds 1 px to every page's scroll height**. `document.documentElement.scrollHeight` is
-  `innerHeight + 1` on every viewport tested. Cause: the PictureInPictureManager appends a `<video
-  style="position: absolute; ... width: 1px; height: 1px;">` directly to `<body>` with no `top` set, so its
-  static position (and therefore its layout box) lands one line below the `.flex.h-dvh` wrapper, contributing
-  1 px of overflow. Cosmetic, but it fails a byte-exact `scrollHeight <= innerHeight` check.
-
 - **Dead PiP resize listener**. `PictureInPictureManager.js` listens for `canvasSizeChanged` on `document`, while
   `RadarSettingsPanel.js` dispatches it on `window`. Harmless because `compositeFrame` resyncs the size every frame.
   Delete the listener.
