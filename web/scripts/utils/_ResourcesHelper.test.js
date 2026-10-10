@@ -39,6 +39,7 @@ describe('generateResourceGrid', () => {
         }
     });
 
+    // @verified 2026-10-10: a control is named by its label alone; a cell reads as its tier header and enchant row label.
     test('names every cell by its tier and enchant, as the headers show them', () => {
         const grid = parse(generateResourceGrid({key: 'settingResourcesStaticFiber', label: 'Static'}));
         const headers = [...grid.querySelectorAll('span')].map(span => span.textContent.trim());
