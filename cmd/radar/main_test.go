@@ -5,11 +5,14 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/nospy/albion-openradar/internal/capture"
+	"github.com/nospy/albion-openradar/internal/logger"
 	"github.com/nospy/albion-openradar/internal/ui"
 )
 
@@ -195,5 +198,25 @@ func TestMemoryStatsMB(t *testing.T) {
 	heap, sys := memoryStatsMB()
 	if heap <= 0 || sys <= 0 || sys < heap {
 		t.Errorf("heap=%.2f sys=%.2f, want 0 < heap <= sys", heap, sys)
+	}
+}
+
+func TestBootInterfacesIPMissWithNothingToPickWarns(t *testing.T) {
+	var warns []string
+	logger.SetLogCallback(func(level, _, msg string) {
+		if level == "WARN" {
+			warns = append(warns, msg)
+		}
+	})
+	t.Cleanup(logger.ClearLogCallback)
+
+	got := bootInterfaces(t.TempDir(), capture.Config{}, nil, "10.0.0.99")
+	if len(got) != 0 {
+		t.Fatalf("got %+v, want nothing", got)
+	}
+	if !slices.ContainsFunc(warns, func(m string) bool {
+		return strings.Contains(m, "10.0.0.99") && !strings.Contains(m, "auto-select")
+	}) {
+		t.Errorf("no -ip miss warning without auto-select claim, got %v", warns)
 	}
 }

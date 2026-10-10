@@ -454,6 +454,9 @@ func bootInterfaces(appDir string, persisted capture.Config, all []capture.Netwo
 
 	target = autoPickDefaults(all)
 	if len(target) == 0 {
+		if ipOverride != "" {
+			logger.PrintWarn("NET", "No interface matches -ip %s and no default interface was found.", ipOverride)
+		}
 		return target
 	}
 
