@@ -1,0 +1,9 @@
+{
+  "scenario": "synthetic-mob-cast-on-player.json",
+  "handler": "actions",
+  "messages": [
+    {"kind": "response", "parameters": {"253": 2, "0": 41475, "8": "3346", "9": [374.4471, -129.6033]}},
+    {"kind": "event", "parameters": {"252": 29, "0": 41362, "1": "XXXXXXXX", "8": "XXXXXXXXXX", "51": "", "53": 0}},
+    {"kind": "event", "parameters": {"252": 19, "0": 12790, "1": 41362, "2": [330.30615, -158.78523], "3": 5892, "4": 33070496, "5": 33070496, "6": 4, "7": 0}}
+  ]
+}
