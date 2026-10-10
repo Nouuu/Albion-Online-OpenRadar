@@ -49,4 +49,18 @@ describe('PictureInPictureManager.compositeFrame', () => {
             ['drawImage', canvases.uiCanvas, 0, 0],
         ]);
     });
+
+    test('@verified 2026-10-10: a 358 px source on a 500 px PiP canvas resizes the canvas and clears 358', () => {
+        const narrow = 358;
+        Object.values(canvases).forEach(canvas => {
+            canvas.width = narrow;
+            canvas.height = narrow;
+        });
+
+        pictureInPictureManager.compositeFrame();
+
+        expect([pictureInPictureManager.pipCanvas.width, pictureInPictureManager.pipCanvas.height]).toEqual([narrow, narrow]);
+        expect(pictureInPictureManager.size).toBe(narrow);
+        expect(ctx.calls[0]).toEqual(['clearRect', 0, 0, narrow, narrow]);
+    });
 });
