@@ -48,6 +48,8 @@
       renders. Documented for a long time, never written. The SPA lifecycle regressions it would catch are currently
       covered only by unit tests and a manual pass.
 - [ ] Memory profile over very long sessions.
+- [ ] **Mocked zone answers in `_PlayersHandler.test.js`**. Sixteen older tests fake `zonesDatabase.getPvpType` as red
+      instead of reading the real zones database through `loadRealZonesDatabase`.
 - [ ] Black Zone portal transitions sometimes drop the cluster id.
 
 ## Open observations

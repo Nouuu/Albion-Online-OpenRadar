@@ -27,6 +27,8 @@ const {PlayersHandler} = await import('./PlayersHandler.js');
 const alertSound = (await import('../utils/AlertSound.js')).default;
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 const zonesDatabase = (await import('../data/ZonesDatabase.js')).default;
+const realZones = loadRealZonesDatabase();
+const redZoneId = '1205';
 
 describe('PlayersHandler', () => {
     let handler;
@@ -135,7 +137,8 @@ describe('PlayersHandler', () => {
         // @verified 2026-09-24: detection off still tracks the player, so turning it on shows the list at once,
         // while the alert gate stays shut.
         test('synthetic: settingPlayersDetect=false tracks the player without alerting and returns 2', () => {
-            zonesDatabase.getPvpType.mockReturnValue('red');
+            zonesDatabase.getPvpType.mockImplementation(id => realZones.getPvpType(id));
+            window.currentMapId = redZoneId;
             settingsSync.getBool.mockImplementation(k => k !== 'settingPlayersDetect');
             const playSpy = vi.spyOn(handler, 'playThreatSound').mockImplementation(() => {});
             const flashSpy = vi.spyOn(handler, 'triggerScreenFlash').mockImplementation(() => {});
@@ -298,7 +301,8 @@ describe('PlayersHandler', () => {
 
         // @characterization 2026-04-18: settingAlertFlash=true and threat present appends a flash div to document.body.
         test('synthetic: settingAlertFlash=true with threat appends flash div to body', () => {
-            zonesDatabase.getPvpType.mockReturnValue('red');
+            zonesDatabase.getPvpType.mockImplementation(id => realZones.getPvpType(id));
+            window.currentMapId = redZoneId;
             settingsSync.getBool.mockImplementation(k => k !== 'settingAlertSound');
 
             handler.handleNewPlayerEvent(1, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
@@ -889,7 +893,8 @@ describe('PlayersHandler', () => {
 
         // @verified 2026-09-25: the zone check runs first, so a non-threat never scans the ignore list.
         test('synthetic: red zone never matches a passive player against the ignore list', () => {
-            zonesDatabase.getPvpType.mockReturnValue('red');
+            zonesDatabase.getPvpType.mockImplementation(id => realZones.getPvpType(id));
+            window.currentMapId = redZoneId;
             handler.handleNewPlayerEvent(1, {1: 'Passive', 8: '', 53: 0, 51: null, 40: [], 43: []});
             handler.handleNewPlayerEvent(2, {1: 'Hostile', 8: '', 53: 255, 51: null, 40: [], 43: []});
             const ignoredSpy = vi.spyOn(handler, 'isIgnored');
@@ -902,7 +907,6 @@ describe('PlayersHandler', () => {
     // pcap-derived: players/spawn.json (8 spawns) and players/faction-spawn.json (4 spawns) replayed in zone 0317,
     // a black zone in the real zones database; synthetic: the faction flip and the 1500 ms list tick.
     describe('detection switch, threat list and display cap', () => {
-        const realZones = loadRealZonesDatabase();
         let detect;
 
         const spawnAll = async scenario => {
