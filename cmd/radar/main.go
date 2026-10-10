@@ -113,9 +113,11 @@ func runApp(cfg Config) bool {
 	if cfgPersisted.Logging.PcapRecording {
 		if err := manager.StartRecording(pcapCaptureDir); err != nil {
 			logger.PrintWarn("PKT", "pcap recording could not start: %v", err)
-			_ = capture.MutateConfig(appDir, func(cfg *capture.Config) {
+			if pErr := capture.MutateConfig(appDir, func(cfg *capture.Config) {
 				cfg.Logging.PcapRecording = false
-			})
+			}); pErr != nil {
+				logger.PrintWarn("PKT", "pcapRecording could not be reset in network.json: %v", pErr)
+			}
 		}
 	}
 
