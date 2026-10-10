@@ -145,6 +145,31 @@ describe('RadarRenderer HUD gates and zone guard', () => {
         expect(ctx.calls.some(c => c[0] === 'strokeRect' && c[2] === 10 && c[1] !== 10)).toBe(false);
     });
 
+    // @verified 2026-10-10: pcap-derived. players/spawn.json in zone 0317 holds 8 players; Max players caps the
+    // list cards, not the HUD count, and detection off drops the players row.
+    test.each([
+        [true, '👥 8 players'],
+        [false, null],
+    ])('stats box after players/spawn.json with detection %s and Max players 2 reads %s', async (detect, row) => {
+        mockSettings({
+            bool: {settingPlayersDetect: detect, settingPlayersPassive: true, settingPlayersFaction: true, settingPlayersHostile: true},
+            number: {settingPlayersMaxDisplayed: 2},
+        });
+        const bz = await loadFixture('router', 'change-cluster-bz');
+        EventRouter.onResponse(normalizeParams(bz.messages[0].parameters), vi.fn());
+        const spawn = await loadFixture('players', 'spawn');
+        for (const message of spawn.messages) {
+            EventRouter.onEvent(normalizeParams(message.parameters));
+        }
+
+        renderer.renderStatsBox(ctx);
+
+        const texts = ctx.calls.filter(c => c[0] === 'fillText').map(c => String(c[1]));
+        if (row) expect(texts).toContain(row);
+        else expect(texts.some(text => text.includes('players'))).toBe(false);
+        expect(texts.some(text => text.includes('resources'))).toBe(true);
+    });
+
     // @verified 2026-09-24: the -1 sentinel (cold-start map object) must never draw the zone box.
     test('map.id -1 draws no zone box', () => {
         mockSettings();
