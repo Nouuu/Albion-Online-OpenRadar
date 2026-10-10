@@ -366,7 +366,7 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingEnemiesMinHealt
     // @verified 2026-04-24: filter on, maxHealth below threshold skips the mob (no circle drawn).
     test('filter on: hostile with maxHealth=1000 below threshold=2100 is skipped', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars');
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
+        settingsSync.getNumber.mockImplementation(key => key === 'settingEnemiesMinHealth' ? 2100 : registryDefault(key));
 
         drawing.invalidate(ctx, [hostile({maxHealth: 1000})]);
 
@@ -376,7 +376,7 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingEnemiesMinHealt
     // @verified 2026-04-24: filter on, maxHealth above threshold renders normally.
     test('filter on: hostile with maxHealth=3000 above threshold=2100 renders', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars' || key === 'settingEnemiesNormal');
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
+        settingsSync.getNumber.mockImplementation(key => key === 'settingEnemiesMinHealth' ? 2100 : registryDefault(key));
 
         drawing.invalidate(ctx, [hostile({maxHealth: 3000})]);
 
@@ -386,7 +386,7 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingEnemiesMinHealt
     // @verified 2026-04-24: filter on, boss (high tier hostile) with high HP still renders.
     test('filter on: boss with maxHealth=50000 above threshold=2100 renders', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars' || key === 'settingEnemiesBoss');
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
+        settingsSync.getNumber.mockImplementation(key => key === 'settingEnemiesMinHealth' ? 2100 : registryDefault(key));
 
         drawing.invalidate(ctx, [hostile({maxHealth: 50000, type: EnemyType.Boss})]);
 
@@ -397,7 +397,7 @@ describe('MobsDrawing minimum HP filter for hostile mobs (settingEnemiesMinHealt
     test('filter on: living resource is not gated by min HP filter', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingEnemiesMinHealthFilter' || key === 'settingEnemiesShowHealthBars');
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesLivingFiber' ? {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)} : null);
-        settingsSync.getNumber.mockImplementation((key, d) => key === 'settingEnemiesMinHealth' ? 2100 : (d ?? 0));
+        settingsSync.getNumber.mockImplementation(key => key === 'settingEnemiesMinHealth' ? 2100 : registryDefault(key));
 
         const living = {id: 20, typeId: 529, hX: 10, hY: 20, tier: 4, enchantmentLevel: 0, name: 'Fiber', type: EnemyType.LivingHarvestable, getCurrentHP: () => 100, maxHealth: 100};
         drawing.invalidate(ctx, [living]);

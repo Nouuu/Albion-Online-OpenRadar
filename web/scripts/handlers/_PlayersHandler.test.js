@@ -810,7 +810,7 @@ describe('PlayersHandler', () => {
         // @verified 2026-08-23: a burst of detections is one alert. The gate lives here, on the detection
         // path, so a sound played from the settings page can never suppress a real threat alert.
         test('synthetic: a detection under the cooldown does not play', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingAlertSoundCooldown' ? 500 : d);
+            settingsSync.getNumber.mockImplementation(k => k === 'settingAlertSoundCooldown' ? 500 : registryDefault(k));
             const fetchMock = stubBackend();
             vi.useFakeTimers();
 
@@ -828,7 +828,7 @@ describe('PlayersHandler', () => {
 
         // @verified 2026-08-23: the interval is a player setting, not a constant baked into the code.
         test('synthetic: the cooldown comes from settings', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingAlertSoundCooldown' ? 2000 : d);
+            settingsSync.getNumber.mockImplementation(k => k === 'settingAlertSoundCooldown' ? 2000 : registryDefault(k));
             const fetchMock = stubBackend();
             vi.useFakeTimers();
 
@@ -841,7 +841,7 @@ describe('PlayersHandler', () => {
 
         // @verified 2026-08-23: zero means the player wants every detection to sound.
         test('synthetic: a cooldown of zero plays every detection', () => {
-            settingsSync.getNumber.mockImplementation((k, d) => k === 'settingAlertSoundCooldown' ? 0 : d);
+            settingsSync.getNumber.mockImplementation(k => k === 'settingAlertSoundCooldown' ? 0 : registryDefault(k));
             const fetchMock = stubBackend();
             vi.useFakeTimers();
 
