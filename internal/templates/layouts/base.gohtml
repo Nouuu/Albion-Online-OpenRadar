@@ -51,8 +51,17 @@
             hoverExpanded: false,
             hoverTimeout: null,
 
+            subscribed: false,
+
             init() {
                 this.collapsed = window.settingsSync?.getBool('settingUiSidebarCollapsed') === true;
+                if (!this.subscribed && window.settingsSync) {
+                    this.subscribed = true;
+                    window.settingsSync.on('settingUiSidebarCollapsed', () => {
+                        this.collapsed = window.settingsSync.getBool('settingUiSidebarCollapsed') === true;
+                        this.updateClasses();
+                    });
+                }
                 this.updateClasses();
                 if (window.lucide) lucide.createIcons();
             },

@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {dirname, join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {afterEach, beforeAll, describe, expect, test} from 'vitest';
+import settingsSync from '../utils/SettingsSync.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../');
 const LAYOUTS = join(ROOT, 'internal/templates/layouts');
@@ -45,6 +46,7 @@ afterEach(() => {
 });
 
 beforeAll(() => {
+    window.settingsSync = settingsSync;
     const {sidebar, listeners} = baseScripts();
     new Function(sidebar)();
     new Function(listeners)();
@@ -82,5 +84,33 @@ describe('nav class lists', () => {
     test('base.gohtml holds the only copy outside the sidebar template, content.gohtml none', () => {
         const count = file => readFileSync(join(LAYOUTS, file), 'utf8').split('border-l-2').length - 1;
         expect([count('base.gohtml'), count('content.gohtml')]).toEqual([1, 0]);
+    });
+});
+
+describe('sidebar collapse follows other tabs', () => {
+    const KEY = 'settingUiSidebarCollapsed';
+
+    afterEach(() => {
+        window.settingsSync.remove(KEY);
+        window.sidebar.collapsed = false;
+    });
+
+    test('@verified 2026-10-10: a change or a Reset from another tab updates the sidebar without a reload', () => {
+        document.body.innerHTML = '<div id="desktop-sidebar"></div>';
+        window.sidebar.init();
+        window.sidebar.init();
+        expect(window.sidebar.collapsed).toBe(false);
+        window.settingsSync.handleMessage({type: 'setting-changed', key: KEY, value: 'true'});
+        expect(window.sidebar.collapsed).toBe(true);
+        expect(document.getElementById('desktop-sidebar').style.width).toBe('5rem');
+        window.settingsSync.handleMessage({type: 'setting-removed', key: KEY, value: null});
+        expect(window.sidebar.collapsed).toBe(false);
+        expect(document.getElementById('desktop-sidebar').style.width).toBe('16rem');
+    });
+
+    test('@verified 2026-10-10: init run twice subscribes only once', () => {
+        window.sidebar.init();
+        window.sidebar.init();
+        expect(window.settingsSync.listeners.get(KEY)).toHaveLength(1);
     });
 });
