@@ -407,3 +407,15 @@ func TestStaticAssetsAlwaysRevalidate(t *testing.T) {
 		})
 	}
 }
+
+func TestNewHTTPServerDevSharesApplyMuAcrossAPIs(t *testing.T) {
+	log := logger.New(t.TempDir(), false)
+	t.Cleanup(func() { log.Stop() })
+	s, err := NewHTTPServerDev(0, testAppDir, nil, log, "dev", "", &fakeManager{}, nil, nil, "")
+	if err != nil {
+		t.Fatalf("NewHTTPServerDev: %v", err)
+	}
+	if s.networkAPI.applyMu == nil || s.networkAPI.applyMu != s.settingsAPI.applyMu {
+		t.Error("network and settings handlers must share one applyMu")
+	}
+}
