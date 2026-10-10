@@ -106,7 +106,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
             this.lastVisibleCount++;
 
-            const useBadge = settingsSync.getBool('settingResourceColorBadges');
+            const useBadge = settingsSync.getBool('settingRadarResourceTierBadges');
             const category = useBadge ? this.getResourceCategory(harvestableOne.stringType) : null;
             if (useBadge && category) {
                 this.drawResourceBadge(
@@ -118,17 +118,17 @@ export class HarvestablesDrawing extends DrawingUtils  {
             }
 
             // Debug: TypeID display (offset scaled with zoom)
-            if (settingsSync.getBool('livingResourcesID'))
+            if (settingsSync.getBool('settingDebugResourcesTypeId'))
                 this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.type.toString(), ctx);
 
             // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
-            if (settingsSync.getBool('settingResourceDistance')) {
+            if (settingsSync.getBool('settingRadarResourceDistance')) {
                 const distanceGameUnits = this.calculateDistance(harvestableOne.hX, harvestableOne.hY, 0, 0);
                 this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
             }
 
             // Resource count badge (if enabled)
-            if (settingsSync.getBool('settingResourceCount'))
+            if (settingsSync.getBool('settingRadarResourceCount'))
             {
                 const realResources = this.calculateRealResources(
                     parseInt(harvestableOne.size),

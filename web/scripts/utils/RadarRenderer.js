@@ -105,7 +105,7 @@ export class RadarRenderer {
         const deltaTime = currentTime - this.previousTime;
         const t = Math.min(1, deltaTime / 100);
 
-        if (settingsSync.getBool('settingShowMap', true) && this.drawings.mapsDrawing) {
+        if (settingsSync.getBool('settingRadarMapBackground') && this.drawings.mapsDrawing) {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
@@ -195,7 +195,7 @@ export class RadarRenderer {
 
         // Cluster detection with caching (recalculated every CLUSTER_UPDATE_INTERVAL)
         let clustersForInfo = null;
-        if (settingsSync.getBool('settingResourceClusters') && context) {
+        if (settingsSync.getBool('settingRadarResourceClusters') && context) {
             const currentTime = performance.now();
             const timeSinceLastUpdate = currentTime - this.lastClusterUpdate;
 
@@ -205,12 +205,12 @@ export class RadarRenderer {
 
                     this.cachedClusters = this.drawingUtils.detectClusters(
                         merged,
-                        settingsSync.getNumber('settingClusterRadius'),
-                        settingsSync.getNumber('settingClusterMinSize')
+                        settingsSync.getNumber('settingRadarClusterRadius'),
+                        settingsSync.getNumber('settingRadarClusterMinSize')
                     );
                     this.lastClusterUpdate = currentTime;
                 } catch (e) {
-                    window.logger?.error(CATEGORIES.RENDERING, 'cluster_compute_failed', e);
+                    window.logger?.error(CATEGORIES.HARVESTABLES, 'cluster_compute_failed', e);
                 }
             }
 
@@ -301,7 +301,7 @@ export class RadarRenderer {
                         this.drawingUtils.drawClusterIndicatorFromCluster(context, cluster);
                     }
                 } catch (e) {
-                    window.logger?.error(CATEGORIES.RENDERING, 'cluster_draw_failed', e);
+                    window.logger?.error(CATEGORIES.HARVESTABLES, 'cluster_draw_failed', e);
                 }
             }
         }
@@ -319,14 +319,14 @@ export class RadarRenderer {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
         this.renderDistanceRings(ctx);
-        this.renderZoneInfo(ctx);
-        this.renderStatsBox(ctx);
+        if (settingsSync.getBool('settingRadarHudZoneInfo')) this.renderZoneInfo(ctx);
+        if (settingsSync.getBool('settingRadarHudStats')) this.renderStatsBox(ctx);
         this.renderThreatBorder(ctx);
         this.renderFlashOverlay(ctx);
     }
 
     renderFlashOverlay(ctx) {
-        if (!settingsSync.getBool('settingFlash')) return;
+        if (!settingsSync.getBool('settingAlertFlash')) return;
         const handler = this.handlers.playersHandler;
         if (!handler?.lastFlashAt) return;
 
@@ -348,8 +348,7 @@ export class RadarRenderer {
         const canvasSize = ctx.canvas.width;
         const center = canvasSize / 2;
         const distances = [10, 20];
-        const isSmall = typeof window !== 'undefined' && window.innerWidth < 640;
-        const zoomLevel = isSmall ? 0.9 : (settingsSync.getFloat('settingRadarZoom') || 1.0);
+        const zoomLevel = this.drawingUtils.getZoomLevel();
         const pixelsPerMeter = (canvasSize / 60) * zoomLevel;
 
         ctx.save();
@@ -378,7 +377,7 @@ export class RadarRenderer {
     }
 
     renderZoneInfo(ctx) {
-        if (!this.map?.id) return;
+        if (!this.map || this.map.id === -1) return;
 
         const zone = zonesDatabase.getZone(this.map.id);
         const zoneName = zone?.name || this.map.id;
@@ -421,7 +420,7 @@ export class RadarRenderer {
         const mobCount = this.drawings.mobsDrawing?.lastVisibleCount ?? 0;
 
         const stats = [];
-        if (settingsSync.getBool('settingShowPlayers')) {
+        if (settingsSync.getBool('settingPlayersDetect')) {
             stats.push({ emoji: '👥', count: playerCount, label: 'players', color: '#ffffff' });
         }
         stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
@@ -461,7 +460,7 @@ export class RadarRenderer {
      * Render threat border when hostile players detected
      */
     renderThreatBorder(ctx) {
-        if (!settingsSync.getBool('settingFlashDangerousPlayer')) return;
+        if (!settingsSync.getBool('settingAlertBorder')) return;
 
         const threats = this.handlers.playersHandler?.getThreatPlayers?.() || [];
 

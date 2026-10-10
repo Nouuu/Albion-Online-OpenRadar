@@ -1,5 +1,4 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "../utils/SettingsSync.js";
 
 class Cage
 {
@@ -27,8 +26,6 @@ export class WispCageHandler
     }
 
     newCageEvent(parameters) {
-        if (!settingsSync.getBool('settingCage')) return;
-
         const id = parameters[0];
         const position = parameters[2];
         const name = parameters[4];
@@ -46,8 +43,6 @@ export class WispCageHandler
 
     cageOpenedEvent(Parameters)
     {
-        if (!settingsSync.getBool('settingCage')) return;
-
         const id = Parameters[0];
 
         if (!this.cages.some(cage => cage.id === id))

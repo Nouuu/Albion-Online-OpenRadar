@@ -59,7 +59,7 @@ describe('HarvestablesDrawing render-time routing', () => {
 
     // @verified 2026-04-24: pure static fiber plant (mobileTypeId=-1) renders when Static fiber is on.
     test('pure static Fiber T5 e2 (mobileTypeId=-1) renders under Static filter', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
@@ -68,8 +68,8 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: pure static fiber plant is skipped when Static is off, Living on has no effect.
     test('pure static Fiber T5 e2 is skipped when Static off, Living on has no effect', () => {
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingStaticFiberEnchants') return allFalse();
-            if (key === 'settingLivingFiberEnchants') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
             return null;
         });
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
@@ -79,7 +79,7 @@ describe('HarvestablesDrawing render-time routing', () => {
 
     // @verified 2026-04-24: batch-spawn (mobileTypeId=null) is pure static, uses Static filter.
     test('batch-spawn Fiber (mobileTypeId=null) T4 e0 renders under Static filter', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const entity = {id: 2, hX: 5, hY: 5, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: null, type: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 5, 5, 'fiber_4_0', 'Resources', 32);
@@ -96,8 +96,8 @@ describe('HarvestablesDrawing render-time routing', () => {
         const p = {0: 9101, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allTrue();
-            if (key === 'settingStaticFiberEnchants') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
             return null;
         });
 
@@ -114,8 +114,8 @@ describe('HarvestablesDrawing render-time routing', () => {
         const p = {0: 9102, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allFalse();
-            if (key === 'settingStaticFiberEnchants') return allTrue();
+            if (key === 'settingResourcesLivingFiber') return allFalse();
+            if (key === 'settingResourcesStaticFiber') return allTrue();
             return null;
         });
 
@@ -135,8 +135,8 @@ describe('HarvestablesDrawing render-time routing', () => {
         const p = {...normalizeParams(msg.parameters), 10: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingOreEnchants') return allTrue();
-            if (key === 'settingStaticOreEnchants') return allFalse();
+            if (key === 'settingResourcesLivingOre') return allTrue();
+            if (key === 'settingResourcesStaticOre') return allFalse();
             return null;
         });
 
@@ -154,8 +154,8 @@ describe('HarvestablesDrawing render-time routing', () => {
         const p = {...normalizeParams(msg.parameters), 10: 1};
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingOreEnchants') return allFalse();
-            if (key === 'settingStaticOreEnchants') return allTrue();
+            if (key === 'settingResourcesLivingOre') return allFalse();
+            if (key === 'settingResourcesStaticOre') return allTrue();
             return null;
         });
 
@@ -179,8 +179,8 @@ describe('HarvestablesDrawing render-time routing', () => {
         const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allTrue();
-            if (key === 'settingStaticFiberEnchants') return allFalse();
+            if (key === 'settingResourcesLivingFiber') return allTrue();
+            if (key === 'settingResourcesStaticFiber') return allFalse();
             return null;
         });
 
@@ -197,8 +197,8 @@ describe('HarvestablesDrawing render-time routing', () => {
         const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingLivingFiberEnchants') return allFalse();
-            if (key === 'settingStaticFiberEnchants') return allTrue();
+            if (key === 'settingResourcesLivingFiber') return allFalse();
+            if (key === 'settingResourcesStaticFiber') return allTrue();
             return null;
         });
 
@@ -213,13 +213,13 @@ describe('HarvestablesDrawing render-time routing', () => {
     // Family coverage grid for pure static path
     // -------------------------------------------------------------------------
 
-    // @verified 2026-04-24: static resolution covers 5 families via settingStatic{Family}Enchants.
+    // @verified 2026-04-24: static resolution covers 5 families via settingResourcesStatic{Family}.
     test.each([
-        ['Fiber', 14, 'settingStaticFiberEnchants', 'fiber'],
-        ['Hide', 20, 'settingStaticHideEnchants', 'hide'],
-        ['Log', 2, 'settingStaticWoodEnchants', 'log'],
-        ['Ore', 24, 'settingStaticOreEnchants', 'ore'],
-        ['Rock', 8, 'settingStaticRockEnchants', 'rock'],
+        ['Fiber', 14, 'settingResourcesStaticFiber', 'fiber'],
+        ['Hide', 20, 'settingResourcesStaticHide', 'hide'],
+        ['Log', 2, 'settingResourcesStaticWood', 'log'],
+        ['Ore', 24, 'settingResourcesStaticOre', 'ore'],
+        ['Rock', 8, 'settingResourcesStaticRock', 'rock'],
     ])('pure static %s T3 e1 (mobileTypeId=-1) renders via %s', (family, typeNumber, settingKey, imagePrefix) => {
         settingsSync.getJSON.mockImplementation(key =>
             key === settingKey
@@ -233,7 +233,7 @@ describe('HarvestablesDrawing render-time routing', () => {
 
     // @verified 2026-04-24: lastVisibleCount reflects only harvestables passing the render gate.
     test('lastVisibleCount counts only rendered harvestables after filters', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const kept = {id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         const dropped = {id: 2, hX: 3, hY: 4, size: 3, tier: 4, charges: 0, stringType: 'Hide', mobileTypeId: -1, type: 20};
 
@@ -248,18 +248,18 @@ describe('HarvestablesDrawing render-time routing', () => {
         drawing.invalidate(ctx, [{id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
         expect(drawing.lastVisibleCount).toBe(0);
 
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
         expect(drawing.lastVisibleCount).toBe(1);
     });
 
     // -------------------------------------------------------------------------
-    // Resource color badges toggle (settingResourceColorBadges)
+    // Resource color badges toggle (settingRadarResourceTierBadges)
     // -------------------------------------------------------------------------
 
     // @verified 2026-05-01: badges off (default) keeps the existing image rendering path.
-    test('settingResourceColorBadges=false renders the game icon as before', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
+    test('settingRadarResourceTierBadges=false renders the game icon as before', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockReturnValue(false);
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
@@ -268,9 +268,9 @@ describe('HarvestablesDrawing render-time routing', () => {
     });
 
     // @verified 2026-05-01: badges on routes static harvestables to drawResourceBadge with the correct category.
-    test('settingResourceColorBadges=true draws a Fiber badge with tier+enchant for static harvestable', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+    test('settingRadarResourceTierBadges=true draws a Fiber badge with tier+enchant for static harvestable', () => {
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Fiber', 5, 2, false);
@@ -279,14 +279,14 @@ describe('HarvestablesDrawing render-time routing', () => {
 
     // @verified 2026-05-01: badge mode covers all 5 categories via getResourceCategory(stringType).
     test.each([
-        ['Fiber', 14, 'settingStaticFiberEnchants', 'Fiber'],
-        ['Hide', 20, 'settingStaticHideEnchants', 'Hide'],
-        ['Log', 2, 'settingStaticWoodEnchants', 'Wood'],
-        ['Ore', 24, 'settingStaticOreEnchants', 'Ore'],
-        ['Rock', 8, 'settingStaticRockEnchants', 'Rock'],
+        ['Fiber', 14, 'settingResourcesStaticFiber', 'Fiber'],
+        ['Hide', 20, 'settingResourcesStaticHide', 'Hide'],
+        ['Log', 2, 'settingResourcesStaticWood', 'Wood'],
+        ['Ore', 24, 'settingResourcesStaticOre', 'Ore'],
+        ['Rock', 8, 'settingResourcesStaticRock', 'Rock'],
     ])('badge mode renders %s as category %s', (stringType, typeNumber, settingKey, expectedCategory) => {
         settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType, mobileTypeId: -1, type: typeNumber};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 1, 2, 32, expectedCategory, 3, 1, false);
@@ -295,8 +295,8 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-05-01: badge mode falls back to DrawCustomImage when getResourceCategory returns null.
     // Stub category resolution to null even though stringType passes the static filter, to exercise the safety branch.
     test('badge mode falls back to DrawCustomImage when getResourceCategory returns null', () => {
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         drawing.getResourceCategory = vi.fn(() => null);
         const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
         drawing.invalidate(ctx, [entity]);
@@ -307,14 +307,14 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-09-03: pcap-derived full-flow test: real handler -> drawing chain produces a badge
     // in badge mode. Static Fiber T6 node with charges from the 2026-09-03 capture; the living nodes in that
     // corpus all arrive with size 0 and are skipped at render.
-    test('pcap-derived full-flow: static Fiber node renders as badge under settingResourceColorBadges', async () => {
+    test('pcap-derived full-flow: static Fiber node renders as badge under settingRadarResourceTierBadges', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
         const msg = fx.messages.find(m => m.parameters['5'] === 14 && m.parameters['7'] === 6 && m.parameters['10'] > 0);
         expect(msg).toBeDefined();
         const p = normalizeParams(msg.parameters);
 
-        settingsSync.getJSON.mockImplementation(key => key === 'settingStaticFiberEnchants' ? allTrue() : null);
-        settingsSync.getBool.mockImplementation(key => key === 'settingResourceColorBadges');
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
 
         const handler = new HarvestablesHandler(null);
         handler.newHarvestableObject(p[0], p);
@@ -327,5 +327,57 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(typeof call[5]).toBe('number');     // tier
         expect(typeof call[6]).toBe('number');     // enchant
         expect(call[7]).toBe(false);               // static, not living
+    });
+});
+
+describe('HarvestablesDrawing type ID overlay', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
+    });
+
+    test('draws the type ID when settingDebugResourcesTypeId is on', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
+        const drawing = buildDrawing();
+        const ctx = {};
+        drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        expect(drawing.drawText).toHaveBeenCalledWith(10, 40, '14', ctx);
+        expect(settingsSync.getBool).not.toHaveBeenCalledWith('livingResourcesID');
+    });
+
+    test('draws no type ID when settingDebugResourcesTypeId is off', () => {
+        settingsSync.getBool.mockImplementation(() => false);
+        const drawing = buildDrawing();
+        drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        expect(drawing.drawText).not.toHaveBeenCalled();
+    });
+});
+
+describe('HarvestablesDrawing distance badge against its tooltip', () => {
+    function badgeFill(distance) {
+        const drawing = new HarvestablesDrawing();
+        drawing.getScaledFontSize = () => 9;
+        drawing.getScaledSize = size => size;
+        drawing.getMarkerSize = size => size;
+        const fills = [];
+        const ctx = {
+            save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, quadraticCurveTo() {}, closePath() {},
+            stroke() {}, fillText() {},
+            measureText: text => ({width: text.length}),
+            fill() { fills.push(this.fillStyle); },
+        };
+        drawing.drawDistanceIndicator(ctx, 0, 0, distance);
+        return fills[0] ?? 'hidden';
+    }
+
+    test.each([
+        [6, 'hidden'],
+        [27, 'rgba(0,200,0,0.85)'],
+        [30, 'rgba(255,200,0,0.85)'],
+        [57, 'rgba(255,200,0,0.85)'],
+        [60, 'rgba(255,100,0,0.85)'],
+    ])('%s game units draws %s: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m', (distance, fill) => {
+        expect(badgeFill(distance)).toBe(fill);
     });
 });

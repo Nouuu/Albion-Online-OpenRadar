@@ -14,11 +14,11 @@ Images used by the main README and the release notes.
     <td align="center"><em>Radar with detected entities</em></td>
   </tr>
   <tr>
-    <td><img src="radar_3.png" alt="Radar zoomed" width="350"></td>
+    <td><img src="radar_3.png" alt="Radar settings panel" width="350"></td>
     <td><img src="pip.jpg" alt="Picture-in-Picture" width="350"></td>
   </tr>
   <tr>
-    <td align="center"><em>Zoom and size controls</em></td>
+    <td align="center"><em>Radar settings panel</em></td>
     <td align="center"><em>Picture-in-Picture window</em></td>
   </tr>
 </table>
@@ -27,11 +27,11 @@ Images used by the main README and the release notes.
 
 <table>
   <tr>
-    <td><img src="settings.png" alt="Settings" width="350"></td>
+    <td><img src="settings.png" alt="Logging and debug settings" width="350"></td>
     <td><img src="players.png" alt="Players" width="350"></td>
   </tr>
   <tr>
-    <td align="center"><em>General settings</em></td>
+    <td align="center"><em>Logging section and start of Debug</em></td>
     <td align="center"><em>Players settings</em></td>
   </tr>
   <tr>
@@ -65,9 +65,9 @@ Bubble Tea dashboard: packets, WebSocket clients, memory, goroutines, live log t
 | `OpenRadar.gif` | TUI dashboard animation |
 | `radar_1.png` | main radar view |
 | `radar_2.png` | radar with entities |
-| `radar_3.png` | radar zoomed |
+| `radar_3.png` | radar settings panel |
 | `pip.jpg` | Picture-in-Picture window |
-| `settings.png` | general settings page |
+| `settings.png` | Logging section and start of Debug on /settings |
 | `players.png` | players settings |
 | `resources.png` | resources settings |
 | `ennemies.png` | enemies settings |

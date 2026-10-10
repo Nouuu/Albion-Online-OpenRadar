@@ -1,4 +1,5 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
+import settingsSync from "../utils/SettingsSync.js";
 
 export class WispCageDrawing extends DrawingUtils
 {
@@ -17,6 +18,8 @@ export class WispCageDrawing extends DrawingUtils
 
     draw(ctx, cages)
     {
+        if (!settingsSync.getBool('settingMistsWispCages')) return;
+
         for (const cage of cages)
         {
             const point = this.transformPoint(cage.hX, cage.hY);

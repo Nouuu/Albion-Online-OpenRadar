@@ -1,7 +1,7 @@
 # OpenRadar Roadmap
 
 **Last release**: 2.2.2
-**Last update**: 2026-08-14
+**Last update**: 2026-10-08
 
 ## Detection systems status
 
@@ -84,13 +84,71 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   The settings page shows the state, the terminal dashboard does not.
 - **`alreadyIgnoredPlayers`**. Dead field on `PlayersHandler`, nothing populates it. The ignore gate reads the setting
   the page actually writes (#161). Remove the field.
-- **Page init runs twice on SPA arrival**. Every page script ends with
-  `window.onGlobalsReady(() => reinitCurrentPage())` while `PageController` also inits on `htmx:afterSettle`. Both
-  fire on arrival, and the second init resets the page `cleanup` array while the first set of listeners stays
-  attached. Measured on the players page: after one round trip, a single click on the preview button fires the
-  handler twice. Affects all seven pages, predates 2.2.3. Fix is one owner for the arrival init, not two.
+- **Two owners for page arrival init**. `registerBoundPage` calls `reinitCurrentPage()` while `PageController` also
+  inits on `DOMContentLoaded` and `htmx:afterSettle`. Every page now goes through `registerBoundPage`, which aborts the
+  previous activation before it binds again, so listeners no longer double: the players preview button fires once per
+  click after three SPA round trips. The init callback can still run twice on a full load, which only matters for init
+  code with effects outside the abort signal. Radar `initRadar` is guarded by `isInitialized`. The reported "first click
+  on the radar settings collapse does not stick" did not reproduce: it came from writing `localStorage` directly past
+  the `settingsSync` cache, or from clicking during the HTMX swap before the binder ran. Fix is still one owner for
+  the arrival init.
 - **`/api/settings/server-logs`**. Replaced by `/api/settings/logging` in 2.2. The old path returns 404 with no
   compatibility shim. Noted in case an old bug report mentions it.
+- **`npm run lint` crashes on every `.gohtml` file**. ESLint 10.11 with `eslint-plugin-html` 8.2 throws
+  `Cannot read private member #ruleDefinitions` while linting any template, unrelated to file content. Reproduces on
+  an untouched file. `npx eslint web/scripts/` alone still works.
+- **Hidden PiP video adds 1 px to every page's scroll height**. `document.documentElement.scrollHeight` is
+  `innerHeight + 1` on every viewport tested. Cause: the PictureInPictureManager appends a `<video
+  style="position: absolute; ... width: 1px; height: 1px;">` directly to `<body>` with no `top` set, so its
+  static position (and therefore its layout box) lands one line below the `.flex.h-dvh` wrapper, contributing
+  1 px of overflow. Cosmetic, but it fails a byte-exact `scrollHeight <= innerHeight` check.
+
+- **Dead PiP resize listener**. `PictureInPictureManager.js` listens for `canvasSizeChanged` on `document`, while
+  `RadarSettingsPanel.js` dispatches it on `window`. Harmless because `compositeFrame` resyncs the size every frame.
+  Delete the listener.
+- **`NetworkSettingsHandler.load()` has no try/catch**. Its two fetches are not guarded, so an unreachable backend
+  throws an unhandled `TypeError` on every 5 s poll tick. `apply()` and `refresh()` already wrap their fetch in
+  try/catch, `load()` does not.
+- **`initRadar` concurrent re-entry**. `isInitialized` (`Utils.js`) is set true only after the `DatabaseLoader.load()`
+  await resolves. Two overlapping calls to `initRadar` both pass the guard and run the setup twice, leaking the first
+  call's intervals.
+- **`Utils.js` binds a `#button` click handler that nothing renders**. No template defines an element with that id, so
+  the listener is dead code.
+- **`PlayerListRenderer` never re-renders an existing card's mounted badge, faction or name**. `computeCardKey` covers
+  equipment, spells and health availability but not those three fields, so a player who mounts or turns hostile keeps
+  its old card until it leaves the list and respawns.
+- **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
+  `handleNewPlayerEvent`; the method is exercised only by its own test.
+- **Radar canvases ignore `devicePixelRatio`**. `RadarSettingsPanel.js` sets each canvas backing store to its CSS size,
+  so the radar is blurry on HiDPI screens and under Windows display scaling.
+- **Distance rings and entities use different scales**. `renderDistanceRings` derives pixels per meter from the canvas
+  width, `transformPoint` from a fixed factor per game unit. The 10 m and 20 m rings match entity distances only on a
+  canvas of about 800 px.
+- **`MapsDrawing` background fill reads `ctx.width`**. A 2D context has no `width`, so the dark fill behind the map
+  image never paints. It should read `ctx.canvas.width`.
+- **`lucide.createIcons({nodes})` re-renders every icon**. The vendored lucide takes `root`, not `nodes`, so the
+  `htmx:afterSwap` hook in `base.gohtml`, `Modal.js` and `Toast.js` fall back to `document` and rescan the whole page.
+- **Header PiP icon is a detached node**. `header.gohtml` keeps a reference to `<i id="pipIcon">`, which lucide
+  replaces with an `<svg>` on first render. `updatePipButton` then sets `data-lucide` on the detached element, so the
+  icon never switches.
+- **Rock E4 controls with no matching item**. The resource grids show E4 for every family, but the item catalog has
+  no rock above enchant 3.
+- **Unidentified mobs never reach their colour branch**. A mob with no database entry keeps `EnemyType.Enemy`, so
+  `getEnemyColor` paints it green like a Normal enemy. The royal blue "unknown" default is never used for them.
+- **Avalon treasure drones fall into Normal**. Their category is `treasuredrones`, which `_getEnemyTypeFromCategory`
+  does not handle, so they get the default `Enemy` type. Nothing assigns `EnemyType.Drone`, so the Avalonian Drones
+  toggle and the cyan colour never apply.
+- **Knightfall handler test covers a path the router never takes**. `_DungeonsHandler.test.js` feeds the abbey
+  entrance (`MISTS_DUNGEON_SOLO_YELLOW` at `Parameters[16]`) to `dungeonEvent`, while `EventRouter` sends every
+  `MISTS_DUNGEON` tag to `mistsDungeonHandler.addPortal`.
+- **A missing saved adapter is not listed**. `GET /api/network/interfaces` builds its rows from the interfaces present
+  now, so an adapter saved in `network.json` that is gone disappears instead of showing as unavailable.
+- **Release line at the top of this file is stale**. It says 2.2.2; the latest release is 2.2.3.
+- **Page container wrapper is duplicated**. `base.gohtml` and `content.gohtml` each carry the same
+  `container mx-auto animate-in` div and page switch, so a change has to land in both.
+- **DaisyUI version differs between release and local builds**. `package-lock.json` pins 5.7.16, which `npm ci` and
+  the release CSS use. A local `node_modules` can hold a later 5.7.x (5.7.43 on the dev machine), so local CSS can
+  differ from the shipped one.
 
 ## Permanent limitations
 

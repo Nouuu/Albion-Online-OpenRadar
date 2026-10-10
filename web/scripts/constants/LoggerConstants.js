@@ -15,18 +15,16 @@ export const CATEGORIES = {
     MOBS: 'MOBS',
     HARVESTABLES: 'HARVESTABLES',
     DUNGEONS: 'DUNGEONS',
-    FISHING: 'FISHING',
-    RENDERING: 'RENDERING'
+    FISHING: 'FISHING'
 };
 
 export const CATEGORY_SETTINGS = {
-    SYSTEM: 'categorySystem',
-    NETWORK: 'categoryNetwork',
-    MAP: 'categoryMap',
-    PLAYERS: 'categoryPlayers',
-    MOBS: 'categoryMobs',
-    HARVESTABLES: 'categoryHarvestables',
-    DUNGEONS: 'categoryDungeons',
-    FISHING: 'categoryFishing',
-    RENDERING: 'categoryRendering'
+    SYSTEM: 'settingLogCategorySystem',
+    NETWORK: 'settingLogCategoryNetwork',
+    MAP: 'settingLogCategoryMap',
+    PLAYERS: 'settingLogCategoryPlayers',
+    MOBS: 'settingLogCategoryMobs',
+    HARVESTABLES: 'settingLogCategoryResources',
+    DUNGEONS: 'settingLogCategoryDungeons',
+    FISHING: 'settingLogCategoryFishing'
 };

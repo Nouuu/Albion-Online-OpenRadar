@@ -1,22 +1,4 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import settingsSync from "./SettingsSync.js";
-
-export function clampForViewport(size, canvas) {
-    const isSmall = (typeof window !== 'undefined' ? window.innerWidth : 9999) < 640;
-    const container = canvas?.parentElement;
-    const cardBody = container?.parentElement;
-    const refWidth = innerWidthOf(cardBody) ?? (typeof window !== 'undefined' ? window.innerWidth : size);
-    const margin = isSmall ? 0 : 20;
-    return Math.min(size, Math.max(200, refWidth - margin));
-}
-
-function innerWidthOf(el) {
-    if (!el || typeof getComputedStyle !== 'function') return null;
-    const cs = getComputedStyle(el);
-    const pl = parseFloat(cs.paddingLeft) || 0;
-    const pr = parseFloat(cs.paddingRight) || 0;
-    return el.clientWidth - pl - pr;
-}
 
 export class CanvasManager {
     constructor() {
@@ -54,16 +36,7 @@ export class CanvasManager {
             window.removeEventListener('canvasSizeChanged', this._onCanvasSizeChanged);
         }
 
-        this._onCanvasSizeChanged = (e) => {
-            const newSize = e.detail?.size || settingsSync.getNumber('settingCanvasSize') || 500;
-            Object.values(this.canvases).forEach(canvas => {
-                if (canvas) {
-                    canvas.width = newSize;
-                    canvas.height = newSize;
-                }
-            });
-            this.setupOurPlayerCanvas();
-        };
+        this._onCanvasSizeChanged = () => this.setupOurPlayerCanvas();
         window.addEventListener('canvasSizeChanged', this._onCanvasSizeChanged);
 
         return {

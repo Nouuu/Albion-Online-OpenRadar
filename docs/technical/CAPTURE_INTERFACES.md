@@ -2,7 +2,7 @@
 
 How OpenRadar selects, opens, and switches network interfaces for packet capture.
 
-*Last verified against code: 2026-08-14.*
+*Last verified against code: 2026-09-25.*
 
 ## Why multi-interface
 
@@ -84,10 +84,10 @@ The selected subset is written to `network.json` and the radar logs `Auto-select
 |---|---|---|---|
 | GET | `/api/network/interfaces` | list available interfaces with `{name, description, address, category, isPersisted, isAvailable}` | none |
 | GET | `/api/network/state` | `{captureInterfaces: [...], isCapturing: bool, lanAddresses: [...]}` | none |
-| POST | `/api/network/interfaces` | body `{names: ["..."]}`, persists and triggers `Manager.Reconfigure` | **403 if `req.RemoteAddr` is not loopback** |
-| POST | `/api/network/refresh` | re-enumerate `pcap.FindAllDevs()`, return new list | none |
+| POST | `/api/network/interfaces` | body `{names: ["..."]}`, persists and triggers `Manager.Reconfigure` | **host-only** |
+| POST | `/api/network/refresh` | re-enumerate `pcap.FindAllDevs()`, return new list | **host-only** |
 
-POST is restricted to loopback so a phone on the LAN cannot accidentally retarget the host's capture. `X-Forwarded-For` is ignored on purpose since OpenRadar does not run behind a proxy.
+Both POST routes go through the same `hostOnly` wrapper as the logging settings API: it accepts loopback callers and a remote whose IP equals the connection's local IP, so a phone on the LAN cannot accidentally retarget the host's capture. A rejected call gets 403 "Only the PC running the radar can change this." `X-Forwarded-For` and other forwarding headers are ignored on purpose since OpenRadar does not run behind a proxy.
 
 `lanAddresses` returns the set of host IPv4 addresses that are RFC1918 and on a `wifi` or `ethernet` interface, independent of the active capture set.
 
