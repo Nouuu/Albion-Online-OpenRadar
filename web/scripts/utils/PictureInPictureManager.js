@@ -45,7 +45,7 @@ class PictureInPictureManager {
         this.videoElement = document.createElement('video');
         this.videoElement.muted = true;
         this.videoElement.playsInline = true;
-        this.videoElement.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;';
+        this.videoElement.style.cssText = 'position:absolute;top:0;left:0;opacity:0;pointer-events:none;width:1px;height:1px;';
         document.body.appendChild(this.videoElement);
 
         this._onLeavePip = () => this.onPipClosed();

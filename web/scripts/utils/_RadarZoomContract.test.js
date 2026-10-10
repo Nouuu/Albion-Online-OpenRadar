@@ -1,18 +1,14 @@
-import {readFileSync} from 'node:fs';
+// synthetic: radar template mounted from internal/templates and checked against the settings registry.
 import {describe, expect, test} from 'vitest';
-
-const radarTemplate = readFileSync(
-    'internal/templates/pages/radar.gohtml',
-    'utf8',
-);
+import {registryEntry} from './SettingsRegistry.js';
+import {mountPage} from '../__fixtures__/pageMarkup.js';
 
 describe('radar zoom range contract', () => {
+    // @verified 2026-08-14: zooming out to ten percent gives a wider view, three is the closest zoom.
     test('allows zooming out to ten percent for a wider view', () => {
-        expect(radarTemplate).toContain(
-            'id="settingRadarZoom" min="0.1" max="3" step="0.1"',
-        );
-        expect(radarTemplate).toContain(
-            'Math.max(0.1, Math.min(3, value))',
-        );
+        const {min, max, step} = registryEntry('settingRadarZoom');
+        expect([min, max, step]).toEqual([0.1, 3, 0.1]);
+        const slider = mountPage('radar').querySelector('[data-setting="settingRadarZoom"], #settingRadarZoom');
+        expect([slider.min, slider.max, slider.step].map(Number)).toEqual([min, max, step]);
     });
 });

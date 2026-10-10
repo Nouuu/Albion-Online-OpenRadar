@@ -41,7 +41,7 @@ input[type="checkbox"]:checked { animation: checkmark 0.15s ease-out; }
 * { scrollbar-width: thin; scrollbar-color: #2a2a3a #0a0a0f; }
 
 /* Focus - uses DaisyUI primary color */
-:focus-visible { outline: 2px solid oklch(var(--p)); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 :focus:not(:focus-visible) { outline: none; }
 
 /* Sidebar */

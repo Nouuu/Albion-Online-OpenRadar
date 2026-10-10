@@ -2,7 +2,7 @@
 
 Technical reference for contributors working on OpenRadar's Go backend and JavaScript frontend.
 
-*Last verified against code: 2026-08-14.*
+*Last verified against code: 2026-09-25.*
 
 ## Architecture overview
 
@@ -73,7 +73,7 @@ HTTP   Server: http://192.168.1.42:5001  (LAN)
 WS     WebSocket: ws://localhost:5001/ws
 ```
 
-The frontend builds the WebSocket URL from `window.location`, so a phone or second laptop loading `http://<server-ip>:5001` gets a working radar without configuration. The capture interface settings UI is loopback-only: `POST /api/network/interfaces` returns 403 if `req.RemoteAddr` is not local. A LAN visitor sees a read-only view.
+The frontend builds the WebSocket URL from `window.location`, so a phone or second laptop loading `http://<server-ip>:5001` gets a working radar without configuration. Network interfaces, backend logs and pcap recording can only be changed from the PC running the radar. Another device can open Settings, but those controls are disabled.
 
 The threat alert sound plays on the machine running the radar, never on the machine showing the page. `POST /api/alert/play` hands a file name and a volume to the Go process, which owns the audio device. A LAN visitor sees the preview button work and hears nothing locally. This is deliberate: a browser tab that is not in front cannot be relied on to make a sound, and the player watching the game is on the capture host.
 
@@ -221,7 +221,7 @@ Two-phase broadcast (RLock for send, Lock for cleanup), 100 client soft limit, g
 
 ### SPA navigation
 
-HTMX swaps page partials without full reloads. `PageController.registerPage(name, {init, destroy})` orchestrates init/destroy cycles. Every handler installs listeners via `addListener(el, evt, fn)` and removes them on `destroy()` to prevent the listener leaks that bit the Jan 2026 churn.
+HTMX swaps page partials without full reloads. Pages call `registerBoundPage(name, {init, destroy})` from `SettingControls.js`, which registers the page with `PageController` once and binds its `data-setting` controls on each activation. `registerBoundPage` hands `init` an AbortController `signal`. Page modules attach their listeners with `{signal}`, and leaving the page aborts it, which removes them all.
 
 ### WebSocket client
 
@@ -258,7 +258,7 @@ class XHandler {
 
 Drawing skeleton: extends `DrawingUtils`. `interpolate(entities, lpX, lpY, t)` calls `interpolateEntity` per entry. `invalidate(ctx, entities)` reads settings via `settingsSync.getBool(...)` and draws via inherited `DrawCustomImage`, `drawFilledCircle`, `transformPoint`.
 
-Page registration: in the page gohtml `<script>`, import `registerPage` and `reinitCurrentPage` from `PageController`. Guard the registration with a `window._<name>Registered` flag to avoid double-register on SPA navigation. Call `window.onGlobalsReady(() => reinitCurrentPage())`.
+Page registration: in the page gohtml `<script>`, dynamic-import `registerBoundPage` from `SettingControls.js` and call `registerBoundPage('<name>', {init, destroy})`. It registers once per page name, so SPA navigation does not double-register.
 
 Imports:
 

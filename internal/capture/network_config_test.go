@@ -1,12 +1,15 @@
 package capture
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -82,6 +85,20 @@ func TestMigrateFromIPTxt(t *testing.T) {
 	}
 }
 
+func TestMigrateIPTxtWrapsConfigReadError(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "network.json"), []byte("{"), 0o644); err != nil {
+		t.Fatalf("WriteFile network.json: %v", err)
+	}
+	_, err := MigrateIPTxt(dir, nil)
+	if err == nil || !strings.Contains(err.Error(), "read existing config before migration: ") {
+		t.Fatalf("MigrateIPTxt error = %v, want the config read wrapped", err)
+	}
+}
+
 func TestMigrateNoIPTxt(t *testing.T) {
 	dir := t.TempDir()
 	migrated, err := MigrateIPTxt(dir, nil)
@@ -101,6 +118,15 @@ func TestMigrateSkipsWhenConfigPopulated(t *testing.T) {
 	}
 	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42\n"), 0o644); err != nil {
 		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	configPath := filepath.Join(dir, "network.json")
+	before, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("ReadFile before: %v", err)
+	}
+	infoBefore, err := os.Stat(configPath)
+	if err != nil {
+		t.Fatalf("Stat before: %v", err)
 	}
 	resolve := func(ip string) (PersistedInterface, error) {
 		t.Fatalf("resolver should not be called when config is already populated; got ip=%q", ip)
@@ -122,6 +148,20 @@ func TestMigrateSkipsWhenConfigPopulated(t *testing.T) {
 	}
 	if len(got.CaptureInterfaces) != 1 || got.CaptureInterfaces[0].Description != "Existing" {
 		t.Errorf("network.json should be unchanged, got %+v", got)
+	}
+	after, err := os.ReadFile(configPath)
+	if err != nil {
+		t.Fatalf("ReadFile after: %v", err)
+	}
+	if !bytes.Equal(before, after) {
+		t.Error("network.json bytes changed on populated-config skip")
+	}
+	infoAfter, err := os.Stat(configPath)
+	if err != nil {
+		t.Fatalf("Stat after: %v", err)
+	}
+	if !infoBefore.ModTime().Equal(infoAfter.ModTime()) {
+		t.Error("network.json mtime changed on populated-config skip")
 	}
 }
 
@@ -164,6 +204,9 @@ func TestMigrateNilResolverWithNonEmptyIPTxt(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); err != nil {
 		t.Errorf("ip.txt should be preserved for retry, err=%v", err)
 	}
+	if _, err := os.Stat(filepath.Join(dir, "network.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("network.json should not be created on nil-resolver error, err=%v", err)
+	}
 }
 
 func TestMigrateResolverError(t *testing.T) {
@@ -187,6 +230,9 @@ func TestMigrateResolverError(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "ip.txt")); !errors.Is(err, fs.ErrNotExist) {
 		t.Errorf("ip.txt should be deleted on resolver error, err=%v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "network.json")); !errors.Is(err, fs.ErrNotExist) {
+		t.Errorf("network.json should not be created on resolver error, err=%v", err)
 	}
 }
 
@@ -314,6 +360,83 @@ func TestMutateConfig_PreservesUntouchedFields(t *testing.T) {
 	}
 	if got.Logging.PcapRecording {
 		t.Error("Logging.PcapRecording: want false after mutation, got true")
+	}
+}
+
+func TestMutateConfigConcurrent(t *testing.T) {
+	dir := t.TempDir()
+	if err := WriteConfig(dir, Config{}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	errs := make(chan error, 75)
+
+	for i := range 50 {
+		wg.Add(1)
+		go func(n int) {
+			defer wg.Done()
+			name := fmt.Sprintf("iface-%d", n)
+			if err := MutateConfig(dir, func(cfg *Config) {
+				cfg.CaptureInterfaces = append(cfg.CaptureInterfaces, PersistedInterface{Name: name})
+			}); err != nil {
+				errs <- err
+			}
+		}(i)
+	}
+	for range 25 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := ReadConfig(dir); err != nil {
+				errs <- err
+			}
+		}()
+	}
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		t.Errorf("concurrent config op failed: %v", err)
+	}
+
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("final ReadConfig: %v", err)
+	}
+	if len(got.CaptureInterfaces) != 50 {
+		t.Errorf("got %d entries, want 50", len(got.CaptureInterfaces))
+	}
+}
+
+func TestMigrateIPTxtKeepsLogging(t *testing.T) {
+	dir := t.TempDir()
+	if err := WriteConfig(dir, Config{
+		Logging: LoggingConfig{ServerLogsEnabled: true, PcapRecording: true},
+	}); err != nil {
+		t.Fatalf("seed config: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ip.txt"), []byte("192.168.1.42"), 0o644); err != nil {
+		t.Fatalf("WriteFile ip.txt: %v", err)
+	}
+	resolve := func(ip string) (PersistedInterface, error) {
+		return PersistedInterface{Name: `\Device\NPF_{X}`, Description: "Wi-Fi"}, nil
+	}
+	migrated, err := MigrateIPTxt(dir, resolve)
+	if err != nil {
+		t.Fatalf("MigrateIPTxt: %v", err)
+	}
+	if !migrated {
+		t.Fatal("expected migrated=true")
+	}
+	got, err := ReadConfig(dir)
+	if err != nil {
+		t.Fatalf("ReadConfig: %v", err)
+	}
+	if !got.Logging.ServerLogsEnabled || !got.Logging.PcapRecording {
+		t.Errorf("logging block lost after migration: %+v", got.Logging)
+	}
+	if len(got.CaptureInterfaces) != 1 || got.CaptureInterfaces[0].Name != `\Device\NPF_{X}` {
+		t.Errorf("migrated interface wrong: %+v", got.CaptureInterfaces)
 	}
 }
 

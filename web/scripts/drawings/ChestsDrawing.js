@@ -12,13 +12,13 @@ export class ChestsDrawing extends DrawingUtils {
         for (const chestOne of chests) {
             const point = this.transformPoint(chestOne.hX, chestOne.hY);
 
-            if (settingsSync.getBool("settingChestGreen") && ["standard", "green"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
+            if (settingsSync.getBool("settingChestsGreen") && ["standard", "green"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
                 this.DrawCustomImage(ctx, point.x, point.y, "green", "Resources", 35);
-            } else if (settingsSync.getBool("settingChestBlue") && ["uncommon", "blue"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
+            } else if (settingsSync.getBool("settingChestsBlue") && ["uncommon", "blue"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
                 this.DrawCustomImage(ctx, point.x, point.y, "blue", "Resources", 35);
-            } else if (settingsSync.getBool("settingChestPurple") && ["rare", "purple"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
+            } else if (settingsSync.getBool("settingChestsPurple") && ["rare", "purple"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
                 this.DrawCustomImage(ctx, point.x, point.y, "rare", "Resources", 35);
-            } else if (settingsSync.getBool("settingChestYellow") && ["legendary", "yellow"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
+            } else if (settingsSync.getBool("settingChestsYellow") && ["legendary", "yellow"].some(sub => chestOne.chestName.toLowerCase().includes(sub))) {
                 this.DrawCustomImage(ctx, point.x, point.y, "legendary", "Resources", 35);
             }
         }

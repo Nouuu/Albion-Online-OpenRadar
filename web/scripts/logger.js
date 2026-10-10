@@ -33,7 +33,7 @@ class Logger {
     }
 
     shouldLog(level, category) {
-        const minLevelName = settingsSync.get('logLevel', 'WARN');
+        const minLevelName = settingsSync.get('settingLogLevel');
         const minLevel = LOG_LEVELS[minLevelName] ?? LOG_LEVELS.WARN;
 
         if (minLevel === LOG_LEVELS.OFF) return false;

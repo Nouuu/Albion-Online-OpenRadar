@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 
 	"github.com/nospy/albion-openradar/internal/capture"
 	"github.com/nospy/albion-openradar/internal/logger"
@@ -20,30 +21,34 @@ type SettingsAPI struct {
 	logger     *logger.Logger
 	recorder   Recorder
 	captureDir string
+	applyMu    *sync.Mutex
 }
 
 // NewSettingsAPI creates a SettingsAPI. recorder may be nil (recording calls are skipped).
-func NewSettingsAPI(appDir string, log *logger.Logger, recorder Recorder, captureDir string) *SettingsAPI {
+func NewSettingsAPI(appDir string, log *logger.Logger, recorder Recorder, captureDir string, applyMu *sync.Mutex) *SettingsAPI {
 	return &SettingsAPI{
 		appDir:     appDir,
 		logger:     log,
 		recorder:   recorder,
 		captureDir: captureDir,
+		applyMu:    applyMu,
 	}
 }
 
 func (a *SettingsAPI) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/settings/logging", a.handleGet)
-	mux.HandleFunc("POST /api/settings/logging", a.handlePost)
+	mux.HandleFunc("POST /api/settings/logging", hostOnly(a.handlePost))
 }
 
 func (a *SettingsAPI) handleGet(w http.ResponseWriter, _ *http.Request) {
-	cfg, err := capture.ReadConfig(a.appDir)
-	if err != nil {
-		http.Error(w, "read config: "+err.Error(), http.StatusInternalServerError)
-		return
+	writeJSON(w, http.StatusOK, a.runtimeLogging())
+}
+
+func (a *SettingsAPI) runtimeLogging() capture.LoggingConfig {
+	return capture.LoggingConfig{
+		ServerLogsEnabled: a.logger != nil && a.logger.IsEnabled(),
+		PcapRecording:     a.recorder != nil && a.recorder.IsRecording(),
 	}
-	writeJSON(w, http.StatusOK, cfg.Logging)
 }
 
 type loggingPatch struct {
@@ -58,7 +63,9 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newLogging capture.LoggingConfig
+	a.applyMu.Lock()
+	defer a.applyMu.Unlock()
+
 	if err := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 		if patch.ServerLogsEnabled != nil {
 			cfg.Logging.ServerLogsEnabled = *patch.ServerLogsEnabled
@@ -66,7 +73,6 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		if patch.PcapRecording != nil {
 			cfg.Logging.PcapRecording = *patch.PcapRecording
 		}
-		newLogging = cfg.Logging
 	}); err != nil {
 		http.Error(w, "write config: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -80,10 +86,13 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		if *patch.PcapRecording {
 			if err := a.recorder.StartRecording(a.captureDir); err != nil {
 				logger.PrintWarn("PKT", "pcap recording could not start: %v", err)
-				_ = capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
+				msg := "pcap recording failed: " + err.Error()
+				if pErr := capture.MutateConfig(a.appDir, func(cfg *capture.Config) {
 					cfg.Logging.PcapRecording = false
-				})
-				http.Error(w, "pcap recording failed: "+err.Error(), http.StatusInternalServerError)
+				}); pErr != nil {
+					msg += "; persist: " + pErr.Error()
+				}
+				http.Error(w, msg, http.StatusInternalServerError)
 				return
 			}
 		} else {
@@ -93,5 +102,5 @@ func (a *SettingsAPI) handlePost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusOK, newLogging)
+	writeJSON(w, http.StatusOK, a.runtimeLogging())
 }

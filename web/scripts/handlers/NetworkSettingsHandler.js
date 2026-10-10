@@ -10,9 +10,10 @@ export class NetworkSettingsHandler {
         this.container = container;
         this.interfaces = [];
         this.state = null;
+        this.pendingSelection = null;
     }
 
-    async load() {
+    async load(preservePending = false) {
         const [ifacesRes, stateRes] = await Promise.all([
             fetch('/api/network/interfaces'),
             fetch('/api/network/state'),
@@ -23,16 +24,23 @@ export class NetworkSettingsHandler {
         }
         this.interfaces = await ifacesRes.json();
         this.state = await stateRes.json();
+        if (!preservePending) this.pendingSelection = null;
         this.render();
     }
 
+    isLocked() {
+        return this.container.hasAttribute('data-locked');
+    }
+
     render() {
+        const locked = this.isLocked();
         const activeNames = new Set((this.state?.captureInterfaces ?? []).map(c => c.name));
+        const checkedNames = this.pendingSelection ?? activeNames;
         const banner = this.renderBanner();
-        const rows = this.interfaces.map(i => this.renderRow(i, activeNames.has(i.name))).join('');
+        const rows = this.interfaces.map(i => this.renderRow(i, checkedNames.has(i.name), locked)).join('');
         const lan = (this.state?.lanAddresses ?? []).map(a => {
             const safe = escapeHTML(a);
-            return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary">http://${safe}:5001/</a></li>`;
+            return `<li><a data-lan-url href="http://${safe}:5001/" target="_blank" rel="noopener noreferrer" class="link link-primary break-all">http://${safe}:5001/</a></li>`;
         }).join('');
         this.container.innerHTML = `
             ${banner}
@@ -40,15 +48,17 @@ export class NetworkSettingsHandler {
             <h3 class="text-base font-semibold mt-2">Capture interfaces</h3>
             <p class="text-sm opacity-70 mb-2">Captured packets are merged across all checked interfaces. Tick at least one to start capture.</p>
             <div class="flex flex-col gap-1">${rows}</div>
-            <div class="flex gap-2 mt-3">
-                <button class="btn btn-sm" data-action="refresh">Refresh list</button>
+            <div class="flex flex-wrap items-center gap-2 mt-3">
+                <button class="btn btn-sm" data-action="refresh"${locked ? ' disabled' : ''}>Refresh list</button>
                 <button class="btn btn-sm btn-primary" data-action="apply" disabled>Apply changes</button>
+                ${locked ? '<span class="text-xs text-base-content/50">Only the PC running the radar can change this.</span>' : ''}
             </div>
             <h3 class="text-base font-semibold mt-6">LAN access</h3>
             <p class="text-sm opacity-70">Reachable from devices on the same local network. Independent of the capture interfaces above.</p>
             <ul class="list-disc pl-5">${lan || '<li class="opacity-60">No LAN address detected.</li>'}</ul>
         `;
         this.bindEvents();
+        this.updateApplyState();
     }
 
     renderExitLagNotice() {
@@ -76,16 +86,16 @@ export class NetworkSettingsHandler {
         return `<div class="alert alert-success mb-2">✓ Capturing on ${n} interface${n > 1 ? 's' : ''}.</div>`;
     }
 
-    renderRow(iface, checked) {
+    renderRow(iface, checked, locked) {
         const badge = BADGES[iface.category] ?? BADGES.other;
         const label = BADGE_LABEL[iface.category] ?? BADGE_LABEL.other;
         const unavail = iface.isAvailable ? '' : ' <span class="opacity-60">(unavailable)</span>';
         return `
-            <label class="flex items-center gap-3 cursor-pointer p-2 rounded hover:bg-base-300/40" data-iface="${escapeHTML(iface.name)}">
-                <input type="checkbox" class="checkbox checkbox-sm" ${checked ? 'checked' : ''} ${iface.isAvailable ? '' : 'disabled'}>
-                <span class="badge badge-outline">${badge} ${label}</span>
-                <span class="flex-1">${escapeHTML(iface.description || iface.name)}${unavail}</span>
-                <span class="opacity-60 text-sm">${escapeHTML(iface.address || '')}</span>
+            <label class="flex flex-wrap items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors" data-iface="${escapeHTML(iface.name)}">
+                <input type="checkbox" class="checkbox checkbox-primary checkbox-xs" ${checked ? 'checked' : ''} ${iface.isAvailable && !locked ? '' : 'disabled'}>
+                <span class="badge badge-outline badge-sm">${badge} ${label}</span>
+                <span class="flex-1 min-w-0 text-base-content/80 text-xs group-hover:text-base-content">${escapeHTML(iface.description || iface.name)}${unavail}</span>
+                <span class="opacity-60 text-xs whitespace-nowrap">${escapeHTML(iface.address || '')}</span>
             </label>
         `;
     }
@@ -104,8 +114,9 @@ export class NetworkSettingsHandler {
         const selected = [...this.selectedNames()].sort();
         const current = (this.state?.captureInterfaces ?? []).map(c => c.name).sort();
         const same = selected.length === current.length && selected.every((n, i) => n === current[i]);
+        this.pendingSelection = same ? null : new Set(selected);
         const btn = this.container.querySelector('[data-action="apply"]');
-        if (btn) btn.disabled = same;
+        if (btn) btn.disabled = same || this.isLocked();
     }
 
     selectedNames() {
@@ -127,7 +138,7 @@ export class NetworkSettingsHandler {
             if (!res.ok) {
                 const txt = await res.text();
                 window.toast?.error?.(`Apply failed: ${txt}`);
-                if (btn) btn.disabled = false;
+                await this.load();
                 return;
             }
             window.toast?.success?.('Capture interfaces updated.');
