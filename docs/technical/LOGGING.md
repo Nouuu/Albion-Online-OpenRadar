@@ -12,8 +12,8 @@ Logs are split by source and severity into four directories under `logs/`.
 |---|---|---|---|---|---|
 | Backend Go | DEBUG/INFO/WARN | yes | no | no | gated by `serverLogsEnabled` |
 | Backend Go | ERROR/CRITICAL | yes if gate on | no | yes (always) | `errors/` is always-on |
-| Frontend (`/api`) | DEBUG/INFO/WARN | no | yes | no | gated by frontend `settingLogToServer` |
-| Frontend (`/api`) | ERROR/CRITICAL | no | yes | yes | same gate; errors copied to `errors/` |
+| Frontend (WebSocket) | DEBUG/INFO/WARN | no | yes | no | gated by frontend `settingLogToServer` |
+| Frontend (WebSocket) | ERROR/CRITICAL | no | yes | yes | same gate; errors copied to `errors/` |
 
 Backend ERROR and CRITICAL entries land in two files at once when the session gate is on: `sessions/` for chronological context, `errors/` for the post-mortem aggregator. The duplicate is intentional. `errors/` for backend stays always-on so a server crash leaves a trace even when file logging is otherwise off.
 
@@ -66,7 +66,7 @@ Per-interface guarantees: `MutateConfig` reads, mutates, and writes under a sing
 
 `Capturer.StartRecording(dir)`, `StopRecording()`, `IsRecording()` are exposed on each capturer. `Manager.StartRecording`/`StopRecording`/`IsRecording` propagate to all active capturers and remember the recording-enabled flag so future capturers added by `Reconfigure` start recording too.
 
-`Manager.StartRecording` is all or nothing: calling it while already recording is a no-op, and if one capturer fails to start, the Manager stops recording on every capturer and resets its state. The interfaces handler then writes `pcapRecording: false`, so the next `GET` reports the real, stopped state.
+`Manager.StartRecording` is all or nothing: calling it while already recording is a no-op, and if one capturer fails to start, the Manager stops recording on every capturer and resets its state. The settings handler then writes `pcapRecording: false`, so the next `GET` reports the real, stopped state; if that write fails, its error is appended to the 500 body. The interfaces handler writes the same `false` after a `Reconfigure` that leaves the Manager not recording.
 
 Each active capturer writes its own pcap file. Filename uses the capturer's interface name sanitized through a `[^A-Za-z0-9_-]` to `_` regex. A start-stop-start cycle on the same interface produces two distinct files.
 
@@ -76,7 +76,7 @@ Each active capturer writes its own pcap file. Filename uses the capturer's inte
 
 ## Frontend behavior
 
-On settings page load, `fetchBackendSettings('/api/settings/logging')` populates the two checkboxes from the backend response. A `change` event on either checkbox calls `POST /api/settings/logging` with the partial body. The frontend never writes the persisted state directly; the backend is the source of truth. On a device that is not the host, both checkboxes render disabled with "Only the PC running the radar can change this."
+On settings page load, `BackendLoggingToggles` (`web/scripts/utils/BackendLoggingToggles.js`) fetches `/api/settings/logging` and populates the two checkboxes from the backend response. A `change` event on either checkbox calls `POST /api/settings/logging` with the partial body. The frontend never writes the persisted state directly; the backend is the source of truth. On a device that is not the host, both checkboxes render disabled with "Only the PC running the radar can change this."
 
 The Settings page carries the logging-related controls in two places:
 
@@ -101,7 +101,7 @@ The frontend log call site:
 window.logger?.debug(CATEGORIES.PLAYERS, 'EquipmentUpdated', { playerId, nickname, slotCount });
 ```
 
-`Logger.shouldLog(level, category)` in `web/scripts/logger.js` is the single filtering point. `settingLogLevel` sets the minimum level; below it, everything is dropped except CRITICAL. DEBUG and INFO also need their category enabled through `settingLogCategory<Area>`, read live off `settingsSync` (no cache). A passing entry is printed to the console when `settingLogToConsole` is on, and queued for `logs/debug/` when `settingLogToServer` is on. The queue flushes over the same WebSocket connection used for game events, every 5 seconds or at 200 buffered entries, whichever comes first.
+`Logger.shouldLog(level, category)` in `web/scripts/logger.js` is the single filtering point. `settingLogLevel` sets the minimum level; below it, everything is dropped except CRITICAL, and at level OFF CRITICAL is dropped too. DEBUG and INFO also need their category enabled through `settingLogCategory<Area>`, read live off `settingsSync` (no cache). A passing entry is printed to the console when `settingLogToConsole` is on, and queued for `logs/debug/` when `settingLogToServer` is on. The queue flushes over the logger's own WebSocket connection, every 5 seconds or at 200 buffered entries, whichever comes first.
 
 ## Operational notes
 
