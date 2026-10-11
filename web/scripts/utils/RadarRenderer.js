@@ -177,6 +177,13 @@ export class RadarRenderer {
             );
         }
 
+        if (this.handlers.actionsHandler && this.drawings.actionsDrawing) {
+            this.drawings.actionsDrawing.interpolate(
+                this.handlers.actionsHandler.markerList,
+                this.lpX, this.lpY, t
+            );
+        }
+
         this.previousTime = currentTime;
     }
 
@@ -289,6 +296,14 @@ export class RadarRenderer {
                     context,
                     this.handlers.dungeonsHandler.dungeonList
                 );
+            }
+
+            if (this.drawings.actionsDrawing && this.handlers.actionsHandler && this.handlers.playersHandler) {
+                const markers = this.handlers.actionsHandler.getMarkers(Date.now());
+                if (markers.length > 0 && settingsSync.getBool('settingShowPlayers')
+                    && settingsSync.getBool('settingShowPlayerActions')) {
+                    this.drawings.actionsDrawing.invalidate(context, markers, this.handlers.playersHandler.getPlayersByType());
+                }
             }
         }
 

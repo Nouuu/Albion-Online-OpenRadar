@@ -1,7 +1,7 @@
 # OpenRadar Roadmap
 
 **Last release**: 2.2.2
-**Last update**: 2026-08-14
+**Last update**: 2026-09-25
 
 ## Detection systems status
 
@@ -9,7 +9,7 @@
 |---|---|---|
 | Resources | working | database-driven, T1-T8 with enchants, render-time filter gate. Family misclassification on some rich static nodes stays open (#100) |
 | Mobs | working | typeIds re-anchored after the 2026-06-29 patch, 9 danger classes. Named non-portal mobs route to the hostile list since #160 |
-| Players | working | faction, guild, alliance, equipment and item power. Ignore list gates the alerts since #161. Positions are never drawn, see permanent limitations |
+| Players | working | faction, guild, alliance, equipment and item power. Ignore list gates the alerts since #161. Live positions are never drawn, see permanent limitations. Action markers show for 10 seconds where a player cast, mounted, teleported, respawned or was pushed |
 | Zones | working | PvP type drives the alert gate. Roads of Avalon and the Mists forced to black |
 | Mists | working | Solo and Duo portals with rarity, feu follets, wisp cages, Knightfall Abbey |
 | Dungeons | working | per-type filters (Solo, Group, Corrupted, Hellgate) and per-enchant E0-E4. Avalonian families and per-difficulty filters still missing |
@@ -72,6 +72,27 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
 - **`getAverageItemPower` slot filter**. It keeps `index <= 4 || index === 8`. Slot 8 is the potion slot, verified
   against 10390 equipment arrays. Potions carry no item power so the average is unaffected, but the renderer draws a
   potion icon in the equipment strip because of it.
+- **Player health on a lethal hit**. `UpdatePlayerLooseHealth` copies HealthUpdate (event 6) `Parameters[3]`, the
+  health after the hit, into `currentHealth`. The server omits a key whose value is 0, so a lethal hit carries no
+  `Parameters[3]` and the player is left with `currentHealth` undefined. Measured on 21 captures across three eras.
+- **HealthUpdates (event 7) never reaches players**. The router sends event 7 to `MobsHandler` only. It carries one
+  target and parallel arrays with the event 6 layout, its entries never repeat in event 6, and it holds 195 of the
+  839 damage entries on players in the same 21 captures, so the player health bar misses them.
+- **Join response after the spawn snapshot**. In every city flow of the 2026-05-12 and 2026-09-03 captures the Join
+  response arrives after the NewCharacter snapshot of its own flow (40 to 60 events), and the router clears the
+  players on it. Live, `WebSocketEventQueue` runs responses at once and defers events to the next animation frame, so
+  the snapshot survives when it shares the frame of the Join; a replay in wire order loses it.
+- **Anonymizer blind spots**. `GvgSeasonUpdate` (352) carries guild names at `[3]` and `[5]` that `anonymize-pcap`
+  keeps. The identity fields at codes 277, 294, 329 and 350 follow the current event table; in captures of May 2026
+  and older those events sit two codes lower and are not scrubbed.
+- **Players page info alert**. It says the radar detects who enters the zone but cannot display them on the map. With
+  Show Player Actions on, the radar shows where a player just acted. The rewording needs a decision.
+- **Buff-only support in a black zone**. The zone rule makes every player dangerous there, and the heal memory only
+  learns from heals. A support that only buffs the local player raises `Attacking you` until spell target types
+  resolve (#166).
+- **Hits on a mounted local player**. In the 2026-10-10 mist fight, the attacker's first 3 hits on the mounted local
+  player arrived as `MountHealthUpdate` (313), not as `HealthUpdate`, so damage alone does not flag an attacker while
+  the local player rides. Its targeted casts and `Attack` still do.
 
 ## Tech debt
 
@@ -91,6 +112,9 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   handler twice. Affects all seven pages, predates 2.2.3. Fix is one owner for the arrival init, not two.
 - **`/api/settings/server-logs`**. Replaced by `/api/settings/logging` in 2.2. The old path returns 404 with no
   compatibility shim. Noted in case an old bug report mentions it.
+- **`?? true` after `getBool` in `WebSocketEventQueue.js`**. `enableCoalescing` and `enableThrottling` read
+  `window.settingsSync?.getBool(key, true) ?? true`. `getBool` already returns its `true` default for an unset key, so
+  the trailing `?? true` acts only when `window.settingsSync` is missing, and `base.gohtml` sets it on every page.
 
 ## Permanent limitations
 

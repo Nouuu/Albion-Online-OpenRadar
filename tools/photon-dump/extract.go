@@ -69,7 +69,7 @@ func runExtract(in, outGo, outJS string, scenarios []Scenario) error {
 		},
 	)
 
-	if err := iteratePcap(in, func(payload []byte) error {
+	if err := iteratePcap(in, func(payload []byte, _, _ uint16) error {
 		currentRaw = payload
 		parser.ReceivePacket(payload)
 		return nil

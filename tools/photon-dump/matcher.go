@@ -45,3 +45,11 @@ func matchesWhere(where map[byte]func(v any) bool, params map[byte]any) bool {
 	}
 	return true
 }
+
+func eventWithIDs(code int, ids map[byte]int) MatchCriteria {
+	where := make(map[byte]func(v any) bool, len(ids))
+	for index, id := range ids {
+		where[index] = func(v any) bool { return intFromParam(v) == id }
+	}
+	return MatchCriteria{Kind: "event", Code: code, Where: where}
+}

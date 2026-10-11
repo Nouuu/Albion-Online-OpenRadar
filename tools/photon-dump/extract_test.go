@@ -45,7 +45,23 @@ func TestIteratePcap_CountsUdpPayloads(t *testing.T) {
 		{0x03, 0x04, 0x05},
 	})
 	var got int
-	err := iteratePcap(in, func(payload []byte) error { got++; return nil })
+	err := iteratePcap(in, func(payload []byte, _, _ uint16) error { got++; return nil })
 	require.NoError(t, err)
 	require.Equal(t, 2, got)
+}
+
+func TestIteratePcap_ReportsUDPPorts(t *testing.T) {
+	in := filepath.Join("..", "..", "internal", "photon", "testdata", "move_heavy.pcap")
+	if _, err := os.Stat(in); err != nil {
+		t.Skip("move_heavy.pcap missing, run from repo root")
+	}
+	var n int
+	err := iteratePcap(in, func(payload []byte, srcPort, dstPort uint16) error {
+		n++
+		require.NotEmpty(t, payload)
+		require.True(t, srcPort == 5056 || dstPort == 5056, "packet %d carries ports %d and %d", n, srcPort, dstPort)
+		return nil
+	})
+	require.NoError(t, err)
+	require.Positive(t, n)
 }

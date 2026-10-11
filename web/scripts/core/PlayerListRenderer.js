@@ -69,6 +69,11 @@ function renderPlayerCard(player, threatType = null) {
         ? `<span class="text-[9px] font-mono font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded border border-primary/25 uppercase tracking-wide">Mounted</span>`
         : '';
 
+    const attacking = Date.now() < player.attackingUntil;
+    const attackingBadge = attacking
+        ? `<span class="text-[9px] font-mono font-semibold text-error bg-error/10 px-1.5 py-0.5 rounded border border-error/25 uppercase tracking-wide">Attacking you</span>`
+        : '';
+
     // Equipment section
     let equipHtml = '';
     if (window.settingsSync?.getBool('settingItems') && Array.isArray(player.equipments) && player.equipments.length > 0 && window.itemsDatabase) {
@@ -131,7 +136,7 @@ function renderPlayerCard(player, threatType = null) {
     // Build card
     const accentBarClass = `bg-${playerTypeColor}`;
 
-    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
+    return `<div class="group relative p-4 pl-5 bg-gradient-to-br from-base-300 to-base-200 rounded-lg transition-all duration-200 hover:from-base-300/90 hover:to-base-200/90 hover:translate-x-0.5${attacking ? ' ring-2 ring-error' : ''}" data-player-id="${player.id}"><div class="absolute left-0 top-0 bottom-0 w-[3px] ${accentBarClass} opacity-90 group-hover:opacity-100 group-hover:w-1 transition-all"></div><div class="flex justify-between items-start gap-3"><div class="flex-1 min-w-0"><span class="block text-sm font-semibold text-base-content truncate">${player.nickname}</span><div class="flex flex-wrap items-center gap-1.5 mt-1">${guildBadge}${allianceBadge}</div></div><div class="flex flex-col items-end gap-1 shrink-0">${playerTypeBadge}<span data-time class="text-[10px] font-mono text-base-content/40">${timeStr}</span></div></div><div class="flex flex-wrap items-center gap-1.5 mt-2">${ipBadge}${mountedBadge}${attackingBadge}</div>${equipHtml}${spellsHtml}${healthHtml}${idStr}</div>`;
 }
 
 function updateSectionPlayers(listContainer, players, threatType) {
@@ -154,12 +159,14 @@ function updateSectionPlayers(listContainer, players, threatType) {
 
     // 3. Create new cards in DocumentFragment (off-DOM, no reflow)
     const fragment = document.createDocumentFragment();
+    const ordered = [...players].sort((a, b) => b.lastActionAt - a.lastActionAt);
 
-    for (const player of players) {
+    for (const player of ordered) {
         const existingCard = existingCards.get(player.id);
         const lastRender = lastRenderedPlayerIds.get(player.id);
+        const attacking = Date.now() < player.attackingUntil;
 
-        if (existingCard && lastRender) {
+        if (existingCard && lastRender && lastRender.mounted === player.mounted && lastRender.attacking === attacking) {
             // Update existing card - minimal DOM operations
             const timeEl = existingCard.querySelector('[data-time]');
             if (timeEl) {
@@ -173,6 +180,8 @@ function updateSectionPlayers(listContainer, players, threatType) {
                     healthBar.style.width = `${pct}%`;
                 }
             }
+        } else if (existingCard) {
+            existingCard.outerHTML = renderPlayerCard(player, threatType).trim();
         } else {
             // Create new card in fragment (off-DOM)
             const template = document.createElement('template');
@@ -180,13 +189,18 @@ function updateSectionPlayers(listContainer, players, threatType) {
             fragment.appendChild(template.content.firstChild);
         }
 
-        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth});
+        lastRenderedPlayerIds.set(player.id, {health: player.currentHealth, mounted: player.mounted, attacking});
     }
 
     // 4. Batch DOM operations: removals first, then single append
     toRemove.forEach(card => card.remove());
     if (fragment.childNodes.length > 0) {
         listContainer.appendChild(fragment);
+    }
+
+    const cards = [...listContainer.querySelectorAll('[data-player-id]')];
+    if (cards.some((card, i) => parseInt(card.dataset.playerId) !== ordered[i]?.id)) {
+        listContainer.append(...ordered.map(p => cards.find(card => parseInt(card.dataset.playerId) === p.id)));
     }
 }
 
@@ -229,9 +243,9 @@ export function update(playersHandler) {
     const total = counts.hostile + counts.faction + counts.passive;
 
     // Get filter settings
-    const showHostile = window.settingsSync?.getBool('settingDangerousPlayers') ?? true;
-    const showFaction = window.settingsSync?.getBool('settingFactionPlayers') ?? true;
-    const showPassive = window.settingsSync?.getBool('settingPassivePlayers') ?? true;
+    const showHostile = window.settingsSync?.getBool('settingDangerousPlayers');
+    const showFaction = window.settingsSync?.getBool('settingFactionPlayers');
+    const showPassive = window.settingsSync?.getBool('settingPassivePlayers');
 
     // Update stats values
     const countsChanged = counts.hostile !== _lastPlayerCounts.hostile ||

@@ -9,6 +9,7 @@
 //
 //	photon-dump -in capture.anon.pcap -out-go internal/photon/testdata -out-js web/scripts/__fixtures__/ws
 //	photon-dump -in capture.anon.pcap -inventory docs/technical/PROTOCOL18_OBSERVED_CODES.md
+//	photon-dump -in capture.anon.pcap -out-go internal/photon/testdata -out-js web/scripts/__fixtures__/ws -range actions/self-cast
 package main
 
 import (
@@ -23,6 +24,7 @@ func main() {
 		outGo     = flag.String("out-go", "", "output dir for .pcap fragments")
 		outJS     = flag.String("out-js", "", "output dir for .json WS-level fixtures")
 		inventory = flag.String("inventory", "", "if set, write census markdown to this path and skip extraction")
+		rangeName = flag.String("range", "", "if set, extract this range scenario only")
 	)
 	flag.Parse()
 
@@ -41,6 +43,21 @@ func main() {
 
 	if *outGo == "" || *outJS == "" {
 		fmt.Fprintln(os.Stderr, "photon-dump: -out-go and -out-js are required when not running -inventory")
+		os.Exit(2)
+	}
+
+	if *rangeName != "" {
+		for _, r := range rangeScenarios {
+			if r.Name != *rangeName {
+				continue
+			}
+			if err := runRange(*in, *outGo, *outJS, r); err != nil {
+				fmt.Fprintln(os.Stderr, "range:", err)
+				os.Exit(1)
+			}
+			return
+		}
+		fmt.Fprintln(os.Stderr, "photon-dump: unknown range scenario", *rangeName)
 		os.Exit(2)
 	}
 
