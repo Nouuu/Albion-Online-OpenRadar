@@ -6,6 +6,24 @@ const CLASS_COLORS = {hostile: '#ef4444', faction: '#3b82f6', passive: '#22c55e'
 const FAMILY_EMOJI = {presence: '\u{2728}', mount: '\u{1F40E}', combat: '\u{2694}\u{FE0F}', mobility: '\u{1F4A8}'};
 
 export class ActionsDrawing extends DrawingUtils {
+    emojiImages = {};
+
+    emojiImage(family, px) {
+        const key = `${family} ${px}`;
+        if (!(key in this.emojiImages)) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                canvas.width = canvas.height = Math.ceil(px * 1.5);
+                ctx.font = `${px}px ${this.fontFamily}`;
+                ctx.fillStyle = this.textColor;
+                ctx.fillText(FAMILY_EMOJI[family], 0, px);
+            }
+            this.emojiImages[key] = ctx ? canvas : null;
+        }
+        return this.emojiImages[key];
+    }
+
     interpolate(markers, lpX, lpY, t) {
         for (const marker of markers) {
             const hX = lpX - marker.x;
@@ -25,7 +43,8 @@ export class ActionsDrawing extends DrawingUtils {
         const listed = Object.entries(byType).flatMap(([cls, players]) => players.map(player => ({player, cls})));
         const now = Date.now();
         const size = this.getMarkerSize(7);
-        const fontSize = `${this.getScaledFontSize(9, 6)}px`;
+        const px = this.getScaledFontSize(9, 6);
+        const fontSize = `${px}px`;
 
         for (const marker of markers) {
             const entry = listed.find(e => e.player.id === marker.playerId);
@@ -35,7 +54,8 @@ export class ActionsDrawing extends DrawingUtils {
             const point = this.transformPoint(marker.hX, marker.hY);
             ctx.globalAlpha = Math.max(0, 1 - age / ACTION_LIFETIME_MS);
             this.drawDiamond(ctx, point.x, point.y, size, CLASS_COLORS[entry.cls]);
-            this.drawTextItems(point.x + size / 2, point.y - size / 2, FAMILY_EMOJI[marker.family], ctx, fontSize, this.textColor);
+            const emoji = this.emojiImage(marker.family, px);
+            if (emoji) ctx.drawImage(emoji, point.x + size / 2, point.y - size / 2 - px);
 
             const label = `${entry.player.nickname} \u{00B7} ${(age / 1000).toFixed(1)}s`;
             ctx.font = `${fontSize} ${this.fontFamily}`;

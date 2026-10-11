@@ -60,12 +60,13 @@ describe('ActionsDrawing', () => {
         drawing.getScaledFontSize = vi.fn(s => s);
         drawing.drawDiamond = vi.fn();
         drawing.drawTextItems = vi.fn();
-        ctx = {font: '', globalAlpha: 1, measureText: vi.fn(() => ({width: 40}))};
+        ctx = {font: '', globalAlpha: 1, measureText: vi.fn(() => ({width: 40})), drawImage: vi.fn()};
     });
 
     afterEach(() => {
         vi.useRealTimers();
         vi.unstubAllGlobals();
+        vi.restoreAllMocks();
     });
 
     // @verified 2026-09-23: the diamond takes the colour of the class bucket the radar puts the player in.
@@ -92,18 +93,50 @@ describe('ActionsDrawing', () => {
         expect(drawing.drawDiamond).toHaveBeenCalledWith(ctx, 10, 20, 7, '#ef4444');
     });
 
-    // @verified 2026-09-23: one emoji per family at the top right of the diamond.
+    // @verified 2026-10-11: one emoji per family at the top right of the diamond, copied from its prerendered image.
+    // A colour emoji drawn with fillText under a changing globalAlpha cost 25 to 127 ms frames for 50 markers in Chrome
+    // 155 (measured 2026-10-11), the same image copied with drawImage none.
+    test.each(['presence', 'mount', 'combat', 'mobility'])('synthetic: a %s marker copies its emoji image to the top right', family => {
+        const image = {};
+        drawing.emojiImage = vi.fn(() => image);
+        spawn(players, 7, 'Anon', 0);
+
+        drawing.invalidate(ctx, [marker(7, {family})], players.getPlayersByType());
+
+        expect(drawing.emojiImage).toHaveBeenCalledWith(family, 9);
+        expect(ctx.drawImage).toHaveBeenCalledWith(image, 13.5, 7.5);
+        expect(drawing.drawTextItems.mock.calls.map(c => c[2])).toEqual(['Anon \u{00B7} 0.0s']);
+    });
+
+    // @verified 2026-10-11: the emoji image is drawn once per family and font size, then reused every frame.
     test.each([
         ['presence', '\u{2728}'],
         ['mount', '\u{1F40E}'],
         ['combat', '\u{2694}\u{FE0F}'],
         ['mobility', '\u{1F4A8}'],
-    ])('synthetic: a %s marker carries its emoji at the top right', (family, emoji) => {
+    ])('synthetic: the %s emoji image holds %s and is built once', (family, emoji) => {
+        const imageCtx = {font: '', fillStyle: '', fillText: vi.fn()};
+        const canvas = {width: 0, height: 0, getContext: vi.fn(() => imageCtx)};
+        vi.spyOn(document, 'createElement').mockReturnValue(canvas);
+
+        const first = drawing.emojiImage(family, 9);
+        const second = drawing.emojiImage(family, 9);
+
+        expect(first).toBe(canvas);
+        expect(second).toBe(canvas);
+        expect(document.createElement).toHaveBeenCalledTimes(1);
+        expect(imageCtx.fillText).toHaveBeenCalledWith(emoji, 0, 9);
+    });
+
+    // @verified 2026-10-11: a canvas with no 2D context gives no image, so the marker draws without its emoji.
+    test('synthetic: without a 2D context the marker draws no emoji and does not throw', () => {
+        vi.spyOn(document, 'createElement').mockReturnValue({getContext: () => null});
         spawn(players, 7, 'Anon', 0);
 
-        drawing.invalidate(ctx, [marker(7, {family})], players.getPlayersByType());
+        drawing.invalidate(ctx, [marker(7)], players.getPlayersByType());
 
-        expect(drawing.drawTextItems).toHaveBeenCalledWith(13.5, 16.5, emoji, ctx, '9px', 'white');
+        expect(ctx.drawImage).not.toHaveBeenCalled();
+        expect(drawing.drawDiamond).toHaveBeenCalled();
     });
 
     // @verified 2026-09-23: the nickname and the age with one decimal, centred under the diamond.
