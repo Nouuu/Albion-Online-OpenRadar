@@ -785,6 +785,25 @@ describe('MobsHandler', () => {
             expect(handler.getMobList()).toHaveLength(0);
         });
 
+        // @verified 2026-09-19: the fame tracker is told about each death before removal.
+        test('synthetic: death calls onMobDied with the dying mob', () => {
+            // synthetic: tests the onMobDied hook on the death branch.
+            addMob(2004);
+            handler.onMobDied = vi.fn();
+            handler.updateMobHealth({'0': 2004, '2': -600, '3': undefined});
+            expect(handler.onMobDied).toHaveBeenCalledTimes(1);
+            expect(handler.onMobDied.mock.calls[0][0].id).toBe(2004);
+        });
+
+        // @verified 2026-09-19: non-lethal damage does not fire onMobDied.
+        test('synthetic: non-lethal damage does not call onMobDied', () => {
+            // synthetic: tests the onMobDied hook stays silent on damage.
+            addMob(2005);
+            handler.onMobDied = vi.fn();
+            handler.updateMobHealth({'0': 2005, '2': -100, '3': 400});
+            expect(handler.onMobDied).not.toHaveBeenCalled();
+        });
+
         // @verified 2026-04-18: unknown id is no-op (not a mob, likely player).
         test('synthetic: unknown id in updateMobHealth is a no-op', () => {
             // synthetic: tests early-return when mob not found.

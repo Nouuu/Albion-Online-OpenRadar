@@ -386,9 +386,15 @@ export function onEvent(Parameters) {
         case EventCodes.NewSimpleItem:
         case EventCodes.NewEquipmentItem:
         case EventCodes.NewJournalItem:
+            // Inventory events - not currently used
+            break;
+
         case EventCodes.UpdateFame:
+            handlers.fameHandler?.onUpdateFame(Parameters);
+            break;
+
         case EventCodes.UpdateMoney:
-            // Inventory/economy events - not currently used
+            handlers.fameHandler?.onUpdateMoney(Parameters);
             break;
 
         case EventCodes.MobChangeState:

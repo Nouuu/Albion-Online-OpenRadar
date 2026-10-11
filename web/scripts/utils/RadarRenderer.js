@@ -4,6 +4,29 @@ import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
 import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 import {EnemyType} from '../handlers/MobsHandler.js';
+import {POPUP_DURATION_MS, parseFameAmount} from '../handlers/FameHandler.js';
+
+/**
+ * Format a fame amount: compact (12.3k, 1.2M) or exact (1,240)
+ */
+export function formatFame(amount, compact = false) {
+    // Drop a trailing ".0" so round numbers read "500k", not "500.0k"
+    const short = value => value.toFixed(1).replace(/\.0$/, '');
+    if (compact && amount >= 1e6) return `${short(amount / 1e6)}M`;
+    if (compact && amount >= 1e4) return `${short(amount / 1e3)}k`;
+    const digits = amount < 10 && !Number.isInteger(amount) ? 1 : 0;
+    return amount.toLocaleString('en-US', {maximumFractionDigits: digits});
+}
+
+/**
+ * Format a duration for the goal ETA: "2h 15m", "45m", "<1m"
+ */
+export function formatDuration(ms) {
+    const minutes = Math.round(ms / 60000);
+    if (minutes < 1) return '<1m';
+    const hours = Math.floor(minutes / 60);
+    return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
+}
 
 export class RadarRenderer {
     constructor(dependencies) {
@@ -321,6 +344,10 @@ export class RadarRenderer {
         this.renderDistanceRings(ctx);
         this.renderZoneInfo(ctx);
         this.renderStatsBox(ctx);
+        if (settingsSync.getBool('settingFameTracker', true)) {
+            this.renderFamePopups(ctx);
+            this.renderFameBox(ctx);
+        }
         this.renderThreatBorder(ctx);
         this.renderFlashOverlay(ctx);
     }
@@ -455,6 +482,144 @@ export class RadarRenderer {
             ctx.fillStyle = stat.color;
             ctx.fillText(labels[index], boxX + padX, boxY + padY + index * lineHeight);
         });
+    }
+
+    /**
+     * Fame text scale: canvas size times the user's "Fame text" slider
+     */
+    getFameTextScale(ctx) {
+        const userScale = settingsSync.getFloat('settingFameTextSize') || 1.0;
+        return Math.min(1, ctx.canvas.width / 500) * userScale;
+    }
+
+    /**
+     * Render floating "+X fame" text: at the killed mob for kills, on the player otherwise
+     */
+    renderFamePopups(ctx) {
+        const fame = this.handlers.fameHandler;
+        if (!fame || !this.drawingUtils) return;
+
+        const popups = fame.getActivePopups();
+        if (popups.length === 0) return;
+
+        const now = Date.now();
+        const scale = this.getFameTextScale(ctx);
+        const baseFontPx = Math.max(16, Math.round(28 * scale));
+
+        ctx.save();
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round';
+
+        for (const popup of popups) {
+            const progress = Math.max(0, Math.min(1, (now - popup.at) / POPUP_DURATION_MS));
+            const atMob = popup.kill && Number.isFinite(popup.posX) && Number.isFinite(popup.posY);
+            const hX = atMob ? -popup.posX + this.lpX : 0;
+            const hY = atMob ? popup.posY - this.lpY : 0;
+            const point = this.drawingUtils.transformPoint(hX, hY);
+            const text = `+${formatFame(popup.amount)} ${popup.silver ? 'silver' : 'fame'}`;
+
+            // Pop in slightly larger, then settle; rise while fading out over the second half.
+            // Silver sits below the player so it never covers fame popups.
+            const pop = progress < 0.1 ? 1.25 - 2.5 * progress : 1;
+            const fontPx = Math.round(baseFontPx * pop);
+            const y = popup.silver
+                ? point.y + baseFontPx * 1.3 - progress * baseFontPx * 0.6
+                : point.y - baseFontPx - progress * baseFontPx * 1.5;
+            ctx.font = `bold ${fontPx}px monospace`;
+            ctx.globalAlpha = Math.min(1, 2 * (1 - progress));
+
+            // Dark pill behind the text so it reads on any map background
+            const padX = fontPx * 0.4;
+            const w = ctx.measureText(text).width + padX * 2;
+            const h = fontPx * 1.35;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+            ctx.beginPath();
+            ctx.roundRect(point.x - w / 2, y - h / 2, w, h, h / 2);
+            ctx.fill();
+
+            ctx.lineWidth = Math.max(3, fontPx / 6);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+            ctx.strokeText(text, point.x, y);
+            ctx.fillStyle = popup.silver ? '#e5e7eb' : popup.kill ? '#ffd24a' : '#9be7ff';
+            ctx.fillText(text, point.x, y);
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * Render session box (bottom left): fame, silver, current pace, time played, fame goal
+     */
+    renderFameBox(ctx) {
+        const fame = this.handlers.fameHandler;
+        if (!fame?.hasSession()) return;
+
+        const rate = value => value === null ? '(…/h)' : `(${formatFame(value, true)}/h)`;
+        const {fame: total, silver} = fame.session;
+        const lines = [
+            {text: `⭐ ${formatFame(total, true)} fame  ${rate(fame.getFamePerHour())}`, color: '#ffd24a'}
+        ];
+        if (silver > 0) {
+            lines.push({text: `💰 ${formatFame(silver, true)} silver  ${rate(fame.getSilverPerHour())}`, color: '#e5e7eb'});
+        }
+        const pace = fame.getRecentFamePerHour();
+        if (pace !== null) {
+            lines.push({text: `⚡ last 5m: ${formatFame(pace, true)} fame/h`, color: '#9be7ff'});
+        }
+        lines.push({text: `⏱️ ${formatDuration(fame.getSessionDuration())} played`, color: '#cbd5e1'});
+
+        const goal = fame.getGoalProgress(parseFameAmount(settingsSync.get('settingFameGoal', '')));
+        if (goal) {
+            const eta = goal.ratio >= 1 ? 'done!' : goal.etaMs === null ? '…' : `~${formatDuration(goal.etaMs)} left`;
+            lines.push({text: `🎯 ${formatFame(goal.fame, true)} / ${formatFame(goal.goal, true)}  ${eta}`, color: '#86efac', bar: goal.ratio});
+        }
+
+        const canvasSize = ctx.canvas.width;
+        const scale = this.getFameTextScale(ctx);
+        const fontPx = Math.max(12, Math.round(20 * scale));
+        const lineHeight = Math.round(fontPx * 1.35);
+        const padX = Math.max(8, Math.round(12 * scale));
+        const padY = Math.max(6, Math.round(10 * scale));
+
+        const barHeight = Math.max(6, Math.round(fontPx * 0.55));
+        const barSpace = goal ? barHeight + Math.round(padY / 2) : 0;
+
+        ctx.font = `bold ${fontPx}px monospace`;
+        const maxTextWidth = lines.reduce((m, l) => Math.max(m, ctx.measureText(l.text).width), 0);
+        const boxWidth = Math.ceil(maxTextWidth) + padX * 2;
+        const boxHeight = padY + lines.length * lineHeight + barSpace + padY;
+        const boxX = 10;
+        const boxY = canvasSize - boxHeight - 10;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeStyle = 'rgba(255, 210, 74, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        lines.forEach((line, index) => {
+            ctx.fillStyle = line.color;
+            ctx.fillText(line.text, boxX + padX, boxY + padY + index * lineHeight);
+        });
+
+        if (goal) {
+            const barX = boxX + padX;
+            const barY = boxY + padY + lines.length * lineHeight;
+            const barWidth = boxWidth - padX * 2;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath();
+            ctx.roundRect(barX, barY, barWidth, barHeight, barHeight / 2);
+            ctx.fill();
+            if (goal.ratio > 0) {
+                ctx.fillStyle = '#86efac';
+                ctx.beginPath();
+                ctx.roundRect(barX, barY, Math.max(barHeight, barWidth * goal.ratio), barHeight, barHeight / 2);
+                ctx.fill();
+            }
+        }
     }
 
     /**
