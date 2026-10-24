@@ -8,14 +8,14 @@ function strictSettings(map) {
 }
 
 function allTrueForFamily(family) {
-    const key = {Fiber: 'settingLivingFiberEnchants', Hide: 'settingLivingHideEnchants', Log: 'settingLivingWoodEnchants', Ore: 'settingLivingOreEnchants', Rock: 'settingLivingRockEnchants'}[family];
+    const key = {Fiber: 'settingResourcesLivingFiber', Hide: 'settingResourcesLivingHide', Log: 'settingResourcesLivingWood', Ore: 'settingResourcesLivingOre', Rock: 'settingResourcesLivingRock'}[family];
     return {
         [key]: {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)},
     };
 }
 
 function allTrueStaticForFamily(family) {
-    const key = {Fiber: 'settingStaticFiberEnchants', Hide: 'settingStaticHideEnchants', Log: 'settingStaticWoodEnchants', Ore: 'settingStaticOreEnchants', Rock: 'settingStaticRockEnchants'}[family];
+    const key = {Fiber: 'settingResourcesStaticFiber', Hide: 'settingResourcesStaticHide', Log: 'settingResourcesStaticWood', Ore: 'settingResourcesStaticOre', Rock: 'settingResourcesStaticRock'}[family];
     return {
         [key]: {e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)},
     };
@@ -24,19 +24,19 @@ function allTrueStaticForFamily(family) {
 describe('shouldRenderLivingResource', () => {
     // @verified 2026-04-24: family-specific on+on path for Fiber at T5 e2.
     test('Fiber T5 e2 returns true when settings e2 T5 is on', () => {
-        const settings = {settingLivingFiberEnchants: {e2: [false, false, false, false, true, false, false, false]}};
+        const settings = {settingResourcesLivingFiber: {e2: [false, false, false, false, true, false, false, false]}};
         expect(shouldRenderLivingResource({name: 'Fiber', tier: 5, enchantmentLevel: 2}, strictSettings(settings))).toBe(true);
     });
 
     // @verified 2026-04-24: family-specific tier-off path for Hide at T4 e0.
     test('Hide T4 e0 returns false when settings e0 T4 is off', () => {
-        const settings = {settingLivingHideEnchants: {e0: [true, true, true, false, true, true, true, true]}};
+        const settings = {settingResourcesLivingHide: {e0: [true, true, true, false, true, true, true, true]}};
         expect(shouldRenderLivingResource({name: 'Hide', tier: 4, enchantmentLevel: 0}, strictSettings(settings))).toBe(false);
     });
 
-    // @verified 2026-04-24: Log maps to settingLivingWoodEnchants correctly.
-    test('Log (wood) T4 e3 resolves via settingLivingWoodEnchants key', () => {
-        const settings = {settingLivingWoodEnchants: {e3: [false, false, false, true, false, false, false, false]}};
+    // @verified 2026-04-24: Log maps to settingResourcesLivingWood correctly.
+    test('Log (wood) T4 e3 resolves via settingResourcesLivingWood key', () => {
+        const settings = {settingResourcesLivingWood: {e3: [false, false, false, true, false, false, false, false]}};
         expect(shouldRenderLivingResource({name: 'Log', tier: 4, enchantmentLevel: 3}, strictSettings(settings))).toBe(true);
     });
 
@@ -52,13 +52,13 @@ describe('shouldRenderLivingResource', () => {
 
     // @verified 2026-04-24: charges-only entity resolves via fallback chain.
     test('charges fallback for HarvestablesHandler entities without enchantmentLevel', () => {
-        const settings = {settingLivingFiberEnchants: {e2: [false, false, false, true, false, false, false, false]}};
+        const settings = {settingResourcesLivingFiber: {e2: [false, false, false, true, false, false, false, false]}};
         expect(shouldRenderLivingResource({name: 'Fiber', tier: 4, charges: 2}, strictSettings(settings))).toBe(true);
     });
 
     // @verified 2026-04-24: enchantmentLevel takes precedence when both fields present.
     test('enchantmentLevel takes precedence over charges if both present', () => {
-        const settings = {settingLivingFiberEnchants: {e1: Array(8).fill(true), e2: Array(8).fill(false)}};
+        const settings = {settingResourcesLivingFiber: {e1: Array(8).fill(true), e2: Array(8).fill(false)}};
         expect(shouldRenderLivingResource({name: 'Fiber', tier: 4, charges: 2, enchantmentLevel: 1}, strictSettings(settings))).toBe(true);
     });
 
@@ -104,7 +104,7 @@ describe('shouldRenderLivingResource', () => {
 
     // @verified 2026-04-24: settings missing the e{n} key returns false.
     test('settings object missing e{n} key returns false', () => {
-        const settings = {settingLivingHideEnchants: {e0: Array(8).fill(true)}};
+        const settings = {settingResourcesLivingHide: {e0: Array(8).fill(true)}};
         expect(shouldRenderLivingResource({name: 'Hide', tier: 4, enchantmentLevel: 2}, strictSettings(settings))).toBe(false);
     });
 
@@ -115,7 +115,7 @@ describe('shouldRenderLivingResource', () => {
 
     // @verified 2026-04-24: enchantmentLevel=0 must be respected (not fallthrough to charges), proves ?? over ||.
     test('enchantmentLevel 0 does not fall through to charges', () => {
-        const settings = {settingLivingFiberEnchants: {e0: Array(8).fill(true), e2: Array(8).fill(false)}};
+        const settings = {settingResourcesLivingFiber: {e0: Array(8).fill(true), e2: Array(8).fill(false)}};
         expect(shouldRenderLivingResource(
             {name: 'Fiber', tier: 4, enchantmentLevel: 0, charges: 2},
             strictSettings(settings)
@@ -124,21 +124,21 @@ describe('shouldRenderLivingResource', () => {
 });
 
 describe('shouldRenderStaticResource', () => {
-    // @verified 2026-04-24: Fiber maps to settingStaticFiberEnchants for the static filter path.
-    test('Fiber T5 e2 returns true when settingStaticFiberEnchants e2 T5 is on', () => {
-        const settings = {settingStaticFiberEnchants: {e2: [false, false, false, false, true, false, false, false]}};
+    // @verified 2026-04-24: Fiber maps to settingResourcesStaticFiber for the static filter path.
+    test('Fiber T5 e2 returns true when settingResourcesStaticFiber e2 T5 is on', () => {
+        const settings = {settingResourcesStaticFiber: {e2: [false, false, false, false, true, false, false, false]}};
         expect(shouldRenderStaticResource({name: 'Fiber', tier: 5, enchantmentLevel: 2}, strictSettings(settings))).toBe(true);
     });
 
-    // @verified 2026-04-24: Hide maps to settingStaticHideEnchants (dead carcass flow).
-    test('Hide T4 e0 returns false when settingStaticHideEnchants e0 T4 is off', () => {
-        const settings = {settingStaticHideEnchants: {e0: [true, true, true, false, true, true, true, true]}};
+    // @verified 2026-04-24: Hide maps to settingResourcesStaticHide (dead carcass flow).
+    test('Hide T4 e0 returns false when settingResourcesStaticHide e0 T4 is off', () => {
+        const settings = {settingResourcesStaticHide: {e0: [true, true, true, false, true, true, true, true]}};
         expect(shouldRenderStaticResource({name: 'Hide', tier: 4, enchantmentLevel: 0}, strictSettings(settings))).toBe(false);
     });
 
-    // @verified 2026-04-24: Log maps to settingStaticWoodEnchants, parity with living path.
-    test('Log (wood) T4 e3 resolves via settingStaticWoodEnchants key', () => {
-        const settings = {settingStaticWoodEnchants: {e3: [false, false, false, true, false, false, false, false]}};
+    // @verified 2026-04-24: Log maps to settingResourcesStaticWood, parity with living path.
+    test('Log (wood) T4 e3 resolves via settingResourcesStaticWood key', () => {
+        const settings = {settingResourcesStaticWood: {e3: [false, false, false, true, false, false, false, false]}};
         expect(shouldRenderStaticResource({name: 'Log', tier: 4, enchantmentLevel: 3}, strictSettings(settings))).toBe(true);
     });
 
@@ -154,13 +154,13 @@ describe('shouldRenderStaticResource', () => {
 
     // @verified 2026-04-24: charges fallback works for HarvestablesHandler entities that carry charges only.
     test('charges fallback resolves for HarvestablesHandler carcass entities', () => {
-        const settings = {settingStaticFiberEnchants: {e2: [false, false, false, true, false, false, false, false]}};
+        const settings = {settingResourcesStaticFiber: {e2: [false, false, false, true, false, false, false, false]}};
         expect(shouldRenderStaticResource({name: 'Fiber', tier: 4, charges: 2}, strictSettings(settings))).toBe(true);
     });
 
     // @verified 2026-04-24: static lookup does not leak into living settings (key isolation).
     test('static function uses static key, ignores a living-only settings object', () => {
-        const settingsLivingOnly = {settingLivingFiberEnchants: {e0: Array(8).fill(true)}};
+        const settingsLivingOnly = {settingResourcesLivingFiber: {e0: Array(8).fill(true)}};
         expect(shouldRenderStaticResource({name: 'Fiber', tier: 4, enchantmentLevel: 0}, strictSettings(settingsLivingOnly))).toBe(false);
     });
 
@@ -181,7 +181,7 @@ describe('shouldRenderStaticResource', () => {
 
     // @verified 2026-04-24: enchantmentLevel=0 static path (proves ?? behaviour matches living path).
     test('enchantmentLevel 0 respected for static path, does not fallthrough to charges', () => {
-        const settings = {settingStaticFiberEnchants: {e0: Array(8).fill(true), e2: Array(8).fill(false)}};
+        const settings = {settingResourcesStaticFiber: {e0: Array(8).fill(true), e2: Array(8).fill(false)}};
         expect(shouldRenderStaticResource(
             {name: 'Fiber', tier: 4, enchantmentLevel: 0, charges: 2},
             strictSettings(settings)

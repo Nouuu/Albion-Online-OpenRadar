@@ -9,7 +9,7 @@ export class MistsDungeonDrawing extends DrawingUtils {
     }
 
     draw(ctx, portals) {
-        if (!settingsSync.getBool('settingShowKnightfallAbbey', true)) return;
+        if (!settingsSync.getBool('settingMistsKnightfallAbbey')) return;
         for (const portal of portals) {
             if (!portal.drawName) continue;
             const point = this.transformPoint(portal.hX, portal.hY);

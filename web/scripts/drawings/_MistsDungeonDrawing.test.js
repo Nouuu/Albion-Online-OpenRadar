@@ -52,8 +52,8 @@ describe('MistsDungeonDrawing', () => {
     });
 
     // @verified 2026-05-14: synthetic. Setting off skips draw entirely.
-    test('draw skips entirely when settingShowKnightfallAbbey is false', () => {
-        settingsSync.getBool.mockImplementation(key => key !== 'settingShowKnightfallAbbey');
+    test('draw skips entirely when settingMistsKnightfallAbbey is false', () => {
+        settingsSync.getBool.mockImplementation(key => key !== 'settingMistsKnightfallAbbey');
         const portals = [{id: 1, hX: 0, hY: 0, drawName: 'mists_abbey'}];
 
         drawing.draw({}, portals);

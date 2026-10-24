@@ -5,6 +5,7 @@ import {dirname, join} from 'node:path';
 import {HarvestablesDatabase} from '../data/HarvestablesDatabase.js';
 import {ItemsDatabase} from '../data/ItemsDatabase.js';
 import {MobsDatabase} from '../data/MobsDatabase.js';
+import {SpellsDatabase} from '../data/SpellsDatabase.js';
 import zonesDatabase, {ZonesDatabase} from '../data/ZonesDatabase.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -32,6 +33,18 @@ export function loadRealItemsDatabase() {
     const db = new ItemsDatabase();
     db._parseItems(readJSON('items.min.json'));
     db.isLoaded = true;
+    return db;
+}
+
+export async function loadRealSpellsDatabase() {
+    const db = new SpellsDatabase();
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = async () => ({ok: true, json: async () => readJSON('spells.min.json')});
+    try {
+        await db.load('spells.min.json');
+    } finally {
+        globalThis.fetch = realFetch;
+    }
     return db;
 }
 

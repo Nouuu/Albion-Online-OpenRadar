@@ -19,8 +19,8 @@ export class FishingDrawing extends DrawingUtils
     draw(ctx, fishes)
     {
         this.lastVisibleCount = 0;
-        if (!settingsSync.getBool("settingFishing")) return;
-        const showCount = settingsSync.getBool("settingResourceCount");
+        if (!settingsSync.getBool("settingResourcesFishing")) return;
+        const showCount = settingsSync.getBool("settingRadarResourceCount");
         for (const fish of fishes)
         {
             const point = this.transformPoint(fish.hX, fish.hY);

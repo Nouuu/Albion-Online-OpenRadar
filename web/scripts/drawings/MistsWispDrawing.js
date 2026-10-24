@@ -9,17 +9,17 @@ export class MistsWispDrawing extends DrawingUtils {
     }
 
     invalidate(ctx, mists) {
-        if (!settingsSync.getBool('settingWispSpawn')) return;
+        if (!settingsSync.getBool('settingMistsWisps')) return;
 
-        const showId = settingsSync.getBool('settingWispSpawnDebugID');
+        const showId = settingsSync.getBool('settingDebugMistsWispIds');
         const fontSize = `${this.getScaledFontSize(10, 7)}px`;
         const yOffset = this.getMarkerSize(26);
 
         for (const m of mists) {
-            if (!settingsSync.getBool('settingMistE' + m.enchant)) continue;
+            if (m.enchant === undefined || m.enchant === null || !settingsSync.getBool('settingMistsEnchant' + m.enchant)) continue;
 
-            const soloAllowed = settingsSync.getBool('settingMistSolo') && m.type == 0;
-            const duoAllowed = settingsSync.getBool('settingMistDuo') && m.type == 1;
+            const soloAllowed = settingsSync.getBool('settingMistsSolo') && m.type == 0;
+            const duoAllowed = settingsSync.getBool('settingMistsDuo') && m.type == 1;
             if (!soloAllowed && !duoAllowed) continue;
 
             const p = this.transformPoint(m.hX, m.hY);

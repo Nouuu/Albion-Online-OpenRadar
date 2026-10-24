@@ -1,10 +1,12 @@
 // synthetic: the backend playing a sound is not observable in a capture
 import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
 
+const {registryDefault} = await vi.hoisted(() => import('./SettingsRegistry.js'));
+
 vi.mock('./SettingsSync.js', () => ({
     default: {
-        get: vi.fn((_k, d) => d),
-        getFloat: vi.fn((_k, d) => d),
+        get: vi.fn(key => registryDefault(key)),
+        getFloat: vi.fn(key => registryDefault(key)),
     },
 }));
 
@@ -28,8 +30,8 @@ describe('AlertSound', () => {
         toast = {warning: vi.fn(), error: vi.fn(), info: vi.fn(), success: vi.fn()};
         window.toast = toast;
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
-        settingsSync.get.mockImplementation((_k, d) => d);
-        settingsSync.getFloat.mockImplementation((_k, d) => d);
+        settingsSync.get.mockImplementation(key => registryDefault(key));
+        settingsSync.getFloat.mockImplementation(key => registryDefault(key));
     });
 
     afterEach(() => {
