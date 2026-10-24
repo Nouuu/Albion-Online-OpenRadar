@@ -179,7 +179,7 @@ describe('DungeonsHandler', () => {
     describe('MISTS portals (SHARED_MIST_WISP_PORTAL_MOB)', () => {
         // @verified 2026-09-03: dungeonEvent picks Parameters[9] (rarity) over Parameters[7] (variant) for MISTS portals.
         test('MIST-6: dungeonEvent on MISTS_SOLO_YELLOW uses Parameters[9] as enchant, not Parameters[7]', () => {
-            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 7: 2, 9: 0, 252: 325});
+            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 7: 2, 9: 0, 252: 324});
 
             expect(handler.dungeonList).toHaveLength(1);
             expect(handler.dungeonList[0].enchant).toBe(0);
@@ -188,7 +188,7 @@ describe('DungeonsHandler', () => {
 
         // @verified 2026-09-03: same MISTS_SOLO_YELLOW name with Parameters[9]=1 renders dungeon_1 (Peu commun).
         test('MIST-6: Parameters[9]=1 with same MISTS_SOLO_YELLOW name renders dungeon_1', () => {
-            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 7: 2, 9: 1, 252: 325});
+            handler.dungeonEvent({0: 1, 1: [0, 0], 3: 'MISTS_SOLO_YELLOW', 7: 2, 9: 1, 252: 324});
 
             expect(handler.dungeonList[0].enchant).toBe(1);
             expect(handler.dungeonList[0].drawName).toBe('dungeon_1');
@@ -196,7 +196,7 @@ describe('DungeonsHandler', () => {
 
         // @verified 2026-09-03: non-MISTS dungeon also reads Parameters[9] (universal enchant source).
         test('MIST-6: non-MISTS dungeon also uses Parameters[9] as enchant (ignoring Parameters[7] variant id)', () => {
-            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'T5_PORTAL_ROYAL_SOLO', 7: 229, 9: 0, 252: 325});
+            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'T5_PORTAL_ROYAL_SOLO', 7: 229, 9: 0, 252: 324});
 
             expect(handler.dungeonList[0].enchant).toBe(0);
             expect(handler.dungeonList[0].drawName).toBe('dungeon_0');
@@ -228,7 +228,7 @@ describe('DungeonsHandler', () => {
 
         // @verified 2026-09-03: T6_MORGANA enchant 2 is read from Parameters[9], never from the [7] variant id.
         test('MIST-6: T6_MORGANA with Parameters[9]=2 renders group_2 (never the Parameters[7] variant id)', () => {
-            handler.dungeonEvent({0: 5199, 1: [87, 7], 3: 'T6_MORGANA', 7: 327, 9: 2, 252: 325});
+            handler.dungeonEvent({0: 5199, 1: [87, 7], 3: 'T6_MORGANA', 7: 327, 9: 2, 252: 324});
 
             expect(handler.dungeonList).toHaveLength(1);
             expect(handler.dungeonList[0].enchant).toBe(2);
@@ -273,7 +273,7 @@ describe('DungeonsHandler', () => {
         // @verified 2026-09-03: regression guard. A standard dungeon with a populated
         // Parameters[3] must keep using it (not the Parameters[16] fallback).
         test('MIST-6: dungeonEvent keeps Parameters[3] when present even if Parameters[16] differs', () => {
-            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'CORRUPTED_SOLO_NONLETHAL', 9: 0, 16: 'IRRELEVANT', 252: 325});
+            handler.dungeonEvent({0: 2, 1: [0, 0], 3: 'CORRUPTED_SOLO_NONLETHAL', 9: 0, 16: 'IRRELEVANT', 252: 324});
 
             expect(handler.dungeonList).toHaveLength(1);
             expect(handler.dungeonList[0].drawName).toBe('corrupt');

@@ -554,4 +554,6 @@ export const OperationCodes =
 	SmartQueueRegionQueueInfo : 551,
 	SurveyCompleted : 552,
 	GetSurveyLogs : 553,
+	ClientFrametimeSpike : 554,
+	RequestDebugMobInfo : 555,
 };

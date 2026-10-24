@@ -159,7 +159,7 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent MistsPlayerJoinedInfo (event 522)
+    // onEvent MistsPlayerJoinedInfo (event 521)
     // -------------------------------------------------------------------------
     describe('onEvent MistsPlayerJoinedInfo', () => {
         // @verified 2026-04-23: pcap-derived. Event 519 with Parameters[2]="@MISTS@<guid>" and
@@ -169,7 +169,7 @@ describe('EventRouter', () => {
             const fix = await loadFixture('mists', 'player-joined-info');
             const entry = fix.messages.find(m => m.parameters['3'] === true);
             const p = normalizeParams(entry.parameters);
-            p[252] = 522; // Dragonfire MistsPlayerJoinedInfo (SAT+ADA 2026-08-31); fixture shape is pre-patch, code was 521
+            p[252] = 521; // 10.0.4 MistsPlayerJoinedInfo (SAT+AFM+ADC 2026-10-12); fixture shape is pre-patch, code was 519
 
             EventRouter.onEvent(p);
 
@@ -179,12 +179,12 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-23: the first pcap message has Parameters[2]="0212" (Royal cluster) with no
         // Parameters[3] flag. Must NOT overwrite map.id (not a Mists entry, just session info).
-        test('MIST-7: event 522 without Parameters[3] flag does not update map.id', async () => {
+        test('MIST-7: event 521 without Parameters[3] flag does not update map.id', async () => {
             const fix = await loadFixture('mists', 'player-joined-info');
             map.id = '0212';
             const msg = fix.messages[0];
             const p = normalizeParams(msg.parameters);
-            p[252] = 522; // Dragonfire MistsPlayerJoinedInfo (SAT+ADA 2026-08-31); fixture shape is pre-patch, code was 521
+            p[252] = 521; // 10.0.4 MistsPlayerJoinedInfo (SAT+AFM+ADC 2026-10-12); fixture shape is pre-patch, code was 519
 
             EventRouter.onEvent(p);
 
@@ -192,13 +192,13 @@ describe('EventRouter', () => {
             expect(radarRenderer.setMap).not.toHaveBeenCalled();
         });
 
-        // @verified 2026-04-23: idempotent. Re-firing event 522 for the same Mists instance does not
+        // @verified 2026-04-23: idempotent. Re-firing event 521 for the same Mists instance does not
         // re-trigger setMap.
-        test('MIST-7: re-firing event 522 for same instance does not re-notify renderer', () => {
+        test('MIST-7: re-firing event 521 for same instance does not re-notify renderer', () => {
             map.id = '@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434';
             EventRouter.onEvent({
                 0: 1,
-                252: 522,
+                252: 521,
                 2: '@MISTS@a40183ea-3d07-4d85-b7a2-4db690f4e434',
                 3: true,
                 4: '0212'
@@ -220,12 +220,12 @@ describe('EventRouter', () => {
         // @verified 2026-04-29: source: session log 2026-04-26T14-33-25.jsonl event 521
         // @MISTS@9f9a62f3-... fired while map.id was already a BZ. Override origin is taken
         // from the previous map id, not Parameters[4] (which carries the joining player's origin).
-        test('MIST-90: event 522 entry from BZ registers black-zone override and persists sessionStorage', () => {
+        test('MIST-90: event 521 entry from BZ registers black-zone override and persists sessionStorage', () => {
             map.id = '3316';
 
             EventRouter.onEvent({
                 0: 1,
-                252: 522,
+                252: 521,
                 2: '@MISTS@9f9a62f3-c9a8-418c-9ad0-440580332ab5',
                 3: true,
                 4: '3316'
@@ -247,7 +247,7 @@ describe('EventRouter', () => {
             const fix = await loadFixture('mists', 'player-joined-info');
             const entry = fix.messages.find(m => m.parameters['3'] === true);
             const p = normalizeParams(entry.parameters);
-            p[252] = 522; // Dragonfire MistsPlayerJoinedInfo (SAT+ADA 2026-08-31); fixture shape is pre-patch, code was 521
+            p[252] = 521; // 10.0.4 MistsPlayerJoinedInfo (SAT+AFM+ADC 2026-10-12); fixture shape is pre-patch, code was 519
 
             EventRouter.onEvent(p);
 
@@ -256,10 +256,10 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-29: synthetic. Mirrors the first message of the pcap fixture
         // (Parameters[2]==Parameters[4], no [3] flag, presence info, not a Mist entry).
-        test('MIST-90: event 522 without Parameters[3] flag does not register override', () => {
+        test('MIST-90: event 521 without Parameters[3] flag does not register override', () => {
             EventRouter.onEvent({
                 0: 1,
-                252: 522,
+                252: 521,
                 2: '3316',
                 4: '3316'
             });
@@ -274,7 +274,7 @@ describe('EventRouter', () => {
             map.id = '99999_unknown_zone';
             EventRouter.onEvent({
                 0: 1,
-                252: 522,
+                252: 521,
                 2: '@MISTS@deadbeef',
                 3: true,
                 4: '99999_unknown_zone'
@@ -291,7 +291,7 @@ describe('EventRouter', () => {
             map.id = '3316';
             EventRouter.onEvent({
                 0: 1,
-                252: 522,
+                252: 521,
                 2: '@MISTS@x',
                 3: true,
                 4: '3316'
@@ -312,14 +312,14 @@ describe('EventRouter', () => {
             map.id = '3316';
             EventRouter.onEvent({
                 0: 1,
-                252: 522,
+                252: 521,
                 2: '@MISTS@first',
                 3: true,
                 4: '3316'
             });
             EventRouter.onEvent({
                 0: 2,
-                252: 522,
+                252: 521,
                 2: '@MISTS@second',
                 3: true,
                 4: '3316'
@@ -362,7 +362,7 @@ describe('EventRouter', () => {
 
         // @verified 2026-04-29: source: session log 2026-04-29T19-23-39.jsonl, sequence
         // 17:25:32 op 2 Join Parameters[8]="0344" then 17:26:11 op 2 Join
-        // Parameters[8]="@MISTS@b0676408-..." (no event 522 with Parameters[3]=true fired).
+        // Parameters[8]="@MISTS@b0676408-..." (no event 521 with Parameters[3]=true fired).
         test('MIST-90: op 2 Join entry into Mist from BZ origin registers black-zone override', () => {
             EventRouter.onResponse({253: OperationCodes.Join, 8: '0344', 9: [0, 0]}, clearHandlers);
             expect(map.id).toBe('0344');
@@ -716,27 +716,27 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent ChangeFlaggingFinished (365)
+    // onEvent ChangeFlaggingFinished (364)
     // -------------------------------------------------------------------------
     describe('onEvent ChangeFlaggingFinished', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
-        test('onEvent routes ChangeFlaggingFinished (P[252]=365) to playersHandler.updatePlayerFaction', async () => {
-            // pcap-derived shape: players/faction-change.json message[0]. Code resynced to post-patch 365 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums.
+        test('onEvent routes ChangeFlaggingFinished (P[252]=364) to playersHandler.updatePlayerFaction', async () => {
+            // pcap-derived shape: players/faction-change.json message[0]. Code resynced to 10.0.4 364 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('players', 'faction-change');
             const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 365;
+            p[252] = 364;
 
             EventRouter.onEvent(p);
 
             expect(handlers.playersHandler.updatePlayerFaction).toHaveBeenCalledWith(p[0], p[1]);
         });
 
-        // @verified 2026-04-18: second pcap variant, dispatch verified after EventCodes refresh.
-        test('onEvent routes ChangeFlaggingFinished second variant (P[252]=365) to updatePlayerFaction', async () => {
-            // pcap-derived shape: players/faction-change.json message[1]. Code resynced to post-patch 365 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        // @verified 2026-10-24: second pcap variant, dispatch verified after the 10.0.4 EventCodes refresh.
+        test('onEvent routes ChangeFlaggingFinished second variant (P[252]=364) to updatePlayerFaction', async () => {
+            // pcap-derived shape: players/faction-change.json message[1]. Code resynced to 10.0.4 364 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('players', 'faction-change');
             const p = normalizeParams(fix.messages[1].parameters);
-            p[252] = 365;
+            p[252] = 364;
 
             EventRouter.onEvent(p);
 
@@ -745,14 +745,15 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent Mounted (211)
+    // onEvent Mounted (210)
     // -------------------------------------------------------------------------
     describe('onEvent Mounted', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
-        test('onEvent routes Mounted (P[252]=211) to playersHandler.handleMountedPlayerEvent', async () => {
-            // pcap-derived: players/mounted.json message[0], P[252]=211
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums.
+        test('onEvent routes Mounted (P[252]=210) to playersHandler.handleMountedPlayerEvent', async () => {
+            // pcap-derived shape: players/mounted.json message[0]. Code resynced to 10.0.4 210 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('players', 'mounted');
             const p = normalizeParams(fix.messages[0].parameters);
+            p[252] = 210;
 
             EventRouter.onEvent(p);
 
@@ -934,15 +935,15 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewRandomDungeonExit (325)
+    // onEvent NewRandomDungeonExit (324)
     // -------------------------------------------------------------------------
     describe('onEvent NewRandomDungeonExit', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
-        test('onEvent routes NewRandomDungeonExit (P[252]=325) to dungeonsHandler.dungeonEvent', async () => {
-            // pcap-derived shape: dungeons/spawn.json message[0]. Code resynced to post-patch 325 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums.
+        test('onEvent routes NewRandomDungeonExit (P[252]=324) to dungeonsHandler.dungeonEvent', async () => {
+            // pcap-derived shape: dungeons/spawn.json message[0]. Code resynced to 10.0.4 324 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('dungeons', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 325;
+            p[252] = 324;
 
             EventRouter.onEvent(p);
 
@@ -951,15 +952,15 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewLootChest (393)
+    // onEvent NewLootChest (392)
     // -------------------------------------------------------------------------
     describe('onEvent NewLootChest', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
-        test('onEvent routes NewLootChest (P[252]=393) to chestsHandler.addChestEvent', async () => {
-            // pcap-derived shape: chests/spawn.json message[0]. Code resynced to post-patch 393 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums.
+        test('onEvent routes NewLootChest (P[252]=392) to chestsHandler.addChestEvent', async () => {
+            // pcap-derived shape: chests/spawn.json message[0]. Code resynced to 10.0.4 392 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('chests', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 393;
+            p[252] = 392;
 
             EventRouter.onEvent(p);
 
@@ -968,27 +969,27 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewFishingZoneObject (361)
+    // onEvent NewFishingZoneObject (360)
     // -------------------------------------------------------------------------
     describe('onEvent NewFishingZoneObject', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
-        test('onEvent routes NewFishingZoneObject (P[252]=361) to fishingHandler.newFishEvent', async () => {
-            // pcap-derived shape: fishing/spawn.json message[0]. Code resynced to post-patch 361 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums.
+        test('onEvent routes NewFishingZoneObject (P[252]=360) to fishingHandler.newFishEvent', async () => {
+            // pcap-derived shape: fishing/spawn.json message[0]. Code resynced to 10.0.4 360 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('fishing', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 361;
+            p[252] = 360;
 
             EventRouter.onEvent(p);
 
             expect(handlers.fishingHandler.newFishEvent).toHaveBeenCalledWith(p);
         });
 
-        // @verified 2026-04-18: FishingNodeFish variant, dispatch verified after EventCodes refresh.
-        test('onEvent routes NewFishingZoneObject FishingNodeFish variant (P[252]=361) to newFishEvent', async () => {
-            // pcap-derived shape: fishing/spawn.json message[2]. Code resynced to post-patch 361 (SAT+ADA 2026-06-29), pending live-capture re-verification.
+        // @verified 2026-10-24: FishingNodeFish variant, dispatch verified after the 10.0.4 EventCodes refresh.
+        test('onEvent routes NewFishingZoneObject FishingNodeFish variant (P[252]=360) to newFishEvent', async () => {
+            // pcap-derived shape: fishing/spawn.json message[2]. Code resynced to 10.0.4 360 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('fishing', 'spawn');
             const p = normalizeParams(fix.messages[2].parameters);
-            p[252] = 361;
+            p[252] = 360;
 
             EventRouter.onEvent(p);
 
@@ -997,13 +998,13 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent FishingFinished (358)
+    // onEvent FishingFinished (357)
     // -------------------------------------------------------------------------
     describe('onEvent FishingFinished', () => {
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis.
-        test('onEvent routes FishingFinished (P[252]=358) to fishingHandler.fishingEnd', () => {
-            // synthetic: no fishingEnd fixture in corpus; upstream value is 356
-            const p = {0: 999, 252: 358};
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums.
+        test('onEvent routes FishingFinished (P[252]=357) to fishingHandler.fishingEnd', () => {
+            // synthetic: no fishingEnd fixture in corpus
+            const p = {0: 999, 252: 357};
 
             EventRouter.onEvent(p);
 
@@ -1012,25 +1013,25 @@ describe('EventRouter', () => {
     });
 
     // -------------------------------------------------------------------------
-    // onEvent NewCagedObject (533) + CagedObjectStateUpdated (534)
+    // onEvent NewCagedObject (532) + CagedObjectStateUpdated (533)
     // -------------------------------------------------------------------------
     describe('onEvent WispCage', () => {
         // @verified 2026-04-19: pcap-derived from capture-70 confirms P[252]=530 in real traffic. Dispatch routes to newCageEvent.
-        test('onEvent routes NewCagedObject (P[252]=533) to wispCageHandler.newCageEvent', async () => {
-            // pcap-derived shape: wispcage/spawn.json message[0]. Code resynced to Dragonfire 533 (SAT+ADA 2026-08-31), pending live-capture re-verification.
+        test('onEvent routes NewCagedObject (P[252]=532) to wispCageHandler.newCageEvent', async () => {
+            // pcap-derived shape: wispcage/spawn.json message[0]. Code resynced to 10.0.4 532 (SAT+AFM+ADC 2026-10-12), pending live-capture re-verification.
             const fix = await loadFixture('wispcage', 'spawn');
             const p = normalizeParams(fix.messages[0].parameters);
-            p[252] = 533;
+            p[252] = 532;
 
             EventRouter.onEvent(p);
 
             expect(handlers.wispCageHandler.newCageEvent).toHaveBeenCalledWith(p);
         });
 
-        // @verified 2026-04-18: dispatch verified after EventCodes refresh against upstream StatisticsAnalysis master fetch. Capture-70 has no CagedObjectStateUpdated events so this stays synthetic.
-        test('onEvent routes CagedObjectStateUpdated (P[252]=534) to wispCageHandler.cageOpenedEvent', () => {
-            // synthetic: no wispcage-opened fixture in corpus; upstream value is 531
-            const p = {0: 777, 252: 534};
+        // @verified 2026-10-24: dispatch verified after the 10.0.4 EventCodes refresh against three upstream enums. Capture-70 has no CagedObjectStateUpdated events so this stays synthetic.
+        test('onEvent routes CagedObjectStateUpdated (P[252]=533) to wispCageHandler.cageOpenedEvent', () => {
+            // synthetic: no wispcage-opened fixture in corpus
+            const p = {0: 777, 252: 533};
 
             EventRouter.onEvent(p);
 
@@ -1297,11 +1298,12 @@ describe('EventRouter', () => {
         // inserted a parameter at [4] on event 325, so the MISTS tag moved from [15] to [16]. The abbey
         // entrance arrives with param[6]="SHARED_MIST_DUNGEON_ENTRANCE_SMALL", param[3]="" and
         // param[16]="MISTS_DUNGEON_SOLO_YELLOW". Route to mistsDungeonHandler, not dungeonsHandler.
-        test('event 325 with param[16] starting MISTS_DUNGEON routes to mistsDungeonHandler.addPortal', async () => {
+        test('event 324 with param[16] starting MISTS_DUNGEON routes to mistsDungeonHandler.addPortal', async () => {
             const fix = await loadFixture('dungeons', 'spawn');
             const entry = fix.messages.find(m => m.parameters['6'] === 'SHARED_MIST_DUNGEON_ENTRANCE_SMALL');
             const p = normalizeParams(entry.parameters);
             expect(p[16]).toBe('MISTS_DUNGEON_SOLO_YELLOW');
+            p[252] = 324; // fixture shape is pre-patch, code was 325
 
             EventRouter.onEvent(p);
 
@@ -1312,10 +1314,11 @@ describe('EventRouter', () => {
 
         // @verified 2026-09-03: pcap-derived, same fixture. A standard random dungeon exit carries no MISTS
         // tag at [16] and still routes to dungeonsHandler.
-        test('event 325 without MISTS_DUNGEON tag routes to dungeonsHandler.dungeonEvent', async () => {
+        test('event 324 without MISTS_DUNGEON tag routes to dungeonsHandler.dungeonEvent', async () => {
             const fix = await loadFixture('dungeons', 'spawn');
             const entry = fix.messages.find(m => m.parameters['4'] === 'RD_DUNGEON_BLACK_3');
             const p = normalizeParams(entry.parameters);
+            p[252] = 324; // fixture shape is pre-patch, code was 325
 
             EventRouter.onEvent(p);
 
@@ -1326,11 +1329,12 @@ describe('EventRouter', () => {
         // @verified 2026-09-03: pcap-derived, same fixture. The portal a wisp opens arrives with
         // param[6]="SHARED_MIST_WISP_PORTAL_MOB" and param[16]="MISTS_DUO_BLACK" (no DUNGEON). It routes
         // to dungeonsHandler, NOT mistsDungeonHandler. The detection key is the MISTS_DUNGEON prefix.
-        test('event 325 with MISTS_DUO (non-DUNGEON) routes to dungeonsHandler, not mistsDungeonHandler', async () => {
+        test('event 324 with MISTS_DUO (non-DUNGEON) routes to dungeonsHandler, not mistsDungeonHandler', async () => {
             const fix = await loadFixture('dungeons', 'spawn');
             const entry = fix.messages.find(m => m.parameters['6'] === 'SHARED_MIST_WISP_PORTAL_MOB');
             const p = normalizeParams(entry.parameters);
             expect(p[16]).toBe('MISTS_DUO_BLACK');
+            p[252] = 324; // fixture shape is pre-patch, code was 325
 
             EventRouter.onEvent(p);
 
@@ -1339,8 +1343,8 @@ describe('EventRouter', () => {
         });
 
         // @verified 2026-09-03: synthetic guard. Missing position skips abbey dispatch silently.
-        test('event 325 MISTS_DUNGEON with missing position does not call addPortal', () => {
-            EventRouter.onEvent({0: 1, 252: 325, 16: 'MISTS_DUNGEON_SOLO_BLACK'});
+        test('event 324 MISTS_DUNGEON with missing position does not call addPortal', () => {
+            EventRouter.onEvent({0: 1, 252: 324, 16: 'MISTS_DUNGEON_SOLO_BLACK'});
 
             expect(handlers.mistsDungeonHandler.addPortal).not.toHaveBeenCalled();
         });

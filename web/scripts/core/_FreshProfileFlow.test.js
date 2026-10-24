@@ -41,10 +41,10 @@ describe('fresh profile full flow', () => {
 
         const cluster = await loadFixture('router', 'change-cluster-bz');
         EventRouter.onResponse(normalizeParams(cluster.messages[0].parameters), vi.fn());
-        for (const [handler, scenario] of [['players', 'spawn'], ['dungeons', 'spawn']]) {
-            const fx = await loadFixture(handler, scenario);
-            for (const message of fx.messages) EventRouter.onEvent(normalizeParams(message.parameters));
-        }
+        const players = await loadFixture('players', 'spawn');
+        for (const message of players.messages) EventRouter.onEvent(normalizeParams(message.parameters));
+        const dungeons = await loadFixture('dungeons', 'spawn');
+        for (const message of dungeons.messages) EventRouter.onEvent({...normalizeParams(message.parameters), 252: 324}); // fixture shape is pre-patch, code was 325
         const chests = await loadFixture('chests', 'spawn');
         chestsHandler.addChestEvent(normalizeParams(chests.messages[0].parameters));
 

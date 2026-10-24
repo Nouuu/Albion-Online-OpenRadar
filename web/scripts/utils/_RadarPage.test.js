@@ -328,7 +328,7 @@ describe('radar.gohtml registration', () => {
 
 describe('static entity cleanup', () => {
     // pcap-derived: dungeons/spawn.json message[0] (dungeon), message[2] (Knightfall portal via mistsDungeon.addPortal),
-    // chests/spawn.json message[0] via addChestEvent (fixture 252=391, current NewLootChest=393, code drift),
+    // chests/spawn.json message[0] via addChestEvent (fixture 252=391, current NewLootChest=392, code drift),
     // wispcage/spawn.json message[0].
     test('@verified 2026-09-24: clearHandlers after router/change-cluster.json empties dungeon, chest, cage and Knightfall lists', async () => {
         await page.init();
