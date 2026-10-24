@@ -2,7 +2,7 @@
 
 How OpenRadar detects portals, feu follets (wisp signs), and wisp cages in the Mists biome.
 
-*Last verified against code: 2026-09-25. Codes are post 2026-06-29 patch, which shifted everything at or above 248 by +2.*
+*Last verified against code: 2026-10-24. Codes are post 10.0.4 (2026-10-12), which removed one event after NewMob and moved every code at or above 124 down by 1.*
 
 ## Detection surface
 
@@ -70,16 +70,16 @@ When a player enters the Mists, the cluster id arrives via `Event 521 MistsPlaye
 | Code | Symbol | Status |
 |---|---|---|
 | 123 | NewMob | Routed. Mob spawns; a portal wisp carries its `MISTS_*` tag at `Parameters[33]` since Dragonfire, its enchant at `[34]`. |
-| 533 | NewCagedObject | Routed. Wisp cages. |
-| 534 | CagedObjectStateUpdated | Routed. Cage opened. |
-| 522 | MistsPlayerJoinedInfo | Routed. Mists entry signal; applies the map change with origin cluster. |
-| 521 | NewMistsImmediateReturnExit | Not routed. Mists exit signal. |
-| 523 | NewMistsStaticEntrance | Not routed. |
-| 532 | MistsEntranceDataChanged | Not routed. |
-| 526 | NewMistsWispSpawn | Not routed. Initial design assumed this carried feu follets; runtime evidence (re-confirmed post-patch on 2026-07-05, feu follets detected live via NewMob name) shows otherwise. Payload observed x22 in the 2026-07-05 Mists capture: `Parameters[0]` id, `Parameters[1]` `[x, y]`, `Parameters[2]` in {90, 180, 270} (likely an orientation), no rarity field. Out of scope until live evidence clarifies its semantics. |
+| 532 | NewCagedObject | Routed. Wisp cages. |
+| 533 | CagedObjectStateUpdated | Routed. Cage opened. |
+| 521 | MistsPlayerJoinedInfo | Routed. Mists entry signal; applies the map change with origin cluster. |
+| 520 | NewMistsImmediateReturnExit | Not routed. Mists exit signal. |
+| 522 | NewMistsStaticEntrance | Not routed. |
+| 531 | MistsEntranceDataChanged | Not routed. |
+| 525 | NewMistsWispSpawn | Not routed. Initial design assumed this carried feu follets; runtime evidence (re-confirmed post-patch on 2026-07-05, feu follets detected live via NewMob name) shows otherwise. Payload observed x22 in the 2026-07-05 Mists capture: `Parameters[0]` id, `Parameters[1]` `[x, y]`, `Parameters[2]` in {90, 180, 270} (likely an orientation), no rarity field. Out of scope until live evidence clarifies its semantics. |
 
 ## Open observations
 
 - Mists rarity at the cluster level (instance-wide, before portals appear) lives in the `ChangeCluster` operation response `Parameters[3]` byte array, last byte. Reaching it requires plumbing a Mists-zone capture with opcode 41 response into a fixture and a cluster-level rarity store.
-- Events 521/523/526/532 are received but not consumed. A follow-up PR should route them into a Mists state surface readable by drawings.
+- Events 520/522/525/531 are received but not consumed. A follow-up PR should route them into a Mists state surface readable by drawings.
 - Portal rarity arrives at `Parameters[34]` since Dragonfire; the 2026-09-03 capture carries a duo portal (`MISTS_DUO_BLACK`) with value 2. The 0 to 4 map reads 2 as Rare, while that portal was noted as Uncommon. No capture pairs a value with the rarity shown in game, so the map is unconfirmed.
