@@ -11,12 +11,13 @@ vi.mock('../utils/SettingsSync.js', () => ({
     },
 }));
 
-const {MistsWispDrawing} = await import('./MistsWispDrawing.js');
+const {MistsWispDrawing, WISP_RARITIES} = await import('./MistsWispDrawing.js');
 const settingsSync = (await import('../utils/SettingsSync.js')).default;
 
 describe('MistsWispDrawing', () => {
     let drawing;
     let ctx;
+    let rings;
 
     beforeEach(() => {
         vi.clearAllMocks();
@@ -27,7 +28,12 @@ describe('MistsWispDrawing', () => {
         drawing.drawTextItems = vi.fn();
         drawing.getScaledSize = vi.fn(s => s);
         drawing.getScaledFontSize = vi.fn(s => s);
-        ctx = {font: '', measureText: vi.fn(() => ({width: 12}))};
+        rings = [];
+        ctx = {
+            font: '', measureText: vi.fn(() => ({width: 12})),
+            save: vi.fn(), restore: vi.fn(), beginPath: vi.fn(), arc: vi.fn(),
+            stroke: vi.fn(() => rings.push({color: ctx.strokeStyle, glow: ctx.shadowBlur ?? 0, width: ctx.lineWidth})),
+        };
     });
 
     // @verified 2026-04-23: master gate settingMistsWisps=false skips all feu follet rendering.
@@ -139,5 +145,55 @@ describe('MistsWispDrawing', () => {
         drawing.invalidate(ctx, [mist]);
 
         expect(error).not.toHaveBeenCalled();
+    });
+
+    describe('rarity ring', () => {
+        // @verified 2026-10-25: rarity ladder from NewMob Parameters[34], colors from the in-game wisp trail
+        // (white, green, blue, purple, golden yellow); a Peu commun portal was observed live with value 1.
+        test.each([
+            [0, 'Common', '#ffffff', false],
+            [1, 'Uncommon', '#4ade80', false],
+            [2, 'Rare', '#3b82f6', false],
+            [3, 'Epic', '#a855f7', true],
+            [4, 'Legendary', '#facc15', true],
+        ])('rarity %d (%s) draws a %s ring, glow=%s, under the matching orb', (rarity, name, color, glow) => {
+            settingsSync.getBool.mockImplementation(() => true);
+
+            drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, type: 0, enchant: rarity}]);
+
+            expect(WISP_RARITIES[rarity].name).toBe(name);
+            expect(rings).toHaveLength(1);
+            expect(rings[0].color).toBe(color);
+            expect(rings[0].glow > 0).toBe(glow);
+            expect(ctx.arc).toHaveBeenCalledWith(10, 20, expect.any(Number), 0, 2 * Math.PI);
+            expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'mist_' + rarity, 'Resources', 21);
+            expect(ctx.arc.mock.invocationCallOrder[0]).toBeLessThan(drawing.DrawCustomImage.mock.invocationCallOrder[0]);
+        });
+
+        test('a higher rarity gets a thicker ring', () => {
+            settingsSync.getBool.mockImplementation(() => true);
+
+            drawing.invalidate(ctx, [0, 1, 2, 3, 4].map(enchant => ({id: enchant, hX: 0, hY: 0, type: 0, enchant})));
+
+            const widths = rings.map(ring => ring.width);
+            expect(widths).toEqual([...widths].sort((a, b) => a - b));
+            expect(new Set(widths).size).toBe(5);
+        });
+
+        test('a filtered rarity draws neither ring nor orb', () => {
+            settingsSync.getBool.mockImplementation(key => key !== 'settingMistsEnchant4');
+
+            drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, type: 0, enchant: 4}, {id: 2, hX: 30, hY: 40, type: 0, enchant: 3}]);
+
+            expect(rings.map(ring => ring.color)).toEqual(['#a855f7']);
+            expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+        });
+
+        test('an unknown rarity value draws the orb without a ring and does not throw', () => {
+            settingsSync.getBool.mockImplementation(() => true);
+
+            expect(() => drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, type: 0, enchant: 7}])).not.toThrow();
+            expect(rings).toHaveLength(0);
+        });
     });
 });
