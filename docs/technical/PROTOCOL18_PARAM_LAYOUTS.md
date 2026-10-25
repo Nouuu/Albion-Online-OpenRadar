@@ -4,7 +4,7 @@ Status: snapshot from a single live capture (T5 zone + harvest + zone transit,
 ~130s, 3020 packets, 4954 events decoded), taken before the 2026-06-29 patch.
 Parameter shapes below still hold. The event codes do not: that patch inserted
 two entries in the upstream enum, shifting every code at or above 248 by +2.
-Codes under 248 were untouched. The 2026-10-12 patch (10.0.4) then removed one
+Codes under 248 were untouched. The 2026-10-12 patch then removed one
 event after NewMob, moving every code at or above 124 down by 1. The table
 below carries the current codes.
 

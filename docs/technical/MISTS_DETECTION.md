@@ -2,7 +2,7 @@
 
 How OpenRadar detects portals, feu follets (wisp signs), and wisp cages in the Mists biome.
 
-*Last verified against code: 2026-10-24. Codes are post 10.0.4 (2026-10-12), which removed one event after NewMob and moved every code at or above 124 down by 1.*
+*Last verified against code: 2026-10-24. Codes are post 2026-10-12 patch, which removed one event after NewMob and moved every code at or above 124 down by 1.*
 
 ## Detection surface
 
