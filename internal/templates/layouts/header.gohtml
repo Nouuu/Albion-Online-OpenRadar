@@ -9,6 +9,12 @@
     <div class="hidden md:block phone-landscape:hidden"></div>
 
     <div class="flex items-center gap-3">
+        <div data-language-switcher class="flex items-center gap-1.5">
+            <i data-lucide="languages" class="w-4 h-4 text-base-content/50" aria-hidden="true"></i>
+            <span id="label-settingUiLanguage" data-setting-label="settingUiLanguage" class="sr-only">Language</span>
+            <select data-setting="settingUiLanguage" aria-labelledby="label-settingUiLanguage" class="select select-bordered select-xs w-auto"></select>
+        </div>
+
         <div id="wsStatusIndicator" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-base-content/[0.02]">
             <span id="wsStatusDot" class="status status-neutral"></span>
             <span id="wsStatusText" class="text-xs text-base-content/50 hidden sm:inline">Connecting...</span>
