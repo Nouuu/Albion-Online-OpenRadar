@@ -61,7 +61,7 @@ class Mob {
         this.hX = 0;
         this.hY = 0;
         this.lastUpdateTime = Date.now(); // For stale entity cleanup
-        this.outOfRange = false;          // Server sent Leave but the radar keeps it (settingRadarKeepOutOfRange)
+        this.outOfRange = false;          // Server sent Leave but the radar keeps it within settingRadarSaveRange
     }
 
     touch() {
@@ -464,6 +464,12 @@ export class MobsHandler {
     markOutOfRange(id) {
         const entity = this.mobsList.find(m => m.id === id) ?? this.mistList.find(m => m.id === id);
         if (entity) entity.outOfRange = true;
+    }
+
+    removeNotInRange(lpX, lpY, range) {
+        const inRange = entity => Math.hypot(lpX - entity.posX, lpY - entity.posY) <= range;
+        this.mobsList = this.mobsList.filter(inRange);
+        this.mistList = this.mistList.filter(inRange);
     }
 
     updateMistPosition(id, posX, posY) {

@@ -5,6 +5,7 @@ import zonesDatabase from "../data/ZonesDatabase.js";
 import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 import {EnemyType} from '../handlers/MobsHandler.js';
 import {t} from './I18n.js';
+import {drawFarmRouteMap} from './FarmRouteMap.js';
 
 export class RadarRenderer {
     constructor(dependencies) {
@@ -25,6 +26,8 @@ export class RadarRenderer {
         this.TARGET_FPS = 30;
         this.FRAME_TIME = 1000 / this.TARGET_FPS;
         this.CLUSTER_UPDATE_INTERVAL = 2000;
+        this.FARM_ROUTE_INTERVAL = 500;
+        this.lastFarmRouteDraw = 0;
         this.lastFrameTime = 0;
         this.lastClusterUpdate = 0;
         this.cachedClusters = null;
@@ -110,8 +113,10 @@ export class RadarRenderer {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
+        const saveRange = settingsSync.getNumber('settingRadarSaveRange');
+
         if (this.handlers.harvestablesHandler && this.drawings.harvestablesDrawing) {
-            this.handlers.harvestablesHandler.removeNotInRange(this.lpX, this.lpY);
+            this.handlers.harvestablesHandler.removeNotInRange(this.lpX, this.lpY, saveRange);
             this.drawings.harvestablesDrawing.interpolate(
                 this.handlers.harvestablesHandler.harvestableList,
                 this.lpX,
@@ -119,6 +124,9 @@ export class RadarRenderer {
                 t
             );
         }
+
+        this.handlers.mobsHandler?.removeNotInRange?.(this.lpX, this.lpY, saveRange);
+        this.handlers.wispCageHandler?.removeNotInRange?.(this.lpX, this.lpY, saveRange);
 
         if (this.handlers.mobsHandler && this.drawings.mobsDrawing) {
             this.drawings.mobsDrawing.interpolate(
@@ -308,6 +316,34 @@ export class RadarRenderer {
         }
 
         this.renderUI();
+        this.renderFarmRoute();
+    }
+
+    renderFarmRoute() {
+        const section = document.getElementById('farmRouteSection');
+        if (!section) return;
+
+        const enabled = settingsSync.getBool('settingRadarFarmRoute');
+        section.classList.toggle('hidden', !enabled);
+        const now = performance.now();
+        if (!enabled || now - this.lastFarmRouteDraw < this.FARM_ROUTE_INTERVAL) return;
+        this.lastFarmRouteDraw = now;
+
+        const canvas = document.getElementById('farmRouteCanvas');
+        if (!canvas || !this.map || this.map.id < 0) return;
+
+        try {
+            const count = drawFarmRouteMap(canvas, {
+                mapId: this.map.id,
+                lpX: this.lpX,
+                lpY: this.lpY,
+                harvestables: this.handlers.harvestablesHandler?.harvestableList ?? [],
+            });
+            const zone = document.getElementById('farmRouteZone');
+            if (zone) zone.textContent = `${zonesDatabase.getZoneName(String(this.map.id))} · ${count}`;
+        } catch (e) {
+            window.logger?.error(CATEGORIES.MAP, 'farm_route_draw_failed', e);
+        }
     }
 
     /**

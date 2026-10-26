@@ -7,7 +7,6 @@ import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
-import settingsSync from '../utils/SettingsSync.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const zonesJsonPath = join(here, '..', '..', 'ao-bin-dumps', 'zones.json');
@@ -637,27 +636,9 @@ describe('EventRouter', () => {
     // onEvent Leave (1)
     // -------------------------------------------------------------------------
     describe('onEvent Leave', () => {
-        // @verified 2026-04-23: Leave fans out remove calls to all seven handlers
-        test('Leave event removes entity from all handlers', () => {
+        // synthetic: mobs, mists and cages are marked out of range (kept within the save range); the rest are removed.
+        test('Leave event marks mobs, mists and cages out of range and removes the rest', () => {
             EventRouter.onEvent({0: 42, 252: EventCodes.Leave});
-
-            expect(handlers.playersHandler.removePlayer).toHaveBeenCalledWith(42);
-            expect(handlers.mobsHandler.removeMist).toHaveBeenCalledWith(42);
-            expect(handlers.mobsHandler.removeMob).toHaveBeenCalledWith(42);
-            expect(handlers.dungeonsHandler.removeDungeon).toHaveBeenCalledWith(42);
-            expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
-            expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
-            expect(handlers.wispCageHandler.removeCage).toHaveBeenCalledWith(42);
-        });
-
-        // synthetic: with settingRadarKeepOutOfRange on, Leave marks mobs, mists and cages instead of removing them.
-        test('Leave event with keep out-of-range on marks mobs, mists and cages and keeps removing the rest', () => {
-            settingsSync.setBool('settingRadarKeepOutOfRange', true);
-            try {
-                EventRouter.onEvent({0: 42, 252: EventCodes.Leave});
-            } finally {
-                settingsSync.setBool('settingRadarKeepOutOfRange', false);
-            }
 
             expect(handlers.mobsHandler.markOutOfRange).toHaveBeenCalledWith(42);
             expect(handlers.wispCageHandler.markOutOfRange).toHaveBeenCalledWith(42);
@@ -665,7 +646,9 @@ describe('EventRouter', () => {
             expect(handlers.mobsHandler.removeMist).not.toHaveBeenCalled();
             expect(handlers.wispCageHandler.removeCage).not.toHaveBeenCalled();
             expect(handlers.playersHandler.removePlayer).toHaveBeenCalledWith(42);
+            expect(handlers.dungeonsHandler.removeDungeon).toHaveBeenCalledWith(42);
             expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
+            expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
         });
 
         // @verified 2026-05-22: pcap-confirmed (capture 13-36-55) the abbey portal id receives a

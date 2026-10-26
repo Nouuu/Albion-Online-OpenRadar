@@ -61,7 +61,8 @@ const STATIC_ENTITY_MAX_AGE = 30 * 60 * 1000;
 export function cleanupStaleEntities() {
     const cleanedPlayers = handlers.players?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedMobs = handlers.mobs?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
-    const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const nodeMaxAge = settingsSync.getNumber('settingRadarNodeTime') * 60000;
+    const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(nodeMaxAge) || 0;
     const cleanedFishing = handlers.fishing?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedChests = handlers.chests?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
     const cleanedDungeons = handlers.dungeons?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;

@@ -87,15 +87,27 @@
                                 </div>
                                 <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
                                     <i data-lucide="radar" class="w-4 h-4 shrink-0 text-base-content/50"></i>
-                                    <span id="label-settingRadarResourceRange" data-setting-label="settingRadarResourceRange" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Node range</span>
-                                    <div class="tooltip shrink-0" data-setting-tip="settingRadarResourceRange" data-tip="Nodes farther than this from you are dropped. The game server decides what it sends, so raising it only helps if nodes arrive beyond 80 m.">
-                                        <span tabindex="0" role="img" aria-label="Nodes farther than this from you are dropped. The game server decides what it sends, so raising it only helps if nodes arrive beyond 80 m." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                    <span id="label-settingRadarSaveRange" data-setting-label="settingRadarSaveRange" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Save range</span>
+                                    <div class="tooltip shrink-0" data-setting-tip="settingRadarSaveRange" data-tip="Nodes, enemies, wisp portals and cages stay saved within this distance of you and are dropped beyond it. Entities the game stopped sending are drawn dimmed.">
+                                        <span tabindex="0" role="img" aria-label="Nodes, enemies, wisp portals and cages stay saved within this distance of you and are dropped beyond it. Entities the game stopped sending are drawn dimmed." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                     </div>
-                                    <button type="button" data-nudge="settingRadarResourceRange" data-dir="-1" aria-label="Decrease node range" title="Decrease node range" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                                    <input type="range" data-setting="settingRadarResourceRange" aria-labelledby="label-settingRadarResourceRange" min="40" max="500" step="10" class="range range-primary range-xs min-w-0 w-full max-w-64">
-                                    <button type="button" data-nudge="settingRadarResourceRange" data-dir="1" aria-label="Increase node range" title="Increase node range" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
-                                    <span data-value-for="settingRadarResourceRange" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
-                                    <button type="button" data-reset="settingRadarResourceRange" aria-label="Reset node range" title="Reset node range" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                    <button type="button" data-nudge="settingRadarSaveRange" data-dir="-1" aria-label="Decrease save range" title="Decrease save range" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarSaveRange" aria-labelledby="label-settingRadarSaveRange" min="40" max="1500" step="10" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarSaveRange" data-dir="1" aria-label="Increase save range" title="Increase save range" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    <span data-value-for="settingRadarSaveRange" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
+                                    <button type="button" data-reset="settingRadarSaveRange" aria-label="Reset save range" title="Reset save range" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
+                                    <i data-lucide="timer" class="w-4 h-4 shrink-0 text-base-content/50"></i>
+                                    <span id="label-settingRadarNodeTime" data-setting-label="settingRadarNodeTime" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Node time</span>
+                                    <div class="tooltip shrink-0" data-setting-tip="settingRadarNodeTime" data-tip="How long a node stays on the radar and the farm route map without news from the game. Default 5 min.">
+                                        <span tabindex="0" role="img" aria-label="How long a node stays on the radar and the farm route map without news from the game. Default 5 min." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                    </div>
+                                    <button type="button" data-nudge="settingRadarNodeTime" data-dir="-1" aria-label="Decrease node time" title="Decrease node time" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarNodeTime" aria-labelledby="label-settingRadarNodeTime" min="5" max="240" step="5" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarNodeTime" data-dir="1" aria-label="Increase node time" title="Increase node time" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    <span data-value-for="settingRadarNodeTime" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
+                                    <button type="button" data-reset="settingRadarNodeTime" aria-label="Reset node time" title="Reset node time" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                                 </div>
                             </div>
                         </section>
@@ -132,10 +144,10 @@
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
-                                        <input type="checkbox" data-setting="settingRadarKeepOutOfRange" aria-labelledby="label-settingRadarKeepOutOfRange" class="toggle toggle-primary toggle-sm">
-                                        <span id="label-settingRadarKeepOutOfRange" data-setting-label="settingRadarKeepOutOfRange" class="text-base-content/80 text-xs group-hover:text-base-content">Keep out-of-range</span>
-                                        <div class="tooltip" data-setting-tip="settingRadarKeepOutOfRange" data-tip="Keeps enemies, wisp portals and wisp cages dimmed after the game stops sending them. A kill you did not see lingers as a ghost until it expires.">
-                                            <span tabindex="0" role="img" aria-label="Keeps enemies, wisp portals and wisp cages dimmed after the game stops sending them. A kill you did not see lingers as a ghost until it expires." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                        <input type="checkbox" data-setting="settingRadarFarmRoute" aria-labelledby="label-settingRadarFarmRoute" class="toggle toggle-primary toggle-sm">
+                                        <span id="label-settingRadarFarmRoute" data-setting-label="settingRadarFarmRoute" class="text-base-content/80 text-xs group-hover:text-base-content">Farm route (experimental)</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarFarmRoute" data-tip="Shows a zone map with your saved nodes under the player list. Raise Save range and Node time to keep more of the zone.">
+                                            <span tabindex="0" role="img" aria-label="Shows a zone map with your saved nodes under the player list. Raise Save range and Node time to keep more of the zone." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors pointer-fine:hidden">
@@ -208,6 +220,7 @@
         </div>
     </div>
 
+    <div id="radarSide" class="flex flex-col gap-4 grow min-w-0">
     <!-- Detected Players Section -->
     <div id="playersSection" class="@container card bg-base-200 grow min-w-0 in-data-[players-beside]:overflow-y-auto">
         <div class="card-body phone-landscape:p-2">
@@ -278,6 +291,19 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Farm Route Section (experimental): zone map with saved nodes -->
+    <div id="farmRouteSection" class="hidden card bg-base-200">
+        <div class="card-body phone-landscape:p-2">
+            <h3 class="text-xl phone-landscape:text-base font-semibold text-base-content flex flex-wrap items-center gap-3 phone-landscape:gap-2">
+                Farm route
+                <span class="badge badge-warning badge-sm">Experimental</span>
+                <span id="farmRouteZone" data-no-i18n class="text-xs font-normal font-mono text-base-content/50"></span>
+            </h3>
+            <canvas id="farmRouteCanvas" width="420" height="420" class="w-full max-w-xl mx-auto aspect-square rounded-lg bg-base-300"></canvas>
+        </div>
+    </div>
     </div>
 </div>
 {{end}}

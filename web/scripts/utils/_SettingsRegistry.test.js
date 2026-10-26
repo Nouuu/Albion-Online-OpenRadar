@@ -11,13 +11,14 @@ const TABLE = [
     [null, 'settingRadarFitToScreen', 'new'],
     ['settingIconSize', 'settingRadarIconSize', 'rename'],
     [null, 'settingRadarResourceCountSize', 'new'],
-    [null, 'settingRadarResourceRange', 'new'],
+    [null, 'settingRadarSaveRange', 'new'],
+    [null, 'settingRadarNodeTime', 'new'],
     ['settingShowMap', 'settingRadarMapBackground', 'fix'],
     [null, 'settingRadarHudZoneInfo', 'new'],
     [null, 'settingRadarHudStats', 'new'],
     [null, 'settingRadarPlayersBeside', 'new'],
     [null, 'settingRadarKeepAwake', 'new'],
-    [null, 'settingRadarKeepOutOfRange', 'new'],
+    [null, 'settingRadarFarmRoute', 'new'],
     ['settingResourceCount', 'settingRadarResourceCount', 'rename'],
     ['settingResourceDistance', 'settingRadarResourceDistance', 'rename'],
     ['settingResourceColorBadges', 'settingRadarResourceTierBadges', 'rename'],
@@ -159,7 +160,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 138 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 139 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -181,9 +182,9 @@ describe('SettingsRegistry', () => {
     test('defaults follow the registry table', () => {
         const expected = {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
-            settingRadarResourceCountSize: 1, settingRadarResourceRange: 80,
+            settingRadarResourceCountSize: 1, settingRadarSaveRange: 80, settingRadarNodeTime: 5, settingRadarFarmRoute: false,
             settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
-            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarKeepOutOfRange: false, settingRadarResourceCount: false, settingRadarResourceDistance: false,
+            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
             settingRadarClusterRadius: 30, settingRadarClusterMinSize: 2,
             settingPlayersDetect: true, settingPlayersShowEquipment: true, settingPlayersShowSpells: false,
@@ -252,7 +253,8 @@ describe('SettingsRegistry', () => {
             settingRadarSize: [300, 1200, 50],
             settingRadarIconSize: [0.5, 2, 0.1],
             settingRadarResourceCountSize: [0.5, 3, 0.1],
-            settingRadarResourceRange: [40, 500, 10],
+            settingRadarSaveRange: [40, 1500, 10],
+            settingRadarNodeTime: [5, 240, 5],
             settingRadarClusterRadius: [10, 100, 5],
             settingRadarClusterMinSize: [2, 10, 1],
             settingEnemiesMinHealth: [100, 1000000, 100],
@@ -276,7 +278,8 @@ describe('SettingsRegistry', () => {
             settingRadarSize: ' px',
             settingRadarIconSize: '%',
             settingRadarResourceCountSize: '%',
-            settingRadarResourceRange: ' m',
+            settingRadarSaveRange: ' m',
+            settingRadarNodeTime: ' min',
             settingAlertSoundVolume: '%',
             settingAlertSoundCooldown: ' ms',
         };
@@ -326,6 +329,7 @@ describe('SettingsRegistry control location', () => {
         ['settingRadarHudStats', 'Radar', 'Radar settings > Display'],
         ['settingRadarPlayersBeside', 'Radar', 'Radar settings > Display'],
         ['settingRadarKeepAwake', 'Radar', 'Radar settings > Display'],
+        ['settingRadarFarmRoute', 'Radar', 'Radar settings > Display'],
         ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
         ['settingPlayersDetect', 'Players', 'Display'],
         ['settingPlayersShowGuild', 'Players', 'Display'],

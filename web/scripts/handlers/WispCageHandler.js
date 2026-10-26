@@ -64,6 +64,11 @@ export class WispCageHandler
         if (cage) cage.outOfRange = true;
     }
 
+    removeNotInRange(lpX, lpY, range)
+    {
+        this.cages = this.cages.filter(cage => Math.hypot(lpX - cage.posX, lpY - cage.posY) <= range);
+    }
+
     Clear()
     {
         this.cages = [];
