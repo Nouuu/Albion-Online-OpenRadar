@@ -11,10 +11,12 @@ class Cage
         this.hX = 0;
         this.hY = 0;
         this.lastUpdateTime = Date.now();
+        this.outOfRange = false;
     }
 
     touch() {
         this.lastUpdateTime = Date.now();
+        this.outOfRange = false;
     }
 }
 
@@ -54,6 +56,12 @@ export class WispCageHandler
     removeCage(id)
     {
         this.cages = this.cages.filter(cage => cage.id !== id);
+    }
+
+    markOutOfRange(id)
+    {
+        const cage = this.cages.find(c => c.id === id);
+        if (cage) cage.outOfRange = true;
     }
 
     Clear()

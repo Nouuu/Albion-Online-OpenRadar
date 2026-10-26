@@ -1,4 +1,4 @@
-import {DrawingUtils} from "../utils/DrawingUtils.js";
+import {DrawingUtils, OUT_OF_RANGE_ALPHA} from "../utils/DrawingUtils.js";
 import settingsSync from "../utils/SettingsSync.js";
 
 export class WispCageDrawing extends DrawingUtils
@@ -24,7 +24,9 @@ export class WispCageDrawing extends DrawingUtils
         {
             const point = this.transformPoint(cage.hX, cage.hY);
 
+            ctx.globalAlpha = cage.outOfRange ? OUT_OF_RANGE_ALPHA : 1;
             this.DrawCustomImage(ctx, point.x, point.y, "cage", "Resources", 18);
         }
+        ctx.globalAlpha = 1;
     }
 }

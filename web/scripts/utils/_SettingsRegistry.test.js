@@ -17,6 +17,7 @@ const TABLE = [
     [null, 'settingRadarHudStats', 'new'],
     [null, 'settingRadarPlayersBeside', 'new'],
     [null, 'settingRadarKeepAwake', 'new'],
+    [null, 'settingRadarKeepOutOfRange', 'new'],
     ['settingResourceCount', 'settingRadarResourceCount', 'rename'],
     ['settingResourceDistance', 'settingRadarResourceDistance', 'rename'],
     ['settingResourceColorBadges', 'settingRadarResourceTierBadges', 'rename'],
@@ -158,7 +159,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 137 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 138 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -182,7 +183,7 @@ describe('SettingsRegistry', () => {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
             settingRadarResourceCountSize: 1, settingRadarResourceRange: 80,
             settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
-            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
+            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarKeepOutOfRange: false, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
             settingRadarClusterRadius: 30, settingRadarClusterMinSize: 2,
             settingPlayersDetect: true, settingPlayersShowEquipment: true, settingPlayersShowSpells: false,

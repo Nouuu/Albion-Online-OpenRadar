@@ -5,6 +5,7 @@ import {t} from "./I18n.js";
 
 const SCALE_FACTOR = 1.0;
 const BASE_ZOOM = 4;
+export const OUT_OF_RANGE_ALPHA = 0.5;
 
 export class DrawingUtils {
     constructor() {

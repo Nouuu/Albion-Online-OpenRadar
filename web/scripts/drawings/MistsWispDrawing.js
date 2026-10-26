@@ -1,4 +1,4 @@
-import {DrawingUtils} from '../utils/DrawingUtils.js';
+import {DrawingUtils, OUT_OF_RANGE_ALPHA} from '../utils/DrawingUtils.js';
 import settingsSync from '../utils/SettingsSync.js';
 
 // Index is the rarity carried by NewMob Parameters[34]. Colors follow the trail a wisp leaves in game.
@@ -47,6 +47,7 @@ export class MistsWispDrawing extends DrawingUtils {
             if (!soloAllowed && !duoAllowed) continue;
 
             const p = this.transformPoint(m.hX, m.hY);
+            ctx.globalAlpha = m.outOfRange ? OUT_OF_RANGE_ALPHA : 1;
             if (WISP_RARITIES[m.enchant]) this.drawRarityRing(ctx, p.x, p.y, m.enchant);
             this.DrawCustomImage(ctx, p.x, p.y, 'mist_' + m.enchant, 'Resources', 21);
 
@@ -57,5 +58,6 @@ export class MistsWispDrawing extends DrawingUtils {
                 this.drawTextItems(p.x - idWidth / 2, p.y + yOffset, idText, ctx, fontSize, '#CCCCCC');
             }
         }
+        ctx.globalAlpha = 1;
     }
 }

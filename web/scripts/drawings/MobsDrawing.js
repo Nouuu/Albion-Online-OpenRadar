@@ -1,4 +1,4 @@
-import {DrawingUtils} from "../utils/DrawingUtils.js";
+import {DrawingUtils, OUT_OF_RANGE_ALPHA} from "../utils/DrawingUtils.js";
 import {EnemyType, getSettingNameForEnemyType} from "../handlers/MobsHandler.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "../utils/SettingsSync.js";
@@ -26,6 +26,7 @@ export class MobsDrawing extends DrawingUtils
 
         for (const mobOne of mobs)
         {
+            ctx.globalAlpha = mobOne.outOfRange ? OUT_OF_RANGE_ALPHA : 1;
             const point = this.transformPoint(mobOne.hX, mobOne.hY);
 
             let imageName = undefined;
@@ -240,6 +241,7 @@ export class MobsDrawing extends DrawingUtils
                 this.drawTextItems(point.x - badgeWidth / 2, point.y + currentYOffset, badgeText, ctx, fontSize10, "#FF69B4");
             }
         }
+        ctx.globalAlpha = 1;
     }
 
     /**

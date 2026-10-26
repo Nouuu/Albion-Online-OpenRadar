@@ -24,6 +24,7 @@ const LABELS = {
     settingRadarHudStats: 'Stats box',
     settingRadarPlayersBeside: 'Players beside radar',
     settingRadarKeepAwake: 'Keep screen awake',
+    settingRadarKeepOutOfRange: 'Keep out-of-range',
     settingRadarResourceCount: 'Resource count',
     settingRadarResourceDistance: 'Resource distance',
     settingRadarResourceTierBadges: 'Resource tier color badges',
@@ -56,6 +57,7 @@ const TOOLTIPS = {
     settingRadarHudStats: 'Top-right box: resource and mob counts, plus player count when detection is on.',
     settingRadarPlayersBeside: 'Shows the player list to the right of the radar when the window is wide enough.',
     settingRadarKeepAwake: 'Stops the screen from sleeping while the radar page is open. Uses more battery on phones.',
+    settingRadarKeepOutOfRange: 'Keeps enemies, wisp portals and wisp cages dimmed after the game stops sending them. A kill you did not see lingers as a ghost until it expires.',
     settingRadarResourceCount: 'Estimated count from size/tier, bonuses excluded. Fishing shows spawned/total fish.',
     settingRadarResourceDistance: 'Distance in meters: hidden under 2 m, green under 10 m, yellow 10-19 m, orange 20 m+.',
     settingRadarResourceTierBadges: 'Colored squares by type instead of icons, with tier. Living creatures get a gold border.',
@@ -493,7 +495,7 @@ describe('settings control tile contract', () => {
     const ALERT_KEYS = ['settingAlertFlash', 'settingAlertBorder', 'settingAlertSound'];
     const KIND = {
         toggle: ['settingRadarFitToScreen', 'settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats',
-            'settingRadarPlayersBeside', 'settingRadarKeepAwake', 'settingRadarResourceCount', 'settingRadarResourceDistance',
+            'settingRadarPlayersBeside', 'settingRadarKeepAwake', 'settingRadarKeepOutOfRange', 'settingRadarResourceCount', 'settingRadarResourceDistance',
             'settingRadarResourceTierBadges', 'settingRadarResourceClusters', 'settingPlayersDetect', 'settingPlayersShowEquipment',
             'settingPlayersShowSpells', 'settingPlayersShowGuild', 'settingPlayersShowTotalIp', 'settingPlayersShowMounted',
             'settingPlayersShowHealthBars', 'settingAlertFlash', 'settingAlertBorder', 'settingAlertSound',

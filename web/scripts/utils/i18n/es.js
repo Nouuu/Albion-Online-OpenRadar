@@ -33,6 +33,8 @@ export const ES = {
     'Icon size': 'Tamaño de iconos',
     'Count size': 'Tamaño números',
     'Node range': 'Alcance nodos',
+    'Keep out-of-range': 'Conservar fuera de rango',
+    'Keeps enemies, wisp portals and wisp cages dimmed after the game stops sending them. A kill you did not see lingers as a ghost until it expires.': 'Mantiene enemigos, portales de wisps y jaulas de wisps atenuados cuando el juego deja de enviarlos. Una muerte que no viste queda como fantasma hasta que caduca.',
     'Nodes farther than this from you are dropped. The game server decides what it sends, so raising it only helps if nodes arrive beyond 80 m.': 'Los nodos más lejos de ti que este valor se descartan. El servidor del juego decide qué envía, así que subirlo solo ayuda si llegan nodos más allá de 80 m.',
     'Map background': 'Fondo del mapa',
     'Zone info box': 'Cuadro de zona',

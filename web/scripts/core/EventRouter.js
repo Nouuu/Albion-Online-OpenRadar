@@ -5,6 +5,7 @@ import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
+import settingsSync from '../utils/SettingsSync.js';
 
 function syncMapIsBZ() {
     if (!map) return;
@@ -339,12 +340,17 @@ export function onEvent(Parameters) {
     switch (eventCode) {
         case EventCodes.Leave:
             playersHandler.removePlayer(id);
-            mobsHandler.removeMist(id);
-            mobsHandler.removeMob(id);
+            if (settingsSync.getBool('settingRadarKeepOutOfRange')) {
+                mobsHandler.markOutOfRange(id);
+                wispCageHandler.markOutOfRange(id);
+            } else {
+                mobsHandler.removeMist(id);
+                mobsHandler.removeMob(id);
+                wispCageHandler.removeCage(id);
+            }
             dungeonsHandler.removeDungeon(id);
             chestsHandler.removeChest(id);
             fishingHandler.removeFish(id);
-            wispCageHandler.removeCage(id);
             handlers.mistsDungeonHandler?.removePortal(id);
             break;
 
