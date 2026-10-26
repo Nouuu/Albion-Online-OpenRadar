@@ -1,4 +1,5 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
+import settingsSync from "../utils/SettingsSync.js";
 
 const HarvestableType =
 {
@@ -371,8 +372,9 @@ export class HarvestablesHandler
 
     removeNotInRange(lpX, lpY)
     {
+        const range = settingsSync.getNumber('settingRadarResourceRange');
         this.harvestableList = this.harvestableList.filter(
-            (x) => this.calculateDistance(lpX, lpY, x.posX, x.posY) <= 80
+            (x) => this.calculateDistance(lpX, lpY, x.posX, x.posY) <= range
         );
 
         this.harvestableList = this.harvestableList.filter(item => item.size !== undefined);

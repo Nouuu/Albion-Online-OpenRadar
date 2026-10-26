@@ -811,6 +811,18 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(1);
         });
 
+        // synthetic: the cut-off follows settingRadarResourceRange instead of a fixed 80.
+        test('synthetic: removeNotInRange keeps entities within a raised range', () => {
+            const p = {0: 604, 5: 14, 6: -1, 7: 4, 8: [150, 0], 10: 2, 11: 0};
+            handler.newHarvestableObject(604, p);
+            settingsSync.getNumber.mockImplementation(key => key === 'settingRadarResourceRange' ? 300 : registryDefault(key));
+
+            handler.removeNotInRange(0, 0);
+
+            expect(handler.getSize()).toBe(1);
+            settingsSync.getNumber.mockImplementation(key => registryDefault(key));
+        });
+
         // @verified 2026-04-18: entities with size===undefined are removed regardless of distance.
         test('synthetic: removeNotInRange removes entities with size undefined', () => {
             const p = {0: 603, 5: 14, 6: -1, 7: 4, 8: [0, 0], 10: 2, 11: 0};

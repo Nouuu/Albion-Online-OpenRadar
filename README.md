@@ -189,6 +189,7 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | Fit to screen              | toggle, fills the window up to 1200px           |
 | Icon size                  | 50% to 200%                                     |
 | Count size                 | 50% to 300%, size of the resource count number  |
+| Node range                 | 40 m to 500 m, nodes beyond it are dropped      |
 | Map background             | toggle, zone map under the radar                |
 | Zone info box              | toggle, zone name, tier and PvP marker          |
 | Stats box                  | toggle, resource, mob and player counts         |

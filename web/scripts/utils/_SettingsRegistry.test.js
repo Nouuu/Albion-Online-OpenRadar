@@ -11,6 +11,7 @@ const TABLE = [
     [null, 'settingRadarFitToScreen', 'new'],
     ['settingIconSize', 'settingRadarIconSize', 'rename'],
     [null, 'settingRadarResourceCountSize', 'new'],
+    [null, 'settingRadarResourceRange', 'new'],
     ['settingShowMap', 'settingRadarMapBackground', 'fix'],
     [null, 'settingRadarHudZoneInfo', 'new'],
     [null, 'settingRadarHudStats', 'new'],
@@ -157,7 +158,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 136 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 137 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -179,7 +180,7 @@ describe('SettingsRegistry', () => {
     test('defaults follow the registry table', () => {
         const expected = {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
-            settingRadarResourceCountSize: 1,
+            settingRadarResourceCountSize: 1, settingRadarResourceRange: 80,
             settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
             settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
@@ -250,6 +251,7 @@ describe('SettingsRegistry', () => {
             settingRadarSize: [300, 1200, 50],
             settingRadarIconSize: [0.5, 2, 0.1],
             settingRadarResourceCountSize: [0.5, 3, 0.1],
+            settingRadarResourceRange: [40, 500, 10],
             settingRadarClusterRadius: [10, 100, 5],
             settingRadarClusterMinSize: [2, 10, 1],
             settingEnemiesMinHealth: [100, 1000000, 100],
@@ -273,6 +275,7 @@ describe('SettingsRegistry', () => {
             settingRadarSize: ' px',
             settingRadarIconSize: '%',
             settingRadarResourceCountSize: '%',
+            settingRadarResourceRange: ' m',
             settingAlertSoundVolume: '%',
             settingAlertSoundCooldown: ' ms',
         };

@@ -32,6 +32,8 @@ export const ES = {
     'Fit to screen': 'Ajustar a la pantalla',
     'Icon size': 'Tamaño de iconos',
     'Count size': 'Tamaño números',
+    'Node range': 'Alcance nodos',
+    'Nodes farther than this from you are dropped. The game server decides what it sends, so raising it only helps if nodes arrive beyond 80 m.': 'Los nodos más lejos de ti que este valor se descartan. El servidor del juego decide qué envía, así que subirlo solo ayuda si llegan nodos más allá de 80 m.',
     'Map background': 'Fondo del mapa',
     'Zone info box': 'Cuadro de zona',
     'Stats box': 'Cuadro de estadísticas',
