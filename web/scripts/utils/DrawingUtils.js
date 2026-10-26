@@ -20,6 +20,9 @@ export class DrawingUtils {
     getIconSizeMultiplier() {
         return settingsSync.getFloat('settingRadarIconSize');
     }
+    getCountSizeMultiplier() {
+        return settingsSync.getFloat('settingRadarResourceCountSize');
+    }
     getCanvasScale() { return this.getCanvasSize() / 500; }
     getScaledSize(baseSize) { return baseSize * this.getZoomLevel() * this.getCanvasScale(); }
     getMarkerSize(baseSize) { return this.getScaledSize(baseSize) * this.getIconSizeMultiplier(); }
@@ -156,8 +159,8 @@ export class DrawingUtils {
         return { x: newX, y: newY };
     }
 
-    drawText(xTemp, yTemp, text, ctx) {
-        const scaledFontSize = `${this.getScaledFontSize(12, 8)}px`;
+    drawText(xTemp, yTemp, text, ctx, sizeMultiplier = 1) {
+        const scaledFontSize = `${this.getScaledFontSize(12 * sizeMultiplier, 8 * Math.min(1, sizeMultiplier))}px`;
         ctx.font = scaledFontSize + " " + this.fontFamily;
         ctx.fillStyle = this.textColor;
         const textWidth = ctx.measureText(text).width;
@@ -174,14 +177,15 @@ export class DrawingUtils {
         const text = count.toString();
         ctx.save();
 
-        const fontSize = this.getScaledFontSize(10, 7);
+        const countSize = this.getCountSizeMultiplier();
+        const fontSize = this.getScaledFontSize(10 * countSize, 7 * Math.min(1, countSize));
         ctx.font = `bold ${fontSize}px monospace`;
         const textWidth = ctx.measureText(text).width;
 
-        const padding = this.getScaledSize(4);
+        const padding = this.getScaledSize(4) * countSize;
         const rectWidth = textWidth + (padding * 2);
-        const rectHeight = this.getScaledSize(14);
-        const radius = this.getScaledSize(4);
+        const rectHeight = this.getScaledSize(14) * countSize;
+        const radius = this.getScaledSize(4) * countSize;
 
         const offset8 = this.getMarkerSize(8);
         const offset6 = this.getMarkerSize(6);

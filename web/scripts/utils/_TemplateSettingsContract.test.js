@@ -17,6 +17,7 @@ const LABELS = {
     settingRadarSize: 'Max size',
     settingRadarFitToScreen: 'Fit to screen',
     settingRadarIconSize: 'Icon size',
+    settingRadarResourceCountSize: 'Count size',
     settingRadarMapBackground: 'Map background',
     settingRadarHudZoneInfo: 'Zone info box',
     settingRadarHudStats: 'Stats box',

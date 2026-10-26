@@ -31,6 +31,7 @@ export const ES = {
     'Max size': 'Tamaño máximo',
     'Fit to screen': 'Ajustar a la pantalla',
     'Icon size': 'Tamaño de iconos',
+    'Count size': 'Tamaño números',
     'Map background': 'Fondo del mapa',
     'Zone info box': 'Cuadro de zona',
     'Stats box': 'Cuadro de estadísticas',

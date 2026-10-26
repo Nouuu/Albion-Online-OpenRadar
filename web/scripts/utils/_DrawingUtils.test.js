@@ -256,6 +256,23 @@ describe('DrawingUtils icon-anchored overlays shift with iconSize', () => {
         // rectX = 116 (was 108 with getScaledSize), so first moveTo x is 116 + radius
         expect(firstMove[0]).toBeGreaterThan(115);
     });
+
+    // synthetic: count size is a render-time multiplier, so the badge font and height follow the slider.
+    test('drawResourceCountBadge font and height scale with the count size setting', () => {
+        const heightFor = size => {
+            settingsSync.getFloat.mockImplementation(key => key === 'settingRadarResourceCountSize' ? size : 1);
+            ctx.font = '';
+            ctx.fillRect.mockClear();
+            ctx.createLinearGradient.mockClear();
+            utils.drawResourceCountBadge(ctx, 100, 100, 5, 'bottom-right');
+            const [, y0, , y1] = ctx.createLinearGradient.mock.calls[0];
+            return {font: Number(/(\d+(?:\.\d+)?)px/.exec(ctx.font)[1]), height: y1 - y0};
+        };
+        const small = heightFor(1);
+        const large = heightFor(2);
+        expect(large.font).toBeCloseTo(small.font * 2);
+        expect(large.height).toBeCloseTo(small.height * 2);
+    });
 });
 
 describe('DrawingUtils.drawResourceBadge', () => {

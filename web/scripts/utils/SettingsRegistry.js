@@ -14,6 +14,7 @@ const ROWS = [
     ['settingRadarSize', 'int', 500, 'settingCanvasSize', 'rename', {min: 300, max: 1200, step: 50, unit: ' px'}],
     ['settingRadarFitToScreen', 'bool', false, null, 'new'],
     ['settingRadarIconSize', 'float', 1, 'settingIconSize', 'rename', {min: 0.5, max: 2, step: 0.1, unit: '%'}],
+    ['settingRadarResourceCountSize', 'float', 1, null, 'new', {min: 0.5, max: 3, step: 0.1, unit: '%'}],
     ['settingRadarMapBackground', 'bool', true, 'settingShowMap', 'fix'],
     ['settingRadarHudZoneInfo', 'bool', true, null, 'new'],
     ['settingRadarHudStats', 'bool', true, null, 'new'],
@@ -149,6 +150,7 @@ const TEXTS = {
     settingRadarSize: ['Max size', 'Width and height in pixels, shrunk on small windows. Ignored while Fit to screen is on.'],
     settingRadarFitToScreen: ['Fit to screen', 'Largest square that fits the window, up to 1200 px, next to the player list when the list sits beside. Overrides Max size.'],
     settingRadarIconSize: ['Icon size'],
+    settingRadarResourceCountSize: ['Count size'],
     settingRadarMapBackground: ['Map background'],
     settingRadarHudZoneInfo: ['Zone info box', 'Top-left box with the zone name, tier and a PvP marker.'],
     settingRadarHudStats: ['Stats box', 'Top-right box: resource and mob counts, plus player count when detection is on.'],
@@ -252,7 +254,8 @@ const TEXTS = {
 };
 
 const LOCATIONS = {
-    'Radar > Radar settings > View': ['settingRadarZoom', 'settingRadarSize', 'settingRadarFitToScreen', 'settingRadarIconSize'],
+    'Radar > Radar settings > View': ['settingRadarZoom', 'settingRadarSize', 'settingRadarFitToScreen', 'settingRadarIconSize',
+        'settingRadarResourceCountSize'],
     'Radar > Radar settings > Display': ['settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats',
         'settingRadarPlayersBeside', 'settingRadarKeepAwake'],
     'Radar > Radar settings > Resources': ['settingRadarResourceCount', 'settingRadarResourceDistance',

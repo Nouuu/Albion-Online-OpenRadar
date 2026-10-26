@@ -57,8 +57,9 @@ describe('FishingDrawing render-time filter', () => {
     // @verified 2026-04-24: settingRadarResourceCount=true calls drawText with sizeSpawned/totalSize format.
     test('settingRadarResourceCount=true calls drawText with n/total', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingResourcesFishing' || key === 'settingRadarResourceCount');
+        settingsSync.getFloat.mockImplementation(key => key === 'settingRadarResourceCountSize' ? 1.5 : 1);
         drawing.draw(ctx, [makePool({id: 1, sizeSpawned: 3, total: 5})]);
-        expect(drawing.drawText).toHaveBeenCalledWith(10, 38, '3/5', ctx);
+        expect(drawing.drawText).toHaveBeenCalledWith(10, 38, '3/5', ctx, 1.5);
     });
 
     // @verified 2026-04-24: lastVisibleCount reflects rendered pools; zero when settingResourcesFishing is off.
