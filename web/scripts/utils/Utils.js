@@ -26,6 +26,7 @@ import pictureInPictureManager from './PictureInPictureManager.js';
 import {destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
 import {exitFullscreenIfActive} from './FullscreenButton.js';
 import {startScreenWakeLock, stopScreenWakeLock} from './ScreenWakeLock.js';
+import {resetFarmRoute} from './FarmRouteMap.js';
 import settingsSync from './SettingsSync.js';
 
 import * as WebSocketManager from '../core/WebSocketManager.js';
@@ -40,6 +41,7 @@ let eventQueue = null;
 let playerListIntervalId = null;
 let cleanupIntervalId = null;
 let buttonClickHandler = null;
+let farmRouteResetHandler = null;
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
@@ -250,6 +252,15 @@ export async function initRadar() {
             buttonElement.addEventListener('click', buttonClickHandler);
         }
 
+        const farmRouteReset = document.getElementById('farmRouteReset');
+        if (farmRouteReset) {
+            farmRouteResetHandler = () => {
+                if (map) resetFarmRoute(map.id);
+                if (radarRenderer) radarRenderer.lastFarmRouteDraw = 0;
+            };
+            farmRouteReset.addEventListener('click', farmRouteResetHandler);
+        }
+
         isInitialized = true;
         window.logger?.info(CATEGORIES.SYSTEM, 'RadarInitialized', {});
 
@@ -281,6 +292,12 @@ export function destroyRadar() {
         buttonElement.removeEventListener('click', buttonClickHandler);
         buttonClickHandler = null;
     }
+
+    const farmRouteReset = document.getElementById('farmRouteReset');
+    if (farmRouteReset && farmRouteResetHandler) {
+        farmRouteReset.removeEventListener('click', farmRouteResetHandler);
+    }
+    farmRouteResetHandler = null;
 
     if (playerListIntervalId) {
         clearInterval(playerListIntervalId);

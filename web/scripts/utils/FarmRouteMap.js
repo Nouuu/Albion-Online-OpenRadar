@@ -3,8 +3,23 @@ import imageCache from './ImageCache.js';
 import settingsSync from './SettingsSync.js';
 import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 
-// Same isometric turn the radar applies to its map image, so north stays where it is on the radar.
+// Same isometric turn the game and the radar use, so the map keeps the in-game orientation (north on top).
 const TURN = Math.SQRT1_2;
+const FALLBACK_EXTENT = 120;
+const FALLBACK_MARGIN = 1.3;
+
+// Fill follows the tier colors of the game; the ring keeps the resource type.
+const TIER_COLORS = {
+    1: '#6b7280',
+    2: '#9ca3af',
+    3: '#22c55e',
+    4: '#3b82f6',
+    5: '#ef4444',
+    6: '#f97316',
+    7: '#facc15',
+    8: '#ffffff',
+};
+const DARK_TEXT_TIERS = new Set([2, 3, 6, 7, 8]);
 
 const NODE_COLORS = {
     Fiber: '#4ade80',
@@ -14,18 +29,67 @@ const NODE_COLORS = {
     Rock: '#cbd5e1',
 };
 
-export function mapView(mapId, size) {
+// Nodes marked on the farm route map, per zone. They live here, not in the radar handlers, so the radar
+// forgetting a node (save range, node time) never unmarks it; only resetFarmRoute does.
+const zones = new Map();
+
+function zoneStore(mapId) {
+    const key = String(mapId);
+    if (!zones.has(key)) zones.set(key, {nodes: new Map(), resetAt: 0});
+    return zones.get(key);
+}
+
+export function rememberNodes(mapId, harvestables) {
+    const zone = zoneStore(mapId);
+    for (const node of harvestables) {
+        if (!(node.size > 0) || node.lastUpdateTime <= zone.resetAt) continue;
+        const {id, posX, posY, stringType, tier, charges, size, mobileTypeId} = node;
+        zone.nodes.set(id, {id, posX, posY, stringType, tier, charges, size, mobileTypeId});
+    }
+}
+
+export function savedNodes(mapId) {
+    return [...zoneStore(mapId).nodes.values()];
+}
+
+// After a reset only nodes the game reports again are marked; the ones the radar still remembers stay out.
+export function resetFarmRoute(mapId) {
+    const zone = zoneStore(mapId);
+    zone.nodes.clear();
+    zone.resetAt = Date.now();
+}
+
+// Zones without bounds in the zone data (Mists, for one) have no map image either, so the view fits the
+// points instead: the saved nodes and the player.
+function fitPoints(points) {
+    if (!points.length) return {center: {x: 0, y: 0}, extent: FALLBACK_EXTENT};
+    const xs = points.map(p => p.posX);
+    const ys = points.map(p => p.posY);
+    const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    return {
+        center: {x: (minX + maxX) / 2, y: (minY + maxY) / 2},
+        extent: Math.max(FALLBACK_EXTENT, Math.max(maxX - minX, maxY - minY) * FALLBACK_MARGIN),
+    };
+}
+
+export function mapView(mapId, size, points = []) {
     const id = String(mapId);
-    const extent = zonesDatabase.getMapAssetExtent(id);
-    const center = zonesDatabase.getMapAssetCenter(id);
+    const hasMap = zonesDatabase.hasMapBounds(id);
+    const {center, extent} = hasMap
+        ? {center: zonesDatabase.getMapAssetCenter(id), extent: zonesDatabase.getMapAssetExtent(id)}
+        : fitPoints(points);
     const imageSize = size * TURN;
-    return {id, size, center, imageSize, pixelsPerUnit: imageSize / extent};
+    return {id, size, center, hasMap, imageSize, pixelsPerUnit: imageSize / extent};
 }
 
 export function worldToMap(view, posX, posY) {
     const u = view.pixelsPerUnit * (posX - view.center.x);
     const v = view.pixelsPerUnit * (posY - view.center.y);
     return {x: view.size / 2 + TURN * (u + v), y: view.size / 2 + TURN * (u - v)};
+}
+
+export function tierColor(tier) {
+    return TIER_COLORS[tier] ?? '#9ca3af';
 }
 
 export function visibleNodes(harvestables) {
@@ -44,6 +108,8 @@ function drawBackground(ctx, view) {
     ctx.fillStyle = '#1a1c23';
     ctx.fillRect(0, 0, view.size, view.size);
 
+    if (!view.hasMap) return;
+
     const src = `/images/Maps/${view.id}.webp`;
     const image = imageCache.GetPreloadedImage(src, 'Maps');
     if (image) {
@@ -59,17 +125,17 @@ function drawBackground(ctx, view) {
 
 function drawNode(ctx, point, node) {
     ctx.beginPath();
-    ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = NODE_COLORS[node.stringType] ?? '#ffffff';
+    ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = tierColor(node.tier);
     ctx.fill();
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = NODE_COLORS[node.stringType] ?? 'rgba(0,0,0,0.85)';
     ctx.stroke();
 
-    ctx.font = 'bold 8px sans-serif';
+    ctx.font = 'bold 10px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = DARK_TEXT_TIERS.has(node.tier) ? '#000000' : '#ffffff';
     ctx.fillText(String(node.tier), point.x, point.y + 0.5);
 }
 
@@ -87,10 +153,10 @@ export function drawFarmRouteMap(canvas, {mapId, lpX, lpY, harvestables}) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return 0;
 
-    const view = mapView(mapId, canvas.width);
+    rememberNodes(mapId, harvestables);
+    const nodes = visibleNodes(savedNodes(mapId));
+    const view = mapView(mapId, canvas.width, [...nodes, {posX: lpX, posY: lpY}]);
     drawBackground(ctx, view);
-
-    const nodes = visibleNodes(harvestables);
     for (const node of nodes) drawNode(ctx, worldToMap(view, node.posX, node.posY), node);
     drawPlayer(ctx, worldToMap(view, lpX, lpY));
     return nodes.length;

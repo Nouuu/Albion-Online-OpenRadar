@@ -119,6 +119,7 @@ const TABLE = [
     ['settingWsCoalescing', 'settingDebugWsCoalescing', 'rename'],
     ['settingWsThrottling', null, 'remove'],
     [null, 'settingUiRadarSettingsOpen', 'new'],
+    [null, 'settingUiRadarPlayersOpen', 'new'],
     [null, 'settingUiPlayersDisplayOpen', 'new'],
     [null, 'settingUiPlayersAlertsOpen', 'new'],
     [null, 'settingUiPlayersTypesOpen', 'new'],
@@ -160,7 +161,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 139 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 140 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -216,7 +217,7 @@ describe('SettingsRegistry', () => {
             settingLogCategoryMap: false, settingLogCategoryPlayers: false, settingLogCategoryMobs: false,
             settingLogCategoryResources: false, settingLogCategoryDungeons: false, settingLogCategoryFishing: false,
             settingLogToConsole: false, settingLogToServer: false, settingDebugWsCoalescing: true,
-            settingUiRadarSettingsOpen: false,
+            settingUiRadarSettingsOpen: false, settingUiRadarPlayersOpen: true,
             settingUiPlayersDisplayOpen: true, settingUiPlayersAlertsOpen: true,
             settingUiPlayersTypesOpen: true, settingUiPlayersLimitsOpen: true,
             settingUiChestsRaritiesOpen: true, settingUiChestsMistsOpen: true, settingUiChestsDungeonsOpen: true,
@@ -331,6 +332,7 @@ describe('SettingsRegistry control location', () => {
         ['settingRadarKeepAwake', 'Radar', 'Radar settings > Display'],
         ['settingRadarFarmRoute', 'Radar', 'Radar settings > Display'],
         ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
+        ['settingUiRadarPlayersOpen', 'Radar', 'Player list'],
         ['settingPlayersDetect', 'Players', 'Display'],
         ['settingPlayersShowGuild', 'Players', 'Display'],
         ['settingPlayersShowTotalIp', 'Players', 'Display'],

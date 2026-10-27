@@ -171,6 +171,11 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
+  // A Mist override carries the bounds of the zone it was entered from, which do not describe the Mist map.
+  hasMapBounds(zoneId) {
+    return !this.overrides.has(String(zoneId)) && this._validBounds(zoneId) !== null;
+  }
+
   getMapAssetExtent(zoneId) {
     const b = this._validBounds(zoneId);
     if (!b) return 825;
