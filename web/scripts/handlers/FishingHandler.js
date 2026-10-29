@@ -36,6 +36,7 @@ export class FishingHandler
         const sizeSpawned = Parameters[2];
         const sizeLeftToSpawn = Parameters[3];
 
+        // Empty type (size 15) is a zone broadcast, not a pool: drawn it shows offset duplicate icons.
         if (!type) return;
         if (!coor) return;
 
