@@ -19,6 +19,7 @@ const TIER_COLORS = {
     7: '#facc15',
     8: '#ffffff',
 };
+const FISH_COLOR = '#22d3ee';
 const DARK_TEXT_TIERS = new Set([2, 3, 6, 7, 8]);
 
 const NODE_COLORS = {
@@ -35,7 +36,7 @@ const zones = new Map();
 
 function zoneStore(mapId) {
     const key = String(mapId);
-    if (!zones.has(key)) zones.set(key, {nodes: new Map(), resetAt: 0});
+    if (!zones.has(key)) zones.set(key, {nodes: new Map(), fishes: new Map(), resetAt: 0});
     return zones.get(key);
 }
 
@@ -52,10 +53,24 @@ export function savedNodes(mapId) {
     return [...zoneStore(mapId).nodes.values()];
 }
 
+export function rememberFishes(mapId, fishes) {
+    const zone = zoneStore(mapId);
+    for (const fish of fishes) {
+        if (fish.lastUpdateTime <= zone.resetAt) continue;
+        const {id, posX, posY, sizeSpawned, totalSize} = fish;
+        zone.fishes.set(id, {id, posX, posY, sizeSpawned, totalSize});
+    }
+}
+
+export function savedFishes(mapId) {
+    return [...zoneStore(mapId).fishes.values()];
+}
+
 // After a reset only nodes the game reports again are marked; the ones the radar still remembers stay out.
 export function resetFarmRoute(mapId) {
     const zone = zoneStore(mapId);
     zone.nodes.clear();
+    zone.fishes.clear();
     zone.resetAt = Date.now();
 }
 
@@ -139,6 +154,26 @@ function drawNode(ctx, point, node) {
     ctx.fillText(String(node.tier), point.x, point.y + 0.5);
 }
 
+function drawFish(ctx, point, fish) {
+    ctx.beginPath();
+    ctx.moveTo(point.x, point.y - 9);
+    ctx.lineTo(point.x + 9, point.y);
+    ctx.lineTo(point.x, point.y + 9);
+    ctx.lineTo(point.x - 9, point.y);
+    ctx.closePath();
+    ctx.fillStyle = FISH_COLOR;
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+    ctx.stroke();
+
+    ctx.font = 'bold 9px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000000';
+    ctx.fillText(String(fish.sizeSpawned), point.x, point.y + 0.5);
+}
+
 function drawPlayer(ctx, point) {
     ctx.beginPath();
     ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
@@ -149,15 +184,18 @@ function drawPlayer(ctx, point) {
     ctx.stroke();
 }
 
-export function drawFarmRouteMap(canvas, {mapId, lpX, lpY, harvestables}) {
+export function drawFarmRouteMap(canvas, {mapId, lpX, lpY, harvestables, fishes = []}) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return 0;
 
     rememberNodes(mapId, harvestables);
+    rememberFishes(mapId, fishes);
     const nodes = visibleNodes(savedNodes(mapId));
-    const view = mapView(mapId, canvas.width, [...nodes, {posX: lpX, posY: lpY}]);
+    const pools = settingsSync.getBool('settingResourcesFishing') ? savedFishes(mapId) : [];
+    const view = mapView(mapId, canvas.width, [...nodes, ...pools, {posX: lpX, posY: lpY}]);
     drawBackground(ctx, view);
     for (const node of nodes) drawNode(ctx, worldToMap(view, node.posX, node.posY), node);
+    for (const fish of pools) drawFish(ctx, worldToMap(view, fish.posX, fish.posY), fish);
     drawPlayer(ctx, worldToMap(view, lpX, lpY));
-    return nodes.length;
+    return nodes.length + pools.length;
 }

@@ -338,6 +338,7 @@ export class RadarRenderer {
                 lpX: this.lpX,
                 lpY: this.lpY,
                 harvestables: this.handlers.harvestablesHandler?.harvestableList ?? [],
+                fishes: this.handlers.fishingHandler?.fishes ?? [],
             });
             const zone = document.getElementById('farmRouteZone');
             if (zone) zone.textContent = `${zonesDatabase.getZoneName(String(this.map.id))} · ${count}`;

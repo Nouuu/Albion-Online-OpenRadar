@@ -12,13 +12,13 @@ function matrix(value) {
 }
 
 vi.mock('./SettingsSync.js', () => ({
-    default: {getJSON: vi.fn(() => ({}))},
+    default: {getJSON: vi.fn(() => ({})), getBool: vi.fn(() => true)},
 }));
 vi.mock('./ImageCache.js', () => ({
     default: {GetPreloadedImage: vi.fn(() => null), preloadImageAndAddToList: vi.fn(() => Promise.resolve())},
 }));
 
-const {mapView, worldToMap, visibleNodes, tierColor, drawFarmRouteMap, rememberNodes, savedNodes, resetFarmRoute} = await import('./FarmRouteMap.js');
+const {mapView, worldToMap, visibleNodes, tierColor, drawFarmRouteMap, rememberNodes, savedNodes, rememberFishes, savedFishes, resetFarmRoute} = await import('./FarmRouteMap.js');
 const settingsSync = (await import('./SettingsSync.js')).default;
 
 const ZONE = '1000';
@@ -119,6 +119,34 @@ describe('FarmRouteMap', () => {
         expect(count).toBe(2);
         expect(ctx.arc).toHaveBeenCalledTimes(3);
         expect(ctx.fillText).toHaveBeenCalledWith('5', expect.any(Number), expect.any(Number));
+    });
+
+    describe('saved fishing pools', () => {
+        const pool = {id: 7, posX: 10, posY: 20, sizeSpawned: 2, totalSize: 5, lastUpdateTime: 1000};
+
+        test('a pool stays marked after the radar list forgets it, and reset clears it', () => {
+            rememberFishes('fish-a', [pool]);
+            rememberFishes('fish-a', []);
+            expect(savedFishes('fish-a').map(f => f.id)).toEqual([7]);
+            resetFarmRoute('fish-a');
+            expect(savedFishes('fish-a')).toEqual([]);
+        });
+
+        test('drawFarmRouteMap counts and draws saved pools, and hides them when fishing pools are off', () => {
+            const ctx = {
+                fillRect: vi.fn(), beginPath: vi.fn(), arc: vi.fn(), fill: vi.fn(), stroke: vi.fn(), fillText: vi.fn(),
+                save: vi.fn(), restore: vi.fn(), translate: vi.fn(), transform: vi.fn(), drawImage: vi.fn(),
+                moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(),
+            };
+            const canvas = {width: 400, height: 400, getContext: () => ctx};
+
+            expect(drawFarmRouteMap(canvas, {mapId: 'fish-b', lpX: 0, lpY: 0, harvestables: [], fishes: [pool]})).toBe(1);
+            expect(ctx.fillText).toHaveBeenCalledWith('2', expect.any(Number), expect.any(Number));
+
+            settingsSync.getBool.mockReturnValue(false);
+            expect(drawFarmRouteMap(canvas, {mapId: 'fish-b', lpX: 0, lpY: 0, harvestables: [], fishes: []})).toBe(0);
+            settingsSync.getBool.mockReturnValue(true);
+        });
     });
 
     describe('saved nodes', () => {
