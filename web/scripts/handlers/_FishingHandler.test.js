@@ -43,7 +43,7 @@ describe('FishingHandler', () => {
             expect(handler.fishes[0].totalSize).toBe(p[2] + p[3]);
         });
 
-        // @verified 2026-04-24: empty-string type entries are phantom zone broadcasts, not real pools; filter drops them.
+        // @verified 2026-10-29: live capture showed type="" (size 15) entries as offset duplicate icons; filter drops them.
         test('pcap-derived spawn: entries with type="" are filtered out', async () => {
             const fx = await loadFixture('fishing', 'spawn');
             const emptyTypeMsgs = fx.messages.filter(m => m.parameters['4'] === '');

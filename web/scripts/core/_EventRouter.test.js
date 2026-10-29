@@ -994,6 +994,17 @@ describe('EventRouter', () => {
 
             expect(handlers.fishingHandler.newFishEvent).toHaveBeenCalledWith(p);
         });
+
+        // @verified 2026-10-29: live capture next to a fishing spot sent the spawns as 360 (FishingNodeSwarm, FishingNodeFish, "").
+        test('onEvent routes the live-game fishing spawn code (P[252]=360) to newFishEvent', async () => {
+            const fix = await loadFixture('fishing', 'spawn');
+            const p = normalizeParams(fix.messages[2].parameters);
+            p[252] = 360;
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.fishingHandler.newFishEvent).toHaveBeenCalledWith(p);
+        });
     });
 
     // -------------------------------------------------------------------------
