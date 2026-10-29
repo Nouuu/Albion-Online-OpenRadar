@@ -12,6 +12,7 @@ function syncMapIsBZ() {
 }
 
 // Map change debouncing
+const FISHING_ZONE_SPAWN_LIVE_CODE = 360;
 const MAP_CHANGE_DEBOUNCE_MS = 4000;
 const MIST_CHOICE_TTL_MS = 30000;
 let lastMapChangeTime = 0;
@@ -467,6 +468,9 @@ export function onEvent(Parameters) {
             wispCageHandler.cageOpenedEvent(Parameters);
             break;
 
+        // The live game sends fishing zone spawns as 360 (observed 2026-10-29: FishingNodeSwarm/FishingNodeFish/"");
+        // upstream EventCodes.cs still lists them at 361, so both are accepted.
+        case FISHING_ZONE_SPAWN_LIVE_CODE:
         case EventCodes.NewFishingZoneObject:
             fishingHandler.newFishEvent(Parameters);
             break;
