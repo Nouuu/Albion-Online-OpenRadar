@@ -91,8 +91,8 @@ headless setups.
 ### Using ExitLag?
 
 ExitLag's default redirection method (WFP) intercepts Albion's traffic above the NDIS layer, so Npcap sees nothing.
-Wireshark sees nothing either. In ExitLag, open **Settings -> Advanced -> Packet redirection method** and pick
-**NDIS (Legacy)**.
+Wireshark sees nothing either. In ExitLag, open **Settings -> Advanced options -> Redirection method** and pick
+**NDIS (legacy)**.
 
 ![ExitLag settings screenshot](docs/images/exitlag.png)
 
@@ -103,8 +103,8 @@ Wireshark sees nothing either. In ExitLag, open **Settings -> Advanced -> Packet
 ### Other players do not appear on the radar
 
 Expected, and the question asked most often. Albion encrypts live player positions, so no passive tool can place them
-on the map. The radar still detects them: open the **Players** page to see who is around, their guild, alliance, gear
-and item power. Threat alerts run off that detection. Details in
+on the map. The radar still detects them: the **Detected Players** list on the Radar page shows who is around, their
+guild, alliance, gear and item power. Threat alerts run off that detection. Details in
 [PLAYER_POSITIONS_MITM.md](docs/technical/PLAYER_POSITIONS_MITM.md).
 
 ### Nothing is detected at all
@@ -112,7 +112,7 @@ and item power. Threat alerts run off that detection. Details in
 Work down this list:
 
 1. Npcap (Windows) or libpcap (Linux) installed, radar restarted afterwards.
-2. **Settings -> Network**: at least one interface ticked and marked active.
+2. **Settings -> Network**: at least one interface ticked and applied, and the "Capturing on" banner shown.
 3. ExitLag, a VPN or a proxy in the way. See the section above.
 4. On Linux, `setcap` applied, or running as root.
 
@@ -129,7 +129,7 @@ Network interfaces, backend logs and pcap recording can only be changed from the
 
 ### Is there a macOS build?
 
-No official build. It might compile from source, nobody has tested it. Tracked in
+No official build. One user tried to set it up on macOS and the capture saw no traffic. See
 [#151](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/151).
 
 ### Is there a Discord?
@@ -149,10 +149,10 @@ call and your risk.
 
 | What          | Coverage                                                                                       |
 |---------------|------------------------------------------------------------------------------------------------|
-| **Resources** | Wood, Rock, Fiber, Hide, Ore. T1-T8, enchanted `.1 .2 .3`, static and living                   |
-| **Mobs**      | 5,186 catalogued, 9 danger classes colour-coded from green (normal) to red (boss)              |
+| **Resources** | Wood, Rock, Fiber, Hide, Ore. T1-T8, enchanted `.1 .2 .3 .4`, static and living                |
+| **Mobs**      | 5,479 catalogued, 9 danger classes colour-coded from green (normal) to red (boss)              |
 | **Players**   | Faction flag, guild, alliance, equipment, item power, zone-aware threat alerts                  |
-| **Zones**     | 1,418 zones. Safe / Yellow / Red / Black drives the alert gate                                  |
+| **Zones**     | 1,423 zones. Safe / Yellow / Red / Black drives the alert gate                                  |
 | **Mists**     | Solo and Duo portals with rarity, feu follets (wisp signs), wisp cages, Knightfall Abbey        |
 | **Dungeons**  | Solo, Group, Corrupted, Hellgate, with per-enchant filters E0-E4                                |
 | **Fishing**   | Spawns detected and drawn                                                                       |
@@ -267,7 +267,7 @@ the fix ships as a patch release.
 - **Player positions**: Albion encrypts movement data. Players are detected and listed, but their live positions cannot
   be placed on the radar without a Photon MITM proxy, which is out of scope. See
   [PLAYER_POSITIONS_MITM.md](docs/technical/PLAYER_POSITIONS_MITM.md).
-- **Some Black Zone maps**: background tiles are missing for zone IDs 4000+. Turn off Map background in the radar settings panel on the Radar page.
+- **Some map backgrounds**: half of the Roads of Avalon maps, and the Hellgates, Corrupted Lairs and Smuggler's Dens, have no background tile. Turn off Map background in the radar settings panel on the Radar page.
 - **Event 46 timing**: `HarvestableChangeState` can skip sizes or arrive late depending on server batching. The radar
   shows what the wire delivers. States the server skipped are unrecoverable.
 
@@ -285,7 +285,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 | libpcap | latest  | Linux packet capture   |
 | ALSA    | latest  | Linux alert sound, PulseAudio preferred when running |
 | Node.js | 26+     | asset and data tooling |
-| Docker  | latest  | Linux cross-compile    |
+| Docker  | latest  | build for the other OS |
 
 ```bash
 git clone https://github.com/Nouuu/Albion-Online-OpenRadar.git
@@ -295,17 +295,18 @@ make run              # run
 make dev              # hot-reload (needs: make install-tools)
 make test             # Go tests + Vitest
 make build-windows    # Windows binary
-make build-linux      # Linux binary, via Docker
+make build-linux      # Linux binary (Docker unless on Linux)
 make all-in-one       # both binaries + READMEs + checksums
 ```
 
 ```
 ├── cmd/radar/        # entry point, flags, app wiring
 ├── internal/
+│   ├── audio/        # alert sound playback
 │   ├── capture/      # multi-interface manager + libpcap workers
 │   ├── photon/       # Protocol18 parser, event/op codes, pcap fixtures
 │   ├── photonscan/   # shared decode walk used by the pcap tools
-│   ├── server/       # HTTP routes, WebSocket, network and settings APIs
+│   ├── server/       # HTTP routes, WebSocket, network, settings and alert APIs
 │   ├── templates/    # Go templates + HTMX pages
 │   ├── ui/           # Bubble Tea TUI dashboard
 │   └── logger/       # JSONL structured logging
@@ -317,6 +318,7 @@ make all-in-one       # both binaries + READMEs + checksums
 │   └── ao-bin-dumps/ # game data, minified JSON
 ├── tools/            # Go tools (anonymize-pcap, photon-dump, photon-strings,
 │                     # gen-eventcodes, offset-validate) + TS asset scripts
+│                     # and the map download Chrome extension
 └── docs/             # documentation
 ```
 
