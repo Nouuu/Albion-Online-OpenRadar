@@ -352,6 +352,10 @@ make download-map         # world map tiles
 make refresh-assets       # all of the above
 ```
 
+`make download-map` downloads the tiles through your everyday Chrome. One-time setup: open `chrome://extensions`,
+enable Developer mode, click **Load unpacked** and pick `tools/map-download-extension`. Tick the Cloudflare box if
+Chrome shows one.
+
 ### Add a new HTTP API
 
 In `internal/server/http.go` (or a sibling `*_api.go` file):

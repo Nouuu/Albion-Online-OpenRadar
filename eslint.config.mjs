@@ -127,6 +127,15 @@ export default [
         }
     },
 
+    // Map download Chrome extension (browser)
+    {
+        files: ["tools/map-download-extension/**/*.js"],
+        languageOptions: {
+            sourceType: "script",
+            globals: globals.browser
+        }
+    },
+
     // Node.js tools/scripts (TS) - TypeScript parser
     {
         files: ["tools/**/*.ts"],

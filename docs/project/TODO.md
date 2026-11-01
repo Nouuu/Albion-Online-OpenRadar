@@ -36,10 +36,6 @@
 ### Maps
 
 - [ ] Black Zone map tiles for zone IDs 4000+ and 5000+, extracted from the client.
-- [ ] **Map download tool blocked**. Since at least 2026-11-01 `cdn.albiononline2d.com` answers every request,
-  plain `curl` included, with a Cloudflare challenge (`HTTP 403`, `Cf-Mitigated: challenge`), so
-  `npm run download-map` fetches nothing. Needs another map source. Its `puppeteer-real-browser` and
-  `puppeteer-extra` stack is unmaintained and holds most of the remaining `npm audit` alerts.
 
 ### Platforms
 

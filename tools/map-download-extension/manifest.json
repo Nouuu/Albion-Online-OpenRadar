@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "OpenRadar map download",
+  "version": "1.0",
+  "description": "Downloads Albion map tiles for the OpenRadar map tool.",
+  "content_scripts": [
+    {
+      "matches": ["https://cdn.albiononline2d.com/game-images/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
