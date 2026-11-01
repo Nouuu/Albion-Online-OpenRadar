@@ -407,3 +407,31 @@ describe('ZonesDatabase asset extent from real zones.json', () => {
         expect(zonesDatabase.getMapAssetExtent('1000')).toBe(600);
     });
 });
+
+describe('ZonesDatabase map image name', () => {
+    beforeEach(() => {
+        zonesDatabase.clearAllMistOverrides();
+    });
+
+    // Real zones.json: Avalon road TNL-201 ships its image as TNL-001 (file prefix), not as its id.
+    test('Avalon road uses the file prefix, not the zone id', () => {
+        expect(zonesDatabase.getMapImageName('TNL-201')).toBe('TNL-001');
+    });
+
+    test('numbered passage uses the file prefix', () => {
+        expect(zonesDatabase.getMapImageName('PSG-0039#2')).toBe('PSG-0039');
+    });
+
+    test('zone whose id equals its file prefix is unchanged', () => {
+        expect(zonesDatabase.getMapImageName('1000')).toBe('1000');
+    });
+
+    test('unknown zone falls back to the id', () => {
+        expect(zonesDatabase.getMapImageName('@UNKNOWN@x')).toBe('@UNKNOWN@x');
+    });
+
+    test('mist override keeps its own id', () => {
+        zonesDatabase.setMistOverride('@MISTS@abc', '3316');
+        expect(zonesDatabase.getMapImageName('@MISTS@abc')).toBe('@MISTS@abc');
+    });
+});

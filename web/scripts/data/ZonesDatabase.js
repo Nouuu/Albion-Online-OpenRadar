@@ -171,6 +171,15 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
+  // Map images are saved under the zone's file prefix (e.g. TNL-001), which differs from the zone id for
+  // Avalon roads (TNL-201) and numbered passages (PSG-0039#2). Mist overrides keep using their own id.
+  getMapImageName(zoneId) {
+    const id = String(zoneId);
+    if (this.overrides.has(id)) return id;
+    const file = this.getZone(id)?.file;
+    return file ? file.split("_")[0] : id;
+  }
+
   getMapAssetExtent(zoneId) {
     const b = this._validBounds(zoneId);
     if (!b) return 825;
