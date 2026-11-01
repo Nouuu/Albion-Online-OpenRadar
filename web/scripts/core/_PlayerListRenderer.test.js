@@ -369,8 +369,8 @@ describe('player card refreshes on a display setting change without a new spawn'
         expect(document.body.innerHTML).toContain(`title="${onlyTwo}"`);
     });
 
-    // @verified 2026-11-01: every field the card draws is part of its key, so a change that arrives after the first
-    // render shows on the next refresh. pcap-derived: players/mounted.json message 0; synthetic: the other changes.
+    // @verified 2026-11-01: name, guild, alliance, faction and mounted are part of the card key, so a change that
+    // arrives after the first render shows on the next refresh. pcap-derived: players/mounted.json message 0; synthetic: the other changes.
     const spawn = {1: 'Before', 8: 'OldGuild', 53: 0, 51: null, 40: [], 43: []};
     test.each([
         ['mounted', '>Mounted<', spawn, async (id) => {
