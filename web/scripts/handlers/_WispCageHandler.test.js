@@ -23,7 +23,7 @@ describe('WispCageHandler', () => {
         handler = new WispCageHandler();
     });
 
-    describe('newCageEvent (event 530)', () => {
+    describe('newCageEvent (event 532)', () => {
         // @verified 2026-11-01: a closed cage (Parameters[5]=1) is added; cages already open (Parameters[5]=2) cannot be used and are not.
         test('pcap-derived spawn: only the closed cage is added, with name from Parameters[4] and position from Parameters[2]', async () => {
             const fx = await loadFixture('wispcage', 'spawn');
@@ -98,7 +98,7 @@ describe('WispCageHandler', () => {
         });
     });
 
-    describe('cageOpenedEvent (event 531)', () => {
+    describe('cageOpenedEvent (event 533)', () => {
         // @verified 2026-09-24: settingMistsWispCages gate moved to draw time; cageOpenedEvent removes the cage regardless of its value.
         test('synthetic: cageOpenedEvent with settingMistsWispCages=false still removes the matching cage', () => {
             handler.cages.push({id: 10, posX: 0, posY: 0, name: 'X', hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
