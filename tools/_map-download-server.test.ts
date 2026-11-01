@@ -154,6 +154,49 @@ describe('startMapDownloadServer', () => {
     test('answers 404 on an unknown path', async () => {
         expect((await send('GET', '/nope')).status).toBe(404);
     });
+
+    test('survives an upload aborted mid-body', async () => {
+        await new Promise<void>(resolve => {
+            const req = http.request({
+                host: '127.0.0.1', port: server.port, method: 'POST', path: '/map/a.png',
+                headers: {Origin: ORIGIN, 'X-Status': '200', 'Content-Length': '1000'},
+            });
+            req.on('error', () => resolve());
+            req.write(PNG.subarray(0, 4), () => setTimeout(() => {
+                req.destroy();
+                resolve();
+            }, 20));
+        });
+        await new Promise(r => setTimeout(r, 50));
+        expect(await list()).toEqual(['a.png', 'b.png']);
+        expect(onMap).not.toHaveBeenCalled();
+    });
+});
+
+describe('idle watchdog', () => {
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+    test('calls onIdle once after idleMs without a request', async () => {
+        const onIdle = vi.fn();
+        await server.close();
+        server = await startMapDownloadServer({origin: ORIGIN, names: ['a.png'], onMap, onIdle, idleMs: 100});
+        await sleep(50);
+        expect(onIdle).not.toHaveBeenCalled();
+        await sleep(200);
+        expect(onIdle).toHaveBeenCalledOnce();
+    });
+
+    test('re-arms on every request', async () => {
+        const onIdle = vi.fn();
+        await server.close();
+        server = await startMapDownloadServer({origin: ORIGIN, names: ['a.png'], onMap, onIdle, idleMs: 150});
+        await sleep(100);
+        await list();
+        await sleep(100);
+        expect(onIdle).not.toHaveBeenCalled();
+        await sleep(150);
+        expect(onIdle).toHaveBeenCalledOnce();
+    });
 });
 
 describe('pickLandingTile', () => {

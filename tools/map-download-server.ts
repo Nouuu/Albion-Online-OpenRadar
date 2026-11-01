@@ -31,11 +31,18 @@ export async function startMapDownloadServer(opts: {
     names: string[];
     onMap: (upload: MapUpload) => Promise<void>;
     onList?: () => void;
+    onIdle?: () => void;
+    idleMs?: number;
 }): Promise<MapDownloadServer> {
     const pending = [...opts.names];
     let queue = Promise.resolve();
     let finish!: () => void;
     const done = new Promise<void>(resolve => finish = resolve);
+    let idleTimer: ReturnType<typeof setTimeout> | undefined;
+    const armIdle = () => {
+        clearTimeout(idleTimer);
+        if (opts.onIdle && opts.idleMs) idleTimer = setTimeout(opts.onIdle, opts.idleMs);
+    };
 
     const reply = (res: http.ServerResponse, status: number) => {
         res.statusCode = status;
@@ -50,7 +57,8 @@ export async function startMapDownloadServer(opts: {
         reply(res, 204);
     };
 
-    const server = http.createServer(async (req, res) => {
+    const handle = async (req: http.IncomingMessage, res: http.ServerResponse) => {
+        armIdle();
         res.setHeader('Access-Control-Allow-Origin', opts.origin);
         if (req.method === 'OPTIONS') {
             res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
@@ -83,15 +91,23 @@ export async function startMapDownloadServer(opts: {
             return;
         }
         reply(res, 404);
+    };
+
+    const server = http.createServer((req, res) => {
+        handle(req, res).catch(() => {
+            if (!res.headersSent) reply(res, 500);
+        });
     });
 
     await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    armIdle();
 
     return {
         port: (server.address() as AddressInfo).port,
         done,
         pending: () => [...pending],
         close: () => new Promise(resolve => {
+            clearTimeout(idleTimer);
             server.closeAllConnections();
             server.close(() => resolve());
         }),

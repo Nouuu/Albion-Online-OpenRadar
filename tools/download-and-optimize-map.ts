@@ -9,7 +9,7 @@ const OUTPUT_DIR = path.join('web/images/Maps');
 const CDN_BASE_URL = 'https://cdn.albiononline2d.com/game-images/'
 const EXTENSION_DIR = path.resolve('tools/map-download-extension');
 const MAX_CONSECUTIVE_CHALLENGES = 3;
-const NO_CONTACT_HINT_MS = 60_000;
+const IDLE_HINT_MS = 60_000;
 
 interface ZoneInfo {
     name: string;
@@ -162,6 +162,12 @@ function printExtensionHint() {
     console.log('⏳ No answer from the OpenRadar Chrome extension yet.');
     console.log('   One-time setup: open chrome://extensions, enable Developer mode, click "Load unpacked"');
     console.log(`   and pick ${EXTENSION_DIR}. Then reload the Chrome tab.`);
+    console.log('   If Chrome asks to access devices on your local network, allow it.');
+}
+
+function printStalledHint(url: string) {
+    console.log('⏳ No news from the Chrome tab for 60 s. If it is closed or stuck, open this URL again:');
+    console.log(`   ${url}`);
 }
 
 async function main() {
@@ -182,12 +188,15 @@ async function main() {
     let received = 0;
     let challenges = 0;
     let contacted = false;
+    let url = '';
     const server = await startMapDownloadServer({
         origin: new URL(CDN_BASE_URL).origin,
         names: pending,
         onList: () => {
             contacted = true;
         },
+        onIdle: () => contacted ? printStalledHint(url) : printExtensionHint(),
+        idleMs: IDLE_HINT_MS,
         onMap: async ({name, status, body}) => {
             if (status === 403) {
                 if (++challenges >= MAX_CONSECUTIVE_CHALLENGES) {
@@ -215,17 +224,12 @@ async function main() {
         },
     });
 
-    const hint = setTimeout(() => {
-        if (!contacted) printExtensionHint();
-    }, NO_CONTACT_HINT_MS);
-
-    const url = `${CDN_BASE_URL}${pickLandingTile(mapFiles, pending)}#openradar=${server.port}`;
+    url = `${CDN_BASE_URL}${pickLandingTile(mapFiles, pending)}#openradar=${server.port}`;
     console.log(`🌐 Opening Chrome: ${url}`);
     console.log('   The OpenRadar extension downloads each tile in that tab. Keep it open.\n');
     openInChrome(url);
 
     await server.done;
-    clearTimeout(hint);
     const missing = server.pending();
     if (missing.length > 0) {
         console.error(`❌ ${missing.length} map tiles were not received: ${missing.join(', ')}`);
