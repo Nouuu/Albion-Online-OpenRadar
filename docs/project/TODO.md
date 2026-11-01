@@ -1,7 +1,7 @@
 # OpenRadar Roadmap
 
-**Last release**: 2.2.2
-**Last update**: 2026-10-08
+**Last release**: 2.3.0
+**Last update**: 2026-11-01
 
 ## Detection systems status
 
@@ -36,6 +36,8 @@
 ### Maps
 
 - [ ] Black Zone map tiles for zone IDs 4000+ and 5000+, extracted from the client.
+- [ ] **Map tiles missing on the CDN**. 44 zone files answer `HTTP 404` (`BLACKBANK-*`, `*-HellDen`, `ARENA-1v1-01`,
+  `1900-DynamicTest`, `PSG-0055`, seen 2026-11-01), so every `make download-map` run retries them for about a minute.
 
 ### Platforms
 
@@ -64,6 +66,8 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
 - **Chest rarity slot** (#29). See backlog above.
 - **Feu follet rarity slot**. Every fixture sample is Common (`Parameters[33]=0`). Live play shows an Uncommon portal
   labelled as such in game, so the rarity is carried somewhere. Needs a multi-rarity capture.
+- **Smuggler cages on the wisp cage layer**. `NewCagedObject` also announces `SHARED_CAGED_SMUGGLER` (seen with
+  `Parameters[5]=0`), and `WispCageHandler` adds every cage it receives, so a smuggler cage draws as a wisp cage.
 - **Mists cluster rarity**. Zone-level rarity lives in the `ChangeCluster` operation response `Parameters[3]` byte
   array, last byte. Plumbing it needs a Mists capture with the opcode 41 response and a cluster-rarity store.
 - **Alert gate on unknown zones** (#65, closed but the behaviour stands). `zonesDatabase.getPvpType` falls back to
@@ -101,9 +105,6 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   the arrival init.
 - **`/api/settings/server-logs`**. Replaced by `/api/settings/logging` in 2.2. The old path returns 404 with no
   compatibility shim. Noted in case an old bug report mentions it.
-- **`npm run lint` crashes on every `.gohtml` file**. ESLint 10.11 with `eslint-plugin-html` 8.2 throws
-  `Cannot read private member #ruleDefinitions` while linting any template, unrelated to file content. Reproduces on
-  an untouched file. `npx eslint web/scripts/` alone still works.
 - **Dead PiP resize listener**. `PictureInPictureManager.js` listens for `canvasSizeChanged` on `document`, while
   `RadarSettingsPanel.js` dispatches it on `window`. Harmless because `compositeFrame` resyncs the size every frame.
   Delete the listener.
@@ -115,10 +116,8 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   call's intervals.
 - **`Utils.js` binds a `#button` click handler that nothing renders**. No template defines an element with that id, so
   the listener is dead code.
-- **`PlayerListRenderer` does not re-render a card when only the mounted badge, name, guild or alliance changes**.
-  `computeCardKey` covers equipment, spells, health availability and display toggles but not those fields, so the card
-  keeps the stale values until another card-key field changes or the player leaves the list. A faction change that moves the player to
-  another section list builds a new card.
+- **Player card health label and colour go stale**. When the card key is unchanged, `updateSectionPlayers` only
+  resizes the health bar, so the `%` text and the bar colour keep their first-render values.
 - **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
   `handleNewPlayerEvent`; the method is exercised only by its own test.
 - **Radar canvases ignore `devicePixelRatio`**. `RadarSettingsPanel.js` sets each canvas backing store to its CSS size,
@@ -137,15 +136,11 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   no rock above enchant 3.
 - **Unidentified mobs never reach their colour branch**. A mob with no database entry keeps `EnemyType.Enemy`, so
   `getEnemyColor` paints it green like a Normal enemy. The royal blue "unknown" default is never used for them.
-- **Avalon treasure drones fall into Normal**. Their category is `treasuredrones`, which `_getEnemyTypeFromCategory`
-  does not handle, so they get the default `Enemy` type. Nothing assigns `EnemyType.Drone`, so the Avalonian Drones
-  toggle and the cyan colour never apply.
 - **Knightfall handler test covers a path the router never takes**. `_DungeonsHandler.test.js` feeds the abbey
   entrance (`MISTS_DUNGEON_SOLO_YELLOW` at `Parameters[16]`) to `dungeonEvent`, while `EventRouter` sends every
   `MISTS_DUNGEON` tag to `mistsDungeonHandler.addPortal`.
 - **A missing saved adapter is not listed**. `GET /api/network/interfaces` builds its rows from the interfaces present
   now, so an adapter saved in `network.json` that is gone disappears instead of showing as unavailable.
-- **Release line at the top of this file is stale**. It says 2.2.2; the latest release is 2.2.3.
 - **Page container wrapper is duplicated**. `base.gohtml` and `content.gohtml` each carry the same
   `container mx-auto animate-in` div and page switch, so a change has to land in both.
 - **DaisyUI version differs between release and local builds**. `package-lock.json` pins 5.7.16, which `npm ci` and

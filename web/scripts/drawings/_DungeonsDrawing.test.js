@@ -67,7 +67,7 @@ describe('DungeonsDrawing', () => {
 
         const fx = await loadFixture('dungeons', 'spawn');
         for (const msg of fx.messages) {
-            EventRouter.onEvent(normalizeParams(msg.parameters));
+            EventRouter.onEvent({...normalizeParams(msg.parameters), 252: 324}); // fixture shape is pre-patch, code was 325
         }
     });
 
@@ -177,11 +177,13 @@ describe('Mists drawings fed by EventRouter', () => {
             radarRenderer: null,
         });
 
-        for (const [handler, scenario] of [['dungeons', 'spawn'], ['mists', 'portal-wisp-spawn']]) {
-            const fx = await loadFixture(handler, scenario);
-            for (const msg of fx.messages) {
-                EventRouter.onEvent(normalizeParams(msg.parameters));
-            }
+        const dungeons = await loadFixture('dungeons', 'spawn');
+        for (const msg of dungeons.messages) {
+            EventRouter.onEvent({...normalizeParams(msg.parameters), 252: 324}); // fixture shape is pre-patch, code was 325
+        }
+        const portals = await loadFixture('mists', 'portal-wisp-spawn');
+        for (const msg of portals.messages) {
+            EventRouter.onEvent(normalizeParams(msg.parameters));
         }
     });
 

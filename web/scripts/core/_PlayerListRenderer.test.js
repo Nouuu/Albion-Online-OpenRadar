@@ -368,4 +368,38 @@ describe('player card refreshes on a display setting change without a new spawn'
         expect(document.querySelector('[data-player-id]')).not.toBe(first);
         expect(document.body.innerHTML).toContain(`title="${onlyTwo}"`);
     });
+
+    // @verified 2026-11-01: name, guild, alliance, faction and mounted are part of the card key, so a change that
+    // arrives after the first render shows on the next refresh. pcap-derived: players/mounted.json message 0; synthetic: the other changes.
+    const spawn = {1: 'Before', 8: 'OldGuild', 53: 0, 51: null, 40: [], 43: []};
+    test.each([
+        ['mounted', '>Mounted<', spawn, async (id) => {
+            const msg = (await loadFixture('players', 'mounted')).messages[0];
+            handler.handleMountedPlayerEvent(id, normalizeParams(msg.parameters));
+        }],
+        ['nickname', '>After<', spawn, async (id) => handler.handleNewPlayerEvent(id, {...spawn, 1: 'After'})],
+        ['guild', '[NewGuild]', spawn, async (id) => handler.handleNewPlayerEvent(id, {...spawn, 8: 'NewGuild'})],
+        ['alliance', '&lt;ALLY&gt;', spawn, async (id) => handler.handleNewPlayerEvent(id, {...spawn, 51: 'ALLY'})],
+        ['faction city', 'Lymhurst', {...spawn, 53: 1}, async (id) => handler.updatePlayerFaction(id, 2)],
+    ])('%s changing after the first render shows %s on the next refresh', async (field, text, params, change) => {
+        const renderer = await import('./PlayerListRenderer.js');
+        document.body.innerHTML = '<div id="playersList"><div id="playersPassive"><div id="passiveList"></div></div>'
+            + '<div id="playersFaction"><div id="factionList"></div></div></div>';
+        window.settingsSync = {getBool: () => true};
+        const id = 90100;
+        handler.handleNewPlayerEvent(id, params);
+
+        renderer.reset();
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        expect(document.querySelectorAll('[data-player-id]')).toHaveLength(1);
+        expect(document.body.innerHTML).not.toContain(text);
+
+        await change(id);
+        renderer.update(handler);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        expect(document.querySelectorAll('[data-player-id]')).toHaveLength(1);
+        expect(document.body.innerHTML).toContain(text);
+    });
 });

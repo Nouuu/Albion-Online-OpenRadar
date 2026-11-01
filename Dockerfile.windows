@@ -6,7 +6,7 @@
 #   docker build -f Dockerfile.windows -o dist/ \
 #     --build-arg VERSION=x.y.z --build-arg BUILD_TIME=2026-04-15T12:00:00Z .
 
-FROM node:25-bookworm-slim AS frontend
+FROM node:26-bookworm-slim AS frontend
 
 WORKDIR /app
 

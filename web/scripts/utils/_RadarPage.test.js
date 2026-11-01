@@ -328,7 +328,7 @@ describe('radar.gohtml registration', () => {
 
 describe('static entity cleanup', () => {
     // pcap-derived: dungeons/spawn.json message[0] (dungeon), message[2] (Knightfall portal via mistsDungeon.addPortal),
-    // chests/spawn.json message[0] via addChestEvent (fixture 252=391, current NewLootChest=393, code drift),
+    // chests/spawn.json message[0] via addChestEvent (fixture 252=391, current NewLootChest=392, code drift),
     // wispcage/spawn.json message[0].
     test('@verified 2026-09-24: clearHandlers after router/change-cluster.json empties dungeon, chest, cage and Knightfall lists', async () => {
         await page.init();
@@ -391,5 +391,20 @@ describe('static entity cleanup', () => {
 
         await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
         expect(list(window.handlers)).toHaveLength(0);
+    });
+
+    // pcap-derived: fishing/spawn.json FishingNodeFish message; synthetic: the idle age, no fixture carries elapsed time.
+    test('@verified 2026-11-01: a fishing zone idle 10 minutes stays, idle 31 minutes is removed by cleanupStaleEntities', async () => {
+        const fixture = await loadFixture('fishing', 'spawn');
+        vi.useFakeTimers({toFake: ['setInterval', 'clearInterval', 'Date']});
+        await page.init();
+
+        window.handlers.fishing.newFishEvent(normalizeParams(fixture.messages.find(m => m.parameters['4'] === 'FishingNodeFish').parameters));
+
+        await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+        expect(window.handlers.fishing.fishes).toHaveLength(1);
+
+        await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
+        expect(window.handlers.fishing.fishes).toHaveLength(0);
     });
 });

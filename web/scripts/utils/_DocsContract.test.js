@@ -115,7 +115,7 @@ describe('docs contract', () => {
 
     const playersFlat = normalize(players);
 
-    // @verified 2026-09-25: web/scripts/core/EventRouter.js dispatch table for player-touching event codes.
+    // @verified 2026-10-24: web/scripts/core/EventRouter.js dispatch table for player-touching event codes.
     // Table rows are single lines in the source, so these match on the raw (un-flattened) file.
     test('PLAYERS.md event table matches the router dispatch at HEAD', () => {
         expect(players).toMatch(/29[^\n]*spawn[^\n]*no health/i);
@@ -123,8 +123,8 @@ describe('docs contract', () => {
         expect(players).toMatch(/6[^\n]*current HP[^\n]*P(?:arameters)?\[3\]/);
         expect(players).toMatch(/90[^\n]*equipment/i);
         expect(players).toMatch(/91[^\n]*current and max HP[^\n]*P(?:arameters)?\[2\][^\n]*P(?:arameters)?\[3\]/);
-        expect(players).toMatch(/211[^\n]*mounted/i);
-        expect(players).toMatch(/365[^\n]*P(?:arameters)?\[0\][^\n]*P(?:arameters)?\[1\]/);
+        expect(players).toMatch(/210[^\n]*mounted/i);
+        expect(players).toMatch(/364[^\n]*P(?:arameters)?\[0\][^\n]*P(?:arameters)?\[1\]/);
         expect(playersFlat).toMatch(/Move[^.]*\b3\b[^.]*not used for players/i);
         expect(playersFlat).toMatch(/HealthUpdates[^.]*\b7\b[^.]*not used for players/i);
     });

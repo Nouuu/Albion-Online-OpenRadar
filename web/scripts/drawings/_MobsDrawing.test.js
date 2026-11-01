@@ -267,6 +267,30 @@ describe('MobsDrawing DEAD critter routing (user live-test 2026-04-24: dead crit
         expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
     });
 
+    // @verified 2026-11-01: name-derived T6_MOB_ROAMING_AVALON_TREASURE_MINION_RARE (no drone in the post-patch
+    // corpus), max HP 1113 as in mobs.min.json. Full-flow MobsHandler -> drawing: the Avalonian Drones toggle gates
+    // a treasure drone, not Normal, and the min HP filter (on, 2100 by default) does not hide it.
+    test('full-flow: treasure drone draws when settingEnemiesAvalonianDrones is on and Normal is off', () => {
+        const typeId = window.mobsDatabase.getTypeIdByName('T6_MOB_ROAMING_AVALON_TREASURE_MINION_RARE');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges' && key !== 'settingEnemiesNormal');
+
+        mobsHandler.NewMobEvent(normalizeParams({'0': 97000, '1': typeId, '2': 255, '7': [0, 0], '13': 1113, '34': 0}));
+        drawing.invalidate(ctx, mobsHandler.getMobList(), []);
+
+        expect(drawing.drawFilledCircle).toHaveBeenCalledTimes(1);
+    });
+
+    test('full-flow: treasure drone is skipped when settingEnemiesAvalonianDrones is off and Normal is on', () => {
+        const typeId = window.mobsDatabase.getTypeIdByName('T6_MOB_ROAMING_AVALON_TREASURE_MINION_RARE');
+        settingsSync.getBool.mockImplementation(key => key !== 'settingRadarResourceTierBadges' && key !== 'settingEnemiesAvalonianDrones');
+
+        mobsHandler.NewMobEvent(normalizeParams({'0': 97001, '1': typeId, '2': 255, '7': [0, 0], '13': 1113, '34': 0}));
+        drawing.invalidate(ctx, mobsHandler.getMobList(), []);
+
+        expect(drawing.drawFilledCircle).not.toHaveBeenCalled();
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
     // @verified 2026-07-05: name-derived T6_MOB_CRITTER_FIBER_SWAMP_DEAD (no DEAD carcass observed
     // in the post-patch corpus). Full-flow MobsHandler -> drawing: Living Fiber T6 renders when
     // Living setting is on and Static setting is off. Pins the user live-test scenario end-to-end.

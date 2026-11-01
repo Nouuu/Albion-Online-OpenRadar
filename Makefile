@@ -4,7 +4,7 @@
 # Requirements:
 #   - GNU Make, bash (Git Bash on Windows)
 #   - Go 1.27+
-#   - Node 20+
+#   - Node 26+
 #   - Docker (only needed to build the non-native platform locally)
 #   - git, gh, git-cliff, golangci-lint (see `make install-tools`)
 # ============================================================================
@@ -55,7 +55,7 @@ help: ## Display help
 	@echo "  update-ao-data    Update Albion Online data JSON files"
 	@echo "  download-icons    Download + optimize item icons"
 	@echo "  download-spells   Download + optimize spell icons"
-	@echo "  download-map      Download + optimize world map (Puppeteer)"
+	@echo "  download-map      Download + optimize world map (Chrome + OpenRadar extension)"
 	@echo "  refresh-assets    Run all of the above sequentially"
 	@echo ""
 	@echo "Protocol codes (single source of truth):"

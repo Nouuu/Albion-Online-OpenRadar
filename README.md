@@ -19,8 +19,6 @@
   </a>
 </p>
 
-> ### ⚠️Dragonfire update of 08/31 broke detection on v2.2.3. Pre-release [v2.2.4-beta1](https://github.com/Nouuu/Albion-Online-OpenRadar/releases/tag/2.2.4-beta1) restores it; report anything still off on [#196](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/196).
-> I don't do a lot of updates recently, because I take some rest and working on something behind... that would be [awesome](https://github.com/Nouuu/Albion-Online-OpenRadar/issues/214) 👀 🫣
 
 https://github.com/user-attachments/assets/33fe1ac7-11f2-4c3c-a91c-0ab42ebdda7d
 
@@ -255,6 +253,7 @@ internet.
 
 | Version                                            | Headline                                                             |
 |----------------------------------------------------|----------------------------------------------------------------------|
+| [v2.3.0](docs/releases/RELEASE_2.3.0.md)           | Dragonfire and 12 October fixes, backend alert sound, new settings   |
 | [v2.2.3](docs/releases/RELEASE_2.2.3.md)           | Fresh game data on upgrade, equipment ids, alert gate                |
 | [v2.2.2](docs/releases/RELEASE_2.2.2.md)           | 2026-06-29 patch resync: event codes and mob table                   |
 | [v2.2.1](docs/releases/RELEASE_2.2.1.md)           | Mists threat detection, Knightfall Abbey, sub-zone maps              |
@@ -289,7 +288,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 | Npcap   | 1.87+   | Windows packet capture |
 | libpcap | latest  | Linux packet capture   |
 | ALSA    | latest  | Linux alert sound, PulseAudio preferred when running |
-| Node.js | 20+     | asset and data tooling |
+| Node.js | 26+     | asset and data tooling |
 | Docker  | latest  | Linux cross-compile    |
 
 ```bash

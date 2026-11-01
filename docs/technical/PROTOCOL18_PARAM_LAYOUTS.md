@@ -4,12 +4,14 @@ Status: snapshot from a single live capture (T5 zone + harvest + zone transit,
 ~130s, 3020 packets, 4954 events decoded), taken before the 2026-06-29 patch.
 Parameter shapes below still hold. The event codes do not: that patch inserted
 two entries in the upstream enum, shifting every code at or above 248 by +2.
-Codes under 248, which is all of the ones listed here, were untouched.
+Codes under 248 were untouched. The 2026-10-12 patch then removed one
+event after NewMob, moving every code at or above 124 down by 1. The table
+below carries the current codes.
 
 Use as a baseline for regression tests and frontend compatibility checks.
 Expect shifts when Albion patches gameplay payload layouts.
 
-*Last verified against code: 2026-08-14.*
+*Last verified against code: 2026-10-24.*
 
 ## Convention
 
@@ -56,7 +58,7 @@ Representative layouts observed:
 | 40        | NewHarvestableObject         | `params[5]` typeNumber, `params[6]` mobileTypeId, `params[7]` tier, `params[8]` **`[]float32`** packed X/Y, `params[10]` size, `params[11]` enchant |
 | 91        | ?                            | `params[2..3,5]` float32, `params[6]` int64 |
 | 123       | NewMob                       | `params[1]` typeId, `params[7]` `[]float32` X/Y, `params[13]` max HP, `params[19]` rarity, `params[31]` server name (Mists creatures carry a `MISTS_` prefix), `params[33]` portal tag string on wisps only, `params[34]` enchant |
-| 325       | NewRandomDungeonExit         | `params[1]` `[]float32` X/Y, `params[3]` name, `params[4]` template on random dungeons only, `params[6]` template, `params[7]` variant, `params[9]` enchant, `params[16]` `MISTS_*` tag on Mists entrances |
+| 324       | NewRandomDungeonExit         | `params[1]` `[]float32` X/Y, `params[3]` name, `params[4]` template on random dungeons only, `params[6]` template, `params[7]` variant, `params[9]` enchant, `params[16]` `MISTS_*` tag on Mists entrances |
 
 **Frontend layout note (real code 40):**
 

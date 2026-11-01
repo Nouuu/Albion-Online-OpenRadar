@@ -1,5 +1,4 @@
 // pcap-derived fixture: web/scripts/__fixtures__/ws/wispcage/spawn.json, dispatched via handler.newCageEvent
-// (fixture carries event code 530, current EventCodes.NewCagedObject is 533, drift left as is)
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
@@ -50,25 +49,23 @@ describe('WispCageDrawing', () => {
         }
     });
 
-    test('pcap-derived: settingMistsWispCages=false still adds cages 1340, 1348 and 1382', () => {
-        expect(handler.cages.map(c => c.id).sort()).toEqual([1340, 1348, 1382]);
+    test('pcap-derived: settingMistsWispCages=false still adds the closed cage 1270, the open cages 1360 and 1298 are skipped', () => {
+        expect(handler.cages.map(c => c.id)).toEqual([1270]);
     });
 
-    test('synthetic: cageOpenedEvent removes cage 1340 while the filter is off', () => {
-        handler.cageOpenedEvent({0: 1340});
+    test('synthetic: cageOpenedEvent removes cage 1270 while the filter is off', () => {
+        handler.cageOpenedEvent({0: 1270});
 
-        expect(handler.cages.map(c => c.id).sort()).toEqual([1348, 1382]);
+        expect(handler.cages).toHaveLength(0);
     });
 
-    test('pcap-derived: filter off draws nothing, filter on draws exactly 1348 and 1382', () => {
-        handler.cageOpenedEvent({0: 1340});
-
+    test('pcap-derived: filter off draws nothing, filter on draws exactly the closed cage 1270', () => {
         drawing.draw(ctx, handler.cages);
         expect(drawnSrcs(ctx)).toHaveLength(0);
 
         settingsSync.getBool.mockReturnValue(true);
         drawing.draw(ctx, handler.cages);
 
-        expect(drawnSrcs(ctx)).toHaveLength(2);
+        expect(drawnSrcs(ctx)).toHaveLength(1);
     });
 });

@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import https from "https";
 import sharp from "sharp";
-import {PageWithCursor} from "puppeteer-real-browser";
 
 export enum DownloadStatus {
     SUCCESS = 'success',
@@ -20,7 +19,7 @@ export interface DownloadResult {
     buffer?: Buffer<ArrayBuffer | ArrayBufferLike>;
 }
 
-function humanFileSize(size: number): string {
+export function humanFileSize(size: number): string {
     const i = size === 0 ? 0 : Math.floor(Math.log(size) / Math.log(1024));
     return (size / Math.pow(1024, i)).toFixed(2) + ' ' + ['B', 'KB', 'MB', 'GB', 'TB'][i];
 }
@@ -69,30 +68,6 @@ export async function downloadFile(url: string): Promise<DownloadResult> {
         })
     });
 }
-
-export async function downloadFileWithPlaywright(url: string, page: PageWithCursor): Promise<DownloadResult> {
-    console.log(`🌐 Downloading with Playwright: ${url}`);
-
-    const response = await page.goto(url, {waitUntil: 'networkidle2', timeout: 30000});
-
-    await new Promise(res => setTimeout(res, 1500 + Math.random() * 500)); // Random delay to mimic human behavior
-
-    if (response && (response.status() >= 200 && response.status() < 400)) {
-        const buffer = await response.buffer();
-        return {
-            status: DownloadStatus.SUCCESS,
-            size: humanFileSize(buffer.length),
-            buffer: buffer,
-            message: 'Downloaded successfully',
-        }
-    } else {
-        return {
-            status: DownloadStatus.FAIL,
-            message: `HTTP ${response ? response.status() : 'N/A'}`,
-        };
-    }
-}
-
 
 export function handleReplacing(outputPath: string, replaceExisting: boolean): DownloadResult {
     if (!replaceExisting && fs.existsSync(outputPath)) {

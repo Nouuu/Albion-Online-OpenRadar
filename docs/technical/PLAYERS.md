@@ -22,8 +22,8 @@ player is ever drawn on the radar canvas. Players surface in the players list in
 | `HealthUpdate` | 6 | current HP at `Parameters[3]` |
 | `CharacterEquipmentChanged` | 90 | equipment update |
 | `RegenerationHealthChanged` | 91 | current and max HP at `Parameters[2]` and `Parameters[3]` |
-| `Mounted` | 211 | mounted flag |
-| `ChangeFlaggingFinished` | 365 | faction change, id at `Parameters[0]`, new faction at `Parameters[1]` |
+| `Mounted` | 210 | mounted flag |
+| `ChangeFlaggingFinished` | 364 | faction change, id at `Parameters[0]`, new faction at `Parameters[1]` |
 
 `Move` (3) and `HealthUpdates` (7) are routed but not used for players: both only update mobs. Player coordinates in
 the `Move` blob are encrypted anyway, so the radar has nothing to read from it.

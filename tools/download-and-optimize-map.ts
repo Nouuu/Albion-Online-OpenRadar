@@ -1,13 +1,15 @@
 import fs from 'fs';
 import path from 'path';
-import puppeteer from 'puppeteer-extra';
-import {connect, PageWithCursor} from 'puppeteer-real-browser';
-import stealth from 'puppeteer-extra-plugin-stealth';
-import {downloadFileWithPlaywright, handleImageBuffer, handleReplacing, printSummary} from "./common";
+import {exec} from 'child_process';
+import {DownloadResult, DownloadStatus, handleImageBuffer, handleReplacing, humanFileSize, printSummary} from "./common";
+import {pickLandingTile, startMapDownloadServer} from './map-download-server';
 
 const ZONES_JSON_PATH = path.join('web/ao-bin-dumps/zones.json');
 const OUTPUT_DIR = path.join('web/images/Maps');
 const CDN_BASE_URL = 'https://cdn.albiononline2d.com/game-images/'
+const EXTENSION_DIR = path.resolve('tools/map-download-extension');
+const MAX_CONSECUTIVE_CHALLENGES = 3;
+const IDLE_HINT_MS = 60_000;
 
 interface ZoneInfo {
     name: string;
@@ -131,9 +133,6 @@ async function initPrerequisites() {
         console.log(`✅ Created directory: ${OUTPUT_DIR}\n`);
     }
 
-    // Use stealth plugin to avoid detection
-    puppeteer.use(stealth());
-
     // Get map files from zones.json
     const mapFiles = getMapFilesFromZones();
     console.log(`📍 Found ${mapFiles.length} unique map files from zones.json\n`);
@@ -143,135 +142,103 @@ async function initPrerequisites() {
         process.exit(0);
     }
 
-    // Create 2 browser instances for parallel downloads
-    console.log('🌐 Launching browser 1...');
-    const browser1 = await connect({
-        // @ts-ignore
-        headless: 'auto',
-        fingerprint: true,
-        turnstile: true,
-        tf: true,
-    });
-
-    console.log('🌐 Launching browser 2...');
-    const browser2 = await connect({
-        // @ts-ignore
-        headless: 'auto',
-        fingerprint: true,
-        turnstile: true,
-        tf: true,
-    });
-
-    return {mapFiles, pages: [browser1.page, browser2.page], browsers: [browser1.browser, browser2.browser]};
+    return {mapFiles};
 }
 
-async function processMapTile(
-    mapName: string,
-    index: number,
-    total: number,
-    page: PageWithCursor
-): Promise<{
-    downloaded: boolean,
-    failed: boolean,
-    optimizeFail: boolean,
-    didReplace: boolean,
-    didSkip: boolean
-    didOptimize: boolean
-}> {
-    const filename = mapName.split('_')[0] + '.webp';
-    const outputPath = path.join(OUTPUT_DIR, filename);
-    console.log();
-
-    let res = handleReplacing(outputPath, replaceExisting);
-    if (res.status === 'exists') {
-        console.log(`⏭️️ [${index + 1}/${total}] ${res.message}`);
-        return {
-            downloaded: false,
-            failed: false,
-            optimizeFail: false,
-            didReplace: false,
-            didSkip: true,
-            didOptimize: false
-        };
-    }
-
-    const url = `${CDN_BASE_URL}${mapName}`;
-    res = await downloadFileWithPlaywright(url, page);
-
-    return handleImageBuffer(
-        res,
-        outputPath,
-        index,
-        total,
-        replaceExisting,
-        onlyUpgrade,
-        optimize,
-        MAX_IMAGE_SIZE,
-        IMAGE_QUALITY
-    );
+function outputPathFor(mapName: string): string {
+    return path.join(OUTPUT_DIR, mapName.split('_')[0] + '.webp');
 }
 
-const CONCURRENCY = 2; // Number of parallel downloads
+function openInChrome(url: string) {
+    const command = process.platform === 'win32' ? `start "" chrome "${url}"`
+        : process.platform === 'darwin' ? `open -a "Google Chrome" "${url}"`
+            : `xdg-open "${url}"`;
+    exec(command, err => {
+        if (err) console.error(`❌ Could not open Chrome (${err.message}). Open this URL in Chrome: ${url}`);
+    });
+}
+
+function printExtensionHint() {
+    console.log('⏳ No answer from the OpenRadar Chrome extension yet.');
+    console.log('   One-time setup: open chrome://extensions, enable Developer mode, click "Load unpacked"');
+    console.log(`   and pick ${EXTENSION_DIR}. Then reload the Chrome tab.`);
+    console.log('   If Chrome asks to access devices on your local network, allow it.');
+}
+
+function printStalledHint(url: string) {
+    console.log('⏳ No news from the Chrome tab for 60 s. If it is closed or stuck, open this URL again:');
+    console.log(`   ${url}`);
+}
 
 async function main() {
-    const {mapFiles, pages, browsers} = await initPrerequisites();
-
-    let downloaded = 0;
-    let completed = 0;
-    let optimizeFail = 0;
-    let failed = 0;
-    let optimized = 0;
-    let replaced = 0;
-    let skipped = 0;
+    const {mapFiles} = await initPrerequisites();
     const now = Date.now();
+    const stats = {completed: 0, downloaded: 0, replaced: 0, skipped: 0, optimized: 0, failed: 0, optimizeFail: 0};
+    const summary = () => printSummary({startTime: now, ...stats, outputDir: OUTPUT_DIR});
 
-    // Initialize both pages
-    console.log('🔄 Initializing browsers...');
-    await Promise.all(pages.map(async (page) => {
-        await page.goto(CDN_BASE_URL, {waitUntil: 'networkidle2', timeout: 30000});
-    }));
-    await new Promise(res => setTimeout(res, 3000)); // Initial delay
+    const pending = mapFiles.filter(mapName => handleReplacing(outputPathFor(mapName), replaceExisting).status !== DownloadStatus.EXISTS);
+    stats.skipped = stats.completed = mapFiles.length - pending.length;
+    console.log(`⏭️  ${stats.skipped} map tiles already exist, ${pending.length} to download\n`);
 
-    // Process in batches of CONCURRENCY (2 browsers)
-    for (let i = 0; i < mapFiles.length; i += CONCURRENCY) {
-        const batch = mapFiles.slice(i, i + CONCURRENCY);
-        const results = await Promise.all(
-            batch.map((mapName, batchIndex) =>
-                processMapTile(
-                    mapName,
-                    i + batchIndex,
-                    mapFiles.length,
-                    pages[batchIndex % CONCURRENCY]
-                )
-            )
-        );
-
-        for (const result of results) {
-            if (result.downloaded) downloaded++;
-            if (result.failed) failed++;
-            if (result.optimizeFail) optimizeFail++;
-            if (result.didReplace) replaced++;
-            if (result.didSkip) skipped++;
-            if (result.didOptimize) optimized++;
-            completed++;
-        }
+    if (pending.length === 0) {
+        summary();
+        process.exit(0);
     }
 
-    // Close all browsers
-    await Promise.all(browsers.map(b => b.close()));
-
-    printSummary({
-        startTime: now,
-        completed,
-        downloaded,
-        replaced,
-        skipped,
-        optimized,
-        failed,
-        optimizeFail,
-        outputDir: OUTPUT_DIR
+    let received = 0;
+    let challenges = 0;
+    let contacted = false;
+    let url = '';
+    const server = await startMapDownloadServer({
+        origin: new URL(CDN_BASE_URL).origin,
+        names: pending,
+        onList: () => {
+            contacted = true;
+        },
+        onIdle: () => contacted ? printStalledHint(url) : printExtensionHint(),
+        idleMs: IDLE_HINT_MS,
+        onMap: async ({name, status, body}) => {
+            if (status === 403) {
+                if (++challenges >= MAX_CONSECUTIVE_CHALLENGES) {
+                    console.error(`❌ Cloudflare refused ${challenges} downloads in a row. Stopping.`);
+                    summary();
+                    process.exit(1);
+                }
+                console.log('🛡️  Cloudflare challenge: the Chrome tab reloads. Tick the box if Chrome shows one.');
+                return;
+            }
+            challenges = 0;
+            console.log();
+            const res: DownloadResult = status === 200
+                ? {status: DownloadStatus.SUCCESS, size: humanFileSize(body.length), buffer: body}
+                : {status: DownloadStatus.FAIL, message: `HTTP ${status}`};
+            const result = await handleImageBuffer(res, outputPathFor(name), received++, pending.length,
+                replaceExisting, onlyUpgrade, optimize, MAX_IMAGE_SIZE, IMAGE_QUALITY);
+            if (result.downloaded) stats.downloaded++;
+            if (result.failed) stats.failed++;
+            if (result.optimizeFail) stats.optimizeFail++;
+            if (result.didReplace) stats.replaced++;
+            if (result.didSkip) stats.skipped++;
+            if (result.didOptimize) stats.optimized++;
+            stats.completed++;
+        },
     });
 
+    url = `${CDN_BASE_URL}${pickLandingTile(mapFiles, pending)}#openradar=${server.port}`;
+    console.log(`🌐 Opening Chrome: ${url}`);
+    console.log('   The OpenRadar extension downloads each tile in that tab. Keep it open.\n');
+    openInChrome(url);
+
+    await server.done;
+    const missing = server.pending();
+    if (missing.length > 0) {
+        console.error(`❌ ${missing.length} map tiles were not received: ${missing.join(', ')}`);
+        stats.failed += missing.length;
+        stats.completed += missing.length;
+    }
+    await server.close();
+
+    summary();
     process.exit(0);
 }
 

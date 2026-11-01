@@ -1,4 +1,4 @@
-// pcap-derived fixture: web/scripts/__fixtures__/ws/wispcage/spawn.json (capture-70, 2026-04-19)
+// pcap-derived fixture: web/scripts/__fixtures__/ws/wispcage/spawn.json (2026-11-01 capture)
 // synthetic: other tests use inline parameter objects for gate and dedup coverage
 
 import {describe, test, expect, beforeEach, vi} from 'vitest';
@@ -23,26 +23,29 @@ describe('WispCageHandler', () => {
         handler = new WispCageHandler();
     });
 
-    describe('newCageEvent (event 530)', () => {
-        // @verified 2026-04-19: real pcap spawn (capture-70) adds a cage per message with name from Parameters[4] and position from Parameters[2].
-        test('pcap-derived spawn: cages are added with name from Parameters[4] and position from Parameters[2] regardless of settingMistsWispCages', async () => {
+    describe('newCageEvent (event 532)', () => {
+        // @verified 2026-11-01: a closed cage (Parameters[5]=1) is added; cages already open (Parameters[5]=2) cannot be used and are not.
+        test('pcap-derived spawn: only the closed cage is added, with name from Parameters[4] and position from Parameters[2]', async () => {
             const fx = await loadFixture('wispcage', 'spawn');
-            expect(fx.messages.length).toBeGreaterThan(0);
+            const closed = normalizeParams(fx.messages.find(m => m.parameters['5'] === 1).parameters);
+            expect(fx.messages.filter(m => m.parameters['5'] === 2)).toHaveLength(2);
 
             for (const msg of fx.messages) {
-                const p = normalizeParams(msg.parameters);
-                handler.newCageEvent(p);
+                handler.newCageEvent(normalizeParams(msg.parameters));
             }
 
-            expect(handler.cages).toHaveLength(fx.messages.length);
-            for (let i = 0; i < fx.messages.length; i++) {
-                const p = normalizeParams(fx.messages[i].parameters);
-                const cage = handler.cages.find(c => c.id === p[0]);
-                expect(cage).toBeDefined();
-                expect(cage.posX).toBe(p[2][0]);
-                expect(cage.posY).toBe(p[2][1]);
-                expect(cage.name).toBe(p[4]);
-            }
+            expect(handler.cages.map(c => c.id)).toEqual([closed[0]]);
+            expect(handler.cages[0].posX).toBe(closed[2][0]);
+            expect(handler.cages[0].posY).toBe(closed[2][1]);
+            expect(handler.cages[0].name).toBe(closed[4]);
+        });
+
+        // @verified 2026-11-01: a known cage announced again as open (Parameters[5]=2) is removed.
+        test('synthetic: a known cage announced again as open is removed', () => {
+            handler.newCageEvent({0: 5, 2: [1, 2], 4: 'CageE', 5: 1});
+            handler.newCageEvent({0: 5, 2: [1, 2], 4: 'CageE', 5: 2});
+
+            expect(handler.cages).toHaveLength(0);
         });
 
         // @verified 2026-04-19: cage is added using Parameters[2] as position and Parameters[4] as name.
@@ -95,7 +98,7 @@ describe('WispCageHandler', () => {
         });
     });
 
-    describe('cageOpenedEvent (event 531)', () => {
+    describe('cageOpenedEvent (event 533)', () => {
         // @verified 2026-09-24: settingMistsWispCages gate moved to draw time; cageOpenedEvent removes the cage regardless of its value.
         test('synthetic: cageOpenedEvent with settingMistsWispCages=false still removes the matching cage', () => {
             handler.cages.push({id: 10, posX: 0, posY: 0, name: 'X', hX: 0, hY: 0, lastUpdateTime: Date.now(), touch() {}});
