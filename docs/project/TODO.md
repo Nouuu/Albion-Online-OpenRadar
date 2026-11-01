@@ -36,6 +36,10 @@
 ### Maps
 
 - [ ] Black Zone map tiles for zone IDs 4000+ and 5000+, extracted from the client.
+- [ ] **Map download tool blocked**. Since at least 2026-11-01 `cdn.albiononline2d.com` answers every request,
+  plain `curl` included, with a Cloudflare challenge (`HTTP 403`, `Cf-Mitigated: challenge`), so
+  `npm run download-map` fetches nothing. Needs another map source. Its `puppeteer-real-browser` and
+  `puppeteer-extra` stack is unmaintained and holds most of the remaining `npm audit` alerts.
 
 ### Platforms
 
@@ -117,6 +121,8 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   call's intervals.
 - **`Utils.js` binds a `#button` click handler that nothing renders**. No template defines an element with that id, so
   the listener is dead code.
+- **Player card health label and colour go stale**. When the card key is unchanged, `updateSectionPlayers` only
+  resizes the health bar, so the `%` text and the bar colour keep their first-render values.
 - **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
   `handleNewPlayerEvent`; the method is exercised only by its own test.
 - **Radar canvases ignore `devicePixelRatio`**. `RadarSettingsPanel.js` sets each canvas backing store to its CSS size,
