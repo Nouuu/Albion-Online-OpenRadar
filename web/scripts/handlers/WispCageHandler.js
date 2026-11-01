@@ -34,6 +34,7 @@ export class WispCageHandler
 
         if (id === undefined || position === undefined) return;
 
+        // Parameters[5] is the cage state: 1 closed, 2 open.
         if (parameters[5] === CAGE_STATE_OPEN) {
             this.removeCage(id);
             return;
