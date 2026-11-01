@@ -35,7 +35,8 @@
 
 ### Maps
 
-- [ ] Black Zone map tiles for zone IDs 4000+ and 5000+, extracted from the client.
+- [ ] **Map tiles for the zones that still have none**: 200 of the 400 Roads of Avalon maps, every Hellgate, Corrupted
+  Lair and Smuggler's Den.
 - [ ] **Map tiles missing on the CDN**. 44 zone files answer `HTTP 404` (`BLACKBANK-*`, `*-HellDen`, `ARENA-1v1-01`,
   `1900-DynamicTest`, `PSG-0055`, seen 2026-11-01), so every `make download-map` run retries them for about a minute.
 
@@ -95,6 +96,8 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   The settings page shows the state, the terminal dashboard does not.
 - **`alreadyIgnoredPlayers`**. Dead field on `PlayersHandler`, nothing populates it. The ignore gate reads the setting
   the page actually writes (#161). Remove the field.
+- **Players page init is inline**. `players.gohtml` passes an inline `init` to `registerBoundPage` that fills the alert
+  sound field and binds its preview button. Page logic should live in a module, like `initSettingsPage`.
 - **Two owners for page arrival init**. `registerBoundPage` calls `reinitCurrentPage()` while `PageController` also
   inits on `DOMContentLoaded` and `htmx:afterSettle`. Every page now goes through `registerBoundPage`, which aborts the
   previous activation before it binds again, so listeners no longer double: the players preview button fires once per
@@ -153,5 +156,5 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   scope without a MITM proxy. See [PLAYER_POSITIONS_MITM.md](../technical/PLAYER_POSITIONS_MITM.md).
 - **Event 46 timing**. `HarvestableChangeState` can skip sizes or arrive late depending on server batching. The radar
   shows what the wire delivers. See [HARVEST_EVENTS.md](../technical/HARVEST_EVENTS.md).
-- **Missing Black Zone map tiles**. Zone IDs 4000+ have no background art in the shipped set. Turn the map background
-  off in settings. Extraction is on the backlog above.
+- **Missing map tiles**. 200 of the 400 Roads of Avalon maps, the Hellgates, Corrupted Lairs and Smuggler's Dens have
+  no background art in the shipped set. Turn the map background off in the radar settings panel. Backlog above.
