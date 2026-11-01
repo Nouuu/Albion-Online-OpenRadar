@@ -141,6 +141,7 @@ const TABLE = [
     ['collapse-settings-network', 'settingUiSettingsNetworkOpen', 'rename'],
     [null, 'settingUiSettingsDangerZoneOpen', 'new'],
     ['sidebarCollapsed', 'settingUiSidebarCollapsed', 'rename'],
+    [null, 'settingUiLanguage', 'new'],
 ];
 
 describe('SettingsRegistry', () => {
@@ -155,7 +156,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 134 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 135 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -222,6 +223,7 @@ describe('SettingsRegistry', () => {
             settingUiResourcesOtherOpen: true, settingUiResourcesDisplayOpen: true,
             settingUiSettingsLoggingOpen: false, settingUiSettingsDebugOpen: false,
             settingUiSettingsNetworkOpen: false, settingUiSettingsDangerZoneOpen: true, settingUiSidebarCollapsed: false,
+            settingUiLanguage: 'en',
         };
         for (const [key, value] of Object.entries(expected)) {
             expect(registryDefault(key), key).toEqual(value);
@@ -349,6 +351,7 @@ describe('SettingsRegistry control location', () => {
         ['settingUiSettingsNetworkOpen', 'Settings', 'Network'],
         ['settingUiSettingsDangerZoneOpen', 'Settings', 'Danger Zone'],
         ['settingUiSidebarCollapsed', 'Layout', 'Sidebar'],
+        ['settingUiLanguage', 'Layout', 'Language'],
     ])('%s is on page %s, section %s', (key, page, section) => {
         expect(registryEntry(key)).toMatchObject({page, section});
     });

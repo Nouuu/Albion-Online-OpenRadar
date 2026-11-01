@@ -4,6 +4,7 @@ import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
 import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 import {EnemyType} from '../handlers/MobsHandler.js';
+import {t} from './I18n.js';
 
 export class RadarRenderer {
     constructor(dependencies) {
@@ -421,10 +422,10 @@ export class RadarRenderer {
 
         const stats = [];
         if (settingsSync.getBool('settingPlayersDetect')) {
-            stats.push({ emoji: '👥', count: playerCount, label: 'players', color: '#ffffff' });
+            stats.push({ emoji: '👥', count: playerCount, label: t('players'), color: '#ffffff' });
         }
-        stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
-        stats.push({ emoji: '👾', count: mobCount, label: 'mobs', color: '#ff6b6b' });
+        stats.push({ emoji: '📦', count: resourceCount, label: t('resources'), color: '#00d4ff' });
+        stats.push({ emoji: '👾', count: mobCount, label: t('mobs'), color: '#ff6b6b' });
 
         const canvasSize = ctx.canvas.width;
         const scale = Math.min(1, canvasSize / 500);

@@ -137,6 +137,8 @@ const ROWS = [
     ['settingUiSettingsNetworkOpen', 'bool', false, 'collapse-settings-network', 'rename'],
     ['settingUiSettingsDangerZoneOpen', 'bool', true, null, 'new'],
     ['settingUiSidebarCollapsed', 'bool', false, 'sidebarCollapsed', 'rename'],
+    ['settingUiLanguage', 'enum', 'en', null, 'new',
+        {values: ['en', 'es'], options: [{file: 'en', label: 'English'}, {file: 'es', label: 'Español'}]}],
 ];
 
 const NOT_DETECTED = 'Not detected yet: no mob is classified as this type today.';
@@ -245,6 +247,7 @@ const TEXTS = {
     settingUiSettingsDebugOpen: ['Debug'],
     settingUiSettingsNetworkOpen: ['Network'],
     settingUiSettingsDangerZoneOpen: ['Danger Zone'],
+    settingUiLanguage: ['Language'],
 };
 
 const LOCATIONS = {
@@ -300,6 +303,7 @@ const LOCATIONS = {
     'Settings > Network': ['settingUiSettingsNetworkOpen'],
     'Settings > Danger Zone': ['settingUiSettingsDangerZoneOpen'],
     'Layout > Sidebar': ['settingUiSidebarCollapsed'],
+    'Layout > Language': ['settingUiLanguage'],
 };
 
 const LOCATION_OF = new Map(Object.entries(LOCATIONS).flatMap(([location, keys]) => keys.map(key => [key, location])));

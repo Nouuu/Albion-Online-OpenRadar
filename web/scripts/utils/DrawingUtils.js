@@ -1,6 +1,7 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
+import {t} from "./I18n.js";
 
 const SCALE_FACTOR = 1.0;
 const BASE_ZOOM = 4;
@@ -432,7 +433,7 @@ export class DrawingUtils {
         const clusterRadiusMeters = settingsSync.getNumber("settingRadarClusterRadius");
 
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
-        const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
+        const line2 = `${stacksText} ${t('stacks')} ·${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
 
         const fontSize1 = this.getScaledFontSize(12, 8);
         const fontSize2 = this.getScaledFontSize(11, 7);
