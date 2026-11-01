@@ -355,6 +355,23 @@ describe('MobsHandler', () => {
             }
         );
 
+        // @verified 2026-11-01: mobs.min.json gives category treasuredrones to the 16 Avalonian treasure minions,
+        // T5 to T8 in four rarities. synthetic: no drone in the post-patch corpus, wire ids derived by uniqueName.
+        const TREASURE_DRONES = [5, 6, 7, 8].flatMap(tier =>
+            ['STANDARD', 'UNCOMMON', 'RARE', 'LEGENDARY'].map(rarity => `T${tier}_MOB_ROAMING_AVALON_TREASURE_MINION_${rarity}`));
+
+        test.each(TREASURE_DRONES)('synthetic: %s classifies as EnemyType.Drone', (uniqueName) => {
+            const typeId = dbs.mobsDatabase.getTypeIdByName(uniqueName);
+            expect(typeId).not.toBeNull();
+
+            handler.NewMobEvent(normalizeParams({'0': 96000 + typeId, '1': typeId, '2': 255, '7': [0, 0], '13': 500, '34': 0}));
+
+            const mobs = handler.getMobList();
+            expect(mobs).toHaveLength(1);
+            expect(mobs[0].category).toBe('treasuredrones');
+            expect(mobs[0].type).toBe(EnemyType.Drone);
+        });
+
         // @verified 2026-04-18: unknown typeId (out-of-range, no DB entry) defaults to EnemyType.Enemy.
         test('synthetic: unknown typeId with no db entry defaults to EnemyType.Enemy', () => {
             // synthetic: typeId 9999 is out of range in mobs.min.json (len=5186); tests the no-db-entry path.

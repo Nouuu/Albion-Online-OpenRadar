@@ -139,9 +139,6 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   no rock above enchant 3.
 - **Unidentified mobs never reach their colour branch**. A mob with no database entry keeps `EnemyType.Enemy`, so
   `getEnemyColor` paints it green like a Normal enemy. The royal blue "unknown" default is never used for them.
-- **Avalon treasure drones fall into Normal**. Their category is `treasuredrones`, which `_getEnemyTypeFromCategory`
-  does not handle, so they get the default `Enemy` type. Nothing assigns `EnemyType.Drone`, so the Avalonian Drones
-  toggle and the cyan colour never apply.
 - **Knightfall handler test covers a path the router never takes**. `_DungeonsHandler.test.js` feeds the abbey
   entrance (`MISTS_DUNGEON_SOLO_YELLOW` at `Parameters[16]`) to `dungeonEvent`, while `EventRouter` sends every
   `MISTS_DUNGEON` tag to `mistsDungeonHandler.addPortal`.

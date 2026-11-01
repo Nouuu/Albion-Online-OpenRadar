@@ -541,6 +541,9 @@ export class MobsHandler {
             case 'rd_solo':       // Random Dungeon solo mobs (weaker)
                 return EnemyType.EnchantedEnemy;
 
+            case 'treasuredrones':
+                return EnemyType.Drone;
+
             // Normal enemy tier - all standard/weak hostile mobs
             case 'standard':      // mobtypecategory="standard"
             case 'trash':         // mobtypecategory="trash"
@@ -567,7 +570,7 @@ export class MobsHandler {
             // - harmless: Non-hostile NPCs
             // - vanity: Cosmetic entities
             // - critter: Living resources (handled separately via isHarvestable)
-            // - hiddentreasures, crystalcreatures, treasuredrones: Non-mob entities
+            // - hiddentreasures, crystalcreatures: Non-mob entities
             // These shouldn't reach this point as they have isHarvestable=false or shouldn't be spawned
         }
     }

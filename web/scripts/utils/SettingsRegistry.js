@@ -197,7 +197,7 @@ const TEXTS = {
     settingEnemiesMistsFairyDragon: ['Fairy Dragon'],
     settingEnemiesMistsVeilWeaver: ['Veil Weaver'],
     settingEnemiesMistsGriffin: ['Griffin'],
-    settingEnemiesAvalonianDrones: ['Avalonian Drones', NOT_DETECTED],
+    settingEnemiesAvalonianDrones: ['Avalonian Drones'],
     settingEnemiesEvent: ['Event Enemies', NOT_DETECTED],
     settingEnemiesShowHealthBars: ['Show Health Bars'],
     settingDebugEnemiesUnidentified: ['Show unidentified enemies', 'Shows enemies missing from mob data, usually new post-update mobs. Type filters skip them.'],

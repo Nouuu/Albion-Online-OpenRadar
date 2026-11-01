@@ -69,7 +69,6 @@ const TOOLTIPS = {
     settingAlertSoundCooldown: 'Minimum delay between two alert sounds. At zero, every alert plays.',
     settingEnemiesChampion: 'Champion mobs, and solo mobs in random dungeons.',
     settingEnemiesMinHealthFilter: 'Hides enemies whose max HP is below the minimum, unidentified ones included. Drones, Mists bosses, events and living resources are exempt.',
-    settingEnemiesAvalonianDrones: NOT_DETECTED,
     settingEnemiesEvent: NOT_DETECTED,
     settingDebugEnemiesUnidentified: 'Shows enemies missing from mob data, usually new post-update mobs. Type filters skip them.',
     settingDebugResourcesTypeId: 'Draws the internal type ID on resource nodes and living resources (debug).',
@@ -84,7 +83,7 @@ const TOOLTIPS = {
 
 const NO_TOOLTIP = ['settingPlayersShowEquipment', 'settingPlayersShowSpells', 'settingPlayersShowGuild', 'settingPlayersShowMounted',
     'settingEnemiesNormal', 'settingEnemiesMiniBoss',
-    'settingEnemiesBoss', 'settingEnemiesMistsCrystalSpider', 'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver',
+    'settingEnemiesBoss', 'settingEnemiesAvalonianDrones', 'settingEnemiesMistsCrystalSpider', 'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver',
     'settingEnemiesMistsGriffin', 'settingResourcesFishing', 'settingChestsGreen', 'settingChestsBlue', 'settingChestsPurple',
     'settingChestsYellow', 'settingMistsSolo', 'settingMistsDuo', 'settingMistsWispCages', 'settingMistsWisps',
     'settingMistsKnightfallAbbey', 'settingDungeonsSolo', 'settingDungeonsGroup', 'settingLogToConsole', 'settingDebugPlayersIds'];
