@@ -392,4 +392,19 @@ describe('static entity cleanup', () => {
         await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
         expect(list(window.handlers)).toHaveLength(0);
     });
+
+    // pcap-derived: fishing/spawn.json FishingNodeFish message; synthetic: the idle age, no fixture carries elapsed time.
+    test('@verified 2026-11-01: a fishing zone idle 10 minutes stays, idle 31 minutes is removed by cleanupStaleEntities', async () => {
+        const fixture = await loadFixture('fishing', 'spawn');
+        vi.useFakeTimers({toFake: ['setInterval', 'clearInterval', 'Date']});
+        await page.init();
+
+        window.handlers.fishing.newFishEvent(normalizeParams(fixture.messages.find(m => m.parameters['4'] === 'FishingNodeFish').parameters));
+
+        await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
+        expect(window.handlers.fishing.fishes).toHaveLength(1);
+
+        await vi.advanceTimersByTimeAsync(21 * 60 * 1000);
+        expect(window.handlers.fishing.fishes).toHaveLength(0);
+    });
 });
