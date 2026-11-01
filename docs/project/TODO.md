@@ -117,10 +117,6 @@ Findings from PR cycles that need pcap-backed investigation before anyone can fi
   call's intervals.
 - **`Utils.js` binds a `#button` click handler that nothing renders**. No template defines an element with that id, so
   the listener is dead code.
-- **`PlayerListRenderer` does not re-render a card when only the mounted badge, name, guild or alliance changes**.
-  `computeCardKey` covers equipment, spells, health availability and display toggles but not those fields, so the card
-  keeps the stale values until another card-key field changes or the player leaves the list. A faction change that moves the player to
-  another section list builds a new card.
 - **`PlayersHandler.enforceMaxSize` has no caller**. The list is already capped at spawn time in
   `handleNewPlayerEvent`; the method is exercised only by its own test.
 - **Radar canvases ignore `devicePixelRatio`**. `RadarSettingsPanel.js` sets each canvas backing store to its CSS size,

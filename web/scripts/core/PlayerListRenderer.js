@@ -147,7 +147,8 @@ function computeCardKey(player) {
     const showTotalIp = window.settingsSync?.getBool('settingPlayersShowTotalIp') ? 1 : 0;
     const showMounted = window.settingsSync?.getBool('settingPlayersShowMounted') ? 1 : 0;
     const showIds = window.settingsSync?.getBool('settingDebugPlayersIds') ? 1 : 0;
-    return `${equipment}|${spells}|${healthAvailable}|${showEquipment}|${showSpells}|${showHealthBars}|${showGuild}|${showTotalIp}|${showMounted}|${showIds}`;
+    const identity = `${player.nickname}|${player.guildName}|${player.allianceName}|${player.faction}|${player.mounted ? 1 : 0}`;
+    return `${identity}|${equipment}|${spells}|${healthAvailable}|${showEquipment}|${showSpells}|${showHealthBars}|${showGuild}|${showTotalIp}|${showMounted}|${showIds}`;
 }
 
 function buildCardElement(player, threatType) {
@@ -197,7 +198,7 @@ function updateSectionPlayers(listContainer, players, threatType) {
                 }
             }
         } else if (existingCard) {
-            // Card key changed (equipment, spells, health availability or a display setting) - rebuild in place
+            // Card key changed (a drawn field or a display setting) - rebuild in place
             existingCard.replaceWith(buildCardElement(player, threatType));
         } else {
             // Create new card in fragment (off-DOM)
