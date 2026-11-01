@@ -36,6 +36,8 @@
 ### Maps
 
 - [ ] Black Zone map tiles for zone IDs 4000+ and 5000+, extracted from the client.
+- [ ] **Map tiles missing on the CDN**. 44 zone files answer `HTTP 404` (`BLACKBANK-*`, `*-HellDen`, `ARENA-1v1-01`,
+  `1900-DynamicTest`, `PSG-0055`, seen 2026-11-01), so every `make download-map` run retries them for about a minute.
 
 ### Platforms
 
