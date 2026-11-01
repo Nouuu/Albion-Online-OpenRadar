@@ -283,7 +283,7 @@ Open bugs and feature requests live in [Issues](https://github.com/Nouuu/Albion-
 | Npcap   | 1.87+   | Windows packet capture |
 | libpcap | latest  | Linux packet capture   |
 | ALSA    | latest  | Linux alert sound, PulseAudio preferred when running |
-| Node.js | 20+     | asset and data tooling |
+| Node.js | 26+     | asset and data tooling |
 | Docker  | latest  | Linux cross-compile    |
 
 ```bash
