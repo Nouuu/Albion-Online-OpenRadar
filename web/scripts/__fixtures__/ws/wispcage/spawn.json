@@ -5,42 +5,39 @@
     {
       "kind": "event",
       "parameters": {
-        "0": 1340,
-        "1": 2,
+        "0": 1270,
         "2": [
-          -138.5,
-          -277.5
+          -61.5,
+          120.5
         ],
-        "252": 530,
-        "4": "SHARED_FILL_CAGE_WISP_UNDEAD_A",
+        "252": 532,
+        "4": "SHARED_FILL_CAGE_WISP_MOR_A",
+        "5": 1
+      }
+    },
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 1360,
+        "2": [
+          -32.5,
+          180.5
+        ],
+        "252": 532,
+        "4": "SHARED_FILL_CAGE_WISP_MOR_A",
         "5": 2
       }
     },
     {
       "kind": "event",
       "parameters": {
-        "0": 1348,
-        "1": 2,
+        "0": 1298,
         "2": [
-          -80.5,
-          -268.5
+          188.5,
+          307.5
         ],
-        "252": 530,
-        "4": "SHARED_FILL_CAGE_WISP_UNDEAD_A",
-        "5": 2
-      }
-    },
-    {
-      "kind": "event",
-      "parameters": {
-        "0": 1382,
-        "1": 2,
-        "2": [
-          9.5,
-          -289.5
-        ],
-        "252": 530,
-        "4": "SHARED_FILL_CAGE_WISP_UNDEAD_A",
+        "252": 532,
+        "4": "SHARED_FILL_CAGE_WISP_MOR_A",
         "5": 2
       }
     }

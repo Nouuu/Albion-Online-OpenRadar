@@ -1,5 +1,7 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 
+const CAGE_STATE_OPEN = 2;
+
 class Cage
 {
     constructor(id, posX, posY, name)
@@ -31,6 +33,11 @@ export class WispCageHandler
         const name = parameters[4];
 
         if (id === undefined || position === undefined) return;
+
+        if (parameters[5] === CAGE_STATE_OPEN) {
+            this.removeCage(id);
+            return;
+        }
 
         const existing = this.cages.find(c => c.id === id);
         if (existing) {

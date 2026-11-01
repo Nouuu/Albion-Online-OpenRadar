@@ -49,11 +49,11 @@ The image is `mist_<enchant>.webp`. The drawing reuses the portal asset rather t
 | `Parameters[0]` | entity id |
 | `Parameters[2]` | `[x, y]` position |
 | `Parameters[4]` | cage name string (e.g. `SHARED_FILL_CAGE_WISP_MOR_A`) |
-| `Parameters[5]` | int (1 on every live cage observed) |
+| `Parameters[5]` | cage state: 1 closed, 2 open, 0 seen on a smuggler cage |
 
 The pre-patch `Parameters[1]` scalar is no longer present.
 
-`Parameters[5]==2` may indicate an "already freed" cage that should be skipped at handler time. The current handler does not implement this check; it remains an open observation pending a Mists capture with both live and freed cages. Reference: deatheye-2pc treats `Parameters[5]=="2"` as a guard.
+A cage announced with `Parameters[5]==2` is already open and cannot be used: the handler skips it, and removes a known cage announced again as open. `CagedObjectStateUpdated` carries the same state at `Parameters[1]`; the 2026-11-01 capture shows a cage spawned with 1, then `CagedObjectStateUpdated` with 2 when it was opened.
 
 ## Mists instance map identifier
 
