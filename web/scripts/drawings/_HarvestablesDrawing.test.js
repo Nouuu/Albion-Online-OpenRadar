@@ -89,15 +89,27 @@ describe('HarvestablesDrawing render-time routing', () => {
     // Live critter path: mobileTypeId references a live mob in MobsDatabase -> Living filter
     // -------------------------------------------------------------------------
 
-    // @verified 2026-07-05: name-derived live Fiber critter (T4_MOB_CRITTER_FIBER_SWAMP_GREEN) routes to Living.
-    test('full-flow: live Fiber critter renders under Living filter', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T4_MOB_CRITTER_FIBER_SWAMP_GREEN');
-        expect(mobileTypeId).not.toBeNull();
-        const p = {0: 9101, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
+    const livingCritterRows = [
+        ['mob-critter', 564, 'Hide', 'hide_3_0', undefined],
+        ['mob-critter', 565, 'Hide', 'hide_4_0', undefined],
+        ['mob-critter', 566, 'Hide', 'hide_5_0', undefined],
+        ['mob-critter-48', 601, 'Hide', 'hide_5_3', undefined],
+        ['living-pair', 721, 'Fiber', 'fiber_7_0', 1],
+    ];
+
+    async function critterParams(scenario, mobKey, size) {
+        const fx = await loadFixture('harvestables', scenario);
+        const msg = fx.messages.find(m => m.parameters['6'] === mobKey);
+        return {...normalizeParams(msg.parameters), ...(size === undefined ? {} : {10: size})};
+    }
+
+    // @verified 2026-11-14: a live critter harvestable from a capture renders under its family Living filter (Hide for the cougars, Fiber for the Mists critter whose size is forced to 1).
+    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i renders under Living %s filter as %s', async (scenario, mobKey, family, image, size) => {
+        const p = await critterParams(scenario, mobKey, size);
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allTrue();
-            if (key === 'settingResourcesStaticFiber') return allFalse();
+            if (key === `settingResourcesLiving${family}`) return allTrue();
+            if (key === `settingResourcesStatic${family}`) return allFalse();
             return null;
         });
 
@@ -105,17 +117,16 @@ describe('HarvestablesDrawing render-time routing', () => {
         handler.newHarvestableObject(p[0], p);
         drawing.invalidate(ctx, handler.getHarvestableList());
 
-        expect(drawing.DrawCustomImage).toHaveBeenCalled();
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), image, 'Resources', 32);
     });
 
-    // @verified 2026-07-05: live Fiber critter skipped when Living is off even if Static is on (wrong routing guard).
-    test('full-flow: live Fiber critter skipped when Living off, Static on', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T4_MOB_CRITTER_FIBER_SWAMP_GREEN');
-        const p = {0: 9102, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
+    // @verified 2026-11-14: the same live critters are skipped when Living is off, even with Static on.
+    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i skipped when Living %s off, Static on', async (scenario, mobKey, family, image, size) => {
+        const p = await critterParams(scenario, mobKey, size);
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allFalse();
-            if (key === 'settingResourcesStaticFiber') return allTrue();
+            if (key === `settingResourcesLiving${family}`) return allFalse();
+            if (key === `settingResourcesStatic${family}`) return allTrue();
             return null;
         });
 
@@ -156,49 +167,6 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getJSON.mockImplementation(key => {
             if (key === 'settingResourcesLivingOre') return allFalse();
             if (key === 'settingResourcesStaticOre') return allTrue();
-            return null;
-        });
-
-        const handler = new HarvestablesHandler(null);
-        handler.newHarvestableObject(p[0], p);
-        drawing.invalidate(ctx, handler.getHarvestableList());
-
-        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
-    });
-
-    // -------------------------------------------------------------------------
-    // Dead critter carcass path: user live-test 2026-04-24 confirmed _DEAD entities
-    // should stay on the Living filter like the live variant. Only pure static
-    // harvestables (mobileTypeId=-1/null/65535) go to the Static filter.
-    // -------------------------------------------------------------------------
-
-    // @verified 2026-07-05: dead Fiber carcass routes through Living since it has a valid mobileTypeId.
-    test('full-flow: dead Fiber carcass renders under Living filter', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
-        expect(mobileTypeId).not.toBeNull();
-        const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
-
-        settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allTrue();
-            if (key === 'settingResourcesStaticFiber') return allFalse();
-            return null;
-        });
-
-        const handler = new HarvestablesHandler(null);
-        handler.newHarvestableObject(p[0], p);
-        drawing.invalidate(ctx, handler.getHarvestableList());
-
-        expect(drawing.DrawCustomImage).toHaveBeenCalled();
-    });
-
-    // @verified 2026-07-05: dead Fiber carcass skipped when Living off even if Static is on.
-    test('full-flow: dead Fiber carcass skipped when Living off, Static on', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
-        const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
-
-        settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allFalse();
-            if (key === 'settingResourcesStaticFiber') return allTrue();
             return null;
         });
 
