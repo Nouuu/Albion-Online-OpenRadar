@@ -10,6 +10,8 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nospy/albion-openradar/internal/photon"
 )
 
 func writeMiniPcap(t *testing.T, path string, payloads [][]byte) {
@@ -48,4 +50,34 @@ func TestIteratePcap_CountsUdpPayloads(t *testing.T) {
 	err := iteratePcap(in, func(payload []byte) error { got++; return nil })
 	require.NoError(t, err)
 	require.Equal(t, 2, got)
+}
+
+func evt(code int, id int64) *photon.EventData {
+	return &photon.EventData{Code: 1, Parameters: map[byte]any{0: id, 252: int64(code)}}
+}
+
+func TestCollector_KeepsCorrelatedFollowUps(t *testing.T) {
+	sc := Scenario{
+		Name: "h/follow", Handler: "h",
+		Match:       MatchCriteria{Kind: "event", Code: 40},
+		FollowUps:   []MatchCriteria{{Kind: "event", Code: 1}},
+		CorrelateBy: 0,
+		Limit:       1,
+	}
+	c := newCollector([]Scenario{sc})
+	feed := func(e *photon.EventData, raw string) {
+		c.offer([]byte(raw), "event", e.Parameters, 0, func(m MatchCriteria) bool { return matchesEvent(m, e) })
+	}
+	feed(evt(1, 7), "leave-before")
+	feed(evt(40, 7), "spawn")
+	feed(evt(1, 8), "leave-other")
+	feed(evt(1, 7), "leave-after")
+	feed(evt(40, 9), "spawn-over-limit")
+	feed(evt(1, 9), "leave-of-over-limit")
+
+	var raws []string
+	for _, h := range c.hits["h/follow"] {
+		raws = append(raws, string(h.raw))
+	}
+	require.Equal(t, []string{"spawn", "leave-after"}, raws)
 }

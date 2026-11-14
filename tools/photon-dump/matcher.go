@@ -1,6 +1,11 @@
 package main
 
-import "github.com/nospy/albion-openradar/internal/photon"
+import (
+	"reflect"
+	"slices"
+
+	"github.com/nospy/albion-openradar/internal/photon"
+)
 
 func matchesEvent(m MatchCriteria, e *photon.EventData) bool {
 	if m.Kind != "event" {
@@ -44,4 +49,36 @@ func matchesWhere(where map[byte]func(v any) bool, params map[byte]any) bool {
 		}
 	}
 	return true
+}
+
+func intEq(n int) func(any) bool {
+	return func(v any) bool { return intFromParam(v) == n }
+}
+
+func intNe(n int) func(any) bool {
+	return func(v any) bool { return intFromParam(v) != n }
+}
+
+func intIn(ns ...int) func(any) bool {
+	return func(v any) bool { return slices.Contains(ns, intFromParam(v)) }
+}
+
+// arrayContains matches any slice parameter, byte arrays included, holding n.
+func arrayContains(n int) func(any) bool {
+	return func(v any) bool {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() != reflect.Slice {
+			return false
+		}
+		for i := range rv.Len() {
+			if intFromParam(rv.Index(i).Interface()) == n {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func intGt(n int) func(any) bool {
+	return func(v any) bool { return intFromParam(v) > n }
 }
