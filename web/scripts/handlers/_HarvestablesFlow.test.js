@@ -99,6 +99,21 @@ describe('harvestable detection flow', () => {
         expect(drawing.drawResourceCountBadge).toHaveBeenCalledTimes(1);
     });
 
+    // @verified 2026-11-14: a living Fiber node is drawn after its spawn and no longer drawn once its charge level update reports 0
+    test('event 46 with charge level 0 stops drawing a spawned Fiber critter', async () => {
+        const fix = await loadFixture('harvestables', 'depleted');
+        const [spawn, depleted] = fix.messages.map(m => normalizeParams(m.parameters));
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesLivingFiber' ? allTrue() : null);
+
+        EventRouter.onEvent(spawn);
+        drawing.invalidate({}, harvestablesHandler.getHarvestableList());
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+
+        EventRouter.onEvent(depleted);
+        drawing.invalidate({}, harvestablesHandler.getHarvestableList());
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+    });
+
     // @verified 2026-11-14: a Join response between two spawns of the same mob id leaves one mob holding the second spawn values
     test('Join between two NewMob events of the same id keeps one mob with the second position', async () => {
         const fix = await loadFixture('mobs', 'named-non-mist');

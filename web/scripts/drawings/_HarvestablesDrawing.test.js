@@ -90,22 +90,22 @@ describe('HarvestablesDrawing render-time routing', () => {
     // -------------------------------------------------------------------------
 
     const livingCritterRows = [
-        ['mob-critter', 564, 'Hide', 'hide_3_0', undefined],
-        ['mob-critter', 565, 'Hide', 'hide_4_0', undefined],
-        ['mob-critter', 566, 'Hide', 'hide_5_0', undefined],
-        ['mob-critter-48', 601, 'Hide', 'hide_5_3', undefined],
-        ['living-pair', 721, 'Fiber', 'fiber_7_0', 1],
+        ['mob-critter', 564, 'Hide', 'hide_3_0'],
+        ['mob-critter', 565, 'Hide', 'hide_4_0'],
+        ['mob-critter', 566, 'Hide', 'hide_5_0'],
+        ['mob-critter-48', 601, 'Hide', 'hide_5_3'],
+        ['fiber-critter', 694, 'Fiber', 'fiber_4_0'],
     ];
 
-    async function critterParams(scenario, mobKey, size) {
+    async function critterParams(scenario, mobKey) {
         const fx = await loadFixture('harvestables', scenario);
         const msg = fx.messages.find(m => m.parameters['6'] === mobKey);
-        return {...normalizeParams(msg.parameters), ...(size === undefined ? {} : {10: size})};
+        return normalizeParams(msg.parameters);
     }
 
-    // @verified 2026-11-14: a live critter harvestable from a capture renders under its family Living filter (Hide for the cougars, Fiber for the Mists critter whose size is forced to 1).
-    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i renders under Living %s filter as %s', async (scenario, mobKey, family, image, size) => {
-        const p = await critterParams(scenario, mobKey, size);
+    // @verified 2026-11-14: a live critter harvestable from a capture renders under its family Living filter (Hide for the cougars, Fiber for the Mists critter).
+    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i renders under Living %s filter as %s', async (scenario, mobKey, family, image) => {
+        const p = await critterParams(scenario, mobKey);
 
         settingsSync.getJSON.mockImplementation(key => {
             if (key === `settingResourcesLiving${family}`) return allTrue();
@@ -121,8 +121,8 @@ describe('HarvestablesDrawing render-time routing', () => {
     });
 
     // @verified 2026-11-14: the same live critters are skipped when Living is off, even with Static on.
-    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i skipped when Living %s off, Static on', async (scenario, mobKey, family, image, size) => {
-        const p = await critterParams(scenario, mobKey, size);
+    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i skipped when Living %s off, Static on', async (scenario, mobKey, family) => {
+        const p = await critterParams(scenario, mobKey);
 
         settingsSync.getJSON.mockImplementation(key => {
             if (key === `settingResourcesLiving${family}`) return allFalse();
