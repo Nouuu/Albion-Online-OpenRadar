@@ -41,6 +41,8 @@ var scenarios = []Scenario{
 	{Name: "harvestables/positions", Handler: "harvestables", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewHarvestableObject, Where: map[byte]func(any) bool{5: intIn(5, 20, 22)}}, Limit: 13},
 	{Name: "harvestables/positions-29", Handler: "harvestables", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewHarvestableObject, Where: map[byte]func(any) bool{5: intEq(29)}}},
 	{Name: "harvestables/empty-regrow", Handler: "harvestables", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewHarvestableObject, Where: map[byte]func(any) bool{6: intEq(-1), 10: intEq(0)}}, FollowUps: []MatchCriteria{{Kind: "event", Code: eventcodes.HarvestableChangeState, Where: map[byte]func(any) bool{1: intGt(0)}}}, CorrelateBy: 0, Limit: 4},
+	{Name: "harvestables/depleted", Handler: "harvestables", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewHarvestableObject, Where: map[byte]func(any) bool{0: intEq(3798)}}, FollowUps: []MatchCriteria{{Kind: "event", Code: eventcodes.HarvestableChangeState, Where: map[byte]func(any) bool{1: intEq(0)}}}, CorrelateBy: 0, Limit: 1},
+	{Name: "harvestables/fiber-critter", Handler: "harvestables", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewHarvestableObject, Where: map[byte]func(any) bool{5: intEq(16), 6: intNe(-1), 10: intGt(0)}}, Limit: 1},
 
 	{Name: "mobs/spawn", Handler: "mobs", Match: MatchCriteria{Kind: "event", Code: eventcodes.NewMob}, Limit: 20},
 	{Name: "mobs/change-state", Handler: "mobs", Match: MatchCriteria{Kind: "event", Code: eventcodes.MobChangeState}, Limit: 5},
