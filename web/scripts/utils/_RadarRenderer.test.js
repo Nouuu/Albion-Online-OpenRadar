@@ -54,7 +54,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     test('pure static harvestable with Static off is excluded from cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allFalse() : null);
         const renderer = makeRenderer({
-            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
+            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(0);
@@ -64,7 +64,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     test('pure static harvestable with Static on is kept in cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
-            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
+            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
@@ -78,7 +78,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
             return null;
         });
         const renderer = makeRenderer({
-            harvestableList: [{id: 2, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: 529, hX: 1, hY: 1}],
+            harvestableList: [{id: 2, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: 529, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
@@ -137,7 +137,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     test('batch-spawn harvestable (mobileTypeId=null) is gated by Static setting', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
-            harvestableList: [{id: 3, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: null, hX: 1, hY: 1}],
+            harvestableList: [{id: 3, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: null, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);

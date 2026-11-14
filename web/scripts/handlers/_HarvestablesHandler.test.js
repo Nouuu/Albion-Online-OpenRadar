@@ -83,13 +83,13 @@ describe('HarvestablesHandler', () => {
         });
 
         // @verified 2026-09-03: pcap-derived single-spawn, 2026-09-03 capture. Static nodes resolve family from
-        // typeNumber through the real HarvestablesDB; tier from Parameters[7], charges from Parameters[11].
+        // typeNumber through the real HarvestablesDB; tier from Parameters[7], rareState from Parameters[11].
         test.each([
             [0, 6, 'Log', 2],
             [7, 6, 'Rock', 1],
             [14, 6, 'Fiber', 2],
             [27, 6, 'Ore', 1],
-        ])('pcap-derived single-spawn: static typeNumber=%i tier=%i stored with stringType %s and charges %i', async (typeNumber, tier, family, charges) => {
+        ])('pcap-derived single-spawn: static typeNumber=%i tier=%i stored with stringType %s and rareState %i', async (typeNumber, tier, family, rareState) => {
             const fx = await loadFixture('harvestables', 'single-spawn');
             const msg = fx.messages.find(m => m.parameters['5'] === typeNumber && m.parameters['7'] === tier);
             expect(msg, `fixture should contain static typeNumber=${typeNumber} tier=${tier}`).toBeDefined();
@@ -100,13 +100,13 @@ describe('HarvestablesHandler', () => {
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
             expect(list[0].tier).toBe(tier);
-            expect(list[0].charges).toBe(charges);
+            expect(list[0].rareState).toBe(rareState);
             expect(list[0].stringType).toBe(family);
         });
 
 
-        // @verified 2026-09-03: static Fiber tier=6 enchant=2 size stored from Parameters[10] (2026-09-03 capture).
-        test('pcap-derived single-spawn: static Fiber tier=6 enchant=2 size stored from param[10]', async () => {
+        // @verified 2026-09-03: static Fiber tier=6 enchant=2 charge level stored from Parameters[10] (2026-09-03 capture).
+        test('pcap-derived single-spawn: static Fiber tier=6 enchant=2 charge level stored from param[10]', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
             const msg = fx.messages.find(m => m.parameters['5'] === 14 && m.parameters['7'] === 6 && m.parameters['6'] === -1);
             expect(msg).toBeDefined();
@@ -116,10 +116,10 @@ describe('HarvestablesHandler', () => {
 
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
-            expect(list[0].size).toBe(p[10]);
+            expect(list[0].chargeLevel).toBe(p[10]);
         });
 
-        // @verified 2026-04-18: spawning same id twice updates charges and does not duplicate.
+        // @verified 2026-04-18: spawning same id twice updates rareState and does not duplicate.
         test('pcap-derived single-spawn: same id spawned twice updates, does not duplicate', async () => {
             const fx = await loadFixture('harvestables', 'single-spawn');
             const first = fx.messages.find(m => m.parameters['6'] === 721);
@@ -133,7 +133,7 @@ describe('HarvestablesHandler', () => {
             handler.newHarvestableObject(p[0], updated);
 
             expect(handler.getSize()).toBe(1);
-            expect(handler.getHarvestableList()[0].charges).toBe(2);
+            expect(handler.getHarvestableList()[0].rareState).toBe(2);
         });
 
         // @verified 2026-04-24: HARV-4, spawn-time filter removed; entities always land in the list.
@@ -152,8 +152,8 @@ describe('HarvestablesHandler', () => {
             expect(handler.getHarvestableList()[0].id).toBe(9999);
         });
 
-        // @verified 2026-04-18: Parameters[11] undefined defaults charges to 0.
-        test('synthetic: missing Parameters[11] defaults charges to 0', () => {
+        // @verified 2026-04-18: Parameters[11] undefined defaults rareState to 0.
+        test('synthetic: missing Parameters[11] defaults rareState to 0', () => {
             const p = {
                 0: 1001, 5: 14, 6: -1, 7: 4,
                 8: [-307.5, 59.5], 10: 3
@@ -163,11 +163,11 @@ describe('HarvestablesHandler', () => {
 
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
-            expect(list[0].charges).toBe(0);
+            expect(list[0].rareState).toBe(0);
         });
 
-        // @verified 2026-04-18: Parameters[10] undefined defaults size to 0.
-        test('synthetic: missing Parameters[10] defaults size to 0', () => {
+        // @verified 2026-04-18: Parameters[10] undefined defaults charge level to 0.
+        test('synthetic: missing Parameters[10] defaults charge level to 0', () => {
             const p = {
                 0: 1002, 5: 14, 6: -1, 7: 4,
                 8: [-307.5, 59.5], 11: 1
@@ -177,7 +177,7 @@ describe('HarvestablesHandler', () => {
 
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
-            expect(list[0].size).toBe(0);
+            expect(list[0].chargeLevel).toBe(0);
         });
 
         // @verified 2026-04-18: posX and posY are read from Parameters[8][0] and [8][1].
@@ -250,7 +250,7 @@ describe('HarvestablesHandler', () => {
 
             const stored = handler.getHarvestableList().find(h => h.id === p[0]);
             expect(stored).toBeDefined();
-            expect(stored.charges).toBe(2);
+            expect(stored.rareState).toBe(2);
         });
 
         // @verified 2026-04-19: event 46 re-gate uses stored stringType + mobileTypeId; a living Fiber
@@ -281,9 +281,9 @@ describe('HarvestablesHandler', () => {
             expect(stored.mobileTypeId).toBeNull();
         });
 
-        // @verified 2026-04-19: living harvestable spawn with charges=0 stays in list when e0 setting is off (#32).
+        // @verified 2026-04-19: living harvestable spawn with rareState=0 stays in list when e0 setting is off (#32).
         // Before the render-time filter move, the spawn-time enchant gate dropped it and event 46 could not recover.
-        test('HARV-2: living fiber spawn with charges=0 is kept in list even when e0 setting is off', async () => {
+        test('HARV-2: living fiber spawn with rareState=0 is kept in list even when e0 setting is off', async () => {
             settingsSync.getJSON.mockImplementation(key => {
                 if (key === 'settingResourcesLivingFiber') {
                     return {e0: Array(8).fill(false), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)};
@@ -301,11 +301,11 @@ describe('HarvestablesHandler', () => {
 
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
-            expect(list[0].charges).toBe(0);
+            expect(list[0].rareState).toBe(0);
         });
 
-        // @verified 2026-04-19: HarvestUpdateEvent mutates charges without removing entity even when new enchant setting is off (#32).
-        test('HARV-2: HarvestUpdateEvent mutates charges without removing entity when setting for new enchant is off', async () => {
+        // @verified 2026-04-19: HarvestUpdateEvent mutates rareState without removing entity even when new enchant setting is off (#32).
+        test('HARV-2: HarvestUpdateEvent mutates rareState without removing entity when setting for new enchant is off', async () => {
             settingsSync.getJSON.mockReturnValue({e0: Array(8).fill(true), e1: Array(8).fill(true), e2: Array(8).fill(true), e3: Array(8).fill(true), e4: Array(8).fill(true)});
             const fx = await loadFixture('harvestables', 'single-spawn');
             const msg = fx.messages.find(m => m.parameters['6'] === 721);
@@ -320,7 +320,7 @@ describe('HarvestablesHandler', () => {
 
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
-            expect(list[0].charges).toBe(2);
+            expect(list[0].rareState).toBe(2);
         });
 
         // @verified 2026-09-03: HARV-4, a living node with mobileTypeId!=null is no longer filtered at spawn.
@@ -360,7 +360,7 @@ describe('HarvestablesHandler', () => {
 
             const stored = handler.getHarvestableList().find(h => h.id === 7777);
             expect(stored).toBeDefined();
-            expect(stored.charges).toBe(1);
+            expect(stored.rareState).toBe(1);
         });
 
         // @verified 2026-04-19: pcap-composed regression, static resource re-gate still keeps the entity
@@ -381,7 +381,7 @@ describe('HarvestablesHandler', () => {
 
             const stored = handler.getHarvestableList().find(h => h.id === 2719);
             expect(stored).toBeDefined();
-            expect(stored.charges).toBe(3);
+            expect(stored.rareState).toBe(3);
         });
     });
 
@@ -397,7 +397,7 @@ describe('HarvestablesHandler', () => {
 
             const list = handler.getHarvestableList();
             expect(list.length).toBe(ids.length);
-            list.forEach(e => expect(e.charges).toBe(0));
+            list.forEach(e => expect(e.rareState).toBe(0));
         });
 
         // @verified 2026-04-18: Buffer-shaped parameters unwrap via ["data"] and ids are recorded correctly.
@@ -478,16 +478,16 @@ describe('HarvestablesHandler', () => {
     });
 
     describe('HarvestUpdateEvent (event 46)', () => {
-        function seedHarvestable(id, size = 3, charges = 0) {
+        function seedHarvestable(id, chargeLevel = 3, rareState = 0) {
             const p = {
                 0: id, 5: 14, 6: -1, 7: 4,
-                8: [-307.5, 59.5], 10: size, 11: charges
+                8: [-307.5, 59.5], 10: chargeLevel, 11: rareState
             };
             handler.newHarvestableObject(id, p);
         }
 
-        // @verified 2026-04-18: size update on existing entity changes size field and refreshes lastUpdateTime.
-        test('pcap-derived state-update: size change on existing entity updates size', async () => {
+        // @verified 2026-04-18: charge level update on existing entity changes charge level field and refreshes lastUpdateTime.
+        test('pcap-derived state-update: charge level change on existing entity updates charge level', async () => {
             const fx = await loadFixture('harvestables', 'state-update');
             const msg = fx.messages.find(m => m.parameters['1'] === 3);
             const p = normalizeParams(msg.parameters);
@@ -499,12 +499,12 @@ describe('HarvestablesHandler', () => {
 
             const e = handler.getHarvestableList().find(h => h.id === id);
             expect(e).toBeDefined();
-            expect(e.size).toBe(3);
+            expect(e.chargeLevel).toBe(3);
             expect(e.lastUpdateTime).toBeGreaterThanOrEqual(before);
         });
 
-        // @verified 2026-04-18: newSize=0 (not undefined) keeps entity but sets size to 0.
-        test('pcap-derived state-update: newSize=0 keeps entity in list with size 0', async () => {
+        // @verified 2026-04-18: newSize=0 (not undefined) keeps entity but sets charge level to 0.
+        test('pcap-derived state-update: newSize=0 keeps entity in list with charge level 0', async () => {
             const fx = await loadFixture('harvestables', 'state-update');
             const msg = fx.messages.find(m => m.parameters['1'] === 0 && m.parameters['2'] === 0);
             const p = normalizeParams(msg.parameters);
@@ -514,11 +514,11 @@ describe('HarvestablesHandler', () => {
 
             const e = handler.getHarvestableList().find(h => h.id === p[0]);
             expect(e).toBeDefined();
-            expect(e.size).toBe(0);
+            expect(e.chargeLevel).toBe(0);
         });
 
-        // @verified 2026-04-18: enchant change on existing entity updates charges field.
-        test('pcap-derived state-update: enchant change updates charges', async () => {
+        // @verified 2026-04-18: enchant change on existing entity updates rareState field.
+        test('pcap-derived state-update: enchant change updates rareState', async () => {
             const fx = await loadFixture('harvestables', 'state-update');
             const msg = fx.messages.find(m => m.parameters['2'] === 2);
             expect(msg).toBeDefined();
@@ -529,7 +529,7 @@ describe('HarvestablesHandler', () => {
 
             const e = handler.getHarvestableList().find(h => h.id === p[0]);
             expect(e).toBeDefined();
-            expect(e.charges).toBe(2);
+            expect(e.rareState).toBe(2);
         });
 
         // @verified 2026-04-24: post-enchant re-gate removed in #32 fix; entity is never dropped
@@ -561,8 +561,8 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(1);
         });
 
-        // @verified 2026-04-18: consecutive size decrements from corpus simulate multi-harvest sequence.
-        test('pcap-derived state-update: consecutive decrements on same id reflect each size', async () => {
+        // @verified 2026-04-18: consecutive charge level decrements from corpus simulate multi-harvest sequence.
+        test('pcap-derived state-update: consecutive decrements on same id reflect each charge level', async () => {
             const fx = await loadFixture('harvestables', 'state-update');
             const msgs = fx.messages.filter(m => m.parameters['0'] === 2525);
             expect(msgs.length).toBeGreaterThanOrEqual(2);
@@ -578,7 +578,7 @@ describe('HarvestablesHandler', () => {
                 expect(e).toBeUndefined();
             } else {
                 expect(e).toBeDefined();
-                expect(e.size).toBe(lastSize);
+                expect(e.chargeLevel).toBe(lastSize);
             }
         });
     });
@@ -746,18 +746,18 @@ describe('HarvestablesHandler', () => {
     });
 
     describe('updateHarvestable', () => {
-        // @verified 2026-04-18: decrements size by count.
-        test('synthetic: updateHarvestable decrements size by count', () => {
+        // @verified 2026-04-18: decrements charge level by count.
+        test('synthetic: updateHarvestable decrements charge level by count', () => {
             const p = {0: 500, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 5, 11: 0};
             handler.newHarvestableObject(500, p);
 
             handler.updateHarvestable(500, 2);
 
-            expect(handler.getHarvestableList()[0].size).toBe(3);
+            expect(handler.getHarvestableList()[0].chargeLevel).toBe(3);
         });
 
-        // @verified 2026-04-18: removes entity when size reaches 0.
-        test('synthetic: updateHarvestable removes entity when size reaches 0', () => {
+        // @verified 2026-04-18: removes entity when charge level reaches 0.
+        test('synthetic: updateHarvestable removes entity when charge level reaches 0', () => {
             const p = {0: 501, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 1, 11: 0};
             handler.newHarvestableObject(501, p);
 
@@ -766,8 +766,8 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(0);
         });
 
-        // @verified 2026-04-18: removes entity when size goes negative.
-        test('synthetic: updateHarvestable removes entity when size goes below 0', () => {
+        // @verified 2026-04-18: removes entity when charge level goes negative.
+        test('synthetic: updateHarvestable removes entity when charge level goes below 0', () => {
             const p = {0: 502, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 1, 11: 0};
             handler.newHarvestableObject(502, p);
 
@@ -811,11 +811,11 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(1);
         });
 
-        // @verified 2026-04-18: entities with size===undefined are removed regardless of distance.
-        test('synthetic: removeNotInRange removes entities with size undefined', () => {
+        // @verified 2026-04-18: entities with charge level undefined are removed regardless of distance.
+        test('synthetic: removeNotInRange removes entities with charge level undefined', () => {
             const p = {0: 603, 5: 14, 6: -1, 7: 4, 8: [0, 0], 10: 2, 11: 0};
             handler.newHarvestableObject(603, p);
-            handler.harvestableList[0].size = undefined;
+            handler.harvestableList[0].chargeLevel = undefined;
 
             handler.removeNotInRange(0, 0);
 

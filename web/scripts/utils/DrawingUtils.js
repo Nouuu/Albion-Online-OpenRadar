@@ -384,7 +384,7 @@ export class DrawingUtils {
             let maxDist = 0; for (const p of pts) { const dx = p.x - cx, dy = p.y - cy; const d = Math.sqrt(dx * dx + dy * dy); if (d > maxDist) maxDist = d; }
             const minRadius = this.getScaledSize(24); const padding = this.getScaledSize(18) + Math.log(Math.max(1, cluster.count)) * this.getScaledSize(6); const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + padding);
 
-            let totalStacks = 0; for (const r of cluster.resources) { const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
+            let totalStacks = 0; for (const r of cluster.resources) { const size = (r.chargeLevel !== undefined && !isNaN(parseInt(r.chargeLevel))) ? parseInt(r.chargeLevel) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
 
             let color;
             if (cluster.count <= 3 && totalStacks <= 6) color = { outer: `rgba(100,200,255,0.45)`, inner: `rgba(100,200,255,0.65)` };
@@ -418,7 +418,7 @@ export class DrawingUtils {
         let maxDist = 0; for (const p of pts) { const dx = p.x - cx, dy = p.y - cy; const d = Math.sqrt(dx * dx + dy * dy); if (d > maxDist) maxDist = d; }
         const minRadius = this.getScaledSize(24); const paddingVal = this.getScaledSize(18) + Math.log(Math.max(1, cluster.count)) * this.getScaledSize(6); const visualRadius = Math.max(minRadius, Math.ceil(maxDist) + paddingVal);
 
-        let totalStacks = 0; for (const r of cluster.resources) { const size = (r.size !== undefined && !isNaN(parseInt(r.size))) ? parseInt(r.size) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
+        let totalStacks = 0; for (const r of cluster.resources) { const size = (r.chargeLevel !== undefined && !isNaN(parseInt(r.chargeLevel))) ? parseInt(r.chargeLevel) : 1; const tier = (r.tier !== undefined && !isNaN(parseInt(r.tier))) ? parseInt(r.tier) : 4; totalStacks += this.calculateRealResources(size, tier); }
 
         const countText = `×${cluster.count}`;
         const typeText = cluster.type || '';
@@ -508,14 +508,14 @@ export class DrawingUtils {
 
         for (let i = 0; i < resources.length; i++) {
             if (processed.has(i)) continue;
-            if (resources[i].size !== undefined && resources[i].size <= 0) continue;
+            if (resources[i].chargeLevel !== undefined && resources[i].chargeLevel <= 0) continue;
             const resource = resources[i];
             const typeName = getTypeName(resource);
             const cluster = { x: resource.hX, y: resource.hY, count: 1, type: typeName, tier: resource.tier, resources: [resource] };
 
             for (let j = i + 1; j < resources.length; j++) {
                 if (processed.has(j)) continue;
-                if (resources[j].size !== undefined && resources[j].size <= 0) continue;
+                if (resources[j].chargeLevel !== undefined && resources[j].chargeLevel <= 0) continue;
                 const other = resources[j];
                 const otherType = getTypeName(other);
                 if (otherType !== typeName) continue;

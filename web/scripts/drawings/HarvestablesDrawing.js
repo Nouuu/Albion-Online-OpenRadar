@@ -23,7 +23,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
         for (const harvestableOne of harvestables)
         {
-            if (harvestableOne.size <= 0) continue;
+            if (harvestableOne.chargeLevel <= 0) continue;
 
             const mobileTypeId = harvestableOne.mobileTypeId;
             const isPureStatic = mobileTypeId === null || mobileTypeId === undefined
@@ -32,7 +32,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
             const filterEntity = {
                 name: harvestableOne.stringType,
                 tier: harvestableOne.tier,
-                enchantmentLevel: harvestableOne.charges,
+                enchantmentLevel: harvestableOne.rareState,
             };
             const filterFn = isPureStatic ? shouldRenderStaticResource : shouldRenderLivingResource;
             if (!filterFn(filterEntity, key => settingsSync.getJSON(key))) {
@@ -45,49 +45,49 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (harvestableOne.stringType) {
                 const st = harvestableOne.stringType.toLowerCase();
                 if (st === 'log' || st === 'wood' || st === 'logs') {
-                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.charges;
+                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 } else if (st === 'rock') {
-                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.charges;
+                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 } else if (st === 'fiber') {
-                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
+                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 } else if (st === 'hide') {
-                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.charges;
+                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 } else if (st === 'ore') {
-                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
+                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 }
 
                 window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingStringType', {
                     id: harvestableOne.id,
                     stringType: harvestableOne.stringType,
-                    type: harvestableOne.type,
+                    position: harvestableOne.position,
                     draw,
                     tier: harvestableOne.tier,
-                    charges: harvestableOne.charges
+                    rareState: harvestableOne.rareState
                 });
             }
 
             // Fallback: use type (typeNumber) if no stringType available
             if (!draw) {
-                const type = harvestableOne.type;
-                if (type >= 0 && type <= 5) {
-                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 6 && type <= 10) {
-                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 11 && type <= 15) {
-                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 16 && type <= 22) {
-                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 23 && type <= 27) {
-                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
+                const position = harvestableOne.position;
+                if (position >= 0 && position <= 5) {
+                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.rareState;
+                } else if (position >= 6 && position <= 10) {
+                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.rareState;
+                } else if (position >= 11 && position <= 15) {
+                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.rareState;
+                } else if (position >= 16 && position <= 22) {
+                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.rareState;
+                } else if (position >= 23 && position <= 27) {
+                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 }
 
                 window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingTypeNumber', {
                     id: harvestableOne.id,
                     stringType: harvestableOne.stringType,
-                    type: harvestableOne.type,
+                    position: harvestableOne.position,
                     draw,
                     tier: harvestableOne.tier,
-                    charges: harvestableOne.charges,
+                    rareState: harvestableOne.rareState,
                     note: 'FALLBACK - no stringType available'
                 });
             }
@@ -96,7 +96,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 window.logger?.warn(CATEGORIES.HARVESTABLES, 'Drawing_NoMatch', {
                     id: harvestableOne.id,
                     stringType: harvestableOne.stringType,
-                    type: harvestableOne.type,
+                    position: harvestableOne.position,
                     note: 'Could not determine resource image'
                 });
                 continue;
@@ -111,7 +111,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (useBadge && category) {
                 this.drawResourceBadge(
                     ctx, point.x, point.y, 32,
-                    category, harvestableOne.tier, harvestableOne.charges, false
+                    category, harvestableOne.tier, harvestableOne.rareState, false
                 );
             } else {
                 this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 32);
@@ -119,7 +119,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
             // Debug: TypeID display (offset scaled with zoom)
             if (settingsSync.getBool('settingDebugResourcesTypeId'))
-                this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.type.toString(), ctx);
+                this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.position.toString(), ctx);
 
             // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
             if (settingsSync.getBool('settingRadarResourceDistance')) {
@@ -131,7 +131,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (settingsSync.getBool('settingRadarResourceCount'))
             {
                 const realResources = this.calculateRealResources(
-                    parseInt(harvestableOne.size),
+                    parseInt(harvestableOne.chargeLevel),
                     harvestableOne.tier
                 );
                 this.drawResourceCountBadge(ctx, point.x, point.y, realResources);

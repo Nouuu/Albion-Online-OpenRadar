@@ -481,7 +481,7 @@ export class RadarRenderer {
     _collectClusterCandidates() {
         const getSetting = key => settingsSync.getJSON(key);
         const staticList = (this.handlers.harvestablesHandler?.harvestableList || []).filter(h => {
-            const entity = {name: h.stringType, tier: h.tier, enchantmentLevel: h.charges};
+            const entity = {name: h.stringType, tier: h.tier, enchantmentLevel: h.rareState};
             const isPureStatic = h.mobileTypeId === null || h.mobileTypeId === undefined
                 || h.mobileTypeId === -1 || h.mobileTypeId === 65535;
             return isPureStatic

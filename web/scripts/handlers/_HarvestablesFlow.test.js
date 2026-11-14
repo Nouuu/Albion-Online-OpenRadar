@@ -149,6 +149,6 @@ describe('harvestable detection flow', () => {
 
         const listed = harvestablesHandler.getHarvestableList();
         expect(listed).toHaveLength(1);
-        expect([listed[0].id, listed[0].tier, listed[0].size]).toEqual([first[0], second[7], second[10]]);
+        expect([listed[0].id, listed[0].tier, listed[0].chargeLevel]).toEqual([first[0], second[7], second[10]]);
     });
 });

@@ -60,7 +60,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: pure static fiber plant (mobileTypeId=-1) renders when Static fiber is on.
     test('pure static Fiber T5 e2 (mobileTypeId=-1) renders under Static filter', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
     });
@@ -72,7 +72,7 @@ describe('HarvestablesDrawing render-time routing', () => {
             if (key === 'settingResourcesLivingFiber') return allTrue();
             return null;
         });
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
@@ -80,7 +80,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: batch-spawn (mobileTypeId=null) is pure static, uses Static filter.
     test('batch-spawn Fiber (mobileTypeId=null) T4 e0 renders under Static filter', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        const entity = {id: 2, hX: 5, hY: 5, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: null, type: 14};
+        const entity = {id: 2, hX: 5, hY: 5, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: null, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 5, 5, 'fiber_4_0', 'Resources', 32);
     });
@@ -227,7 +227,7 @@ describe('HarvestablesDrawing render-time routing', () => {
                 ? {e0: Array(8).fill(false), e1: [false, false, true, false, false, false, false, false], e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)}
                 : null
         );
-        const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType: family, mobileTypeId: -1, type: typeNumber};
+        const entity = {id: 99, hX: 1, hY: 2, chargeLevel: 3, tier: 3, rareState: 1, stringType: family, mobileTypeId: -1, position: typeNumber};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 1, 2, `${imagePrefix}_3_1`, 'Resources', 32);
     });
@@ -235,8 +235,8 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: lastVisibleCount reflects only harvestables passing the render gate.
     test('lastVisibleCount counts only rendered harvestables after filters', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        const kept = {id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14};
-        const dropped = {id: 2, hX: 3, hY: 4, size: 3, tier: 4, charges: 0, stringType: 'Hide', mobileTypeId: -1, type: 20};
+        const kept = {id: 1, hX: 1, hY: 2, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 14};
+        const dropped = {id: 2, hX: 3, hY: 4, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Hide', mobileTypeId: -1, position: 20};
 
         drawing.invalidate(ctx, [kept, dropped]);
 
@@ -246,11 +246,11 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: lastVisibleCount resets on each invalidate call.
     test('lastVisibleCount resets on each invalidate call', () => {
         settingsSync.getJSON.mockReturnValue(allFalse());
-        drawing.invalidate(ctx, [{id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        drawing.invalidate(ctx, [{id: 1, hX: 1, hY: 2, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
         expect(drawing.lastVisibleCount).toBe(0);
 
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
         expect(drawing.lastVisibleCount).toBe(1);
     });
 
@@ -262,7 +262,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     test('settingRadarResourceTierBadges=false renders the game icon as before', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockReturnValue(false);
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
         expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
@@ -272,7 +272,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     test('settingRadarResourceTierBadges=true draws a Fiber badge with tier+enchant for static harvestable', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Fiber', 5, 2, false);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
@@ -288,7 +288,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     ])('badge mode renders %s as category %s', (stringType, typeNumber, settingKey, expectedCategory) => {
         settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
-        const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType, mobileTypeId: -1, type: typeNumber};
+        const entity = {id: 99, hX: 1, hY: 2, chargeLevel: 3, tier: 3, rareState: 1, stringType, mobileTypeId: -1, position: typeNumber};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 1, 2, 32, expectedCategory, 3, 1, false);
     });
@@ -299,14 +299,14 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         drawing.getResourceCategory = vi.fn(() => null);
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
     // @verified 2026-09-03: pcap-derived full-flow test: real handler -> drawing chain produces a badge
-    // in badge mode. Static Fiber T6 node with charges from the 2026-09-03 capture; the living nodes in that
+    // in badge mode. Static Fiber T6 node with rare state from the 2026-09-03 capture; the living nodes in that
     // corpus all arrive with size 0 and are skipped at render.
     test('pcap-derived full-flow: static Fiber node renders as badge under settingRadarResourceTierBadges', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
@@ -342,7 +342,7 @@ describe('HarvestablesDrawing type ID overlay', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
         const drawing = buildDrawing();
         const ctx = {};
-        drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
         expect(drawing.drawText).toHaveBeenCalledWith(10, 40, '14', ctx);
         expect(settingsSync.getBool).not.toHaveBeenCalledWith('livingResourcesID');
     });
@@ -350,7 +350,7 @@ describe('HarvestablesDrawing type ID overlay', () => {
     test('draws no type ID when settingDebugResourcesTypeId is off', () => {
         settingsSync.getBool.mockImplementation(() => false);
         const drawing = buildDrawing();
-        drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
         expect(drawing.drawText).not.toHaveBeenCalled();
     });
 });
