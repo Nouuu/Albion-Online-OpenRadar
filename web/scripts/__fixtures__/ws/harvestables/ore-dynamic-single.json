@@ -1,0 +1,24 @@
+{
+  "scenario": "ore-dynamic-single.json",
+  "handler": "harvestables",
+  "messages": [
+    {
+      "kind": "event",
+      "parameters": {
+        "0": 1149,
+        "10": 5,
+        "11": 1,
+        "2": 639241133732761688,
+        "252": 40,
+        "5": 28,
+        "6": -1,
+        "7": 5,
+        "8": [
+          154,
+          -135
+        ],
+        "9": 450
+      }
+    }
+  ]
+}
