@@ -1,6 +1,5 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
 import settingsSync from "../utils/SettingsSync.js";
-import {CATEGORIES} from "../constants/LoggerConstants.js";
 import {isMobOrigin, shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
 
 export class HarvestablesDrawing extends DrawingUtils  {
@@ -51,15 +50,6 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 } else if (st === 'ore') {
                     draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 }
-
-                window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingStringType', {
-                    id: harvestableOne.id,
-                    stringType: harvestableOne.stringType,
-                    position: harvestableOne.position,
-                    draw,
-                    tier: harvestableOne.tier,
-                    rareState: harvestableOne.rareState
-                });
             }
 
             // Fallback: use type (typeNumber) if no stringType available
@@ -76,25 +66,9 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 } else if (position >= 23 && position <= 27) {
                     draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.rareState;
                 }
-
-                window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingTypeNumber', {
-                    id: harvestableOne.id,
-                    stringType: harvestableOne.stringType,
-                    position: harvestableOne.position,
-                    draw,
-                    tier: harvestableOne.tier,
-                    rareState: harvestableOne.rareState,
-                    note: 'FALLBACK - no stringType available'
-                });
             }
 
             if (draw === undefined) {
-                window.logger?.warn(CATEGORIES.HARVESTABLES, 'Drawing_NoMatch', {
-                    id: harvestableOne.id,
-                    stringType: harvestableOne.stringType,
-                    position: harvestableOne.position,
-                    note: 'Could not determine resource image'
-                });
                 continue;
             }
 

@@ -97,28 +97,12 @@ export class HarvestablesHandler
             stringType = this.GetStringType(position);
         }
 
-        window.logger?.debug(CATEGORIES.HARVESTABLES, 'detection', {
-            id,
-            mobileTypeId,
-            position,
-            tier,
-            rareState,
-            chargeLevel,
-            stringType,
-            isLiving
-        });
-
         var harvestable = this.harvestableList.find((item) => item.id === id);
 
         if (!harvestable)
         {
             const h = new Harvestable(id, position, tier, posX, posY, rareState, chargeLevel, stringType, mobileTypeId);
             this.harvestableList.push(h);
-
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'HarvestableAdded', {
-                id, position, stringType, tier, rareState, chargeLevel, mobileTypeId,
-                listSize: this.harvestableList.length
-            });
         }
         else // update
         {
@@ -126,9 +110,7 @@ export class HarvestablesHandler
             harvestable.touch();
             if (stringType) harvestable.stringType = stringType;
 
-            window.logger?.debug(CATEGORIES.HARVESTABLES, 'HarvestableUpdated', {
-                id, stringType, newRareState: rareState
-            });
+            this.logUpdated(harvestable);
         }
     }
 
@@ -154,17 +136,6 @@ export class HarvestablesHandler
             stringType = this.GetStringType(position);
         }
 
-        window.logger?.debug(CATEGORIES.HARVESTABLES, 'update', {
-            id,
-            mobileTypeId,
-            position,
-            tier,
-            rareState,
-            chargeLevel,
-            stringType,
-            isLiving
-        });
-
         var harvestable = this.harvestableList.find((item) => item.id === id);
 
         if (!harvestable)
@@ -173,18 +144,19 @@ export class HarvestablesHandler
             return;
         }
 
-        window.logger?.info(CATEGORIES.HARVESTABLES, 'UpdateHarvestable_Existing', {
-            id,
-            oldRareState: harvestable.rareState,
-            newRareState: rareState,
-            oldChargeLevel: harvestable.chargeLevel,
-            newChargeLevel: chargeLevel,
-            stringType: harvestable.stringType
-        });
-
         harvestable.rareState = rareState;
         harvestable.chargeLevel = chargeLevel;
         if (stringType) harvestable.stringType = stringType;
+        this.logUpdated(harvestable);
+    }
+
+    logUpdated(harvestable)
+    {
+        window.logger?.debug(CATEGORIES.HARVESTABLES, 'HarvestableUpdated', {
+            id: harvestable.id,
+            chargeLevel: harvestable.chargeLevel,
+            rareState: harvestable.rareState
+        });
     }
 
     harvestFinished(Parameters)
@@ -200,16 +172,10 @@ export class HarvestablesHandler
         const newChargeLevel = Parameters[1];
         const rareState = Parameters[2];
 
-        window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_ChangeState', {
-            harvestableId: id,
-            newChargeLevel,
-            rareState
-        });
-
         // newSize undefined = resource depleted, remove it
         if (newChargeLevel === undefined) {
             window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_ResourceDepleted', {id});
-            this.removeHarvestable(id);
+            this.removeHarvestable(id, 'depleted');
             return;
         }
 
@@ -222,24 +188,15 @@ export class HarvestablesHandler
 
         // Event 46 is the source of truth - accept ALL size changes
         if (newChargeLevel !== harvestable.chargeLevel) {
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_SizeUpdate', {
-                id,
-                oldChargeLevel: harvestable.chargeLevel,
-                newChargeLevel,
-                delta: newChargeLevel - harvestable.chargeLevel
-            });
             harvestable.chargeLevel = newChargeLevel;
         }
 
         // Update enchantment if provided and different (filter applied at render, not here)
         if (rareState !== undefined && rareState !== harvestable.rareState) {
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_EnchantmentUpdate', {
-                id,
-                oldRareState: harvestable.rareState,
-                newRareState: rareState
-            });
             harvestable.rareState = rareState;
         }
+
+        this.logUpdated(harvestable);
     }
 
     // Normally work with everything
@@ -254,40 +211,6 @@ export class HarvestablesHandler
 
         let rareState = Parameters[11] === undefined ? 0 : Parameters[11];
         let chargeLevel = Parameters[10] === undefined ? 0 : Parameters[10];
-
-        // 🔍 Log ALL parameters for comparison with Event38
-        const allParams40 = {};
-        for (let key in Parameters) {
-            if (Parameters.hasOwnProperty(key)) {
-                allParams40[`param[${key}]`] = Parameters[key];
-            }
-        }
-
-        window.logger?.info(CATEGORIES.HARVESTABLES, 'Event40_IndividualSpawn_FULL', {
-            id,
-            position,
-            tier,
-            rareState,
-            chargeLevel,
-            mobileTypeId,
-            isLiving: isMobOrigin(mobileTypeId),
-            allParametersKeys: Object.keys(Parameters),
-            allParameters: allParams40
-        });
-
-        const isCritterCorpse = isMobOrigin(mobileTypeId);
-        if (isCritterCorpse) {
-            const dbInfo = window.mobsDatabase?.getMobInfo(mobileTypeId);
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'CritterCorpseTierAudit', {
-                mobileTypeId,
-                serverTier: tier,
-                dbCombatTier: dbInfo?.combatTier ?? null,
-                dbLootTier: dbInfo?.tier ?? null,
-                dbUniqueName: dbInfo?.uniqueName ?? null,
-                dbLootType: dbInfo?.lootType ?? null,
-                tierDelta: dbInfo ? (tier - (dbInfo.combatTier ?? 0)) : null
-            });
-        }
 
         this.UpdateHarvestable(id, position, tier, location[0], location[1], rareState, chargeLevel, mobileTypeId);
     }
@@ -350,11 +273,18 @@ export class HarvestablesHandler
 
     removeNotInRange(lpX, lpY)
     {
+        const before = this.harvestableList.length;
+
         this.harvestableList = this.harvestableList.filter(
             (x) => this.calculateDistance(lpX, lpY, x.posX, x.posY) <= 80
         );
 
         this.harvestableList = this.harvestableList.filter(item => item.chargeLevel !== undefined);
+
+        const count = before - this.harvestableList.length;
+        if (count > 0) {
+            window.logger?.debug(CATEGORIES.HARVESTABLES, 'HarvestablesOutOfRange', {count});
+        }
     }
 
     calculateDistance(lpX, lpY, posX, posY)
@@ -365,9 +295,13 @@ export class HarvestablesHandler
         return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
     }
 
-    removeHarvestable(id)
+    removeHarvestable(id, reason)
     {
+        const before = this.harvestableList.length;
         this.harvestableList = this.harvestableList.filter((x) => x.id !== id);
+        if (this.harvestableList.length < before) {
+            window.logger?.debug(CATEGORIES.HARVESTABLES, 'HarvestableRemoved', {id, reason});
+        }
     }
 
     getHarvestableList() {

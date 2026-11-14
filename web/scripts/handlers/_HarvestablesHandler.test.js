@@ -501,6 +501,11 @@ describe('HarvestablesHandler', () => {
             expect(e).toBeDefined();
             expect(e.chargeLevel).toBe(3);
             expect(e.lastUpdateTime).toBeGreaterThanOrEqual(before);
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(),
+                'HarvestableUpdated',
+                {id, chargeLevel: 3, rareState: p[2]}
+            );
         });
 
         // @verified 2026-04-18: newSize=0 (not undefined) keeps entity but sets charge level to 0.
@@ -550,6 +555,11 @@ describe('HarvestablesHandler', () => {
             handler.HarvestUpdateEvent({0: 9002, 1: undefined, 2: 0});
 
             expect(handler.getSize()).toBe(0);
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(),
+                'HarvestableRemoved',
+                {id: 9002, reason: 'depleted'}
+            );
         });
 
         // @verified 2026-04-18: unknown id is a no-op, no throw, list unchanged.
@@ -626,9 +636,14 @@ describe('HarvestablesHandler', () => {
             handler.newHarvestableObject(1, p);
             expect(handler.getSize()).toBe(1);
 
-            handler.removeHarvestable(1);
+            handler.removeHarvestable(1, 'test');
 
             expect(handler.getSize()).toBe(0);
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(),
+                'HarvestableRemoved',
+                {id: 1, reason: 'test'}
+            );
         });
 
         // @verified 2026-04-18: removing an unknown id is a no-op, does not throw.
@@ -636,9 +651,10 @@ describe('HarvestablesHandler', () => {
             const p = {0: 2, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 2, 11: 0};
             handler.newHarvestableObject(2, p);
 
-            handler.removeHarvestable(9999);
+            handler.removeHarvestable(9999, 'test');
 
             expect(handler.getSize()).toBe(1);
+            expect(window.logger.debug).not.toHaveBeenCalledWith(expect.anything(), 'HarvestableRemoved', expect.anything());
         });
     });
 
@@ -729,6 +745,11 @@ describe('HarvestablesHandler', () => {
 
             expect(handler.getSize()).toBe(1);
             expect(handler.getHarvestableList()[0].id).toBe(600);
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(),
+                'HarvestablesOutOfRange',
+                {count: 1}
+            );
         });
 
         // @verified 2026-04-18: entities within 80 units are kept.
