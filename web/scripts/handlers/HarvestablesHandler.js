@@ -97,11 +97,6 @@ export class HarvestablesHandler
             stringType = this.GetStringType(position);
         }
 
-        // 🔍 Phase 4: Check validation with database
-        const databaseValidation = window.harvestablesDatabase?.isLoaded
-            ? window.harvestablesDatabase.isValidResourceByTypeNumber(position, tier, rareState)
-            : null;
-
         window.logger?.debug(CATEGORIES.HARVESTABLES, 'detection', {
             id,
             mobileTypeId,
@@ -110,9 +105,7 @@ export class HarvestablesHandler
             rareState,
             chargeLevel,
             stringType,
-            isLiving,
-            databaseLoaded: window.harvestablesDatabase?.isLoaded ?? false,
-            databaseValid: databaseValidation
+            isLiving
         });
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
@@ -161,11 +154,6 @@ export class HarvestablesHandler
             stringType = this.GetStringType(position);
         }
 
-        // 🔍 Phase 4: Check validation with database
-        const databaseValidation = window.harvestablesDatabase?.isLoaded
-            ? window.harvestablesDatabase.isValidResourceByTypeNumber(position, tier, rareState)
-            : null;
-
         window.logger?.debug(CATEGORIES.HARVESTABLES, 'update', {
             id,
             mobileTypeId,
@@ -174,9 +162,7 @@ export class HarvestablesHandler
             rareState,
             chargeLevel,
             stringType,
-            isLiving,
-            databaseLoaded: window.harvestablesDatabase?.isLoaded ?? false,
-            databaseValid: databaseValidation
+            isLiving
         });
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
@@ -388,21 +374,6 @@ export class HarvestablesHandler
         return [...this.harvestableList];
     }
 
-    updateHarvestable(harvestableId, count)
-    {   
-        const harvestable = this.harvestableList.find((h) => h.id === harvestableId);
-
-        if (harvestable)
-        {
-            harvestable.chargeLevel = harvestable.chargeLevel - count;
-
-            // Remove harvestable when last stack is harvested
-            if (harvestable.chargeLevel <= 0) {
-                this.removeHarvestable(harvestableId);
-            }
-        }
-    }
-
     GetStringType(typeNumber)
     {
         // If already a string (from MobsHandler), return directly
@@ -460,24 +431,6 @@ export class HarvestablesHandler
         return mappedType;
     }
 
-    /**
-     * 🔍 Phase 4: Helper to convert HarvestableType string to typeNumber for database validation
-     * @param {string} stringType - HarvestableType (Fiber, Hide, Log, Ore, Rock)
-     * @returns {number|null} - typeNumber (0-27) or null if unknown
-     * @private
-     */
-    _getTypeNumberFromString(stringType) {
-        // Map HarvestableType to mid-range typeNumber for each category
-        const typeMap = {
-            [HarvestableType.Log]: 3,    // Wood mid-range (0-5)
-            [HarvestableType.Rock]: 8,   // Rock mid-range (6-10)
-            [HarvestableType.Fiber]: 13, // Fiber mid-range (11-15)
-            [HarvestableType.Hide]: 19,  // Hide mid-range (16-22)
-            [HarvestableType.Ore]: 25    // Ore mid-range (23-27)
-        };
-        return typeMap[stringType] ?? null;
-    }
-
     Clear()
     {
         this.harvestableList = [];
@@ -500,23 +453,6 @@ export class HarvestablesHandler
         if (removed > 0) {
             window.logger?.debug(CATEGORIES.HARVESTABLES, 'cleanup', {removed, maxAgeMs});
         }
-        return removed;
-    }
-
-    /**
-     * Enforce maximum list size by removing oldest entries
-     * @param {number} maxSize - Maximum number of entities (default: 1000)
-     * @returns {number} - Number of entities removed
-     */
-    enforceMaxSize(maxSize = 1000) {
-        if (this.harvestableList.length <= maxSize) return 0;
-
-        // Sort by lastUpdateTime (oldest first) and keep newest
-        this.harvestableList.sort((a, b) => b.lastUpdateTime - a.lastUpdateTime);
-        const removed = this.harvestableList.length - maxSize;
-        this.harvestableList = this.harvestableList.slice(0, maxSize);
-
-        window.logger?.debug(CATEGORIES.HARVESTABLES, 'max_size_enforced', {removed});
         return removed;
     }
 

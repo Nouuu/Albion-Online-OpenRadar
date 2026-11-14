@@ -688,34 +688,6 @@ describe('HarvestablesHandler', () => {
         });
     });
 
-    describe('enforceMaxSize', () => {
-        // @verified 2026-04-18: trims list to maxSize, keeping newest entries.
-        test('synthetic: enforceMaxSize trims to maxSize keeping newest', () => {
-            const now = Date.now();
-            for (let i = 0; i < 5; i++) {
-                const p = {0: i + 100, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 2, 11: 0};
-                handler.newHarvestableObject(i + 100, p);
-                handler.harvestableList[i].lastUpdateTime = now + i;
-            }
-
-            const removed = handler.enforceMaxSize(3);
-
-            expect(removed).toBe(2);
-            expect(handler.getSize()).toBe(3);
-        });
-
-        // @verified 2026-04-18: returns 0 when list is at or below maxSize.
-        test('synthetic: enforceMaxSize no-op when size within limit', () => {
-            const p = {0: 200, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 2, 11: 0};
-            handler.newHarvestableObject(200, p);
-
-            const removed = handler.enforceMaxSize(10);
-
-            expect(removed).toBe(0);
-            expect(handler.getSize()).toBe(1);
-        });
-    });
-
     describe('getHarvestableList', () => {
         // @verified 2026-04-18: returns a shallow copy, not the internal reference.
         test('synthetic: getHarvestableList returns a copy not the internal array', () => {
@@ -742,48 +714,6 @@ describe('HarvestablesHandler', () => {
             handler.newHarvestableObject(401, {...p, 0: 401});
 
             expect(handler.getSize()).toBe(2);
-        });
-    });
-
-    describe('updateHarvestable', () => {
-        // @verified 2026-04-18: decrements charge level by count.
-        test('synthetic: updateHarvestable decrements charge level by count', () => {
-            const p = {0: 500, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 5, 11: 0};
-            handler.newHarvestableObject(500, p);
-
-            handler.updateHarvestable(500, 2);
-
-            expect(handler.getHarvestableList()[0].chargeLevel).toBe(3);
-        });
-
-        // @verified 2026-04-18: removes entity when charge level reaches 0.
-        test('synthetic: updateHarvestable removes entity when charge level reaches 0', () => {
-            const p = {0: 501, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 1, 11: 0};
-            handler.newHarvestableObject(501, p);
-
-            handler.updateHarvestable(501, 1);
-
-            expect(handler.getSize()).toBe(0);
-        });
-
-        // @verified 2026-04-18: removes entity when charge level goes negative.
-        test('synthetic: updateHarvestable removes entity when charge level goes below 0', () => {
-            const p = {0: 502, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 1, 11: 0};
-            handler.newHarvestableObject(502, p);
-
-            handler.updateHarvestable(502, 5);
-
-            expect(handler.getSize()).toBe(0);
-        });
-
-        // @verified 2026-04-18: unknown id is no-op.
-        test('synthetic: updateHarvestable unknown id is no-op', () => {
-            const p = {0: 503, 5: 14, 6: -1, 7: 4, 8: [-10, 10], 10: 3, 11: 0};
-            handler.newHarvestableObject(503, p);
-
-            handler.updateHarvestable(9999, 1);
-
-            expect(handler.getSize()).toBe(1);
         });
     });
 

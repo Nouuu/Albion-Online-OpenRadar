@@ -22,7 +22,7 @@ function resolveSettingsCell(entity, getSetting, keyMap) {
     if (!entity) return false;
     const tier = entity.tier ?? 0;
     if (tier < 1 || tier > 8) return false;
-    const enchant = entity.enchantmentLevel ?? entity.rareState ?? 0;
+    const enchant = entity.enchantmentLevel ?? 0;
     if (enchant < 0 || enchant > 4) return false;
     const key = keyMap[entity.name];
     if (!key) return false;

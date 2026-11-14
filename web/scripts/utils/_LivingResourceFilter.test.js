@@ -50,18 +50,6 @@ describe('shouldRenderLivingResource', () => {
         expect(shouldRenderLivingResource({name: 'Rock', tier: 3, enchantmentLevel: 0}, strictSettings(allTrueForFamily('Rock')))).toBe(true);
     });
 
-    // @verified 2026-04-24: rareState-only entity resolves via fallback chain.
-    test('rareState fallback for HarvestablesHandler entities without enchantmentLevel', () => {
-        const settings = {settingResourcesLivingFiber: {e2: [false, false, false, true, false, false, false, false]}};
-        expect(shouldRenderLivingResource({name: 'Fiber', tier: 4, rareState: 2}, strictSettings(settings))).toBe(true);
-    });
-
-    // @verified 2026-04-24: enchantmentLevel takes precedence when both fields present.
-    test('enchantmentLevel takes precedence over rareState if both present', () => {
-        const settings = {settingResourcesLivingFiber: {e1: Array(8).fill(true), e2: Array(8).fill(false)}};
-        expect(shouldRenderLivingResource({name: 'Fiber', tier: 4, rareState: 2, enchantmentLevel: 1}, strictSettings(settings))).toBe(true);
-    });
-
     // @verified 2026-04-24: null entity guard returns false.
     test('null entity returns false', () => {
         expect(shouldRenderLivingResource(null, strictSettings({}))).toBe(false);
@@ -113,11 +101,11 @@ describe('shouldRenderLivingResource', () => {
         expect(shouldRenderLivingResource(undefined, strictSettings({}))).toBe(false);
     });
 
-    // @verified 2026-04-24: enchantmentLevel=0 must be respected (not fallthrough to rareState), proves ?? over ||.
-    test('enchantmentLevel 0 does not fall through to rareState', () => {
+    // @verified 2026-04-24: enchantmentLevel=0 must be respected.
+    test('enchantmentLevel 0 is respected', () => {
         const settings = {settingResourcesLivingFiber: {e0: Array(8).fill(true), e2: Array(8).fill(false)}};
         expect(shouldRenderLivingResource(
-            {name: 'Fiber', tier: 4, enchantmentLevel: 0, rareState: 2},
+            {name: 'Fiber', tier: 4, enchantmentLevel: 0},
             strictSettings(settings)
         )).toBe(true);
     });
@@ -152,12 +140,6 @@ describe('shouldRenderStaticResource', () => {
         expect(shouldRenderStaticResource({name: 'Rock', tier: 3, enchantmentLevel: 0}, strictSettings(allTrueStaticForFamily('Rock')))).toBe(true);
     });
 
-    // @verified 2026-04-24: rareState fallback works for HarvestablesHandler entities that carry rareState only.
-    test('rareState fallback resolves for HarvestablesHandler carcass entities', () => {
-        const settings = {settingResourcesStaticFiber: {e2: [false, false, false, true, false, false, false, false]}};
-        expect(shouldRenderStaticResource({name: 'Fiber', tier: 4, rareState: 2}, strictSettings(settings))).toBe(true);
-    });
-
     // @verified 2026-04-24: static lookup does not leak into living settings (key isolation).
     test('static function uses static key, ignores a living-only settings object', () => {
         const settingsLivingOnly = {settingResourcesLivingFiber: {e0: Array(8).fill(true)}};
@@ -180,10 +162,10 @@ describe('shouldRenderStaticResource', () => {
     });
 
     // @verified 2026-04-24: enchantmentLevel=0 static path (proves ?? behaviour matches living path).
-    test('enchantmentLevel 0 respected for static path, does not fallthrough to rareState', () => {
+    test('enchantmentLevel 0 respected for static path', () => {
         const settings = {settingResourcesStaticFiber: {e0: Array(8).fill(true), e2: Array(8).fill(false)}};
         expect(shouldRenderStaticResource(
-            {name: 'Fiber', tier: 4, enchantmentLevel: 0, rareState: 2},
+            {name: 'Fiber', tier: 4, enchantmentLevel: 0},
             strictSettings(settings)
         )).toBe(true);
     });
