@@ -177,6 +177,27 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
+    // @verified 2026-11-14: a static node whose message lacks the mob type id key is drawn under its family Static setting and not under Living.
+    test.each([
+        ['Static on, Living off', allTrue(), allFalse(), true],
+        ['Static off, Living on', allFalse(), allTrue(), false],
+    ])('pcap-derived full-flow with the mob type id key deleted from the message: %s', async (_label, staticCell, livingCell, drawn) => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = normalizeParams(fx.messages[0].parameters);
+        expect(p[6]).toBe(-1);
+        delete p[6];
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        const family = handler.getHarvestableList()[0].stringType;
+        const staticKey = {Fiber: 'settingResourcesStaticFiber', Hide: 'settingResourcesStaticHide', Log: 'settingResourcesStaticWood', Ore: 'settingResourcesStaticOre', Rock: 'settingResourcesStaticRock'}[family];
+        const livingKey = staticKey.replace('Static', 'Living');
+        settingsSync.getJSON.mockImplementation(key => key === staticKey ? staticCell : key === livingKey ? livingCell : null);
+
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(drawn ? 1 : 0);
+    });
+
     // @verified 2026-11-14: a static node spawned empty draws nothing, then draws once its charge level update arrives.
     test('pcap-derived full-flow: empty static Fiber node is drawn only after its regrow update', async () => {
         const fx = await loadFixture('harvestables', 'empty-regrow');

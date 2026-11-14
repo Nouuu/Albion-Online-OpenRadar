@@ -1,7 +1,7 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
 import settingsSync from "../utils/SettingsSync.js";
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import {shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
+import {isMobOrigin, shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
 
 export class HarvestablesDrawing extends DrawingUtils  {
     constructor() {
@@ -25,16 +25,12 @@ export class HarvestablesDrawing extends DrawingUtils  {
         {
             if (harvestableOne.chargeLevel <= 0) continue;
 
-            const mobileTypeId = harvestableOne.mobileTypeId;
-            const isPureStatic = mobileTypeId === null || mobileTypeId === undefined
-                || mobileTypeId === -1 || mobileTypeId === 65535;
-
             const filterEntity = {
                 name: harvestableOne.stringType,
                 tier: harvestableOne.tier,
                 enchantmentLevel: harvestableOne.rareState,
             };
-            const filterFn = isPureStatic ? shouldRenderStaticResource : shouldRenderLivingResource;
+            const filterFn = isMobOrigin(harvestableOne.mobileTypeId) ? shouldRenderLivingResource : shouldRenderStaticResource;
             if (!filterFn(filterEntity, key => settingsSync.getJSON(key))) {
                 continue;
             }

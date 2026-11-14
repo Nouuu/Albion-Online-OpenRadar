@@ -2,7 +2,7 @@ import {CanvasManager} from './CanvasManager.js';
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
-import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
+import {isMobOrigin, shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 import {EnemyType} from '../handlers/MobsHandler.js';
 
 export class RadarRenderer {
@@ -482,11 +482,9 @@ export class RadarRenderer {
         const getSetting = key => settingsSync.getJSON(key);
         const staticList = (this.handlers.harvestablesHandler?.harvestableList || []).filter(h => {
             const entity = {name: h.stringType, tier: h.tier, enchantmentLevel: h.rareState};
-            const isPureStatic = h.mobileTypeId === null || h.mobileTypeId === undefined
-                || h.mobileTypeId === -1 || h.mobileTypeId === 65535;
-            return isPureStatic
-                ? shouldRenderStaticResource(entity, getSetting)
-                : shouldRenderLivingResource(entity, getSetting);
+            return isMobOrigin(h.mobileTypeId)
+                ? shouldRenderLivingResource(entity, getSetting)
+                : shouldRenderStaticResource(entity, getSetting);
         });
         const livingList = (this.handlers.mobsHandler?.mobsList || [])
             .filter(mob => mob.type === EnemyType.LivingHarvestable

@@ -1,4 +1,5 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
+import {isMobOrigin} from "../utils/LivingResourceFilter.js";
 
 const HarvestableType =
 {
@@ -76,7 +77,7 @@ export class HarvestablesHandler
         // - mobileTypeId === 65535 or -1 : STATIC (both are int16 decodes of 0xFFFF).
         // - mobileTypeId === null        : STATIC from Event 38 batch spawn.
         // - mobileTypeId === real TypeID : LIVING creature.
-        const isLiving = mobileTypeId !== null && mobileTypeId !== 65535 && mobileTypeId !== -1;
+        const isLiving = isMobOrigin(mobileTypeId);
 
         // Get resource type string
         // Living resources: use MobsDatabase (typeNumber is WRONG for living!)
@@ -140,7 +141,7 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId = null)
     {
-        const isLiving = mobileTypeId !== null && mobileTypeId !== 65535 && mobileTypeId !== -1;
+        const isLiving = isMobOrigin(mobileTypeId);
 
         // Get resource type string
         // Living resources: use MobsDatabase (typeNumber is WRONG for living!)
@@ -283,15 +284,12 @@ export class HarvestablesHandler
             rareState,
             chargeLevel,
             mobileTypeId,
-            isLiving: mobileTypeId !== null && mobileTypeId !== 65535 && mobileTypeId !== -1,
+            isLiving: isMobOrigin(mobileTypeId),
             allParametersKeys: Object.keys(Parameters),
             allParameters: allParams40
         });
 
-        const isCritterCorpse = mobileTypeId !== null
-            && mobileTypeId !== 65535
-            && mobileTypeId !== -1
-            && mobileTypeId !== undefined;
+        const isCritterCorpse = isMobOrigin(mobileTypeId);
         if (isCritterCorpse) {
             const dbInfo = window.mobsDatabase?.getMobInfo(mobileTypeId);
             window.logger?.info(CATEGORIES.HARVESTABLES, 'CritterCorpseTierAudit', {

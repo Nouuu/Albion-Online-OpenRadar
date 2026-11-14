@@ -14,6 +14,10 @@ const STATIC_SETTINGS_KEY_BY_NAME = {
     Rock: 'settingResourcesStaticRock',
 };
 
+export function isMobOrigin(mobileTypeId) {
+    return typeof mobileTypeId === 'number' && mobileTypeId !== -1 && mobileTypeId !== 65535;
+}
+
 function resolveSettingsCell(entity, getSetting, keyMap) {
     if (!entity) return false;
     const tier = entity.tier ?? 0;

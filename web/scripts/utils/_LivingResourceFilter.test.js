@@ -1,7 +1,7 @@
 // synthetic: no pcap fixture needed for a pure function with no network dependency
 // all scenarios constructed from known game constraints (T1-T8, e0-e4, 5 families)
 import {describe, test, expect} from 'vitest';
-import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
+import {isMobOrigin, shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 
 function strictSettings(map) {
     return key => map[key] ?? null;
@@ -186,5 +186,12 @@ describe('shouldRenderStaticResource', () => {
             {name: 'Fiber', tier: 4, enchantmentLevel: 0, rareState: 2},
             strictSettings(settings)
         )).toBe(true);
+    });
+});
+
+describe('isMobOrigin', () => {
+    // @verified 2026-11-14: a real mob type id marks a harvestable left by a mob, the 0xFFFF sentinels and a missing id mark a static node.
+    test.each([[0, true], [721, true], [-1, false], [65535, false], [null, false], [undefined, false]])('isMobOrigin(%s) is %s', (id, expected) => {
+        expect(isMobOrigin(id)).toBe(expected);
     });
 });
