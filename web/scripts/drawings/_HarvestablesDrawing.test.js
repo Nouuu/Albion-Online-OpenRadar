@@ -209,6 +209,39 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
+    // @verified 2026-11-14: a static node spawned empty draws nothing, then draws once its charge level update arrives.
+    test('pcap-derived full-flow: empty static Fiber node is drawn only after its regrow update', async () => {
+        const fx = await loadFixture('harvestables', 'empty-regrow');
+        const spawn = normalizeParams(fx.messages.find(m => m.parameters['252'] === 40 && m.parameters['0'] === 2587).parameters);
+        const regrow = normalizeParams(fx.messages.find(m => m.parameters['252'] === 46 && m.parameters['0'] === 2587).parameters);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(spawn[0], spawn);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+
+        handler.HarvestUpdateEvent(regrow);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_4_1', 'Resources', 32);
+    });
+
+    // @verified 2026-11-14: every empty static node of the capture (Ore, Fiber, Log) draws nothing before any update.
+    test('pcap-derived full-flow: every node spawned empty draws nothing', async () => {
+        const fx = await loadFixture('harvestables', 'empty-regrow');
+        const handler = new HarvestablesHandler(null);
+        for (const m of fx.messages.filter(msg => msg.parameters['252'] === 40)) {
+            const p = normalizeParams(m.parameters);
+            handler.newHarvestableObject(p[0], p);
+        }
+        settingsSync.getJSON.mockReturnValue(allTrue());
+
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(handler.getHarvestableList()).toHaveLength(4);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
     // -------------------------------------------------------------------------
     // Family coverage grid for pure static path
     // -------------------------------------------------------------------------
