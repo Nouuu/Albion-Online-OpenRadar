@@ -174,40 +174,39 @@ export class HarvestablesHandler
         this.UpdateHarvestable(id, position, tier, location[0], location[1], rareState, chargeLevel, mobileTypeId);
     }
 
+    readBatchArrays(Parameters)
+    {
+        const present = [0, 1, 2, 3, 4].map((i) => !!Parameters[i]);
+        if (!present.every(Boolean)) {
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'Event38_MissingParams',
+                Object.fromEntries(present.map((has, i) => [`has${i}`, has])));
+            return null;
+        }
+
+        const [a0, a1, a2, a4] = [0, 1, 2, 4].map((i) => Parameters[i]["data"] ?? Parameters[i]);
+        const a3 = Parameters[3];
+        if (!Array.isArray(a0) || a0.length === 0) return null;
+
+        const isArray = [a1, a2, a4].map(Array.isArray);
+        if (!isArray.every(Boolean)) {
+            window.logger?.warn(CATEGORIES.HARVESTABLES, 'Event38_InvalidArrays', {
+                a1IsArray: isArray[0],
+                a2IsArray: isArray[1],
+                a4IsArray: isArray[2]
+            });
+            return null;
+        }
+
+        return {a0, a1, a2, a3, a4};
+    }
+
     // Normally work with everything
     // Good
     newSimpleHarvestableObject(Parameters) // New (Event 38 - Batch spawn)
     {
-        // Validate required parameters exist
-        if (!Parameters[0] || !Parameters[1] || !Parameters[2] || !Parameters[3] || !Parameters[4]) {
-            window.logger?.warn(CATEGORIES.HARVESTABLES, 'Event38_MissingParams', {
-                has0: !!Parameters[0],
-                has1: !!Parameters[1],
-                has2: !!Parameters[2],
-                has3: !!Parameters[3],
-                has4: !!Parameters[4]
-            });
-            return;
-        }
-
-        let a0 = Parameters[0]["data"] ?? Parameters[0];
-        if (!Array.isArray(a0) || a0.length === 0) return;
-
-        const a1 = Parameters[1]["data"] ?? Parameters[1];
-        const a2 = Parameters[2]["data"] ?? Parameters[2];
-
-        const a3 = Parameters[3];
-        const a4 = Parameters[4]["data"] ?? Parameters[4];
-
-        // Validate arrays
-        if (!Array.isArray(a1) || !Array.isArray(a2) || !Array.isArray(a4)) {
-            window.logger?.warn(CATEGORIES.HARVESTABLES, 'Event38_InvalidArrays', {
-                a1IsArray: Array.isArray(a1),
-                a2IsArray: Array.isArray(a2),
-                a4IsArray: Array.isArray(a4)
-            });
-            return;
-        }
+        const arrays = this.readBatchArrays(Parameters);
+        if (!arrays) return;
+        const {a0, a1, a2, a3, a4} = arrays;
 
         window.logger?.info(CATEGORIES.HARVESTABLES, 'Event38_BatchSpawn', {
             count: a0.length,

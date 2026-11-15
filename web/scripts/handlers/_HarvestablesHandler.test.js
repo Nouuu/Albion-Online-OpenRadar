@@ -446,6 +446,32 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(0);
         });
 
+        test('@characterization 2026-11-15: synthetic: current code does add nothing and log Event38_MissingParams when a parameter is missing', () => {
+            handler.newSimpleHarvestableObject({
+                0: [5001], 1: [14], 2: [4], 3: [-100, -200],
+            });
+
+            expect(handler.getSize()).toBe(0);
+            expect(window.logger.warn).toHaveBeenCalledWith(
+                expect.anything(),
+                'Event38_MissingParams',
+                {has0: true, has1: true, has2: true, has3: true, has4: false}
+            );
+        });
+
+        test('@characterization 2026-11-15: synthetic: current code does add nothing and log Event38_InvalidArrays when Parameters[1] is not an array', () => {
+            handler.newSimpleHarvestableObject({
+                0: [5001], 1: 14, 2: [4], 3: [-100, -200], 4: [2],
+            });
+
+            expect(handler.getSize()).toBe(0);
+            expect(window.logger.warn).toHaveBeenCalledWith(
+                expect.anything(),
+                'Event38_InvalidArrays',
+                {a1IsArray: false, a2IsArray: true, a4IsArray: true}
+            );
+        });
+
         // @verified 2026-04-18: plain array Parameters (no Buffer wrapper) also accepted.
         test('synthetic: plain array Parameters (no Buffer wrapper) accepted', () => {
             const p = {
