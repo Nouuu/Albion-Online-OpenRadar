@@ -2,6 +2,11 @@ import {DrawingUtils} from "../utils/DrawingUtils.js";
 import settingsSync from "../utils/SettingsSync.js";
 import {isMobOrigin, shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
 
+const ICON_FAMILY = new Map([
+    ['log', 'log'], ['wood', 'log'], ['logs', 'log'],
+    ['rock', 'rock'], ['fiber', 'fiber'], ['hide', 'hide'], ['ore', 'ore'],
+]);
+
 export class HarvestablesDrawing extends DrawingUtils  {
     constructor() {
         super();
@@ -25,6 +30,11 @@ export class HarvestablesDrawing extends DrawingUtils  {
         this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(32), text, ctx, fontSize, '#FFD700');
     }
 
+    iconName(harvestable) {
+        const family = ICON_FAMILY.get(harvestable.stringType?.toLowerCase());
+        return family && `${family}_${harvestable.tier}_${harvestable.rareState}`;
+    }
+
     invalidate(ctx, harvestables)
     {
         // Clusters are detected and drawn centrally in Utils.render when overlayCluster is enabled
@@ -45,25 +55,9 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 continue;
             }
 
-            let draw = undefined;
+            const draw = this.iconName(harvestableOne);
 
-            // Use stringType if available (corrected by MobsDatabase for living resources)
-            if (harvestableOne.stringType) {
-                const st = harvestableOne.stringType.toLowerCase();
-                if (st === 'log' || st === 'wood' || st === 'logs') {
-                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (st === 'rock') {
-                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (st === 'fiber') {
-                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (st === 'hide') {
-                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (st === 'ore') {
-                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                }
-            }
-
-            if (draw === undefined) {
+            if (!draw) {
                 continue;
             }
 
