@@ -332,7 +332,7 @@ export class HarvestablesHandler
             return '';
         }
 
-        const resourceType = window.harvestablesDatabase.getResourceTypeFromTypeNumber(typeNumber);
+        const resourceType = window.harvestablesDatabase.getResource(typeNumber);
         if (!resourceType) {
             // typeNumber not found in database
             window.logger?.warn(CATEGORIES.HARVESTABLES, 'unknown_type_number', {

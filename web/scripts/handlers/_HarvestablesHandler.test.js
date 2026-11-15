@@ -773,4 +773,40 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(0);
         });
     });
+
+    describe('stringType from the harvestables.xml position', () => {
+        const eventPositions = (m) => {
+            const a = m.parameters['1'];
+            return m.parameters['252'] === 39 ? (a.data ?? a) : [m.parameters['5']];
+        };
+
+        test.each([
+            ['single-spawn', 40, 0, 'Log'],
+            ['count-variants', 39, 2, 'Log'],
+            ['positions', 40, 5, 'Log'],
+            ['single-spawn', 40, 7, 'Rock'],
+            ['single-spawn', 40, 14, 'Fiber'],
+            ['living-pair', 40, 16, 'Fiber'],
+            ['positions', 40, 20, 'Hide'],
+            ['positions', 40, 22, 'Hide'],
+            ['mob-critter', 40, 23, 'Hide'],
+            ['single-spawn', 40, 27, 'Ore'],
+            ['ore-dynamic-single', 40, 28, 'Ore'],
+            ['ore-dynamic-batch', 39, 28, 'Ore'],
+            ['positions-29', 40, 29, 'Ore'],
+            ['mob-critter-48', 40, 48, 'Hide'],
+        ])('@verified 2026-11-15: pcap-derived %s event %i position %i is stored with the family of its game-file entry, %s', async (scenario, event, position, family) => {
+            const fx = await loadFixture('harvestables', scenario);
+            const msg = fx.messages.find(m => m.parameters['252'] === event && eventPositions(m).includes(position));
+            expect(msg, `${scenario} should hold an event ${event} message at position ${position}`).toBeDefined();
+            const p = normalizeParams(msg.parameters);
+
+            if (event === 40) handler.newHarvestableObject(p[0], p);
+            else handler.newSimpleHarvestableObject(p);
+
+            const atPosition = handler.getHarvestableList().filter(h => h.position === position);
+            expect(atPosition.length).toBeGreaterThan(0);
+            for (const h of atPosition) expect(h.stringType).toBe(family);
+        });
+    });
 });

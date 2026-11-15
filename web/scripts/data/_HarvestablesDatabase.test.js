@@ -34,3 +34,24 @@ describe('HarvestablesDatabase entryAt', () => {
         expect(db.entryAt(undefined)).toBeNull();
     });
 });
+
+describe('HarvestablesDatabase getResource', () => {
+    let db;
+    beforeAll(() => {
+        db = loadRealHarvestablesDatabase();
+    });
+
+    test.each([
+        [0, 'WOOD'], [6, 'WOOD'], [7, 'ROCK'], [13, 'ROCK'], [14, 'FIBER'], [19, 'FIBER'],
+        [20, 'HIDE'], [26, 'HIDE'], [27, 'ORE'], [28, 'ORE'], [32, 'ORE'],
+    ])('@verified 2026-11-15: position %i is %s', (position, resource) => {
+        expect(db.getResource(position)).toBe(resource);
+    });
+
+    test('@verified 2026-11-15: a silver entry, a position past the file, a negative and a fractional one have no resource', () => {
+        expect(db.getResource(59)).toBeNull();
+        expect(db.getResource(200)).toBeNull();
+        expect(db.getResource(-1)).toBeNull();
+        expect(db.getResource(1.5)).toBeNull();
+    });
+});

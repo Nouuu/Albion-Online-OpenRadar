@@ -68,16 +68,11 @@ export class HarvestablesDatabase {
     }
 
     /**
-     * Get resource type from typeNumber
-     * @param {number} typeNumber - Type number (0-27)
-     * @returns {string|null} - Resource type or null
+     * Resource family of the entry at a position
+     * @param {number} position
+     * @returns {'WOOD'|'ROCK'|'FIBER'|'HIDE'|'ORE'|null}
      */
-    getResourceTypeFromTypeNumber(typeNumber) {
-        if (typeNumber >= 0 && typeNumber <= 5) return 'WOOD';
-        if (typeNumber >= 6 && typeNumber <= 10) return 'ROCK';
-        if (typeNumber >= 11 && typeNumber <= 15) return 'FIBER';
-        if (typeNumber >= 16 && typeNumber <= 22) return 'HIDE';
-        if (typeNumber >= 23 && typeNumber <= 27) return 'ORE';
-        return null;
+    getResource(position) {
+        return this.entryAt(position)?.resource ?? null;
     }
 }

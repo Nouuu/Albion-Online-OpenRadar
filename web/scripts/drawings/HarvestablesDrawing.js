@@ -52,22 +52,6 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 }
             }
 
-            // Fallback: use type (typeNumber) if no stringType available
-            if (!draw) {
-                const position = harvestableOne.position;
-                if (position >= 0 && position <= 5) {
-                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (position >= 6 && position <= 10) {
-                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (position >= 11 && position <= 15) {
-                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (position >= 16 && position <= 22) {
-                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                } else if (position >= 23 && position <= 27) {
-                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.rareState;
-                }
-            }
-
             if (draw === undefined) {
                 continue;
             }

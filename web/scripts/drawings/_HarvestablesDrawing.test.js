@@ -403,3 +403,67 @@ describe('HarvestablesDrawing distance badge against its tooltip', () => {
         expect(badgeFill(distance)).toBe(fill);
     });
 });
+
+describe('HarvestablesDrawing static family from the position', () => {
+    let drawing;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        installRealDatabasesOnWindow();
+        drawing = buildDrawing();
+        ctx = {};
+        settingsSync.getBool.mockReturnValue(false);
+        settingsSync.getJSON.mockReturnValue(allTrue());
+    });
+
+    test('@verified 2026-11-15: synthetic: an empty stringType at position 0 draws nothing, whatever its position', () => {
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: '', mobileTypeId: -1, position: 0};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        [19, 'Fiber', true],
+        [59, '', false],
+        [200, '', false],
+    ])('@verified 2026-11-15: synthetic: a real static event 40 message with position set to %i (19 is Fiber, 59 and 200 have no family) is stored as "%s" and drawn=%s', async (position, family, drawn) => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = {...normalizeParams(fx.messages.find(m => m.parameters['6'] === -1).parameters), 5: position, 10: 3};
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(handler.getHarvestableList()[0].stringType).toBe(family);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(drawn ? 1 : 0);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: ore-dynamic-single event 40 position 28 node with charge above 0 draws ore_5_1', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage.mock.calls.map(c => c[3])).toEqual(['ore_5_1']);
+    });
+
+    test.each([
+        [0, ['ore_5_0']],
+        [1, ['ore_5_0']],
+        [2, ['ore_4_0']],
+    ])('@verified 2026-11-15: pcap-derived full-flow: ore-dynamic-batch event 39 message %i position 28 nodes with charge above 0 draw %j', async (index, images) => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-batch');
+        const p = normalizeParams(fx.messages[index].parameters);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticOre' ? allTrue() : null);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newSimpleHarvestableObject(p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage.mock.calls.map(c => c[3])).toEqual(images);
+    });
+});
