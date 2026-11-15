@@ -274,6 +274,38 @@ export function minifyHarvestables(rawData: any): MinifiedHarvestable[] {
     });
 }
 
+export function diffHarvestablePositions(previous: {n: string}[], next: {n: string}[]) {
+    const moved: {position: number, from: string, to: string}[] = [];
+    const added: {position: number, name: string}[] = [];
+    const removed: {position: number, name: string}[] = [];
+    for (let position = 0; position < Math.max(previous.length, next.length); position++) {
+        if (position >= previous.length) added.push({position, name: next[position].n});
+        else if (position >= next.length) removed.push({position, name: previous[position].n});
+        else if (previous[position].n !== next[position].n) moved.push({position, from: previous[position].n, to: next[position].n});
+    }
+    return {moved, added, removed};
+}
+
+function minifyHarvestablesAndReportPositions(rawData: any): MinifiedHarvestable[] {
+    const next = minifyHarvestables(rawData);
+    let previous: unknown;
+    try {
+        previous = JSON.parse(fs.readFileSync(path.join(OUTPUT_DIR, 'harvestables.min.json'), 'utf-8'));
+    } catch {
+        previous = null;
+    }
+    if (!Array.isArray(previous)) {
+        console.log('   ℹ️ No previous harvestables position list to compare');
+        return next;
+    }
+    const {moved, added, removed} = diffHarvestablePositions(previous, next);
+    for (const m of moved) console.log(`   ↔️ harvestables position ${m.position}: ${m.from} -> ${m.to}`);
+    for (const a of added) console.log(`   ➕ harvestables position ${a.position}: ${a.name}`);
+    for (const r of removed) console.log(`   ➖ harvestables position ${r.position}: ${r.name}`);
+    if (!moved.length && !added.length && !removed.length) console.log('   ✅ harvestables: no position change');
+    return next;
+}
+
 // ============================================================================
 // Zone Processing (unchanged)
 // ============================================================================
@@ -509,7 +541,7 @@ async function main() {
     results.push(await downloadAndMinifyItems());
     results.push(await downloadAndMinify('mobs.json', minifyMobs, 'mobs.min.json'));
     results.push(await downloadAndMinify('spells.json', minifySpells, 'spells.min.json'));
-    results.push(await downloadAndMinify('harvestables.json', minifyHarvestables, 'harvestables.min.json'));
+    results.push(await downloadAndMinify('harvestables.json', minifyHarvestablesAndReportPositions, 'harvestables.min.json'));
 
     // Process zones
     const zonesResult = await processWorldJson();

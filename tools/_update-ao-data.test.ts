@@ -1,6 +1,6 @@
 // synthetic: hand-built upstream harvestables shape, tests the transform only.
 import {describe, expect, test} from 'vitest';
-import {minifyHarvestables} from './update-ao-data';
+import {diffHarvestablePositions, minifyHarvestables} from './update-ao-data';
 
 const input = {
     'AO-Harvestables': {
@@ -45,5 +45,28 @@ describe('minifyHarvestables', () => {
     test('@verified 2026-11-15: a charge level without a yield attribute counts as yield 0', () => {
         const raw = {'AO-Harvestables': {Harvestable: {'@name': 'DEADRAT', '@resource': 'HIDE', Tier: {'@tier': '1', Charge: {'@level': '1-2'}}}}};
         expect(minifyHarvestables(raw)[0].t['1'].y).toEqual([0, 0]);
+    });
+});
+
+describe('diffHarvestablePositions', () => {
+    const list = (...names: string[]) => names.map(n => ({n}));
+    const empty = {moved: [], added: [], removed: []};
+
+    test('@verified 2026-11-15: identical lists give three empty arrays', () => {
+        expect(diffHarvestablePositions(list('A', 'B'), list('A', 'B'))).toEqual(empty);
+    });
+
+    test('@verified 2026-11-15: an entry inserted at position 1 moves positions 1 and 2 and adds position 3', () => {
+        expect(diffHarvestablePositions(list('A', 'B', 'C'), list('A', 'X', 'B', 'C'))).toEqual({
+            moved: [{position: 1, from: 'B', to: 'X'}, {position: 2, from: 'C', to: 'B'}],
+            added: [{position: 3, name: 'C'}],
+            removed: [],
+        });
+    });
+
+    test('@verified 2026-11-15: a dropped last entry is removed', () => {
+        expect(diffHarvestablePositions(list('A', 'B', 'C'), list('A', 'B'))).toEqual({
+            moved: [], added: [], removed: [{position: 2, name: 'C'}],
+        });
     });
 });
