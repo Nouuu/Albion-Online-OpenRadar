@@ -59,7 +59,7 @@ describe('HarvestablesHandler', () => {
 
     describe('newHarvestableObject (event 40)', () => {
         // @verified 2026-09-03: pcap-derived single-spawn, 2026-09-03 capture. Server Parameters[7] and the
-        // Dragonfire DB entry for the living mobileTypeId agree on the tier, and the family comes from the DB.
+        // Dragonfire DB entry for the living mobileTypeId agree on the tier, and the family comes from the position.
         test.each([
             [715, 'T7_MOB_CRITTER_ORE_MISTS_RED', 'Ore', 7],
             [721, 'T7_MOB_CRITTER_FIBER_MISTS_RED', 'Fiber', 7],
@@ -68,11 +68,9 @@ describe('HarvestablesHandler', () => {
             const msg = fx.messages.find(m => m.parameters['6'] === mobileTypeId);
             expect(msg, `fixture should contain mobileTypeId=${mobileTypeId}`).toBeDefined();
             const p = normalizeParams(msg.parameters);
-            const spy = vi.spyOn(dbs.mobsDatabase, 'getResourceInfo');
 
             handler.newHarvestableObject(p[0], p);
 
-            expect(spy).toHaveBeenCalledWith(mobileTypeId);
             expect(dbs.mobsDatabase.getMobInfo(mobileTypeId).uniqueName).toBe(uniqueName);
             const list = handler.getHarvestableList();
             expect(list).toHaveLength(1);
@@ -220,19 +218,6 @@ describe('HarvestablesHandler', () => {
     });
 
     describe('newHarvestableObject pinned bugs', () => {
-        // @verified 2026-04-19: mobileTypeId=-1 sentinel routes as static and skips the mobsDatabase lookup.
-        test('pcap-derived single-spawn: static with mobileTypeId=-1 does not trigger mobsDatabase lookup', async () => {
-            const fx = await loadFixture('harvestables', 'single-spawn');
-            const msg = fx.messages.find(m => m.parameters['6'] === -1);
-            expect(msg).toBeDefined();
-            const p = normalizeParams(msg.parameters);
-            const spy = vi.spyOn(dbs.mobsDatabase, 'getResourceInfo');
-
-            handler.newHarvestableObject(p[0], p);
-
-            expect(spy).not.toHaveBeenCalledWith(-1);
-        });
-
         // @verified 2026-04-19: living Fiber/Hide with e0 off appears after event 46 enchant update (#32 fix).
         test('issue #30/#32: living Fiber with e0 off appears after event 46 enchant update to e=2', async () => {
             settingsSync.getJSON.mockImplementation(key => {

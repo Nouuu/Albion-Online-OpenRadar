@@ -1,5 +1,4 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
-import {isMobOrigin} from "../utils/LivingResourceFilter.js";
 
 const HarvestableType =
 {
@@ -73,29 +72,7 @@ export class HarvestablesHandler
 
     addHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId = null)
     {
-        // Determine resource type: living (animals/creatures) vs static.
-        // - mobileTypeId === 65535 or -1 : STATIC (both are int16 decodes of 0xFFFF).
-        // - mobileTypeId === null        : STATIC from Event 38 batch spawn.
-        // - mobileTypeId === real TypeID : LIVING creature.
-        const isLiving = isMobOrigin(mobileTypeId);
-
-        // Get resource type string
-        // Living resources: use MobsDatabase (typeNumber is WRONG for living!)
-        // Static resources: use HarvestablesDatabase based on typeNumber
-        let stringType;
-        if (isLiving && window.mobsDatabase?.isLoaded) {
-            const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
-            stringType = resourceInfo?.type || this.GetStringType(position);
-
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'LivingResource_TypeFromMobsDB', {
-                id, mobileTypeId, position,
-                mobsDbType: resourceInfo?.type,
-                fallbackType: this.GetStringType(position),
-                finalStringType: stringType
-            });
-        } else {
-            stringType = this.GetStringType(position);
-        }
+        const stringType = this.GetStringType(position);
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
 
@@ -116,25 +93,7 @@ export class HarvestablesHandler
 
     UpdateHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId = null)
     {
-        const isLiving = isMobOrigin(mobileTypeId);
-
-        // Get resource type string
-        // Living resources: use MobsDatabase (typeNumber is WRONG for living!)
-        // Static resources: use HarvestablesDatabase based on typeNumber
-        let stringType;
-        if (isLiving && window.mobsDatabase?.isLoaded) {
-            const resourceInfo = window.mobsDatabase.getResourceInfo(mobileTypeId);
-            stringType = resourceInfo?.type || this.GetStringType(position);
-
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'UpdateHarvestable_LivingResource_TypeFromMobsDB', {
-                id, mobileTypeId, position,
-                mobsDbType: resourceInfo?.type,
-                fallbackType: this.GetStringType(position),
-                finalStringType: stringType
-            });
-        } else {
-            stringType = this.GetStringType(position);
-        }
+        const stringType = this.GetStringType(position);
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
 
@@ -310,18 +269,6 @@ export class HarvestablesHandler
 
     GetStringType(typeNumber)
     {
-        // If already a string (from MobsHandler), return directly
-        if (typeof typeNumber === 'string') {
-            // Normalize the name
-            const normalized = typeNumber.toLowerCase();
-            if (normalized === 'fiber') return HarvestableType.Fiber;
-            if (normalized === 'hide') return HarvestableType.Hide;
-            if (normalized === 'wood' || normalized === 'log' || normalized === 'logs') return HarvestableType.Log;
-            if (normalized === 'ore') return HarvestableType.Ore;
-            if (normalized === 'rock') return HarvestableType.Rock;
-            return typeNumber; // Return as-is if unknown
-        }
-
         // 🔍 Phase 4: Use database (REQUIRED - no fallback)
         if (!window.harvestablesDatabase?.isLoaded) {
             // Database not loaded - use fallback
