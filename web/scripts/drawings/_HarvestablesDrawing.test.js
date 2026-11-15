@@ -24,10 +24,11 @@ function buildDrawing() {
     drawing.transformPoint = vi.fn((x, y) => ({x, y}));
     drawing.interpolateEntity = vi.fn();
     drawing.drawText = vi.fn();
+    drawing.drawTextItems = vi.fn();
+    drawing.getScaledFontSize = vi.fn(s => s);
     drawing.drawDistanceIndicator = vi.fn();
     drawing.drawResourceCountBadge = vi.fn();
     drawing.calculateDistance = vi.fn(() => 10);
-    drawing.calculateRealResources = vi.fn(() => 5);
     drawing.getScaledSize = vi.fn(s => s);
     drawing.getMarkerSize = vi.fn(s => s);
     return drawing;
@@ -60,7 +61,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: pure static fiber plant (mobileTypeId=-1) renders when Static fiber is on.
     test('pure static Fiber T5 e2 (mobileTypeId=-1) renders under Static filter', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
     });
@@ -72,7 +73,7 @@ describe('HarvestablesDrawing render-time routing', () => {
             if (key === 'settingResourcesLivingFiber') return allTrue();
             return null;
         });
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
@@ -80,7 +81,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: batch-spawn (mobileTypeId=null) is pure static, uses Static filter.
     test('batch-spawn Fiber (mobileTypeId=null) T4 e0 renders under Static filter', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        const entity = {id: 2, hX: 5, hY: 5, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: null, type: 14};
+        const entity = {id: 2, hX: 5, hY: 5, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: null, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 5, 5, 'fiber_4_0', 'Resources', 32);
     });
@@ -89,15 +90,27 @@ describe('HarvestablesDrawing render-time routing', () => {
     // Live critter path: mobileTypeId references a live mob in MobsDatabase -> Living filter
     // -------------------------------------------------------------------------
 
-    // @verified 2026-07-05: name-derived live Fiber critter (T4_MOB_CRITTER_FIBER_SWAMP_GREEN) routes to Living.
-    test('full-flow: live Fiber critter renders under Living filter', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T4_MOB_CRITTER_FIBER_SWAMP_GREEN');
-        expect(mobileTypeId).not.toBeNull();
-        const p = {0: 9101, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
+    const livingCritterRows = [
+        ['mob-critter', 564, 'Hide', 'hide_3_0'],
+        ['mob-critter', 565, 'Hide', 'hide_4_0'],
+        ['mob-critter', 566, 'Hide', 'hide_5_0'],
+        ['mob-critter-48', 601, 'Hide', 'hide_5_3'],
+        ['fiber-critter', 694, 'Fiber', 'fiber_4_0'],
+    ];
+
+    async function critterParams(scenario, mobKey) {
+        const fx = await loadFixture('harvestables', scenario);
+        const msg = fx.messages.find(m => m.parameters['6'] === mobKey);
+        return normalizeParams(msg.parameters);
+    }
+
+    // @verified 2026-11-14: a live critter harvestable from a capture renders under its family Living filter (Hide for the cougars, Fiber for the Mists critter).
+    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i renders under Living %s filter as %s', async (scenario, mobKey, family, image) => {
+        const p = await critterParams(scenario, mobKey);
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allTrue();
-            if (key === 'settingResourcesStaticFiber') return allFalse();
+            if (key === `settingResourcesLiving${family}`) return allTrue();
+            if (key === `settingResourcesStatic${family}`) return allFalse();
             return null;
         });
 
@@ -105,17 +118,16 @@ describe('HarvestablesDrawing render-time routing', () => {
         handler.newHarvestableObject(p[0], p);
         drawing.invalidate(ctx, handler.getHarvestableList());
 
-        expect(drawing.DrawCustomImage).toHaveBeenCalled();
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), image, 'Resources', 32);
     });
 
-    // @verified 2026-07-05: live Fiber critter skipped when Living is off even if Static is on (wrong routing guard).
-    test('full-flow: live Fiber critter skipped when Living off, Static on', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T4_MOB_CRITTER_FIBER_SWAMP_GREEN');
-        const p = {0: 9102, 5: 11, 6: mobileTypeId, 7: 4, 8: [0, 0], 10: 3, 11: 1};
+    // @verified 2026-11-14: the same live critters are skipped when Living is off, even with Static on.
+    test.each(livingCritterRows)('pcap-derived full-flow: %s mob key %i skipped when Living %s off, Static on', async (scenario, mobKey, family) => {
+        const p = await critterParams(scenario, mobKey);
 
         settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allFalse();
-            if (key === 'settingResourcesStaticFiber') return allTrue();
+            if (key === `settingResourcesLiving${family}`) return allFalse();
+            if (key === `settingResourcesStatic${family}`) return allTrue();
             return null;
         });
 
@@ -166,46 +178,57 @@ describe('HarvestablesDrawing render-time routing', () => {
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
-    // -------------------------------------------------------------------------
-    // Dead critter carcass path: user live-test 2026-04-24 confirmed _DEAD entities
-    // should stay on the Living filter like the live variant. Only pure static
-    // harvestables (mobileTypeId=-1/null/65535) go to the Static filter.
-    // -------------------------------------------------------------------------
-
-    // @verified 2026-07-05: dead Fiber carcass routes through Living since it has a valid mobileTypeId.
-    test('full-flow: dead Fiber carcass renders under Living filter', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
-        expect(mobileTypeId).not.toBeNull();
-        const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
-
-        settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allTrue();
-            if (key === 'settingResourcesStaticFiber') return allFalse();
-            return null;
-        });
-
+    // @verified 2026-11-14: a static node whose message lacks the mob type id key is drawn under its family Static setting and not under Living.
+    test.each([
+        ['Static on, Living off', allTrue(), allFalse(), true],
+        ['Static off, Living on', allFalse(), allTrue(), false],
+    ])('pcap-derived full-flow with the mob type id key deleted from the message: %s', async (_label, staticCell, livingCell, drawn) => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = normalizeParams(fx.messages[0].parameters);
+        expect(p[6]).toBe(-1);
+        delete p[6];
         const handler = new HarvestablesHandler(null);
         handler.newHarvestableObject(p[0], p);
+        const family = handler.getHarvestableList()[0].stringType;
+        const staticKey = {Fiber: 'settingResourcesStaticFiber', Hide: 'settingResourcesStaticHide', Log: 'settingResourcesStaticWood', Ore: 'settingResourcesStaticOre', Rock: 'settingResourcesStaticRock'}[family];
+        const livingKey = staticKey.replace('Static', 'Living');
+        settingsSync.getJSON.mockImplementation(key => key === staticKey ? staticCell : key === livingKey ? livingCell : null);
+
         drawing.invalidate(ctx, handler.getHarvestableList());
 
-        expect(drawing.DrawCustomImage).toHaveBeenCalled();
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(drawn ? 1 : 0);
     });
 
-    // @verified 2026-07-05: dead Fiber carcass skipped when Living off even if Static is on.
-    test('full-flow: dead Fiber carcass skipped when Living off, Static on', () => {
-        const mobileTypeId = window.mobsDatabase.getTypeIdByName('T5_MOB_CRITTER_FIBER_SWAMP_DEAD');
-        const p = {0: 9001, 5: 11, 6: mobileTypeId, 7: 5, 8: [0, 0], 10: 3, 11: 0};  // size=3 so drawing does not skip
-
-        settingsSync.getJSON.mockImplementation(key => {
-            if (key === 'settingResourcesLivingFiber') return allFalse();
-            if (key === 'settingResourcesStaticFiber') return allTrue();
-            return null;
-        });
+    // @verified 2026-11-14: a static node spawned empty draws nothing, then draws once its charge level update arrives.
+    test('pcap-derived full-flow: empty static Fiber node is drawn only after its regrow update', async () => {
+        const fx = await loadFixture('harvestables', 'empty-regrow');
+        const spawn = normalizeParams(fx.messages.find(m => m.parameters['252'] === 40 && m.parameters['0'] === 2587).parameters);
+        const regrow = normalizeParams(fx.messages.find(m => m.parameters['252'] === 46 && m.parameters['0'] === 2587).parameters);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
 
         const handler = new HarvestablesHandler(null);
-        handler.newHarvestableObject(p[0], p);
+        handler.newHarvestableObject(spawn[0], spawn);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+
+        handler.HarvestUpdateEvent(regrow);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+        expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, expect.any(Number), expect.any(Number), 'fiber_4_1', 'Resources', 32);
+    });
+
+    // @verified 2026-11-14: every empty static node of the capture (Ore, Fiber, Log) draws nothing before any update.
+    test('pcap-derived full-flow: every node spawned empty draws nothing', async () => {
+        const fx = await loadFixture('harvestables', 'empty-regrow');
+        const handler = new HarvestablesHandler(null);
+        for (const m of fx.messages.filter(msg => msg.parameters['252'] === 40)) {
+            const p = normalizeParams(m.parameters);
+            handler.newHarvestableObject(p[0], p);
+        }
+        settingsSync.getJSON.mockReturnValue(allTrue());
+
         drawing.invalidate(ctx, handler.getHarvestableList());
 
+        expect(handler.getHarvestableList()).toHaveLength(4);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
     });
 
@@ -226,7 +249,7 @@ describe('HarvestablesDrawing render-time routing', () => {
                 ? {e0: Array(8).fill(false), e1: [false, false, true, false, false, false, false, false], e2: Array(8).fill(false), e3: Array(8).fill(false), e4: Array(8).fill(false)}
                 : null
         );
-        const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType: family, mobileTypeId: -1, type: typeNumber};
+        const entity = {id: 99, hX: 1, hY: 2, chargeLevel: 3, tier: 3, rareState: 1, stringType: family, mobileTypeId: -1, position: typeNumber};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 1, 2, `${imagePrefix}_3_1`, 'Resources', 32);
     });
@@ -234,8 +257,8 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: lastVisibleCount reflects only harvestables passing the render gate.
     test('lastVisibleCount counts only rendered harvestables after filters', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        const kept = {id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14};
-        const dropped = {id: 2, hX: 3, hY: 4, size: 3, tier: 4, charges: 0, stringType: 'Hide', mobileTypeId: -1, type: 20};
+        const kept = {id: 1, hX: 1, hY: 2, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 14};
+        const dropped = {id: 2, hX: 3, hY: 4, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Hide', mobileTypeId: -1, position: 20};
 
         drawing.invalidate(ctx, [kept, dropped]);
 
@@ -245,11 +268,11 @@ describe('HarvestablesDrawing render-time routing', () => {
     // @verified 2026-04-24: lastVisibleCount resets on each invalidate call.
     test('lastVisibleCount resets on each invalidate call', () => {
         settingsSync.getJSON.mockReturnValue(allFalse());
-        drawing.invalidate(ctx, [{id: 1, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        drawing.invalidate(ctx, [{id: 1, hX: 1, hY: 2, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
         expect(drawing.lastVisibleCount).toBe(0);
 
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
-        drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, size: 3, tier: 4, charges: 0, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
+        drawing.invalidate(ctx, [{id: 2, hX: 1, hY: 2, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
         expect(drawing.lastVisibleCount).toBe(1);
     });
 
@@ -261,7 +284,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     test('settingRadarResourceTierBadges=false renders the game icon as before', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockReturnValue(false);
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.DrawCustomImage).toHaveBeenCalledWith(ctx, 10, 20, 'fiber_5_2', 'Resources', 32);
         expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
@@ -271,7 +294,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     test('settingRadarResourceTierBadges=true draws a Fiber badge with tier+enchant for static harvestable', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 10, 20, 32, 'Fiber', 5, 2, false);
         expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
@@ -287,7 +310,7 @@ describe('HarvestablesDrawing render-time routing', () => {
     ])('badge mode renders %s as category %s', (stringType, typeNumber, settingKey, expectedCategory) => {
         settingsSync.getJSON.mockImplementation(key => key === settingKey ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
-        const entity = {id: 99, hX: 1, hY: 2, size: 3, tier: 3, charges: 1, stringType, mobileTypeId: -1, type: typeNumber};
+        const entity = {id: 99, hX: 1, hY: 2, chargeLevel: 3, tier: 3, rareState: 1, stringType, mobileTypeId: -1, position: typeNumber};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).toHaveBeenCalledWith(ctx, 1, 2, 32, expectedCategory, 3, 1, false);
     });
@@ -298,14 +321,14 @@ describe('HarvestablesDrawing render-time routing', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceTierBadges');
         drawing.getResourceCategory = vi.fn(() => null);
-        const entity = {id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14};
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14};
         drawing.invalidate(ctx, [entity]);
         expect(drawing.drawResourceBadge).not.toHaveBeenCalled();
         expect(drawing.DrawCustomImage).toHaveBeenCalled();
     });
 
     // @verified 2026-09-03: pcap-derived full-flow test: real handler -> drawing chain produces a badge
-    // in badge mode. Static Fiber T6 node with charges from the 2026-09-03 capture; the living nodes in that
+    // in badge mode. Static Fiber T6 node with rare state from the 2026-09-03 capture; the living nodes in that
     // corpus all arrive with size 0 and are skipped at render.
     test('pcap-derived full-flow: static Fiber node renders as badge under settingRadarResourceTierBadges', async () => {
         const fx = await loadFixture('harvestables', 'single-spawn');
@@ -340,17 +363,17 @@ describe('HarvestablesDrawing type ID overlay', () => {
     test('draws the type ID when settingDebugResourcesTypeId is on', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
         const drawing = buildDrawing();
-        const ctx = {};
-        drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
-        expect(drawing.drawText).toHaveBeenCalledWith(10, 40, '14', ctx);
+        const ctx = {measureText: text => ({width: text.length * 4})};
+        drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
+        expect(drawing.drawTextItems).toHaveBeenCalledWith(6, 40, '14', ctx, '10px', '#CCCCCC');
         expect(settingsSync.getBool).not.toHaveBeenCalledWith('livingResourcesID');
     });
 
     test('draws no type ID when settingDebugResourcesTypeId is off', () => {
         settingsSync.getBool.mockImplementation(() => false);
         const drawing = buildDrawing();
-        drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, size: 3, tier: 5, charges: 2, stringType: 'Fiber', mobileTypeId: -1, type: 14}]);
-        expect(drawing.drawText).not.toHaveBeenCalled();
+        drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
     });
 });
 
@@ -379,5 +402,201 @@ describe('HarvestablesDrawing distance badge against its tooltip', () => {
         [60, 'rgba(255,100,0,0.85)'],
     ])('%s game units draws %s: hidden within 2 m, green under 10 m, yellow 10 to 19 m, orange from 20 m', (distance, fill) => {
         expect(badgeFill(distance)).toBe(fill);
+    });
+});
+
+describe('HarvestablesDrawing static family from the position', () => {
+    let drawing;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        installRealDatabasesOnWindow();
+        drawing = buildDrawing();
+        ctx = {measureText: vi.fn(text => ({width: text.length * 4}))};
+        settingsSync.getBool.mockReturnValue(false);
+        settingsSync.getJSON.mockReturnValue(allTrue());
+    });
+
+    test('@verified 2026-11-15: synthetic: an empty stringType at position 0 draws nothing, whatever its position', () => {
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: '', mobileTypeId: -1, position: 0};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.DrawCustomImage).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        [19, 'Fiber', true],
+        [59, '', false],
+        [200, '', false],
+    ])('@verified 2026-11-15: synthetic: a real static event 40 message with position set to %i (19 is Fiber, 59 and 200 have no family) is stored as "%s" and drawn=%s', async (position, family, drawn) => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = {...normalizeParams(fx.messages.find(m => m.parameters['6'] === -1).parameters), 5: position, 10: 3};
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(handler.getHarvestableList()[0].stringType).toBe(family);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(drawn ? 1 : 0);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: ore-dynamic-single event 40 position 28 node with charge above 0 draws ore_5_1', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage.mock.calls.map(c => c[3])).toEqual(['ore_5_1']);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: Show DB Name draws T5_ORE_DYNAMIC@1 in the living resource style for the ore-dynamic-single node', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        const [node] = handler.getHarvestableList();
+        drawing.invalidate(ctx, [node]);
+
+        const text = 'T5_ORE_DYNAMIC@1';
+        expect(drawing.drawText).not.toHaveBeenCalled();
+        expect(drawing.drawTextItems.mock.calls).toEqual([[node.hX - text.length * 2, node.hY + 32, text, ctx, '9px', '#FFD700']]);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: Show ID draws the position of the ore-dynamic-single node in the living id style', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        const [node] = handler.getHarvestableList();
+        drawing.invalidate(ctx, [node]);
+
+        expect(drawing.drawText).not.toHaveBeenCalled();
+        expect(drawing.drawTextItems.mock.calls).toEqual([[node.hX - 4, node.hY + 20, '28', ctx, '10px', '#CCCCCC']]);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: Show DB Name and the position text together draw the name 12 below the position', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName' || key === 'settingDebugResourcesTypeId');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        const [position, [, nameY, name]] = drawing.drawTextItems.mock.calls;
+        expect(position[2]).toBe('28');
+        expect(name).toBe('T5_ORE_DYNAMIC@1');
+        expect(nameY).toBe(position[1] + 12);
+    });
+
+    test.each([
+        ['on', ['T6_WOOD@2'], true],
+        ['off', [], false],
+    ])('@verified 2026-11-15: pcap-derived full-flow: a static position 0 node with Show DB Name %s draws %j', async (_label, texts, on) => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = {...normalizeParams(fx.messages.find(m => m.parameters['6'] === -1 && m.parameters['5'] === 0).parameters)};
+        settingsSync.getBool.mockImplementation(key => on && key === 'settingDebugResourcesDbName');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+        expect(drawing.drawTextItems.mock.calls.map(c => c[2])).toEqual(texts);
+    });
+
+    test('@verified 2026-11-15: synthetic: Show DB Name draws the entry name without the @ part for rare state 0 (position 19)', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 19};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawTextItems.mock.calls.map(c => c[2])).toEqual(['T4_FIBER_TREASURE']);
+    });
+
+    test('@verified 2026-11-15: synthetic: Show DB Name draws nothing for a position outside the shipped data', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 999};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
+    });
+
+    test('@verified 2026-11-15: synthetic: Show DB Name draws nothing for an empty node', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 0, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 19};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        [0, ['ore_5_0']],
+        [1, ['ore_5_0']],
+        [2, ['ore_4_0']],
+    ])('@verified 2026-11-15: pcap-derived full-flow: ore-dynamic-batch event 39 message %i position 28 nodes with charge above 0 draw %j', async (index, images) => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-batch');
+        const p = normalizeParams(fx.messages[index].parameters);
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticOre' ? allTrue() : null);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newSimpleHarvestableObject(p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage.mock.calls.map(c => c[3])).toEqual(images);
+    });
+});
+
+describe('HarvestablesDrawing count badge from the game data yields', () => {
+    let drawing;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        installRealDatabasesOnWindow();
+        drawing = buildDrawing();
+        ctx = {};
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceCount');
+        settingsSync.getJSON.mockReturnValue(allTrue());
+    });
+
+    test('@verified 2026-11-15: synthetic: a real static spawn set to a T1 WOOD node at charge level 2 draws a count badge of 2', async () => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = {...normalizeParams(fx.messages.find(m => m.parameters['6'] === -1).parameters), 5: 0, 7: 1, 10: 2};
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.drawResourceCountBadge).toHaveBeenCalledTimes(1);
+        expect(drawing.drawResourceCountBadge.mock.calls[0][3]).toBe(2);
+    });
+
+    test.each([
+        [2, 1, 5, 50],
+        [0, 1, 2, 2],
+        [7, 1, 2, 2],
+        [7, 7, 8, 8],
+    ])('@verified 2026-11-15: pcap-derived: the batch spawn node at position %i tier %i charge level %i draws a count badge of %i', async (position, tier, chargeLevel, count) => {
+        const fx = await loadFixture('harvestables', 'count-variants');
+        const p = normalizeParams(fx.messages.find(m => m.parameters['252'] === 39).parameters);
+        const positions = p[1].data ?? p[1];
+        const tiers = p[2].data ?? p[2];
+        const charges = p[4].data ?? p[4];
+        const indexes = positions.map((_, i) => i).filter(i => positions[i] === position && tiers[i] === tier && charges[i] === chargeLevel);
+        expect(indexes.length).toBeGreaterThan(0);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newSimpleHarvestableObject(p);
+        const ids = indexes.map(i => p[0][i]);
+        drawing.invalidate(ctx, handler.getHarvestableList().filter(h => ids.includes(h.id)));
+
+        expect(drawing.drawResourceCountBadge).toHaveBeenCalledTimes(ids.length);
+        for (const call of drawing.drawResourceCountBadge.mock.calls) expect(call[3]).toBe(count);
     });
 });

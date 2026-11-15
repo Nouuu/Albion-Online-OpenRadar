@@ -1,7 +1,11 @@
 import {DrawingUtils} from "../utils/DrawingUtils.js";
 import settingsSync from "../utils/SettingsSync.js";
-import {CATEGORIES} from "../constants/LoggerConstants.js";
-import {shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
+import {isMobOrigin, shouldRenderLivingResource, shouldRenderStaticResource} from '../utils/LivingResourceFilter.js';
+
+const ICON_FAMILY = new Map([
+    ['log', 'log'], ['wood', 'log'], ['logs', 'log'],
+    ['rock', 'rock'], ['fiber', 'fiber'], ['hide', 'hide'], ['ore', 'ore'],
+]);
 
 export class HarvestablesDrawing extends DrawingUtils  {
     constructor() {
@@ -15,6 +19,46 @@ export class HarvestablesDrawing extends DrawingUtils  {
         }
     }
 
+    drawEntryName(ctx, point, harvestable) {
+        if (!settingsSync.getBool('settingDebugResourcesDbName')) return;
+        const entryName = window.harvestablesDatabase?.entryAt(harvestable.position)?.name;
+        if (!entryName) return;
+        const text = `T${harvestable.tier}_${entryName}${harvestable.rareState > 0 ? `@${harvestable.rareState}` : ''}`;
+        const fontSize = `${this.getScaledFontSize(9, 6)}px`;
+        ctx.font = `${fontSize} ${this.fontFamily}`;
+        const width = ctx.measureText(text).width;
+        this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(32), text, ctx, fontSize, '#FFD700');
+    }
+
+    drawPositionText(ctx, point, harvestable) {
+        if (!settingsSync.getBool('settingDebugResourcesTypeId')) return;
+        const text = harvestable.position.toString();
+        const fontSize = `${this.getScaledFontSize(10, 7)}px`;
+        ctx.font = `${fontSize} ${this.fontFamily}`;
+        const width = ctx.measureText(text).width;
+        this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(20), text, ctx, fontSize, '#CCCCCC');
+    }
+
+    drawOverlays(ctx, point, harvestable) {
+        this.drawPositionText(ctx, point, harvestable);
+
+        this.drawEntryName(ctx, point, harvestable);
+
+        // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
+        if (settingsSync.getBool('settingRadarResourceDistance')) {
+            const distanceGameUnits = this.calculateDistance(harvestable.hX, harvestable.hY, 0, 0);
+            this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
+        }
+
+        if (settingsSync.getBool('settingRadarResourceCount'))
+            this.drawResourceCountBadge(ctx, point.x, point.y, harvestable.count);
+    }
+
+    iconName(harvestable) {
+        const family = ICON_FAMILY.get(harvestable.stringType?.toLowerCase());
+        return family && `${family}_${harvestable.tier}_${harvestable.rareState}`;
+    }
+
     invalidate(ctx, harvestables)
     {
         // Clusters are detected and drawn centrally in Utils.render when overlayCluster is enabled
@@ -23,82 +67,21 @@ export class HarvestablesDrawing extends DrawingUtils  {
 
         for (const harvestableOne of harvestables)
         {
-            if (harvestableOne.size <= 0) continue;
-
-            const mobileTypeId = harvestableOne.mobileTypeId;
-            const isPureStatic = mobileTypeId === null || mobileTypeId === undefined
-                || mobileTypeId === -1 || mobileTypeId === 65535;
+            if (harvestableOne.chargeLevel <= 0) continue;
 
             const filterEntity = {
                 name: harvestableOne.stringType,
                 tier: harvestableOne.tier,
-                enchantmentLevel: harvestableOne.charges,
+                enchantmentLevel: harvestableOne.rareState,
             };
-            const filterFn = isPureStatic ? shouldRenderStaticResource : shouldRenderLivingResource;
+            const filterFn = isMobOrigin(harvestableOne.mobileTypeId) ? shouldRenderLivingResource : shouldRenderStaticResource;
             if (!filterFn(filterEntity, key => settingsSync.getJSON(key))) {
                 continue;
             }
 
-            let draw = undefined;
+            const draw = this.iconName(harvestableOne);
 
-            // Use stringType if available (corrected by MobsDatabase for living resources)
-            if (harvestableOne.stringType) {
-                const st = harvestableOne.stringType.toLowerCase();
-                if (st === 'log' || st === 'wood' || st === 'logs') {
-                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (st === 'rock') {
-                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (st === 'fiber') {
-                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (st === 'hide') {
-                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (st === 'ore') {
-                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                }
-
-                window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingStringType', {
-                    id: harvestableOne.id,
-                    stringType: harvestableOne.stringType,
-                    type: harvestableOne.type,
-                    draw,
-                    tier: harvestableOne.tier,
-                    charges: harvestableOne.charges
-                });
-            }
-
-            // Fallback: use type (typeNumber) if no stringType available
             if (!draw) {
-                const type = harvestableOne.type;
-                if (type >= 0 && type <= 5) {
-                    draw = "log_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 6 && type <= 10) {
-                    draw = "rock_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 11 && type <= 15) {
-                    draw = "fiber_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 16 && type <= 22) {
-                    draw = "hide_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                } else if (type >= 23 && type <= 27) {
-                    draw = "ore_" + harvestableOne.tier + "_" + harvestableOne.charges;
-                }
-
-                window.logger?.debug(CATEGORIES.HARVESTABLES, 'Drawing_UsingTypeNumber', {
-                    id: harvestableOne.id,
-                    stringType: harvestableOne.stringType,
-                    type: harvestableOne.type,
-                    draw,
-                    tier: harvestableOne.tier,
-                    charges: harvestableOne.charges,
-                    note: 'FALLBACK - no stringType available'
-                });
-            }
-
-            if (draw === undefined) {
-                window.logger?.warn(CATEGORIES.HARVESTABLES, 'Drawing_NoMatch', {
-                    id: harvestableOne.id,
-                    stringType: harvestableOne.stringType,
-                    type: harvestableOne.type,
-                    note: 'Could not determine resource image'
-                });
                 continue;
             }
 
@@ -111,31 +94,13 @@ export class HarvestablesDrawing extends DrawingUtils  {
             if (useBadge && category) {
                 this.drawResourceBadge(
                     ctx, point.x, point.y, 32,
-                    category, harvestableOne.tier, harvestableOne.charges, false
+                    category, harvestableOne.tier, harvestableOne.rareState, false
                 );
             } else {
                 this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 32);
             }
 
-            // Debug: TypeID display (offset scaled with zoom)
-            if (settingsSync.getBool('settingDebugResourcesTypeId'))
-                this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.type.toString(), ctx);
-
-            // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
-            if (settingsSync.getBool('settingRadarResourceDistance')) {
-                const distanceGameUnits = this.calculateDistance(harvestableOne.hX, harvestableOne.hY, 0, 0);
-                this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
-            }
-
-            // Resource count badge (if enabled)
-            if (settingsSync.getBool('settingRadarResourceCount'))
-            {
-                const realResources = this.calculateRealResources(
-                    parseInt(harvestableOne.size),
-                    harvestableOne.tier
-                );
-                this.drawResourceCountBadge(ctx, point.x, point.y, realResources);
-            }
+            this.drawOverlays(ctx, point, harvestableOne);
         }
     }
 }

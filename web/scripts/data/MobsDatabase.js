@@ -230,22 +230,6 @@ export class MobsDatabase {
     }
 
     /**
-     * Get resource info if mob is harvestable
-     * @param {number} typeId - The mob type ID
-     * @returns {{type: string, tier: number}|null} Resource info or null
-     */
-    getResourceInfo(typeId) {
-        const info = this.mobsById.get(typeId);
-        if (info && info.isHarvestable) {
-            return {
-                type: info.type,
-                tier: info.tier
-            };
-        }
-        return null;
-    }
-
-    /**
      * Get typeId by unique name
      * @param {string} uniqueName - The mob unique name
      * @returns {number|null} TypeId or null if not found

@@ -1,6 +1,6 @@
 /**
  * Harvestables Database
- * Parses harvestables.json and provides resource type validation
+ * Parses harvestables.min.json (entries in game file order) and provides resource type validation
  * Follows the same pattern as ItemsDatabase and SpellsDatabase
  */
 
@@ -8,25 +8,11 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class HarvestablesDatabase {
     constructor() {
-        /** @type {Map<string, {resource: string, tiers: Set<number>}>} */
-        this.harvestableTypes = new Map();
-
-        /** @type {Set<string>} Valid combinations: "resource-tier-enchant" */
-        this.validCombinations = new Set();
-
-        /** @type {Map<string, number>} Resource type to base typeNumber mapping */
-        this.resourceToTypeNumber = new Map([
-            ['WOOD', 0],   // typeNumber 0-5
-            ['ROCK', 6],   // typeNumber 6-10
-            ['FIBER', 11], // typeNumber 11-15
-            ['HIDE', 16],  // typeNumber 16-22
-            ['ORE', 23]    // typeNumber 23-27
-        ]);
+        /** @type {{n: string, r: string|null, t: Object<string, {y: number[]}>}[]} */
+        this.entries = [];
 
         this.isLoaded = false;
         this.stats = {
-            typesLoaded: 0,
-            combinationsLoaded: 0,
             loadTimeMs: 0
         };
     }
@@ -53,8 +39,7 @@ export class HarvestablesDatabase {
             this.isLoaded = true;
 
             window.logger?.info(CATEGORIES.SYSTEM, 'HarvestablesLoaded', {
-                typesLoaded: this.stats.typesLoaded,
-                combinationsLoaded: this.stats.combinationsLoaded,
+                entries: this.entries.length,
                 loadTimeMs: this.stats.loadTimeMs
             });
 
@@ -68,82 +53,41 @@ export class HarvestablesDatabase {
     }
 
     _parseHarvestables(data) {
-        for (const [resourceType, tierEntries] of Object.entries(data)) {
-            if (!Array.isArray(tierEntries)) continue;
-
-            const tierNumbers = new Set(tierEntries.map(e => e.tier));
-            this.harvestableTypes.set(resourceType, {
-                resource: resourceType,
-                tiers: tierNumbers,
-                tierData: tierEntries
-            });
-            this.stats.typesLoaded++;
-
-            for (const tierNum of tierNumbers) {
-                for (const enchant of [0, 1, 2, 3, 4]) {
-                    this.validCombinations.add(`${resourceType}-${tierNum}-${enchant}`);
-                }
-            }
-        }
-
-        this.stats.combinationsLoaded = this.validCombinations.size;
+        this.entries = data;
     }
 
     /**
-     * Check if a resource combination is valid
-     * @param {string} resourceType - Resource type (WOOD, ROCK, FIBER, HIDE, ORE)
-     * @param {number} tier - Tier (1-8)
-     * @param {number} enchant - Enchantment level (0-4)
-     * @returns {boolean}
+     * Entry at a 0-based position of the game file
+     * @param {number} position
+     * @returns {{name: string, resource: string|null, tiers: Object<string, {y: number[]}>}|null}
      */
-    isValidResource(resourceType, tier, enchant) {
-        const key = `${resourceType}-${tier}-${enchant}`;
-        return this.validCombinations.has(key);
+    entryAt(position) {
+        const entry = this.entries[position];
+        if (!entry) return null;
+        return {name: entry.n, resource: entry.r, tiers: entry.t};
     }
 
     /**
-     * Check if a resource combination is valid by typeNumber
-     * @param {number} typeNumber - Type number (0-27)
-     * @param {number} tier - Tier (1-8)
-     * @param {number} enchant - Enchantment level (0-4)
-     * @returns {boolean}
+     * Resources held at a charge level: the integer part of each level's yield, summed up to that level
+     * @param {number} position
+     * @param {number} tier
+     * @param {number} chargeLevel
+     * @returns {number}
      */
-    isValidResourceByTypeNumber(typeNumber, tier, enchant) {
-        const resourceType = this.getResourceTypeFromTypeNumber(typeNumber);
-        if (!resourceType) return false;
-        return this.isValidResource(resourceType, tier, enchant);
+    countAt(position, tier, chargeLevel) {
+        const yields = this.entries[position]?.t?.[tier]?.y;
+        if (!yields || chargeLevel > yields.length) return 0;
+        let total = 0;
+        for (let level = 0; level < chargeLevel; level++) total += Math.trunc(yields[level]);
+        return total;
     }
 
     /**
-     * Get resource type from typeNumber
-     * @param {number} typeNumber - Type number (0-27)
-     * @returns {string|null} - Resource type or null
+     * Resource family of the entry at a position
+     * @param {number} position
+     * @returns {'WOOD'|'ROCK'|'FIBER'|'HIDE'|'ORE'|null}
      */
-    getResourceTypeFromTypeNumber(typeNumber) {
-        if (typeNumber >= 0 && typeNumber <= 5) return 'WOOD';
-        if (typeNumber >= 6 && typeNumber <= 10) return 'ROCK';
-        if (typeNumber >= 11 && typeNumber <= 15) return 'FIBER';
-        if (typeNumber >= 16 && typeNumber <= 22) return 'HIDE';
-        if (typeNumber >= 23 && typeNumber <= 27) return 'ORE';
-        return null;
-    }
-
-    /**
-     * Get harvestable type data
-     * @param {string} resourceType - Resource type
-     * @returns {{resource: string, tiers: Set<number>}|undefined}
-     */
-    getResourceData(resourceType) {
-        return this.harvestableTypes.get(resourceType);
-    }
-
-    /**
-     * Get all valid tiers for a resource type
-     * @param {string} resourceType - Resource type
-     * @returns {number[]} Array of valid tiers
-     */
-    getValidTiers(resourceType) {
-        const data = this.harvestableTypes.get(resourceType);
-        return data ? Array.from(data.tiers).sort((a, b) => a - b) : [];
+    getResource(position) {
+        return this.entryAt(position)?.resource ?? null;
     }
 }

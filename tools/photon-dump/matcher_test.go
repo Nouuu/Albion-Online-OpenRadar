@@ -61,3 +61,25 @@ func TestMatchEvent_WildcardCode(t *testing.T) {
 	ev := &photon.EventData{Code: 1, Parameters: map[byte]any{252: int64(29)}}
 	require.True(t, matchesEvent(m, ev))
 }
+
+func TestParamPredicates(t *testing.T) {
+	require.True(t, intEq(28)(int32(28)))
+	require.False(t, intEq(28)(int32(29)))
+	require.False(t, intEq(28)("28"))
+	require.True(t, intNe(-1)(int64(5)))
+	require.False(t, intNe(-1)(int64(-1)))
+	require.True(t, intGt(0)(byte(1)))
+	require.False(t, intGt(0)(byte(0)))
+	require.True(t, intIn(23, 48)(byte(48)))
+	require.False(t, intIn(23, 48)(byte(5)))
+}
+
+func TestArrayContains(t *testing.T) {
+	has28 := arrayContains(28)
+	require.True(t, has28(photon.ByteArray{1, 28, 3}))
+	require.True(t, has28([]int16{1, 28}))
+	require.True(t, has28([]any{int64(1), int64(28)}))
+	require.False(t, has28(photon.ByteArray{1, 2}))
+	require.False(t, has28(int64(28)), "scalar is not an array")
+	require.False(t, has28(nil))
+}

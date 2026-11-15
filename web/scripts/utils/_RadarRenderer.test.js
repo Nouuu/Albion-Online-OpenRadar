@@ -4,6 +4,7 @@
 import {describe, test, expect, beforeEach, vi} from 'vitest';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
+import {createRecordingContext} from '../__fixtures__/recordingContext.js';
 
 const {registryDefault} = await vi.hoisted(() => import('./SettingsRegistry.js'));
 
@@ -21,6 +22,8 @@ vi.mock('../data/ZonesDatabase.js', () => ({default: {zones: {}}, ZonesDatabase:
 
 const {RadarRenderer} = await import('./RadarRenderer.js');
 const {EnemyType} = await import('../handlers/MobsHandler.js');
+const {HarvestablesHandler} = await import('../handlers/HarvestablesHandler.js');
+const {DrawingUtils} = await import('./DrawingUtils.js');
 const settingsSync = (await import('./SettingsSync.js')).default;
 
 function makeRenderer({harvestableList = [], mobsList = []} = {}) {
@@ -54,7 +57,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     test('pure static harvestable with Static off is excluded from cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allFalse() : null);
         const renderer = makeRenderer({
-            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
+            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(0);
@@ -64,7 +67,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     test('pure static harvestable with Static on is kept in cluster candidates', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
-            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: -1, hX: 1, hY: 1}],
+            harvestableList: [{id: 1, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: -1, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
@@ -78,7 +81,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
             return null;
         });
         const renderer = makeRenderer({
-            harvestableList: [{id: 2, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: 529, hX: 1, hY: 1}],
+            harvestableList: [{id: 2, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: 529, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
@@ -137,7 +140,7 @@ describe('RadarRenderer._collectClusterCandidates', () => {
     test('batch-spawn harvestable (mobileTypeId=null) is gated by Static setting', () => {
         settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticFiber' ? allTrue() : null);
         const renderer = makeRenderer({
-            harvestableList: [{id: 3, stringType: 'Fiber', tier: 4, charges: 0, mobileTypeId: null, hX: 1, hY: 1}],
+            harvestableList: [{id: 3, stringType: 'Fiber', tier: 4, rareState: 0, mobileTypeId: null, hX: 1, hY: 1}],
         });
 
         expect(renderer._collectClusterCandidates()).toHaveLength(1);
@@ -240,5 +243,34 @@ describe('RadarRenderer cluster errors', () => {
             drawClusterInfoBox: vi.fn(() => { throw new Error('boom'); }),
         }).render();
         expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_draw_failed', expect.any(Error));
+    });
+});
+
+describe('cluster stacks total from the game data yields', () => {
+    test('@verified 2026-11-15: synthetic: two real static spawns set to T1 WOOD nodes at charge level 2 through the real handler draw a stacks total of 4', async () => {
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        installRealDatabasesOnWindow();
+        settingsSync.getJSON.mockImplementation(key => key === 'settingResourcesStaticWood' ? allTrue() : null);
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const base = normalizeParams(fx.messages.find(m => m.parameters['6'] === -1).parameters);
+        const handler = new HarvestablesHandler(null);
+        for (const id of [9001, 9002]) handler.newHarvestableObject(id, {...base, 0: id, 5: 0, 7: 1, 10: 2, 11: 0});
+        for (const h of handler.getHarvestableList()) { h.hX = 10; h.hY = 10; }
+
+        const drawingUtils = new DrawingUtils();
+        drawingUtils.transformPoint = (x, y) => ({x, y});
+        drawingUtils.getZoomLevel = () => 1;
+        drawingUtils.getCanvasScale = () => 1;
+        const renderer = new RadarRenderer({
+            handlers: {harvestablesHandler: handler, mobsHandler: {mobsList: []}},
+            drawings: {},
+            drawingUtils,
+        });
+        const clusters = drawingUtils.detectClusters(renderer._collectClusterCandidates(), 30, 2);
+        const ctx = createRecordingContext({});
+        drawingUtils.drawClusterInfoBox(ctx, clusters[0]);
+
+        expect(clusters).toHaveLength(1);
+        expect(ctx.calls.filter(c => c[0] === 'fillText').map(c => c[1].split(' ')[0])).toContain('4');
     });
 });

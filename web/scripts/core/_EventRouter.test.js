@@ -7,6 +7,9 @@ import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {loadFixture, normalizeParams} from '../__fixtures__/loader.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
+import {installRealDatabasesOnWindow} from '../__fixtures__/realDatabases.js';
+import {HarvestablesHandler} from '../handlers/HarvestablesHandler.js';
+import {MobsHandler} from '../handlers/MobsHandler.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const zonesJsonPath = join(here, '..', '..', 'ao-bin-dumps', 'zones.json');
@@ -58,6 +61,7 @@ describe('EventRouter', () => {
             harvestablesHandler: {
                 newSimpleHarvestableObject: vi.fn(),
                 newHarvestableObject: vi.fn(),
+                removeHarvestable: vi.fn(),
                 HarvestUpdateEvent: vi.fn(),
                 harvestFinished: vi.fn()
             },
@@ -644,6 +648,31 @@ describe('EventRouter', () => {
             expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
             expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
             expect(handlers.wispCageHandler.removeCage).toHaveBeenCalledWith(42);
+            expect(handlers.harvestablesHandler.removeHarvestable).toHaveBeenCalledWith(42, 'leave');
+        });
+
+        // @verified 2026-11-15: pcap-derived, a Leave for the id of a harvestable left by a mob removes it and keeps the others
+        test('Leave event removes a harvestable left by a mob and keeps the others listed', async () => {
+            installRealDatabasesOnWindow();
+            const mobsHandler = new MobsHandler();
+            const harvestablesHandler = new HarvestablesHandler(mobsHandler);
+            EventRouter.reset();
+            EventRouter.init({handlers: {...handlers, mobsHandler, harvestablesHandler}, map, radarRenderer});
+            const fix = await loadFixture('harvestables', 'mob-leave');
+            const ids = () => harvestablesHandler.getHarvestableList().map(h => h.id);
+            const remaining = new Set();
+
+            for (const m of fix.messages) {
+                const p = normalizeParams(m.parameters);
+                EventRouter.onEvent(p);
+                if (p[252] === EventCodes.NewHarvestableObject) remaining.add(p[0]);
+                if (p[252] === EventCodes.Leave) {
+                    remaining.delete(p[0]);
+                    expect(ids()).not.toContain(p[0]);
+                }
+                expect(ids().sort()).toEqual([...remaining].sort());
+            }
+            expect(remaining.size).toBe(0);
         });
 
         // @verified 2026-05-22: pcap-confirmed (capture 13-36-55) the abbey portal id receives a
