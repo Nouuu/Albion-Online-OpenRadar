@@ -23,6 +23,7 @@ vi.mock('../data/ZonesDatabase.js', () => ({
     default: {
         getMapAssetExtent: vi.fn(() => 825),
         getMapAssetCenter: vi.fn(() => ({x: 0, y: 0})),
+        getMapImageName: vi.fn((id) => id),
     },
 }));
 

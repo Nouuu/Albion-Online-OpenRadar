@@ -171,6 +171,14 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
+  // Images are saved under the file prefix (TNL-001 for road TNL-201); Mist instances have no image.
+  getMapImageName(zoneId) {
+    const id = String(zoneId);
+    if (this.overrides.has(id)) return id;
+    const file = this.getZone(id)?.file;
+    return file ? file.split("_")[0] : id;
+  }
+
   getMapAssetExtent(zoneId) {
     const b = this._validBounds(zoneId);
     if (!b) return 825;
