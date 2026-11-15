@@ -346,6 +346,7 @@ export function onEvent(Parameters) {
             fishingHandler.removeFish(id);
             wispCageHandler.removeCage(id);
             handlers.mistsDungeonHandler?.removePortal(id);
+            harvestablesHandler.removeHarvestable(id, 'leave');
             break;
 
         case EventCodes.Move:
