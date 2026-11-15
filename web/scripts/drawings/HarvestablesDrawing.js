@@ -30,6 +30,23 @@ export class HarvestablesDrawing extends DrawingUtils  {
         this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(32), text, ctx, fontSize, '#FFD700');
     }
 
+    drawOverlays(ctx, point, harvestable) {
+        // Debug: TypeID display (offset scaled with zoom)
+        if (settingsSync.getBool('settingDebugResourcesTypeId'))
+            this.drawText(point.x, point.y + this.getMarkerSize(20), harvestable.position.toString(), ctx);
+
+        this.drawEntryName(ctx, point, harvestable);
+
+        // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
+        if (settingsSync.getBool('settingRadarResourceDistance')) {
+            const distanceGameUnits = this.calculateDistance(harvestable.hX, harvestable.hY, 0, 0);
+            this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
+        }
+
+        if (settingsSync.getBool('settingRadarResourceCount'))
+            this.drawResourceCountBadge(ctx, point.x, point.y, harvestable.count);
+    }
+
     iconName(harvestable) {
         const family = ICON_FAMILY.get(harvestable.stringType?.toLowerCase());
         return family && `${family}_${harvestable.tier}_${harvestable.rareState}`;
@@ -76,23 +93,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
                 this.DrawCustomImage(ctx, point.x, point.y, draw, "Resources", 32);
             }
 
-            // Debug: TypeID display (offset scaled with zoom)
-            if (settingsSync.getBool('settingDebugResourcesTypeId'))
-                this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.position.toString(), ctx);
-
-            this.drawEntryName(ctx, point, harvestableOne);
-
-            // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
-            if (settingsSync.getBool('settingRadarResourceDistance')) {
-                const distanceGameUnits = this.calculateDistance(harvestableOne.hX, harvestableOne.hY, 0, 0);
-                this.drawDistanceIndicator(ctx, point.x, point.y, distanceGameUnits);
-            }
-
-            // Resource count badge (if enabled)
-            if (settingsSync.getBool('settingRadarResourceCount'))
-            {
-                this.drawResourceCountBadge(ctx, point.x, point.y, harvestableOne.count);
-            }
+            this.drawOverlays(ctx, point, harvestableOne);
         }
     }
 }
