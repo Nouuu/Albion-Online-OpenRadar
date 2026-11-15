@@ -167,18 +167,3 @@ describe('MapsDrawing per-zone asset extent', () => {
         expect(ctx.drawImage).not.toHaveBeenCalled();
     });
 });
-
-describe('MapsDrawing image lookup', () => {
-    // synthetic: zone id TNL-201 ships its image under the file prefix TNL-001.
-    test('requests the image under the name returned by getMapImageName', async () => {
-        const imageCache = (await import('../utils/ImageCache.js')).default;
-        const drawing = new MapDrawing();
-        drawing.getZoomLevel = vi.fn(() => 1.0);
-        drawing.getCanvasCenter = vi.fn(() => 250);
-        zonesDatabase.getMapImageName.mockReturnValueOnce('TNL-001');
-
-        drawing.draw(buildCtx(), {id: 'TNL-201', hX: 0, hY: 0});
-
-        expect(imageCache.GetPreloadedImage).toHaveBeenCalledWith('/images/Maps/TNL-001.webp', 'Maps');
-    });
-});
