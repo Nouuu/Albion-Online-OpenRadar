@@ -1,6 +1,6 @@
 /**
  * Harvestables Database
- * Parses harvestables.json and provides resource type validation
+ * Parses harvestables.min.json (entries in game file order) and provides resource type validation
  * Follows the same pattern as ItemsDatabase and SpellsDatabase
  */
 
@@ -8,12 +8,11 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 
 export class HarvestablesDatabase {
     constructor() {
-        /** @type {Map<string, {resource: string, tiers: Set<number>}>} */
-        this.harvestableTypes = new Map();
+        /** @type {{n: string, r: string|null, t: Object<string, {y: number[]}>}[]} */
+        this.entries = [];
 
         this.isLoaded = false;
         this.stats = {
-            typesLoaded: 0,
             loadTimeMs: 0
         };
     }
@@ -40,7 +39,7 @@ export class HarvestablesDatabase {
             this.isLoaded = true;
 
             window.logger?.info(CATEGORIES.SYSTEM, 'HarvestablesLoaded', {
-                typesLoaded: this.stats.typesLoaded,
+                entries: this.entries.length,
                 loadTimeMs: this.stats.loadTimeMs
             });
 
@@ -54,17 +53,18 @@ export class HarvestablesDatabase {
     }
 
     _parseHarvestables(data) {
-        for (const [resourceType, tierEntries] of Object.entries(data)) {
-            if (!Array.isArray(tierEntries)) continue;
+        this.entries = data;
+    }
 
-            const tierNumbers = new Set(tierEntries.map(e => e.tier));
-            this.harvestableTypes.set(resourceType, {
-                resource: resourceType,
-                tiers: tierNumbers,
-                tierData: tierEntries
-            });
-            this.stats.typesLoaded++;
-        }
+    /**
+     * Entry at a 0-based position of the game file
+     * @param {number} position
+     * @returns {{name: string, resource: string|null, tiers: Object<string, {y: number[]}>}|null}
+     */
+    entryAt(position) {
+        const entry = this.entries[position];
+        if (!entry) return null;
+        return {name: entry.n, resource: entry.r, tiers: entry.t};
     }
 
     /**

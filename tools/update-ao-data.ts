@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import {pathToFileURL} from 'url';
 import {downloadFile, DownloadStatus} from "./common";
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/ao-data/ao-bin-dumps/refs/heads/master';
@@ -62,20 +63,14 @@ interface MinifiedSpell {
 }
 
 /**
- * Minified harvestables with tier details
+ * Minified harvestable: array index = position of the entry in harvestables.xml.
+ * t is keyed by tier, y[k-1] is the yield of charge level k.
  */
-interface HarvestableTier {
-    tier: number;
-    item: string;
-    respawn: number;
-    harvest: number;
-    tool: boolean;
-    maxcharges?: number;
-    startcharges?: number;
-    chargeup?: number;
+interface MinifiedHarvestable {
+    n: string;
+    r: string | null;
+    t: Record<string, {y: number[]}>;
 }
-
-type MinifiedHarvestables = Record<string, HarvestableTier[]>;
 
 // ============================================================================
 // Minification Functions
@@ -256,55 +251,27 @@ function minifySpells(rawData: any): MinifiedSpell[] {
     return spells;
 }
 
-function minifyHarvestables(rawData: any): MinifiedHarvestables {
-    const result: MinifiedHarvestables = {};
-    const aoHarvestables = rawData?.['AO-Harvestables'];
-    if (!aoHarvestables?.Harvestable) return result;
-
-    const harvestables = Array.isArray(aoHarvestables.Harvestable)
-        ? aoHarvestables.Harvestable
-        : [aoHarvestables.Harvestable];
-
-    for (const harvestable of harvestables) {
-        const resourceType = harvestable['@resource'];
-        if (!resourceType) continue;
-
-        if (!result[resourceType]) {
-            result[resourceType] = [];
-        }
-
-        if (harvestable.Tier) {
-            const tiers = Array.isArray(harvestable.Tier)
-                ? harvestable.Tier
-                : [harvestable.Tier];
-
-            for (const tierData of tiers) {
-                const tier = parseInt(tierData['@tier']);
-                if (isNaN(tier)) continue;
-
-                const tierEntry: HarvestableTier = {
-                    tier,
-                    item: tierData['@item'] || '',
-                    respawn: parseInt(tierData['@respawntimeseconds']) || 0,
-                    harvest: parseInt(tierData['@harvesttimeseconds']) || 0,
-                    tool: tierData['@requirestool'] === 'true'
-                };
-                const maxcharges = parseInt(tierData['@maxchargesperharvest']);
-                if (maxcharges > 0) tierEntry.maxcharges = maxcharges;
-                const startcharges = parseInt(tierData['@startcharges']);
-                if (startcharges > 0) tierEntry.startcharges = startcharges;
-                const chargeup = parseFloat(tierData['@chargeupchance']);
-                if (chargeup > 0) tierEntry.chargeup = chargeup;
-                result[resourceType].push(tierEntry);
-            }
+function chargeYields(tier: any): number[] {
+    const y: number[] = [];
+    for (const charge of [].concat(tier.Charge ?? [])) {
+        const [from, to = from] = (charge as any)['@level'].split('-').map(Number);
+        for (let level = Math.max(from, 1); level <= to; level++) {
+            y[level - 1] = Number((charge as any)['@yield'] ?? 0);
         }
     }
+    return y;
+}
 
-    for (const key of Object.keys(result)) {
-        result[key].sort((a, b) => a.tier - b.tier);
-    }
+export function minifyHarvestables(rawData: any): MinifiedHarvestable[] {
+    const entries = [].concat(rawData?.['AO-Harvestables']?.Harvestable ?? []);
 
-    return result;
+    return entries.map((entry: any) => {
+        const t: Record<string, {y: number[]}> = {};
+        for (const tier of [].concat(entry.Tier ?? [])) {
+            t[(tier as any)['@tier']] = {y: chargeYields(tier)};
+        }
+        return {n: entry['@name'], r: entry['@resource'] ?? null, t};
+    });
 }
 
 // ============================================================================
@@ -595,7 +562,9 @@ async function main() {
     process.exit(failCount > 0 ? 1 : 0);
 }
 
-main().catch(err => {
-    console.error('❌ Fatal error:', err);
-    process.exit(1);
-});
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+    main().catch(err => {
+        console.error('❌ Fatal error:', err);
+        process.exit(1);
+    });
+}
