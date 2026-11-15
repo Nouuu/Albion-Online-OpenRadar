@@ -24,6 +24,8 @@ function buildDrawing() {
     drawing.transformPoint = vi.fn((x, y) => ({x, y}));
     drawing.interpolateEntity = vi.fn();
     drawing.drawText = vi.fn();
+    drawing.drawTextItems = vi.fn();
+    drawing.getScaledFontSize = vi.fn(s => s);
     drawing.drawDistanceIndicator = vi.fn();
     drawing.drawResourceCountBadge = vi.fn();
     drawing.calculateDistance = vi.fn(() => 10);
@@ -413,7 +415,7 @@ describe('HarvestablesDrawing static family from the position', () => {
         window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
         installRealDatabasesOnWindow();
         drawing = buildDrawing();
-        ctx = {};
+        ctx = {measureText: vi.fn(text => ({width: text.length * 4}))};
         settingsSync.getBool.mockReturnValue(false);
         settingsSync.getJSON.mockReturnValue(allTrue());
     });
@@ -449,6 +451,75 @@ describe('HarvestablesDrawing static family from the position', () => {
         drawing.invalidate(ctx, handler.getHarvestableList());
 
         expect(drawing.DrawCustomImage.mock.calls.map(c => c[3])).toEqual(['ore_5_1']);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: Show DB Name draws T5_ORE_DYNAMIC@1 in the living resource style for the ore-dynamic-single node', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        const [node] = handler.getHarvestableList();
+        drawing.invalidate(ctx, [node]);
+
+        const text = 'T5_ORE_DYNAMIC@1';
+        expect(drawing.drawText).not.toHaveBeenCalled();
+        expect(drawing.drawTextItems.mock.calls).toEqual([[node.hX - text.length * 2, node.hY + 32, text, ctx, '9px', '#FFD700']]);
+    });
+
+    test('@verified 2026-11-15: pcap-derived full-flow: Show DB Name and the position text together draw the name 12 below the position', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName' || key === 'settingDebugResourcesTypeId');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        const [position] = drawing.drawText.mock.calls;
+        const [[, nameY, name]] = drawing.drawTextItems.mock.calls;
+        expect(position[2]).toBe('28');
+        expect(name).toBe('T5_ORE_DYNAMIC@1');
+        expect(nameY).toBe(position[1] + 12);
+    });
+
+    test.each([
+        ['on', ['T6_WOOD@2'], true],
+        ['off', [], false],
+    ])('@verified 2026-11-15: pcap-derived full-flow: a static position 0 node with Show DB Name %s draws %j', async (_label, texts, on) => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = {...normalizeParams(fx.messages.find(m => m.parameters['6'] === -1 && m.parameters['5'] === 0).parameters)};
+        settingsSync.getBool.mockImplementation(key => on && key === 'settingDebugResourcesDbName');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+        expect(drawing.drawTextItems.mock.calls.map(c => c[2])).toEqual(texts);
+    });
+
+    test('@verified 2026-11-15: synthetic: Show DB Name draws the entry name without the @ part for rare state 0 (position 19)', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 4, rareState: 0, stringType: 'Fiber', mobileTypeId: -1, position: 19};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawTextItems.mock.calls.map(c => c[2])).toEqual(['T4_FIBER_TREASURE']);
+    });
+
+    test('@verified 2026-11-15: synthetic: Show DB Name draws nothing for a position outside the shipped data', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 999};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.DrawCustomImage).toHaveBeenCalledTimes(1);
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
+    });
+
+    test('@verified 2026-11-15: synthetic: Show DB Name draws nothing for an empty node', () => {
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesDbName');
+        const entity = {id: 1, hX: 10, hY: 20, chargeLevel: 0, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 19};
+        drawing.invalidate(ctx, [entity]);
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
     });
 
     test.each([

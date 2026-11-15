@@ -14,6 +14,17 @@ export class HarvestablesDrawing extends DrawingUtils  {
         }
     }
 
+    drawEntryName(ctx, point, harvestable) {
+        if (!settingsSync.getBool('settingDebugResourcesDbName')) return;
+        const entryName = window.harvestablesDatabase?.entryAt(harvestable.position)?.name;
+        if (!entryName) return;
+        const text = `T${harvestable.tier}_${entryName}${harvestable.rareState > 0 ? `@${harvestable.rareState}` : ''}`;
+        const fontSize = `${this.getScaledFontSize(9, 6)}px`;
+        ctx.font = `${fontSize} ${this.fontFamily}`;
+        const width = ctx.measureText(text).width;
+        this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(32), text, ctx, fontSize, '#FFD700');
+    }
+
     invalidate(ctx, harvestables)
     {
         // Clusters are detected and drawn centrally in Utils.render when overlayCluster is enabled
@@ -74,6 +85,8 @@ export class HarvestablesDrawing extends DrawingUtils  {
             // Debug: TypeID display (offset scaled with zoom)
             if (settingsSync.getBool('settingDebugResourcesTypeId'))
                 this.drawText(point.x, point.y + this.getMarkerSize(20), harvestableOne.position.toString(), ctx);
+
+            this.drawEntryName(ctx, point, harvestableOne);
 
             // Distance indicator (if enabled) - use game-units (hX/hY) so metrics match clusters
             if (settingsSync.getBool('settingRadarResourceDistance')) {
