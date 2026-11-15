@@ -106,15 +106,8 @@ export class HarvestablesHandler
     HarvestUpdateEvent(Parameters) // Event 46 - HarvestableChangeState
     {
         const id = Parameters[0];
-        const newChargeLevel = Parameters[1];
+        const newChargeLevel = Parameters[1] ?? 0;
         const rareState = Parameters[2];
-
-        // newSize undefined = resource depleted, remove it
-        if (newChargeLevel === undefined) {
-            window.logger?.info(CATEGORIES.HARVESTABLES, 'Event46_ResourceDepleted', {id});
-            this.removeHarvestable(id, 'depleted');
-            return;
-        }
 
         var harvestable = this.harvestableList.find((item) => item.id === id);
         if (!harvestable) {

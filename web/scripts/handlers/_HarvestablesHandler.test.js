@@ -613,18 +613,24 @@ describe('HarvestablesHandler', () => {
             expect(handler.getSize()).toBe(1);
         });
 
-        // @verified 2026-04-18: newSize===undefined triggers removal of the entity.
-        test('synthetic: newSize undefined (depletion) removes entity from list', () => {
+        test('@characterization 2026-11-15: synthetic: current code does set charge level 0 and keep the entity when event 46 has no charge level', () => {
             seedHarvestable(9002, 2);
 
-            handler.HarvestUpdateEvent({0: 9002, 1: undefined, 2: 0});
+            handler.HarvestUpdateEvent({0: 9002, 2: 0});
 
-            expect(handler.getSize()).toBe(0);
-            expect(window.logger.debug).toHaveBeenCalledWith(
-                expect.anything(),
-                'HarvestableRemoved',
-                {id: 9002, reason: 'depleted'}
-            );
+            const e = handler.getHarvestableList().find(h => h.id === 9002);
+            expect(e).toBeDefined();
+            expect(e.chargeLevel).toBe(0);
+            expect(window.logger.info).not.toHaveBeenCalledWith(expect.anything(), 'Event46_ResourceDepleted', expect.anything());
+        });
+
+        test('@verified 2026-11-15: synthetic: event 46 for an id the handler does not hold changes nothing and does not throw', () => {
+            seedHarvestable(9004, 2);
+
+            expect(() => handler.HarvestUpdateEvent({0: 55555, 1: 3, 2: 1})).not.toThrow();
+            expect(() => handler.HarvestUpdateEvent({0: 55555, 2: 1})).not.toThrow();
+
+            expect(handler.getHarvestableList().map(h => [h.id, h.chargeLevel])).toEqual([[9004, 2]]);
         });
 
         // @verified 2026-04-18: unknown id is a no-op, no throw, list unchanged.
