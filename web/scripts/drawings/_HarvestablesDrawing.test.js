@@ -29,7 +29,6 @@ function buildDrawing() {
     drawing.drawDistanceIndicator = vi.fn();
     drawing.drawResourceCountBadge = vi.fn();
     drawing.calculateDistance = vi.fn(() => 10);
-    drawing.calculateRealResources = vi.fn(() => 5);
     drawing.getScaledSize = vi.fn(s => s);
     drawing.getMarkerSize = vi.fn(s => s);
     return drawing;
@@ -536,5 +535,55 @@ describe('HarvestablesDrawing static family from the position', () => {
         drawing.invalidate(ctx, handler.getHarvestableList());
 
         expect(drawing.DrawCustomImage.mock.calls.map(c => c[3])).toEqual(images);
+    });
+});
+
+describe('HarvestablesDrawing count badge from the game data yields', () => {
+    let drawing;
+    let ctx;
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+        window.logger = {debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn()};
+        installRealDatabasesOnWindow();
+        drawing = buildDrawing();
+        ctx = {};
+        settingsSync.getBool.mockImplementation(key => key === 'settingRadarResourceCount');
+        settingsSync.getJSON.mockReturnValue(allTrue());
+    });
+
+    test('@verified 2026-11-15: synthetic: a real static spawn set to a T1 WOOD node at charge level 2 draws a count badge of 2', async () => {
+        const fx = await loadFixture('harvestables', 'single-spawn');
+        const p = {...normalizeParams(fx.messages.find(m => m.parameters['6'] === -1).parameters), 5: 0, 7: 1, 10: 2};
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        drawing.invalidate(ctx, handler.getHarvestableList());
+
+        expect(drawing.drawResourceCountBadge).toHaveBeenCalledTimes(1);
+        expect(drawing.drawResourceCountBadge.mock.calls[0][3]).toBe(2);
+    });
+
+    test.each([
+        [2, 1, 5, 50],
+        [0, 1, 2, 2],
+        [7, 1, 2, 2],
+        [7, 7, 8, 8],
+    ])('@verified 2026-11-15: pcap-derived: the batch spawn node at position %i tier %i charge level %i draws a count badge of %i', async (position, tier, chargeLevel, count) => {
+        const fx = await loadFixture('harvestables', 'count-variants');
+        const p = normalizeParams(fx.messages.find(m => m.parameters['252'] === 39).parameters);
+        const positions = p[1].data ?? p[1];
+        const tiers = p[2].data ?? p[2];
+        const charges = p[4].data ?? p[4];
+        const indexes = positions.map((_, i) => i).filter(i => positions[i] === position && tiers[i] === tier && charges[i] === chargeLevel);
+        expect(indexes.length).toBeGreaterThan(0);
+
+        const handler = new HarvestablesHandler(null);
+        handler.newSimpleHarvestableObject(p);
+        const ids = indexes.map(i => p[0][i]);
+        drawing.invalidate(ctx, handler.getHarvestableList().filter(h => ids.includes(h.id)));
+
+        expect(drawing.drawResourceCountBadge).toHaveBeenCalledTimes(ids.length);
+        for (const call of drawing.drawResourceCountBadge.mock.calls) expect(call[3]).toBe(count);
     });
 });

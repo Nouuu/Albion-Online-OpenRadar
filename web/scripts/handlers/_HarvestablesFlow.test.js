@@ -31,7 +31,6 @@ function buildDrawing() {
     drawing.drawDistanceIndicator = vi.fn();
     drawing.drawResourceCountBadge = vi.fn();
     drawing.calculateDistance = vi.fn(() => 10);
-    drawing.calculateRealResources = vi.fn(() => 5);
     drawing.getScaledSize = vi.fn(s => s);
     drawing.getMarkerSize = vi.fn(s => s);
     return drawing;

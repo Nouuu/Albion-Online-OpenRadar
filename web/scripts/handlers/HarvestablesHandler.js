@@ -36,6 +36,10 @@ class Harvestable
     touch() {
         this.lastUpdateTime = Date.now();
     }
+
+    get count() {
+        return window.harvestablesDatabase?.countAt(this.position, this.tier, this.chargeLevel) ?? 0;
+    }
 }
 
 export class HarvestablesHandler

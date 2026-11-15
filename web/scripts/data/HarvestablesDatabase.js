@@ -68,6 +68,21 @@ export class HarvestablesDatabase {
     }
 
     /**
+     * Resources held at a charge level: the integer part of each level's yield, summed up to that level
+     * @param {number} position
+     * @param {number} tier
+     * @param {number} chargeLevel
+     * @returns {number}
+     */
+    countAt(position, tier, chargeLevel) {
+        const yields = this.entries[position]?.t?.[tier]?.y;
+        if (!yields || chargeLevel > yields.length) return 0;
+        let total = 0;
+        for (let level = 0; level < chargeLevel; level++) total += Math.trunc(yields[level]);
+        return total;
+    }
+
+    /**
      * Resource family of the entry at a position
      * @param {number} position
      * @returns {'WOOD'|'ROCK'|'FIBER'|'HIDE'|'ORE'|null}

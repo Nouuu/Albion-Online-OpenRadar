@@ -55,3 +55,37 @@ describe('HarvestablesDatabase getResource', () => {
         expect(db.getResource(1.5)).toBeNull();
     });
 });
+
+describe('HarvestablesDatabase countAt', () => {
+    let db;
+    beforeAll(() => {
+        db = loadRealHarvestablesDatabase();
+    });
+
+    test.each([
+        [0, 1, 2, 2],
+        [2, 1, 1, 10],
+        [2, 2, 3, 5],
+        [6, 4, 30, 30],
+        [14, 4, 3, 6],
+        [14, 5, 5, 5],
+        [14, 4, 0, 0],
+    ])('@verified 2026-11-15: entry %i tier %i at charge level %i holds %i', (position, tier, chargeLevel, expected) => {
+        expect(db.countAt(position, tier, chargeLevel)).toBe(expected);
+    });
+
+    test('@verified 2026-11-15: a charge level past the last listed level counts 0', () => {
+        expect(db.countAt(14, 4, 9)).toBe(0);
+    });
+
+    test('@verified 2026-11-15: fractional silver yields are truncated per level', () => {
+        expect(db.countAt(59, 2, 3)).toBe(1);
+    });
+
+    test('@verified 2026-11-15: a missing entry, tier or non numeric input counts 0, never NaN', () => {
+        expect(db.countAt(500, 4, 2)).toBe(0);
+        expect(db.countAt(14, 9, 2)).toBe(0);
+        expect(db.countAt(14, 4, undefined)).toBe(0);
+        expect(db.countAt(undefined, 4, 2)).toBe(0);
+    });
+});

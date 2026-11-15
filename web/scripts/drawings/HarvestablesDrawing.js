@@ -91,11 +91,7 @@ export class HarvestablesDrawing extends DrawingUtils  {
             // Resource count badge (if enabled)
             if (settingsSync.getBool('settingRadarResourceCount'))
             {
-                const realResources = this.calculateRealResources(
-                    parseInt(harvestableOne.chargeLevel),
-                    harvestableOne.tier
-                );
-                this.drawResourceCountBadge(ctx, point.x, point.y, realResources);
+                this.drawResourceCountBadge(ctx, point.x, point.y, harvestableOne.count);
             }
         }
     }
