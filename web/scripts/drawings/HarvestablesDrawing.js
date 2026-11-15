@@ -30,10 +30,17 @@ export class HarvestablesDrawing extends DrawingUtils  {
         this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(32), text, ctx, fontSize, '#FFD700');
     }
 
+    drawPositionText(ctx, point, harvestable) {
+        if (!settingsSync.getBool('settingDebugResourcesTypeId')) return;
+        const text = harvestable.position.toString();
+        const fontSize = `${this.getScaledFontSize(10, 7)}px`;
+        ctx.font = `${fontSize} ${this.fontFamily}`;
+        const width = ctx.measureText(text).width;
+        this.drawTextItems(point.x - width / 2, point.y + this.getMarkerSize(20), text, ctx, fontSize, '#CCCCCC');
+    }
+
     drawOverlays(ctx, point, harvestable) {
-        // Debug: TypeID display (offset scaled with zoom)
-        if (settingsSync.getBool('settingDebugResourcesTypeId'))
-            this.drawText(point.x, point.y + this.getMarkerSize(20), harvestable.position.toString(), ctx);
+        this.drawPositionText(ctx, point, harvestable);
 
         this.drawEntryName(ctx, point, harvestable);
 

@@ -363,9 +363,9 @@ describe('HarvestablesDrawing type ID overlay', () => {
     test('draws the type ID when settingDebugResourcesTypeId is on', () => {
         settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
         const drawing = buildDrawing();
-        const ctx = {};
+        const ctx = {measureText: text => ({width: text.length * 4})};
         drawing.invalidate(ctx, [{id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
-        expect(drawing.drawText).toHaveBeenCalledWith(10, 40, '14', ctx);
+        expect(drawing.drawTextItems).toHaveBeenCalledWith(6, 40, '14', ctx, '10px', '#CCCCCC');
         expect(settingsSync.getBool).not.toHaveBeenCalledWith('livingResourcesID');
     });
 
@@ -373,7 +373,7 @@ describe('HarvestablesDrawing type ID overlay', () => {
         settingsSync.getBool.mockImplementation(() => false);
         const drawing = buildDrawing();
         drawing.invalidate({}, [{id: 1, hX: 10, hY: 20, chargeLevel: 3, tier: 5, rareState: 2, stringType: 'Fiber', mobileTypeId: -1, position: 14}]);
-        expect(drawing.drawText).not.toHaveBeenCalled();
+        expect(drawing.drawTextItems).not.toHaveBeenCalled();
     });
 });
 
@@ -467,6 +467,20 @@ describe('HarvestablesDrawing static family from the position', () => {
         expect(drawing.drawTextItems.mock.calls).toEqual([[node.hX - text.length * 2, node.hY + 32, text, ctx, '9px', '#FFD700']]);
     });
 
+    test('@verified 2026-11-15: pcap-derived full-flow: Show ID draws the position of the ore-dynamic-single node in the living id style', async () => {
+        const fx = await loadFixture('harvestables', 'ore-dynamic-single');
+        const p = normalizeParams(fx.messages[0].parameters);
+        settingsSync.getBool.mockImplementation(key => key === 'settingDebugResourcesTypeId');
+
+        const handler = new HarvestablesHandler(null);
+        handler.newHarvestableObject(p[0], p);
+        const [node] = handler.getHarvestableList();
+        drawing.invalidate(ctx, [node]);
+
+        expect(drawing.drawText).not.toHaveBeenCalled();
+        expect(drawing.drawTextItems.mock.calls).toEqual([[node.hX - 4, node.hY + 20, '28', ctx, '10px', '#CCCCCC']]);
+    });
+
     test('@verified 2026-11-15: pcap-derived full-flow: Show DB Name and the position text together draw the name 12 below the position', async () => {
         const fx = await loadFixture('harvestables', 'ore-dynamic-single');
         const p = normalizeParams(fx.messages[0].parameters);
@@ -476,8 +490,7 @@ describe('HarvestablesDrawing static family from the position', () => {
         handler.newHarvestableObject(p[0], p);
         drawing.invalidate(ctx, handler.getHarvestableList());
 
-        const [position] = drawing.drawText.mock.calls;
-        const [[, nameY, name]] = drawing.drawTextItems.mock.calls;
+        const [position, [, nameY, name]] = drawing.drawTextItems.mock.calls;
         expect(position[2]).toBe('28');
         expect(name).toBe('T5_ORE_DYNAMIC@1');
         expect(nameY).toBe(position[1] + 12);
