@@ -70,42 +70,20 @@ export class HarvestablesHandler
         }
     }
 
-    addHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId = null)
+    upsertHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId = null)
     {
-        const stringType = this.GetStringType(position);
-
-        var harvestable = this.harvestableList.find((item) => item.id === id);
+        const harvestable = this.harvestableList.find((item) => item.id === id);
 
         if (!harvestable)
         {
-            const h = new Harvestable(id, position, tier, posX, posY, rareState, chargeLevel, stringType, mobileTypeId);
-            this.harvestableList.push(h);
-        }
-        else // update
-        {
-            harvestable.rareState = rareState;
-            harvestable.touch();
-            if (stringType) harvestable.stringType = stringType;
-
-            this.logUpdated(harvestable);
-        }
-    }
-
-    UpdateHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId = null)
-    {
-        const stringType = this.GetStringType(position);
-
-        var harvestable = this.harvestableList.find((item) => item.id === id);
-
-        if (!harvestable)
-        {
-            this.addHarvestable(id, position, tier, posX, posY, rareState, chargeLevel, mobileTypeId);
+            const stringType = this.GetStringType(position);
+            this.harvestableList.push(new Harvestable(id, position, tier, posX, posY, rareState, chargeLevel, stringType, mobileTypeId));
             return;
         }
 
         harvestable.rareState = rareState;
         harvestable.chargeLevel = chargeLevel;
-        if (stringType) harvestable.stringType = stringType;
+        harvestable.touch();
         this.logUpdated(harvestable);
     }
 
@@ -171,7 +149,7 @@ export class HarvestablesHandler
         let rareState = Parameters[11] === undefined ? 0 : Parameters[11];
         let chargeLevel = Parameters[10] === undefined ? 0 : Parameters[10];
 
-        this.UpdateHarvestable(id, position, tier, location[0], location[1], rareState, chargeLevel, mobileTypeId);
+        this.upsertHarvestable(id, position, tier, location[0], location[1], rareState, chargeLevel, mobileTypeId);
     }
 
     readBatchArrays(Parameters)
@@ -225,7 +203,7 @@ export class HarvestablesHandler
             // Resources created with enchant=0, Event 46 (HarvestUpdateEvent) will update it
             const rareState = 0;
 
-            this.addHarvestable(id, position, tier, posX, posY, rareState, chargeLevel);
+            this.upsertHarvestable(id, position, tier, posX, posY, rareState, chargeLevel);
         }
     }
 

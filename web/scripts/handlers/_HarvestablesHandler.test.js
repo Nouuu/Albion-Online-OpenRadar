@@ -258,9 +258,9 @@ describe('HarvestablesHandler', () => {
             expect(handler.getHarvestableList().find(h => h.id === p[0])).toBeDefined();
         });
 
-        // @verified 2026-04-19: contract test, addHarvestable without mobileTypeId stores null.
+        // @verified 2026-04-19: contract test, upsertHarvestable without mobileTypeId stores null.
         test('synthetic contract: Harvestable defaults mobileTypeId to null when omitted', () => {
-            handler.addHarvestable(9001, 0, 4, 10, 20, 0, 3);
+            handler.upsertHarvestable(9001, 0, 4, 10, 20, 0, 3);
             const stored = handler.getHarvestableList().find(e => e.id === 9001);
             expect(stored).toBeDefined();
             expect(stored.mobileTypeId).toBeNull();
@@ -337,11 +337,11 @@ describe('HarvestablesHandler', () => {
             expect(handler.getHarvestableList()).toHaveLength(ids.length);
         });
 
-        // @verified 2026-04-24: HARV-4, UpdateHarvestable path also ignores settings at spawn.
-        test('HARV-4: UpdateHarvestable on new id with all settings off still creates entity', () => {
+        // @verified 2026-04-24: HARV-4, upsertHarvestable path also ignores settings at spawn.
+        test('HARV-4: upsertHarvestable on new id with all settings off still creates entity', () => {
             settingsSync.getJSON.mockReturnValue(allFalseSettings);
 
-            handler.UpdateHarvestable(7777, 14, 4, 10, 20, 1, 3, -1);
+            handler.upsertHarvestable(7777, 14, 4, 10, 20, 1, 3, -1);
 
             const stored = handler.getHarvestableList().find(h => h.id === 7777);
             expect(stored).toBeDefined();
@@ -485,6 +485,60 @@ describe('HarvestablesHandler', () => {
             handler.newSimpleHarvestableObject(p);
 
             expect(handler.getSize()).toBe(2);
+        });
+    });
+
+    describe('one create or update path', () => {
+        test('@verified 2026-11-15: pcap-derived: a re-sent event 39 node takes the last charge level and keeps one entity', async () => {
+            const fx = await loadFixture('harvestables', 'batch-resend');
+
+            for (const m of fx.messages) handler.newSimpleHarvestableObject(normalizeParams(m.parameters));
+
+            const matches = handler.getHarvestableList().filter(h => h.id === 991);
+            expect(matches).toHaveLength(1);
+            expect(matches[0].chargeLevel).toBe(3);
+            expect(matches[0].rareState).toBe(0);
+        });
+
+        test('@verified 2026-11-15: pcap-derived: event 40 then event 39 for one id keeps one entity with the last charge level and rare state', async () => {
+            const spawn = await loadFixture('harvestables', 'empty-regrow');
+            const p40 = normalizeParams(spawn.messages.find(m => m.parameters['252'] === 40 && m.parameters['0'] === 1627).parameters);
+            const resend = await loadFixture('harvestables', 'batch-resend');
+            const p39 = normalizeParams(resend.messages[0].parameters);
+            expect(p39[0]).toContain(p40[0]);
+            expect(p40[11]).toBe(1);
+            expect(p40[10]).toBe(0);
+
+            handler.newHarvestableObject(p40[0], p40);
+            handler.newSimpleHarvestableObject(p39);
+
+            const matches = handler.getHarvestableList().filter(h => h.id === p40[0]);
+            expect(matches).toHaveLength(1);
+            expect(matches[0].chargeLevel).toBe(1);
+            expect(matches[0].rareState).toBe(0);
+        });
+
+        test('@verified 2026-11-15: synthetic: a re-sent known id keeps its position, tier, location and mob key', () => {
+            handler.upsertHarvestable(9100, 14, 4, 10, 20, 0, 3, -1);
+
+            handler.upsertHarvestable(9100, 7, 6, 99, 98, 2, 1, 421);
+
+            const e = handler.getHarvestableList().find(h => h.id === 9100);
+            expect(handler.getSize()).toBe(1);
+            expect([e.position, e.tier, e.posX, e.posY, e.mobileTypeId]).toEqual([14, 4, 10, 20, -1]);
+            expect([e.chargeLevel, e.rareState]).toEqual([1, 2]);
+        });
+
+        test('@verified 2026-11-15: synthetic: upserting a known id touches it and logs HarvestableUpdated', () => {
+            handler.upsertHarvestable(9101, 14, 4, 10, 20, 0, 3);
+            const e = handler.getHarvestableList().find(h => h.id === 9101);
+            e.lastUpdateTime = 0;
+
+            handler.upsertHarvestable(9101, 14, 4, 10, 20, 1, 2);
+
+            expect(e.lastUpdateTime).toBeGreaterThan(0);
+            expect(window.logger.debug).toHaveBeenCalledWith(
+                expect.anything(), 'HarvestableUpdated', {id: 9101, chargeLevel: 2, rareState: 1});
         });
     });
 
