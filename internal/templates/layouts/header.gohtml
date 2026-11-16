@@ -19,6 +19,12 @@
             <span id="pipText" class="hidden sm:inline">PiP Mode</span>
         </button>
 
+        <button id="pipPlayersBtn" class="btn btn-primary btn-sm" disabled style="display:none;"
+            title="Floating always-on-top window with detected players and their gear">
+            <i id="pipPlayersIcon" data-lucide="users" class="w-4 h-4"></i>
+            <span id="pipPlayersText" class="hidden sm:inline">Players window</span>
+        </button>
+
         <button id="fullscreenToggleBtn" class="btn btn-primary btn-sm" style="display:none;">
             <i data-lucide="maximize" class="w-4 h-4"></i>
             <span class="hidden sm:inline">Fullscreen</span>
@@ -34,6 +40,8 @@
     const pipBtn = document.getElementById('pipToggleBtn');
     const pipIcon = document.getElementById('pipIcon');
     const pipText = document.getElementById('pipText');
+    const playersBtn = document.getElementById('pipPlayersBtn');
+    const playersText = document.getElementById('pipPlayersText');
 
     function isOnRadarPage() {
         const pageContent = document.getElementById('page-content');
@@ -56,6 +64,13 @@
             const pipSupported = document.pictureInPictureEnabled === true;
             pipBtn.style.display = (onRadar && pipSupported) ? 'flex' : 'none';
             pipBtn.disabled = !onRadar || !window.pipManager;
+        }
+
+        // Players window button (Document Picture-in-Picture)
+        if (playersBtn) {
+            const supported = 'documentPictureInPicture' in window;
+            playersBtn.style.display = (onRadar && supported) ? 'flex' : 'none';
+            playersBtn.disabled = !onRadar || !window.pipPlayersWindow;
         }
     }
 
@@ -115,6 +130,26 @@
             }
         });
     }
+
+    function updatePlayersButton(isOpen) {
+        if (!playersBtn || !playersText) return;
+        playersBtn.classList.toggle('btn-primary', !isOpen);
+        playersBtn.classList.toggle('btn-secondary', isOpen);
+        playersText.textContent = isOpen ? 'Close players' : 'Players window';
+    }
+
+    if (playersBtn) {
+        playersBtn.addEventListener('click', async () => {
+            if (window.pipPlayersWindow) {
+                updatePlayersButton(await window.pipPlayersWindow.toggle());
+            }
+        });
+    }
+
+    document.addEventListener('pipPlayersWindowChange', (e) => updatePlayersButton(e.detail.isOpen));
+    document.addEventListener('pipPlayersWindowReady', () => {
+        if (playersBtn && isOnRadarPage()) playersBtn.disabled = false;
+    });
 
     // Listen to PiP status changes (e.g., when user closes PiP window)
     document.addEventListener('pipStatusChange', (e) => {

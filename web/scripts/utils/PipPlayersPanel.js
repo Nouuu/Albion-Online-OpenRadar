@@ -11,12 +11,12 @@ const ROWS_UNDER = 2;
 const COLS_UNDER = 2;
 const MAX_GEAR_TILES = 6;
 const PLAYER_TYPES = ['hostile', 'faction', 'passive'];
-const FACTION_CITIES = ['', 'Martlock', 'Lymhurst', 'Bridgewatch', 'Fort Sterling', 'Thetford', 'Caerleon'];
+export const FACTION_CITIES = ['', 'Martlock', 'Lymhurst', 'Bridgewatch', 'Fort Sterling', 'Thetford', 'Caerleon'];
 
 const FONT_SANS = '"Space Grotesk", system-ui, sans-serif';
 const FONT_MONO = '"JetBrains Mono", ui-monospace, monospace';
 
-const COLORS = {
+export const COLORS = {
     panelTop: '#151a22',
     panelBottom: '#0e1217',
     edge: 'rgba(255, 255, 255, 0.10)',
@@ -40,8 +40,8 @@ const COLORS = {
     healthLow: '#f87171',
 };
 
-const TIER_COLORS = ['#9ca3af', '#9ca3af', '#a8b0bd', '#93c5fd', '#7dd3fc', '#fca5a5', '#fdba74', '#fde047', '#f8fafc'];
-const ENCHANT_COLORS = ['', '#4ade80', '#60a5fa', '#c084fc', '#fbbf24'];
+export const TIER_COLORS = ['#9ca3af', '#9ca3af', '#a8b0bd', '#93c5fd', '#7dd3fc', '#fca5a5', '#fdba74', '#fde047', '#f8fafc'];
+export const ENCHANT_COLORS = ['', '#4ade80', '#60a5fa', '#c084fc', '#fbbf24'];
 
 function clamp(value, min, max) {
     return Math.min(max, Math.max(min, value));
@@ -179,7 +179,7 @@ export function gearOf(player, itemsDb) {
     return tiles.slice(0, MAX_GEAR_TILES);
 }
 
-function spellsOf(player, spellsDb) {
+export function spellsOf(player, spellsDb) {
     if (!spellsDb || !Array.isArray(player?.spells)) return [];
     return player.spells
         .filter(id => id && id > 0 && id !== 65535)
@@ -230,7 +230,7 @@ function fitText(ctx, text, maxWidth) {
     return '';
 }
 
-function formatElapsed(detectedAt, now) {
+export function formatElapsed(detectedAt, now) {
     const seconds = Math.max(0, Math.floor((now - detectedAt) / 1000));
     return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}m`;
 }

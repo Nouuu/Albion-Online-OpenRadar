@@ -155,13 +155,14 @@ class PictureInPictureManager {
         if (this.isActive) {
             this.compositeFrame();
         }
+        window.pipPlayersWindow?.drawMap();
     }
 
     compositeFrame() {
         if (!this.pipCtx || !this.canvasManager) return;
 
         const canvases = this.canvasManager.canvases || this.canvasManager.getAllCanvases();
-        const {mapCanvas, drawCanvas, ourPlayerCanvas, uiCanvas} = canvases;
+        const {mapCanvas} = canvases;
 
         const sourceSize = mapCanvas?.width || this.size;
         const {position, opts} = readPanelSettings(window.settingsSync);
@@ -177,14 +178,22 @@ class PictureInPictureManager {
 
         this.pipCtx.clearRect(0, 0, width, height);
 
-        if (mapCanvas) this.pipCtx.drawImage(mapCanvas, 0, 0);
-        if (drawCanvas) this.pipCtx.drawImage(drawCanvas, 0, 0);
-        if (ourPlayerCanvas) this.pipCtx.drawImage(ourPlayerCanvas, 0, 0);
-        if (uiCanvas) this.pipCtx.drawImage(uiCanvas, 0, 0);
+        this.drawRadarLayers(this.pipCtx);
 
         if (layout) {
             this.playersPanel.draw(this.pipCtx, layout, collectPlayers(window.playersHandler));
         }
+    }
+
+    /** Draws the four radar layers at 0,0. Also used by the players window to mirror the map. */
+    drawRadarLayers(ctx) {
+        if (!ctx || !this.canvasManager) return;
+        const canvases = this.canvasManager.canvases || this.canvasManager.getAllCanvases();
+        const {mapCanvas, drawCanvas, ourPlayerCanvas, uiCanvas} = canvases;
+        if (mapCanvas) ctx.drawImage(mapCanvas, 0, 0);
+        if (drawCanvas) ctx.drawImage(drawCanvas, 0, 0);
+        if (ourPlayerCanvas) ctx.drawImage(ourPlayerCanvas, 0, 0);
+        if (uiCanvas) ctx.drawImage(uiCanvas, 0, 0);
     }
 
     dispatchStatusEvent(status) {
