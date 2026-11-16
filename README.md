@@ -190,6 +190,7 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | Zone info box              | toggle, zone name, tier and PvP marker          |
 | Stats box                  | toggle, resource, mob and player counts         |
 | Players beside radar       | toggle, player list right of the radar if room  |
+| Players in PiP             | off, beside or under the radar, with gear       |
 | Keep screen awake          | toggle on touch screens, keeps the screen on    |
 | Resource count             | toggle, estimated quantity per node             |
 | Resource distance          | toggle, distance in meters per node             |
@@ -201,7 +202,8 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | PiP                        | Picture-in-Picture floating window              |
 
 **Picture-in-Picture**: playing fullscreen? Pop the radar into a floating always-on-top window. One click, native
-browser PiP. Alerts mirror onto it.
+browser PiP. Alerts mirror onto it. Turn on **Players in PiP** in the radar settings to add a player panel with gear,
+IP and health, beside the radar or under it.
 
 **Self-contained**: fonts, icons and game data are bundled in the binary. Once Albion connects, the radar needs no
 internet.

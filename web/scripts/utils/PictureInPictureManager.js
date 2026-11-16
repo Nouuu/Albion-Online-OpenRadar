@@ -1,7 +1,9 @@
 import {CATEGORIES} from '../constants/LoggerConstants.js';
+import {PipPlayersPanel, collectPlayers, computeLayout, readPanelSettings} from './PipPlayersPanel.js';
 
 class PictureInPictureManager {
     constructor() {
+        this.playersPanel = new PipPlayersPanel();
         this.pipCanvas = null;
         this.pipCtx = null;
         this.videoElement = null;
@@ -162,18 +164,27 @@ class PictureInPictureManager {
         const {mapCanvas, drawCanvas, ourPlayerCanvas, uiCanvas} = canvases;
 
         const sourceSize = mapCanvas?.width || this.size;
-        if (this.pipCanvas.width !== sourceSize) {
-            this.pipCanvas.width = sourceSize;
-            this.pipCanvas.height = sourceSize;
+        const {position, opts} = readPanelSettings(window.settingsSync);
+        const layout = computeLayout(position, sourceSize, opts);
+        const width = layout ? layout.width : sourceSize;
+        const height = layout ? layout.height : sourceSize;
+
+        if (this.pipCanvas.width !== width || this.pipCanvas.height !== height) {
+            this.pipCanvas.width = width;
+            this.pipCanvas.height = height;
             this.size = sourceSize;
         }
 
-        this.pipCtx.clearRect(0, 0, this.size, this.size);
+        this.pipCtx.clearRect(0, 0, width, height);
 
         if (mapCanvas) this.pipCtx.drawImage(mapCanvas, 0, 0);
         if (drawCanvas) this.pipCtx.drawImage(drawCanvas, 0, 0);
         if (ourPlayerCanvas) this.pipCtx.drawImage(ourPlayerCanvas, 0, 0);
         if (uiCanvas) this.pipCtx.drawImage(uiCanvas, 0, 0);
+
+        if (layout) {
+            this.playersPanel.draw(this.pipCtx, layout, collectPlayers(window.playersHandler));
+        }
     }
 
     dispatchStatusEvent(status) {
