@@ -29,9 +29,15 @@
     <script type="module">
         import { CATEGORIES } from '/scripts/constants/LoggerConstants.js';
         import settingsSync from '/scripts/utils/SettingsSync.js';
+        import { initI18n } from '/scripts/utils/I18n.js';
+        import { bindSettingControls } from '/scripts/utils/SettingControls.js';
 
         window.CATEGORIES = CATEGORIES;
         window.settingsSync = settingsSync;
+
+        initI18n(settingsSync);
+        const languageSwitcher = document.querySelector('[data-language-switcher]');
+        if (languageSwitcher) bindSettingControls(languageSwitcher, new AbortController().signal);
 
         window.__globalsReady = true;
         document.dispatchEvent(new CustomEvent('globalsReady'));
