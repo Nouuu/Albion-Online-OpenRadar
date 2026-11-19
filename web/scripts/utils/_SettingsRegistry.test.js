@@ -14,6 +14,7 @@ const TABLE = [
     [null, 'settingRadarHudZoneInfo', 'new'],
     [null, 'settingRadarHudStats', 'new'],
     [null, 'settingRadarPlayersBeside', 'new'],
+    [null, 'settingRadarPipPlayers', 'new'],
     [null, 'settingRadarKeepAwake', 'new'],
     ['settingResourceCount', 'settingRadarResourceCount', 'rename'],
     ['settingResourceDistance', 'settingRadarResourceDistance', 'rename'],
@@ -155,7 +156,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 134 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 136 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -178,7 +179,7 @@ describe('SettingsRegistry', () => {
         const expected = {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
             settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
-            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
+            settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarPipPlayers: 'off', settingRadarKeepAwake: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
             settingRadarClusterRadius: 30, settingRadarClusterMinSize: 2,
             settingPlayersDetect: true, settingPlayersShowEquipment: true, settingPlayersShowSpells: false,
@@ -278,6 +279,7 @@ describe('SettingsRegistry', () => {
 
     test('enum entries list their allowed values and hold their default', () => {
         expect(registryEntry('settingLogLevel').values).toEqual(['OFF', 'ERROR', 'WARN', 'INFO', 'DEBUG']);
+        expect(registryEntry('settingRadarPipPlayers').values).toEqual(['off', 'right', 'bottom']);
         for (const entry of SETTINGS.filter(e => e.type === 'enum')) {
             expect(entry.values, entry.key).toContain(entry.default);
         }
@@ -315,6 +317,7 @@ describe('SettingsRegistry control location', () => {
         ['settingRadarZoom', 'Radar', 'Radar settings > View'],
         ['settingRadarHudStats', 'Radar', 'Radar settings > Display'],
         ['settingRadarPlayersBeside', 'Radar', 'Radar settings > Display'],
+        ['settingRadarPipPlayers', 'Radar', 'Radar settings > Picture-in-Picture'],
         ['settingRadarKeepAwake', 'Radar', 'Radar settings > Display'],
         ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
         ['settingPlayersDetect', 'Players', 'Display'],

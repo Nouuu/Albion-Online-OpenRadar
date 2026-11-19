@@ -120,6 +120,26 @@
                             </section>
                             <section>
                                 <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
+                                    <i data-lucide="picture-in-picture-2" class="w-4 h-4"></i>
+                                    Picture-in-Picture
+                                </h3>
+                                <div class="grid grid-cols-1 gap-2 max-w-xl">
+                                    <div class="flex items-center gap-2 p-2 rounded-lg bg-base-300">
+                                        <i data-lucide="users" class="w-4 h-4 shrink-0 text-base-content/50"></i>
+                                        <span id="label-settingRadarPipPlayers" data-setting-label="settingRadarPipPlayers" class="text-base-content/80 text-xs whitespace-nowrap">Players in PiP</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarPipPlayers" data-tip="Adds a player panel with gear, IP and health to the PiP window, beside the radar or under it.">
+                                            <span tabindex="0" role="img" aria-label="Adds a player panel with gear, IP and health to the PiP window, beside the radar or under it." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                        </div>
+                                        <select data-setting="settingRadarPipPlayers" aria-labelledby="label-settingRadarPipPlayers" class="select select-bordered select-sm ml-auto w-full max-w-48">
+                                            <option value="off">Off</option>
+                                            <option value="right">Beside the radar</option>
+                                            <option value="bottom">Under the radar</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </section>
+                            <section>
+                                <h3 class="text-sm font-semibold text-base-content/80 mb-3 flex items-center gap-2">
                                     <i data-lucide="gem" class="w-4 h-4"></i>
                                     Resources
                                 </h3>

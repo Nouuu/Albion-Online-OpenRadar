@@ -23,6 +23,7 @@ import {CATEGORIES} from '../constants/LoggerConstants.js';
 import {createRadarRenderer} from './RadarRenderer.js';
 import {destroyEventQueue, getEventQueue} from './WebSocketEventQueue.js';
 import pictureInPictureManager from './PictureInPictureManager.js';
+import pipPlayersWindow from './PipPlayersWindow.js';
 import {destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
 import {exitFullscreenIfActive} from './FullscreenButton.js';
 import {startScreenWakeLock, stopScreenWakeLock} from './ScreenWakeLock.js';
@@ -259,6 +260,11 @@ export async function initRadar() {
             window.logger?.info(CATEGORIES.SYSTEM, 'PiPManagerInitialized', {});
         }
 
+        if (pipPlayersWindow.isSupported()) {
+            window.pipPlayersWindow = pipPlayersWindow;
+            document.dispatchEvent(new CustomEvent('pipPlayersWindowReady'));
+        }
+
     } catch (error) {
         window.logger?.error(CATEGORIES.SYSTEM, 'RadarInitFailed', {error: error.message});
         if (window.toast) window.toast.error('Failed to initialize radar');
@@ -288,6 +294,11 @@ export function destroyRadar() {
     if (cleanupIntervalId) {
         clearInterval(cleanupIntervalId);
         cleanupIntervalId = null;
+    }
+
+    if (window.pipPlayersWindow) {
+        pipPlayersWindow.destroy();
+        window.pipPlayersWindow = null;
     }
 
     if (window.pipManager) {

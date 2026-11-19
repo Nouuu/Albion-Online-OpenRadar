@@ -190,6 +190,7 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | Zone info box              | toggle, zone name, tier and PvP marker          |
 | Stats box                  | toggle, resource, mob and player counts         |
 | Players beside radar       | toggle, player list right of the radar if room  |
+| Players in PiP             | off, beside or under the radar, with gear       |
 | Keep screen awake          | toggle on touch screens, keeps the screen on    |
 | Resource count             | toggle, estimated quantity per node             |
 | Resource distance          | toggle, distance in meters per node             |
@@ -201,7 +202,17 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | PiP                        | Picture-in-Picture floating window              |
 
 **Picture-in-Picture**: playing fullscreen? Pop the radar into a floating always-on-top window. One click, native
-browser PiP. Alerts mirror onto it.
+browser PiP. Alerts mirror onto it. Turn on **Players in PiP** in the radar settings to add a player panel with gear,
+IP and health, beside the radar or under it.
+
+For a separate window instead, click **Players window** in the header (Chromium browsers: Chrome, Edge, Brave).
+It is an always-on-top window listing detected players with gear, IP, mount and health, and you can drag it
+anywhere. It cannot be transparent (a browser limitation). If your browser allows only one PiP window at a time,
+use its **Map** button to show the radar inside it.
+
+Browsers cannot make a PiP window transparent. If you want it see-through and click-through, the optional
+AutoHotkey v2 script [`tools/windows/window-opacity.ahk`](tools/windows/window-opacity.ahk) sets opacity
+(Ctrl+Alt+Up/Down) and click-through (Ctrl+Alt+T) on the window under the mouse. Windows only.
 
 **Self-contained**: fonts, icons and game data are bundled in the binary. Once Albion connects, the radar needs no
 internet.
