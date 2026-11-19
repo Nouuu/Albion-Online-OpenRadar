@@ -210,6 +210,10 @@ It is an always-on-top window listing detected players with gear, IP, mount and 
 anywhere. It cannot be transparent (a browser limitation). If your browser allows only one PiP window at a time,
 use its **Map** button to show the radar inside it.
 
+Browsers cannot make a PiP window transparent. If you want it see-through and click-through, the optional
+AutoHotkey v2 script [`tools/windows/window-opacity.ahk`](tools/windows/window-opacity.ahk) sets opacity
+(Ctrl+Alt+Up/Down) and click-through (Ctrl+Alt+T) on the window under the mouse. Windows only.
+
 **Self-contained**: fonts, icons and game data are bundled in the binary. Once Albion connects, the radar needs no
 internet.
 
