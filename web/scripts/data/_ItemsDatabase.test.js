@@ -23,8 +23,8 @@ const REAL_IDS = [
     [5588, 'T8_HEAD_GATHERER_FIBER@4', 8, 4],
     [5609, 'T8_ARMOR_GATHERER_FIBER', 8, 0],
     [5634, 'T8_SHOES_GATHERER_FIBER', 8, 0],
-    [11149, 'UNIQUE_OFF_VANITY_CHARITY_MARCH2020', 0, 0],
-    [12237, 'T8_JOURNAL_FISHING_FULL', 8, 0],
+    [11155, 'UNIQUE_OFF_VANITY_CHARITY_MARCH2020', 0, 0],
+    [12248, 'T8_JOURNAL_FISHING_FULL', 8, 0],
 ];
 
 // pcap-derived: item ids read off the wire in the 2026-09-03 capture (CharacterEquipmentChanged and
@@ -36,8 +36,8 @@ const WIRE_IDS = [
 ];
 
 describe('ItemsDatabase real catalog', () => {
-    // @verified 2026-09-03: array index is the real Albion item id, cross-checked against upstream items.txt
-    // fetched 2026-09-03 after the Dragonfire reassignment.
+    // @verified 2026-11-15: array index is the real Albion item id, cross-checked against upstream items.txt
+    // fetched 2026-11-15 for game 1.32.040.346594.
     test.each([...REAL_IDS, ...WIRE_IDS])('id %i resolves to %s', (id, name, tier, enchant) => {
         const db = loadRealItemsDatabase();
 
@@ -56,12 +56,12 @@ describe('ItemsDatabase real catalog', () => {
         expect(db.getItemById(0)).toBeUndefined();
     });
 
-    // @verified 2026-09-03: catalog covers the full upstream id space (items.txt holds 12237 ids), guards a
+    // @verified 2026-11-15: catalog covers the full upstream id space (items.txt holds 12248 ids), guards a
     // silent parse failure.
     test('catalog holds the full upstream id space', () => {
         const db = loadRealItemsDatabase();
 
-        expect(db.items.size).toBe(12237);
+        expect(db.items.size).toBe(12248);
     });
 
     // @verified 2026-07-24: no non-null raw entry carries a falsy n, guards a builder regex drift.
