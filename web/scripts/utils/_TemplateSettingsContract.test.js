@@ -58,7 +58,7 @@ const TOOLTIPS = {
     settingRadarHudZoneInfo: 'Top-left box with the zone name, tier and a PvP marker.',
     settingRadarHudStats: 'Top-right box: resource and mob counts, plus player count when detection is on.',
     settingRadarPlayersBeside: 'Shows the player list to the right of the radar when the window is wide enough.',
-    settingRadarFarmRoute: 'Shows a zone map under the player list. Nodes stay marked on it until you press Reset map.',
+    settingRadarFarmRoute: 'Shows a zone map above the player list. Nodes stay marked on it until you press Reset map.',
     settingRadarKeepAwake: 'Stops the screen from sleeping while the radar page is open. Uses more battery on phones.',
     settingRadarResourceCount: 'Estimated count from size/tier, bonuses excluded. Fishing shows spawned/total fish.',
     settingRadarResourceDistance: 'Distance in meters: hidden under 2 m, green under 10 m, yellow 10-19 m, orange 20 m+.',
@@ -505,7 +505,8 @@ describe('settings control tile contract', () => {
             'settingMistsWispCages', 'settingMistsWisps', 'settingMistsKnightfallAbbey', 'settingLogToConsole', 'settingLogToServer',
             'settingDebugEnemiesUnidentified', 'settingDebugEnemiesTypeId', 'settingDebugEnemiesTier', 'settingDebugEnemiesName',
             'settingDebugEnemiesCategoryBadge', 'settingDebugResourcesTypeId', 'settingDebugResourcesDbName', 'settingDebugPlayersIds',
-            'settingDebugMistsWispIds', 'settingDebugWsCoalescing', 'settingDebugPcapRecording', 'settingDebugBackendLogs'],
+            'settingDebugMistsWispIds', 'settingDebugWsCoalescing', 'settingDebugPcapRecording', 'settingDebugBackendLogs',
+            'settingRadarShowResources', 'settingRadarShowFishing', 'settingRadarShowEnemies', 'settingRadarShowChests', 'settingRadarShowMists', 'settingRadarShowDungeons', 'settingRadarShowPlayers'],
         checkbox: ['settingPlayersPassive', 'settingPlayersFaction', 'settingPlayersHostile', 'settingEnemiesNormal',
             'settingEnemiesChampion', 'settingEnemiesMiniBoss', 'settingEnemiesBoss', 'settingEnemiesMistsCrystalSpider',
             'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver', 'settingEnemiesMistsGriffin',
@@ -674,6 +675,7 @@ describe('settings control tile contract', () => {
         panelPair: ['grid', 'grid-cols-1', '@sm:grid-cols-2', 'gap-2'],
         stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
         sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
+        column: ['gap-2'],
     };
     const LAYOUT_CLASS = /^(grid|gap-.*|max-w-.*|(@?\w+:)?grid-cols-.*)$/;
     const tiles = pages.flatMap(({name, root}) => [...root.querySelectorAll('.flex.items-center.p-2.rounded-lg')]
@@ -696,6 +698,8 @@ describe('settings control tile contract', () => {
 
     function expectedTypes(list) {
         if (list.querySelector('input[type="range"]')) return ['sliders'];
+        // The radar layer switches are a narrow side column by design, one under another.
+        if (list.closest('#radarLayersPanel')) return ['column'];
         const count = sameNatureCount(list);
         if (count < 2) return ['stack'];
         return count === 2 ? ['pair', 'panelPair'] : ['items', 'panel'];

@@ -146,8 +146,8 @@
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
                                         <input type="checkbox" data-setting="settingRadarFarmRoute" aria-labelledby="label-settingRadarFarmRoute" class="toggle toggle-primary toggle-sm">
                                         <span id="label-settingRadarFarmRoute" data-setting-label="settingRadarFarmRoute" class="text-base-content/80 text-xs group-hover:text-base-content">Farm route (experimental)</span>
-                                        <div class="tooltip" data-setting-tip="settingRadarFarmRoute" data-tip="Shows a zone map under the player list. Nodes stay marked on it until you press Reset map.">
-                                            <span tabindex="0" role="img" aria-label="Shows a zone map under the player list. Nodes stay marked on it until you press Reset map." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                        <div class="tooltip" data-setting-tip="settingRadarFarmRoute" data-tip="Shows a zone map above the player list. Nodes stay marked on it until you press Reset map.">
+                                            <span tabindex="0" role="img" aria-label="Shows a zone map above the player list. Nodes stay marked on it until you press Reset map." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors pointer-fine:hidden">
@@ -221,6 +221,68 @@
     </div>
 
     <div id="radarSide" class="flex flex-col gap-4 grow min-w-0">
+    <div class="flex flex-wrap items-start gap-4">
+    <!-- Farm Route Section (experimental): zone map with saved nodes -->
+    <div id="farmRouteSection" class="hidden card bg-base-200 grow basis-72 min-w-0">
+        <div class="card-body phone-landscape:p-2">
+            <h3 class="text-xl phone-landscape:text-base font-semibold text-base-content flex flex-wrap items-center gap-3 phone-landscape:gap-2">
+                Farm route
+                <span class="badge badge-warning badge-sm">Experimental</span>
+                <span id="farmRouteZone" data-no-i18n class="text-xs font-normal font-mono text-base-content/50"></span>
+                <button type="button" id="farmRouteReset" class="btn btn-ghost btn-xs ml-auto" aria-label="Reset map" title="Reset map"><i data-lucide="rotate-ccw" class="w-3 h-3"></i>Reset map</button>
+            </h3>
+            <canvas id="farmRouteCanvas" width="420" height="420" class="w-full max-w-xl mx-auto aspect-square rounded-lg bg-base-300"></canvas>
+        </div>
+    </div>
+
+    <!-- Layer switches: hide or show what the radar draws without touching the filters of each page -->
+    <div id="radarLayersPanel" class="card bg-base-200 grow sm:grow-0 basis-52">
+        <div class="card-body p-3">
+            <h3 class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                Radar layers
+            </h3>
+            <div class="flex flex-col gap-2">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowResources" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="gem" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowResources" data-setting-label="settingRadarShowResources" class="text-base-content/80 text-xs group-hover:text-base-content">Resources</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowFishing" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="fish" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowFishing" data-setting-label="settingRadarShowFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowEnemies" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="skull" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowEnemies" data-setting-label="settingRadarShowEnemies" class="text-base-content/80 text-xs group-hover:text-base-content">Enemies</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowChests" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="package" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowChests" data-setting-label="settingRadarShowChests" class="text-base-content/80 text-xs group-hover:text-base-content">Chests</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowMists" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="cloud-fog" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowMists" data-setting-label="settingRadarShowMists" class="text-base-content/80 text-xs group-hover:text-base-content">Mists</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowDungeons" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="door-open" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowDungeons" data-setting-label="settingRadarShowDungeons" class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowPlayers" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowPlayers" data-setting-label="settingRadarShowPlayers" class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
+                </label>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <!-- Detected Players Section -->
     <div id="playersSection" class="@container card bg-base-200 grow min-w-0 in-data-[players-beside]:overflow-y-auto">
         <div class="card-body phone-landscape:p-2">
@@ -299,19 +361,6 @@
             </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Farm Route Section (experimental): zone map with saved nodes -->
-    <div id="farmRouteSection" class="hidden card bg-base-200">
-        <div class="card-body phone-landscape:p-2">
-            <h3 class="text-xl phone-landscape:text-base font-semibold text-base-content flex flex-wrap items-center gap-3 phone-landscape:gap-2">
-                Farm route
-                <span class="badge badge-warning badge-sm">Experimental</span>
-                <span id="farmRouteZone" data-no-i18n class="text-xs font-normal font-mono text-base-content/50"></span>
-                <button type="button" id="farmRouteReset" class="btn btn-ghost btn-xs ml-auto" aria-label="Reset map" title="Reset map"><i data-lucide="rotate-ccw" class="w-3 h-3"></i>Reset map</button>
-            </h3>
-            <canvas id="farmRouteCanvas" width="420" height="420" class="w-full max-w-xl mx-auto aspect-square rounded-lg bg-base-300"></canvas>
         </div>
     </div>
     </div>

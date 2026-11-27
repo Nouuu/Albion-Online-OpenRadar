@@ -204,7 +204,7 @@ export class RadarRenderer {
 
         // Cluster detection with caching (recalculated every CLUSTER_UPDATE_INTERVAL)
         let clustersForInfo = null;
-        if (settingsSync.getBool('settingRadarResourceClusters') && context) {
+        if (settingsSync.getBool('settingRadarResourceClusters') && settingsSync.getBool('settingRadarShowResources') && context) {
             const currentTime = performance.now();
             const timeSinceLastUpdate = currentTime - this.lastClusterUpdate;
 
@@ -240,63 +240,63 @@ export class RadarRenderer {
             if (this.drawings.harvestablesDrawing && this.handlers.harvestablesHandler) {
                 this.drawings.harvestablesDrawing.invalidate(
                     context,
-                    this.handlers.harvestablesHandler.harvestableList
+                    this._inLayer('Resources', this.handlers.harvestablesHandler.harvestableList)
                 );
             }
 
             if (this.drawings.mobsDrawing && this.handlers.mobsHandler) {
                 this.drawings.mobsDrawing.invalidate(
                     context,
-                    this.handlers.mobsHandler.mobsList
+                    this._visibleMobs(this.handlers.mobsHandler.mobsList)
                 );
             }
 
             if (this.drawings.chestsDrawing && this.handlers.chestsHandler) {
                 this.drawings.chestsDrawing.invalidate(
                     context,
-                    this.handlers.chestsHandler.chestsList
+                    this._inLayer('Chests', this.handlers.chestsHandler.chestsList)
                 );
             }
 
             if (this.drawings.playersDrawing && this.handlers.playersHandler) {
                 this.drawings.playersDrawing.invalidate(
                     context,
-                    this.handlers.playersHandler.getFilteredPlayers()
+                    this._inLayer('Players', this.handlers.playersHandler.getFilteredPlayers())
                 );
             }
 
             if (this.drawings.wispCageDrawing && this.handlers.wispCageHandler) {
                 this.drawings.wispCageDrawing.draw(
                     context,
-                    this.handlers.wispCageHandler.cages
+                    this._inLayer('Mists', this.handlers.wispCageHandler.cages)
                 );
             }
 
             if (this.drawings.mistsDungeonDrawing && this.handlers.mistsDungeonHandler) {
                 this.drawings.mistsDungeonDrawing.draw(
                     context,
-                    this.handlers.mistsDungeonHandler.portalList
+                    this._inLayer('Mists', this.handlers.mistsDungeonHandler.portalList)
                 );
             }
 
             if (this.drawings.mistsWispDrawing && this.handlers.mobsHandler) {
                 this.drawings.mistsWispDrawing.invalidate(
                     context,
-                    this.handlers.mobsHandler.mistList
+                    this._inLayer('Mists', this.handlers.mobsHandler.mistList)
                 );
             }
 
             if (this.drawings.fishingDrawing && this.handlers.fishingHandler) {
                 this.drawings.fishingDrawing.draw(
                     context,
-                    this.handlers.fishingHandler.fishes
+                    this._inLayer('Fishing', this.handlers.fishingHandler.fishes)
                 );
             }
 
             if (this.drawings.dungeonsDrawing && this.handlers.dungeonsHandler) {
                 this.drawings.dungeonsDrawing.draw(
                     context,
-                    this.handlers.dungeonsHandler.dungeonList
+                    this._visibleDungeons(this.handlers.dungeonsHandler.dungeonList)
                 );
             }
         }
@@ -514,6 +514,27 @@ export class RadarRenderer {
         ctx.lineWidth = 5;
         ctx.strokeRect(3, 3, canvasSize - 6, canvasSize - 6);
         ctx.restore();
+    }
+
+    // Layer switches only decide what is drawn; handlers keep tracking, so showing a layer again is instant.
+    _inLayer(layer, list) {
+        return settingsSync.getBool(`settingRadarShow${layer}`) ? list : [];
+    }
+
+    _visibleMobs(mobs) {
+        const resources = settingsSync.getBool('settingRadarShowResources');
+        const enemies = settingsSync.getBool('settingRadarShowEnemies');
+        if (resources && enemies) return mobs;
+        return mobs.filter(mob => mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable
+            ? resources : enemies);
+    }
+
+    // Mists portals share the dungeon list; their settingKeys tell them apart.
+    _visibleDungeons(dungeons) {
+        const mists = settingsSync.getBool('settingRadarShowMists');
+        const others = settingsSync.getBool('settingRadarShowDungeons');
+        if (mists && others) return dungeons;
+        return dungeons.filter(dungeon => dungeon.settingKeys?.[0]?.startsWith('settingMists') ? mists : others);
     }
 
     _collectClusterCandidates() {
