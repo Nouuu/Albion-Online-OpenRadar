@@ -125,7 +125,7 @@ function drawBackground(ctx, view) {
 
     if (!view.hasMap) return;
 
-    const src = `/images/Maps/${view.id}.webp`;
+    const src = `/images/Maps/${zonesDatabase.getMapImageName(view.id)}.webp`;
     const image = imageCache.GetPreloadedImage(src, 'Maps');
     if (image) {
         ctx.save();
@@ -190,8 +190,9 @@ export function drawFarmRouteMap(canvas, {mapId, lpX, lpY, harvestables, fishes 
 
     rememberNodes(mapId, harvestables);
     rememberFishes(mapId, fishes);
-    const nodes = visibleNodes(savedNodes(mapId));
-    const pools = settingsSync.getBool('settingResourcesFishing') ? savedFishes(mapId) : [];
+    const nodes = settingsSync.getBool('settingRadarShowResources') ? visibleNodes(savedNodes(mapId)) : [];
+    const showPools = settingsSync.getBool('settingRadarShowFishing') && settingsSync.getBool('settingResourcesFishing');
+    const pools = showPools ? savedFishes(mapId) : [];
     const view = mapView(mapId, canvas.width, [...nodes, ...pools, {posX: lpX, posY: lpY}]);
     drawBackground(ctx, view);
     for (const node of nodes) drawNode(ctx, worldToMap(view, node.posX, node.posY), node);
