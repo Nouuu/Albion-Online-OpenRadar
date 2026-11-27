@@ -795,7 +795,7 @@ describe('HarvestablesHandler', () => {
             handler.newHarvestableObject(600, near);
             handler.newHarvestableObject(601, far);
 
-            handler.removeNotInRange(0, 0);
+            handler.removeNotInRange(0, 0, 80);
 
             expect(handler.getSize()).toBe(1);
             expect(handler.getHarvestableList()[0].id).toBe(600);
@@ -806,7 +806,17 @@ describe('HarvestablesHandler', () => {
             const p = {0: 602, 5: 14, 6: -1, 7: 4, 8: [50, 0], 10: 2, 11: 0};
             handler.newHarvestableObject(602, p);
 
-            handler.removeNotInRange(0, 0);
+            handler.removeNotInRange(0, 0, 80);
+
+            expect(handler.getSize()).toBe(1);
+        });
+
+        // synthetic: the cut-off is the range argument, not a fixed 80.
+        test('synthetic: removeNotInRange keeps entities within a raised range', () => {
+            const p = {0: 604, 5: 14, 6: -1, 7: 4, 8: [150, 0], 10: 2, 11: 0};
+            handler.newHarvestableObject(604, p);
+
+            handler.removeNotInRange(0, 0, 300);
 
             expect(handler.getSize()).toBe(1);
         });
@@ -817,7 +827,7 @@ describe('HarvestablesHandler', () => {
             handler.newHarvestableObject(603, p);
             handler.harvestableList[0].size = undefined;
 
-            handler.removeNotInRange(0, 0);
+            handler.removeNotInRange(0, 0, 80);
 
             expect(handler.getSize()).toBe(0);
         });

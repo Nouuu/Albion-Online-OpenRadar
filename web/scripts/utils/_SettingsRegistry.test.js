@@ -10,11 +10,22 @@ const TABLE = [
     ['settingCanvasSize', 'settingRadarSize', 'rename'],
     [null, 'settingRadarFitToScreen', 'new'],
     ['settingIconSize', 'settingRadarIconSize', 'rename'],
+    [null, 'settingRadarResourceCountSize', 'new'],
+    [null, 'settingRadarSaveRange', 'new'],
+    [null, 'settingRadarNodeTime', 'new'],
     ['settingShowMap', 'settingRadarMapBackground', 'fix'],
     [null, 'settingRadarHudZoneInfo', 'new'],
     [null, 'settingRadarHudStats', 'new'],
     [null, 'settingRadarPlayersBeside', 'new'],
     [null, 'settingRadarKeepAwake', 'new'],
+    [null, 'settingRadarFarmRoute', 'new'],
+    [null, 'settingRadarShowResources', 'new'],
+    [null, 'settingRadarShowFishing', 'new'],
+    [null, 'settingRadarShowEnemies', 'new'],
+    [null, 'settingRadarShowChests', 'new'],
+    [null, 'settingRadarShowMists', 'new'],
+    [null, 'settingRadarShowDungeons', 'new'],
+    [null, 'settingRadarShowPlayers', 'new'],
     ['settingResourceCount', 'settingRadarResourceCount', 'rename'],
     ['settingResourceDistance', 'settingRadarResourceDistance', 'rename'],
     ['settingResourceColorBadges', 'settingRadarResourceTierBadges', 'rename'],
@@ -115,6 +126,7 @@ const TABLE = [
     ['settingWsCoalescing', 'settingDebugWsCoalescing', 'rename'],
     ['settingWsThrottling', null, 'remove'],
     [null, 'settingUiRadarSettingsOpen', 'new'],
+    [null, 'settingUiRadarPlayersOpen', 'new'],
     [null, 'settingUiPlayersDisplayOpen', 'new'],
     [null, 'settingUiPlayersAlertsOpen', 'new'],
     [null, 'settingUiPlayersTypesOpen', 'new'],
@@ -141,6 +153,7 @@ const TABLE = [
     ['collapse-settings-network', 'settingUiSettingsNetworkOpen', 'rename'],
     [null, 'settingUiSettingsDangerZoneOpen', 'new'],
     ['sidebarCollapsed', 'settingUiSidebarCollapsed', 'rename'],
+    [null, 'settingUiLanguage', 'new'],
 ];
 
 describe('SettingsRegistry', () => {
@@ -155,7 +168,7 @@ describe('SettingsRegistry', () => {
         expect(SETTINGS.some(e => e.key === 'settingSchemaVersion')).toBe(false);
     });
 
-    test('MIGRATION_ROWS maps the 134 rows of the registry table with their class', () => {
+    test('MIGRATION_ROWS maps the 140 rows of the registry table with their class', () => {
         expect(MIGRATION_ROWS).toEqual(TABLE.map(([legacyKey, key, migration]) => ({legacyKey, key, migration})));
     });
 
@@ -177,6 +190,8 @@ describe('SettingsRegistry', () => {
     test('defaults follow the registry table', () => {
         const expected = {
             settingRadarZoom: 1, settingRadarSize: 500, settingRadarFitToScreen: false, settingRadarIconSize: 1,
+            settingRadarResourceCountSize: 1, settingRadarSaveRange: 80, settingRadarNodeTime: 5, settingRadarFarmRoute: false,
+            settingRadarShowResources: true, settingRadarShowFishing: true, settingRadarShowEnemies: true, settingRadarShowChests: true, settingRadarShowMists: true, settingRadarShowDungeons: true, settingRadarShowPlayers: true,
             settingRadarMapBackground: true, settingRadarHudZoneInfo: true,
             settingRadarHudStats: true, settingRadarPlayersBeside: false, settingRadarKeepAwake: true, settingRadarResourceCount: false, settingRadarResourceDistance: false,
             settingRadarResourceTierBadges: false, settingRadarResourceClusters: false,
@@ -210,7 +225,7 @@ describe('SettingsRegistry', () => {
             settingLogCategoryMap: false, settingLogCategoryPlayers: false, settingLogCategoryMobs: false,
             settingLogCategoryResources: false, settingLogCategoryDungeons: false, settingLogCategoryFishing: false,
             settingLogToConsole: false, settingLogToServer: false, settingDebugWsCoalescing: true,
-            settingUiRadarSettingsOpen: false,
+            settingUiRadarSettingsOpen: false, settingUiRadarPlayersOpen: true,
             settingUiPlayersDisplayOpen: true, settingUiPlayersAlertsOpen: true,
             settingUiPlayersTypesOpen: true, settingUiPlayersLimitsOpen: true,
             settingUiChestsRaritiesOpen: true, settingUiChestsMistsOpen: true, settingUiChestsDungeonsOpen: true,
@@ -222,6 +237,7 @@ describe('SettingsRegistry', () => {
             settingUiResourcesOtherOpen: true, settingUiResourcesDisplayOpen: true,
             settingUiSettingsLoggingOpen: false, settingUiSettingsDebugOpen: false,
             settingUiSettingsNetworkOpen: false, settingUiSettingsDangerZoneOpen: true, settingUiSidebarCollapsed: false,
+            settingUiLanguage: 'en',
         };
         for (const [key, value] of Object.entries(expected)) {
             expect(registryDefault(key), key).toEqual(value);
@@ -245,6 +261,9 @@ describe('SettingsRegistry', () => {
             settingRadarZoom: [0.1, 3, 0.1],
             settingRadarSize: [300, 1200, 50],
             settingRadarIconSize: [0.5, 2, 0.1],
+            settingRadarResourceCountSize: [0.5, 3, 0.1],
+            settingRadarSaveRange: [40, 1500, 10],
+            settingRadarNodeTime: [5, 240, 5],
             settingRadarClusterRadius: [10, 100, 5],
             settingRadarClusterMinSize: [2, 10, 1],
             settingEnemiesMinHealth: [100, 1000000, 100],
@@ -267,6 +286,9 @@ describe('SettingsRegistry', () => {
             settingRadarZoom: '%',
             settingRadarSize: ' px',
             settingRadarIconSize: '%',
+            settingRadarResourceCountSize: '%',
+            settingRadarSaveRange: ' m',
+            settingRadarNodeTime: ' min',
             settingAlertSoundVolume: '%',
             settingAlertSoundCooldown: ' ms',
         };
@@ -316,7 +338,10 @@ describe('SettingsRegistry control location', () => {
         ['settingRadarHudStats', 'Radar', 'Radar settings > Display'],
         ['settingRadarPlayersBeside', 'Radar', 'Radar settings > Display'],
         ['settingRadarKeepAwake', 'Radar', 'Radar settings > Display'],
+        ['settingRadarFarmRoute', 'Radar', 'Radar settings > Display'],
+        ['settingRadarShowEnemies', 'Radar', 'Layers'],
         ['settingUiRadarSettingsOpen', 'Radar', 'Radar settings'],
+        ['settingUiRadarPlayersOpen', 'Radar', 'Player list'],
         ['settingPlayersDetect', 'Players', 'Display'],
         ['settingPlayersShowGuild', 'Players', 'Display'],
         ['settingPlayersShowTotalIp', 'Players', 'Display'],
@@ -349,6 +374,7 @@ describe('SettingsRegistry control location', () => {
         ['settingUiSettingsNetworkOpen', 'Settings', 'Network'],
         ['settingUiSettingsDangerZoneOpen', 'Settings', 'Danger Zone'],
         ['settingUiSidebarCollapsed', 'Layout', 'Sidebar'],
+        ['settingUiLanguage', 'Layout', 'Language'],
     ])('%s is on page %s, section %s', (key, page, section) => {
         expect(registryEntry(key)).toMatchObject({page, section});
     });

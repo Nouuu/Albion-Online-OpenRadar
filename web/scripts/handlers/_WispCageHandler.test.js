@@ -128,6 +128,28 @@ describe('WispCageHandler', () => {
         });
     });
 
+    describe('out of range', () => {
+        // synthetic: markOutOfRange keeps the cage flagged until a new event touches it.
+        test('markOutOfRange flags the cage and a repeated spawn clears the flag', () => {
+            handler.newCageEvent({0: 7, 2: [10, 10], 4: 'cage'});
+            handler.markOutOfRange(7);
+            expect(handler.cages[0].outOfRange).toBe(true);
+
+            handler.newCageEvent({0: 7, 2: [10, 10], 4: 'cage'});
+            expect(handler.cages[0].outOfRange).toBe(false);
+        });
+
+        // synthetic: removeNotInRange drops cages farther than the save range from the player.
+        test('removeNotInRange drops cages beyond the range and keeps the ones inside', () => {
+            handler.newCageEvent({0: 1, 2: [50, 0], 4: 'near'});
+            handler.newCageEvent({0: 2, 2: [200, 0], 4: 'far'});
+
+            handler.removeNotInRange(0, 0, 80);
+
+            expect(handler.cages.map(c => c.id)).toEqual([1]);
+        });
+    });
+
     describe('Clear', () => {
         // @verified 2026-04-18: Clear empties the cages list.
         test('synthetic: Clear empties cages list', () => {

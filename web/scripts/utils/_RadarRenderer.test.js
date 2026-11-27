@@ -242,3 +242,33 @@ describe('RadarRenderer cluster errors', () => {
         expect(window.logger.error).toHaveBeenCalledWith('HARVESTABLES', 'cluster_draw_failed', expect.any(Error));
     });
 });
+
+// synthetic: hand-built entity shapes, only the layer switch gate is under test.
+describe('RadarRenderer layer switches', () => {
+    const living = {id: 1, type: EnemyType.LivingHarvestable};
+    const enemy = {id: 2, type: EnemyType.Boss};
+    const mistPortal = {id: 3, settingKeys: ['settingMistsSolo']};
+    const dungeon = {id: 4, settingKeys: ['settingDungeonsSolo']};
+    const hide = (...layers) => settingsSync.getBool.mockImplementation(
+        key => !layers.some(layer => key === `settingRadarShow${layer}`));
+
+    test('a hidden layer hands the drawing an empty list', () => {
+        hide('Chests');
+        expect(makeRenderer()._inLayer('Chests', [{id: 1}])).toEqual([]);
+        expect(makeRenderer()._inLayer('Players', [{id: 1}])).toHaveLength(1);
+    });
+
+    test('living creatures follow Resources, hostile mobs follow Enemies', () => {
+        hide('Resources');
+        expect(makeRenderer()._visibleMobs([living, enemy])).toEqual([enemy]);
+        hide('Enemies');
+        expect(makeRenderer()._visibleMobs([living, enemy])).toEqual([living]);
+    });
+
+    test('Mists portals follow Mists, other entrances follow Dungeons', () => {
+        hide('Mists');
+        expect(makeRenderer()._visibleDungeons([mistPortal, dungeon])).toEqual([dungeon]);
+        hide('Dungeons');
+        expect(makeRenderer()._visibleDungeons([mistPortal, dungeon])).toEqual([mistPortal]);
+    });
+});

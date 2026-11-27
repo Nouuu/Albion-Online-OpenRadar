@@ -369,10 +369,10 @@ export class HarvestablesHandler
         }
     }
 
-    removeNotInRange(lpX, lpY)
+    removeNotInRange(lpX, lpY, range)
     {
         this.harvestableList = this.harvestableList.filter(
-            (x) => this.calculateDistance(lpX, lpY, x.posX, x.posY) <= 80
+            (x) => this.calculateDistance(lpX, lpY, x.posX, x.posY) <= range
         );
 
         this.harvestableList = this.harvestableList.filter(item => item.size !== undefined);

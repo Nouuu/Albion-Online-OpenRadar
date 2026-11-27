@@ -17,11 +17,15 @@ const LABELS = {
     settingRadarSize: 'Max size',
     settingRadarFitToScreen: 'Fit to screen',
     settingRadarIconSize: 'Icon size',
+    settingRadarResourceCountSize: 'Count size',
+    settingRadarSaveRange: 'Save range',
+    settingRadarNodeTime: 'Node time',
     settingRadarMapBackground: 'Map background',
     settingRadarHudZoneInfo: 'Zone info box',
     settingRadarHudStats: 'Stats box',
     settingRadarPlayersBeside: 'Players beside radar',
     settingRadarKeepAwake: 'Keep screen awake',
+    settingRadarFarmRoute: 'Farm route (experimental)',
     settingRadarResourceCount: 'Resource count',
     settingRadarResourceDistance: 'Resource distance',
     settingRadarResourceTierBadges: 'Resource tier color badges',
@@ -29,6 +33,7 @@ const LABELS = {
     settingRadarClusterRadius: 'Cluster radius (m)',
     settingRadarClusterMinSize: 'Min nodes per cluster',
     settingUiRadarSettingsOpen: 'Radar settings',
+    settingUiRadarPlayersOpen: 'Player list',
     settingPlayersDetect: 'Detect players',
     settingPlayersShowGuild: 'Show Guild Name',
     settingPlayersShowTotalIp: 'Show Total IP',
@@ -53,10 +58,13 @@ const TOOLTIPS = {
     settingRadarHudZoneInfo: 'Top-left box with the zone name, tier and a PvP marker.',
     settingRadarHudStats: 'Top-right box: resource and mob counts, plus player count when detection is on.',
     settingRadarPlayersBeside: 'Shows the player list to the right of the radar when the window is wide enough.',
+    settingRadarFarmRoute: 'Shows a zone map above the player list. Nodes stay marked on it until you press Reset map.',
     settingRadarKeepAwake: 'Stops the screen from sleeping while the radar page is open. Uses more battery on phones.',
     settingRadarResourceCount: 'Estimated count from size/tier, bonuses excluded. Fishing shows spawned/total fish.',
     settingRadarResourceDistance: 'Distance in meters: hidden under 2 m, green under 10 m, yellow 10-19 m, orange 20 m+.',
     settingRadarResourceTierBadges: 'Colored squares by type instead of icons, with tier. Living creatures get a gold border.',
+    settingRadarNodeTime: 'How long a node stays on the radar without news from the game. Default 5 min.',
+    settingRadarSaveRange: 'Nodes, enemies, wisp portals and cages stay saved within this distance of you and are dropped beyond it. Entities the game stopped sending are drawn dimmed.',
     settingRadarClusterRadius: 'Groups same-type, same-tier resources within this range. Default 30 m.',
     settingRadarClusterMinSize: 'Smallest group drawn as a cluster. Default: 2.',
     settingRadarResourceClusters: 'Circles groups of nearby same-type nodes, with count and distance. Only nodes your filters show are grouped.',
@@ -489,7 +497,7 @@ describe('settings control tile contract', () => {
     const ALERT_KEYS = ['settingAlertFlash', 'settingAlertBorder', 'settingAlertSound'];
     const KIND = {
         toggle: ['settingRadarFitToScreen', 'settingRadarMapBackground', 'settingRadarHudZoneInfo', 'settingRadarHudStats',
-            'settingRadarPlayersBeside', 'settingRadarKeepAwake', 'settingRadarResourceCount', 'settingRadarResourceDistance',
+            'settingRadarPlayersBeside', 'settingRadarKeepAwake', 'settingRadarFarmRoute', 'settingRadarResourceCount', 'settingRadarResourceDistance',
             'settingRadarResourceTierBadges', 'settingRadarResourceClusters', 'settingPlayersDetect', 'settingPlayersShowEquipment',
             'settingPlayersShowSpells', 'settingPlayersShowGuild', 'settingPlayersShowTotalIp', 'settingPlayersShowMounted',
             'settingPlayersShowHealthBars', 'settingAlertFlash', 'settingAlertBorder', 'settingAlertSound',
@@ -497,7 +505,8 @@ describe('settings control tile contract', () => {
             'settingMistsWispCages', 'settingMistsWisps', 'settingMistsKnightfallAbbey', 'settingLogToConsole', 'settingLogToServer',
             'settingDebugEnemiesUnidentified', 'settingDebugEnemiesTypeId', 'settingDebugEnemiesTier', 'settingDebugEnemiesName',
             'settingDebugEnemiesCategoryBadge', 'settingDebugResourcesTypeId', 'settingDebugResourcesDbName', 'settingDebugPlayersIds',
-            'settingDebugMistsWispIds', 'settingDebugWsCoalescing', 'settingDebugPcapRecording', 'settingDebugBackendLogs'],
+            'settingDebugMistsWispIds', 'settingDebugWsCoalescing', 'settingDebugPcapRecording', 'settingDebugBackendLogs',
+            'settingRadarShowResources', 'settingRadarShowFishing', 'settingRadarShowEnemies', 'settingRadarShowChests', 'settingRadarShowMists', 'settingRadarShowDungeons', 'settingRadarShowPlayers'],
         checkbox: ['settingPlayersPassive', 'settingPlayersFaction', 'settingPlayersHostile', 'settingEnemiesNormal',
             'settingEnemiesChampion', 'settingEnemiesMiniBoss', 'settingEnemiesBoss', 'settingEnemiesMistsCrystalSpider',
             'settingEnemiesMistsFairyDragon', 'settingEnemiesMistsVeilWeaver', 'settingEnemiesMistsGriffin',
@@ -666,6 +675,7 @@ describe('settings control tile contract', () => {
         panelPair: ['grid', 'grid-cols-1', '@sm:grid-cols-2', 'gap-2'],
         stack: ['grid', 'grid-cols-1', 'gap-2', 'max-w-xl'],
         sliders: ['grid', 'grid-cols-1', 'gap-2', 'max-w-2xl'],
+        column: ['gap-2'],
     };
     const LAYOUT_CLASS = /^(grid|gap-.*|max-w-.*|(@?\w+:)?grid-cols-.*)$/;
     const tiles = pages.flatMap(({name, root}) => [...root.querySelectorAll('.flex.items-center.p-2.rounded-lg')]
@@ -688,6 +698,8 @@ describe('settings control tile contract', () => {
 
     function expectedTypes(list) {
         if (list.querySelector('input[type="range"]')) return ['sliders'];
+        // The radar layer switches are a narrow side column by design, one under another.
+        if (list.closest('#radarLayersPanel')) return ['column'];
         const count = sameNatureCount(list);
         if (count < 2) return ['stack'];
         return count === 2 ? ['pair', 'panelPair'] : ['items', 'panel'];

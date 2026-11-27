@@ -61,10 +61,12 @@ class Mob {
         this.hX = 0;
         this.hY = 0;
         this.lastUpdateTime = Date.now(); // For stale entity cleanup
+        this.outOfRange = false;          // Server sent Leave but the radar keeps it within settingRadarSaveRange
     }
 
     touch() {
         this.lastUpdateTime = Date.now();
+        this.outOfRange = false;
     }
 
     /**
@@ -94,6 +96,7 @@ class Mist {
         this.hX = 0;
         this.hY = 0;
         this.lastUpdateTime = Date.now(); // For stale entity cleanup
+        this.outOfRange = false;
 
         if (name.toLowerCase().includes("solo")) {
             this.type = 0;
@@ -104,6 +107,7 @@ class Mist {
 
     touch() {
         this.lastUpdateTime = Date.now();
+        this.outOfRange = false;
     }
 }
 
@@ -189,7 +193,11 @@ export class MobsHandler {
     }
 
     AddEnemy(id, typeId, posX, posY, healthNormalized, maxHealth, enchant, rarity) {
-        if (this.mobsList.some(m => m.id === id)) return;
+        const existing = this.mobsList.find(m => m.id === id);
+        if (existing) {
+            existing.touch();
+            return;
+        }
 
         // Fix for fort/dungeon NPCs spawning with low HP value (params[2]=5)
         // If healthNormalized is very low (< 10), it's likely a spawn default value, not real HP
@@ -451,6 +459,17 @@ export class MobsHandler {
 
     removeMist(id) {
         this.mistList = this.mistList.filter(m => m.id !== id);
+    }
+
+    markOutOfRange(id) {
+        const entity = this.mobsList.find(m => m.id === id) ?? this.mistList.find(m => m.id === id);
+        if (entity) entity.outOfRange = true;
+    }
+
+    removeNotInRange(lpX, lpY, range) {
+        const inRange = entity => Math.hypot(lpX - entity.posX, lpY - entity.posY) <= range;
+        this.mobsList = this.mobsList.filter(inRange);
+        this.mistList = this.mistList.filter(inRange);
     }
 
     updateMistPosition(id, posX, posY) {

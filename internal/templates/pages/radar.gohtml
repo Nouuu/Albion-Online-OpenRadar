@@ -75,6 +75,40 @@
                                     <span data-value-for="settingRadarIconSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
                                     <button type="button" data-reset="settingRadarIconSize" aria-label="Reset icon size" title="Reset icon size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
                                 </div>
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
+                                    <i data-lucide="hash" class="w-4 h-4 shrink-0 text-base-content/50"></i>
+                                    <span id="label-settingRadarResourceCountSize" data-setting-label="settingRadarResourceCountSize" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Count size</span>
+                                    <span class="w-3 shrink-0" aria-hidden="true"></span>
+                                    <button type="button" data-nudge="settingRadarResourceCountSize" data-dir="-1" aria-label="Decrease count size" title="Decrease count size" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarResourceCountSize" aria-labelledby="label-settingRadarResourceCountSize" min="0.5" max="3" step="0.1" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarResourceCountSize" data-dir="1" aria-label="Increase count size" title="Increase count size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    <span data-value-for="settingRadarResourceCountSize" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
+                                    <button type="button" data-reset="settingRadarResourceCountSize" aria-label="Reset count size" title="Reset count size" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
+                                    <i data-lucide="radar" class="w-4 h-4 shrink-0 text-base-content/50"></i>
+                                    <span id="label-settingRadarSaveRange" data-setting-label="settingRadarSaveRange" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Save range</span>
+                                    <div class="tooltip shrink-0" data-setting-tip="settingRadarSaveRange" data-tip="Nodes, enemies, wisp portals and cages stay saved within this distance of you and are dropped beyond it. Entities the game stopped sending are drawn dimmed.">
+                                        <span tabindex="0" role="img" aria-label="Nodes, enemies, wisp portals and cages stay saved within this distance of you and are dropped beyond it. Entities the game stopped sending are drawn dimmed." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                    </div>
+                                    <button type="button" data-nudge="settingRadarSaveRange" data-dir="-1" aria-label="Decrease save range" title="Decrease save range" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarSaveRange" aria-labelledby="label-settingRadarSaveRange" min="40" max="1500" step="10" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarSaveRange" data-dir="1" aria-label="Increase save range" title="Increase save range" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    <span data-value-for="settingRadarSaveRange" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
+                                    <button type="button" data-reset="settingRadarSaveRange" aria-label="Reset save range" title="Reset save range" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
+                                <div class="flex items-center gap-1.5 sm:gap-2 p-2 rounded-lg bg-base-300">
+                                    <i data-lucide="timer" class="w-4 h-4 shrink-0 text-base-content/50"></i>
+                                    <span id="label-settingRadarNodeTime" data-setting-label="settingRadarNodeTime" class="text-base-content/80 text-xs whitespace-nowrap w-16 shrink-0">Node time</span>
+                                    <div class="tooltip shrink-0" data-setting-tip="settingRadarNodeTime" data-tip="How long a node stays on the radar without news from the game. Default 5 min.">
+                                        <span tabindex="0" role="img" aria-label="How long a node stays on the radar without news from the game. Default 5 min." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                    </div>
+                                    <button type="button" data-nudge="settingRadarNodeTime" data-dir="-1" aria-label="Decrease node time" title="Decrease node time" class="btn btn-ghost btn-xs btn-square ml-auto"><i data-lucide="minus" class="w-3 h-3"></i></button>
+                                    <input type="range" data-setting="settingRadarNodeTime" aria-labelledby="label-settingRadarNodeTime" min="5" max="240" step="5" class="range range-primary range-xs min-w-0 w-full max-w-64">
+                                    <button type="button" data-nudge="settingRadarNodeTime" data-dir="1" aria-label="Increase node time" title="Increase node time" class="btn btn-ghost btn-xs btn-square"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                                    <span data-value-for="settingRadarNodeTime" class="text-xs text-base-content/60 font-mono tabular-nums w-14 shrink-0 text-right whitespace-nowrap"></span>
+                                    <button type="button" data-reset="settingRadarNodeTime" aria-label="Reset node time" title="Reset node time" class="btn btn-ghost btn-xs btn-square"><i data-lucide="rotate-ccw" class="w-3 h-3"></i></button>
+                                </div>
                             </div>
                         </section>
                         <div class="@container space-y-6 @2xl:border-l @2xl:border-base-content/5 @2xl:pl-8">
@@ -107,6 +141,13 @@
                                         <span id="label-settingRadarPlayersBeside" data-setting-label="settingRadarPlayersBeside" class="text-base-content/80 text-xs group-hover:text-base-content">Players beside radar</span>
                                         <div class="tooltip" data-setting-tip="settingRadarPlayersBeside" data-tip="Shows the player list to the right of the radar when the window is wide enough.">
                                             <span tabindex="0" role="img" aria-label="Shows the player list to the right of the radar when the window is wide enough." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
+                                        </div>
+                                    </label>
+                                    <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                                        <input type="checkbox" data-setting="settingRadarFarmRoute" aria-labelledby="label-settingRadarFarmRoute" class="toggle toggle-primary toggle-sm">
+                                        <span id="label-settingRadarFarmRoute" data-setting-label="settingRadarFarmRoute" class="text-base-content/80 text-xs group-hover:text-base-content">Farm route (experimental)</span>
+                                        <div class="tooltip" data-setting-tip="settingRadarFarmRoute" data-tip="Shows a zone map above the player list. Nodes stay marked on it until you press Reset map.">
+                                            <span tabindex="0" role="img" aria-label="Shows a zone map above the player list. Nodes stay marked on it until you press Reset map." class="block"><i data-lucide="info" class="w-3 h-3 opacity-50"></i></span>
                                         </div>
                                     </label>
                                     <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors pointer-fine:hidden">
@@ -179,6 +220,69 @@
         </div>
     </div>
 
+    <div id="radarSide" class="flex flex-col gap-4 grow min-w-0">
+    <div class="flex flex-wrap items-start gap-4">
+    <!-- Farm Route Section (experimental): zone map with saved nodes -->
+    <div id="farmRouteSection" class="hidden card bg-base-200 grow basis-72 min-w-0">
+        <div class="card-body phone-landscape:p-2">
+            <h3 class="text-xl phone-landscape:text-base font-semibold text-base-content flex flex-wrap items-center gap-3 phone-landscape:gap-2">
+                Farm route
+                <span class="badge badge-warning badge-sm">Experimental</span>
+                <span id="farmRouteZone" data-no-i18n class="text-xs font-normal font-mono text-base-content/50"></span>
+                <button type="button" id="farmRouteReset" class="btn btn-ghost btn-xs ml-auto" aria-label="Reset map" title="Reset map"><i data-lucide="rotate-ccw" class="w-3 h-3"></i>Reset map</button>
+            </h3>
+            <canvas id="farmRouteCanvas" width="420" height="420" class="w-full max-w-xl mx-auto aspect-square rounded-lg bg-base-300"></canvas>
+        </div>
+    </div>
+
+    <!-- Layer switches: hide or show what the radar draws without touching the filters of each page -->
+    <div id="radarLayersPanel" class="card bg-base-200 grow sm:grow-0 basis-52">
+        <div class="card-body p-3">
+            <h3 class="text-sm font-semibold text-base-content/80 flex items-center gap-2">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                Radar layers
+            </h3>
+            <div class="flex flex-col gap-2">
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowResources" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="gem" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowResources" data-setting-label="settingRadarShowResources" class="text-base-content/80 text-xs group-hover:text-base-content">Resources</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowFishing" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="fish" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowFishing" data-setting-label="settingRadarShowFishing" class="text-base-content/80 text-xs group-hover:text-base-content">Fishing</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowEnemies" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="skull" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowEnemies" data-setting-label="settingRadarShowEnemies" class="text-base-content/80 text-xs group-hover:text-base-content">Enemies</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowChests" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="package" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowChests" data-setting-label="settingRadarShowChests" class="text-base-content/80 text-xs group-hover:text-base-content">Chests</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowMists" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="cloud-fog" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowMists" data-setting-label="settingRadarShowMists" class="text-base-content/80 text-xs group-hover:text-base-content">Mists</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowDungeons" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="door-open" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowDungeons" data-setting-label="settingRadarShowDungeons" class="text-base-content/80 text-xs group-hover:text-base-content">Dungeons</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-lg bg-base-300 cursor-pointer group hover:bg-base-300/70 transition-colors">
+                    <input type="checkbox" data-setting="settingRadarShowPlayers" class="toggle toggle-primary toggle-sm">
+                    <i data-lucide="users" class="w-4 h-4 text-base-content/50"></i>
+                    <span id="label-settingRadarShowPlayers" data-setting-label="settingRadarShowPlayers" class="text-base-content/80 text-xs group-hover:text-base-content">Players</span>
+                </label>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <!-- Detected Players Section -->
     <div id="playersSection" class="@container card bg-base-200 grow min-w-0 in-data-[players-beside]:overflow-y-auto">
         <div class="card-body phone-landscape:p-2">
@@ -209,7 +313,14 @@
                     </div>
                 </div>
             </div>
-            <div id="playersListContainer" class="mt-4 phone-landscape:mt-2">
+            <div id="playersListPanel" class="collapse collapse-arrow bg-base-300/50 rounded-lg mt-4 phone-landscape:mt-2">
+                <input type="checkbox" data-setting="settingUiRadarPlayersOpen" aria-labelledby="label-settingUiRadarPlayersOpen"/>
+                <div class="collapse-title text-sm font-semibold flex items-center gap-2 min-h-0 py-2">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span id="label-settingUiRadarPlayersOpen" data-setting-label="settingUiRadarPlayersOpen">Player list</span>
+                </div>
+                <div class="collapse-content px-2 pb-2">
+            <div id="playersListContainer" class="mt-2 phone-landscape:mt-1">
                 <!-- Flex container: sections share space equally, wrap on small screens -->
                 <!-- data-sections set by JS: controls card grid columns -->
                 <div id="playersList" class="flex flex-col sm:flex-row sm:flex-wrap gap-4" data-sections="0">
@@ -248,7 +359,10 @@
                     </div>
                 </div>
             </div>
+                </div>
+            </div>
         </div>
+    </div>
     </div>
 </div>
 {{end}}

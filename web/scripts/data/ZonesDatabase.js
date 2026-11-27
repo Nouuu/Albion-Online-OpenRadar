@@ -171,6 +171,11 @@ export class ZonesDatabase {
     return this.getZone(zoneId)?.type || "";
   }
 
+  // A Mist override carries the bounds of the zone it was entered from, which do not describe the Mist map.
+  hasMapBounds(zoneId) {
+    return !this.overrides.has(String(zoneId)) && this._validBounds(zoneId) !== null;
+  }
+
   // Images are saved under the file prefix (TNL-001 for road TNL-201); Mist instances have no image.
   getMapImageName(zoneId) {
     const id = String(zoneId);

@@ -186,11 +186,15 @@ encrypts live positions, see [Known limitations](#known-limitations).
 | Max size                   | 300px to 1200px                                 |
 | Fit to screen              | toggle, fills the window up to 1200px           |
 | Icon size                  | 50% to 200%                                     |
+| Count size                 | 50% to 300%, size of the resource count number  |
+| Save range                 | 40 m to 1500 m, how far nodes and enemies stay  |
+| Node time                  | 5 to 240 min, how long a node is remembered     |
 | Map background             | toggle, zone map under the radar                |
 | Zone info box              | toggle, zone name, tier and PvP marker          |
 | Stats box                  | toggle, resource, mob and player counts         |
 | Players beside radar       | toggle, player list right of the radar if room  |
 | Keep screen awake          | toggle on touch screens, keeps the screen on    |
+| Farm route (experimental)  | toggle, zone map that keeps nodes until reset   |
 | Resource count             | toggle, estimated quantity per node             |
 | Resource distance          | toggle, distance in meters per node             |
 | Resource tier color badges | toggle, colored squares with tier and enchant   |

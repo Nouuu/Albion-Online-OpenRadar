@@ -766,6 +766,37 @@ describe('MobsHandler', () => {
         });
     });
 
+    describe('out of range', () => {
+        // synthetic: Leave marks a mob or mist instead of removing it; a repeated spawn clears the flag.
+        test('markOutOfRange flags mobs and mists and a repeated spawn clears the flag', () => {
+            handler.AddEnemy(1, 5, 10, 10, 255, 500, 0, null);
+            handler.AddMist(2, 10, 10, 'MISTS_SOLO', 1);
+
+            handler.markOutOfRange(1);
+            handler.markOutOfRange(2);
+            expect(handler.mobsList[0].outOfRange).toBe(true);
+            expect(handler.mistList[0].outOfRange).toBe(true);
+
+            handler.AddEnemy(1, 5, 10, 10, 255, 500, 0, null);
+            handler.AddMist(2, 10, 10, 'MISTS_SOLO', 1);
+            expect(handler.mobsList[0].outOfRange).toBe(false);
+            expect(handler.mistList[0].outOfRange).toBe(false);
+        });
+
+        // synthetic: removeNotInRange drops mobs and mists farther than the save range from the player.
+        test('removeNotInRange drops mobs and mists beyond the range and keeps the ones inside', () => {
+            handler.AddEnemy(1, 5, 50, 0, 255, 500, 0, null);
+            handler.AddEnemy(2, 5, 200, 0, 255, 500, 0, null);
+            handler.AddMist(3, 50, 0, 'MISTS_SOLO', 1);
+            handler.AddMist(4, 200, 0, 'MISTS_SOLO', 1);
+
+            handler.removeNotInRange(0, 0, 80);
+
+            expect(handler.mobsList.map(m => m.id)).toEqual([1]);
+            expect(handler.mistList.map(m => m.id)).toEqual([3]);
+        });
+    });
+
     // -------------------------------------------------------------------------
     // Health update paths
     // -------------------------------------------------------------------------

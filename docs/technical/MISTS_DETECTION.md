@@ -25,7 +25,7 @@ Portal names follow the pattern `MISTS_<TYPE>_<COLOR>`:
 - `<TYPE>` is one of `SOLO`, `DUO`.
 - `<COLOR>` is the PvP zone tag: `YELLOW`, `GREEN`, `BLUE`, `PURPLE`, `RED`. **It is not the rarity.**
 
-`MobsHandler.NewMobEvent` reads the rarity from `Parameters[34]` and passes it into `AddMist`, which stores it as `mist.enchant`. Values 0 to 4 map to Common, Uncommon, Rare, Epic, Legendary. Live evidence from a "Peu commun" YELLOW portal confirmed the path on 2026-04-23 (green `mist_1` icon), back when the enchant sat at `Parameters[33]`; Dragonfire (2026-08-31) shifted it to `[34]`. Settings gate uses `settingMistsEnchant<enchant>`.
+`MobsHandler.NewMobEvent` reads the rarity from `Parameters[34]` and passes it into `AddMist`, which stores it as `mist.enchant`. Values 0 to 4 map to Common, Uncommon, Rare, Epic, Legendary, the five steps of the in-game wisp ladder (white, green, blue, purple and golden yellow trail). Live evidence from a "Peu commun" YELLOW portal confirmed the path on 2026-04-23 (green `mist_1` icon), back when the enchant sat at `Parameters[33]`; Dragonfire (2026-08-31) shifted it to `[34]`. Settings gate uses `settingMistsEnchant<enchant>`.
 
 Pre-patch captures also carried the rarity in `Parameters[8]` (evidence behind the PR #78 dungeon enchant fix). Since the 2026-06-29 patch and before Dragonfire, `Parameters[8]` on portal NewMob events held an `[x, y]` position instead (2026-07-05 capture, typeId 116), with the enchant still at `Parameters[33]` at that time. Only Common portals (`Parameters[33]=0` in that capture) were observed in that window, so the rarity slot needed confirmation against a non-Common portal. The 2026-09-03 capture shows a non-Common value at the post-Dragonfire index, but which rarity each value names is still open (see Open observations).
 
@@ -38,7 +38,7 @@ Pre-patch captures also carried the rarity in `Parameters[8]` (evidence behind t
 3. `settingMistsSolo` or `settingMistsDuo` based on the portal type.
 4. `settingDebugMistsWispIds` (optional overlay of the entity id for live capture work).
 
-The image is `mist_<enchant>.webp`. The drawing reuses the portal asset rather than a dedicated `wisp_sign.webp`.
+The image is `mist_<enchant>.webp`, an orb whose color follows the rarity. A ring in the in-game trail color is drawn under it, thicker with each step, with a glow on Epic and Legendary (`WISP_RARITIES` in `MistsWispDrawing.js`). The drawing reuses the portal asset rather than a dedicated `wisp_sign.webp`.
 
 ## Wisp cage indexing
 
@@ -81,5 +81,5 @@ When a player enters the Mists, the cluster id arrives via `Event 521 MistsPlaye
 ## Open observations
 
 - Mists rarity at the cluster level (instance-wide, before portals appear) lives in the `ChangeCluster` operation response `Parameters[3]` byte array, last byte. Reaching it requires plumbing a Mists-zone capture with opcode 41 response into a fixture and a cluster-level rarity store.
-- Events 520/522/525/531 are received but not consumed. A follow-up PR should route them into a Mists state surface readable by drawings.
-- Portal rarity arrives at `Parameters[34]` since Dragonfire; the 2026-09-03 capture carries a duo portal (`MISTS_DUO_BLACK`) with value 2. The 0 to 4 map reads 2 as Rare, while that portal was noted as Uncommon. No capture pairs a value with the rarity shown in game, so the map is unconfirmed.
+- Events 521/523/526/532 are received but not consumed. A follow-up PR should route them into a Mists state surface readable by drawings.
+- Portal rarity arrives at `Parameters[34]` since Dragonfire. The ladder (0 Common to 4 Legendary) rests on the "Peu commun" portal seen live with value 1 and on the five orb colors. The mob table names the same wisps `..._STANDARD`, `..._UNCOMMON`, `..._RARE`, `..._LEGENDARY` after a base entry, so its labels sit one step off the ladder from the second entry on: the 2026-09-03 duo portal (typeId 127, `MOB_UNIQUE_MISTS_PORTAL_WISP_DUO_UNCOMMON`) carries value 2, a Rare on the ladder. Compare the ring color with the trail of a live wisp to settle it.

@@ -5,13 +5,13 @@ import {EventCodes} from '../utils/EventCodes.js';
 import {OperationCodes} from '../utils/OperationCodes.js';
 import {CATEGORIES} from '../constants/LoggerConstants.js';
 import zonesDatabase from '../data/ZonesDatabase.js';
-
 function syncMapIsBZ() {
     if (!map) return;
     map.isBZ = zonesDatabase.isBlackZone(map.id);
 }
 
 // Map change debouncing
+const FISHING_ZONE_SPAWN_LIVE_CODE = 360;
 const MAP_CHANGE_DEBOUNCE_MS = 4000;
 const MIST_CHOICE_TTL_MS = 30000;
 let lastMapChangeTime = 0;
@@ -339,12 +339,11 @@ export function onEvent(Parameters) {
     switch (eventCode) {
         case EventCodes.Leave:
             playersHandler.removePlayer(id);
-            mobsHandler.removeMist(id);
-            mobsHandler.removeMob(id);
+            mobsHandler.markOutOfRange(id);
+            wispCageHandler.markOutOfRange(id);
             dungeonsHandler.removeDungeon(id);
             chestsHandler.removeChest(id);
             fishingHandler.removeFish(id);
-            wispCageHandler.removeCage(id);
             handlers.mistsDungeonHandler?.removePortal(id);
             break;
 
@@ -467,6 +466,9 @@ export function onEvent(Parameters) {
             wispCageHandler.cageOpenedEvent(Parameters);
             break;
 
+        // The live game sends fishing zone spawns as 360 (observed 2026-10-29: FishingNodeSwarm/FishingNodeFish/"");
+        // upstream EventCodes.cs still lists them at 361, so both are accepted.
+        case FISHING_ZONE_SPAWN_LIVE_CODE:
         case EventCodes.NewFishingZoneObject:
             fishingHandler.newFishEvent(Parameters);
             break;

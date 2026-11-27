@@ -1,9 +1,11 @@
 import {CATEGORIES} from "../constants/LoggerConstants.js";
 import imageCache from "./ImageCache.js";
 import settingsSync from "./SettingsSync.js";
+import {t} from "./I18n.js";
 
 const SCALE_FACTOR = 1.0;
 const BASE_ZOOM = 4;
+export const OUT_OF_RANGE_ALPHA = 0.5;
 
 export class DrawingUtils {
     constructor() {
@@ -18,6 +20,9 @@ export class DrawingUtils {
     }
     getIconSizeMultiplier() {
         return settingsSync.getFloat('settingRadarIconSize');
+    }
+    getCountSizeMultiplier() {
+        return settingsSync.getFloat('settingRadarResourceCountSize');
     }
     getCanvasScale() { return this.getCanvasSize() / 500; }
     getScaledSize(baseSize) { return baseSize * this.getZoomLevel() * this.getCanvasScale(); }
@@ -155,8 +160,8 @@ export class DrawingUtils {
         return { x: newX, y: newY };
     }
 
-    drawText(xTemp, yTemp, text, ctx) {
-        const scaledFontSize = `${this.getScaledFontSize(12, 8)}px`;
+    drawText(xTemp, yTemp, text, ctx, sizeMultiplier = 1) {
+        const scaledFontSize = `${this.getScaledFontSize(12 * sizeMultiplier, 8 * Math.min(1, sizeMultiplier))}px`;
         ctx.font = scaledFontSize + " " + this.fontFamily;
         ctx.fillStyle = this.textColor;
         const textWidth = ctx.measureText(text).width;
@@ -173,14 +178,15 @@ export class DrawingUtils {
         const text = count.toString();
         ctx.save();
 
-        const fontSize = this.getScaledFontSize(10, 7);
+        const countSize = this.getCountSizeMultiplier();
+        const fontSize = this.getScaledFontSize(10 * countSize, 7 * Math.min(1, countSize));
         ctx.font = `bold ${fontSize}px monospace`;
         const textWidth = ctx.measureText(text).width;
 
-        const padding = this.getScaledSize(4);
+        const padding = this.getScaledSize(4) * countSize;
         const rectWidth = textWidth + (padding * 2);
-        const rectHeight = this.getScaledSize(14);
-        const radius = this.getScaledSize(4);
+        const rectHeight = this.getScaledSize(14) * countSize;
+        const radius = this.getScaledSize(4) * countSize;
 
         const offset8 = this.getMarkerSize(8);
         const offset6 = this.getMarkerSize(6);
@@ -432,7 +438,7 @@ export class DrawingUtils {
         const clusterRadiusMeters = settingsSync.getNumber("settingRadarClusterRadius");
 
         const line1 = `${countText}${typeText ? ' ' + typeText : ''}${tierText ? ' ' + tierText : ''}`;
-        const line2 = `${stacksText} stacks · ${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
+        const line2 = `${stacksText} ${t('stacks')} ·${distText}${clusterRadiusMeters ? ' · R:' + clusterRadiusMeters + 'm' : ''}`;
 
         const fontSize1 = this.getScaledFontSize(12, 8);
         const fontSize2 = this.getScaledFontSize(11, 7);

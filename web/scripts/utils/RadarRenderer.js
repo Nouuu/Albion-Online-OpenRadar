@@ -4,6 +4,8 @@ import settingsSync from "./SettingsSync.js";
 import zonesDatabase from "../data/ZonesDatabase.js";
 import {shouldRenderLivingResource, shouldRenderStaticResource} from './LivingResourceFilter.js';
 import {EnemyType} from '../handlers/MobsHandler.js';
+import {t} from './I18n.js';
+import {drawFarmRouteMap} from './FarmRouteMap.js';
 
 export class RadarRenderer {
     constructor(dependencies) {
@@ -24,6 +26,8 @@ export class RadarRenderer {
         this.TARGET_FPS = 30;
         this.FRAME_TIME = 1000 / this.TARGET_FPS;
         this.CLUSTER_UPDATE_INTERVAL = 2000;
+        this.FARM_ROUTE_INTERVAL = 500;
+        this.lastFarmRouteDraw = 0;
         this.lastFrameTime = 0;
         this.lastClusterUpdate = 0;
         this.cachedClusters = null;
@@ -109,8 +113,10 @@ export class RadarRenderer {
             this.drawings.mapsDrawing.interpolate(this.map, this.lpX, this.lpY, t);
         }
 
+        const saveRange = settingsSync.getNumber('settingRadarSaveRange');
+
         if (this.handlers.harvestablesHandler && this.drawings.harvestablesDrawing) {
-            this.handlers.harvestablesHandler.removeNotInRange(this.lpX, this.lpY);
+            this.handlers.harvestablesHandler.removeNotInRange(this.lpX, this.lpY, saveRange);
             this.drawings.harvestablesDrawing.interpolate(
                 this.handlers.harvestablesHandler.harvestableList,
                 this.lpX,
@@ -118,6 +124,9 @@ export class RadarRenderer {
                 t
             );
         }
+
+        this.handlers.mobsHandler?.removeNotInRange?.(this.lpX, this.lpY, saveRange);
+        this.handlers.wispCageHandler?.removeNotInRange?.(this.lpX, this.lpY, saveRange);
 
         if (this.handlers.mobsHandler && this.drawings.mobsDrawing) {
             this.drawings.mobsDrawing.interpolate(
@@ -195,7 +204,7 @@ export class RadarRenderer {
 
         // Cluster detection with caching (recalculated every CLUSTER_UPDATE_INTERVAL)
         let clustersForInfo = null;
-        if (settingsSync.getBool('settingRadarResourceClusters') && context) {
+        if (settingsSync.getBool('settingRadarResourceClusters') && settingsSync.getBool('settingRadarShowResources') && context) {
             const currentTime = performance.now();
             const timeSinceLastUpdate = currentTime - this.lastClusterUpdate;
 
@@ -231,63 +240,63 @@ export class RadarRenderer {
             if (this.drawings.harvestablesDrawing && this.handlers.harvestablesHandler) {
                 this.drawings.harvestablesDrawing.invalidate(
                     context,
-                    this.handlers.harvestablesHandler.harvestableList
+                    this._inLayer('Resources', this.handlers.harvestablesHandler.harvestableList)
                 );
             }
 
             if (this.drawings.mobsDrawing && this.handlers.mobsHandler) {
                 this.drawings.mobsDrawing.invalidate(
                     context,
-                    this.handlers.mobsHandler.mobsList
+                    this._visibleMobs(this.handlers.mobsHandler.mobsList)
                 );
             }
 
             if (this.drawings.chestsDrawing && this.handlers.chestsHandler) {
                 this.drawings.chestsDrawing.invalidate(
                     context,
-                    this.handlers.chestsHandler.chestsList
+                    this._inLayer('Chests', this.handlers.chestsHandler.chestsList)
                 );
             }
 
             if (this.drawings.playersDrawing && this.handlers.playersHandler) {
                 this.drawings.playersDrawing.invalidate(
                     context,
-                    this.handlers.playersHandler.getFilteredPlayers()
+                    this._inLayer('Players', this.handlers.playersHandler.getFilteredPlayers())
                 );
             }
 
             if (this.drawings.wispCageDrawing && this.handlers.wispCageHandler) {
                 this.drawings.wispCageDrawing.draw(
                     context,
-                    this.handlers.wispCageHandler.cages
+                    this._inLayer('Mists', this.handlers.wispCageHandler.cages)
                 );
             }
 
             if (this.drawings.mistsDungeonDrawing && this.handlers.mistsDungeonHandler) {
                 this.drawings.mistsDungeonDrawing.draw(
                     context,
-                    this.handlers.mistsDungeonHandler.portalList
+                    this._inLayer('Mists', this.handlers.mistsDungeonHandler.portalList)
                 );
             }
 
             if (this.drawings.mistsWispDrawing && this.handlers.mobsHandler) {
                 this.drawings.mistsWispDrawing.invalidate(
                     context,
-                    this.handlers.mobsHandler.mistList
+                    this._inLayer('Mists', this.handlers.mobsHandler.mistList)
                 );
             }
 
             if (this.drawings.fishingDrawing && this.handlers.fishingHandler) {
                 this.drawings.fishingDrawing.draw(
                     context,
-                    this.handlers.fishingHandler.fishes
+                    this._inLayer('Fishing', this.handlers.fishingHandler.fishes)
                 );
             }
 
             if (this.drawings.dungeonsDrawing && this.handlers.dungeonsHandler) {
                 this.drawings.dungeonsDrawing.draw(
                     context,
-                    this.handlers.dungeonsHandler.dungeonList
+                    this._visibleDungeons(this.handlers.dungeonsHandler.dungeonList)
                 );
             }
         }
@@ -307,6 +316,35 @@ export class RadarRenderer {
         }
 
         this.renderUI();
+        this.renderFarmRoute();
+    }
+
+    renderFarmRoute() {
+        const section = document.getElementById('farmRouteSection');
+        if (!section) return;
+
+        const enabled = settingsSync.getBool('settingRadarFarmRoute');
+        section.classList.toggle('hidden', !enabled);
+        const now = performance.now();
+        if (!enabled || now - this.lastFarmRouteDraw < this.FARM_ROUTE_INTERVAL) return;
+        this.lastFarmRouteDraw = now;
+
+        const canvas = document.getElementById('farmRouteCanvas');
+        if (!canvas || !this.map || this.map.id < 0) return;
+
+        try {
+            const count = drawFarmRouteMap(canvas, {
+                mapId: this.map.id,
+                lpX: this.lpX,
+                lpY: this.lpY,
+                harvestables: this.handlers.harvestablesHandler?.harvestableList ?? [],
+                fishes: this.handlers.fishingHandler?.fishes ?? [],
+            });
+            const zone = document.getElementById('farmRouteZone');
+            if (zone) zone.textContent = `${zonesDatabase.getZoneName(String(this.map.id))} · ${count}`;
+        } catch (e) {
+            window.logger?.error(CATEGORIES.MAP, 'farm_route_draw_failed', e);
+        }
     }
 
     /**
@@ -421,10 +459,10 @@ export class RadarRenderer {
 
         const stats = [];
         if (settingsSync.getBool('settingPlayersDetect')) {
-            stats.push({ emoji: '👥', count: playerCount, label: 'players', color: '#ffffff' });
+            stats.push({ emoji: '👥', count: playerCount, label: t('players'), color: '#ffffff' });
         }
-        stats.push({ emoji: '📦', count: resourceCount, label: 'resources', color: '#00d4ff' });
-        stats.push({ emoji: '👾', count: mobCount, label: 'mobs', color: '#ff6b6b' });
+        stats.push({ emoji: '📦', count: resourceCount, label: t('resources'), color: '#00d4ff' });
+        stats.push({ emoji: '👾', count: mobCount, label: t('mobs'), color: '#ff6b6b' });
 
         const canvasSize = ctx.canvas.width;
         const scale = Math.min(1, canvasSize / 500);
@@ -476,6 +514,27 @@ export class RadarRenderer {
         ctx.lineWidth = 5;
         ctx.strokeRect(3, 3, canvasSize - 6, canvasSize - 6);
         ctx.restore();
+    }
+
+    // Layer switches only decide what is drawn; handlers keep tracking, so showing a layer again is instant.
+    _inLayer(layer, list) {
+        return settingsSync.getBool(`settingRadarShow${layer}`) ? list : [];
+    }
+
+    _visibleMobs(mobs) {
+        const resources = settingsSync.getBool('settingRadarShowResources');
+        const enemies = settingsSync.getBool('settingRadarShowEnemies');
+        if (resources && enemies) return mobs;
+        return mobs.filter(mob => mob.type === EnemyType.LivingHarvestable || mob.type === EnemyType.LivingSkinnable
+            ? resources : enemies);
+    }
+
+    // Mists portals share the dungeon list; their settingKeys tell them apart.
+    _visibleDungeons(dungeons) {
+        const mists = settingsSync.getBool('settingRadarShowMists');
+        const others = settingsSync.getBool('settingRadarShowDungeons');
+        if (mists && others) return dungeons;
+        return dungeons.filter(dungeon => dungeon.settingKeys?.[0]?.startsWith('settingMists') ? mists : others);
     }
 
     _collectClusterCandidates() {

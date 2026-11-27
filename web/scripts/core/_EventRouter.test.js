@@ -48,6 +48,7 @@ describe('EventRouter', () => {
                 updateMobPosition: vi.fn(),
                 removeMist: vi.fn(),
                 removeMob: vi.fn(),
+                markOutOfRange: vi.fn(),
                 updateEnchantEvent: vi.fn(),
                 NewMobEvent: vi.fn(),
                 debugLogMobById: vi.fn(),
@@ -64,7 +65,7 @@ describe('EventRouter', () => {
             chestsHandler: {removeChest: vi.fn(), addChestEvent: vi.fn()},
             dungeonsHandler: {removeDungeon: vi.fn(), dungeonEvent: vi.fn()},
             fishingHandler: {removeFish: vi.fn(), newFishEvent: vi.fn(), fishingEnd: vi.fn()},
-            wispCageHandler: {removeCage: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
+            wispCageHandler: {removeCage: vi.fn(), markOutOfRange: vi.fn(), newCageEvent: vi.fn(), cageOpenedEvent: vi.fn()},
             mistsDungeonHandler: {addPortal: vi.fn(), removePortal: vi.fn(), cleanupStaleEntities: vi.fn(), Clear: vi.fn()}
         };
 
@@ -633,17 +634,19 @@ describe('EventRouter', () => {
     // onEvent Leave (1)
     // -------------------------------------------------------------------------
     describe('onEvent Leave', () => {
-        // @verified 2026-04-23: Leave fans out remove calls to all seven handlers
-        test('Leave event removes entity from all handlers', () => {
+        // synthetic: mobs, mists and cages are marked out of range (kept within the save range); the rest are removed.
+        test('Leave event marks mobs, mists and cages out of range and removes the rest', () => {
             EventRouter.onEvent({0: 42, 252: EventCodes.Leave});
 
+            expect(handlers.mobsHandler.markOutOfRange).toHaveBeenCalledWith(42);
+            expect(handlers.wispCageHandler.markOutOfRange).toHaveBeenCalledWith(42);
+            expect(handlers.mobsHandler.removeMob).not.toHaveBeenCalled();
+            expect(handlers.mobsHandler.removeMist).not.toHaveBeenCalled();
+            expect(handlers.wispCageHandler.removeCage).not.toHaveBeenCalled();
             expect(handlers.playersHandler.removePlayer).toHaveBeenCalledWith(42);
-            expect(handlers.mobsHandler.removeMist).toHaveBeenCalledWith(42);
-            expect(handlers.mobsHandler.removeMob).toHaveBeenCalledWith(42);
             expect(handlers.dungeonsHandler.removeDungeon).toHaveBeenCalledWith(42);
             expect(handlers.chestsHandler.removeChest).toHaveBeenCalledWith(42);
             expect(handlers.fishingHandler.removeFish).toHaveBeenCalledWith(42);
-            expect(handlers.wispCageHandler.removeCage).toHaveBeenCalledWith(42);
         });
 
         // @verified 2026-05-22: pcap-confirmed (capture 13-36-55) the abbey portal id receives a
@@ -975,6 +978,17 @@ describe('EventRouter', () => {
         // @verified 2026-10-24: FishingNodeFish variant, dispatch verified after the 2026-10-12 EventCodes refresh.
         test('onEvent routes NewFishingZoneObject FishingNodeFish variant (P[252]=360) to newFishEvent', async () => {
             // pcap-derived shape: fishing/spawn.json message[2]. Code resynced to 360 after the 2026-10-12 patch (SAT+AFM+ADC), pending live-capture re-verification.
+            const fix = await loadFixture('fishing', 'spawn');
+            const p = normalizeParams(fix.messages[2].parameters);
+            p[252] = 360;
+
+            EventRouter.onEvent(p);
+
+            expect(handlers.fishingHandler.newFishEvent).toHaveBeenCalledWith(p);
+        });
+
+        // @verified 2026-10-29: live capture next to a fishing spot sent the spawns as 360 (FishingNodeSwarm, FishingNodeFish, "").
+        test('onEvent routes the live-game fishing spawn code (P[252]=360) to newFishEvent', async () => {
             const fix = await loadFixture('fishing', 'spawn');
             const p = normalizeParams(fix.messages[2].parameters);
             p[252] = 360;

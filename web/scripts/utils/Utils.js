@@ -26,6 +26,7 @@ import pictureInPictureManager from './PictureInPictureManager.js';
 import {destroyRadarSettingsPanel, initRadarSettingsPanel} from './RadarSettingsPanel.js';
 import {exitFullscreenIfActive} from './FullscreenButton.js';
 import {startScreenWakeLock, stopScreenWakeLock} from './ScreenWakeLock.js';
+import {resetFarmRoute} from './FarmRouteMap.js';
 import settingsSync from './SettingsSync.js';
 
 import * as WebSocketManager from '../core/WebSocketManager.js';
@@ -40,6 +41,7 @@ let eventQueue = null;
 let playerListIntervalId = null;
 let cleanupIntervalId = null;
 let buttonClickHandler = null;
+let farmRouteResetHandler = null;
 
 let handlers = {
     harvestables: null, mobs: null, players: null, chests: null,
@@ -61,7 +63,8 @@ const STATIC_ENTITY_MAX_AGE = 30 * 60 * 1000;
 export function cleanupStaleEntities() {
     const cleanedPlayers = handlers.players?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
     const cleanedMobs = handlers.mobs?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
-    const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(STALE_ENTITY_MAX_AGE) || 0;
+    const nodeMaxAge = settingsSync.getNumber('settingRadarNodeTime') * 60000;
+    const cleanedHarvestables = handlers.harvestables?.cleanupStaleEntities?.(nodeMaxAge) || 0;
     const cleanedFishing = handlers.fishing?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
     const cleanedChests = handlers.chests?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
     const cleanedDungeons = handlers.dungeons?.cleanupStaleEntities?.(STATIC_ENTITY_MAX_AGE) || 0;
@@ -249,6 +252,15 @@ export async function initRadar() {
             buttonElement.addEventListener('click', buttonClickHandler);
         }
 
+        const farmRouteReset = document.getElementById('farmRouteReset');
+        if (farmRouteReset) {
+            farmRouteResetHandler = () => {
+                if (map) resetFarmRoute(map.id);
+                if (radarRenderer) radarRenderer.lastFarmRouteDraw = 0;
+            };
+            farmRouteReset.addEventListener('click', farmRouteResetHandler);
+        }
+
         isInitialized = true;
         window.logger?.info(CATEGORIES.SYSTEM, 'RadarInitialized', {});
 
@@ -280,6 +292,12 @@ export function destroyRadar() {
         buttonElement.removeEventListener('click', buttonClickHandler);
         buttonClickHandler = null;
     }
+
+    const farmRouteReset = document.getElementById('farmRouteReset');
+    if (farmRouteReset && farmRouteResetHandler) {
+        farmRouteReset.removeEventListener('click', farmRouteResetHandler);
+    }
+    farmRouteResetHandler = null;
 
     if (playerListIntervalId) {
         clearInterval(playerListIntervalId);
